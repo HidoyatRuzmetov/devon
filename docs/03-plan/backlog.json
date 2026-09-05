@@ -4,7 +4,7 @@
   "epics": [
     {
       "id": "EPIC-000",
-      "title": "Foundation: monorepo, tokens, app shell, BFF auth + Keycloak, tenancy + RLS, audit/outbox, demo seed, gates, CI, Compose",
+      "title": "Foundation: monorepo, tokens (Palette B), app shell, built-in auth (sessions + 2FA), tenancy + RLS, audit/outbox, --demo seed, four-locale i18n, terminology pass, gates, CI, Compose",
       "status": "ready",
       "priority": 0,
       "phase": 1,
@@ -19,10 +19,11 @@
         "admin"
       ],
       "outcomes": [
-        "A developer clones the repo, runs pnpm setup && pnpm dev, and opens the demo ministry in uz/ru/en",
-        "Every gate in agentic/gates.json runs green on the scaffold",
-        "Login through Keycloak works for the six demo accounts; the shell renders in light/dark at 1440/1024/390",
-        "Cross-tenant isolation test passes in CI"
+        "A developer clones the repo, runs pnpm setup && pnpm dev, and opens the demo ministry (with --demo) in uz-Latn, uz-Cyrl, ru and en",
+        "Every gate in agentic/gates.json runs green on the scaffold, including four-way i18n parity",
+        "Username/password login with server sessions works for the six demo accounts; TOTP 2FA can be enabled; the shell renders in light/dark at 1440/1024/390",
+        "Cross-tenant isolation test passes in CI",
+        "packages/i18n/TERMS.md records the real-world Uzbek/Russian terminology with sources"
       ],
       "has_ui": true,
       "class_hint": "C",
@@ -355,7 +356,7 @@
     },
     {
       "id": "EPIC-011",
-      "title": "AI level 1: gateway by tier, quick-add parsing, translate on demand, pulse draft, catch-up, newcomer briefing, duplicate detection, tag suggestions, digest ranking",
+      "title": "AI level 1 on the self-hosted GLM: gateway, quick-add parsing, translate on demand (4 locales), pulse draft, catch-up, newcomer briefing, duplicate detection, tag suggestions, digest ranking",
       "status": "ready",
       "priority": 110,
       "phase": 1,
@@ -375,7 +376,7 @@
         "Quick-add parses uz/ru/en into assignee/due/unit with a visible confirmation before saving",
         "Any text can be translated on demand; official-register text shows a review hint",
         "The Friday composer offers a drafted sentence from the week's activity; the human edits and saves",
-        "No Restricted-tier data reaches an external provider (routing test in CI); every call is traced with cost"
+        "Every AI call goes to the in-country GLM endpoint only (routing test in CI) and is traced with cost; Uzbek/Russian quality passes the golden set before a feature is on by default"
       ],
       "has_ui": true,
       "class_hint": "C",
@@ -672,7 +673,7 @@
     {
       "id": "EPIC-021",
       "title": "State integrations: OneID broker, E-Imzo for official approvals (optional), ijro bridge (optional)",
-      "status": "draft",
+      "status": "dropped",
       "priority": 210,
       "phase": 3,
       "area": "integrations",
@@ -696,7 +697,15 @@
         "uzbekistan-context.md"
       ],
       "value": "H",
-      "complexity": "H"
+      "complexity": "H",
+      "history": [
+        {
+          "from": "draft",
+          "to": "dropped",
+          "ts": "2026-09-05T13:40:04.848Z",
+          "note": "CTO decision 2026-09-05: no OneID/E-Imzo/ijro"
+        }
+      ]
     },
     {
       "id": "EPIC-022",

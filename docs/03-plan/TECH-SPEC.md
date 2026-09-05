@@ -29,7 +29,7 @@ not a chat app, not an HRIS payroll system. Pages exist for onboarding, briefs a
 | Latency | p95 API < 150 ms for list/detail; navigation feels instant (optimistic UI, prefetch) | k6 + Lighthouse CI |
 | Scale | 50 tenants × 500 people × 50k tasks per instance without schema change; 20 concurrent editors per board | Testcontainers load test, Centrifugo limits [tech-realtime-boards-and-canvas] |
 | Accessibility | WCAG 2.2 AA; keyboard-complete; axe 0 serious/critical | gate `a11y` |
-| i18n | uz (Latin) default, ru, en complete; Uzbek glyphs verified; plural rules | gate `i18n` + wp-a11y-i18n |
+| i18n | uz-Latn (default), uz-Cyrl, ru, en, each 100 % complete; Uzbek glyphs verified; plural rules | gate `i18n` (four-way parity) + wp-a11y-i18n |
 | Security | OWASP ASVS 5.0 Level 2; cross-tenant isolation test in CI; audit of restricted reads | gate `security` (Semgrep/Trivy) + wp-security |
 | Data residency | All persistent data in Uzbekistan; no foreign SaaS for personal data (identity, notifications, AI on Restricted tier) | architecture review |
 | Bundle | ≤ 200 kB gzip shell; route chunks lazy | gate `bundle` |
@@ -88,11 +88,11 @@ docs/               reference, research, plan, escalations, ADRs
 | API | Fastify 5.x, fastify-type-provider-zod, @fastify/swagger, pino 9 | pinned | encapsulated domain plugins |
 | DB | Postgres 17 (18 evaluated), Drizzle ORM latest, pgvector 0.8, pg-boss 10.x | pinned | RLS via `pgPolicy`; `set_config` tenant context |
 | Realtime | Centrifugo 6.x, centrifuge-js | pinned | JWT auth, per-tenant channels |
-| Identity | Keycloak 26.x (Organizations GA), openid-client 6 | pinned | BFF code flow + PKCE |
+| Identity | built-in: argon2 (node-argon2), otplib (TOTP), @simplewebauthn/server (optional passkeys), sessions in Postgres + Valkey | pinned | no external IdP; `IdentityProvider` interface for future OIDC |
 | Cache | Valkey 9.x | pinned | rate limits, session store |
 | Files | MinIO (behind S3 API), ClamAV | pinned | presigned uploads |
 | Telegram | grammY 1.46.x, @telegram-apps/sdk 3.11.x | pinned | Bot API 10.3 |
-| AI | Anthropic SDK (current), Vercel AI SDK 7, vLLM (on-prem), promptfoo | pinned | see §9 |
+| AI | GLM (~300B) self-hosted on the ministry GPU host behind an OpenAI-compatible endpoint (vLLM/SGLang), Vercel AI SDK 7 with the openai-compatible provider, bge-m3 (proposed) for embeddings, promptfoo | pinned | see §9; no external API |
 | Tests | Vitest 4.x (5.0 just shipped; pin 4 for phase 1), Playwright 1.5x, Storybook 9 + addon-vitest, MSW 2, Testcontainers 12, k6 | pinned | |
 | Lint | ESLint 9 flat + typescript-eslint, Prettier 3.7 | pinned | Biome deferred |
 
@@ -100,19 +100,23 @@ docs/               reference, research, plan, escalations, ADRs
 
 ## 2. Tenancy, identity and sessions
 
-- **Tenant = department or ministry** (grain **[DECISION NEEDED]**, default: one tenant per department,
-  many tenants per instance). Every tenant-owned table carries `tenant_id`; Postgres RLS is the single
+- **Tenant = department; one instance per ministry** (decision 3). A ministry-wide directory exposes
+  only public profile fields and the org chart across tenants (open point A); everything else is
+  department-scoped. Every tenant-owned table carries `tenant_id`; Postgres RLS is the single
   enforcement point, predicates written as `(select current_setting('app.tenant_id', true))::uuid` so
   Postgres evaluates them once per query [tech-backend-stack-deep-dive §2].
 - **Transaction wrapper** sets context with bound parameters:
   `select set_config('app.tenant_id', $1, true), set_config('app.person_id', $2, true), set_config('app.roles', $3, true)`.
   Never string-interpolated `SET LOCAL`.
-- **Keycloak 26**: one realm, one **Organization per tenant**, LDAP/AD federation optional per
-  organization, passkeys preferred, TOTP fallback; realm-per-tenant only for a ministry that demands it.
-  OneID federated as an upstream broker in Phase 3 [auth-permissions-security-compliance].
-- **BFF pattern**: the SPA never holds tokens. `apps/api` does the OIDC code flow with PKCE, stores the
-  session server-side (Valkey), sets an `HttpOnly; Secure; SameSite=Lax` cookie, refreshes silently, and
-  exposes `/api/v1/me`. CSRF: double-submit token on state-changing requests.
+- **Built-in identity (decision 4)**: username (work email or login) + password hashed with argon2id;
+  server-side sessions (Postgres row + Valkey cache) referenced by an `HttpOnly; Secure; SameSite=Lax`
+  cookie; sliding expiry (12 h idle, 30 d absolute), device list with "sign out everywhere"; CSRF
+  double-submit token; login rate limits and lockout with audit; password policy (length ≥ 12, breach
+  list check, no composition rules); admin-issued first passwords with forced change; second factor
+  per tenant policy: TOTP (otplib) or a Telegram-delivered OTP, passkeys optional (SimpleWebAuthn);
+  mandatory 2FA for head/HR/admin roles (assumed, open point C). The auth module sits behind an
+  `IdentityProvider` interface so OIDC/SSO can be added later without touching the rest of the app.
+  No Keycloak, no OneID [auth-permissions-security-compliance for the threat model].
 - **Telegram link**: `initData` HMAC validation for the Mini App; Login Widget for linking a Telegram
   account to a person; Telegram is never the primary identity [notifications-telegram-mobile addendum §A/§C].
 - **Provisioning**: `tenants` row + Keycloak organization + admin invite + demo/holiday calendar copy
@@ -321,8 +325,12 @@ Trips (xizmat safari) carry destination, dates, purpose, a generated order numbe
   **Excalidraw (MIT)** embedded; scene JSON in `canvases.scene`, voting/timer as our own overlay.
   tldraw rejected: its licence requires a paid or watermarked licence for production use, which an
   internal government deployment plausibly is [data-dense-ui-components addendum].
-- **i18n**: Paraglide compiled messages; `uz` variants single form, `ru` four categories enforced by
-  `check-i18n.mjs`; dates `DD.MM.YYYY`, week starts Monday; names `Familiya Ism Otasining ismi`.
+- **i18n (decision 6)**: four locales, all 100 % complete: `uz-Latn` (default), `uz-Cyrl`, `ru`, `en`.
+  Paraglide compiled messages; Uzbek single plural form, Russian four categories, parity across all
+  four enforced by `check-i18n.mjs`; `uz-Cyrl` strings generated from `uz-Latn` by deterministic
+  transliteration and then human-reviewed (reviewed keys are locked); dates `DD.MM.YYYY`, week starts
+  Monday; names `Familiya Ism Otasining ismi`; per-person locale switch in the header, tenant default
+  in settings.
 - **Fonts**: Inter for UI (Cyrillic + Latin), display face per DESIGN.md; Uzbek glyphs `Oʻ Gʻ ʼ` verified
   in-browser before phase 1 ships (test page in Storybook).
 - **Performance**: route-level code splitting, prefetch on hover/focus, `size-limit` 200 kB shell,
@@ -334,12 +342,12 @@ Trips (xizmat safari) carry destination, dates, purpose, a generated order numbe
 
 - Tokens in DTCG format → CSS variables via Style Dictionary; OKLCH 12-step scales; per-tenant override
   through `data-tenant` attribute (primary hue, logo, name) so one build serves every ministry.
-- Identity: Palette A from the identity research ("Paper & Forest, Ministry Trim"): warm paper
-  `#f7f5ef`, Devon's own deep green primary `#2a5745`, forest sidebar `#183129`, amber attention
-  `#d69f58`, semantic success/warning/destructive/info; the ministry's official navy `#013d8c`
-  (observed on digital.uz/gov.uz, which share one token set under the unified gov platform) used
-  verbatim for one official touchpoint only. Flag colours never as chrome
-  [uzbekistan-gov-visual-identity-research].
+- Identity (decision 8): Palette B from the identity research ("Navy-led, product-owned blue"): warm
+  paper `#f7f5f0`, Devon's own navy primary `#1b4a76` (distinct in hue and chroma from the ministry's
+  `#013d8c`), near-black navy sidebar `#071b31`, amber wayfinding `#d69f58`, green reserved as the
+  semantic success colour; the ministry's official navy `#013d8c` (observed on digital.uz/gov.uz,
+  which share one token set under the unified gov platform) used verbatim for one official touchpoint
+  only. Flag colours never as chrome [uzbekistan-gov-visual-identity-research].
 - Type: IBM Plex Serif display (Cyrillic + Latin Extended, Uzbek modifier letters verified), Inter UI
   (Golos Text evaluated for Russian body), IBM Plex Mono; tabular numerals; 8-pt rhythm.
 - Motion system: 140 / 220 / 300 ms (+ 480 ms one-shot celebration), expo-out entrances, expo-in
@@ -357,12 +365,17 @@ complexity, never changes a privacy tier, and never writes the record of truth w
 [ai-features-and-assistants].
 
 **Gateway** (`packages/ai`): `run({feature, tier, input, schema?, tools?, budget})`.
-- Routing by data tier: Restricted → on-prem model (vLLM; Qwen3 ≥ 8B or Kimi-class, benchmarked for
-  Uzbek) or refuse; Internal/Public → the tenant's configured API provider (Anthropic Claude by default;
-  Vercel AI SDK 7 keeps it provider-agnostic) **[DECISION NEEDED: which API the owner has, and whether
-  Internal-tier data may leave the country]**.
-- Mechanics: tool-use JSON schemas with strict mode for extraction; prompt caching of the stable
-  workspace context block; Batch API for digests; streaming for drafts; pinned dated model ids.
+- Provider (decision 1): one in-country model, GLM (~300B) on the ministry's GPU host, exposed as an
+  OpenAI-compatible endpoint (vLLM or SGLang) and consumed through the AI SDK's openai-compatible
+  provider; every tier may use it because data never leaves the ministry. Tier routing remains in the
+  gateway (so a second provider can be added later), plus a per-tenant "AI enabled" switch and budget.
+  Embeddings from a small in-country model (bge-m3 proposed; multilingual incl. Uzbek/Russian) served
+  on the same host.
+- Mechanics: JSON-schema tool calls for extraction (GLM function calling; validated with Zod and
+  retried once on schema failure); prefix caching of the stable workspace context where the serving
+  stack supports it; batched nightly jobs for digests via pg-boss; streaming for drafts; pinned model
+  build id recorded in every `ai_traces` row. Uzbek Latin/Cyrillic and Russian quality is benchmarked
+  with a golden set in EPIC-011 before any feature is enabled by default.
 - Safety: permission-aware retrieval (embeddings live on RLS-protected rows; retrieval runs as the
   user); prompt-injection defences (content is data, tools are allow-listed per feature, no feature has
   both restricted-read and external-send); citations mandatory for any answer about policy/HR; every
@@ -455,8 +468,9 @@ complexity, never changes a privacy tier, and never writes the record of truth w
 ## 13. Deployment and operations
 
 - `infra/docker-compose.yml`: caddy (TLS, HTTP/3), api, worker, web (static via caddy), postgres 17
-  (+ pgvector, pg_trgm), valkey, minio, centrifugo, keycloak, clamav, pgbackrest sidecar, optional
-  vllm (GPU host) and grafana/loki/tempo. Images pinned by digest; healthchecks; resource limits;
+  (+ pgvector, pg_trgm), valkey, minio, centrifugo, clamav, pgbackrest sidecar, optional
+  grafana/loki/tempo. The GLM inference service runs on the separate ministry GPU host and is reached
+  over the internal network as an OpenAI-compatible endpoint (`AI_BASE_URL`). Images pinned by digest; healthchecks; resource limits;
   `.env.example` documents every variable; `pnpm setup && pnpm dev` for developers (Docker for
   Postgres/MinIO/Keycloak only).
 - Backups: pgBackRest full weekly + WAL; quarterly restore drill scripted (`infra/scripts/restore-drill.sh`).
@@ -470,7 +484,10 @@ complexity, never changes a privacy tier, and never writes the record of truth w
 
 ## 14. Demo tenant and seed
 
-`packages/db/seed/` creates tenant `raqamli-demo` with the department from the reference (director,
+Demo mode (decision 7): `pnpm start --demo` (or `DEVON_DEMO=1`) seeds everything below on first boot
+and shows a "demo data" chip in the header; without it a fresh install starts empty and opens the
+admin bootstrap wizard (create tenant, first admin, locale, holidays). `packages/db/seed/` creates
+tenant `raqamli-demo` with the department from the reference (director,
 4 units, 23 people with three-part Uzbek names, positions incl. 2 vacancies, 14 projects with pulse
 history, ~180 tasks incl. topshiriqs and escalations, leave balances and 2026 holidays, 4 events with
 RSVPs, an onboarding plan for a newcomer starting next Monday, 6 pages, 2 retro canvases, notifications,
@@ -484,7 +501,7 @@ and demo accounts `director@demo`, `head.sr@demo`, `spec.db@demo`, `hr@demo`, `a
 
 | Epic | Title | Phase | Depends on | Class |
 |---|---|---|---|---|
-| EPIC-000 | Foundation: monorepo, tokens, shell, BFF auth + Keycloak, tenancy + RLS, audit/outbox, seed, gates, CI, Compose | 1 | – | C |
+| EPIC-000 | Foundation: monorepo, tokens, shell, built-in auth (sessions, 2FA), tenancy + RLS, audit/outbox, `--demo` seed, four-locale i18n, terminology pass, gates, CI, Compose | 1 | – | C |
 | EPIC-001 | People & Organisation: directory, positions, org chart, privacy tiers, verification, delegation | 1 | 000 | C |
 | EPIC-002 | Work core: tasks/topshiriq, projects, list/board/timeline, quick-add, filter grammar, saved views, comments, attachments, labels, checklists | 1 | 001 | B |
 | EPIC-003 | Rituals: Friday pulse, health computation, Ijro nazorati queue, objectives | 1 | 002 | B |
@@ -505,7 +522,7 @@ and demo accounts `director@demo`, `head.sr@demo`, `spec.db@demo`, `hr@demo`, `a
 | EPIC-018 | Calendar sync (CalDAV/Graph), web push, ICS subscriptions | 2 | 004 | C |
 | EPIC-019 | Automations (5 triggers), recurring tasks, templates gallery | 2 | 002 | B |
 | EPIC-020 | Multi-ministry operations: tenant provisioning UI, instance admin, backups UI, k3s option | 2 | 012 | C |
-| EPIC-021 | State integrations: OneID broker, E-Imzo for official approvals (optional), ijro bridge | 3 | 020 | C |
+| EPIC-021 | State integrations (OneID, E-Imzo, ijro) — **dropped by decision 10** | – | – | – |
 | EPIC-022 | AI level 3: agent execution with preview/undo, anomaly flags, workload signals | 3 | 016 | C |
 | EPIC-023 | Decision intelligence: delivery confidence trend, dependency alerts, forecasts | 3 | 017 | B |
 | EPIC-024 | Cyrillic Uzbek locale, EGDI observatory for Strategy & Rankings | 3 | 013 | B |
@@ -548,16 +565,25 @@ notifications model and Telegram pointer policy; ADR-007 AI gateway routing by t
 editor storage (JSON, LWW, Yjs behind flag); ADR-009 canvas library; ADR-010 design tokens and
 per-tenant theming.
 
-## 19. Decisions needed from the product owner
+## 19. Decisions (answered by the CTO on 2026-09-05; frozen)
 
-1. Tenant grain (department vs ministry) and whether cross-unit visibility is default-open or default-closed.
-2. Hosting: ministry on-prem, UZINFOCOM/government cloud, or commercial Uzbek data centre.
-3. Identity: existing AD/LDAP to federate? OneID timeline?
-4. AI: which API/provider is available; may Internal-tier (non-personal) data be sent to it; is an
-   on-prem GPU host feasible for Restricted-tier features?
-5. Telegram: official bot acceptable; SMS fallback needed for staff without Telegram?
-6. Language default (uz Latin assumed) and whether Cyrillic Uzbek is needed in phase 1.
-7. Staffing table import source and who owns restricted HR fields.
-8. Certification timing for state information systems.
-9. Error tracking: Sentry self-hosted vs GlitchTip; calendar: FullCalendar vs Schedule-X (engineering picks if no preference).
-10. Working name "Devon" and any ministry brand constraints on colour and type.
+| # | Decision | Consequence in this spec |
+|---|---|---|
+| 1 | **AI = GLM (~300B) self-hosted on the ministry's GPU host.** No external API. | §9: single in-country provider for every tier; OpenAI-compatible endpoint through the AI SDK provider; embeddings model to be deployed alongside (bge-m3 proposed); Uzbek quality benchmarked in EPIC-011. |
+| 2 | **Hosting = ministry server (on-prem).** | §13: Docker Compose on the ministry box; GLM on the separate GPU host. |
+| 3 | **Tenant = department, one instance per ministry.** | §2: many department tenants in one deployment; ministry-wide directory of *public* profile fields, everything else department-scoped (default; see open point A). |
+| 4 | **Identity = built-in username/password with server sessions and optional 2FA. No OneID, no Keycloak.** | §2 rewritten: argon2id passwords, Postgres+Valkey sessions, HttpOnly cookies, CSRF, TOTP and Telegram-OTP as second factors, passkeys optional; OIDC-ready abstraction kept for the future. |
+| 5 | **Telegram bot approved** for notifications/reminders, one-tap approvals, RSVP, account linking, optional OTP. | §10 unchanged; OTP delivery added as an option. |
+| 6 | **Four locales, 100 % complete: uz-Latn (default), uz-Cyrl, ru, en.** | §0, §7: gate `i18n` enforces parity across four; Cyrillic generated by transliteration then human-reviewed. |
+| 7 | **No staffing table to import; the product ships a fully detailed demo mode (`--demo`).** | §14: `pnpm start --demo` / `DEVON_DEMO=1` seeds the complete demo ministry; production starts empty with an admin bootstrap wizard. |
+| 8 | **Palette B (navy-led, product-owned blue).** Real-world terminology to be researched from actual usage, not legal jargon. | `DESIGN.md` §2 switched to Palette B; terminology pass scheduled before UI copy is frozen (EPIC-000 deliverable). |
+| 9 | **The CTO maintains and directs.** | TypeScript stack stands; runbooks written for one operator. |
+| 10 | **No E-Imzo, no ijro.gov.uz, no OneID.** | EPIC-021 dropped; Phase 3 keeps only AI level 3, decision intelligence, Cyrillic/EGDI items. |
+
+### Open points remaining (small)
+
+A. Ministry-wide directory: may staff of one department see other departments' public profiles and
+   org charts by default? (Assumed yes for public fields.)
+B. GLM serving details: exact model/version, serving stack (vLLM/SGLang), context window, whether
+   function calling is enabled, and whether an embedding model exists or may be deployed.
+C. 2FA policy: optional per person, or mandatory for heads/HR/admins? (Assumed mandatory for those roles.)

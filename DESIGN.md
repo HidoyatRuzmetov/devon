@@ -8,41 +8,43 @@ Version 1.0, 2026-09-05. Binding for `wp-designer` (specs) and `wp-ui` (implemen
 ## 1. Identity in one paragraph
 
 Devon looks like a well-run institution's own instrument, not like the ministry's public portal and
-not like a startup. Warm paper surfaces, a deep forest primary inherited from the supervisor's
-prototype, one amber accent for "needs attention", a serif display face for headings and a humanist
-sans for everything else, small-caps eyebrows for section labels, 8-pt rhythm, restrained shadows,
-and the ministry's official navy reserved verbatim for a single official touchpoint (the header
-hairline and the "Raqamli texnologiyalar vazirligi tizimi" credit line). Flag colours never appear
-together as chrome. Dark mode is a real theme, not an inversion.
+not like a startup. Warm paper surfaces, Devon's own navy primary (in the government blue family but
+deliberately not the ministry's exact token), one amber accent for wayfinding and "needs attention",
+green kept strictly as the meaning of success, a serif display face for headings and a humanist sans
+for everything else, small-caps eyebrows for section labels, 8-pt rhythm, restrained shadows, and the
+ministry's official navy reserved verbatim for a single official touchpoint (the header hairline and
+the "Raqamli texnologiyalar vazirligi tizimi" credit line). Flag colours never appear together as
+chrome. Dark mode is a real theme, not an inversion.
 
 ## 2. Tokens (DTCG → CSS variables; Tailwind v4 `@theme`)
 
-Palette A ("Paper & Forest, Ministry Trim") from the identity research; OKLCH is the source of truth,
-hex is the exact conversion. Per-tenant overrides are limited to `--color-primary*`, `--color-sidebar*`,
-the logo and the display name, applied via `data-tenant` on `<html>`.
+Palette B ("Navy-led, product-owned blue") from the identity research, chosen by the CTO on
+2026-09-05. OKLCH is the source of truth; hex values marked ≈ are close conversions to be regenerated
+by Style Dictionary at build time. Per-tenant overrides are limited to `--color-primary*`,
+`--color-sidebar*`, the logo and the display name, applied via `data-tenant` on `<html>`.
 
 ### 2.1 Colour, light theme
 
 | Token | OKLCH | Hex | Role |
 |---|---|---|---|
-| `--color-background` | oklch(97% 0.008 88) | `#f7f5ef` | page (warm paper) |
-| `--color-foreground` | oklch(26% 0.020 160) | `#1c2721` | body text |
+| `--color-background` | oklch(97% 0.007 88) | `#f7f5f0` | page (warm paper) |
+| `--color-foreground` | oklch(24% 0.015 240) | `#192026` | body text |
 | `--color-card` | oklch(99% 0 0) | `#fcfcfc` | surfaces |
-| `--color-muted` | oklch(94% 0.008 90) | `#edebe5` | subtle fills, table stripes |
-| `--color-muted-foreground` | oklch(52% 0.012 150) | `#6b746e` | secondary text (≥ 4.5:1 on card) |
-| `--color-border` | oklch(90% 0.008 90) | `#e0ded8` | hairlines |
-| `--color-primary` | oklch(42% 0.060 165) | `#2a5745` | brand, primary buttons, links |
+| `--color-muted` | oklch(94% 0.006 90) | ≈`#ecebe6` | subtle fills, table stripes |
+| `--color-muted-foreground` | oklch(50% 0.015 245) | ≈`#5f6873` | secondary text (≥ 4.5:1 on card) |
+| `--color-border` | oklch(90% 0.006 90) | `#dfdeda` | hairlines |
+| `--color-primary` | oklch(40% 0.090 250) | `#1b4a76` | brand, primary buttons, links |
 | `--color-primary-foreground` | oklch(99% 0 0) | `#fcfcfc` | text on primary |
-| `--color-accent` | oklch(93% 0.020 165) | `#dcece4` | selected rows, hover fills |
-| `--color-ring` | oklch(63% 0.050 165) | `#6d9382` | focus ring (2 px, offset 2 px) |
+| `--color-accent` | oklch(93% 0.020 250) | ≈`#e2e9f3` | selected rows, hover fills |
+| `--color-ring` | oklch(62% 0.090 250) | ≈`#5f88b8` | focus ring (2 px, offset 2 px) |
 | `--color-attention` | oklch(74% 0.110 72) | `#d69f58` | amber: escalations, "needs your decision", active nav |
-| `--color-success` | oklch(55% 0.130 152) | `#22864a` | done, approved, on track |
+| `--color-success` | oklch(55% 0.130 152) | `#22864a` | done, approved, on track (semantic only) |
 | `--color-warning` | oklch(70% 0.120 70) | `#ce9042` | at risk, due soon |
 | `--color-destructive` | oklch(52% 0.150 27) | `#af3d36` | blocked, rejected, errors |
-| `--color-info` | oklch(55% 0.100 250) | `#3a6a9c` | planning, informational |
-| `--color-sidebar` | oklch(29% 0.035 172) | `#183129` | dark forest sidebar |
-| `--color-sidebar-foreground` | oklch(93% 0.010 160) | `#e8efeb` | sidebar text |
-| `--color-sidebar-accent` | oklch(35% 0.035 172) | `#25453a` | sidebar hover/active fill |
+| `--color-info` | oklch(55% 0.080 205) | ≈`#3a7d88` | planning, informational (teal, so it never competes with primary) |
+| `--color-sidebar` | oklch(22% 0.050 252) | `#071b31` | near-black navy sidebar |
+| `--color-sidebar-foreground` | oklch(93% 0.010 240) | ≈`#e7ebf0` | sidebar text |
+| `--color-sidebar-accent` | oklch(30% 0.050 252) | ≈`#173252` | sidebar hover/active fill |
 | `--color-official` | oklch(38% 0.143 258.6) | `#013d8c` | ministry navy, verbatim, header hairline + credit only |
 
 Status is never conveyed by colour alone: every status chip carries a label and, on boards, a
@@ -51,10 +53,10 @@ generated from OKLCH at L 60 % C 0.09, used only for avatars and unit chips.
 
 ### 2.2 Colour, dark theme
 
-Elevation is expressed by lightness tint, not shadow. `--color-background` oklch(18% 0.012 165),
-`--color-card` oklch(22% 0.012 165), `--color-muted` oklch(26% 0.012 165), `--color-border`
-oklch(32% 0.012 165), `--color-foreground` oklch(93% 0.010 160), `--color-primary` oklch(70% 0.080 165)
-(`#7fb59a`), `--color-accent` oklch(30% 0.030 165), sidebar oklch(14% 0.020 172). Semantic colours are
+Elevation is expressed by lightness tint, not shadow. `--color-background` oklch(18% 0.015 250),
+`--color-card` oklch(22% 0.015 250), `--color-muted` oklch(26% 0.015 250), `--color-border`
+oklch(32% 0.015 250), `--color-foreground` oklch(93% 0.010 240), `--color-primary` oklch(72% 0.090 250)
+(≈`#8db2e0`), `--color-accent` oklch(30% 0.040 250), sidebar oklch(13% 0.030 252). Semantic colours are
 re-tuned for contrast (success oklch(72% 0.130 152), warning oklch(80% 0.120 75), destructive
 oklch(70% 0.150 27), attention oklch(80% 0.110 72)). Contrast ≥ 4.5:1 body, ≥ 3:1 large/UI, both
 themes, verified by Storybook a11y addon.
@@ -138,8 +140,12 @@ matching final layout; nothing under 1 s, skeleton 1–10 s, progress bar beyond
 what to do, retry), No permission (what this is, who to ask), Success (toast with undo where
 reversible), Offline (banner + pending badge on queued writes). `wp-qa-visual` forces all six.
 
-## 5. Copy rules (uz default; ru and en complete)
+## 5. Copy rules (uz-Latn default; uz-Cyrl, ru and en complete)
 
+- Four locales, each 100 % complete; Cyrillic Uzbek generated by transliteration then reviewed by a
+  native reader; every term chosen from a terminology pass over *actually used* wording in Uzbek
+  ministries (job postings, ministry sites, HR forms), not statute language (EPIC-000 deliverable,
+  recorded in `packages/i18n/TERMS.md`).
 - Plain, formal-neutral register; imperative buttons in the polite form ("Yuborish", "Tasdiqlash",
   "Saqlash"); no jargon (never "sprint", "epic", "ticket"); numbers with locale separators; dates
   `DD.MM.YYYY`, times 24 h, `Asia/Tashkent`.
