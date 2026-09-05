@@ -8,18 +8,27 @@ additions are made by the human or via an ADR merged by `wp-release`.
 - I-1 Every row of tenant-owned data carries `tenant_id`, and every query is scoped by it, either through
   Postgres row-level security with `SET LOCAL app.tenant_id` or through the repository layer. No raw
   query bypasses it.
-- I-2 Personal data (date of birth, personal phone, home address, passport/PINFL, emergency contact,
-  documents) lives only in `restricted` fields and is never returned by list endpoints. Access is
-  logged with actor, subject, field, purpose.
+- I-2 The system stores no HR-grade personal data (no birth dates, IDs, addresses, documents). The
+  only private block is `people_private` (personal phone, emergency contact): never returned by list
+  endpoints, readable by self, the unit head and the workspace admin only, every read logged.
 - I-3 Deleting is soft by default. Hard deletes exist only in explicit retention jobs with an audit
-  record.
+  record. The audit log itself is never subject to retention.
 - I-4 IDs are stable, opaque, and never re-used. External systems get the same ID forever.
-- I-5 Every write to a domain object appends an event to the audit/event log in the same transaction.
+- I-5 Every write to a domain object appends an event to the audit log in the same transaction.
+- I-5a The audit log (`audit.events`) is immutable: the application database role holds INSERT and
+  SELECT only; UPDATE, DELETE and TRUNCATE are revoked and additionally blocked by a trigger; rows are
+  hash-chained and the chain head is anchored nightly outside the database. No code path, role or
+  migration may weaken this; a migration that touches the `audit` schema's grants is SEV1.
+- I-5b Every action by an instance role (`super_admin`, `ministry_viewer`) is audited with the role
+  recorded; super admin power is unlimited but never silent.
 
 ## Permissions
 - I-6 Authorisation happens on the server. The client only hides what it cannot use.
 - I-7 The permission check is centralised (`can(actor, action, object)`); no endpoint hand-rolls it.
 - I-8 A deputy acting for someone is recorded as `acting_for`; the audit log shows both identities.
+- I-8a Workspaces are private by default; nothing crosses a workspace boundary unless the workspace's
+  own admin switched visibility to `ministry`, a share exists, or the reader holds an instance role.
+  Only a `super_admin` can create or archive a workspace; the ministry view is read-only.
 
 ## Product
 - I-9 Every user-facing string goes through i18n with `uz` (Latin) as the default, `ru` and `en`

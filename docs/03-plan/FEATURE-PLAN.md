@@ -26,14 +26,17 @@ the country.
 
 **Phase 1, the first ninety days, is the whole department's daily life, working.** Home answers three
 questions for each role without a click: due from me, needs my decision, happening around me; the
-director's Home is a one-page weekly brief drafted from the Friday pulses. People has three name
-fields, positions from the staffing table with vacancies shown as dashed boxes, public/internal/
-restricted tiers with every restricted read logged, and a deputy switch for leave season. Work has
+head's Home is a one-page weekly brief drafted from the Friday pulses, and ministry leadership gets a
+read-only view across every workspace that opted in or that they are entitled to see. People has
+three name fields, the workspace's real structure (a *boshqarma* with its *bo'lims*, heads optional),
+vacancies shown as dashed boxes, a small private contact block whose reads are logged, and a deputy
+switch for the away season. Work has
 quick-add that reads "Nodira: EGDI dalillar paketi, juma", list, board and timeline over the same
 items, a filter line that is a shareable URL, the Friday pulse (one status, one sentence), and the
-*Ijro nazorati* queue that fills itself when a deadline slips. Requests does leave in three taps against
-the admin-editable holiday calendar, trips with an order number, and one-tap approval from the inbox or
-a Telegram button. Events has RSVP with capacity and waitlist, a date poll, a budget and a checklist,
+*Ijro nazorati* queue that fills itself when a deadline slips. There is no HR module: a person sets
+"away 12–19 October" in two taps and the head is told, and anything that needs someone's yes is a
+decision on a task, answered in one tap from the inbox or a Telegram button. Events has RSVP with
+capacity and waitlist, a date poll, a budget and a checklist,
 and feedback afterwards. Onboarding gives a newcomer a plan from a role template with items for them,
 their manager, HR, a buddy and IT, a reading list of "how we work" pages, and 30/60/90 check-ins. The
 first AI features ship inside these flows: quick-add parsing, translate on demand, a drafted Friday
@@ -85,19 +88,21 @@ teaching empty states and contextual hints replace them [zero-training-ux-and-on
 
 | Object | One line |
 |---|---|
-| Tenant | a department or ministry: theme, locale, holidays, quiet hours |
-| Unit, Position, Person | the org chart, the staffing table with vacancies, people with three names and three privacy tiers |
+| Instance | the ministry: one deployment, a super admin, a read-only ministry view |
+| Workspace | any unit that adopts the tool (boshqarma, departament, bo'lim…): private by default, theme, locale, holidays, quiet hours |
+| Unit, Position, Person | optional sub-units with optional heads, titles with vacancies, people with three names and one small private contact block |
+| Availability | "away from–to, why": a status that badges the person, tells the head, and prompts a deputy |
+| Decision | a yes/no asked of a named person on a task or event; one tap to answer; several make a concurrence |
 | Delegation | acting-for, time-boxed, logged twice |
 | Topshiriq / Task | assigner → assignee → due → report → closure; subtasks; checklists; labels; watchers |
 | Project | bundle of tasks with a weekly pulse and computed health; objectives at unit level |
 | Board / View | the same tasks as list, board, timeline, calendar; saved filter strings |
-| Request | leave, trip, remote, other; concurrence then approval; balance snapshot |
 | Event, Poll, Canvas | team life: RSVP with waitlist, date polls, retro boards with votes and a timer |
 | Page | lightweight blocks for onboarding, briefs, retro notes; assignable checklist items; versions |
 | OnboardingPlan / Item | a newcomer's 30/60/90 with items owned by newcomer, manager, HR, buddy, IT |
 | Notification | reason-tagged, pointer-only, digested, quiet-hours aware |
 | Kudos | attached to a finished task or an event, never a feed of its own |
-| AuditEvent, RestrictedRead, AITrace | the record of who did, saw, or generated what |
+| AuditEvent, PrivateRead, AITrace | the record of who did, saw, or generated what; the audit log is hash-chained and cannot be edited or deleted, even by the super admin |
 
 ---
 
@@ -107,8 +112,8 @@ teaching empty states and contextual hints replace them [zero-training-ux-and-on
 |---|---|---|---|
 | Home for each role; director's weekly brief | 1 / EPIC-010 | The only screen most people need | "I know what to do today" in 30 s |
 | "My work" and "Waiting on" queues | 1 / EPIC-010 | Personal view first; delegated work ages visibly | Overdue items I assigned appear without a filter |
-| Directory with script-tolerant search; privacy tiers; verification | 1 / EPIC-001 | Names in Latin/Cyrillic; legal tiers | "Нодира" finds Nodira |
-| Positions and org chart with vacancies; delegation | 1 / EPIC-001 | Directors care about vacancies; leave season | Dashed box = open post |
+| Directory with script-tolerant search; private contact block; verification | 1 / EPIC-001 | Names in Latin/Cyrillic; minimal personal data | "Нодира" finds Nodira |
+| Workspace structure (optional sub-units and heads), org chart with vacancies; availability status; delegation | 1 / EPIC-001 | Mirrors the ministry's real structure; away season | Dashed box = open post; "away" badge everywhere |
 | Tasks and topshiriq with chain of accountability | 1 / EPIC-002 | Culturally native primitive | Executor sees who asked and by when |
 | Quick-add in uz/ru/en | 1 / EPIC-002, AI in 011 | Kills the eight-field form | One line creates a correct item |
 | List, board, timeline over one dataset; keyboard drag | 1 / EPIC-002 | Views never lose data; accessible | Switching views keeps everything |
@@ -117,17 +122,17 @@ teaching empty states and contextual hints replace them [zero-training-ux-and-on
 | Friday pulse; computed health; Ijro nazorati queue; objectives | 1 / EPIC-003 | The ritual is the product; no green-until-crisis | Update in 20 s from the row |
 | Inbox with reasons; quiet hours; digests; ICS feeds | 1 / EPIC-004 | Trust in why I was pinged | Every notification says why |
 | Telegram bot: nudges, approvals, RSVP, deep links | 1 / EPIC-005 | Where the ministry lives | Approve without opening the portal |
-| Leave in three taps with balance and holidays; trips; concurrence then approval | 1 / EPIC-006 | Highest-frequency requests | Balance visible before submit |
+| Decisions on tasks (approve / return / decline), one tap from inbox or Telegram; away status with deputy prompt | 1 / EPIC-006 | The one approval primitive, no workflow engine | "Needs my decision" shows what to do |
 | Events with RSVP/waitlist, capacity, budget, checklist, feedback, date polls, photos | 1 / EPIC-007 | Team life, humane | RSVP in one tap |
 | Pages editor: templates, mentions, assignable checklist items, versions | 1 / EPIC-008 | Notion's onboarding pages, not its universe | `/` and `@` just work |
 | Onboarding plans by role; buddy; 30/60/90; reading list; progress | 1 / EPIC-009 | Newcomers become colleagues faster | Newcomer finds who to ask in 30 s |
 | AI level 1 (parse, translate, pulse draft, catch-up, briefing, duplicates, tags, digest ranking) | 1 / EPIC-011 | Fewer clicks, no privacy risk | Draft appears; human edits |
-| Admin: theme, holidays, roles, audit viewer, tenant provisioning, webhooks | 1 / EPIC-012 | Another department in an afternoon | Colour change without a deploy |
+| Super admin console, workspace creation, ministry read-only view, visibility switch, theme, holidays, roles, immutable audit viewer, webhooks | 1 / EPIC-012 | Another unit in an afternoon; nobody can rewrite history | Colour change without a deploy; audit chain verifies |
 | Hardening: a11y, i18n QA, performance, offline queue, release 1.0 | 1 / EPIC-013 | Production-grade, not MVP | axe 0 serious; Lighthouse ≥ 90 |
 | Telegram Mini App | 2 / EPIC-014 | Mobile without an app store | Approve from the phone in one tap |
 | Retro/brainstorm canvas with dot voting and timer (Excalidraw) | 2 / EPIC-015 | Miro's useful 10 % | Sticky note, vote, timer, done |
 | AI level 2 (semantic search, citations, meeting notes → tasks, retro summary, onboarding drafting, similar projects) | 2 / EPIC-016 | Real intelligence, still no chatbot by default | Every answer shows its source |
-| Capacity view, 1:1 notes, kudos on work, birthdays, skills matrix | 2 / EPIC-017 | Team management without surveillance | Overload visible before Friday |
+| Capacity view (derived), 1:1 notes, kudos on work, birthdays | 2 / EPIC-017 | Team management without surveillance | Overload visible before Friday |
 | Calendar sync, web push | 2 / EPIC-018 | Leave shows in Outlook | ICS link works |
 | Automations (five triggers), recurring tasks, templates gallery | 2 / EPIC-019 | Butler's safety, no engine sprawl | Fill-in-the-blank sentence rule |
 | Multi-ministry operations, restore drills, k3s option | 2 / EPIC-020 | The viral unit is the boring service | Sysadmin installs from README |
@@ -165,8 +170,10 @@ golden test set guards every feature and every model change in CI.
    and comment in place, and the name carries the authority.
 4. **Approve where you are**: inbox row or Telegram inline button; the record shows who decided and
    when; quiet hours respected unless the item is blocking.
-5. **Leave in three taps** with the balance and the holiday calendar visible.
-6. **Home answers three questions**; the director's Home is a one-pager.
+5. **Away in two taps**: dates and a reason; the head is told, a deputy is suggested, the badge shows
+   on every mention of the person until they are back.
+6. **Home answers three questions**; the head's Home is a one-pager; the Minister's view is the
+   whole ministry, read-only.
 7. **Search that forgives scripts and apostrophes.**
 8. **Undo, not "Are you sure?"**, with a progress bar in the toast.
 9. **Org chart that tells the truth**: dashed vacancies; click a unit for mandate, people, live projects.
@@ -181,6 +188,10 @@ golden test set guards every feature and every model change in CI.
 ## Non-goals and refusals
 
 - No office suite, document editing or correspondence registry (attachments and lightweight pages only).
+- No HR module: no leave balances, trip accounting, attestation, staffing-table administration, birth
+  dates or ID numbers. Availability is a status; approvals are decisions on tasks.
+- No workspace creation by anyone but the super admin; no editing by ministry leadership through the
+  ministry view; no deletion of audit history by anyone.
 - No chat app; Telegram exists. No native mobile app before the Mini App proves itself.
 - No custom-field or custom-workflow engine for users; automations capped at five trigger types.
 - No per-person KPIs, leaderboards, productivity scores, activity timestamps, 360 reviews, 9-box,
@@ -194,20 +205,23 @@ golden test set guards every feature and every model change in CI.
 
 ---
 
-## Decisions needed from the product owner (also TECH-SPEC §19)
+## Decisions taken (CTO, 2026-09-05; the full table is TECH-SPEC §19)
 
-1. Tenant grain (department vs ministry) and default cross-unit visibility.
-2. Hosting: ministry on-prem, UZINFOCOM/government cloud, or a commercial Uzbek data centre.
-3. Identity: existing AD/LDAP to federate; OneID timeline.
-4. AI: which API/provider you have; may non-personal (Internal-tier) text be sent to it; is an on-prem
-   GPU host feasible for Restricted-tier features.
-5. Telegram: an official department bot is acceptable; who lacks Telegram (SMS fallback).
-6. Language default (Uzbek Latin assumed); Cyrillic Uzbek in phase 1 or later.
-7. Staffing table import source; who owns restricted HR fields (ministry HR vs department).
-8. Certification timing for state information systems.
-9. Name "Devon" and any ministry brand constraints; Palette A (paper and forest with ministry trim)
-   vs B (navy-led) in `DESIGN.md`.
-10. Team after the agents ship it (TypeScript chosen for hiring reality).
+Self-hosted GLM-5.2 on the government GPU cluster, no external AI; ministry on-prem hosting;
+built-in login with optional 2FA, no OneID or Keycloak; four complete locales (uz-Latn default,
+uz-Cyrl, ru, en); no data import, a fully detailed `--demo` mode; Palette B; no state integrations;
+the CTO directs and maintains.
+
+**How the hierarchy works, in plain words.** The ministry is the instance. Any unit that wants the
+tool, a *boshqarma*, a *departament* or a single *bo'lim*, gets its own workspace, created only by the
+super admin, and runs it itself through a workspace admin; inside, sub-units and heads are optional,
+so a flat team of eight and a directorate with four divisions use the same product. Workspaces are
+private by default and can be opened to the ministry by their own admin. Ministry leadership sees
+everything through a read-only ministry view and instructs through its own workspace's tasks, never
+by editing someone else's. There is exactly one place where structure is created and exactly one
+role that can do it, which is how it stays neither strict nor loose. This model was taken from the
+ministry's own structure page, where the reference department appears as "Axborot-tahlil va ijro
+intizomi boshqarmasi" with two *bo'lims* under it, reporting straight to the Minister.
 
 ## Why this is not generic
 

@@ -35,7 +35,7 @@
     },
     {
       "id": "EPIC-001",
-      "title": "People & Organisation: directory, positions/staffing table, org chart, privacy tiers, quarterly verification, delegation",
+      "title": "People & Organisation: directory, workspace structure (optional sub-units and heads), positions with vacancies, org chart, private contact block, availability status, delegation",
       "status": "ready",
       "priority": 10,
       "phase": 1,
@@ -52,10 +52,11 @@
         "admin"
       ],
       "outcomes": [
-        "A specialist finds any colleague by Latin or Cyrillic name in under 3 seconds and sees work contacts",
-        "HR sees restricted fields with a logged purpose; a specialist cannot, even via list/search/export",
-        "The org chart shows vacancies as dashed boxes and units with mandates",
-        "A head sets a deputy for a date range; the deputy acts \"on behalf of\" in the audit log"
+        "A member finds any colleague in the workspace by Latin or Cyrillic name in under 3 seconds and sees work contacts",
+        "The personal phone / emergency contact block is visible only to self, the unit head and the workspace admin, and each read is logged",
+        "The org chart shows the workspace as the ministry structure page describes it (boshqarma/bo'lim wording), with vacancies dashed and heads optional",
+        "A person sets \"away 12–19 Oct, vacation\" in two taps; the head is notified and a deputy can be named; the away badge shows everywhere",
+        "A sibling workspace sees nothing unless the admin switches visibility to ministry"
       ],
       "has_ui": true,
       "class_hint": "C",
@@ -195,7 +196,7 @@
     },
     {
       "id": "EPIC-006",
-      "title": "Requests: leave with balances and holiday calendar, business trips with order numbers, generic requests; concurrence then approval; inbox one-tap",
+      "title": "Availability & decisions: away status with auto-delegation prompt, the decision primitive on tasks, one-tap decide from inbox and Telegram",
       "status": "ready",
       "priority": 60,
       "phase": 1,
@@ -212,18 +213,18 @@
         "admin"
       ],
       "outcomes": [
-        "A specialist requests leave in three taps and sees the remaining balance before submitting",
-        "Weekends and the admin-editable 2026 holiday calendar are excluded from leave day counts",
-        "A trip request gets TRIP-2026-NNN and a concurrence step before final approval",
-        "A head approves from the inbox; the requester is notified within a minute"
+        "A task can ask a named person for a decision; it appears in their \"needs my decision\" queue, inbox and Telegram",
+        "The person approves, returns with a comment or declines in one tap; the task records who, when and on whose behalf",
+        "Several decisions on one task express concurrence without a workflow engine",
+        "Holidays and weekends are excluded when deadlines are set with relative dates"
       ],
       "has_ui": true,
-      "class_hint": "C",
+      "class_hint": "B",
       "evidence": [
         "TECH-SPEC.md §3.3"
       ],
       "value": "H",
-      "complexity": "H"
+      "complexity": "M"
     },
     {
       "id": "EPIC-007",
@@ -341,8 +342,8 @@
         "admin"
       ],
       "outcomes": [
-        "Home answers due-from-me / needs-my-decision / around-me without a click for each persona",
-        "The director's Home is a one-page weekly brief composed from pulses with a human edit step",
+        "Home answers due-from-me / needs-my-decision / around-me without a click for each role",
+        "The head's Home is a one-page weekly brief composed from pulses with a human edit step; the ministry view rolls up workspaces read-only",
         "Search finds \"Nodira\", \"Нодира\", \"Gʻ\" and \"G'\" spellings",
         "Waiting on lists items I assigned that are overdue or unreported"
       ],
@@ -388,7 +389,7 @@
     },
     {
       "id": "EPIC-012",
-      "title": "Admin & tenant provisioning: settings, theme tokens, holidays, roles, audit viewer, API keys/webhooks",
+      "title": "Instance & workspace admin: super admin console, workspace creation, ministry read-only view, visibility switch, theme, holidays, roles, immutable audit viewer with chain verification, API keys/webhooks",
       "status": "ready",
       "priority": 120,
       "phase": 1,
@@ -405,10 +406,11 @@
         "admin"
       ],
       "outcomes": [
-        "An admin changes the tenant colour, logo and holiday calendar without a deploy",
-        "The audit viewer answers \"who saw X's restricted fields\" in one query",
-        "A new department tenant is provisioned by one form (Keycloak organisation + seed)",
-        "Webhooks deliver signed events with retries"
+        "Only the super admin can create a workspace (choosing its unit type from the ministry vocabulary) and its first admin; the action is audited",
+        "A ministry_viewer sees every workspace read-only from a ministry Home (pulses, escalations, headcount) and cannot edit anything",
+        "The audit viewer answers \"who changed X\" and \"who looked at Y's private block\", and a verify button re-computes the hash chain and reports the last anchored head",
+        "No endpoint, role or migration can update or delete audit rows; the database refuses at the grant and trigger level (tested in CI)",
+        "A workspace admin changes colour, logo, holidays and roles without a deploy"
       ],
       "has_ui": true,
       "class_hint": "C",
@@ -552,7 +554,7 @@
     },
     {
       "id": "EPIC-017",
-      "title": "Team management extras: capacity view (person × week), 1:1 notes, kudos attached to work, birthdays, skills matrix",
+      "title": "Team extras: capacity as a derived person × week view, 1:1 notes, kudos on finished work, birthdays",
       "status": "draft",
       "priority": 170,
       "phase": 2,
@@ -569,8 +571,8 @@
         "admin"
       ],
       "outcomes": [
-        "A head sees overload before Friday in a person × week view",
-        "Kudos attach to a task or event; birthdays appear quietly on Home"
+        "A head sees overload before Friday in a person × week view derived from assignments",
+        "Kudos attach to a finished task or an event; birthdays appear quietly on Home (opt-in)"
       ],
       "has_ui": true,
       "class_hint": "B",

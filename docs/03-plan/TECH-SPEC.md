@@ -8,15 +8,19 @@ marked **[DECISION NEEDED]** and repeated in §19.
 
 ## 0. Scope, personas, non-functional targets
 
-**What it is.** An internal team and work tracking platform for a department of the Ministry of Digital
-Technologies of Uzbekistan, multi-tenant so other departments and ministries can adopt it. Modules:
-Home, People & Organisation, Work (tasks, projects, boards, timeline), Requests (leave, trips, other),
-Events & Team building, Onboarding, Inbox, Admin. Plus a Telegram bot (phase 1) and Mini App (phase 2),
-and an AI layer that removes clicks rather than chatting.
+**What it is.** An internal team and work tracking platform for the units of the Ministry of Digital
+Technologies of Uzbekistan (a directorate, department or division adopts it as its own workspace),
+multi-tenant so any unit, and later any ministry, can adopt it. Modules: Home, People & Organisation
+(directory, structure, availability), Work (tasks, projects, boards, timeline, decisions), Events &
+Team building, Onboarding, Inbox, Admin. Plus a Telegram bot (phase 1) and Mini App (phase 2), and an
+AI layer that removes clicks rather than chatting.
 
-**What it is not.** Not an office suite, not a document-management or correspondence-registry system,
-not a chat app, not an HRIS payroll system. Pages exist for onboarding, briefs and retro notes only
-(lightweight block editor); files are attachments, not a drive.
+**What it is not (decisions 10–13).** Not an office suite, not a document-management or
+correspondence-registry system, not a chat app, and **not an HR system**: no leave balances, trip
+accounting, attestation or staffing-table administration; HR departments track their own work in
+their own workspace like everyone else. Availability is a status a person sets ("ta'tilda 12–19 okt"),
+not a process. Pages exist for onboarding, briefs and retro notes only (lightweight block editor);
+files are attachments, not a drive.
 
 **Personas.** Specialist (most users), head of sub-department, director, HR/administrator, tenant admin
 (sysadmin in another ministry), newcomer (first 90 days).
@@ -100,9 +104,25 @@ docs/               reference, research, plan, escalations, ADRs
 
 ## 2. Tenancy, identity and sessions
 
-- **Tenant = department; one instance per ministry** (decision 3). A ministry-wide directory exposes
-  only public profile fields and the org chart across tenants (open point A); everything else is
-  department-scoped. Every tenant-owned table carries `tenant_id`; Postgres RLS is the single
+- **Instance = ministry; workspace (tenant) = any unit that adopts the tool** (decisions 3, 11): a
+  *boshqarma* (directorate), *departament*, *bo'lim* (division) or a subordinate organisation. The
+  tenant record carries `unit_type` from the ministry's own vocabulary (see §3.1) so the UI never says
+  "department" generically. Inside a workspace, sub-units are optional and may or may not have a head:
+  a flat workspace of 8 people works exactly like a directorate with four divisions.
+- **Who creates what.** Only the instance **super admin** creates a workspace (and its first
+  workspace admin); nobody else, including ministry leadership, creates or deletes workspaces. The
+  workspace admin (normally the unit head or a person they name) manages everything inside: people,
+  sub-units, projects, settings. Workspaces are `private` by default (siblings see nothing) and can be
+  switched by their admin to `ministry` visibility (siblings see the public profile fields, the org
+  chart and the project list, read-only).
+- **Ministry view.** People with the instance role `ministry_viewer` (the Minister, deputies,
+  advisors, the Board secretariat) see every workspace **read-only**, regardless of its visibility,
+  through a ministry-level Home that lists workspaces, their weekly pulse and escalations. They do not
+  edit, assign or configure anything; if they want to instruct, they do it through their own
+  workspace's tasks. Every ministry-view read is audited like any other.
+- **Super admin.** At least one instance-level `super_admin` exists (the CTO's operations role): full
+  read and write everywhere, every action written to the immutable audit log with `actor_role =
+  super_admin`, no way to disable that logging. Every tenant-owned table carries `tenant_id`; Postgres RLS is the single
   enforcement point, predicates written as `(select current_setting('app.tenant_id', true))::uuid` so
   Postgres evaluates them once per query [tech-backend-stack-deep-dive §2].
 - **Transaction wrapper** sets context with bound parameters:
@@ -113,8 +133,8 @@ docs/               reference, research, plan, escalations, ADRs
   cookie; sliding expiry (12 h idle, 30 d absolute), device list with "sign out everywhere"; CSRF
   double-submit token; login rate limits and lockout with audit; password policy (length ≥ 12, breach
   list check, no composition rules); admin-issued first passwords with forced change; second factor
-  per tenant policy: TOTP (otplib) or a Telegram-delivered OTP, passkeys optional (SimpleWebAuthn);
-  mandatory 2FA for head/HR/admin roles (assumed, open point C). The auth module sits behind an
+  optional for everyone (decision 13): TOTP (otplib) or a Telegram-delivered code, passkeys optional
+  (SimpleWebAuthn), recommended in Settings and never forced. The auth module sits behind an
   `IdentityProvider` interface so OIDC/SSO can be added later without touching the rest of the app.
   No Keycloak, no OneID [auth-permissions-security-compliance for the threat model].
 - **Telegram link**: `initData` HMAC validation for the Mini App; Login Widget for linking a Telegram
@@ -135,14 +155,27 @@ in the language typed. Names use three fields. Timestamps UTC, displayed in `Asi
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `tenants` | slug, name, locale_default, timezone, theme jsonb, quiet_hours jsonb, settings jsonb | theme = token overrides (`data-tenant`) |
-| `units` | parent_unit_id, name jsonb, mandate jsonb, head_position_id, sort | hierarchy; `unit_closure(ancestor_id, descendant_id, depth)` maintained by trigger for cheap "is X under Y" |
-| `positions` | unit_id, title jsonb, grade, holder_person_id null, reports_to_position_id, sort, is_vacant generated | the staffing table (shtat); dashed boxes on the org chart |
-| `people` | user_sub (Keycloak), given_name, patronymic, family_name, display_name generated, work_email, work_phone, unit_id, position_id, start_date, status, avatar_key, locale, skills text[], education jsonb, bio, birthday_month_day (public opt-in) | **Public + Internal** tiers |
-| `people_restricted` | person_id PK, birth_date, personal_phone, home_address, pinfl_enc, emergency_contact jsonb, documents jsonb | **Restricted** tier; separate table, separate RLS policy, every read via `read_restricted(person_id, fields[], purpose)` which logs to `restricted_reads` |
-| `person_roles` | person_id, role enum(director, head, specialist, hr, admin), scope_unit_id null | hierarchical RBAC mirrors the org chart |
-| `delegations` | principal_person_id, delegate_person_id, starts_at, ends_at, scope enum(all, approvals, work), reason | acting-for; audit stores both identities |
-| `holidays` | date, name jsonb, kind enum(holiday, moved_weekend, moved_workday) | admin-editable per tenant, seeded from decree PF-257 for 2026 |
+| `instances` | name jsonb, settings jsonb | the ministry; exactly one row per deployment |
+| `instance_roles` | user_id, role enum(super_admin, ministry_viewer) | instance-level roles; every action by these roles is audited with the role |
+| `tenants` (workspaces) | slug, name jsonb, unit_type enum(vazirlik, boshqarma, departament, bo'lim, sektor, xizmat, markaz, tashkilot), parent_label jsonb (e.g. "Vazirning birinchi o'rinbosari"), visibility enum(private, ministry), locale_default, timezone, theme jsonb, quiet_hours jsonb, settings jsonb, created_by (super admin) | one row per adopting unit; `unit_type` words come from the ministry's own structure page |
+| `units` | tenant_id, parent_unit_id null, unit_type enum(bo'lim, sektor, guruh), name jsonb, mandate jsonb, head_person_id null, sort | optional sub-units; a head is optional; `unit_closure` maintained by trigger |
+| `positions` | tenant_id, unit_id null, title jsonb, holder_person_id null, sort, is_vacant generated | lightweight: a title and whether it is filled, so the org chart can show vacancies; no grades, no HR administration |
+| `people` | user_id, given_name, patronymic, family_name, display_name generated, work_email, work_phone, unit_id null, position_id null, title_free text, start_date, status enum(active, inactive), avatar_key, locale, skills text[], bio, birthday_month_day (opt-in), telegram_user_id, private_note text | **public within the workspace** except `birthday_month_day` (opt-in) and the small `private` group below |
+| `people_private` | person_id PK, personal_phone, emergency_contact text | visible to self, the person's unit head, the workspace admin; read logged. No birth dates, IDs, addresses or documents anywhere in the system |
+| `person_roles` | person_id, role enum(workspace_admin, head, member), scope_unit_id null | `head` scoped to a unit or to the whole workspace; a workspace works with zero heads (admin + members) |
+| `delegations` | principal_person_id, delegate_person_id, starts_at, ends_at, reason | acting-for while away; audit stores both identities |
+| `availability` | person_id, kind enum(vacation, trip, sick, remote, training, other), starts_on, ends_on, note, acknowledged_by null | a status, not a request: sets the "away" badge, auto-delegation prompt, and the head is notified; no balances |
+| `holidays` | tenant_id null (instance-wide) or tenant, date, name jsonb, kind enum(holiday, moved_weekend, moved_workday) | admin-editable, seeded from decree PF-257 for 2026; used for deadlines and events |
+
+Unit and title vocabulary as actually used on the ministry's structure page (digital.uz/oz/structure,
+read 2026-09-05): *Vazir*, *Hay'at*, *Vazirning birinchi o'rinbosari*, *Vazir o'rinbosari*, *Vazir
+maslahatchisi*, *boshqarma* (directorate, e.g. "Axborot-tahlil va ijro intizomi boshqarmasi"),
+*departament* (e.g. "Sun'iy intellekt texnologiyalarini rivojlantirish departamenti"), *bo'lim*
+(division, e.g. "Nazorat va ijro intizomi bo'limi", "Murojaatlar bo'limi"), *xizmat* (service, e.g.
+"Axborot xizmati"), *bosh mutaxassis* (a standalone chief-specialist position). Titles of heads and
+specialists (boshqarma boshlig'i, bo'lim boshlig'i, bosh mutaxassis, yetakchi mutaxassis, 1-toifali
+mutaxassis, mutaxassis) are confirmed in the EPIC-000 terminology pass and stored in
+`packages/i18n/TERMS.md`.
 
 ### 3.2 Work
 
@@ -168,17 +201,19 @@ State machines (enforced in the service layer, tested):
 - project.health: computed = late if target_date passed and status ≠ done; blocked if last pulse blocked or
   any escalated topshiriq; at_risk if last pulse at_risk or no pulse for 2 weeks; else on_track.
 
-### 3.3 Requests and leave
+### 3.3 Decisions (the one approval primitive)
+
+There is no requests module (decision 12). Anything that needs someone's yes/no is a **decision** on
+a task: a task (or checklist item) can carry `decision_needed_from = person`, which puts it in that
+person's "needs my decision" queue, in the inbox, and on Telegram as an inline button. The decision
+(`approve` / `return with comment` / `decline`) is recorded on the task with actor, acting-for and
+timestamp, and the task moves on. This covers "sign off this report", "agree to this plan",
+"confirm the event budget" without a workflow engine. Multi-party concurrence is simply several
+decision checklist items on the same task.
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `requests` | type enum(leave, trip, remote, other), requester_person_id, payload jsonb, state enum(draft, submitted, concurrence, approved, rejected, cancelled), current_step smallint, steps jsonb (ordered approvers by role/person), decisions jsonb[] ({person, on_behalf_of, decision, comment, at}), balance_snapshot jsonb | concurrence (kelishish) steps precede final approval (tasdiqlash) [uzbekistan-context] |
-| `leave_types` | code, name jsonb, paid bool, requires_balance bool, max_days | annual (21+ days, Labour Code art. 217), sick, unpaid, study |
-| `leave_balances` | person_id, year, entitlement_days, used_days, carried_over_days | balance shown before submit |
-| `request_templates` | type, steps jsonb by role, required fields | per tenant |
-
-Trips (xizmat safari) carry destination, dates, purpose, a generated order number `TRIP-YYYY-NNN`
-(administrative convenience, not a correspondence registry).
+| `decisions` | subject_type enum(task, checklist_item, event), subject_id, requested_from_person_id, requested_by_person_id, state enum(pending, approved, returned, declined), comment, decided_at, acting_for_person_id | one row per ask; a task shows its open decisions as chips |
 
 ### 3.4 Events and culture
 
@@ -208,8 +243,8 @@ Trips (xizmat safari) carry destination, dates, purpose, a generated order numbe
 | `notifications` | person_id, type, reason enum(assigned, mentioned, subscribed, escalated, decision, digest, reminder), subject_type/id, title jsonb, read_at, archived_at | inbox-first; payload is a pointer, never restricted data |
 | `notification_prefs` | person_id, channel enum(inapp, telegram, email, push), type, enabled, digest_mode | quiet hours are tenant-level server defaults (20:00–08:00 + weekends) with per-person override only to *more* quiet |
 | `notification_deliveries` | notification_id, channel, status, provider_message_id, attempts, last_error | audit trail of delivery |
-| `audit_events` | actor_person_id, acting_for_person_id, action, subject_type/id, before jsonb, after jsonb, ip, user_agent, request_id, at | append-only (no UPDATE/DELETE grants); written in the same transaction as the change via outbox |
-| `restricted_reads` | actor_person_id, subject_person_id, fields text[], purpose, at | who saw what |
+| `audit.events` | seq bigserial, tenant_id null, actor_user_id, actor_role, acting_for_person_id, action, subject_type/id, before jsonb, after jsonb, ip, user_agent, request_id, at, prev_hash, row_hash | **immutable** (decision 14): lives in its own `audit` schema; the application role has INSERT and SELECT only, UPDATE/DELETE/TRUNCATE are revoked at the database level and a trigger raises on any attempt; each row hashes its content plus the previous row's hash (SHA-256), and a nightly job writes the chain head to an append-only file on a separate volume and to the super admin's Telegram, so even a database superuser cannot rewrite history undetected; no retention sweep ever touches it; export only |
+| `audit.private_reads` | actor_user_id, subject_person_id, at | who looked at someone's private contact block |
 | `outbox` | event_type, payload jsonb, published_at null | worker publishes to notifications, webhooks, Centrifugo |
 | `ai_traces` | feature, tier, provider, model, prompt_hash, input_tokens, output_tokens, cost_micro, latency_ms, subject, accepted bool | governance and budget |
 | `webhooks` / `api_keys` | tenant, url, secret, events[], last_delivery | integrations for other ministries |
@@ -248,18 +283,23 @@ Trips (xizmat safari) carry destination, dates, purpose, a generated order numbe
 
 ## 5. Authorisation
 
-- **Roles** (per tenant, scoped by unit through the closure table): `director` (all units), `head`
-  (own unit subtree), `specialist` (self + own unit read), `hr` (people restricted tier, requests of leave
-  type), `admin` (tenant settings, no restricted reads by default). Named after job functions, never
-  scopes [auth-permissions-security-compliance].
+- **Five roles, two levels** (decision 11):
+  instance `super_admin` (everything, always logged), instance `ministry_viewer` (read-only across
+  all workspaces); workspace `workspace_admin` (people, units, settings, projects), `head` (of a unit
+  or of the workspace: sees the unit's work, receives escalations and decisions, acknowledges
+  availability), `member` (own work, own unit's boards and projects, the workspace directory).
+  A person can be `head` of one unit and `member` elsewhere. There is no HR role.
 - **`can(actor, action, subject)`**: CASL ability definitions in `packages/contracts` (reused by the
   client for optimistic UI), translated to SQL predicates in the repository layer; RLS is the backstop.
-- **Object shares**: `shares(subject_type, subject_id, grantee_person_id|unit_id, level enum(view, edit))`
-  for the rare cross-unit project; the UI always shows *effective* access, most-restrictive-wins for
-  People tiers [notion-model-and-block-editors].
-- **Field tiers**: Public (name, position, unit, work contacts, skills), Internal (birthday month/day
-  opt-in, availability, workload), Restricted (`people_restricted`). List endpoints never return
-  Restricted; detail endpoints require `purpose` and log.
+- **Cross-workspace visibility**: `tenants.visibility = private` (default) hides everything from
+  sibling workspaces; `ministry` exposes public profile fields, the org chart and project titles
+  read-only. `ministry_viewer` and `super_admin` see all workspaces regardless.
+- **Object shares**: `shares(subject_type, subject_id, grantee_person_id|unit_id|tenant_id, level
+  enum(view, edit))` for the occasional joint project between workspaces; the UI always shows
+  *effective* access.
+- **Field visibility**: everything on a profile is visible within the workspace except the opt-in
+  birthday and the `people_private` block (personal phone, emergency contact), which self, the unit
+  head and the workspace admin can read, with the read logged.
 - **Delegation**: a delegate's request carries `acting_for`; `can()` evaluates the principal's abilities
   within the delegation scope and window; audit records both.
 
@@ -365,17 +405,28 @@ complexity, never changes a privacy tier, and never writes the record of truth w
 [ai-features-and-assistants].
 
 **Gateway** (`packages/ai`): `run({feature, tier, input, schema?, tools?, budget})`.
-- Provider (decision 1): one in-country model, GLM (~300B) on the ministry's GPU host, exposed as an
-  OpenAI-compatible endpoint (vLLM or SGLang) and consumed through the AI SDK's openai-compatible
-  provider; every tier may use it because data never leaves the ministry. Tier routing remains in the
-  gateway (so a second provider can be added later), plus a per-tenant "AI enabled" switch and budget.
-  Embeddings from a small in-country model (bge-m3 proposed; multilingual incl. Uzbek/Russian) served
-  on the same host.
-- Mechanics: JSON-schema tool calls for extraction (GLM function calling; validated with Zod and
-  retried once on schema failure); prefix caching of the stable workspace context where the serving
-  stack supports it; batched nightly jobs for digests via pg-boss; streaming for drafts; pinned model
-  build id recorded in every `ai_traces` row. Uzbek Latin/Cyrillic and Russian quality is benchmarked
-  with a golden set in EPIC-011 before any feature is enabled by default.
+- Provider (decision 1, details in `docs/03-plan/integrations/glm-api-instruction.md`): the
+  government GPU cluster's OpenAI-compatible API, base URL `https://api-llm.gpu.uz/v1`, model
+  **`glm-5.2`**, bearer key from `AI_API_KEY` (never in the repo; the instruction file is stored with
+  its key fields blank). Facts that shape the code: 256 000-token context (input + output + tool
+  definitions + reasoning); the model **always reasons first** and spends 200–500 tokens of
+  `max_tokens` on it, returning the reasoning in `message.reasoning_content`, so every call sets
+  `max_tokens ≥ 1024` (2048+ for extraction with long inputs) and treats empty `content` with
+  `finish_reason: "length"` as a retry with a larger budget; tool calling in the standard OpenAI
+  format (`tools`, `tool_choice`, `message.tool_calls`); streaming supported; billed per token in UZS
+  (19 500 UZS per million, input and output alike), which the gateway records per call and rolls up
+  into a per-workspace monthly budget with a soft cap and an admin alert. The endpoint sits on the
+  INHA cluster inside Uzbekistan, so every data tier may use it; the gateway still keeps a provider
+  abstraction (AI SDK 7 openai-compatible provider) and a tier switch so a second model can be added.
+  Embeddings are not offered by this API: a small in-country embedding model (bge-m3 proposed) is
+  deployed next to the app for search and duplicate detection, or those two features stay
+  FTS/trigram-only until it exists.
+- Mechanics: JSON-schema tool calls for extraction (validated with Zod, retried once with the error
+  fed back); history trimming and a stable, short workspace-context block to stay well inside the
+  context limit; batched nightly digests via pg-boss; streaming for drafts; `reasoning_content`
+  never shown to users and never stored beyond the trace; pinned model id recorded in every
+  `ai_traces` row. Uzbek Latin/Cyrillic and Russian quality is benchmarked with a golden set in
+  EPIC-011 before any feature is enabled by default.
 - Safety: permission-aware retrieval (embeddings live on RLS-protected rows; retrieval runs as the
   user); prompt-injection defences (content is data, tools are allow-listed per feature, no feature has
   both restricted-read and external-send); citations mandatory for any answer about policy/HR; every
@@ -507,18 +558,18 @@ and demo accounts `director@demo`, `head.sr@demo`, `spec.db@demo`, `hr@demo`, `a
 | EPIC-003 | Rituals: Friday pulse, health computation, Ijro nazorati queue, objectives | 1 | 002 | B |
 | EPIC-004 | Inbox & notifications: event bus, preferences, quiet hours, digests, email, ICS | 1 | 002 | B |
 | EPIC-005 | Telegram bot: link, nudges, approvals, RSVP, deep links | 1 | 004 | C |
-| EPIC-006 | Requests: leave with balances + holiday calendar, trips, generic; concurrence/approval; inbox one-tap | 1 | 004 | C |
+| EPIC-006 | Availability & decisions: away status with auto-delegation prompt, the decision primitive on tasks, one-tap decide from inbox and Telegram | 1 | 004 | B |
 | EPIC-007 | Events & team building: events, RSVP/waitlist, checklist, budget, feedback, date polls, photos | 1 | 004 | B |
 | EPIC-008 | Pages editor: Tiptap, templates, mentions, assignable checklist items, versions | 1 | 002 | B |
 | EPIC-009 | Onboarding: templates, plans, items by role, buddy, "how we work" pages, progress, 30/60/90 | 1 | 008 | B |
 | EPIC-010 | Home & director brief, search (FTS + normalize_uz), "My work", "Waiting on" | 1 | 003, 006 | B |
 | EPIC-011 | AI level 1: gateway, quick-add parse, translate, pulse draft, catch-up, briefing, duplicates, tags, digest ranking | 1 | 010 | C |
-| EPIC-012 | Admin & tenant provisioning: settings, theme, holidays, roles, audit viewer, API keys/webhooks | 1 | 001 | C |
+| EPIC-012 | Instance & workspace admin: super admin console, workspace creation, ministry view (read-only), visibility switch, theme, holidays, roles, immutable audit viewer with chain verification, API keys/webhooks | 1 | 001 | C |
 | EPIC-013 | Hardening: a11y, i18n QA, performance, offline queue, error states, release 1.0 | 1 | 003–012 | B |
 | EPIC-014 | Telegram Mini App | 2 | 005, 013 | C |
 | EPIC-015 | Canvas (retro/brainstorm), voting, timer | 2 | 008 | B |
 | EPIC-016 | AI level 2: semantic search, ask with citations, meeting notes → tasks, retro summary, onboarding drafting | 2 | 011, 015 | C |
-| EPIC-017 | Team management extras: capacity view, 1:1 notes, kudos, birthdays, skills matrix | 2 | 010 | B |
+| EPIC-017 | Team extras: capacity as a derived person × week view, 1:1 notes, kudos on finished work, birthdays | 2 | 010 | B |
 | EPIC-018 | Calendar sync (CalDAV/Graph), web push, ICS subscriptions | 2 | 004 | C |
 | EPIC-019 | Automations (5 triggers), recurring tasks, templates gallery | 2 | 002 | B |
 | EPIC-020 | Multi-ministry operations: tenant provisioning UI, instance admin, backups UI, k3s option | 2 | 012 | C |
@@ -580,10 +631,10 @@ per-tenant theming.
 | 9 | **The CTO maintains and directs.** | TypeScript stack stands; runbooks written for one operator. |
 | 10 | **No E-Imzo, no ijro.gov.uz, no OneID.** | EPIC-021 dropped; Phase 3 keeps only AI level 3, decision intelligence, Cyrillic/EGDI items. |
 
-### Open points remaining (small)
+| 11 | **Hierarchy = instance (ministry) → workspaces (any unit: boshqarma / departament / bo'lim) → optional sub-units with optional heads.** Workspaces private by default with a `ministry` visibility switch; ministry leadership gets a read-only ministry view; only the super admin creates workspaces; workspace admins run everything inside. | §2, §3.1, §5 rewritten; modelled on the ministry's structure page (digital.uz/oz/structure). |
+| 12 | **No HR module.** Availability is a status; decisions are a primitive on tasks; no leave balances, trips, attestation, restricted HR records. | §3.3 rewritten; `people_restricted` removed; EPIC-006 re-scoped. |
+| 13 | **2FA optional for everyone** (TOTP or Telegram code), recommended in settings, never forced. | §2. |
+| 14 | **At least one super admin; an audit log that cannot be deleted after production.** | §3.6: `audit` schema, INSERT/SELECT-only role, hash chain, nightly anchor to a separate volume and Telegram, no retention sweep. |
+| 15 | **GLM-5.2 at `https://api-llm.gpu.uz/v1`** (256k context, reasoning-first, tool calling, UZS billing). | §9; instruction file saved at `docs/03-plan/integrations/glm-api-instruction.md` with key fields blank. |
 
-A. Ministry-wide directory: may staff of one department see other departments' public profiles and
-   org charts by default? (Assumed yes for public fields.)
-B. GLM serving details: exact model/version, serving stack (vLLM/SGLang), context window, whether
-   function calling is enabled, and whether an embedding model exists or may be deployed.
-C. 2FA policy: optional per person, or mandatory for heads/HR/admins? (Assumed mandatory for those roles.)
+No open points remain that block the build.
