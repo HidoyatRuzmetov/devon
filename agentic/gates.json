@@ -8,14 +8,14 @@
     "coverage_lines_min": 70,
     "bundle_main_kb_max": 350,
     "a11y_blocking_impacts": ["serious", "critical"],
-    "locales": ["uz", "ru", "en"],
+    "locales": ["uz-Latn", "uz-Cyrl", "ru", "en"],
     "screenshot_widths": [1440, 1024, 390]
   },
   "profiles": {
     "fast": ["typecheck", "lint", "unit", "i18n", "secrets"],
     "item": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "e2e-smoke"],
-    "integration": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle"],
-    "release": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "deps"]
+    "integration": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security"],
+    "release": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security", "perf", "deps"]
   },
   "gates": {
     "typecheck": { "cmd": "pnpm -r --if-present typecheck", "blocking": true, "timeout_s": 600 },
@@ -24,11 +24,14 @@
     "i18n": { "cmd": "node agentic/scripts/check-i18n.mjs", "blocking": true, "timeout_s": 120 },
     "secrets": { "cmd": "node agentic/scripts/check-secrets.mjs", "blocking": true, "timeout_s": 120 },
     "build": { "cmd": "pnpm -r --if-present build", "blocking": true, "timeout_s": 1200 },
-    "migrate": { "cmd": "pnpm --filter @workportal/db migrate:verify", "blocking": true, "timeout_s": 600 },
-    "e2e-smoke": { "cmd": "pnpm --filter @workportal/web test:e2e -- --grep @smoke", "blocking": true, "timeout_s": 1200 },
-    "e2e": { "cmd": "pnpm --filter @workportal/web test:e2e", "blocking": true, "timeout_s": 2400 },
-    "a11y": { "cmd": "pnpm --filter @workportal/web test:a11y", "blocking": true, "timeout_s": 1200 },
+    "migrate": { "cmd": "pnpm --filter @devon/db migrate:verify", "blocking": true, "timeout_s": 600 },
+    "e2e-smoke": { "cmd": "pnpm --filter @devon/web test:e2e -- --grep @smoke", "blocking": true, "timeout_s": 1200 },
+    "e2e": { "cmd": "pnpm --filter @devon/web test:e2e", "blocking": true, "timeout_s": 2400 },
+    "a11y": { "cmd": "pnpm --filter @devon/web test:a11y", "blocking": true, "timeout_s": 1200 },
     "bundle": { "cmd": "node agentic/scripts/check-bundle.mjs", "blocking": true, "timeout_s": 120 },
+    "security": { "cmd": "pnpm -w --if-present security:scan", "blocking": true, "timeout_s": 900 },
+    "perf": { "cmd": "pnpm -w --if-present perf:check", "blocking": true, "timeout_s": 1800 },
+    "ai-evals": { "cmd": "pnpm --filter @devon/ai --if-present evals", "blocking": false, "blocking_on_release": true, "timeout_s": 1800 },
     "deps": { "cmd": "pnpm audit --audit-level=high", "blocking": false, "blocking_on_release": true, "timeout_s": 300 }
   },
   "protected_paths": [

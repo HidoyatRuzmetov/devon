@@ -1,800 +1,618 @@
 {
   "version": 1,
-  "note": "Generated from TECH-SPEC.md §15 on 2026-09-05. Only ready epics run; phase 2/3 epics stay draft until phase 1 ships. Edit with node agentic/scripts/backlog.mjs.",
+  "note": "Generated from TECH-SPEC v2 §15 / TASKS.md on 2026-09-05. All epics ready; the ship loop runs until the backlog is empty. Edit with node agentic/scripts/backlog.mjs.",
   "epics": [
     {
       "id": "EPIC-000",
-      "title": "Foundation: monorepo, tokens (Palette B), app shell, built-in auth (sessions + 2FA), tenancy + RLS, audit/outbox, --demo seed, four-locale i18n, terminology pass, gates, CI, Compose",
+      "title": "Foundation: monorepo, tokens (Palette B), shell, four locales + terminology, audit schema (immutable), sessions core, super admin bootstrap, --demo framework, gates, CI, Compose, sentinel skeleton",
       "status": "ready",
       "priority": 0,
       "phase": 1,
       "area": "platform",
       "depends_on": [],
-      "plan_ref": "TECH-SPEC.md §1,§2,§6,§12,§13",
+      "plan_ref": "TECH-SPEC.md §1,§3.7,§12,§13; TASKS.md EPIC-000",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A developer clones the repo, runs pnpm setup && pnpm dev, and opens the demo ministry (with --demo) in uz-Latn, uz-Cyrl, ru and en",
-        "Every gate in agentic/gates.json runs green on the scaffold, including four-way i18n parity",
-        "Username/password login with server sessions works for the six demo accounts; TOTP 2FA can be enabled; the shell renders in light/dark at 1440/1024/390",
-        "Cross-tenant isolation test passes in CI",
-        "packages/i18n/TERMS.md records the real-world Uzbek/Russian terminology with sources"
+        "A developer clones the repo, runs pnpm setup && pnpm dev, and opens the app in uz-Latn, uz-Cyrl, ru and en; pnpm start --demo seeds the demo and shows a demo chip",
+        "Every gate in agentic/gates.json runs green on the scaffold, including four-way i18n parity, cross-department isolation and audit immutability tests",
+        "First production boot prints a one-time setup URL that creates the super admin; the shell renders in light/dark at 1440/1024/390 with empty/loading/error/offline states",
+        "packages/i18n/TERMS.md records real-world Uzbek/Russian terminology with sources; ADR-000…011 exist; infra/sentinel responds to a signed no-op command on localhost only"
       ],
       "has_ui": true,
       "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §1,§2,§6,§12,§13"
+        "TECH-SPEC.md §1,§3.7,§12,§13; TASKS.md EPIC-000"
       ],
       "value": "H",
       "complexity": "H"
     },
     {
       "id": "EPIC-001",
-      "title": "People & Organisation: directory, workspace structure (optional sub-units and heads), positions with vacancies, org chart, private contact block, availability status, delegation",
+      "title": "Accounts: registration (login, password, name, photo, optional title), login, sessions/devices, optional 2FA (TOTP, Telegram code), profile, password reset by super admin or Telegram, account deletion, fresh-account landing",
       "status": "ready",
       "priority": 10,
       "phase": 1,
-      "area": "people",
+      "area": "accounts",
       "depends_on": [
         "EPIC-000"
       ],
-      "plan_ref": "TECH-SPEC.md §3.1,§5",
+      "plan_ref": "TECH-SPEC.md §2.1; TASKS.md EPIC-001",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A member finds any colleague in the workspace by Latin or Cyrillic name in under 3 seconds and sees work contacts",
-        "The personal phone / emergency contact block is visible only to self, the unit head and the workspace admin, and each read is logged",
-        "The org chart shows the workspace as the ministry structure page describes it (boshqarma/bo'lim wording), with vacancies dashed and heads optional",
-        "A person sets \"away 12–19 Oct, vacation\" in two taps; the head is notified and a deputy can be named; the away badge shows everywhere",
-        "A sibling workspace sees nothing unless the admin switches visibility to ministry"
+        "Anyone registers in under a minute with name, optional photo and optional title, and lands on \"Create a department or join one\"",
+        "Sessions are server-side with HttpOnly/Secure/SameSite cookies, device list and sign-out-everywhere; login, register and reset are rate-limited without enumeration",
+        "2FA is optional for everyone: TOTP with recovery codes works; the Telegram code path is stubbed until EPIC-007",
+        "The super admin resets a password to a temporary one that must be changed at next login"
       ],
       "has_ui": true,
       "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §3.1,§5"
+        "TECH-SPEC.md §2.1; TASKS.md EPIC-001"
       ],
       "value": "H",
       "complexity": "H"
     },
     {
       "id": "EPIC-002",
-      "title": "Work core: tasks and topshiriq, projects, list/board/timeline views, quick-add, filter grammar, saved views, comments, attachments, labels, checklists",
+      "title": "Departments: create request (name, description, bo'limlar rows), super admin approval → creator becomes head, join key + password, invite sheet (link /join/<key>, QR, localised copy), join by link or form, memberships, settings, switcher",
       "status": "ready",
       "priority": 20,
       "phase": 1,
-      "area": "work",
+      "area": "departments",
       "depends_on": [
         "EPIC-001"
       ],
-      "plan_ref": "TECH-SPEC.md §3.2,§4.4,§7",
+      "plan_ref": "TECH-SPEC.md §2.2,§2.3; TASKS.md EPIC-002",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A head types \"Nodira: EGDI dalillar paketi, juma\" and a topshiriq for Nodira due Friday exists",
-        "The same tasks appear as list, board and timeline; drag on the board is keyboard-accessible",
-        "A filter string like assignee:@me due:<=friday is a shareable URL and a saved view",
-        "Comments with @mentions notify; attachments are virus-scanned before visible"
+        "A fresh account submits a department request with any number of bo'limlar; the super admin approves; the department exists and the requester is its head",
+        "The head opens Invite, sets or generates the password, and \"Copy invitation\" copies a localised text with the link and password in the current locale",
+        "A colleague joins by opening /join/<key> (registering first if needed) and entering the password, or by the join form; a wrong password says only \"invalid key or password\" and attempts are rate-limited",
+        "The head can rotate key/password, require join approval, remove members, transfer headship; every member can switch between their departments"
       ],
       "has_ui": true,
-      "class_hint": "B",
+      "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §3.2,§4.4,§7"
+        "TECH-SPEC.md §2.2,§2.3; TASKS.md EPIC-002"
       ],
       "value": "H",
-      "complexity": "M"
+      "complexity": "H"
     },
     {
       "id": "EPIC-003",
-      "title": "Rituals: Friday pulse, project health computation, Ijro nazorati escalation queue, unit objectives",
+      "title": "Structure: bo'limlar with unlimited nesting, colours, reorder, self-assignment to units and unit roles, org chart that is complete without unit heads",
       "status": "ready",
       "priority": 30,
       "phase": 1,
-      "area": "work",
+      "area": "departments",
       "depends_on": [
         "EPIC-002"
       ],
-      "plan_ref": "TECH-SPEC.md §3.2 state machines",
+      "plan_ref": "TECH-SPEC.md §2.3,§3.1; TASKS.md EPIC-003",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A project lead updates status + one sentence inline in under 20 seconds; history is visible",
-        "A missed deadline moves the item into the head's Ijro nazorati queue with acknowledge/reassign in place",
-        "Project health is computed from dates, pulses and escalations, never typed",
-        "3–5 quarterly objectives per department link to projects and show on Home"
+        "Any member creates, renames, reorders and deletes bo'limlar and sub-bo'limlar (delete has undo; people become unassigned) while the head setting allows it",
+        "A member assigns themselves as bo'lim boshlig'i, o'rinbosar or a'zo of any unit when self-assignment is on; the head can assign others",
+        "The org chart renders a department with zero unit heads and one with three levels of nesting equally well, with keyboard navigation and PNG export"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §3.2 state machines"
+        "TECH-SPEC.md §2.3,§3.1; TASKS.md EPIC-003"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-004",
-      "title": "Inbox & notifications: event bus, preferences, quiet hours, digests, email, ICS feeds",
+      "title": "Work core: cards (giver → assignee, deadline with risk badge, links, attachments, nested checklist, comments + activity timeline, labels, watchers), People board grouped by bo'lim, quick-add, filter grammar, saved views, table/timeline/calendar/mine, archive, undo, realtime",
       "status": "ready",
       "priority": 40,
       "phase": 1,
-      "area": "inbox",
+      "area": "work",
       "depends_on": [
-        "EPIC-002"
+        "EPIC-003"
       ],
-      "plan_ref": "TECH-SPEC.md §3.6,§10",
+      "plan_ref": "TECH-SPEC.md §3.2,§4,§5; TASKS.md EPIC-004",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "Every notification shows why it was sent (assigned/mentioned/escalated/decision/digest)",
-        "No notification leaves the server between 20:00 and 08:00 or on weekends unless flagged blocking",
-        "A personal daily digest and a Friday department digest are generated by pg-boss jobs",
-        "A person subscribes to an ICS feed of their leave, events and deadlines"
+        "The board shows one column per member under colour-coded bo'lim sections; drag between columns works with mouse and keyboard with live announcements; changes appear on a second browser within a second",
+        "A card records who gave it, to whom, by when, links with titles, a nested checklist, comments with mentions and a full activity timeline; done cards leave the board into the person's archive, which any member can read and restore from",
+        "Quick-add \"Nodira: EGDI paketi, juma\" creates a card for Nodira due Friday; assignee:@me due:<=friday is a shareable URL and a saved view; table, timeline, calendar and mine show the same cards",
+        "Every list is paginated and virtualised; every write is optimistic with rollback; offline edits queue with a pending badge"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §3.6,§10"
+        "TECH-SPEC.md §3.2,§4,§5; TASKS.md EPIC-004"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-005",
-      "title": "Telegram bot: account link, nudges, one-tap approvals and RSVP, deep links, uz/ru/en templates",
+      "title": "Group projects: members, objective (shared) and subjective (per-member) tasks, milestones, progress, project page, templates",
       "status": "ready",
       "priority": 50,
       "phase": 1,
-      "area": "integrations",
+      "area": "work",
       "depends_on": [
         "EPIC-004"
       ],
-      "plan_ref": "TECH-SPEC.md §10",
+      "plan_ref": "TECH-SPEC.md §3.2; TASKS.md EPIC-005",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A person links Telegram from Settings and receives a Friday 15:00 nudge listing projects needing a sentence",
-        "A head approves a leave request from an inline button; the app shows who decided and when",
-        "No message ever contains restricted data (allow-list serializer + build-time check)",
-        "Deep links open the exact record after login"
-      ],
-      "has_ui": true,
-      "class_hint": "C",
-      "evidence": [
-        "TECH-SPEC.md §10"
-      ],
-      "value": "H",
-      "complexity": "H"
-    },
-    {
-      "id": "EPIC-006",
-      "title": "Availability & decisions: away status with auto-delegation prompt, the decision primitive on tasks, one-tap decide from inbox and Telegram",
-      "status": "ready",
-      "priority": 60,
-      "phase": 1,
-      "area": "requests",
-      "depends_on": [
-        "EPIC-004"
-      ],
-      "plan_ref": "TECH-SPEC.md §3.3",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "A task can ask a named person for a decision; it appears in their \"needs my decision\" queue, inbox and Telegram",
-        "The person approves, returns with a comment or declines in one tap; the task records who, when and on whose behalf",
-        "Several decisions on one task express concurrence without a workflow engine",
-        "Holidays and weekends are excluded when deadlines are set with relative dates"
+        "Creating a group project puts one project card in every member's column; objective tasks have one shared state, subjective tasks belong to each member",
+        "Project progress is computed from objective and subjective completion; the project page shows milestones, members' loads and the timeline",
+        "A project template creates the objective task list in one click"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §3.3"
+        "TECH-SPEC.md §3.2; TASKS.md EPIC-005"
+      ],
+      "value": "H",
+      "complexity": "M"
+    },
+    {
+      "id": "EPIC-006",
+      "title": "Inbox & notifications: reasons, preferences per type and channel, quiet hours, deadline reminders, daily and weekly digests, ICS feeds, optional email",
+      "status": "ready",
+      "priority": 60,
+      "phase": 1,
+      "area": "inbox",
+      "depends_on": [
+        "EPIC-004"
+      ],
+      "plan_ref": "TECH-SPEC.md §3.6,§6; TASKS.md EPIC-006",
+      "personas": [
+        "member",
+        "head",
+        "admin"
+      ],
+      "outcomes": [
+        "Every notification says why it was sent; preferences per type and channel work; quiet hours hold non-urgent delivery",
+        "Deadline reminders and digests arrive from pg-boss jobs on schedule in Asia/Tashkent; a person subscribes to an ICS feed of their deadlines and events"
+      ],
+      "has_ui": true,
+      "class_hint": "B",
+      "evidence": [
+        "TECH-SPEC.md §3.6,§6; TASKS.md EPIC-006"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-007",
-      "title": "Events & team building: events with RSVP/waitlist, capacity, checklist, budget, feedback, date polls, photos",
+      "title": "Telegram: personal linking (/start code + QR), preferences, commands, inline actions, reset and 2FA codes, department group connection by join key with update kinds, weekly summaries",
       "status": "ready",
       "priority": 70,
       "phase": 1,
-      "area": "events",
+      "area": "integrations",
       "depends_on": [
-        "EPIC-004"
+        "EPIC-006"
       ],
-      "plan_ref": "TECH-SPEC.md §3.4",
+      "plan_ref": "TECH-SPEC.md §7; TASKS.md EPIC-007",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "An organiser creates a futsal evening with capacity 20; the 21st RSVP goes to the waitlist automatically",
-        "RSVP works in one tap from the app or Telegram",
-        "A date poll picks the retreat date; the event checklist mirrors the reference (owner/budget, transport, capacity, accessibility, safety, feedback)",
-        "After the event, feedback is collected and visible to the organiser"
+        "A person links Telegram from Settings and receives assignment, deadline and event notifications in their locale with inline buttons that work",
+        "A member adds the bot to a group and sends /connect <join key>; the group receives new events, polls and weekly summaries as chosen",
+        "No message ever contains personal contact details (serializer allow-list + test); webhook secret verified; reset and 2FA codes arrive by bot"
       ],
       "has_ui": true,
-      "class_hint": "B",
+      "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §3.4"
+        "TECH-SPEC.md §7; TASKS.md EPIC-007"
       ],
       "value": "H",
-      "complexity": "M"
+      "complexity": "H"
     },
     {
       "id": "EPIC-008",
-      "title": "Pages editor: Tiptap, templates, mentions, assignable checklist items, version history",
+      "title": "Events: create/edit/cancel with change notices, RSVP with guests/change/cancel/waitlist, comments, reminders, carpooling with seats, polls (date/single/multi, anonymous), who-brings-what, photos, feedback, calendar, ICS, illustrations",
       "status": "ready",
       "priority": 80,
       "phase": 1,
-      "area": "docs",
+      "area": "events",
       "depends_on": [
-        "EPIC-002"
+        "EPIC-006"
       ],
-      "plan_ref": "TECH-SPEC.md §3.5,§7.9",
+      "plan_ref": "TECH-SPEC.md §3.4; TASKS.md EPIC-008",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A head writes a \"how we work\" page with / commands and @mentions; autosave shows Saqlandi",
-        "A checklist item in a page can be assigned with a due date and appears in that person's My work",
-        "Version history shows a diff and can restore",
-        "Pages older than 180 days without verification are marked stale"
+        "An organiser creates an event in a minute with an illustration; members RSVP, change or cancel before the deadline; the 21st RSVP on a 20-capacity event goes to the waitlist",
+        "A driver offers a car with seats and a departure point; colleagues claim seats; a full car shows a waitlist",
+        "A date poll and a choice poll (optionally anonymous) run with a deadline and animated results; changing the time or place notifies everyone with the diff; cancellation notifies everyone who RSVPed",
+        "After the event, photos (links) and feedback are collected; every event exports ICS and appears in the calendar"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §3.5,§7.9"
+        "TECH-SPEC.md §3.4; TASKS.md EPIC-008"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-009",
-      "title": "Onboarding: templates, plans, items by role (newcomer/manager/HR/buddy/IT), buddy pairing, progress, 30/60/90 checkpoints",
+      "title": "Personal workspace: sprints (3h/day/week/custom), nested tasks with checkboxes, today/focus, notes, sticky-note canvas (Excalidraw), Pomodoro (defaults 25/5/15/4, editable, sessions, sounds, notifications, shell widget), strictly private",
       "status": "ready",
       "priority": 90,
       "phase": 1,
-      "area": "onboarding",
+      "area": "personal",
       "depends_on": [
-        "EPIC-008"
+        "EPIC-004"
       ],
-      "plan_ref": "TECH-SPEC.md §3.5; product-team-management-and-culture-features.md",
+      "plan_ref": "TECH-SPEC.md §3.3; TASKS.md EPIC-009",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "HR starts a plan for a newcomer from a role template; tasks appear for the newcomer, manager, HR, buddy and IT",
-        "The newcomer sees Day 1 / Week 1 / 30 / 60 / 90 progress on Home and a reading list of pages",
-        "The manager gets 30/60/90 feedback prompts",
-        "A newcomer finds who to ask within 30 seconds without training"
+        "A person starts a 3-hour, day or week sprint, adds nested tasks with checkboxes and drags them; nothing here is visible to anyone else, including the head and the super admin view-as",
+        "The Pomodoro runs with 25/5/15 defaults, editable in settings, with sounds and browser notifications, a mini widget in the shell, and a session log with stats",
+        "The canvas supports sticky notes, drawing and text; it autosaves and restores; a personal task can link to a department card"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §3.5; product-team-management-and-culture-features.md"
+        "TECH-SPEC.md §3.3; TASKS.md EPIC-009"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-010",
-      "title": "Home & director brief, search (FTS + normalize_uz), My work, Waiting on",
+      "title": "Analytics for everyone: precomputed aggregates, filter bar with the grammar, saved filters, throughput/on-time/load/overdue/projects/events/polls sections, exports, animated charts, pin to Home",
       "status": "ready",
       "priority": 100,
       "phase": 1,
-      "area": "home",
+      "area": "analytics",
       "depends_on": [
-        "EPIC-003",
-        "EPIC-006"
+        "EPIC-005",
+        "EPIC-008"
       ],
-      "plan_ref": "TECH-SPEC.md §6 search; portfolio-pm-analytics-dashboards.md",
+      "plan_ref": "TECH-SPEC.md §9; TASKS.md EPIC-010",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "Home answers due-from-me / needs-my-decision / around-me without a click for each role",
-        "The head's Home is a one-page weekly brief composed from pulses with a human edit step; the ministry view rolls up workspaces read-only",
-        "Search finds \"Nodira\", \"Нодира\", \"Gʻ\" and \"G'\" spellings",
-        "Waiting on lists items I assigned that are overdue or unreported"
+        "Any member opens Analytics and filters by person, unit, project, giver, label and date range; charts animate in and export CSV/PNG",
+        "No analytics query runs longer than 100 ms on the request path (aggregates precomputed nightly and patched on write); a chart can be pinned to Home"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "TECH-SPEC.md §6 search; portfolio-pm-analytics-dashboards.md"
+        "TECH-SPEC.md §9; TASKS.md EPIC-010"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-011",
-      "title": "AI level 1 on the self-hosted GLM: gateway, quick-add parsing, translate on demand (4 locales), pulse draft, catch-up, newcomer briefing, duplicate detection, tag suggestions, digest ranking",
+      "title": "Pages & onboarding-lite: how-we-work pages with versions and mentions, onboarding checklist template that becomes a newcomer's personal tasks on join",
       "status": "ready",
       "priority": 110,
+      "phase": 1,
+      "area": "pages",
+      "depends_on": [
+        "EPIC-004"
+      ],
+      "plan_ref": "TECH-SPEC.md §3.5; TASKS.md EPIC-011",
+      "personas": [
+        "member",
+        "head",
+        "admin"
+      ],
+      "outcomes": [
+        "A department writes a how-we-work page with / commands and @mentions; versions can be compared and restored",
+        "When enabled, a newcomer's join creates their onboarding checklist in their personal workspace from the department template"
+      ],
+      "has_ui": true,
+      "class_hint": "B",
+      "evidence": [
+        "TECH-SPEC.md §3.5; TASKS.md EPIC-011"
+      ],
+      "value": "H",
+      "complexity": "M"
+    },
+    {
+      "id": "EPIC-012",
+      "title": "AI helpers L1 on GLM-5.2: gateway with budgets and traces, quick-add parsing, task breakdown, plan my sprint, risk explanations, weekly summaries, event drafting, thread summary, natural-language analytics filter, translation, what-did-I-miss; evals gate",
+      "status": "ready",
+      "priority": 120,
       "phase": 1,
       "area": "ai",
       "depends_on": [
         "EPIC-010"
       ],
-      "plan_ref": "TECH-SPEC.md §9",
+      "plan_ref": "TECH-SPEC.md §8; TASKS.md EPIC-012",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "Quick-add parses uz/ru/en into assignee/due/unit with a visible confirmation before saving",
-        "Any text can be translated on demand; official-register text shows a review hint",
-        "The Friday composer offers a drafted sentence from the week's activity; the human edits and saves",
-        "Every AI call goes to the in-country GLM endpoint only (routing test in CI) and is traced with cost; Uzbek/Russian quality passes the golden set before a feature is on by default"
+        "Every AI feature shows a preview and requires an accept before anything is saved; each has a promptfoo golden set that gates CI",
+        "All calls go to https://api-llm.gpu.uz/v1 with max_tokens ≥ 1024 and are traced with tokens and UZS cost; a department's monthly budget soft-caps and alerts, then hard-stops",
+        "Uzbek (Latin and Cyrillic) and Russian outputs pass the golden set before a feature is on by default; AI can be disabled per department"
       ],
       "has_ui": true,
       "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §9"
-      ],
-      "value": "H",
-      "complexity": "H"
-    },
-    {
-      "id": "EPIC-012",
-      "title": "Instance & workspace admin: super admin console, workspace creation, ministry read-only view, visibility switch, theme, holidays, roles, immutable audit viewer with chain verification, API keys/webhooks",
-      "status": "ready",
-      "priority": 120,
-      "phase": 1,
-      "area": "platform",
-      "depends_on": [
-        "EPIC-001"
-      ],
-      "plan_ref": "TECH-SPEC.md §2,§4",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "Only the super admin can create a workspace (choosing its unit type from the ministry vocabulary) and its first admin; the action is audited",
-        "A ministry_viewer sees every workspace read-only from a ministry Home (pulses, escalations, headcount) and cannot edit anything",
-        "The audit viewer answers \"who changed X\" and \"who looked at Y's private block\", and a verify button re-computes the hash chain and reports the last anchored head",
-        "No endpoint, role or migration can update or delete audit rows; the database refuses at the grant and trigger level (tested in CI)",
-        "A workspace admin changes colour, logo, holidays and roles without a deploy"
-      ],
-      "has_ui": true,
-      "class_hint": "C",
-      "evidence": [
-        "TECH-SPEC.md §2,§4"
+        "TECH-SPEC.md §8; TASKS.md EPIC-012"
       ],
       "value": "H",
       "complexity": "H"
     },
     {
       "id": "EPIC-013",
-      "title": "Hardening and release 1.0: accessibility, i18n QA, performance budgets, offline queue, error states, docs",
+      "title": "Super admin console: requests queue, departments (view-as read-only, pause, archive), accounts (lock, reset password, 2FA reset, delete), global analytics, audit viewer with chain verification, health, registration toggle, pause switch, wipe switch with host sentinel",
       "status": "ready",
       "priority": 130,
       "phase": 1,
+      "area": "admin",
+      "depends_on": [
+        "EPIC-002"
+      ],
+      "plan_ref": "TECH-SPEC.md §10,§11; TASKS.md EPIC-013",
+      "personas": [
+        "member",
+        "head",
+        "admin"
+      ],
+      "outcomes": [
+        "The super admin approves or rejects department requests with a reason, views any department read-only, and resets a password; every action appears in the audit log with the role",
+        "The audit viewer verifies the hash chain and reports the last anchored head; no role, endpoint or migration can update or delete audit rows (CI test)",
+        "The pause switch shows the four-locale message on every page and API within seconds while the console stays reachable; the Telegram bot replies with the same message",
+        "The wipe switch, after password, 2FA if enabled, a typed phrase and a 60-second countdown, makes the sentinel remove only this project's containers, volumes, code, backups and logs; devon-wipe --confirm does the same from the host shell"
+      ],
+      "has_ui": true,
+      "class_hint": "C",
+      "evidence": [
+        "TECH-SPEC.md §10,§11; TASKS.md EPIC-013"
+      ],
+      "value": "H",
+      "complexity": "H"
+    },
+    {
+      "id": "EPIC-014",
+      "title": "Hardening & release 1.0: execute agentic/HARDENING.md H1–H30 end to end, write docs/03-plan/PRODUCTION-READINESS.md with before/after measurements, fix everything fixable, tag v1.0.0",
+      "status": "ready",
+      "priority": 140,
+      "phase": 1,
       "area": "platform",
       "depends_on": [
+        "EPIC-001",
+        "EPIC-002",
         "EPIC-003",
         "EPIC-004",
         "EPIC-005",
         "EPIC-006",
         "EPIC-007",
+        "EPIC-008",
         "EPIC-009",
         "EPIC-010",
         "EPIC-011",
-        "EPIC-012"
-      ],
-      "plan_ref": "TECH-SPEC.md §0,§12",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "axe reports zero serious/critical on every route; keyboard walkthrough of all rituals recorded",
-        "Lighthouse ≥ 90 on the five main routes; shell under 200 kB gzip",
-        "Offline: reads work, writes queue with a pending badge, approvals refuse offline",
-        "Release 1.0 tagged with a plain-language changelog in uz/ru/en"
-      ],
-      "has_ui": true,
-      "class_hint": "B",
-      "evidence": [
-        "TECH-SPEC.md §0,§12"
-      ],
-      "value": "H",
-      "complexity": "M"
-    },
-    {
-      "id": "EPIC-014",
-      "title": "Telegram Mini App: inbox, approvals, pulse, RSVP, quick-add",
-      "status": "draft",
-      "priority": 140,
-      "phase": 2,
-      "area": "integrations",
-      "depends_on": [
-        "EPIC-005",
+        "EPIC-012",
         "EPIC-013"
       ],
-      "plan_ref": "TECH-SPEC.md §10",
+      "plan_ref": "agentic/HARDENING.md; TASKS.md EPIC-014",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A head approves and a specialist RSVPs from the Mini App with initData validated server-side",
-        "Theme follows Telegram theme params; haptics on confirm"
+        "Every HARDENING.md item is evidenced as done or listed under \"requires external configuration\" with exact instructions",
+        "Before/after measurements exist for request counts, bytes, query counts, LCP/INP/CLS, bundle size, p95 latency at 1/10/100/1000 users, and memory under a 30-minute soak",
+        "v1.0.0 is tagged with a four-locale changelog; all gates green in the release profile"
       ],
       "has_ui": true,
       "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §10"
+        "agentic/HARDENING.md; TASKS.md EPIC-014"
       ],
       "value": "H",
       "complexity": "H"
     },
     {
       "id": "EPIC-015",
-      "title": "Canvas: retro and brainstorm boards on Excalidraw, dot voting, timer, templates",
-      "status": "draft",
+      "title": "Telegram Mini App: inbox, board peek, RSVP, polls, Pomodoro companion",
+      "status": "ready",
       "priority": 150,
       "phase": 2,
-      "area": "events",
+      "area": "integrations",
       "depends_on": [
-        "EPIC-008"
+        "EPIC-007",
+        "EPIC-014"
       ],
-      "plan_ref": "TECH-SPEC.md §7.10",
+      "plan_ref": "TECH-SPEC.md §7; TASKS.md EPIC-015",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A unit runs a retro with sticky notes, anonymous dot voting and a visible timer",
-        "Retro action items become tasks"
-      ],
-      "has_ui": true,
-      "class_hint": "B",
-      "evidence": [
-        "TECH-SPEC.md §7.10"
-      ],
-      "value": "H",
-      "complexity": "M"
-    },
-    {
-      "id": "EPIC-016",
-      "title": "AI level 2: semantic search, ask with citations, meeting notes to tasks, retro summary, onboarding plan drafting, similar projects",
-      "status": "draft",
-      "priority": 160,
-      "phase": 2,
-      "area": "ai",
-      "depends_on": [
-        "EPIC-011",
-        "EPIC-015"
-      ],
-      "plan_ref": "TECH-SPEC.md §9",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "Search returns semantically related items the user is allowed to see",
-        "Every generated answer cites its sources; a pasted meeting note becomes accept-per-item task drafts"
+        "A member opens the Mini App from the bot, sees their inbox and today's cards, RSVPs and votes; initData is validated server-side; theme follows Telegram"
       ],
       "has_ui": true,
       "class_hint": "C",
       "evidence": [
-        "TECH-SPEC.md §9"
+        "TECH-SPEC.md §7; TASKS.md EPIC-015"
+      ],
+      "value": "H",
+      "complexity": "H"
+    },
+    {
+      "id": "EPIC-016",
+      "title": "AI L2: embedding sidecar, semantic search, ask with citations, related cards, similar projects",
+      "status": "ready",
+      "priority": 160,
+      "phase": 2,
+      "area": "ai",
+      "depends_on": [
+        "EPIC-012"
+      ],
+      "plan_ref": "TECH-SPEC.md §8; TASKS.md EPIC-016",
+      "personas": [
+        "member",
+        "head",
+        "admin"
+      ],
+      "outcomes": [
+        "Search returns semantically related cards the member is allowed to see; answers cite the cards and events they used"
+      ],
+      "has_ui": true,
+      "class_hint": "C",
+      "evidence": [
+        "TECH-SPEC.md §8; TASKS.md EPIC-016"
       ],
       "value": "H",
       "complexity": "H"
     },
     {
       "id": "EPIC-017",
-      "title": "Team extras: capacity as a derived person × week view, 1:1 notes, kudos on finished work, birthdays",
-      "status": "draft",
+      "title": "Automations (five triggers), recurring cards, templates gallery",
+      "status": "ready",
       "priority": 170,
       "phase": 2,
-      "area": "people",
+      "area": "work",
       "depends_on": [
-        "EPIC-010"
+        "EPIC-005"
       ],
-      "plan_ref": "product-team-management-and-culture-features.md",
+      "plan_ref": "TASKS.md EPIC-017",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A head sees overload before Friday in a person × week view derived from assignments",
-        "Kudos attach to a finished task or an event; birthdays appear quietly on Home (opt-in)"
+        "A rule \"when a card is done, archive after 3 days\" runs without admin help; recurring cards and event/project/page templates cover repeating work"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "product-team-management-and-culture-features.md"
+        "TASKS.md EPIC-017"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
       "id": "EPIC-018",
-      "title": "Calendar sync (CalDAV/Graph), web push, ICS subscriptions hardening",
-      "status": "draft",
+      "title": "Realtime polish: presence on boards, typing indicators, live cursors on canvas",
+      "status": "ready",
       "priority": 180,
-      "phase": 2,
-      "area": "integrations",
-      "depends_on": [
-        "EPIC-004"
-      ],
-      "plan_ref": "TECH-SPEC.md §10",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "Leave and events appear in Outlook/Google calendars",
-        "Web push works as an opt-in secondary channel"
-      ],
-      "has_ui": false,
-      "class_hint": "C",
-      "evidence": [
-        "TECH-SPEC.md §10"
-      ],
-      "value": "H",
-      "complexity": "H"
-    },
-    {
-      "id": "EPIC-019",
-      "title": "Automations (5 triggers), recurring tasks, templates gallery",
-      "status": "draft",
-      "priority": 190,
       "phase": 2,
       "area": "work",
       "depends_on": [
-        "EPIC-002"
+        "EPIC-009"
       ],
-      "plan_ref": "all-in-one-suites-lark-bitrix.md steal list",
+      "plan_ref": "TASKS.md EPIC-018",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "A rule \"when a card enters Done, archive after 3 days\" runs without admin help",
-        "Recurring tasks and project templates cover the department's repeating work"
+        "Members see who is viewing a board and who is typing a comment; the canvas shows live cursors"
       ],
       "has_ui": true,
       "class_hint": "B",
       "evidence": [
-        "all-in-one-suites-lark-bitrix.md steal list"
+        "TASKS.md EPIC-018"
       ],
       "value": "H",
       "complexity": "M"
     },
     {
+      "id": "EPIC-019",
+      "title": "Calendar sync (CalDAV/Graph) and web push",
+      "status": "ready",
+      "priority": 190,
+      "phase": 2,
+      "area": "integrations",
+      "depends_on": [
+        "EPIC-006"
+      ],
+      "plan_ref": "TASKS.md EPIC-019",
+      "personas": [
+        "member",
+        "head",
+        "admin"
+      ],
+      "outcomes": [
+        "Events and deadlines appear in Outlook/Google calendars; web push works as an opt-in channel"
+      ],
+      "has_ui": true,
+      "class_hint": "C",
+      "evidence": [
+        "TASKS.md EPIC-019"
+      ],
+      "value": "H",
+      "complexity": "H"
+    },
+    {
       "id": "EPIC-020",
-      "title": "Multi-ministry operations: tenant provisioning UI, instance admin, backup/restore UI, k3s option",
-      "status": "draft",
+      "title": "Operations: install guide for another server, scripted restore drills, update channel, k3s option, runbooks",
+      "status": "ready",
       "priority": 200,
       "phase": 2,
       "area": "platform",
       "depends_on": [
-        "EPIC-012"
-      ],
-      "plan_ref": "TECH-SPEC.md §13",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "A sysadmin in another ministry installs and provisions a tenant in an afternoon from the README",
-        "A restore drill is scripted and rehearsed"
-      ],
-      "has_ui": true,
-      "class_hint": "C",
-      "evidence": [
-        "TECH-SPEC.md §13"
-      ],
-      "value": "H",
-      "complexity": "H"
-    },
-    {
-      "id": "EPIC-021",
-      "title": "State integrations: OneID broker, E-Imzo for official approvals (optional), ijro bridge (optional)",
-      "status": "dropped",
-      "priority": 210,
-      "phase": 3,
-      "area": "integrations",
-      "depends_on": [
-        "EPIC-020"
-      ],
-      "plan_ref": "uzbekistan-context.md",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "Staff can log in via OneID where the ministry enables it"
-      ],
-      "has_ui": true,
-      "class_hint": "C",
-      "evidence": [
-        "uzbekistan-context.md"
-      ],
-      "value": "H",
-      "complexity": "H",
-      "history": [
-        {
-          "from": "draft",
-          "to": "dropped",
-          "ts": "2026-09-05T13:40:04.848Z",
-          "note": "CTO decision 2026-09-05: no OneID/E-Imzo/ijro"
-        }
-      ]
-    },
-    {
-      "id": "EPIC-022",
-      "title": "AI level 3: bounded agent execution with preview and undo, anomaly flags on requests, aggregate workload signals",
-      "status": "draft",
-      "priority": 220,
-      "phase": 3,
-      "area": "ai",
-      "depends_on": [
-        "EPIC-016"
-      ],
-      "plan_ref": "TECH-SPEC.md §9",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "\"Move X's overdue items to next week and notify them\" shows a preview, executes on confirm, and can be undone for 10 minutes"
-      ],
-      "has_ui": true,
-      "class_hint": "C",
-      "evidence": [
-        "TECH-SPEC.md §9"
-      ],
-      "value": "H",
-      "complexity": "H"
-    },
-    {
-      "id": "EPIC-023",
-      "title": "Decision intelligence: delivery confidence trend, dependency alerts, forecasts",
-      "status": "draft",
-      "priority": 230,
-      "phase": 3,
-      "area": "work",
-      "depends_on": [
-        "EPIC-017"
-      ],
-      "plan_ref": "portfolio-pm-analytics-dashboards.md",
-      "personas": [
-        "specialist",
-        "head",
-        "director",
-        "hr",
-        "admin"
-      ],
-      "outcomes": [
-        "Status trend per project shows movement, not only current state"
-      ],
-      "has_ui": true,
-      "class_hint": "B",
-      "evidence": [
-        "portfolio-pm-analytics-dashboards.md"
-      ],
-      "value": "H",
-      "complexity": "M"
-    },
-    {
-      "id": "EPIC-024",
-      "title": "Cyrillic Uzbek locale via transliteration; EGDI observatory for Strategy & Rankings",
-      "status": "draft",
-      "priority": 240,
-      "phase": 3,
-      "area": "platform",
-      "depends_on": [
         "EPIC-013"
       ],
-      "plan_ref": "uzbekistan-context.md",
+      "plan_ref": "TASKS.md EPIC-020",
       "personas": [
-        "specialist",
+        "member",
         "head",
-        "director",
-        "hr",
         "admin"
       ],
       "outcomes": [
-        "Older staff can switch to Cyrillic Uzbek; the observatory tracks UN EGDI methodology inputs"
+        "A sysadmin installs Devon on a fresh server from the guide in an afternoon; a restore drill restores a backup into a scratch environment automatically"
       ],
       "has_ui": true,
-      "class_hint": "B",
+      "class_hint": "C",
       "evidence": [
-        "uzbekistan-context.md"
+        "TASKS.md EPIC-020"
       ],
       "value": "H",
-      "complexity": "M"
+      "complexity": "H"
     }
   ]
 }

@@ -20,9 +20,12 @@ area (`node agentic/scripts/ledger.mjs recent <area>`). Produce `agentic/ledger/
 using `agentic/templates/acceptance-criteria.md` and return the same content.
 
 A criterion is valid only if you can state its **disproof**. Every new screen needs a zero-training
-criterion (found cold within 30 s), an i18n criterion (uz + ru, 390 px, no truncation), a states
-criterion (empty/loading/error/no-permission), and, when data is involved, a negative permission
-criterion. Keep to 6–14 criteria; more means the epic is too big: split it and say so.
+criterion (found cold within 30 s), an i18n criterion (uz-Latn, uz-Cyrl, ru, en; 390 px; no
+truncation), a states criterion (empty/loading/error/no-permission/offline), and, when data is
+involved, a negative permission criterion (another department, another member, a member vs the head).
+Every epic also carries the applicable items of `agentic/HARDENING.md` as criteria (cite ids, e.g.
+"H3.1 no query in a loop", "H5.1 optimistic with rollback"). Keep to 8–16 criteria; more means the
+epic is too big: split it and say so.
 
 Assign the class (see `agentic/ROSTER.md`). When torn between B and C, choose C.
 

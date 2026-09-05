@@ -1,640 +1,531 @@
-# Devon (WorkPortal) — Technical Design Document
+# Devon — Technical Design Document (v2, final for build)
 
-Version 1.0 draft, 2026-09-05. Status: ready for review before coding starts. Every choice cites the
-research report that supports it (`docs/01-research/<file>.md`). Where a choice is still open it is
-marked **[DECISION NEEDED]** and repeated in §19.
-
----
-
-## 0. Scope, personas, non-functional targets
-
-**What it is.** An internal team and work tracking platform for the units of the Ministry of Digital
-Technologies of Uzbekistan (a directorate, department or division adopts it as its own workspace),
-multi-tenant so any unit, and later any ministry, can adopt it. Modules: Home, People & Organisation
-(directory, structure, availability), Work (tasks, projects, boards, timeline, decisions), Events &
-Team building, Onboarding, Inbox, Admin. Plus a Telegram bot (phase 1) and Mini App (phase 2), and an
-AI layer that removes clicks rather than chatting.
-
-**What it is not (decisions 10–13).** Not an office suite, not a document-management or
-correspondence-registry system, not a chat app, and **not an HR system**: no leave balances, trip
-accounting, attestation or staffing-table administration; HR departments track their own work in
-their own workspace like everyone else. Availability is a status a person sets ("ta'tilda 12–19 okt"),
-not a process. Pages exist for onboarding, briefs and retro notes only (lightweight block editor);
-files are attachments, not a drive.
-
-**Personas.** Specialist (most users), head of sub-department, director, HR/administrator, tenant admin
-(sysadmin in another ministry), newcomer (first 90 days).
-
-**Non-functional targets (production-grade, not MVP).**
-
-| Area | Target | Verified by |
-|---|---|---|
-| Availability | 99.5 % monthly on a single-box Compose install; zero-downtime deploys | gates `release`, smoke test |
-| Latency | p95 API < 150 ms for list/detail; navigation feels instant (optimistic UI, prefetch) | k6 + Lighthouse CI |
-| Scale | 50 tenants × 500 people × 50k tasks per instance without schema change; 20 concurrent editors per board | Testcontainers load test, Centrifugo limits [tech-realtime-boards-and-canvas] |
-| Accessibility | WCAG 2.2 AA; keyboard-complete; axe 0 serious/critical | gate `a11y` |
-| i18n | uz-Latn (default), uz-Cyrl, ru, en, each 100 % complete; Uzbek glyphs verified; plural rules | gate `i18n` (four-way parity) + wp-a11y-i18n |
-| Security | OWASP ASVS 5.0 Level 2; cross-tenant isolation test in CI; audit of restricted reads | gate `security` (Semgrep/Trivy) + wp-security |
-| Data residency | All persistent data in Uzbekistan; no foreign SaaS for personal data (identity, notifications, AI on Restricted tier) | architecture review |
-| Bundle | ≤ 200 kB gzip shell; route chunks lazy | gate `bundle` |
-| Offline | read cache + visible write queue; approvals require live connection | e2e offline spec |
+2026-09-05. Supersedes v1. Binding for every maker and verifier. Evidence lives in
+`docs/01-research/` (cited as [file]); the product view is `FEATURE-PLAN.md`; the visual contract is
+`DESIGN.md`; the master task list is `TASKS.md`; the production-hardening checklist is
+`agentic/HARDENING.md`. Decisions from the CTO are in §19 and are frozen.
 
 ---
 
-## 1. Architecture overview
+## 0. What it is, in one screen
+
+A self-hosted platform where **a department runs its week**: a board with a column per person,
+group projects, a personal workspace with sprints and a Pomodoro, events with RSVP, carpooling and
+polls, an inbox and a Telegram bot, analytics anyone in the department can filter, and AI helpers
+that actually think. One **super admin** runs the instance. **Anyone can register**; a fresh account
+then **creates a department** (approved once by the super admin, the creator becomes its head) or
+**joins one** with a key and a password. Inside a department **everyone can shape the structure**
+(bo'limlar, sub-bo'limlar, self-assigned roles) unless the head turns that off. No ministry layer, no
+HR module, no document registry, no chat.
+
+Non-functional targets (verified by gates, §12):
+
+| Area | Target |
+|---|---|
+| Availability | 99.5 % monthly on one server; zero-downtime deploys; pause switch instead of outages |
+| Latency | p95 API < 150 ms for lists/details; every interaction optimistic; navigation instant |
+| Scale | 200 departments × 300 people × 100k cards per instance without schema change |
+| Accessibility | WCAG 2.2 AA, keyboard-complete, axe 0 serious/critical |
+| i18n | uz-Latn (default), uz-Cyrl, ru, en, each 100 % (gate enforces four-way parity) |
+| Security | OWASP ASVS 5.0 L2; `agentic/HARDENING.md` fully applied; cross-tenant isolation test in CI |
+| Data residency | everything on the ministry server; AI on the government GPU cluster |
+| Bundle | shell ≤ 200 kB gzip, route chunks lazy, Lighthouse ≥ 90 on the six main routes |
+| Offline | read cache + visible write queue; destructive actions refuse offline |
+
+---
+
+## 1. Architecture and stack
 
 ```
- Browser (SPA)  ─┐                                          ┌─ Postgres 17 (RLS, FTS, pgvector, pg-boss queues)
- Telegram Mini  ─┼─ Caddy (TLS) ─► apps/api (Fastify 5)  ─┼─ MinIO (S3 API)  ─ ClamAV
- App / Bot      ─┘        │             │  ├ BFF auth (OIDC) ─┼─ Keycloak 26 (single realm, Organizations)
-                          │             │  ├ REST v1 + OpenAPI
-                          │             │  ├ Telegram webhook (grammY)
-                          │             │  └ Centrifugo publish ─► Centrifugo 6 ─► clients (WebSocket)
-                          │        apps/api worker (pg-boss): reminders, digests, escalation sweep,
-                          │             AI jobs, thumbnails, virus scan, outbox → notifications/webhooks
-                          └─ Valkey (cache/rate limits)     LLM gateway (packages/ai) → Claude API | on-prem vLLM
+ Browser (SPA) ─┐                                     ┌─ Postgres 17 (RLS, FTS+pg_trgm, pgvector, pg-boss)
+ Telegram      ─┼─ Caddy (TLS) ─► apps/api (Fastify 5) ┼─ MinIO (S3)  ─ ClamAV
+ Mini App/Bot  ─┘        │           ├ auth (sessions, 2FA)   ├─ Valkey (sessions, cache, rate limits)
+                         │           ├ REST v1 + OpenAPI      └─ Centrifugo 6 (realtime fan-out)
+                         │           ├ Telegram webhook (grammY)
+                         │           └ AI gateway ─► GLM-5.2 @ https://api-llm.gpu.uz/v1 (gov GPU cluster)
+                         │      apps/api worker (pg-boss): reminders, digests, AI jobs, scans, thumbnails,
+                         │           outbox → notifications/Telegram/Centrifugo, audit anchoring
+                         └─ infra/sentinel (host-level): pause/wipe executor, reachable only from localhost
 ```
 
-One codebase, one Postgres, one API process (plus a worker process using the same code), one identity
-provider. Everything self-hostable with Docker Compose on a single ministry box; k3s later
-[backend-architecture-and-multitenancy; tech-backend-stack-deep-dive].
-
-### 1.1 Monorepo layout (pnpm workspaces + Turborepo)
+### 1.1 Monorepo (pnpm workspaces + Turborepo)
 
 ```
-apps/web            Vite 8 + React 19.2 + TanStack Router SPA (also serves the Telegram Mini App route /m)
-apps/api            Fastify 5: REST, BFF auth, realtime publish, Telegram webhook; src/worker.ts for pg-boss jobs
-packages/db         Drizzle schema, RLS policies, migrations, seed (demo tenant)
-packages/contracts  Zod schemas + TS types for every DTO, event and filter grammar; shared client/server
-packages/ui         Design system (shadcn-style copied components on Base UI/Radix), tokens, icons, motion presets
-packages/i18n       Paraglide messages (uz, ru, en), formatting helpers (dates, names, plurals)
-packages/ai         LLM gateway, prompts, tool schemas, eval datasets (promptfoo)
+apps/web            Vite 8 + React 19.2 + TanStack Router SPA (routes incl. /join/:key, /admin, /m for Telegram Mini App)
+apps/api            Fastify 5: REST, sessions/auth, realtime publish, Telegram webhook; src/worker.ts for pg-boss jobs
+packages/db         Drizzle schema, RLS policies, migrations, seed (--demo)
+packages/contracts  Zod schemas + types for every DTO, event, filter grammar; CASL abilities
+packages/ui         design system (shadcn-style on Base UI/Radix), tokens, icons, motion presets, illustrations
+packages/i18n       Paraglide messages uz-Latn/uz-Cyrl/ru/en, TERMS.md, formatting helpers
+packages/ai         GLM gateway, prompts, tool schemas, eval sets (promptfoo)
 packages/config     tsconfig, eslint (flat), prettier, size-limit presets
-e2e/                Playwright: routes.json, ritual specs, a11y, realtime two-browser, offline
-infra/              docker-compose.yml, Caddyfile, keycloak realm export, pgbackrest, clamav, scripts
-agentic/            delivery-system runtime (protocol, gates, ledgers)     plugins/  wp-agentic plugin
-docs/               reference, research, plan, escalations, ADRs
+e2e/                Playwright: routes.json, ritual specs, a11y, realtime, offline, load (k6)
+infra/              docker-compose.yml, Caddyfile, pgbackrest, clamav, sentinel/, scripts/
+agentic/  plugins/  delivery system (protocol, gates, HARDENING.md) and its plugin form
+docs/               reference, research, plan (this file, FEATURE-PLAN, TASKS, backlog), escalations, ADRs
 ```
 
-### 1.2 Provisional versions (pin exact, no `^`) [tech-frontend-stack-deep-dive; tech-backend-stack-deep-dive]
+### 1.2 Pinned versions (exact, no `^`) [tech-frontend-stack-deep-dive; tech-backend-stack-deep-dive]
 
-| Layer | Package | Version (2026-09) | Note |
+| Layer | Package | Version | Note |
 |---|---|---|---|
-| Build | Vite | 8.0.x | Rolldown default |
-| UI | React / react-dom | 19.2.x | `<Activity>` for kept-alive panels; React Compiler 1.0 |
-| Routing/data | @tanstack/react-router, react-query 5.101.x, react-table 9.2.x, react-form 1.x, react-virtual 3.x | pinned | Table v9 renamed hooks and roughly doubled gzip vs v8 (still small); supply-chain incident May 2026 → provenance checks in CI |
-| Styling | Tailwind CSS 4.x, shadcn CLI 3.x on Base UI 1.0 (Radix kept where already used) | pinned | CSS-first tokens, `data-tenant` theming |
-| Validation | Zod 4.5.x | pinned | no `z.interface()`; `.exactOptional()` |
-| i18n | Paraglide JS 2.x, date-fns 4.x (uz, ru locales) | pinned | plural variants via Intl.PluralRules |
-| Motion | motion 12.x | pinned | layout animations, reduced-motion gate |
-| Palette/hotkeys | cmdk, react-hotkeys-hook, Sonner, Vaul | pinned | command registry pattern |
-| Editor | Tiptap 3.x (+ Yjs only if collaboration is enabled) | pinned | see §7.9 |
-| API | Fastify 5.x, fastify-type-provider-zod, @fastify/swagger, pino 9 | pinned | encapsulated domain plugins |
-| DB | Postgres 17 (18 evaluated), Drizzle ORM latest, pgvector 0.8, pg-boss 10.x | pinned | RLS via `pgPolicy`; `set_config` tenant context |
-| Realtime | Centrifugo 6.x, centrifuge-js | pinned | JWT auth, per-tenant channels |
-| Identity | built-in: argon2 (node-argon2), otplib (TOTP), @simplewebauthn/server (optional passkeys), sessions in Postgres + Valkey | pinned | no external IdP; `IdentityProvider` interface for future OIDC |
-| Cache | Valkey 9.x | pinned | rate limits, session store |
-| Files | MinIO (behind S3 API), ClamAV | pinned | presigned uploads |
+| Build | Vite | 8.0.x | Rolldown |
+| UI | React / react-dom, React Compiler | 19.2.x / 1.0 | `<Activity>` for kept-alive panels |
+| Routing/data | @tanstack/react-router, react-query 5.101.x, react-table 9.2.x, react-form 1.x, react-virtual 3.x | pinned | provenance checks in CI |
+| Styling | Tailwind CSS 4.x, shadcn CLI 3.x on Base UI 1.0 (Radix where already used) | pinned | CSS-first tokens |
+| Validation | Zod 4.5.x | pinned | shared client/server |
+| i18n | Paraglide JS 2.x, date-fns 4.x | pinned | four locales |
+| Motion | motion 12.x, NumberFlow, Sonner, Vaul, cmdk, react-hotkeys-hook | pinned | tokens in DESIGN.md |
+| Boards/canvas | @atlaskit/pragmatic-drag-and-drop, fractional-indexing, Excalidraw (MIT), FullCalendar 7, Recharts 3, vendored d3-org-chart | pinned | tldraw rejected (licence) |
+| Editor | Tiptap 3.31 (+ @tiptap/markdown) | pinned | LWW autosave, versions |
+| API | Fastify 5.x, fastify-type-provider-zod, @fastify/swagger, @fastify/helmet, @fastify/rate-limit, @fastify/compress, @fastify/cookie, pino 9 | pinned | |
+| Auth | node-argon2, otplib, @simplewebauthn/server (optional passkeys) | pinned | built-in sessions |
+| DB | Postgres 17, Drizzle ORM, pgvector 0.8, pg-boss 10.x | pinned | RLS via `pgPolicy` |
+| Realtime | Centrifugo 6.x, centrifuge-js | pinned | |
+| Cache | Valkey 9.x | pinned | |
+| Files | MinIO, ClamAV, sharp | pinned | presigned uploads |
 | Telegram | grammY 1.46.x, @telegram-apps/sdk 3.11.x | pinned | Bot API 10.3 |
-| AI | GLM (~300B) self-hosted on the ministry GPU host behind an OpenAI-compatible endpoint (vLLM/SGLang), Vercel AI SDK 7 with the openai-compatible provider, bge-m3 (proposed) for embeddings, promptfoo | pinned | see §9; no external API |
-| Tests | Vitest 4.x (5.0 just shipped; pin 4 for phase 1), Playwright 1.5x, Storybook 9 + addon-vitest, MSW 2, Testcontainers 12, k6 | pinned | |
-| Lint | ESLint 9 flat + typescript-eslint, Prettier 3.7 | pinned | Biome deferred |
+| AI | openai-compatible client via Vercel AI SDK 7, promptfoo | pinned | `glm-5.2` |
+| Tests | Vitest 4.x, Playwright 1.5x, Storybook 9 + addon-vitest, MSW 2, Testcontainers 12, k6, Lighthouse CI, axe | pinned | |
+| Lint/sec | ESLint 9 flat + typescript-eslint, Prettier 3.7, Semgrep, Trivy, Renovate (self-hosted) | pinned | |
 
 ---
 
-## 2. Tenancy, identity and sessions
+## 2. Accounts, departments, roles
 
-- **Instance = ministry; workspace (tenant) = any unit that adopts the tool** (decisions 3, 11): a
-  *boshqarma* (directorate), *departament*, *bo'lim* (division) or a subordinate organisation. The
-  tenant record carries `unit_type` from the ministry's own vocabulary (see §3.1) so the UI never says
-  "department" generically. Inside a workspace, sub-units are optional and may or may not have a head:
-  a flat workspace of 8 people works exactly like a directorate with four divisions.
-- **Who creates what.** Only the instance **super admin** creates a workspace (and its first
-  workspace admin); nobody else, including ministry leadership, creates or deletes workspaces. The
-  workspace admin (normally the unit head or a person they name) manages everything inside: people,
-  sub-units, projects, settings. Workspaces are `private` by default (siblings see nothing) and can be
-  switched by their admin to `ministry` visibility (siblings see the public profile fields, the org
-  chart and the project list, read-only).
-- **Ministry view.** People with the instance role `ministry_viewer` (the Minister, deputies,
-  advisors, the Board secretariat) see every workspace **read-only**, regardless of its visibility,
-  through a ministry-level Home that lists workspaces, their weekly pulse and escalations. They do not
-  edit, assign or configure anything; if they want to instruct, they do it through their own
-  workspace's tasks. Every ministry-view read is audited like any other.
-- **Super admin.** At least one instance-level `super_admin` exists (the CTO's operations role): full
-  read and write everywhere, every action written to the immutable audit log with `actor_role =
-  super_admin`, no way to disable that logging. Every tenant-owned table carries `tenant_id`; Postgres RLS is the single
-  enforcement point, predicates written as `(select current_setting('app.tenant_id', true))::uuid` so
-  Postgres evaluates them once per query [tech-backend-stack-deep-dive §2].
-- **Transaction wrapper** sets context with bound parameters:
-  `select set_config('app.tenant_id', $1, true), set_config('app.person_id', $2, true), set_config('app.roles', $3, true)`.
-  Never string-interpolated `SET LOCAL`.
-- **Built-in identity (decision 4)**: username (work email or login) + password hashed with argon2id;
-  server-side sessions (Postgres row + Valkey cache) referenced by an `HttpOnly; Secure; SameSite=Lax`
-  cookie; sliding expiry (12 h idle, 30 d absolute), device list with "sign out everywhere"; CSRF
-  double-submit token; login rate limits and lockout with audit; password policy (length ≥ 12, breach
-  list check, no composition rules); admin-issued first passwords with forced change; second factor
-  optional for everyone (decision 13): TOTP (otplib) or a Telegram-delivered code, passkeys optional
-  (SimpleWebAuthn), recommended in Settings and never forced. The auth module sits behind an
-  `IdentityProvider` interface so OIDC/SSO can be added later without touching the rest of the app.
-  No Keycloak, no OneID [auth-permissions-security-compliance for the threat model].
-- **Telegram link**: `initData` HMAC validation for the Mini App; Login Widget for linking a Telegram
-  account to a person; Telegram is never the primary identity [notifications-telegram-mobile addendum §A/§C].
-- **Provisioning**: `tenants` row + Keycloak organization + admin invite + demo/holiday calendar copy
-  happen in one job (`tenant.provision`), so "a new department in an afternoon" is a form, not a runbook.
+### 2.1 Accounts (self-registration)
+
+- Register with **login** (email or a chosen username; email optional so a server without SMTP still
+  works), **password** (argon2id, ≥ 12 chars, breach-list check, no composition rules), **name**
+  (given name, family name, optional patronymic), **photo** (optional; presigned upload, ClamAV, 512 px
+  WebP variants), **title / lavozim** (optional free text), **locale** (default from browser among the
+  four), **timezone** (default Asia/Tashkent).
+- A new account has **no role and no department**: it lands on "Create a department or join one".
+- Sessions: server-side (Postgres row + Valkey), `HttpOnly; Secure; SameSite=Lax` cookie, sliding
+  12 h idle / 30 d absolute, device list with "sign out everywhere", CSRF double-submit token, login
+  rate limit and progressive lockout with audit, no account enumeration on login/reset.
+- **2FA optional for everyone** (decision 13): TOTP app or a code via the linked Telegram; recovery
+  codes; recommended in Settings, never forced.
+- **Password reset**: by the super admin (temporary password, forced change at next login) or, if
+  Telegram is linked, a one-time code sent by the bot. No email reset unless SMTP is configured.
+- An account may belong to **several departments** (a workspace switcher); most people have one.
+- Deletion: self-service "delete my account" soft-deletes and anonymises after 30 days; the audit log
+  keeps the events.
+
+### 2.2 Departments (workspaces)
+
+- **Create** (any account): form with department name (required), short description (optional), the
+  list of **bo'limlar** (add as many rows as needed; optional; each with a name and an optional
+  colour), default locale, an emoji/colour for the switcher (optional). Submitting creates a
+  `department_requests` row and notifies the super admin (inbox + Telegram).
+- **Approval** (super admin): approve or reject with a reason; on approval the department is created,
+  the requester becomes **head**, the **join key** is generated (e.g. `DVN-7K3M-9Q2P-X8LZ`: 12
+  characters from an unambiguous alphabet, unique, rotatable) and the head is asked to set the
+  **join password** (or accepts a generated one). Super admins can also create departments directly.
+- **Invite**: an "Invite" button in the department header opens a sheet with the link
+  `https://<host>/join/<key>`, the password, a "Copy invitation" button that copies a localised text
+  ("Bizning bo'limga qo'shiling: <link>, parol: <password>") in the inviter's current locale (all four
+  available), a QR code, and controls to rotate the key or password and to toggle **join approval**
+  (default off: joining is instant).
+- **Join**: by link (`/join/:key` → if logged out, register/login first, then the password prompt) or
+  by the "Join a department" form (key + password). Passwords are argon2id-hashed; join attempts are
+  rate-limited per key and per IP; a wrong password says only "invalid key or password".
+- **Membership**: `member` or `head`; the head can transfer headship, remove members, and change
+  settings. Leaving a department keeps the person's archive readable by the department (attributed).
+
+### 2.3 Roles and permissions (three roles, one settings page)
+
+| Role | Scope | Can |
+|---|---|---|
+| `super_admin` | instance | everything: approve requests, manage departments and accounts, reset passwords, lock accounts, view-as (read-only) any department, global analytics, audit viewer, pause switch, wipe switch, system health. Every action audited with the role. |
+| `head` | one department | everything a member can, plus: settings, invite key/password, join approval, remove members, transfer headship, request department deletion, department Telegram group connection (if restricted) |
+| `member` | one department | create/edit/archive cards for anyone (giver/assignee are free choices), projects, events, polls, pages; create/edit/delete bo'limlar and sub-bo'limlar, self-assign to units and unit roles (bo'lim boshlig'i, o'rinbosar, a'zo), when the settings allow (default: allowed) |
+
+Department settings (head): `allow_self_assign` (default on), `allow_structure_edit` (default on),
+`join_requires_approval` (default off), `who_can_connect_telegram_group` (everyone / head; default
+everyone), `quiet_hours`, default locale, colours, archive visibility (department-wide, default) and
+the deletion request. Unit-level roles (`bo'lim boshlig'i` etc.) are labels for the org chart and
+for routing (a unit head receives unit-level reminders and summaries); they grant no extra
+permissions. The UI is designed so a department with no unit heads at all looks complete.
+
+Authorisation is CASL abilities in `packages/contracts` (shared with the client) translated to
+predicates in repositories, with Postgres RLS on `department_id` as the backstop, and every list
+endpoint scoped by department membership. Personal workspace data is scoped to the owner only.
 
 ---
 
 ## 3. Domain model
 
-Conventions: `id uuid` (UUIDv7), `tenant_id uuid not null`, `created_at/updated_at timestamptz`,
-`deleted_at timestamptz null` (soft delete), `version int` (optimistic concurrency), i18n text columns as
-`jsonb {uz,ru,en}` only where the *system* authors text (unit names, templates); user content is stored
-in the language typed. Names use three fields. Timestamps UTC, displayed in `Asia/Tashkent` [uzbekistan-context].
+Conventions: `id` uuid v7; `department_id` on every department-owned table; `created_at`,
+`updated_at`, `deleted_at` (soft), `version` (optimistic concurrency); UTC storage; user content in
+the language typed; system text as `{uz, uzc, ru, en}` jsonb. The `audit` schema is immutable (§3.7).
 
-### 3.1 Organisation and people
+### 3.1 Accounts and departments
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `instances` | name jsonb, settings jsonb | the ministry; exactly one row per deployment |
-| `instance_roles` | user_id, role enum(super_admin, ministry_viewer) | instance-level roles; every action by these roles is audited with the role |
-| `tenants` (workspaces) | slug, name jsonb, unit_type enum(vazirlik, boshqarma, departament, bo'lim, sektor, xizmat, markaz, tashkilot), parent_label jsonb (e.g. "Vazirning birinchi o'rinbosari"), visibility enum(private, ministry), locale_default, timezone, theme jsonb, quiet_hours jsonb, settings jsonb, created_by (super admin) | one row per adopting unit; `unit_type` words come from the ministry's own structure page |
-| `units` | tenant_id, parent_unit_id null, unit_type enum(bo'lim, sektor, guruh), name jsonb, mandate jsonb, head_person_id null, sort | optional sub-units; a head is optional; `unit_closure` maintained by trigger |
-| `positions` | tenant_id, unit_id null, title jsonb, holder_person_id null, sort, is_vacant generated | lightweight: a title and whether it is filled, so the org chart can show vacancies; no grades, no HR administration |
-| `people` | user_id, given_name, patronymic, family_name, display_name generated, work_email, work_phone, unit_id null, position_id null, title_free text, start_date, status enum(active, inactive), avatar_key, locale, skills text[], bio, birthday_month_day (opt-in), telegram_user_id, private_note text | **public within the workspace** except `birthday_month_day` (opt-in) and the small `private` group below |
-| `people_private` | person_id PK, personal_phone, emergency_contact text | visible to self, the person's unit head, the workspace admin; read logged. No birth dates, IDs, addresses or documents anywhere in the system |
-| `person_roles` | person_id, role enum(workspace_admin, head, member), scope_unit_id null | `head` scoped to a unit or to the whole workspace; a workspace works with zero heads (admin + members) |
-| `delegations` | principal_person_id, delegate_person_id, starts_at, ends_at, reason | acting-for while away; audit stores both identities |
-| `availability` | person_id, kind enum(vacation, trip, sick, remote, training, other), starts_on, ends_on, note, acknowledged_by null | a status, not a request: sets the "away" badge, auto-delegation prompt, and the head is notified; no balances |
-| `holidays` | tenant_id null (instance-wide) or tenant, date, name jsonb, kind enum(holiday, moved_weekend, moved_workday) | admin-editable, seeded from decree PF-257 for 2026; used for deadlines and events |
+| Table | Key columns |
+|---|---|
+| `users` | login, email null, password_hash, given_name, family_name, patronymic null, title null, avatar_key null, locale, timezone, status enum(active, locked, deleted), totp_secret_enc null, recovery_codes_hash[], telegram_user_id null (unique), telegram_link_code null, must_change_password bool, last_login_at |
+| `sessions` | user_id, token_hash, device_label, ip, user_agent, created_at, last_seen_at, expires_at, revoked_at |
+| `departments` | name, slug, description, emoji, colour, locale_default, timezone, settings jsonb (§2.3), join_key (unique), join_password_hash, join_requires_approval, status enum(active, paused_by_admin, deletion_requested, archived), created_from_request_id |
+| `department_requests` | requester_user_id, name, description, units jsonb[], locale, status enum(pending, approved, rejected), reviewed_by, reason, reviewed_at |
+| `memberships` | department_id, user_id, role enum(head, member), title_override null, joined_at, left_at, status enum(active, pending_approval, removed) |
+| `units` | department_id, parent_unit_id null, name, colour, sort, path ltree | unlimited nesting; `unit_closure` maintained by trigger |
+| `unit_roles` | unit_id, user_id, role enum(head, deputy, member), assigned_by, at | self-assigned when allowed |
+| `join_attempts` | key, ip, user_id null, ok bool, at | rate limiting and audit |
+| `instance_settings` | singleton: maintenance jsonb {enabled, message {uz,uzc,ru,en}, since, by}, registration_open bool, ai jsonb, telegram jsonb, limits jsonb |
 
-Unit and title vocabulary as actually used on the ministry's structure page (digital.uz/oz/structure,
-read 2026-09-05): *Vazir*, *Hay'at*, *Vazirning birinchi o'rinbosari*, *Vazir o'rinbosari*, *Vazir
-maslahatchisi*, *boshqarma* (directorate, e.g. "Axborot-tahlil va ijro intizomi boshqarmasi"),
-*departament* (e.g. "Sun'iy intellekt texnologiyalarini rivojlantirish departamenti"), *bo'lim*
-(division, e.g. "Nazorat va ijro intizomi bo'limi", "Murojaatlar bo'limi"), *xizmat* (service, e.g.
-"Axborot xizmati"), *bosh mutaxassis* (a standalone chief-specialist position). Titles of heads and
-specialists (boshqarma boshlig'i, bo'lim boshlig'i, bosh mutaxassis, yetakchi mutaxassis, 1-toifali
-mutaxassis, mutaxassis) are confirmed in the EPIC-000 terminology pass and stored in
-`packages/i18n/TERMS.md`.
+### 3.2 Work (department board)
 
-### 3.2 Work
+| Table | Key columns |
+|---|---|
+| `cards` | department_id, kind enum(task, project_task), title, description jsonb (blocks), assignee_user_id, giver_user_id null (who assigned; from the member list), project_id null, project_scope enum(none, objective, subjective), status enum(active, done, archived), priority enum(none, low, medium, high, urgent), start_at null, due_at null, done_at null, order_key (fractional), labels uuid[], watchers uuid[], links jsonb[] ({url, title, favicon}), recurrence jsonb null, source enum(manual, ai, telegram, template), risk enum(none, at_risk, overdue) computed |
+| `card_checklist_items` | card_id, parent_item_id null, text, done_at, assignee_user_id null, due_at null, sort | nested |
+| `card_comments` | card_id, author_user_id, body jsonb, mentions uuid[], edited_at | the Jira-like timeline together with `card_activity` |
+| `card_activity` | card_id, actor_user_id, kind (created, assigned, status, due, comment, link, checklist…), data jsonb, at | rendered in the timeline |
+| `attachments` | subject_type/id, key, name, mime, size, scan_status, thumb_key | links are preferred; files allowed with limits |
+| `labels` | department_id, name, colour |
+| `projects` | department_id, title, description jsonb, colour, cover_key, owner_user_id, members uuid[], status enum(planning, active, on_hold, done, archived), start_on, target_on, progress computed, milestones jsonb[] |
+| `saved_views` | owner_user_id, department_id, name, filter (grammar), layout enum(people_board, table, timeline, calendar, mine), shared bool |
+| `archive` | (view over cards where status = archived, grouped by former assignee; department-wide readable; restore allowed) |
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `projects` | title, description jsonb(blocks), unit_id, owner_person_id, objective_id, status enum(planning, active, on_hold, done, archived), health enum(on_track, at_risk, blocked, late) **computed**, start_date, target_date, progress smallint, color, cover_key, template_id | health is derived nightly and on write from dates, pulses and escalations, never typed [portfolio-pm-analytics-dashboards] |
-| `project_pulses` | project_id, week_start date, status enum(on_track, at_risk, blocked), note text (≤ 280 chars), author_person_id, ai_drafted bool | the Friday ritual; unique (project_id, week_start) |
-| `tasks` | project_id null, parent_task_id null, kind enum(task, topshiriq), title, description jsonb, assigner_person_id, assignee_person_id, unit_id, status enum(backlog, todo, in_progress, in_review, done, cancelled), priority enum(none, low, medium, high, urgent), start_at, due_at, completed_at, estimate_minutes, order_key text (fractional index), column_id, labels uuid[], watchers uuid[], recurrence jsonb, report text, escalation enum(none, overdue, escalated, acknowledged), source enum(manual, ai, telegram, meeting, template), embedding vector(1024) null | topshiriq = assigner ≠ assignee with a report expected; chain of accountability = assigner → assignee; subtasks via parent_task_id (max depth 2) |
-| `boards` / `board_columns` | scope (project or unit), name, type enum(kanban, list, timeline, calendar), swimlane_by, wip_limit, column status mapping | views over the same tasks; columns map to statuses or custom stages per project |
-| `checklists` / `checklist_items` | task_id, title, done_at, assignee_person_id, due_at, sort | Trello-style fraction badge |
-| `labels` | name, color, unit_id null | |
-| `comments` | subject_type, subject_id, body jsonb, author_person_id, mentions uuid[], edited_at | mentions create notifications |
-| `reactions` | comment_id, person_id, emoji | |
-| `attachments` | subject_type, subject_id, key, name, mime, size, scan_status enum(pending, clean, infected), thumb_key | MinIO presigned upload; ClamAV job |
-| `saved_views` | owner_person_id, scope, name, filter text (grammar §4.4), sort, group_by, columns jsonb, shared bool | Linear-style filters, bookmarkable |
-| `objectives` | unit_id, quarter, title, key_results jsonb[2..4], status | 3–5 per department per quarter; never per person |
-| `automations` | scope, trigger enum(task_done, due_passed, status_changed, label_added, checklist_done), conditions jsonb, actions jsonb, enabled | max 5 trigger types on purpose (Butler pattern, no engine sprawl) [all-in-one-suites addendum] |
+Rules. The **People board** is the default view: one column per member, grouped under colour-coded
+bo'lim sections (unassigned last), each column showing the person's active cards sorted by due date
+then order key; done cards leave the board and go to the person's archive (visible to the whole
+department, searchable, restorable). A **group project** appears as one card in every member's
+column: **objective tasks** are shared checklist items/cards with one state for everyone; **subjective
+tasks** are per-member cards under the project. Project progress = weighted completion of objective
+tasks and members' subjective tasks. Every card shows giver → assignee, deadline with a risk badge,
+link chips, a checklist fraction, and a comment count; opening it shows the full timeline. Detail is
+progressive: board → card peek → full card page.
 
-State machines (enforced in the service layer, tested):
-- task.status: backlog→todo→in_progress→in_review→done; any→cancelled; done→in_progress (reopen, audited).
-- task.escalation: none →(due_at passed)→ overdue →(24 h without update or immediate if blocked)→ escalated
-  (appears in the unit head's *Ijro nazorati* queue) →(head acknowledges/reassigns)→ acknowledged →(done)→ none.
-- project.health: computed = late if target_date passed and status ≠ done; blocked if last pulse blocked or
-  any escalated topshiriq; at_risk if last pulse at_risk or no pulse for 2 weeks; else on_track.
+### 3.3 Personal workspace (private to the user)
 
-### 3.3 Decisions (the one approval primitive)
+| Table | Key columns |
+|---|---|
+| `personal_sprints` | user_id, kind enum(3h, day, week, custom), starts_at, ends_at, goal, status |
+| `personal_tasks` | user_id, sprint_id null, parent_id null (nested), title, done_at, notes, sort, estimate_min null, linked_card_id null |
+| `personal_notes` | user_id, title, body jsonb, pinned |
+| `personal_canvases` | user_id, title, scene jsonb (Excalidraw), stickies overlay jsonb |
+| `pomodoro_settings` | user_id, focus_min (25), short_break_min (5), long_break_min (15), cycles_before_long (4), sound, notifications, auto_start |
+| `pomodoro_sessions` | user_id, task_id null, started_at, ended_at, kind, completed bool |
 
-There is no requests module (decision 12). Anything that needs someone's yes/no is a **decision** on
-a task: a task (or checklist item) can carry `decision_needed_from = person`, which puts it in that
-person's "needs my decision" queue, in the inbox, and on Telegram as an inline button. The decision
-(`approve` / `return with comment` / `decline`) is recorded on the task with actor, acting-for and
-timestamp, and the task moves on. This covers "sign off this report", "agree to this plan",
-"confirm the event budget" without a workflow engine. Multi-party concurrence is simply several
-decision checklist items on the same task.
+Nothing in this section is visible to anyone else, including the head; the super admin's view-as does
+not include personal workspaces (only aggregate counts).
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `decisions` | subject_type enum(task, checklist_item, event), subject_id, requested_from_person_id, requested_by_person_id, state enum(pending, approved, returned, declined), comment, decided_at, acting_for_person_id | one row per ask; a task shows its open decisions as chips |
+### 3.4 Events
 
-### 3.4 Events and culture
+| Table | Key columns |
+|---|---|
+| `events` | department_id, title, description jsonb, category enum(team_building, sports, volunteering, social, training, family, other), starts_at, ends_at, place, place_url, cover_key or illustration_id, capacity null, rsvp_deadline null, cost_note, organizer_user_id, status enum(draft, open, full, cancelled, done), updated_summary text (what changed, for notifications) |
+| `event_rsvps` | event_id, user_id, status enum(yes, no, maybe, waitlist), guests smallint, note, changed_at | change or cancel any time before the deadline |
+| `event_comments` | event_id, author, body, mentions |
+| `carpools` | event_id, driver_user_id, seats, departure_place, departure_at, note, status | others claim seats |
+| `carpool_seats` | carpool_id, user_id, claimed_at | waitlist when full |
+| `event_items` | event_id, text ("who brings what"), claimed_by null | potluck / checklist |
+| `polls` | department_id, event_id null, kind enum(date, single, multi), question, options jsonb[], anonymous bool, closes_at, created_by, status |
+| `poll_votes` | poll_id, option_id, user_id (null when anonymous → stored as hash) |
+| `event_feedback` | event_id, user_id, rating 1–5, comment, anonymous bool |
+| `event_photos` | event_id, url, added_by |
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `events` | title, category enum(team_building, sports, volunteering, social, training, family), starts_at, ends_at, venue, capacity, budget_amount, budget_currency 'UZS', organizer_person_id, checklist jsonb, cover_key, rsvp_deadline, state enum(draft, open, full, closed, done, cancelled), poll_id null | checklist template from the reference (owner/budget, transport, capacity, accessibility, safety, feedback) |
-| `event_rsvps` | event_id, person_id, status enum(yes, no, maybe, waitlist), guests smallint, note | capacity → waitlist automatically |
-| `event_feedback` | event_id, person_id (nullable anonymous at department level), rating, comment | |
-| `polls` / `poll_options` / `poll_votes` | kind enum(date, choice), question, anonymous bool, closes_at | date polls for events; anonymous only department-wide |
-| `kudos` | from_person_id, to_person_id, text, subject_type/id null, visibility | attached to work or events, no separate feed |
+Reminders: default 1 day and 1 hour before (organizer editable), via inbox and Telegram; changes to
+time/place send an "updated" notification with the diff; cancellation notifies everyone who RSVPed.
+ICS per event and per person.
 
-### 3.5 Pages, onboarding, canvas
+### 3.5 Pages and onboarding-lite
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `pages` | kind enum(onboarding, team, brief, retro, note), title, blocks jsonb (Tiptap JSON), parent_page_id, unit_id, owner_person_id, template_id, last_verified_at, status enum(draft, current, stale, archived), search_text generated | small editor; "stale" auto-set 180 days after last verification |
-| `page_versions` | page_id, blocks jsonb, author, created_at | diff view |
-| `onboarding_templates` | role/unit, items jsonb (title, owner_role, due_offset_days, page_ref) | 30/60/90 structure |
-| `onboarding_plans` | person_id, template_id, manager_person_id, buddy_person_id, hr_person_id, start_date, checkpoints jsonb (30/60/90 feedback) | progress = done items / total |
-| `onboarding_items` | plan_id, title, owner_role enum(newcomer, manager, hr, buddy, it), assignee_person_id, due_at, done_at, task_id | each item is also a task in the assignee's "My work" |
-| `canvases` | kind enum(retro, brainstorm, whiteboard), scene jsonb, voting jsonb, timer jsonb, linked subject | library per §7.10 |
+`pages` (department, kind enum(how_we_work, onboarding, brief, note), blocks jsonb, versions) and
+`onboarding_templates` (department; checklist items with owner role newcomer/head/buddy). When
+enabled, a newcomer's join creates their onboarding checklist as personal-workspace tasks linked to
+the template.
 
-### 3.6 Notifications, audit, AI, platform
+### 3.6 Notifications, Telegram, AI, platform
 
-| Table | Key columns | Notes |
-|---|---|---|
-| `notifications` | person_id, type, reason enum(assigned, mentioned, subscribed, escalated, decision, digest, reminder), subject_type/id, title jsonb, read_at, archived_at | inbox-first; payload is a pointer, never restricted data |
-| `notification_prefs` | person_id, channel enum(inapp, telegram, email, push), type, enabled, digest_mode | quiet hours are tenant-level server defaults (20:00–08:00 + weekends) with per-person override only to *more* quiet |
-| `notification_deliveries` | notification_id, channel, status, provider_message_id, attempts, last_error | audit trail of delivery |
-| `audit.events` | seq bigserial, tenant_id null, actor_user_id, actor_role, acting_for_person_id, action, subject_type/id, before jsonb, after jsonb, ip, user_agent, request_id, at, prev_hash, row_hash | **immutable** (decision 14): lives in its own `audit` schema; the application role has INSERT and SELECT only, UPDATE/DELETE/TRUNCATE are revoked at the database level and a trigger raises on any attempt; each row hashes its content plus the previous row's hash (SHA-256), and a nightly job writes the chain head to an append-only file on a separate volume and to the super admin's Telegram, so even a database superuser cannot rewrite history undetected; no retention sweep ever touches it; export only |
-| `audit.private_reads` | actor_user_id, subject_person_id, at | who looked at someone's private contact block |
-| `outbox` | event_type, payload jsonb, published_at null | worker publishes to notifications, webhooks, Centrifugo |
-| `ai_traces` | feature, tier, provider, model, prompt_hash, input_tokens, output_tokens, cost_micro, latency_ms, subject, accepted bool | governance and budget |
-| `webhooks` / `api_keys` | tenant, url, secret, events[], last_delivery | integrations for other ministries |
-| `jobs` (pg-boss schema) | | reminders, digests, escalation sweep, thumbnails, scans, AI jobs |
+| Table | Key columns |
+|---|---|
+| `notifications` | user_id, type, reason enum(assigned, mentioned, due, updated, rsvp, poll, decision, digest, system), subject_type/id, title jsonb, read_at |
+| `notification_prefs` | user_id, channel enum(inapp, telegram, email), type, enabled, digest_mode |
+| `notification_deliveries` | notification_id, channel, status, provider_id, attempts, error |
+| `telegram_links` | user_id, chat_id, linked_at, link_code_used |
+| `telegram_groups` | department_id, chat_id, title, connected_by, kinds text[] (events, polls, announcements, weekly_summary, deadlines), connected_at |
+| `ai_traces` | user_id, department_id null, feature, model, prompt_hash, in_tokens, out_tokens, reasoning_tokens, cost_uzs, latency_ms, accepted bool null |
+| `ai_budgets` | department_id, month, limit_uzs, spent_uzs |
+| `outbox` | event_type, payload, published_at |
+| `jobs` (pg-boss) | reminders, digests, AI jobs, scans, thumbnails, audit anchor, retention |
 
----
+### 3.7 Audit (immutable; decision 14)
 
-## 4. API design
-
-- **Style**: REST, JSON, `/api/v1/...`, OpenAPI 3.1 generated from the same Zod schemas that validate
-  requests (`fastify-type-provider-zod` + `@fastify/swagger`) [tech-backend-stack-deep-dive §1]. tRPC is
-  not used: other ministries' contractors must be able to consume the API.
-- **Tenant scoping**: from the session; `X-Tenant` header only for instance admins.
-- **Resources** (all support `GET list`, `GET one`, `POST`, `PATCH`, `DELETE` soft; `If-Match` with
-  `version` for optimistic concurrency): `me`, `people`, `people/:id/restricted` (HR only, purpose
-  required), `positions`, `units`, `org-chart`, `delegations`, `projects`, `projects/:id/pulses`,
-  `tasks`, `tasks/:id/checklist`, `boards`, `views`, `labels`, `comments`, `attachments` (presign),
-  `requests`, `requests/:id/decide`, `leave-balances`, `holidays`, `events`, `events/:id/rsvp`, `polls`,
-  `pages`, `pages/:id/versions`, `onboarding/templates`, `onboarding/plans`, `canvases`, `kudos`,
-  `notifications`, `notification-prefs`, `search`, `ai/*` (§9), `admin/*`, `audit`, `webhooks`.
-- **Conventions**: cursor pagination (`?cursor=&limit=`), `?fields=` sparse fieldsets, `?include=`
-  for relations, RFC 9457 problem details for errors, `Idempotency-Key` on POSTs that create, rate
-  limits per person and per tenant (Valkey), request id in every log line and response header.
-- **Filter grammar** (Linear/GitHub-style tokens, parsed by a 200-line parser in `packages/contracts`):
-  `assignee:@me status:in_progress,in_review due:<=friday label:egdi unit:strategy "evidence"`.
-  Supports `@me`, relative dates (`today`, `friday`, `+7d`, `week`, `quarter`), negation `-label:x`,
-  free-text (goes to FTS). Saved views store the string. The same grammar drives quick filters and the
-  command palette.
-- **Realtime**: Centrifugo channels `t.{tenant}.inbox.{personId}`, `t.{tenant}.board.{boardId}`,
-  `t.{tenant}.project.{projectId}`, `t.{tenant}.page.{pageId}`; messages `{type, id, version, patch}`;
-  clients apply patches and re-fetch on version gaps [tech-realtime-boards-and-canvas].
-- **Webhooks**: signed (`HMAC-SHA256`), retried with backoff from the outbox, events like
-  `task.completed`, `request.approved`, `event.rsvp`.
+`audit.events(seq, actor_user_id, actor_role, on_behalf_of null, department_id null, action,
+subject_type, subject_id, before, after, ip, user_agent, request_id, at, prev_hash, row_hash)`.
+The application role has INSERT and SELECT only; UPDATE/DELETE/TRUNCATE revoked and trigger-blocked;
+SHA-256 chain; nightly anchor of the chain head to an append-only file on a separate volume and to
+the super admin's Telegram; the audit viewer verifies the chain on demand. Never retained-away.
+`audit.private_reads` records views of another person's contact details by the head or super admin.
 
 ---
 
-## 5. Authorisation
+## 4. API
 
-- **Five roles, two levels** (decision 11):
-  instance `super_admin` (everything, always logged), instance `ministry_viewer` (read-only across
-  all workspaces); workspace `workspace_admin` (people, units, settings, projects), `head` (of a unit
-  or of the workspace: sees the unit's work, receives escalations and decisions, acknowledges
-  availability), `member` (own work, own unit's boards and projects, the workspace directory).
-  A person can be `head` of one unit and `member` elsewhere. There is no HR role.
-- **`can(actor, action, subject)`**: CASL ability definitions in `packages/contracts` (reused by the
-  client for optimistic UI), translated to SQL predicates in the repository layer; RLS is the backstop.
-- **Cross-workspace visibility**: `tenants.visibility = private` (default) hides everything from
-  sibling workspaces; `ministry` exposes public profile fields, the org chart and project titles
-  read-only. `ministry_viewer` and `super_admin` see all workspaces regardless.
-- **Object shares**: `shares(subject_type, subject_id, grantee_person_id|unit_id|tenant_id, level
-  enum(view, edit))` for the occasional joint project between workspaces; the UI always shows
-  *effective* access.
-- **Field visibility**: everything on a profile is visible within the workspace except the opt-in
-  birthday and the `people_private` block (personal phone, emergency contact), which self, the unit
-  head and the workspace admin can read, with the read logged.
-- **Delegation**: a delegate's request carries `acting_for`; `can()` evaluates the principal's abilities
-  within the delegation scope and window; audit records both.
+REST, JSON, `/api/v1`, OpenAPI 3.1 from the same Zod schemas [tech-backend-stack-deep-dive].
+Resources: `auth/*` (register, login, logout, sessions, 2fa, reset), `me`, `departments`,
+`departments/requests`, `departments/:id/{members,units,unit-roles,settings,invite,join-approvals,
+telegram-groups,analytics}`, `join/:key`, `cards`, `cards/:id/{checklist,comments,activity,links}`,
+`projects`, `views`, `labels`, `attachments/presign`, `events`, `events/:id/{rsvp,comments,carpools,
+items,photos,feedback}`, `polls`, `pages`, `personal/{sprints,tasks,notes,canvases,pomodoro}`,
+`notifications`, `prefs`, `telegram/*`, `search`, `ai/*`, `admin/*` (requests, departments, users,
+password-reset, lock, view-as, analytics, audit, health, maintenance, wipe), `webhooks`.
+Conventions: cursor pagination, sparse fieldsets, `include`, RFC 9457 errors, `Idempotency-Key` on
+creates, `If-Match` on updates, per-user and per-IP rate limits, request id everywhere, Brotli/gzip.
+Filter grammar (Linear-style tokens, ~200-line parser in `packages/contracts`):
+`assignee:@me giver:@nodira status:active due:<=friday project:"EGDI" label:urgent unit:"Data" "evidence"`.
+Realtime channels: `d.{department}.board`, `d.{department}.project.{id}`, `u.{user}.inbox`,
+`d.{department}.event.{id}`; delta messages with versions.
+
+---
+
+## 5. Frontend
+
+Shell: sidebar (Home, Board, Projects, Events, Personal, Analytics, Pages; department switcher;
+super admin gets Admin), top bar (quick-add, `Ctrl/⌘+K`, inbox bell), routed detail panel kept
+mounted with `<Activity>`, Sonner toasts with undo, Vaul sheets on mobile, `?` shortcut overlay.
+Data: TanStack Router loaders + Query (persisted cache), the single optimistic-mutation shape
+everywhere, URL-as-state for filters/views, Zustand for UI state, offline read cache + write queue with
+a pending badge. Boards: pragmatic-drag-and-drop with keyboard DnD and live-region announcements;
+fractional order keys; `layoutId` motion gated by reduced motion. People board columns virtualised
+horizontally and vertically. Tables: TanStack Table v9 + Virtual. Timeline: SVG. Calendar:
+FullCalendar 7. Org chart: vendored d3-org-chart, correct with or without heads. Canvas:
+Excalidraw embedded with our sticky-note/vote/timer overlay. Editor: Tiptap 3.31 with mentions,
+checklist items, callouts, links with unfurled titles. Charts: Recharts 3 with draw-in and NumberFlow
+tickers. Illustrations: a curated open-licence 2D vector set (unDraw-style, recoloured to tokens) for
+empty states, events and onboarding, plus small Lottie sequences only where the animation report
+allows. i18n: Paraglide, four locales, terminology from `packages/i18n/TERMS.md`. Fonts: IBM Plex
+Serif display, Inter UI (Uzbek glyphs verified). Motion: the tokens in `DESIGN.md` §2.5.
 
 ---
 
 ## 6. Backend services
 
-- `apps/api/src/plugins/` cross-cutting: `context` (AsyncLocalStorage: request id, tenant, person,
-  roles, acting_for), `db` (Drizzle + transaction wrapper with `set_config`), `auth` (BFF), `errors`
-  (single `setErrorHandler`, 5xx flattened), `rate-limit`, `openapi`, `realtime` (Centrifugo publisher),
-  `outbox`, `storage`, `ai`.
-- `apps/api/src/modules/<domain>/` each a Fastify plugin: `routes.ts` (Zod schemas), `service.ts`
-  (rules and state machines), `repo.ts` (Drizzle), `events.ts` (outbox event types), `jobs.ts`.
-- **Outbox pattern**: every write appends `audit_events` and `outbox` rows in the same transaction;
-  the worker publishes to Centrifugo, notifications and webhooks, marking `published_at`. pg-boss jobs
-  are created inside the same transaction as the business write [tech-backend-stack-deep-dive §4].
-- **Jobs** (pg-boss, cron in `Asia/Tashkent`): `escalation.sweep` (every 15 min), `pulse.nudge`
-  (Fri 15:00), `digest.department` (Fri 18:00), `digest.personal` (daily 08:30), `reminder.due`
-  (hourly), `health.recompute` (nightly), `onboarding.tick` (daily), `event.rsvp_reminder`,
-  `profile.verification` (quarterly), `attachment.scan`, `attachment.thumb`, `ai.*`, `webhook.deliver`,
-  `retention.sweep`.
-- **Search**: Postgres FTS `russian` config for ru text, `simple` + `pg_trgm` over a generated
-  `normalize_uz(text)` column (folds ʻ ʼ ' ’, transliterates Cyrillic→Latin) for names and Uzbek text;
-  pgvector 0.8 with `hnsw.iterative_scan` for semantic search when embeddings are enabled
-  [tech-backend-stack-deep-dive §3].
-- **Files**: presigned PUT to MinIO, `attachment.scan` with ClamAV before the file becomes visible,
-  thumbnails via sharp, private signed GET URLs (5 min).
+Fastify plugins: `context` (AsyncLocalStorage: request id, user, department, role), `db`
+(transaction wrapper with `select set_config('app.department_id', $1, true)` etc.), `auth`,
+`errors` (5xx flattened; no stack, SQL or paths in responses), `security` (helmet, CSP with nonces,
+HSTS, CORS allow-list, rate limits), `compress`, `openapi`, `realtime`, `outbox`, `storage`, `ai`,
+`telegram`, `maintenance` (§11). Modules under `src/modules/<domain>/{routes,service,repo,events,jobs}.ts`.
+Outbox in the same transaction as every write; jobs created in the same transaction. Search: FTS
+(`russian` config) + `simple` with `normalize_uz()` (folds ʻ ʼ ' ’, Cyrillic→Latin) and `pg_trgm`;
+embeddings optional (bge-m3 sidecar) for semantic search and duplicate detection. Files: presigned
+PUT, ClamAV before visibility, sharp thumbnails, signed 5-minute GETs, filename sanitisation,
+size/MIME/extension allow-lists.
+
+Jobs (pg-boss, Asia/Tashkent): `reminder.due` (hourly), `reminder.event` (per event schedule),
+`digest.personal` (08:30), `digest.department` (Fri 18:00 + weekly summary to Telegram groups),
+`risk.recompute` (nightly), `sprint.rollover`, `attachment.scan/thumb`, `ai.*`, `audit.anchor`
+(nightly), `retention.sweep` (notifications, sessions, temp uploads only), `backup.verify` (weekly).
 
 ---
 
-## 7. Frontend architecture
+## 7. Telegram
 
-- **Shell**: left sidebar (5 areas + tenant switcher), top command bar (`Ctrl/⌘+K`, quick-add), right
-  detail panel routed (`?panel=task:ID`) and kept mounted with `<Activity mode="hidden">`, inbox
-  drawer, toast region (Sonner) with undo. Mobile (390 px) uses bottom sheets (Vaul) and a bottom tab bar.
-- **Routing/data**: TanStack Router file routes; `validateSearch` + `loaderDeps` make every filtered list
-  a shareable URL; loaders prefetch with TanStack Query; the one optimistic-mutation shape everywhere
-  (cancel → snapshot → optimistic set → rollback on error → invalidate on settle)
-  [tech-frontend-stack-deep-dive §5].
-- **State**: server state in Query (persisted to IndexedDB for instant reopen), URL state for views and
-  filters, Zustand for small UI state (sidebar, density), no global store.
-- **Offline**: read cache + mutation queue with a visible "pending" badge; approvals disabled offline.
-- **Command registry**: one registry feeds the palette and hotkeys (`react-hotkeys-hook`); every
-  navigable object and primary action registers; `?` shows the shortcut overlay.
-- **Forms**: TanStack Form + shared Zod schema; autosave drafts for long forms; undo instead of confirm.
-- **Tables**: TanStack Table v9 + Virtual, inline edit, column filters, grouping, saved views, density
-  toggle, bulk actions with undo [data-dense-ui-components].
-- **Boards**: pragmatic-drag-and-drop with keyboard DnD and live-region announcements; fractional
-  `order_key`; layout animations via `motion` `layoutId` gated by reduced motion.
-- **Timeline**: custom SVG/CSS-grid roadmap (projects and milestones), no Gantt library in phase 1.
-- **Calendar**: FullCalendar 7 (GA 2026-06-19, MIT core) with uz/ru locales. Schedule-X rejected:
-  its v4 free package dropped drag-and-drop/resize [data-dense-ui-components addendum].
-- **Org chart**: `d3-org-chart` vendored from the GitHub source (the npm package has been stale since
-  2023), vacancies rendered dashed, keyboard navigation and ARIA added by us.
-- **Charts**: Recharts via shadcn chart components; animated draw-in; no dashboards without an owner.
-- **§7.9 Pages editor**: Tiptap 3.31 (MIT, incl. `@tiptap/markdown`) with StarterKit, a custom
-  `AssignableTaskItem` node (assignee, due date, linked task), dual Mention (`@person`, `#project`),
-  slash menu, `Callout` node, image, table; JSON stored in `pages.blocks` with a generated
-  `search_text`/tsvector column; last-write-wins autosave with optimistic locking (`version`) and
-  `page_versions` history in phase 1; Yjs + Hocuspocus 4.6 (MIT) behind a flag only if simultaneous
-  editing becomes a real need [notion-model-and-block-editors addendum].
-- **§7.10 Canvas**: retro/brainstorm boards with sticky notes, dot voting and a timer, built on
-  **Excalidraw (MIT)** embedded; scene JSON in `canvases.scene`, voting/timer as our own overlay.
-  tldraw rejected: its licence requires a paid or watermarked licence for production use, which an
-  internal government deployment plausibly is [data-dense-ui-components addendum].
-- **i18n (decision 6)**: four locales, all 100 % complete: `uz-Latn` (default), `uz-Cyrl`, `ru`, `en`.
-  Paraglide compiled messages; Uzbek single plural form, Russian four categories, parity across all
-  four enforced by `check-i18n.mjs`; `uz-Cyrl` strings generated from `uz-Latn` by deterministic
-  transliteration and then human-reviewed (reviewed keys are locked); dates `DD.MM.YYYY`, week starts
-  Monday; names `Familiya Ism Otasining ismi`; per-person locale switch in the header, tenant default
-  in settings.
-- **Fonts**: Inter for UI (Cyrillic + Latin), display face per DESIGN.md; Uzbek glyphs `Oʻ Gʻ ʼ` verified
-  in-browser before phase 1 ships (test page in Storybook).
-- **Performance**: route-level code splitting, prefetch on hover/focus, `size-limit` 200 kB shell,
-  Lighthouse CI ≥ 90 performance/accessibility on the five main routes.
+Per user: Settings → "Connect Telegram" shows `/start <code>` deep link and a QR; the bot links the
+chat, confirms in the user's locale; preferences per notification type; quiet hours; commands
+`/today`, `/mytasks`, `/events`, `/done <id>`, `/rsvp`, `/mute 2h`; inline buttons for RSVP, poll
+votes, "mark done", "snooze deadline 1 day"; 2FA/reset codes when enabled.
+Per department group: add the bot to a group, send `/connect <join key>` (allowed roles per
+settings); the group receives new events, polls, announcements, weekly summaries and deadline
+digests (kinds chosen at connect time, editable in settings). "Pointer not payload": messages carry
+titles, dates and deep links, never personal contact details [notifications-telegram-mobile].
+Webhook on `apps/api`, grammY with throttler + auto-retry, `initData` HMAC validation for the Mini App.
 
 ---
 
-## 8. Design system (summary; the full spec is `DESIGN.md`)
+## 8. AI (GLM-5.2 on the government GPU cluster; decision 15)
 
-- Tokens in DTCG format → CSS variables via Style Dictionary; OKLCH 12-step scales; per-tenant override
-  through `data-tenant` attribute (primary hue, logo, name) so one build serves every ministry.
-- Identity (decision 8): Palette B from the identity research ("Navy-led, product-owned blue"): warm
-  paper `#f7f5f0`, Devon's own navy primary `#1b4a76` (distinct in hue and chroma from the ministry's
-  `#013d8c`), near-black navy sidebar `#071b31`, amber wayfinding `#d69f58`, green reserved as the
-  semantic success colour; the ministry's official navy `#013d8c` (observed on digital.uz/gov.uz,
-  which share one token set under the unified gov platform) used verbatim for one official touchpoint
-  only. Flag colours never as chrome [uzbekistan-gov-visual-identity-research].
-- Type: IBM Plex Serif display (Cyrillic + Latin Extended, Uzbek modifier letters verified), Inter UI
-  (Golos Text evaluated for Russian body), IBM Plex Mono; tabular numerals; 8-pt rhythm.
-- Motion system: 140 / 220 / 300 ms (+ 480 ms one-shot celebration), expo-out entrances, expo-in
-  exits, critically-damped springs, per-component reduced-motion replacement; 28-item catalogue in
-  [tech-animation-and-visual-craft].
-- Every component ships light/dark, three densities where relevant, and empty/loading/error/no-permission
-  states in Storybook.
+Gateway `packages/ai`: `run({feature, user, department, input, schema?, tools?, maxTokens})` →
+OpenAI-compatible call to `https://api-llm.gpu.uz/v1` with `AI_API_KEY` from env; `max_tokens ≥ 1024`
+always (reasoning costs 200–500 tokens; empty content + `finish_reason: length` → retry with double);
+`reasoning_content` never shown or stored beyond token counts; tool calls with strict JSON schemas
+validated by Zod (one retry with the error); history trimmed to fit 256k; per-department monthly
+budget in UZS (19 500 per million tokens) with a soft cap, an admin alert and a hard stop; every
+call traced; feature flags per department; promptfoo golden sets in CI (`ai-evals` gate).
 
----
-
-## 9. AI layer
-
-**Principle**: AI removes clicks on the simple model; it never becomes a chat-shaped workaround for
-complexity, never changes a privacy tier, and never writes the record of truth without a human accept
-[ai-features-and-assistants].
-
-**Gateway** (`packages/ai`): `run({feature, tier, input, schema?, tools?, budget})`.
-- Provider (decision 1, details in `docs/03-plan/integrations/glm-api-instruction.md`): the
-  government GPU cluster's OpenAI-compatible API, base URL `https://api-llm.gpu.uz/v1`, model
-  **`glm-5.2`**, bearer key from `AI_API_KEY` (never in the repo; the instruction file is stored with
-  its key fields blank). Facts that shape the code: 256 000-token context (input + output + tool
-  definitions + reasoning); the model **always reasons first** and spends 200–500 tokens of
-  `max_tokens` on it, returning the reasoning in `message.reasoning_content`, so every call sets
-  `max_tokens ≥ 1024` (2048+ for extraction with long inputs) and treats empty `content` with
-  `finish_reason: "length"` as a retry with a larger budget; tool calling in the standard OpenAI
-  format (`tools`, `tool_choice`, `message.tool_calls`); streaming supported; billed per token in UZS
-  (19 500 UZS per million, input and output alike), which the gateway records per call and rolls up
-  into a per-workspace monthly budget with a soft cap and an admin alert. The endpoint sits on the
-  INHA cluster inside Uzbekistan, so every data tier may use it; the gateway still keeps a provider
-  abstraction (AI SDK 7 openai-compatible provider) and a tier switch so a second model can be added.
-  Embeddings are not offered by this API: a small in-country embedding model (bge-m3 proposed) is
-  deployed next to the app for search and duplicate detection, or those two features stay
-  FTS/trigram-only until it exists.
-- Mechanics: JSON-schema tool calls for extraction (validated with Zod, retried once with the error
-  fed back); history trimming and a stable, short workspace-context block to stay well inside the
-  context limit; batched nightly digests via pg-boss; streaming for drafts; `reasoning_content`
-  never shown to users and never stored beyond the trace; pinned model id recorded in every
-  `ai_traces` row. Uzbek Latin/Cyrillic and Russian quality is benchmarked with a golden set in
-  EPIC-011 before any feature is enabled by default.
-- Safety: permission-aware retrieval (embeddings live on RLS-protected rows; retrieval runs as the
-  user); prompt-injection defences (content is data, tools are allow-listed per feature, no feature has
-  both restricted-read and external-send); citations mandatory for any answer about policy/HR; every
-  call logged to `ai_traces` with cost; per-tenant monthly budget; promptfoo golden set + red-team
-  suite as a CI gate for every feature and model bump.
-
-**Feature ladder** (surface → capability → tier):
-
-| Phase | Feature | Surface | Capability |
-|---|---|---|---|
-| 1 | Quick-add parsing uz/ru/en | Ctrl+K quick-add | extraction (schema) |
-| 1 | Translate on demand | any text field toggle | generation |
-| 1 | Friday pulse draft from activity | pulse composer | summarisation (structured input) |
-| 1 | "What did I miss" after leave | Home card | summarisation, permission-scoped |
-| 1 | Newcomer project briefing | project page button | summarisation over project data |
-| 1 | Duplicate detection on create | task form warning | embeddings |
-| 1 | Stalled-work and deadline-risk badges | cards, queue | rules + optional rationale |
-| 1 | Auto-tag suggestions | pre-filled chips | classification |
-| 1 | Smart digest ranking | inbox digest mode | ranking |
-| 1 | Event date suggestions | event form | constraint solving over calendars |
-| 2 | Meeting notes → tasks (paste or upload) | review panel, accept per item | extraction |
-| 2 | Retro summarisation | retro canvas → summary page | summarisation (Restricted-aware) |
-| 2 | Semantic search | Ctrl+K search | embeddings + FTS hybrid |
-| 2 | Ask with citations | docked panel | RAG, citations required |
-| 2 | Onboarding plan drafting per role | onboarding module | constrained generation |
-| 2 | Similar past projects | new project wizard | embeddings |
-| 2 | Auto-link related items | related panel | embeddings + entities |
-| 3 | Multi-step agent ("move X's overdue items to next week and notify") | preview → confirm → undo window | agentic tool use via internal MCP server |
-| 3 | Anomaly flags on requests | approval screen (flag, never auto-reject) | classification |
-| 3 | Department workload signals (aggregate only) | director view | aggregation |
-| 3 | Cross-unit status roll-up | director brief | summarisation |
+Features (each a small, specific tool, with its own prompt, schema and eval set; the user always
+sees a preview and accepts): quick-add parsing in four locales; task breakdown into subtasks; "plan
+my day/sprint" for the personal workspace; deadline-risk explanations; weekly summary per person and
+per department (drafts the digest); event drafting (description, checklist, poll options, carpool
+plan) from a one-line idea; comment-thread summary on long cards; natural-language analytics ("show
+overdue cards of Data bo'limi this month" → filter grammar + chart choice); translate any text among
+the four locales; smart reminder timing suggestions; duplicate/related card detection; "what did I
+miss" after time away; retro/feedback summarisation; department health narrative for the head. Guard
+rails: content is data, tools are allow-listed per feature, no feature both reads private contact
+blocks and sends externally, citations (links to cards/events) in every summary.
 
 ---
 
-## 10. Notifications and Telegram
+## 9. Analytics (for everyone in the department)
 
-- Model: domain event → `notifications` (reason-tagged) → per-person preferences → channel adapters
-  (in-app realtime, Telegram, email, web push) → digests; a ~300-line pg-boss worker instead of Novu
-  (fewer moving parts) [notifications-telegram-mobile addendum §L].
-- Quiet hours: tenant default 20:00–08:00 and weekends, server-enforced; only `blocking` escalations
-  may override.
-- Telegram bot (grammY, webhook on `apps/api`): account linking, deep links to records, inline
-  buttons for approve/decline/RSVP/mark-done with `answerCallbackQuery`, message editing for live RSVP
-  counts, Friday nudges, daily/weekly digests, uz/ru/en templates, rate-limit-aware sender with
-  auto-retry, "pointer not payload" enforced by an allow-list serializer and a build-time check.
-- Mini App (phase 2): inbox, approvals, pulse, RSVP, quick-add; `initData` HMAC validation; theme tokens
-  mapped to Telegram theme params; haptics on confirm.
-- Email: local SMTP relay; never on the critical path of an approval.
-- Web push (VAPID): secondary, opt-in.
-- Calendar: ICS feeds per person and unit (leave, events, deadlines); CalDAV/Graph sync in phase 2.
+One analytics page with a filter bar (person, unit, project, giver, label, date range, status, any
+grammar token) and saved filters; sections: throughput (cards done per week), on-time rate, open vs
+overdue trend, load per person and per unit, project progress and burn-up, cycle time distribution,
+events participation and RSVP rates, poll turnout, Pomodoro/sprint stats for the viewer only. Every
+chart has an owner question in its header, animates in, supports keyboard, exports CSV/PNG, and can
+be pinned to Home. Aggregates are precomputed nightly into `analytics_daily` and refreshed on write
+for the current day; heavy queries never run on the request path.
 
 ---
 
-## 11. Security and compliance
+## 10. Super admin console
 
-- ASVS 5.0 Level 2 checklist tracked in `docs/adr/ADR-000-security-baseline.md` (to be written in
-  EPIC-000).
-- Data localisation: all services in-country; provider allow-list for AI by tier; no telemetry egress.
-- Secrets: env only, `.env.example` documented, Compose secrets; SBOM (Trivy) + dependency scanning
-  + Renovate self-hosted; npm provenance checks for `@tanstack/*` and other critical packages.
-- Audit: append-only tables with revoked UPDATE/DELETE; restricted reads logged with purpose;
-  retention policy per table (`retention.sweep`).
-- Threats explicitly tested in CI: cross-tenant read/write, vertical escalation, restricted-field leak
-  through list/search/export/notification/Telegram, CSRF, file type sniffing, SSRF in URL fields, CSV
-  injection in exports, prompt injection into AI features.
-- Certification: the platform likely falls under state-body information-system requirements
-  (expertise/certification); the architecture keeps a clean boundary (single box, documented data flows)
-  to make that process tractable [uzbekistan-context addendum §5] **[DECISION NEEDED: timing]**.
+Requests queue (approve/reject with reason), departments (list, view-as read-only, pause a
+department, archive, restore, delete after retention), accounts (search, lock/unlock, reset password,
+force 2FA reset, delete/anonymise), global analytics (departments, people, activity, AI spend) in
+polished visualisations, audit viewer with chain verification and export, system health (queues,
+DB, storage, Telegram, AI endpoint latency, backups), registration open/closed, **pause switch**
+and **wipe switch** (§11).
 
 ---
 
-## 12. Testing and gates (maps to `agentic/gates.json`)
+## 11. Pause and wipe switches (decision 16)
+
+- **Pause (maintenance mode).** A toggle with a message in four locales. When on: every page renders
+  the message on a branded 503 page (super admin login and the console stay reachable), every API
+  returns 503 with the message, workers pause non-critical jobs, the Telegram bot answers with the
+  message, and Caddy serves the same page if the API is down. State in `instance_settings` and in
+  Valkey for instant effect; audited.
+- **Wipe (kill switch).** Removes everything about this project from the server and nothing else.
+  Because the app cannot delete itself, `infra/sentinel/` is a tiny host service (systemd unit,
+  listens on `127.0.0.1` only) that accepts a wipe command signed with a key that exists only in the
+  sentinel's config and the super admin's password-protected console. In the console: type the
+  department-count phrase shown, re-enter the password, confirm 2FA if enabled, then a 60-second
+  countdown with cancel. The sentinel then: stops and removes the project's containers, images and
+  volumes, deletes the project directory, backups and logs under `/opt/devon`, and writes a single
+  line "wiped at <time> by <user>" to `/var/log/devon-wipe.log`. Also available as a CLI on the host
+  (`devon-wipe --confirm`) for the CTO. Documented in `infra/README.md` with a recovery note (there
+  is none, by design).
+
+---
+
+## 12. Gates (maps to `agentic/gates.json`) and the hardening pass
 
 | Gate | Implementation |
 |---|---|
-| typecheck / lint | `tsc -b`, ESLint 9 flat + typescript-eslint, Prettier check |
-| unit | Vitest 4 (services, state machines, filter grammar, `can()`, plural rules); Storybook 9 addon-vitest for components |
-| i18n | `check-i18n.mjs` (parity, missing keys, hard-coded strings, ru plural completeness) |
-| secrets / deps | `check-secrets.mjs`, Trivy, npm audit high |
-| build | web + api builds; `size-limit` on the shell |
-| migrate | Testcontainers Postgres 17: apply all migrations twice; drift check; **cross-tenant isolation test** (required) |
-| e2e | Playwright projects at 1440/1024/390 × light/dark × uz/ru for the ritual flows: quick-add, Friday pulse, escalation queue, leave in 3 taps + inbox approval, RSVP with waitlist, onboarding checklist, delegation, Telegram callback (mocked), offline queue; two-browser realtime board test |
-| a11y | axe on every route in `e2e/routes.json`, keyboard walkthrough spec |
-| bundle | `check-bundle.mjs` |
-| perf | Lighthouse CI ≥ 90 on Home, People, Board, Project, Request; k6 smoke (200 VUs) |
-| ai-evals | promptfoo golden set (warn in phase 1, blocking from AI level 2) |
+| typecheck / lint | `tsc -b`, ESLint 9, Prettier |
+| unit | Vitest 4: services, state rules, filter grammar, `can()`, plural rules, AI schema validators; Storybook addon-vitest for components |
+| i18n | `check-i18n.mjs`: four-way parity, missing keys, hard-coded strings, ru plural completeness |
+| secrets / deps / security | `check-secrets.mjs`, npm audit, Trivy (fs + image), Semgrep (OWASP rules), licence allow-list |
+| build / bundle | web + api builds; `size-limit` 200 kB shell; `check-bundle.mjs` |
+| migrate | Testcontainers Postgres 17: migrations twice; drift; **cross-department isolation test**; **audit immutability test** (UPDATE/DELETE must fail) |
+| e2e | Playwright at 1440/1024/390 × light/dark × uz-Latn/ru: register → create department → approve → invite → join; people board drag; group project; personal sprint + Pomodoro; event with RSVP, carpool, poll; Telegram callback (mocked); pause switch; offline queue; two-browser realtime |
+| a11y | axe on every route in `e2e/routes.json`; keyboard walkthrough spec |
+| perf | Lighthouse CI ≥ 90 on Home, Board, Project, Events, Personal, Analytics; k6 (200 VUs, p95 < 150 ms API) |
+| ai-evals | promptfoo golden + red-team sets (warn until EPIC-012, then blocking) |
+| hardening | `agentic/HARDENING.md` checklist executed and evidenced in the production-readiness report (EPIC-014) |
 
 ---
 
 ## 13. Deployment and operations
 
-- `infra/docker-compose.yml`: caddy (TLS, HTTP/3), api, worker, web (static via caddy), postgres 17
-  (+ pgvector, pg_trgm), valkey, minio, centrifugo, clamav, pgbackrest sidecar, optional
-  grafana/loki/tempo. The GLM inference service runs on the separate ministry GPU host and is reached
-  over the internal network as an OpenAI-compatible endpoint (`AI_BASE_URL`). Images pinned by digest; healthchecks; resource limits;
-  `.env.example` documents every variable; `pnpm setup && pnpm dev` for developers (Docker for
-  Postgres/MinIO/Keycloak only).
-- Backups: pgBackRest full weekly + WAL; quarterly restore drill scripted (`infra/scripts/restore-drill.sh`).
-- Upgrades: expand → migrate → contract; previous image + no destructive migration in the same release
-  = rollback; `/healthz`, `/readyz`; structured logs (pino) with request/tenant ids; OpenTelemetry traces
-  optional; Sentry self-hosted or GlitchTip **[DECISION NEEDED]**.
-- Sizing (single ministry, 500 users): 4 vCPU / 16 GB / 200 GB SSD; AI on-prem needs a separate GPU host.
-- k3s/Helm only when tenants or HA require it.
+`infra/docker-compose.yml`: caddy (TLS, HTTP/3, Brotli), api, worker, web (static), postgres 17
+(+ pgvector, pg_trgm), valkey, minio, centrifugo, clamav, pgbackrest, optional grafana/loki/tempo,
+optional bge-m3 embedding sidecar; `infra/sentinel/` on the host; images pinned by digest;
+healthchecks; resource limits; `.env.example` documents every variable; `pnpm setup && pnpm dev`
+for developers; `pnpm start --demo` seeds the demo; production starts with the super admin
+bootstrap (first run prints a one-time setup URL). Backups: pgBackRest full weekly + WAL, MinIO
+mirror, weekly automated restore verification, quarterly drill. Zero-downtime: expand → migrate →
+contract; rolling restart behind Caddy; graceful shutdown; queued jobs survive. Observability: pino
+structured logs with request/user/department ids and no secrets, OpenTelemetry optional, error
+tracking self-hosted (GlitchTip), `/healthz`, `/readyz`, queue and AI metrics on the admin health page.
 
 ---
 
-## 14. Demo tenant and seed
+## 14. Demo mode
 
-Demo mode (decision 7): `pnpm start --demo` (or `DEVON_DEMO=1`) seeds everything below on first boot
-and shows a "demo data" chip in the header; without it a fresh install starts empty and opens the
-admin bootstrap wizard (create tenant, first admin, locale, holidays). `packages/db/seed/` creates
-tenant `raqamli-demo` with the department from the reference (director,
-4 units, 23 people with three-part Uzbek names, positions incl. 2 vacancies, 14 projects with pulse
-history, ~180 tasks incl. topshiriqs and escalations, leave balances and 2026 holidays, 4 events with
-RSVPs, an onboarding plan for a newcomer starting next Monday, 6 pages, 2 retro canvases, notifications,
-and demo accounts `director@demo`, `head.sr@demo`, `spec.db@demo`, `hr@demo`, `admin@demo`,
-`newcomer@demo` (password printed by the seed). The seed doubles as Playwright fixtures and the
-"show it to another ministry" demo.
-
----
-
-## 15. Delivery plan (epics → `docs/03-plan/backlog.json`)
-
-| Epic | Title | Phase | Depends on | Class |
-|---|---|---|---|---|
-| EPIC-000 | Foundation: monorepo, tokens, shell, built-in auth (sessions, 2FA), tenancy + RLS, audit/outbox, `--demo` seed, four-locale i18n, terminology pass, gates, CI, Compose | 1 | – | C |
-| EPIC-001 | People & Organisation: directory, positions, org chart, privacy tiers, verification, delegation | 1 | 000 | C |
-| EPIC-002 | Work core: tasks/topshiriq, projects, list/board/timeline, quick-add, filter grammar, saved views, comments, attachments, labels, checklists | 1 | 001 | B |
-| EPIC-003 | Rituals: Friday pulse, health computation, Ijro nazorati queue, objectives | 1 | 002 | B |
-| EPIC-004 | Inbox & notifications: event bus, preferences, quiet hours, digests, email, ICS | 1 | 002 | B |
-| EPIC-005 | Telegram bot: link, nudges, approvals, RSVP, deep links | 1 | 004 | C |
-| EPIC-006 | Availability & decisions: away status with auto-delegation prompt, the decision primitive on tasks, one-tap decide from inbox and Telegram | 1 | 004 | B |
-| EPIC-007 | Events & team building: events, RSVP/waitlist, checklist, budget, feedback, date polls, photos | 1 | 004 | B |
-| EPIC-008 | Pages editor: Tiptap, templates, mentions, assignable checklist items, versions | 1 | 002 | B |
-| EPIC-009 | Onboarding: templates, plans, items by role, buddy, "how we work" pages, progress, 30/60/90 | 1 | 008 | B |
-| EPIC-010 | Home & director brief, search (FTS + normalize_uz), "My work", "Waiting on" | 1 | 003, 006 | B |
-| EPIC-011 | AI level 1: gateway, quick-add parse, translate, pulse draft, catch-up, briefing, duplicates, tags, digest ranking | 1 | 010 | C |
-| EPIC-012 | Instance & workspace admin: super admin console, workspace creation, ministry view (read-only), visibility switch, theme, holidays, roles, immutable audit viewer with chain verification, API keys/webhooks | 1 | 001 | C |
-| EPIC-013 | Hardening: a11y, i18n QA, performance, offline queue, error states, release 1.0 | 1 | 003–012 | B |
-| EPIC-014 | Telegram Mini App | 2 | 005, 013 | C |
-| EPIC-015 | Canvas (retro/brainstorm), voting, timer | 2 | 008 | B |
-| EPIC-016 | AI level 2: semantic search, ask with citations, meeting notes → tasks, retro summary, onboarding drafting | 2 | 011, 015 | C |
-| EPIC-017 | Team extras: capacity as a derived person × week view, 1:1 notes, kudos on finished work, birthdays | 2 | 010 | B |
-| EPIC-018 | Calendar sync (CalDAV/Graph), web push, ICS subscriptions | 2 | 004 | C |
-| EPIC-019 | Automations (5 triggers), recurring tasks, templates gallery | 2 | 002 | B |
-| EPIC-020 | Multi-ministry operations: tenant provisioning UI, instance admin, backups UI, k3s option | 2 | 012 | C |
-| EPIC-021 | State integrations (OneID, E-Imzo, ijro) — **dropped by decision 10** | – | – | – |
-| EPIC-022 | AI level 3: agent execution with preview/undo, anomaly flags, workload signals | 3 | 016 | C |
-| EPIC-023 | Decision intelligence: delivery confidence trend, dependency alerts, forecasts | 3 | 017 | B |
-| EPIC-024 | Cyrillic Uzbek locale, EGDI observatory for Strategy & Rankings | 3 | 013 | B |
-
-Phase 1 = EPIC-000…013 (target ninety days with the agentic loop; sequential by dependency, parallel
-worktrees where TOUCHES are disjoint).
+`--demo` (or `DEVON_DEMO=1`) seeds: the super admin, 3 departments (one modelled on "Axborot-tahlil
+va ijro intizomi boshqarmasi" with two bo'limlar and a sub-bo'lim; one flat team without unit heads;
+one pending request), ~40 users with three-part Uzbek names and avatars, ~250 cards across people
+columns with givers, links, checklists and comment timelines, 6 group projects with objective and
+subjective tasks, archives, 5 events (one with carpools and a date poll, one cancelled, one done with
+photos and feedback), polls, pages and an onboarding template, personal workspaces for the demo
+accounts (sprints, nested tasks, a canvas, Pomodoro history), notifications, Telegram links (mock),
+AI traces, 2026 holidays, and an audit chain. Demo accounts: `superadmin`, `head.sr`, `head.flat`,
+`member.db`, `newcomer`, `pending.creator` (passwords printed by the seed; demo chip in the header).
 
 ---
 
-## 16. Coding standards (binding for makers)
+## 15. Delivery plan (epics, in `backlog.json`; work items in `TASKS.md`)
 
-- TypeScript strict; no `any` in `packages/contracts`; Zod schemas are the source of truth for types.
-- Every table: `tenant_id`, timestamps, soft delete, `version`; every write: audit + outbox in one
-  transaction; every endpoint: `can()`; every string: i18n; every screen: four states; every primary
-  action: keyboard path + command registry entry.
-- Commits `<ITEM-ID>: <user-visible change>`; migrations additive first; tests assert behaviour.
-- Never edit an applied migration; never bypass the API client; never hard-code a colour.
+| Epic | Title | Depends on |
+|---|---|---|
+| EPIC-000 | Foundation: monorepo, tokens, shell, gates, CI, Compose, sentinel skeleton, audit schema, sessions core, super admin bootstrap, demo framework, four locales, terminology pass | – |
+| EPIC-001 | Accounts: registration, login, sessions, devices, optional 2FA, profile & photo, password reset paths, account deletion | 000 |
+| EPIC-002 | Departments: create request, super admin approval, join key + password, invite sheet with localised copy and QR, join by link/form, memberships, settings, switcher | 001 |
+| EPIC-003 | Structure: bo'limlar with unlimited nesting, self-assignment, unit roles, org chart correct without heads, colours, reorder | 002 |
+| EPIC-004 | Work core: cards, giver/assignee, deadlines, links/attachments, checklists (nested), comments + activity timeline, labels, watchers, People board grouped by bo'lim, quick-add, filter grammar, saved views, table/timeline/calendar/mine, archive, undo | 003 |
+| EPIC-005 | Group projects: members, objective vs subjective tasks, progress, milestones, project page, templates | 004 |
+| EPIC-006 | Inbox & notifications: reasons, preferences, quiet hours, deadline reminders, digests, ICS | 004 |
+| EPIC-007 | Telegram: personal linking, commands, inline actions, department groups via join key, group updates, reminders, reset/2FA codes | 006 |
+| EPIC-008 | Events: create/edit/cancel with change notifications, RSVP with guests/cancel/waitlist, comments, reminders, carpooling with seats, polls (date/single/multi, anonymous), who-brings-what, photos, feedback, calendar, ICS, illustrations | 006 |
+| EPIC-009 | Personal workspace: sprints (3h/day/week/custom), nested tasks with checkboxes, today/focus, notes, canvas with stickies, Pomodoro (defaults, editable, sessions, sounds, notifications), privacy | 004 |
+| EPIC-010 | Analytics for everyone: filter bar, saved filters, throughput/on-time/load/overdue/projects/events, precomputed aggregates, exports, animated charts, pin to Home | 005, 008 |
+| EPIC-011 | Pages & onboarding-lite: how-we-work pages, onboarding checklist template, newcomer flow | 004 |
+| EPIC-012 | AI helpers L1 (list in §8), gateway, budgets, evals, settings | 010 |
+| EPIC-013 | Super admin console: requests, departments, accounts, password reset, view-as, global analytics, audit viewer + chain verify, health, pause switch, wipe switch + sentinel | 002 |
+| EPIC-014 | Hardening & release 1.0: execute `agentic/HARDENING.md` end to end, production-readiness report with before/after measurements | all above |
+| EPIC-015 | Telegram Mini App: inbox, board peek, RSVP, polls, Pomodoro companion | 007, 014 |
+| EPIC-016 | AI L2: embeddings sidecar, semantic search, ask with citations, related cards, similar projects | 012 |
+| EPIC-017 | Automations (5 triggers), recurring cards, templates gallery | 005 |
+| EPIC-018 | Realtime polish: presence on boards, live cursors on canvas, typing indicators | 009 |
+| EPIC-019 | Calendar sync (CalDAV/Graph), web push | 006 |
+| EPIC-020 | Operations: install guide for another server, restore drills, update channel, k3s option | 013 |
+
+---
+
+## 16. Coding standards (binding)
+
+TypeScript strict; Zod schemas are the source of truth; every department table has `department_id`
+and RLS; every write emits audit + outbox in one transaction; every endpoint checks `can()`; every
+string through i18n in four locales; every screen has empty/loading/error/no-permission/offline
+states; undo over confirm; `Ctrl/⌘+K` reaches everything; tokens only; commits `<ITEM-ID>: <user-visible
+change>`; migrations additive first; tests assert behaviour; no secrets in the repo; no `console.log`
+in production code; every list endpoint paginated; no query in a loop; no `await` in a loop over
+independent items; every external call has a timeout and bounded retries.
 
 ---
 
 ## 17. Risks
 
-| Risk | Mitigation |
-|---|---|
-| TanStack Table v9 freshly stable; AI-generated code follows v8 shapes | pin exact version; reviewer checklist item; one shared table component |
-| Uzbek FTS quality | `normalize_uz` validated against a real name corpus in EPIC-010; trigram fallback |
-| On-prem model quality for Uzbek | benchmark before routing Restricted tier; phase-1 AI features avoid Restricted data |
-| Keycloak operational weight | realm export in repo, provisioning job, admin runbook in EPIC-000 |
-| Telegram policy in the ministry | pointer-only policy documented; feature-flag the bot per tenant |
-| Ninety-day scope | bounded loop, gates, and the backlog order above; hardening epic reserved |
-| Certification of state systems | clean single-box architecture; documented data flows; ADR-000 |
+TanStack Table v9 freshness (pin, shared component); Uzbek FTS (normalize_uz validated in EPIC-004);
+GLM quality for Uzbek (golden set gate in EPIC-012, features off by default until green); Telegram
+policy (feature-flag per department); wipe switch misuse (password + 2FA + countdown + host-only
+sentinel); scope size (bounded loop, epics ship independently, hardening epic reserved).
 
 ---
 
-## 18. Decisions log (to become ADRs in EPIC-000)
+## 18. ADRs to write in EPIC-000
 
-ADR-000 security baseline (ASVS L2); ADR-001 monorepo and versions; ADR-002 tenancy = shared schema +
-RLS, Keycloak Organizations; ADR-003 BFF auth; ADR-004 outbox/audit; ADR-005 filter grammar; ADR-006
-notifications model and Telegram pointer policy; ADR-007 AI gateway routing by tier; ADR-008 pages
-editor storage (JSON, LWW, Yjs behind flag); ADR-009 canvas library; ADR-010 design tokens and
-per-tenant theming.
+ADR-000 security baseline (ASVS L2 + HARDENING); ADR-001 monorepo/versions; ADR-002 tenancy =
+department_id + RLS; ADR-003 built-in auth; ADR-004 audit immutability; ADR-005 filter grammar;
+ADR-006 notifications & Telegram pointer policy; ADR-007 AI gateway (GLM-5.2); ADR-008 pages
+storage; ADR-009 canvas (Excalidraw); ADR-010 tokens/theming; ADR-011 pause/wipe switches.
 
-## 19. Decisions (answered by the CTO on 2026-09-05; frozen)
+---
 
-| # | Decision | Consequence in this spec |
-|---|---|---|
-| 1 | **AI = GLM (~300B) self-hosted on the ministry's GPU host.** No external API. | §9: single in-country provider for every tier; OpenAI-compatible endpoint through the AI SDK provider; embeddings model to be deployed alongside (bge-m3 proposed); Uzbek quality benchmarked in EPIC-011. |
-| 2 | **Hosting = ministry server (on-prem).** | §13: Docker Compose on the ministry box; GLM on the separate GPU host. |
-| 3 | **Tenant = department, one instance per ministry.** | §2: many department tenants in one deployment; ministry-wide directory of *public* profile fields, everything else department-scoped (default; see open point A). |
-| 4 | **Identity = built-in username/password with server sessions and optional 2FA. No OneID, no Keycloak.** | §2 rewritten: argon2id passwords, Postgres+Valkey sessions, HttpOnly cookies, CSRF, TOTP and Telegram-OTP as second factors, passkeys optional; OIDC-ready abstraction kept for the future. |
-| 5 | **Telegram bot approved** for notifications/reminders, one-tap approvals, RSVP, account linking, optional OTP. | §10 unchanged; OTP delivery added as an option. |
-| 6 | **Four locales, 100 % complete: uz-Latn (default), uz-Cyrl, ru, en.** | §0, §7: gate `i18n` enforces parity across four; Cyrillic generated by transliteration then human-reviewed. |
-| 7 | **No staffing table to import; the product ships a fully detailed demo mode (`--demo`).** | §14: `pnpm start --demo` / `DEVON_DEMO=1` seeds the complete demo ministry; production starts empty with an admin bootstrap wizard. |
-| 8 | **Palette B (navy-led, product-owned blue).** Real-world terminology to be researched from actual usage, not legal jargon. | `DESIGN.md` §2 switched to Palette B; terminology pass scheduled before UI copy is frozen (EPIC-000 deliverable). |
-| 9 | **The CTO maintains and directs.** | TypeScript stack stands; runbooks written for one operator. |
-| 10 | **No E-Imzo, no ijro.gov.uz, no OneID.** | EPIC-021 dropped; Phase 3 keeps only AI level 3, decision intelligence, Cyrillic/EGDI items. |
+## 19. Decisions (CTO, 2026-09-05; frozen)
 
-| 11 | **Hierarchy = instance (ministry) → workspaces (any unit: boshqarma / departament / bo'lim) → optional sub-units with optional heads.** Workspaces private by default with a `ministry` visibility switch; ministry leadership gets a read-only ministry view; only the super admin creates workspaces; workspace admins run everything inside. | §2, §3.1, §5 rewritten; modelled on the ministry's structure page (digital.uz/oz/structure). |
-| 12 | **No HR module.** Availability is a status; decisions are a primitive on tasks; no leave balances, trips, attestation, restricted HR records. | §3.3 rewritten; `people_restricted` removed; EPIC-006 re-scoped. |
-| 13 | **2FA optional for everyone** (TOTP or Telegram code), recommended in settings, never forced. | §2. |
-| 14 | **At least one super admin; an audit log that cannot be deleted after production.** | §3.6: `audit` schema, INSERT/SELECT-only role, hash chain, nightly anchor to a separate volume and Telegram, no retention sweep. |
-| 15 | **GLM-5.2 at `https://api-llm.gpu.uz/v1`** (256k context, reasoning-first, tool calling, UZS billing). | §9; instruction file saved at `docs/03-plan/integrations/glm-api-instruction.md` with key fields blank. |
-
-No open points remain that block the build.
+| # | Decision |
+|---|---|
+| 1 | AI = `glm-5.2` at `https://api-llm.gpu.uz/v1` (OpenAI-compatible, 256k, reasoning-first, tool calling, UZS billing); no external AI; key only in env |
+| 2 | Hosting = ministry server, Docker Compose |
+| 3 | No ministry layer: one instance = super admin + departments; departments never see each other |
+| 4 | Identity = built-in login/password with server sessions; 2FA optional for everyone (TOTP or Telegram code); password reset by super admin or Telegram code; no OneID/Keycloak |
+| 5 | Telegram bot approved: personal notifications/reminders, inline actions, department groups connected by join key, codes |
+| 6 | Four locales, 100 %: uz-Latn (default), uz-Cyrl, ru, en |
+| 7 | No import; `--demo` seeds a fully detailed demo; production starts with a super admin bootstrap |
+| 8 | Palette B; terminology from real usage (`packages/i18n/TERMS.md`) |
+| 9 | The CTO directs and maintains |
+| 10 | No E-Imzo, ijro.gov.uz, OneID |
+| 11 | Anyone can register; a fresh account creates a department (approved once by the super admin; creator becomes head) or joins with key + password; invite link `/join/<key>` with localised copy |
+| 12 | Inside a department everyone can create/edit/delete bo'limlar (unlimited nesting) and self-assign roles, controlled by head settings that default to allowed; UI complete without unit heads |
+| 13 | No HR module; personal workspace is private; department board = column per person grouped by bo'lim; done cards go to a department-readable archive |
+| 14 | Immutable, hash-chained audit log; at least one super admin who can see and edit everything, always logged |
+| 15 | GLM details as in §8 |
+| 16 | Super admin pause switch (custom message, four locales) and wipe switch (host sentinel; removes only this project) |
+| 17 | The production-hardening pass (`agentic/HARDENING.md`, 30 sections) is mandatory for every epic's verification and is executed in full in EPIC-014 |
+| 18 | Build everything in `backlog.json` end to end, not only phase 1; the ship loop runs until the backlog is empty |
