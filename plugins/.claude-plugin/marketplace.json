@@ -1,0 +1,15 @@
+{
+  "name": "workportal-local",
+  "owner": { "name": "WorkPortal team", "email": "dokon24org@gmail.com" },
+  "plugins": [
+    {
+      "name": "wp-agentic",
+      "source": "./wp-agentic",
+      "description": "Bounded, evidence-gated autonomous delivery loop (agents, workflows, hooks, gates, ledgers) for WorkPortal and any project that adopts the protocol.",
+      "version": "1.0.0",
+      "displayName": "WorkPortal Agentic Delivery System",
+      "author": { "name": "WorkPortal team" },
+      "keywords": ["agentic", "delivery", "workflow", "gates"]
+    }
+  ]
+}

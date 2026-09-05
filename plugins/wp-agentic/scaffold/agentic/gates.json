@@ -1,0 +1,50 @@
+{
+  "$schema": "./gates.schema.json",
+  "version": 1,
+  "limits": {
+    "MAX_FIX_ROUNDS": 3,
+    "MAX_EPIC_ROUNDS": 2,
+    "MAX_GATE_ATTEMPTS": 2,
+    "coverage_lines_min": 70,
+    "bundle_main_kb_max": 350,
+    "a11y_blocking_impacts": ["serious", "critical"],
+    "locales": ["uz", "ru", "en"],
+    "screenshot_widths": [1440, 1024, 390]
+  },
+  "profiles": {
+    "fast": ["typecheck", "lint", "unit", "i18n", "secrets"],
+    "item": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "e2e-smoke"],
+    "integration": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle"],
+    "release": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "deps"]
+  },
+  "gates": {
+    "typecheck": { "cmd": "pnpm -r --if-present typecheck", "blocking": true, "timeout_s": 600 },
+    "lint": { "cmd": "pnpm -r --if-present lint", "blocking": true, "timeout_s": 600 },
+    "unit": { "cmd": "pnpm -r --if-present test:unit -- --run", "blocking": true, "timeout_s": 900 },
+    "i18n": { "cmd": "node agentic/scripts/check-i18n.mjs", "blocking": true, "timeout_s": 120 },
+    "secrets": { "cmd": "node agentic/scripts/check-secrets.mjs", "blocking": true, "timeout_s": 120 },
+    "build": { "cmd": "pnpm -r --if-present build", "blocking": true, "timeout_s": 1200 },
+    "migrate": { "cmd": "pnpm --filter @workportal/db migrate:verify", "blocking": true, "timeout_s": 600 },
+    "e2e-smoke": { "cmd": "pnpm --filter @workportal/web test:e2e -- --grep @smoke", "blocking": true, "timeout_s": 1200 },
+    "e2e": { "cmd": "pnpm --filter @workportal/web test:e2e", "blocking": true, "timeout_s": 2400 },
+    "a11y": { "cmd": "pnpm --filter @workportal/web test:a11y", "blocking": true, "timeout_s": 1200 },
+    "bundle": { "cmd": "node agentic/scripts/check-bundle.mjs", "blocking": true, "timeout_s": 120 },
+    "deps": { "cmd": "pnpm audit --audit-level=high", "blocking": false, "blocking_on_release": true, "timeout_s": 300 }
+  },
+  "protected_paths": [
+    "agentic/gates.json",
+    "agentic/INVARIANTS.md",
+    "agentic/PROTOCOL.md",
+    "agentic/hooks/",
+    "agentic/scripts/gate.mjs",
+    "agentic/scripts/dod.mjs",
+    ".claude/settings.json"
+  ],
+  "fixer_forbidden_globs": [
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/e2e/**",
+    "**/__tests__/**",
+    "packages/db/migrations/**"
+  ]
+}

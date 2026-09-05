@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkPortal backlog",
+  "type": "object",
+  "required": ["version", "epics"],
+  "properties": {
+    "version": { "type": "integer" },
+    "epics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "status", "priority", "phase", "depends_on"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^EPIC-\\d{3}[a-z]?$" },
+          "title": { "type": "string" },
+          "status": { "enum": ["draft", "proposed", "ready", "in-progress", "done", "blocked", "dropped"] },
+          "priority": { "type": "number", "description": "lower runs sooner" },
+          "phase": { "enum": [1, 2, 3] },
+          "area": { "type": "string", "description": "people | org | work | docs | requests | inbox | home | platform | design-system | integrations | ai" },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "plan_ref": { "type": "string", "description": "section of docs/03-plan/FEATURE-PLAN.md or TECH-SPEC.md" },
+          "personas": { "type": "array", "items": { "enum": ["specialist", "head", "director", "hr", "admin", "other-ministry-admin"] } },
+          "outcomes": { "type": "array", "items": { "type": "string" }, "description": "what a user can do after this ships, plain language" },
+          "has_ui": { "type": "boolean" },
+          "class_hint": { "enum": ["A", "B", "C"] },
+          "constraints": { "type": "array", "items": { "type": "string" } },
+          "out_of_scope": { "type": "array", "items": { "type": "string" } },
+          "evidence": { "type": "array", "items": { "type": "string" }, "description": "research files / findings that justify it" },
+          "value": { "enum": ["L", "M", "H"] },
+          "complexity": { "enum": ["L", "M", "H"] },
+          "history": { "type": "array" },
+          "created": { "type": "string" }
+        }
+      }
+    }
+  }
+}

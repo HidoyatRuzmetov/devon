@@ -1,0 +1,9 @@
+{
+  "name": "wp-agentic",
+  "displayName": "WorkPortal Agentic Delivery System",
+  "version": "1.0.0",
+  "description": "Bounded, evidence-gated autonomous delivery loop: 16 role agents (pm, architect, designer, lead, makers, reviewers, QA, security, scout, release), workflows (ship, feature-cycle, review-sweep, polish-sweep, research-sweep), guard hooks, deterministic gate scripts, ledgers and templates. Never stalls: frozen acceptance criteria, fingerprinted findings, capped fix rounds, escalation files with safe defaults.",
+  "author": { "name": "WorkPortal team", "email": "dokon24org@gmail.com" },
+  "license": "MIT",
+  "keywords": ["agentic", "delivery", "workflow", "gates", "review", "qa", "multi-agent", "workportal", "devon"]
+}
