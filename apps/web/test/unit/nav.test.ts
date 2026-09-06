@@ -5,12 +5,14 @@ import { NAV_ENTRIES } from '../../src/shell/nav.js'
 describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // Core entries (`home`, `admin`) plus whatever `src/features/*/manifest.ts(x)` registers
   // (MODULE-GUIDE.md "Web features"), flattened in alphabetical directory order
-  // (`registry.ts`'s `import.meta.glob` sort): accounts, departments, projects, structure, work. Every
-  // one of those sidebar entries is visible to every signed-in role except `department-requests` (the
-  // super-admin approval queue) and the core `admin` entry, which stay `super_admin`-only.
+  // (`registry.ts`'s `import.meta.glob` sort): accounts, departments, events, projects, structure,
+  // work. Every one of those sidebar entries is visible to every signed-in role except
+  // `department-requests` (the super-admin approval queue) and the core `admin` entry, which stay
+  // `super_admin`-only.
   const featureEntryIds = [
     'account-settings',
     'departments',
+    'events',
     'projects',
     'structure',
     'people',
@@ -35,6 +37,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'account-settings',
       'departments',
       'department-requests',
+      'events',
       'projects',
       'structure',
       'people',

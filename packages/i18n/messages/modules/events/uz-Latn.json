@@ -1,0 +1,240 @@
+{
+  "events": {
+    "title": "Tadbirlar",
+    "view": {
+      "list": "Roʻyxat",
+      "calendar": "Taqvim"
+    },
+    "actions": {
+      "create": "Tadbir yaratish",
+      "edit": "Tahrirlash",
+      "save": "Saqlash",
+      "cancelEvent": "Tadbirni bekor qilish",
+      "close": "Yopish",
+      "retry": "Qayta urinish",
+      "back": "Orqaga"
+    },
+    "empty": {
+      "title": "Hozircha tadbirlar yoʻq",
+      "body": "Jamoangiz uchun birinchi tadbirni shu yerda yarating.",
+      "action": "Tadbir yaratish"
+    },
+    "loading": {
+      "title": "Tadbirlar yuklanmoqda"
+    },
+    "error": {
+      "title": "Tadbirlarni yuklab boʻlmadi",
+      "body": "Nimadir xato ketdi. Qayta urinib koʻring."
+    },
+    "forbidden": {
+      "title": "Ruxsat yoʻq",
+      "body": "Tadbirlarni koʻrish uchun boʻlim aʼzosi boʻlishingiz kerak."
+    },
+    "offline": {
+      "title": "Aloqa yoʻq",
+      "body": "Internet tiklanganda tadbirlar roʻyxati yangilanadi."
+    },
+    "category": {
+      "team_building": "Jamoa qurish",
+      "sports": "Sport",
+      "volunteering": "Koʻngillilik",
+      "social": "Ijtimoiy",
+      "training": "Trening",
+      "family": "Oilaviy",
+      "other": "Boshqa"
+    },
+    "status": {
+      "draft": "Qoralama",
+      "open": "Ochiq",
+      "full": "Joylar toʻlgan",
+      "cancelled": "Bekor qilingan",
+      "done": "Yakunlangan"
+    },
+    "card": {
+      "organizer": "Tashkilotchi: {name}",
+      "going": "{count} kishi boradi",
+      "waitlisted": "{count} kishi navbatda",
+      "capacity": "{going} / {capacity} joy",
+      "unlimitedCapacity": "Joylar soni cheklanmagan",
+      "deadline": "Roʻyxatdan oʻtish: {date}",
+      "cancelledBanner": "Bu tadbir bekor qilindi",
+      "cancelledReason": "Sabab: {reason}",
+      "doneBanner": "Bu tadbir yakunlandi"
+    },
+    "form": {
+      "titleLabel": "Tadbir nomi",
+      "titlePlaceholder": "Masalan, kuzgi jamoaviy piknik",
+      "descriptionLabel": "Tavsif",
+      "descriptionPlaceholder": "Tadbir haqida qisqacha yozing",
+      "categoryLabel": "Toifa",
+      "startsAtLabel": "Boshlanish vaqti",
+      "endsAtLabel": "Tugash vaqti",
+      "placeLabel": "Manzil",
+      "placePlaceholder": "Masalan, boʻlim yigʻilishlar zali",
+      "placeUrlLabel": "Manzil havolasi",
+      "capacityLabel": "Joylar soni",
+      "capacityPlaceholder": "Cheklanmagan",
+      "waitlistEnabledLabel": "Joylar tugasa navbat ochilsin",
+      "rsvpDeadlineLabel": "Roʻyxatdan oʻtish muddati",
+      "costNoteLabel": "Xarajat haqida eslatma",
+      "costNotePlaceholder": "Masalan, transport boʻlim hisobidan",
+      "remindersLabel": "Eslatmalar",
+      "reminderDayBefore": "1 kun oldin",
+      "reminderHourBefore": "1 soat oldin",
+      "submitCreate": "Tadbirni yaratish",
+      "submitUpdate": "Oʻzgarishlarni saqlash",
+      "validation": {
+        "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak"
+      }
+    },
+    "diff": {
+      "title": "Nimalar oʻzgardi",
+      "field": {
+        "title": "Nomi",
+        "startsAt": "Boshlanish vaqti",
+        "endsAt": "Tugash vaqti",
+        "place": "Manzil",
+        "placeUrl": "Manzil havolasi",
+        "capacity": "Joylar soni",
+        "costNote": "Xarajat eslatmasi",
+        "description": "Tavsif"
+      }
+    },
+    "cancelDialog": {
+      "title": "Tadbirni bekor qilish",
+      "body": "Roʻyxatdan oʻtgan barcha xodimlarga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi.",
+      "reasonLabel": "Sabab",
+      "reasonPlaceholder": "Xodimlarga tushuntiring",
+      "confirm": "Ha, bekor qilish",
+      "keepEvent": "Yoʻq, saqlab qolish"
+    },
+    "rsvp": {
+      "title": "Ishtirok etasizmi?",
+      "status": {
+        "yes": "Ha, boraman",
+        "no": "Bormayman",
+        "maybe": "Ehtimol",
+        "waitlist": "Navbatda"
+      },
+      "guestsLabel": "Mehmonlar soni",
+      "noteLabel": "Izoh (ixtiyoriy)",
+      "notePlaceholder": "Masalan, allergiya yoki boshqa eslatma",
+      "submit": "Yuborish",
+      "update": "Yangilash",
+      "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
+      "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
+      "confirmedToast": "Ishtirokingiz qayd etildi",
+      "waitlistedToast": "Joylar toʻlgan -- navbatga qoʻyildingiz",
+      "myStatus": "Sizning javobingiz: {status}",
+      "notYet": "Hali javob bermadingiz"
+    },
+    "attendees": {
+      "title": "Ishtirokchilar",
+      "titleCount": "Ishtirokchilar ({count})",
+      "empty": "Hozircha hech kim javob bermadi",
+      "guestsSuffix": "+{count} mehmon"
+    },
+    "comments": {
+      "title": "Muhokama",
+      "empty": "Hozircha izoh yoʻq. Birinchi boʻling.",
+      "placeholder": "Izoh yozing",
+      "submit": "Yuborish",
+      "delete": "Oʻchirish",
+      "deleteConfirm": "Izohni oʻchirmoqchimisiz?"
+    },
+    "carpool": {
+      "title": "Birga borish",
+      "empty": "Hozircha birga borish takliflari yoʻq",
+      "offer": "Mashina taklif qilish",
+      "seatsLabel": "Boʻsh oʻrindiqlar",
+      "departurePlaceLabel": "Joʻnash nuqtasi",
+      "departureAtLabel": "Joʻnash vaqti",
+      "noteLabel": "Izoh",
+      "driver": "Haydovchi: {name}",
+      "seatsTaken": "{claimed} / {seats} oʻrin band",
+      "claim": "Oʻrin band qilish",
+      "release": "Voz kechish",
+      "waitlisted": "Navbatda",
+      "confirmed": "Tasdiqlangan",
+      "passengers": "Yoʻlovchilar",
+      "driverCannotClaim": "Haydovchi oʻz taklifidan oʻrin ololmaydi",
+      "cancelled": "Bu taklif bekor qilingan"
+    },
+    "items": {
+      "title": "Kim nima olib keladi",
+      "empty": "Hozircha buyumlar roʻyxati boʻsh",
+      "add": "Buyum qoʻshish",
+      "labelPlaceholder": "Masalan, choy-poy",
+      "quantityLabel": "Miqdori",
+      "claim": "Men olib kelaman",
+      "release": "Voz kechish",
+      "claimedBy": "Olib keladi: {name}",
+      "claimedByMe": "Siz olib kelasiz",
+      "alreadyClaimed": "Bu buyumni allaqachon boshqa xodim oldi"
+    },
+    "polls": {
+      "title": "Soʻrovnomalar",
+      "empty": "Hozircha soʻrovnoma yoʻq",
+      "create": "Soʻrovnoma yaratish",
+      "kindLabel": "Turi",
+      "kind": {
+        "date": "Sana tanlash",
+        "single": "Bitta variant",
+        "multi": "Bir nechta variant"
+      },
+      "questionLabel": "Savol",
+      "questionPlaceholder": "Masalan, piknik uchun qaysi sana qulay?",
+      "anonymousLabel": "Anonim ovoz berish",
+      "closesAtLabel": "Yakunlanish vaqti",
+      "optionsLabel": "Variantlar",
+      "optionPlaceholder": "Variant matni",
+      "addOption": "Variant qoʻshish",
+      "removeOption": "Olib tashlash",
+      "vote": "Ovoz berish",
+      "changeVote": "Ovozni oʻzgartirish",
+      "totalVotes": "{count} ta ovoz",
+      "closed": "Yakunlangan",
+      "yourVote": "Sizning ovozingiz",
+      "createdBy": "Yaratdi: {name}"
+    },
+    "photos": {
+      "title": "Fotosuratlar",
+      "empty": "Hozircha fotosurat yoʻq",
+      "add": "Havola qoʻshish",
+      "urlLabel": "Rasm havolasi",
+      "captionLabel": "Izoh (ixtiyoriy)",
+      "delete": "Oʻchirish"
+    },
+    "feedback": {
+      "title": "Fikr-mulohaza",
+      "empty": "Hozircha fikr bildirilmagan",
+      "ratingLabel": "Baho",
+      "commentLabel": "Fikringiz (ixtiyoriy)",
+      "anonymousLabel": "Anonim qoldirish",
+      "submit": "Yuborish",
+      "update": "Yangilash",
+      "average": "Oʻrtacha baho: {rating} / 5",
+      "yours": "Sizning bahoyingiz",
+      "anonymousAuthor": "Anonim",
+      "thankYou": "Fikringiz uchun rahmat"
+    },
+    "ics": {
+      "exportEvent": "Taqvimga qoʻshish (.ics)",
+      "exportMine": "Mening tadbirlarim (.ics)"
+    },
+    "tabs": {
+      "overview": "Umumiy",
+      "rsvp": "Ishtirok",
+      "carpool": "Birga borish",
+      "items": "Buyumlar",
+      "polls": "Soʻrovnomalar",
+      "photos": "Fotosuratlar",
+      "feedback": "Fikr-mulohaza",
+      "comments": "Muhokama"
+    },
+    "filters": {
+      "from": "Boshlanish",
+      "to": "Tugash"
+    }
+  }
+}
