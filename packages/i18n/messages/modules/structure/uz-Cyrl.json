@@ -1,0 +1,83 @@
+{
+  "structure": {
+    "nav": { "units": "Тузилма", "people": "Ходимлар" },
+    "units": {
+      "title": "Тузилма",
+      "subtitle": "{departmentName} бўлимлари ва лавозимлари",
+      "empty": {
+        "title": "Ҳали бўлим йўқ",
+        "body": "Бўлимни тузганингиздан кейин ходимларни унга тақсимлашингиз мумкин.",
+        "action": "Бўлим қўшиш"
+      },
+      "addUnit": "Бўлим қўшиш",
+      "addSubUnit": "Ички бўлим қўшиш",
+      "rename": "Номини ўзгартириш",
+      "renameLabel": "Бўлим номи",
+      "delete": "Ўчириш",
+      "deleteConfirm": {
+        "title": "«{name}» ўчирилсинми?",
+        "body": "Аъзолар бўлимсиз қолади. Бир муддат «Бекор қилиш» билан қайтариш мумкин.",
+        "confirm": "Ўчириш",
+        "cancel": "Бекор қилиш"
+      },
+      "deletedToast": "«{name}» ўчирилди",
+      "undo": "Бекор қилиш",
+      "restoredToast": "«{name}» тикланди",
+      "colourLabel": "Ранг",
+      "colourAuto": "Автоматик",
+      "settingsNotice": {
+        "structureEdit": "Ҳозирча тузилмани фақат бўлим бошлиғи таҳрирлай олади",
+        "selfAssign": "Ҳозирча лавозимларни фақат бўлим бошлиғи белгилай олади"
+      },
+      "dragHint": "Тартибини ўзгартириш учун тортинг",
+      "view": { "tree": "Рўйхат", "chart": "Тузилма схемаси" },
+      "chart": {
+        "exportPng": "PNG сифатида сақлаш",
+        "noHead": "Бошлиғи ҳали тайинланмаган",
+        "headBadge": "Бошлиғи",
+        "deputyBadge": "Ўринбосари",
+        "memberCount": "{count} киши",
+        "keyboardHint": "Бўлимлар орасида ўтиш учун стрелка тугмаларидан фойдаланинг"
+      },
+      "validation": { "nameRequired": "Номини киритинг" },
+      "addDialog": {
+        "title": "Янги бўлим",
+        "namePlaceholder": "Масалан, Мониторинг гуруҳи",
+        "parentLabel": "Юқори бўлим",
+        "rootOption": "Йўқ — асосий бўлим",
+        "create": "Яратиш",
+        "cancel": "Бекор қилиш"
+      }
+    },
+    "roles": {
+      "roleLabel": { "head": "Бўлим бошлиғи", "deputy": "Ўринбосар", "member": "Аъзо" },
+      "join": "Ушбу бўлимга қўшилиш",
+      "joinAs": "{role} сифатида қўшилиш",
+      "leave": "Бўлимдан чиқиш",
+      "assign": "Тайинлаш",
+      "assignDialog": {
+        "title": "«{unitName}» бўлимига тайинлаш",
+        "person": "Ходим",
+        "role": "Лавозим",
+        "submit": "Тайинлаш",
+        "cancel": "Бекор қилиш"
+      },
+      "removeConfirm": {
+        "title": "{name} «{unitName}» бўлимидан чиқарилсинми?",
+        "confirm": "Чиқариш",
+        "cancel": "Бекор қилиш"
+      },
+      "assignedToast": "{name} {role} этиб тайинланди",
+      "removedToast": "{name} бўлимдан чиқарилди"
+    },
+    "people": {
+      "title": "Ходимлар",
+      "subtitle": "{departmentName} жамоаси, бўлимлар бўйича",
+      "empty": { "title": "Ҳали аъзо йўқ" },
+      "searchPlaceholder": "Ходимни қидириш",
+      "unassignedGroup": "Бўлимсиз",
+      "memberCard": { "noUnit": "Бўлим белгиланмаган" }
+    },
+    "common": { "head": "Бошлиғи", "member": "Аъзо" }
+  }
+}

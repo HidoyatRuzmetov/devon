@@ -5,6 +5,7 @@
 // `src/db/repo.ts`; it is proved separately by `setup:prove` / `session:prove` / `admin:prove`.
 import { randomUUID, createHash } from 'node:crypto'
 import { hashPassword } from '../../src/lib/password.js'
+import type { Membership } from '@devon/contracts'
 import type {
   Deps,
   CreatedSession,
@@ -38,6 +39,9 @@ export type FakeState = {
   setupTokens: { id: string; tokenHash: string; expiresAt: Date; consumedAt: Date | null }[]
   auditEvents: AuditEvent[]
   instanceSettings: InstanceSettingsRecord
+  /** `userId -> memberships` (`listActiveMembershipsForUser`'s fake). Empty by default, matching a
+   * fresh account with no department yet -- a test that needs a member sets this directly. */
+  memberships: Record<string, Membership[]>
   dbReady: boolean
   migrationsApplied: boolean
   /** Set by a test to force the very next `consumeSetupToken` call to observe zero rows on its
@@ -57,6 +61,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
       registrationOpen: true,
       maintenance: { enabled: false, message: null },
     },
+    memberships: {},
     dbReady: true,
     migrationsApplied: true,
     forceSetupRaceLoss: false,
@@ -82,6 +87,10 @@ export function createFakeDeps(state: FakeState): Deps {
 
     async findUserById(id) {
       return state.users.find((u) => u.id === id) ?? null
+    },
+
+    async listActiveMembershipsForUser(userId) {
+      return state.memberships[userId] ?? []
     },
 
     async updateUserProfile(userId, patch, ctx) {

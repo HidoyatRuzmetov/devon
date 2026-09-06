@@ -40,7 +40,10 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
     const loaded = await app.devon.findSessionByToken(raw)
     if (!loaded) return // expired/revoked/unknown token: request proceeds unauthenticated, never errors here.
 
-    req.actor = buildActor(loaded.user)
+    req.actor = buildActor(
+      loaded.user,
+      await app.devon.listActiveMembershipsForUser(loaded.user.id),
+    )
     req.actorUser = loaded.user
     req.sessionId = loaded.session.id
     req.csrfHash = loaded.csrfHash

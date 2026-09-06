@@ -8,6 +8,8 @@ export type TableClass = 'tenant_root' | 'department_owned' | 'user_owned' | 'gl
 export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.departments': 'tenant_root',
   'app.memberships': 'department_owned',
+  'app.units': 'department_owned',
+  'app.unit_roles': 'department_owned',
   'app.users': 'global',
   'app.sessions': 'global',
   'app.setup_tokens': 'global',

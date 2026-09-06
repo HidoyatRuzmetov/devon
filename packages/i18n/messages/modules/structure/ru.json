@@ -1,0 +1,83 @@
+{
+  "structure": {
+    "nav": { "units": "Структура", "people": "Сотрудники" },
+    "units": {
+      "title": "Структура",
+      "subtitle": "Отделы и роли в «{departmentName}»",
+      "empty": {
+        "title": "Отделов пока нет",
+        "body": "Создайте первый отдел, чтобы распределить сотрудников.",
+        "action": "Добавить отдел"
+      },
+      "addUnit": "Добавить отдел",
+      "addSubUnit": "Добавить подотдел",
+      "rename": "Переименовать",
+      "renameLabel": "Название отдела",
+      "delete": "Удалить",
+      "deleteConfirm": {
+        "title": "Удалить «{name}»?",
+        "body": "Участники останутся без отдела. Действие можно отменить в течение короткого времени.",
+        "confirm": "Удалить",
+        "cancel": "Отмена"
+      },
+      "deletedToast": "«{name}» удалён",
+      "undo": "Отменить",
+      "restoredToast": "«{name}» восстановлен",
+      "colourLabel": "Цвет",
+      "colourAuto": "Автоматически",
+      "settingsNotice": {
+        "structureEdit": "Сейчас структуру может менять только руководитель отдела",
+        "selfAssign": "Сейчас роли может назначать только руководитель отдела"
+      },
+      "dragHint": "Перетащите, чтобы изменить порядок",
+      "view": { "tree": "Список", "chart": "Оргсхема" },
+      "chart": {
+        "exportPng": "Сохранить как PNG",
+        "noHead": "Руководитель ещё не назначен",
+        "headBadge": "Руководитель",
+        "deputyBadge": "Заместитель",
+        "memberCount": "{count} чел.",
+        "keyboardHint": "Используйте стрелки, чтобы переходить между отделами"
+      },
+      "validation": { "nameRequired": "Введите название" },
+      "addDialog": {
+        "title": "Новый отдел",
+        "namePlaceholder": "Например, Группа мониторинга",
+        "parentLabel": "Вышестоящий отдел",
+        "rootOption": "Нет — верхний уровень",
+        "create": "Создать",
+        "cancel": "Отмена"
+      }
+    },
+    "roles": {
+      "roleLabel": { "head": "Руководитель отдела", "deputy": "Заместитель", "member": "Участник" },
+      "join": "Присоединиться к отделу",
+      "joinAs": "Присоединиться как «{role}»",
+      "leave": "Покинуть отдел",
+      "assign": "Назначить",
+      "assignDialog": {
+        "title": "Назначение в «{unitName}»",
+        "person": "Сотрудник",
+        "role": "Роль",
+        "submit": "Назначить",
+        "cancel": "Отмена"
+      },
+      "removeConfirm": {
+        "title": "Убрать {name} из «{unitName}»?",
+        "confirm": "Убрать",
+        "cancel": "Отмена"
+      },
+      "assignedToast": "{name} назначен(а) как «{role}»",
+      "removedToast": "{name} убран(а) из отдела"
+    },
+    "people": {
+      "title": "Сотрудники",
+      "subtitle": "Команда «{departmentName}», по отделам",
+      "empty": { "title": "Пока нет ни одного сотрудника" },
+      "searchPlaceholder": "Поиск сотрудника",
+      "unassignedGroup": "Без отдела",
+      "memberCard": { "noUnit": "Отдел не указан" }
+    },
+    "common": { "head": "Руководитель", "member": "Участник" }
+  }
+}
