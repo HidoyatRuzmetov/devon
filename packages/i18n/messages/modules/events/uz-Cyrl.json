@@ -130,6 +130,7 @@
     },
     "attendees": {
       "title": "Иштирокчилар",
+      "titleCount": "Иштирокчилар ({count})",
       "empty": "Ҳозирча ҳеч ким жавоб бермади",
       "guestsSuffix": "+{count} меҳмон"
     },

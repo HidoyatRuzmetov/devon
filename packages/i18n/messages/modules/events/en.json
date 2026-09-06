@@ -130,6 +130,7 @@
     },
     "attendees": {
       "title": "Attendees",
+      "titleCount": "Attendees ({count})",
       "empty": "No one has answered yet",
       "guestsSuffix": "+{count} guests"
     },

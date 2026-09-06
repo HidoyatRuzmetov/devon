@@ -130,6 +130,7 @@
     },
     "attendees": {
       "title": "Ishtirokchilar",
+      "titleCount": "Ishtirokchilar ({count})",
       "empty": "Hozircha hech kim javob bermadi",
       "guestsSuffix": "+{count} mehmon"
     },

@@ -62,7 +62,25 @@ export function createEvent(input: CreateEventInput, csrfToken: string) {
   return apiClient.post(BASE, input, eventSchema, csrfToken)
 }
 
-export type UpdateEventInput = Partial<CreateEventInput>
+/** Unlike `CreateEventInput`, the API's `PATCH` body treats these fields as tri-state (server
+ * `updateEventBodySchema`, apps/api/src/modules/events/schemas.ts): omitted means "leave as is",
+ * `null` means "clear it". `Partial<CreateEventInput>` would only ever let a caller omit a field,
+ * never explicitly clear one (e.g. removing a capacity limit or a place link on edit). */
+export type UpdateEventInput = {
+  title?: string | undefined
+  description?: string | null | undefined
+  category?: string | undefined
+  illustrationKey?: string | undefined
+  startsAt?: string | undefined
+  endsAt?: string | undefined
+  place?: string | null | undefined
+  placeUrl?: string | null | undefined
+  capacity?: number | null | undefined
+  waitlistEnabled?: boolean | undefined
+  rsvpDeadline?: string | null | undefined
+  costNote?: string | null | undefined
+  reminderOffsetsMinutes?: number[] | undefined
+}
 
 export function updateEvent(eventId: string, input: UpdateEventInput, csrfToken: string) {
   return apiClient.patch(`${BASE}/${eventId}`, input, eventSchema, csrfToken)
