@@ -38,7 +38,7 @@
     "milestone": {
       "addPlaceholder": "Введите название этапа"
     },
-    "task": {
+    "card": {
       "addObjectivePlaceholder": "Добавить общую задачу",
       "addSubjectivePlaceholder": "Добавить личную задачу"
     },

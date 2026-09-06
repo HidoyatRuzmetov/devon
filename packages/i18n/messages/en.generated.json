@@ -407,5 +407,705 @@
       "label": "Switch department",
       "current": "Current department"
     }
+  },
+  "events": {
+    "title": "Events",
+    "view": {
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "actions": {
+      "create": "Create event",
+      "edit": "Edit",
+      "save": "Save",
+      "cancelEvent": "Cancel event",
+      "close": "Close",
+      "retry": "Retry",
+      "back": "Back"
+    },
+    "empty": {
+      "title": "No events yet",
+      "body": "Create the first event for your team.",
+      "action": "Create event"
+    },
+    "loading": {
+      "title": "Loading events"
+    },
+    "error": {
+      "title": "Couldn't load events",
+      "body": "Something went wrong. Please try again."
+    },
+    "forbidden": {
+      "title": "No access",
+      "body": "You need to be a member of the department to see events."
+    },
+    "offline": {
+      "title": "No connection",
+      "body": "The event list will update once you're back online."
+    },
+    "category": {
+      "team_building": "Team building",
+      "sports": "Sports",
+      "volunteering": "Volunteering",
+      "social": "Social",
+      "training": "Training",
+      "family": "Family",
+      "other": "Other"
+    },
+    "status": {
+      "draft": "Draft",
+      "open": "Open",
+      "full": "Full",
+      "cancelled": "Cancelled",
+      "done": "Done"
+    },
+    "card": {
+      "organizer": "Organiser: {name}",
+      "going": "{count} going",
+      "waitlisted": "{count} waitlisted",
+      "capacity": "{going} / {capacity} spots",
+      "unlimitedCapacity": "No capacity limit",
+      "deadline": "RSVP by {date}",
+      "cancelledBanner": "This event was cancelled",
+      "cancelledReason": "Reason: {reason}",
+      "doneBanner": "This event is done"
+    },
+    "form": {
+      "titleLabel": "Event title",
+      "titlePlaceholder": "E.g. autumn team picnic",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "A short description of the event",
+      "categoryLabel": "Category",
+      "startsAtLabel": "Starts at",
+      "endsAtLabel": "Ends at",
+      "placeLabel": "Place",
+      "placePlaceholder": "E.g. the department meeting room",
+      "placeUrlLabel": "Place link",
+      "capacityLabel": "Capacity",
+      "capacityPlaceholder": "Unlimited",
+      "waitlistEnabledLabel": "Open a waitlist once full",
+      "rsvpDeadlineLabel": "RSVP deadline",
+      "costNoteLabel": "Cost note",
+      "costNotePlaceholder": "E.g. transport covered by the department",
+      "remindersLabel": "Reminders",
+      "reminderDayBefore": "1 day before",
+      "reminderHourBefore": "1 hour before",
+      "submitCreate": "Create event",
+      "submitUpdate": "Save changes",
+      "validation": {
+        "endsBeforeStarts": "The end time must be after the start time"
+      }
+    },
+    "diff": {
+      "title": "What changed",
+      "field": {
+        "title": "Title",
+        "startsAt": "Start time",
+        "endsAt": "End time",
+        "place": "Place",
+        "placeUrl": "Place link",
+        "capacity": "Capacity",
+        "costNote": "Cost note",
+        "description": "Description"
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel event",
+      "body": "Everyone who RSVPed will be notified. This cannot be undone.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Let people know what happened",
+      "confirm": "Yes, cancel",
+      "keepEvent": "No, keep it"
+    },
+    "rsvp": {
+      "title": "Are you going?",
+      "status": {
+        "yes": "Yes, I'll go",
+        "no": "Not going",
+        "maybe": "Maybe",
+        "waitlist": "Waitlisted"
+      },
+      "guestsLabel": "Guests",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "E.g. an allergy or other note",
+      "submit": "Submit",
+      "update": "Update",
+      "deadlinePassed": "The RSVP deadline has passed",
+      "eventFull": "This event is full -- you've been waitlisted",
+      "confirmedToast": "Your RSVP is recorded",
+      "waitlistedToast": "Full -- you've been added to the waitlist",
+      "myStatus": "Your answer: {status}",
+      "notYet": "You haven't answered yet"
+    },
+    "attendees": {
+      "title": "Attendees",
+      "titleCount": "Attendees ({count})",
+      "empty": "No one has answered yet",
+      "guestsSuffix": "+{count} guests"
+    },
+    "comments": {
+      "title": "Discussion",
+      "empty": "No comments yet. Be the first.",
+      "placeholder": "Write a comment",
+      "submit": "Post",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this comment?"
+    },
+    "carpool": {
+      "title": "Carpooling",
+      "empty": "No carpool offers yet",
+      "offer": "Offer a ride",
+      "seatsLabel": "Seats available",
+      "departurePlaceLabel": "Departure point",
+      "departureAtLabel": "Departure time",
+      "noteLabel": "Note",
+      "driver": "Driver: {name}",
+      "seatsTaken": "{claimed} / {seats} seats taken",
+      "claim": "Claim a seat",
+      "release": "Give up seat",
+      "waitlisted": "Waitlisted",
+      "confirmed": "Confirmed",
+      "passengers": "Passengers",
+      "driverCannotClaim": "The driver can't claim a seat on their own offer",
+      "cancelled": "This offer was cancelled"
+    },
+    "items": {
+      "title": "Who brings what",
+      "empty": "The list is empty for now",
+      "add": "Add an item",
+      "labelPlaceholder": "E.g. tea and biscuits",
+      "quantityLabel": "Quantity",
+      "claim": "I'll bring this",
+      "release": "Give up",
+      "claimedBy": "Bringing it: {name}",
+      "claimedByMe": "You're bringing this",
+      "alreadyClaimed": "Someone else already claimed this item"
+    },
+    "polls": {
+      "title": "Polls",
+      "empty": "No polls yet",
+      "create": "Create a poll",
+      "kindLabel": "Kind",
+      "kind": {
+        "date": "Pick a date",
+        "single": "Single choice",
+        "multi": "Multiple choice"
+      },
+      "questionLabel": "Question",
+      "questionPlaceholder": "E.g. which date works for the picnic?",
+      "anonymousLabel": "Anonymous voting",
+      "closesAtLabel": "Closes at",
+      "optionsLabel": "Options",
+      "optionPlaceholder": "Option text",
+      "addOption": "Add option",
+      "removeOption": "Remove",
+      "vote": "Vote",
+      "changeVote": "Change vote",
+      "totalVotes": "{count} votes",
+      "closed": "Closed",
+      "yourVote": "Your vote",
+      "createdBy": "Created by {name}"
+    },
+    "photos": {
+      "title": "Photos",
+      "empty": "No photos yet",
+      "add": "Add a link",
+      "urlLabel": "Image link",
+      "captionLabel": "Caption (optional)",
+      "delete": "Delete"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "empty": "No feedback yet",
+      "ratingLabel": "Rating",
+      "commentLabel": "Comment (optional)",
+      "anonymousLabel": "Leave anonymously",
+      "submit": "Submit",
+      "update": "Update",
+      "average": "Average rating: {rating} / 5",
+      "yours": "Your rating",
+      "anonymousAuthor": "Anonymous",
+      "thankYou": "Thanks for your feedback"
+    },
+    "ics": {
+      "exportEvent": "Add to calendar (.ics)",
+      "exportMine": "My events (.ics)"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "rsvp": "RSVP",
+      "carpool": "Carpool",
+      "items": "Items",
+      "polls": "Polls",
+      "photos": "Photos",
+      "feedback": "Feedback",
+      "comments": "Discussion"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To"
+    }
+  },
+  "personal": {
+    "title": "Personal",
+    "tabs": {
+      "today": "Today",
+      "sprints": "Periods",
+      "tasks": "To-dos",
+      "notes": "Notes",
+      "canvas": "Canvas",
+      "pomodoro": "Pomodoro"
+    },
+    "today": {
+      "tasks": {
+        "title": "Today's to-dos"
+      },
+      "empty": {
+        "title": "Nothing planned for today",
+        "body": "Add a to-do or start a period to see it here."
+      },
+      "focus": "Focus"
+    },
+    "sprints": {
+      "active": {
+        "title": "Active periods"
+      },
+      "empty": {
+        "title": "No periods yet",
+        "body": "Start a period to give your work a goal and a time box."
+      },
+      "create": {
+        "action": "New period",
+        "title": "New period",
+        "submit": "Create period"
+      },
+      "goal": "Goal",
+      "goalPlaceholder": "What are you trying to get done?",
+      "history": {
+        "title": "History ({count})"
+      },
+      "rollover": {
+        "action": "Roll over",
+        "toast": "Moved {count} unfinished to-dos to a new period"
+      },
+      "complete": {
+        "action": "Mark complete"
+      },
+      "kind": {
+        "threeHour": "3 hours",
+        "day": "Day",
+        "week": "Week",
+        "custom": "Custom"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "archived": "Archived"
+      }
+    },
+    "tasks": {
+      "inbox": "Inbox",
+      "addPlaceholder": "Add a to-do",
+      "toggleDone": "Mark done",
+      "delete": "Delete to-do",
+      "deleted": {
+        "toast": "To-do deleted"
+      },
+      "dragHandle": "Drag to reorder",
+      "indent": "Indent (make sub-item)",
+      "outdent": "Outdent",
+      "empty": {
+        "section": "No to-dos here yet."
+      }
+    },
+    "notes": {
+      "create": "New note",
+      "newTitle": "New note",
+      "bodyPlaceholder": "Write something...",
+      "delete": "Delete note",
+      "deleted": {
+        "toast": "Note deleted"
+      },
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "empty": {
+        "title": "No notes yet",
+        "body": "Notes are just for you -- jot down anything."
+      }
+    },
+    "canvas": {
+      "create": "New canvas",
+      "newTitle": "New canvas",
+      "open": "Open",
+      "back": "Back to canvases",
+      "delete": "Delete canvas",
+      "deleted": {
+        "toast": "Canvas deleted"
+      },
+      "empty": {
+        "title": "No canvases yet",
+        "body": "A canvas is a free-form board for sketches and sticky notes."
+      },
+      "addSticky": "Add sticky note",
+      "undo": "Undo",
+      "redo": "Redo",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "strokeWidth": "Stroke width",
+      "emptyText": "Text",
+      "tool": {
+        "select": "Select",
+        "pen": "Pen",
+        "rectangle": "Rectangle",
+        "ellipse": "Ellipse",
+        "arrow": "Arrow",
+        "text": "Text",
+        "eraser": "Eraser"
+      }
+    },
+    "pomodoro": {
+      "widget": {
+        "label": "Pomodoro",
+        "aria": "Pomodoro timer"
+      },
+      "phase": {
+        "idle": "Ready",
+        "focus": "Focus",
+        "shortBreak": "Short break",
+        "longBreak": "Long break"
+      },
+      "action": {
+        "startFocus": "Start focus",
+        "startShortBreak": "Start break",
+        "pause": "Pause",
+        "resume": "Resume",
+        "skip": "Skip",
+        "stop": "Stop"
+      },
+      "notification": {
+        "body": "Time's up"
+      },
+      "sound": {
+        "chime": "Chime",
+        "bell": "Bell",
+        "digital": "Digital",
+        "none": "Silent"
+      },
+      "notifications": {
+        "on": "Notifications on",
+        "off": "Notifications off"
+      },
+      "settings": {
+        "title": "Pomodoro settings",
+        "focusMin": "Focus (minutes)",
+        "shortBreakMin": "Short break (minutes)",
+        "longBreakMin": "Long break (minutes)",
+        "cyclesBeforeLong": "Focus sessions before a long break",
+        "sound": "Sound",
+        "notifications": "Browser notifications",
+        "autoStart": "Start the next phase automatically"
+      },
+      "stats": {
+        "todayFocus": "Focus today",
+        "todaySessions": "Sessions today",
+        "weekFocus": "Focus this week",
+        "weekSessions": "Sessions this week",
+        "minutesShort": "min"
+      },
+      "log": {
+        "title": "Session log",
+        "completed": "Completed",
+        "skipped": "Skipped",
+        "empty": {
+          "title": "No sessions yet",
+          "body": "Start a focus session to see it here."
+        }
+      }
+    }
+  },
+  "projects": {
+    "title": "Group projects",
+    "emptyTitle": "No projects yet",
+    "emptyBody": "Start the first group project -- from a template or from scratch.",
+    "noIdTitle": "No project selected",
+    "noIdBody": "This link is missing a project id.",
+    "tile": {
+      "progress": "{percent}% done"
+    },
+    "field": {
+      "title": "Title",
+      "titlePlaceholder": "Enter a project title",
+      "owner": "Owner",
+      "ownerPlaceholder": "Choose an owner",
+      "members": "Members",
+      "template": "Template",
+      "milestones": "Milestones",
+      "objective": "Shared cards",
+      "subjective": "Personal cards"
+    },
+    "status": {
+      "planning": "Planning",
+      "active": "Active",
+      "on_hold": "On hold",
+      "done": "Done",
+      "archived": "Archived"
+    },
+    "create": {
+      "button": "New project",
+      "title": "Create a group project",
+      "fromTemplate": "From a template",
+      "fromScratch": "From scratch",
+      "submit": "Create",
+      "success": "Project created",
+      "error": "Could not create the project"
+    },
+    "milestone": {
+      "addPlaceholder": "Enter a milestone title"
+    },
+    "card": {
+      "addObjectivePlaceholder": "Add a shared card",
+      "addSubjectivePlaceholder": "Add a personal card"
+    },
+    "action": {
+      "archive": "Archive project"
+    }
+  },
+  "structure": {
+    "nav": {
+      "units": "Structure",
+      "people": "People"
+    },
+    "units": {
+      "title": "Structure",
+      "subtitle": "Units and roles in {departmentName}",
+      "empty": {
+        "title": "No units yet",
+        "body": "Create the first unit, then place people into it.",
+        "action": "Add a unit"
+      },
+      "addUnit": "Add a unit",
+      "addSubUnit": "Add a sub-unit",
+      "rename": "Rename",
+      "renameLabel": "Unit name",
+      "delete": "Delete",
+      "deleteConfirm": {
+        "title": "Delete “{name}”?",
+        "body": "Members become unassigned. You can undo this for a short while.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "deletedToast": "“{name}” deleted",
+      "undo": "Undo",
+      "restoredToast": "“{name}” restored",
+      "colourLabel": "Colour",
+      "colourAuto": "Automatic",
+      "settingsNotice": {
+        "structureEdit": "Only the department head can edit the structure right now",
+        "selfAssign": "Only the department head can assign unit roles right now"
+      },
+      "dragHint": "Drag to reorder",
+      "view": {
+        "tree": "List",
+        "chart": "Org chart"
+      },
+      "chart": {
+        "exportPng": "Export as PNG",
+        "noHead": "No head assigned yet",
+        "headBadge": "Head",
+        "deputyBadge": "Deputy",
+        "memberCount": "{count} people",
+        "keyboardHint": "Use the arrow keys to move between units"
+      },
+      "validation": {
+        "nameRequired": "Enter a name"
+      },
+      "addDialog": {
+        "title": "New unit",
+        "namePlaceholder": "e.g. Monitoring group",
+        "parentLabel": "Parent unit",
+        "rootOption": "None — top level",
+        "create": "Create",
+        "cancel": "Cancel"
+      }
+    },
+    "roles": {
+      "roleLabel": {
+        "head": "Unit head",
+        "deputy": "Deputy",
+        "member": "Member"
+      },
+      "join": "Join this unit",
+      "joinAs": "Join as {role}",
+      "leave": "Leave this unit",
+      "assign": "Assign",
+      "assignDialog": {
+        "title": "Assign to “{unitName}”",
+        "person": "Person",
+        "role": "Role",
+        "submit": "Assign",
+        "cancel": "Cancel"
+      },
+      "removeConfirm": {
+        "title": "Remove {name} from “{unitName}”?",
+        "confirm": "Remove",
+        "cancel": "Cancel"
+      },
+      "assignedToast": "{name} assigned as {role}",
+      "removedToast": "{name} removed from the unit"
+    },
+    "people": {
+      "title": "People",
+      "subtitle": "Everyone in {departmentName}, grouped by unit",
+      "empty": {
+        "title": "No members yet"
+      },
+      "searchPlaceholder": "Search people",
+      "unassignedGroup": "Unassigned",
+      "memberCard": {
+        "noUnit": "No unit assigned"
+      }
+    },
+    "common": {
+      "head": "Head",
+      "member": "Member"
+    }
+  },
+  "work": {
+    "title": "Cards",
+    "view": {
+      "board": "Board",
+      "table": "Table",
+      "timeline": "Timeline",
+      "calendar": "Calendar",
+      "mine": "Mine",
+      "archive": "Archive"
+    },
+    "board": {
+      "department": "Department",
+      "unassigned": "Unassigned",
+      "columnEmpty": "No cards",
+      "emptyTitle": "No department members found",
+      "emptyBody": "Add people to the department to see the board.",
+      "moved": "\"{title}\" moved to {target}'s column"
+    },
+    "quickAdd": {
+      "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
+      "created": "\"{title}\" created",
+      "error": "Could not create the card",
+      "unknownAssignee": "No member matches \"{name}\""
+    },
+    "filter": {
+      "placeholder": "assignee:@me due:<=friday label:urgent",
+      "apply": "Apply",
+      "clear": "Clear",
+      "saveAs": "Save as view",
+      "viewName": "View name",
+      "saved": "View saved",
+      "saveError": "Could not save the view",
+      "savedViews": "Saved views",
+      "noSavedViews": "No saved views yet"
+    },
+    "field": {
+      "title": "Title",
+      "description": "Description",
+      "assignee": "Assignee",
+      "giver": "Giver",
+      "priority": "Priority",
+      "due": "Due",
+      "start": "Start",
+      "status": "Status",
+      "unassigned": "Unassigned",
+      "noGiver": "No giver",
+      "watchers": "Watchers",
+      "links": "Links",
+      "checklist": "Checklist",
+      "comments": "Comments",
+      "activity": "Activity"
+    },
+    "card": {
+      "peekTitle": "Card details",
+      "markDone": "Mark done",
+      "archive": "Archive",
+      "archived": "Card archived",
+      "restore": "Restore",
+      "watch": "Watch",
+      "watching": "Watching",
+      "moveTo": "Move to",
+      "newLabel": "New label",
+      "descriptionPlaceholder": "Add a description",
+      "addLinkPlaceholder": "Paste a link",
+      "unfurlError": "Could not load that link",
+      "addChecklistItem": "Add an item",
+      "addCommentPlaceholder": "Write a comment, @ to mention someone",
+      "backToBoard": "Back to board",
+      "noIdTitle": "No card selected",
+      "noIdBody": "This link is missing a card id."
+    },
+    "priority": {
+      "none": "No priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "risk": {
+      "atRisk": "Due soon",
+      "overdue": "Overdue"
+    },
+    "status": {
+      "active": "Active",
+      "done": "Done",
+      "archived": "Archived"
+    },
+    "activity": {
+      "created": "created the card",
+      "assigned": "changed the assignee",
+      "status": "changed the status",
+      "due": "changed the due date",
+      "comment": "left a comment",
+      "checklist": "added a checklist item",
+      "system": "System"
+    },
+    "table": {
+      "open": "Open",
+      "emptyTitle": "No cards found",
+      "emptyBody": "Adjust the filter or add a new card."
+    },
+    "timeline": {
+      "today": "Today",
+      "emptyTitle": "No cards with a due date",
+      "emptyBody": "The timeline only shows active cards that have a due date."
+    },
+    "calendar": {
+      "prev": "Previous month",
+      "next": "Next month",
+      "today": "Today",
+      "more": "{count} more",
+      "weekday": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "mine": {
+      "overdue": "Overdue",
+      "atRisk": "Due soon",
+      "rest": "Everything else",
+      "emptyTitle": "Nothing assigned to you",
+      "emptyBody": "Cards assigned to you will show up here."
+    },
+    "archive": {
+      "emptyTitle": "Archive is empty",
+      "emptyBody": "Done and archived cards will show up here."
+    },
+    "action": {
+      "save": "Save",
+      "delete": "Delete",
+      "send": "Send"
+    }
   }
 }

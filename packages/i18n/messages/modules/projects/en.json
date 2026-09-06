@@ -38,7 +38,7 @@
     "milestone": {
       "addPlaceholder": "Enter a milestone title"
     },
-    "task": {
+    "card": {
       "addObjectivePlaceholder": "Add a shared card",
       "addSubjectivePlaceholder": "Add a personal card"
     },

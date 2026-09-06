@@ -407,5 +407,705 @@
       "label": "Сменить отдел",
       "current": "Текущий отдел"
     }
+  },
+  "events": {
+    "title": "Мероприятия",
+    "view": {
+      "list": "Список",
+      "calendar": "Календарь"
+    },
+    "actions": {
+      "create": "Создать мероприятие",
+      "edit": "Редактировать",
+      "save": "Сохранить",
+      "cancelEvent": "Отменить мероприятие",
+      "close": "Закрыть",
+      "retry": "Повторить",
+      "back": "Назад"
+    },
+    "empty": {
+      "title": "Пока нет мероприятий",
+      "body": "Создайте первое мероприятие для своей команды.",
+      "action": "Создать мероприятие"
+    },
+    "loading": {
+      "title": "Загрузка мероприятий"
+    },
+    "error": {
+      "title": "Не удалось загрузить мероприятия",
+      "body": "Что-то пошло не так. Попробуйте ещё раз."
+    },
+    "forbidden": {
+      "title": "Нет доступа",
+      "body": "Чтобы видеть мероприятия, нужно быть участником отдела."
+    },
+    "offline": {
+      "title": "Нет соединения",
+      "body": "Список мероприятий обновится, когда появится интернет."
+    },
+    "category": {
+      "team_building": "Тимбилдинг",
+      "sports": "Спорт",
+      "volunteering": "Волонтёрство",
+      "social": "Общение",
+      "training": "Обучение",
+      "family": "Семейное",
+      "other": "Другое"
+    },
+    "status": {
+      "draft": "Черновик",
+      "open": "Открыто",
+      "full": "Мест нет",
+      "cancelled": "Отменено",
+      "done": "Завершено"
+    },
+    "card": {
+      "organizer": "Организатор: {name}",
+      "going": "Идут: {count}",
+      "waitlisted": "В очереди: {count}",
+      "capacity": "{going} / {capacity} мест",
+      "unlimitedCapacity": "Количество мест не ограничено",
+      "deadline": "Регистрация до: {date}",
+      "cancelledBanner": "Это мероприятие отменено",
+      "cancelledReason": "Причина: {reason}",
+      "doneBanner": "Это мероприятие завершено"
+    },
+    "form": {
+      "titleLabel": "Название мероприятия",
+      "titlePlaceholder": "Например, осенний командный пикник",
+      "descriptionLabel": "Описание",
+      "descriptionPlaceholder": "Коротко расскажите о мероприятии",
+      "categoryLabel": "Категория",
+      "startsAtLabel": "Начало",
+      "endsAtLabel": "Окончание",
+      "placeLabel": "Место",
+      "placePlaceholder": "Например, зал совещаний отдела",
+      "placeUrlLabel": "Ссылка на место",
+      "capacityLabel": "Количество мест",
+      "capacityPlaceholder": "Без ограничения",
+      "waitlistEnabledLabel": "Открыть очередь, если мест не останется",
+      "rsvpDeadlineLabel": "Срок регистрации",
+      "costNoteLabel": "Заметка о расходах",
+      "costNotePlaceholder": "Например, транспорт за счёт отдела",
+      "remindersLabel": "Напоминания",
+      "reminderDayBefore": "за 1 день",
+      "reminderHourBefore": "за 1 час",
+      "submitCreate": "Создать мероприятие",
+      "submitUpdate": "Сохранить изменения",
+      "validation": {
+        "endsBeforeStarts": "Окончание должно быть позже начала"
+      }
+    },
+    "diff": {
+      "title": "Что изменилось",
+      "field": {
+        "title": "Название",
+        "startsAt": "Начало",
+        "endsAt": "Окончание",
+        "place": "Место",
+        "placeUrl": "Ссылка на место",
+        "capacity": "Количество мест",
+        "costNote": "Заметка о расходах",
+        "description": "Описание"
+      }
+    },
+    "cancelDialog": {
+      "title": "Отменить мероприятие",
+      "body": "Всем зарегистрированным сотрудникам придёт уведомление. Это действие необратимо.",
+      "reasonLabel": "Причина",
+      "reasonPlaceholder": "Объясните сотрудникам, что произошло",
+      "confirm": "Да, отменить",
+      "keepEvent": "Нет, оставить"
+    },
+    "rsvp": {
+      "title": "Вы участвуете?",
+      "status": {
+        "yes": "Да, приду",
+        "no": "Не приду",
+        "maybe": "Возможно",
+        "waitlist": "В очереди"
+      },
+      "guestsLabel": "Количество гостей",
+      "noteLabel": "Комментарий (необязательно)",
+      "notePlaceholder": "Например, аллергия или другая заметка",
+      "submit": "Отправить",
+      "update": "Обновить",
+      "deadlinePassed": "Срок регистрации истёк",
+      "eventFull": "Мест нет -- вы добавлены в очередь",
+      "confirmedToast": "Ваше участие зафиксировано",
+      "waitlistedToast": "Мест нет -- вы поставлены в очередь",
+      "myStatus": "Ваш ответ: {status}",
+      "notYet": "Вы ещё не ответили"
+    },
+    "attendees": {
+      "title": "Участники",
+      "titleCount": "Участники ({count})",
+      "empty": "Пока никто не ответил",
+      "guestsSuffix": "+{count} гостей"
+    },
+    "comments": {
+      "title": "Обсуждение",
+      "empty": "Пока нет комментариев. Будьте первым.",
+      "placeholder": "Напишите комментарий",
+      "submit": "Отправить",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить комментарий?"
+    },
+    "carpool": {
+      "title": "Совместные поездки",
+      "empty": "Пока нет предложений по совместной поездке",
+      "offer": "Предложить машину",
+      "seatsLabel": "Свободные места",
+      "departurePlaceLabel": "Место отправления",
+      "departureAtLabel": "Время отправления",
+      "noteLabel": "Комментарий",
+      "driver": "Водитель: {name}",
+      "seatsTaken": "{claimed} / {seats} мест занято",
+      "claim": "Занять место",
+      "release": "Отказаться",
+      "waitlisted": "В очереди",
+      "confirmed": "Подтверждено",
+      "passengers": "Пассажиры",
+      "driverCannotClaim": "Водитель не может занять место в своей же поездке",
+      "cancelled": "Это предложение отменено"
+    },
+    "items": {
+      "title": "Кто что приносит",
+      "empty": "Список пока пуст",
+      "add": "Добавить пункт",
+      "labelPlaceholder": "Например, чай и печенье",
+      "quantityLabel": "Количество",
+      "claim": "Я принесу",
+      "release": "Отказаться",
+      "claimedBy": "Принесёт: {name}",
+      "claimedByMe": "Вы принесёте это",
+      "alreadyClaimed": "Этот пункт уже занят другим сотрудником"
+    },
+    "polls": {
+      "title": "Опросы",
+      "empty": "Пока нет опросов",
+      "create": "Создать опрос",
+      "kindLabel": "Тип",
+      "kind": {
+        "date": "Выбор даты",
+        "single": "Один вариант",
+        "multi": "Несколько вариантов"
+      },
+      "questionLabel": "Вопрос",
+      "questionPlaceholder": "Например, какая дата подходит для пикника?",
+      "anonymousLabel": "Анонимное голосование",
+      "closesAtLabel": "Завершение",
+      "optionsLabel": "Варианты",
+      "optionPlaceholder": "Текст варианта",
+      "addOption": "Добавить вариант",
+      "removeOption": "Убрать",
+      "vote": "Проголосовать",
+      "changeVote": "Изменить голос",
+      "totalVotes": "Голосов: {count}",
+      "closed": "Завершён",
+      "yourVote": "Ваш голос",
+      "createdBy": "Создал(а): {name}"
+    },
+    "photos": {
+      "title": "Фотографии",
+      "empty": "Пока нет фотографий",
+      "add": "Добавить ссылку",
+      "urlLabel": "Ссылка на изображение",
+      "captionLabel": "Подпись (необязательно)",
+      "delete": "Удалить"
+    },
+    "feedback": {
+      "title": "Отзывы",
+      "empty": "Пока нет отзывов",
+      "ratingLabel": "Оценка",
+      "commentLabel": "Комментарий (необязательно)",
+      "anonymousLabel": "Оставить анонимно",
+      "submit": "Отправить",
+      "update": "Обновить",
+      "average": "Средняя оценка: {rating} из 5",
+      "yours": "Ваша оценка",
+      "anonymousAuthor": "Анонимно",
+      "thankYou": "Спасибо за отзыв"
+    },
+    "ics": {
+      "exportEvent": "Добавить в календарь (.ics)",
+      "exportMine": "Мои мероприятия (.ics)"
+    },
+    "tabs": {
+      "overview": "Обзор",
+      "rsvp": "Участие",
+      "carpool": "Поездки",
+      "items": "Пункты",
+      "polls": "Опросы",
+      "photos": "Фото",
+      "feedback": "Отзывы",
+      "comments": "Обсуждение"
+    },
+    "filters": {
+      "from": "С",
+      "to": "По"
+    }
+  },
+  "personal": {
+    "title": "Личное",
+    "tabs": {
+      "today": "Сегодня",
+      "sprints": "Периоды",
+      "tasks": "Задачи",
+      "notes": "Заметки",
+      "canvas": "Доска",
+      "pomodoro": "Помодоро"
+    },
+    "today": {
+      "tasks": {
+        "title": "Задачи на сегодня"
+      },
+      "empty": {
+        "title": "На сегодня ничего не запланировано",
+        "body": "Добавьте задачу или начните период, чтобы увидеть его здесь."
+      },
+      "focus": "Фокус"
+    },
+    "sprints": {
+      "active": {
+        "title": "Активные периоды"
+      },
+      "empty": {
+        "title": "Пока нет периодов",
+        "body": "Начните период, чтобы задать цель и рамки времени для своей работы."
+      },
+      "create": {
+        "action": "Новый период",
+        "title": "Новый период",
+        "submit": "Создать период"
+      },
+      "goal": "Цель",
+      "goalPlaceholder": "Чего вы хотите достичь?",
+      "history": {
+        "title": "История ({count})"
+      },
+      "rollover": {
+        "action": "Перенести",
+        "toast": "Перенесено незавершённых задач в новый период: {count}"
+      },
+      "complete": {
+        "action": "Отметить завершённым"
+      },
+      "kind": {
+        "threeHour": "3 часа",
+        "day": "День",
+        "week": "Неделя",
+        "custom": "Произвольный"
+      },
+      "status": {
+        "active": "Активен",
+        "completed": "Завершён",
+        "archived": "В архиве"
+      }
+    },
+    "tasks": {
+      "inbox": "Входящие",
+      "addPlaceholder": "Добавить задачу",
+      "toggleDone": "Отметить выполненным",
+      "delete": "Удалить задачу",
+      "deleted": {
+        "toast": "Задача удалена"
+      },
+      "dragHandle": "Перетащите, чтобы изменить порядок",
+      "indent": "Сделать подзадачей",
+      "outdent": "Убрать вложенность",
+      "empty": {
+        "section": "Здесь пока нет задач."
+      }
+    },
+    "notes": {
+      "create": "Новая заметка",
+      "newTitle": "Новая заметка",
+      "bodyPlaceholder": "Напишите что-нибудь...",
+      "delete": "Удалить заметку",
+      "deleted": {
+        "toast": "Заметка удалена"
+      },
+      "pin": "Закрепить",
+      "unpin": "Открепить",
+      "empty": {
+        "title": "Пока нет заметок",
+        "body": "Заметки видны только вам -- записывайте всё, что нужно."
+      }
+    },
+    "canvas": {
+      "create": "Новая доска",
+      "newTitle": "Новая доска",
+      "open": "Открыть",
+      "back": "Назад к доскам",
+      "delete": "Удалить доску",
+      "deleted": {
+        "toast": "Доска удалена"
+      },
+      "empty": {
+        "title": "Пока нет досок",
+        "body": "Доска -- свободное место для набросков и стикеров."
+      },
+      "addSticky": "Добавить стикер",
+      "undo": "Отменить",
+      "redo": "Повторить",
+      "zoomIn": "Увеличить",
+      "zoomOut": "Уменьшить",
+      "strokeWidth": "Толщина линии",
+      "emptyText": "Текст",
+      "tool": {
+        "select": "Выбор",
+        "pen": "Карандаш",
+        "rectangle": "Прямоугольник",
+        "ellipse": "Эллипс",
+        "arrow": "Стрелка",
+        "text": "Текст",
+        "eraser": "Ластик"
+      }
+    },
+    "pomodoro": {
+      "widget": {
+        "label": "Помодоро",
+        "aria": "Таймер Помодоро"
+      },
+      "phase": {
+        "idle": "Готово",
+        "focus": "Фокус",
+        "shortBreak": "Короткий перерыв",
+        "longBreak": "Длинный перерыв"
+      },
+      "action": {
+        "startFocus": "Начать фокус",
+        "startShortBreak": "Начать перерыв",
+        "pause": "Пауза",
+        "resume": "Продолжить",
+        "skip": "Пропустить",
+        "stop": "Остановить"
+      },
+      "notification": {
+        "body": "Время вышло"
+      },
+      "sound": {
+        "chime": "Мелодия",
+        "bell": "Звонок",
+        "digital": "Цифровой",
+        "none": "Без звука"
+      },
+      "notifications": {
+        "on": "Уведомления включены",
+        "off": "Уведомления выключены"
+      },
+      "settings": {
+        "title": "Настройки Помодоро",
+        "focusMin": "Фокус (минут)",
+        "shortBreakMin": "Короткий перерыв (минут)",
+        "longBreakMin": "Длинный перерыв (минут)",
+        "cyclesBeforeLong": "Число фокус-сессий перед длинным перерывом",
+        "sound": "Звук",
+        "notifications": "Уведомления браузера",
+        "autoStart": "Автоматически начинать следующий этап"
+      },
+      "stats": {
+        "todayFocus": "Фокус сегодня",
+        "todaySessions": "Сеансов сегодня",
+        "weekFocus": "Фокус за неделю",
+        "weekSessions": "Сеансов за неделю",
+        "minutesShort": "мин"
+      },
+      "log": {
+        "title": "Журнал сеансов",
+        "completed": "Завершён",
+        "skipped": "Пропущен",
+        "empty": {
+          "title": "Пока нет сеансов",
+          "body": "Начните фокус-сеанс, чтобы увидеть его здесь."
+        }
+      }
+    }
+  },
+  "projects": {
+    "title": "Групповые проекты",
+    "emptyTitle": "Проектов пока нет",
+    "emptyBody": "Создайте первый групповой проект -- по шаблону или с нуля.",
+    "noIdTitle": "Проект не указан",
+    "noIdBody": "В ссылке отсутствует идентификатор проекта.",
+    "tile": {
+      "progress": "выполнено {percent}%"
+    },
+    "field": {
+      "title": "Название",
+      "titlePlaceholder": "Введите название проекта",
+      "owner": "Ответственный",
+      "ownerPlaceholder": "Выберите ответственного",
+      "members": "Участники",
+      "template": "Шаблон",
+      "milestones": "Этапы",
+      "objective": "Общие задачи",
+      "subjective": "Личные задачи"
+    },
+    "status": {
+      "planning": "Планируется",
+      "active": "В работе",
+      "on_hold": "Приостановлен",
+      "done": "Завершён",
+      "archived": "В архиве"
+    },
+    "create": {
+      "button": "Новый проект",
+      "title": "Создать групповой проект",
+      "fromTemplate": "По шаблону",
+      "fromScratch": "С нуля",
+      "submit": "Создать",
+      "success": "Проект создан",
+      "error": "Не удалось создать проект"
+    },
+    "milestone": {
+      "addPlaceholder": "Введите название этапа"
+    },
+    "card": {
+      "addObjectivePlaceholder": "Добавить общую задачу",
+      "addSubjectivePlaceholder": "Добавить личную задачу"
+    },
+    "action": {
+      "archive": "Архивировать проект"
+    }
+  },
+  "structure": {
+    "nav": {
+      "units": "Структура",
+      "people": "Сотрудники"
+    },
+    "units": {
+      "title": "Структура",
+      "subtitle": "Отделы и роли в «{departmentName}»",
+      "empty": {
+        "title": "Отделов пока нет",
+        "body": "Создайте первый отдел, чтобы распределить сотрудников.",
+        "action": "Добавить отдел"
+      },
+      "addUnit": "Добавить отдел",
+      "addSubUnit": "Добавить подотдел",
+      "rename": "Переименовать",
+      "renameLabel": "Название отдела",
+      "delete": "Удалить",
+      "deleteConfirm": {
+        "title": "Удалить «{name}»?",
+        "body": "Участники останутся без отдела. Действие можно отменить в течение короткого времени.",
+        "confirm": "Удалить",
+        "cancel": "Отмена"
+      },
+      "deletedToast": "«{name}» удалён",
+      "undo": "Отменить",
+      "restoredToast": "«{name}» восстановлен",
+      "colourLabel": "Цвет",
+      "colourAuto": "Автоматически",
+      "settingsNotice": {
+        "structureEdit": "Сейчас структуру может менять только руководитель отдела",
+        "selfAssign": "Сейчас роли может назначать только руководитель отдела"
+      },
+      "dragHint": "Перетащите, чтобы изменить порядок",
+      "view": {
+        "tree": "Список",
+        "chart": "Оргсхема"
+      },
+      "chart": {
+        "exportPng": "Сохранить как PNG",
+        "noHead": "Руководитель ещё не назначен",
+        "headBadge": "Руководитель",
+        "deputyBadge": "Заместитель",
+        "memberCount": "{count} чел.",
+        "keyboardHint": "Используйте стрелки, чтобы переходить между отделами"
+      },
+      "validation": {
+        "nameRequired": "Введите название"
+      },
+      "addDialog": {
+        "title": "Новый отдел",
+        "namePlaceholder": "Например, Группа мониторинга",
+        "parentLabel": "Вышестоящий отдел",
+        "rootOption": "Нет — верхний уровень",
+        "create": "Создать",
+        "cancel": "Отмена"
+      }
+    },
+    "roles": {
+      "roleLabel": {
+        "head": "Руководитель отдела",
+        "deputy": "Заместитель",
+        "member": "Участник"
+      },
+      "join": "Присоединиться к отделу",
+      "joinAs": "Присоединиться как «{role}»",
+      "leave": "Покинуть отдел",
+      "assign": "Назначить",
+      "assignDialog": {
+        "title": "Назначение в «{unitName}»",
+        "person": "Сотрудник",
+        "role": "Роль",
+        "submit": "Назначить",
+        "cancel": "Отмена"
+      },
+      "removeConfirm": {
+        "title": "Убрать {name} из «{unitName}»?",
+        "confirm": "Убрать",
+        "cancel": "Отмена"
+      },
+      "assignedToast": "{name} назначен(а) как «{role}»",
+      "removedToast": "{name} убран(а) из отдела"
+    },
+    "people": {
+      "title": "Сотрудники",
+      "subtitle": "Команда «{departmentName}», по отделам",
+      "empty": {
+        "title": "Пока нет ни одного сотрудника"
+      },
+      "searchPlaceholder": "Поиск сотрудника",
+      "unassignedGroup": "Без отдела",
+      "memberCard": {
+        "noUnit": "Отдел не указан"
+      }
+    },
+    "common": {
+      "head": "Руководитель",
+      "member": "Участник"
+    }
+  },
+  "work": {
+    "title": "Задачи",
+    "view": {
+      "board": "Доска",
+      "table": "Таблица",
+      "timeline": "График",
+      "calendar": "Календарь",
+      "mine": "Мои задачи",
+      "archive": "Архив"
+    },
+    "board": {
+      "department": "Отдел",
+      "unassigned": "Не назначено",
+      "columnEmpty": "Нет карточек",
+      "emptyTitle": "Сотрудники отдела не найдены",
+      "emptyBody": "Чтобы увидеть доску, сначала добавьте сотрудников в отдел.",
+      "moved": "«{title}» перемещена в колонку «{target}»"
+    },
+    "quickAdd": {
+      "placeholder": "Быстро добавить: «Нодира: пакет ЕГДИ, пятница»",
+      "created": "«{title}» создана",
+      "error": "Не удалось создать задачу",
+      "unknownAssignee": "Сотрудник «{name}» не найден"
+    },
+    "filter": {
+      "placeholder": "assignee:@me due:<=friday label:urgent",
+      "apply": "Применить",
+      "clear": "Очистить",
+      "saveAs": "Сохранить как вид",
+      "viewName": "Название вида",
+      "saved": "Вид сохранён",
+      "saveError": "Не удалось сохранить вид",
+      "savedViews": "Сохранённые виды",
+      "noSavedViews": "Сохранённых видов пока нет"
+    },
+    "field": {
+      "title": "Заголовок",
+      "description": "Описание",
+      "assignee": "Кому",
+      "giver": "От кого",
+      "priority": "Приоритет",
+      "due": "Срок",
+      "start": "Начало",
+      "status": "Статус",
+      "unassigned": "Не назначено",
+      "noGiver": "Не указано",
+      "watchers": "Наблюдатели",
+      "links": "Ссылки",
+      "checklist": "Чек-лист",
+      "comments": "Комментарии",
+      "activity": "История"
+    },
+    "card": {
+      "peekTitle": "Детали задачи",
+      "markDone": "Отметить выполненной",
+      "archive": "Архивировать",
+      "archived": "Задача отправлена в архив",
+      "restore": "Восстановить",
+      "watch": "Наблюдать",
+      "watching": "Вы наблюдаете",
+      "moveTo": "Переместить в колонку",
+      "newLabel": "Новая метка",
+      "descriptionPlaceholder": "Добавьте описание",
+      "addLinkPlaceholder": "Введите адрес ссылки",
+      "unfurlError": "Не удалось загрузить ссылку",
+      "addChecklistItem": "Добавить пункт",
+      "addCommentPlaceholder": "Напишите комментарий, @ чтобы упомянуть сотрудника",
+      "backToBoard": "Назад к доске",
+      "noIdTitle": "Задача не указана",
+      "noIdBody": "В ссылке отсутствует идентификатор задачи."
+    },
+    "priority": {
+      "none": "Без приоритета",
+      "low": "Низкий",
+      "medium": "Средний",
+      "high": "Высокий",
+      "urgent": "Срочно"
+    },
+    "risk": {
+      "atRisk": "Срок приближается",
+      "overdue": "Просрочено"
+    },
+    "status": {
+      "active": "В работе",
+      "done": "Выполнено",
+      "archived": "В архиве"
+    },
+    "activity": {
+      "created": "создал(а) задачу",
+      "assigned": "изменил(а) исполнителя",
+      "status": "изменил(а) статус",
+      "due": "изменил(а) срок",
+      "comment": "оставил(а) комментарий",
+      "checklist": "добавил(а) пункт в чек-лист",
+      "system": "Система"
+    },
+    "table": {
+      "open": "Открыть",
+      "emptyTitle": "Задачи не найдены",
+      "emptyBody": "Измените фильтр или добавьте новую задачу."
+    },
+    "timeline": {
+      "today": "Сегодня",
+      "emptyTitle": "Нет задач со сроком",
+      "emptyBody": "На графике показаны только задачи в работе с указанным сроком."
+    },
+    "calendar": {
+      "prev": "Предыдущий месяц",
+      "next": "Следующий месяц",
+      "today": "Сегодня",
+      "more": "ещё {count}",
+      "weekday": {
+        "mon": "Пн",
+        "tue": "Вт",
+        "wed": "Ср",
+        "thu": "Чт",
+        "fri": "Пт",
+        "sat": "Сб",
+        "sun": "Вс"
+      }
+    },
+    "mine": {
+      "overdue": "Просрочено",
+      "atRisk": "Срок близко",
+      "rest": "Остальные",
+      "emptyTitle": "Вам ничего не назначено",
+      "emptyBody": "Назначенные вам задачи появятся здесь."
+    },
+    "archive": {
+      "emptyTitle": "Архив пуст",
+      "emptyBody": "Выполненные и архивированные задачи появятся здесь."
+    },
+    "action": {
+      "save": "Сохранить",
+      "delete": "Удалить",
+      "send": "Отправить"
+    }
   }
 }

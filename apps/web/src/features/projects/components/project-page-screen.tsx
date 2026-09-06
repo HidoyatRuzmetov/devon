@@ -217,7 +217,7 @@ export default function ProjectPageScreen() {
                 <Input
                   value={newObjective}
                   onChange={(e) => setNewObjective(e.target.value)}
-                  placeholder={t('projects.task.addObjectivePlaceholder')}
+                  placeholder={t('projects.card.addObjectivePlaceholder')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newObjective.trim()) {
                       createCard.mutate({
@@ -310,7 +310,7 @@ function SubjectiveAddRow({
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={t('projects.task.addSubjectivePlaceholder')}
+        placeholder={t('projects.card.addSubjectivePlaceholder')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && text.trim()) {
             createCard.mutate({

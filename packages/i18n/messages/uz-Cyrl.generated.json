@@ -407,5 +407,705 @@
       "label": "Бўлимни алмаштириш",
       "current": "Жорий бўлим"
     }
+  },
+  "events": {
+    "title": "Тадбирлар",
+    "view": {
+      "list": "Рўйхат",
+      "calendar": "Тақвим"
+    },
+    "actions": {
+      "create": "Тадбир яратиш",
+      "edit": "Таҳрирлаш",
+      "save": "Сақлаш",
+      "cancelEvent": "Тадбирни бекор қилиш",
+      "close": "Ёпиш",
+      "retry": "Қайта уриниш",
+      "back": "Орқага"
+    },
+    "empty": {
+      "title": "Ҳозирча тадбирлар йўқ",
+      "body": "Жамоангиз учун биринчи тадбирни шу ерда яратинг.",
+      "action": "Тадбир яратиш"
+    },
+    "loading": {
+      "title": "Тадбирлар юкланмоқда"
+    },
+    "error": {
+      "title": "Тадбирларни юклаб бўлмади",
+      "body": "Нимадир хато кетди. Қайта уриниб кўринг."
+    },
+    "forbidden": {
+      "title": "Рухсат йўқ",
+      "body": "Тадбирларни кўриш учун бўлим аъзоси бўлишингиз керак."
+    },
+    "offline": {
+      "title": "Алоқа йўқ",
+      "body": "Интернет тикланганда тадбирлар рўйхати янгиланади."
+    },
+    "category": {
+      "team_building": "Жамоа қуриш",
+      "sports": "Спорт",
+      "volunteering": "Кўнгиллилик",
+      "social": "Ижтимоий",
+      "training": "Тренинг",
+      "family": "Оилавий",
+      "other": "Бошқа"
+    },
+    "status": {
+      "draft": "Қоралама",
+      "open": "Очиқ",
+      "full": "Жойлар тўлган",
+      "cancelled": "Бекор қилинган",
+      "done": "Якунланган"
+    },
+    "card": {
+      "organizer": "Ташкилотчи: {name}",
+      "going": "{count} киши боради",
+      "waitlisted": "{count} киши навбатда",
+      "capacity": "{going} / {capacity} жой",
+      "unlimitedCapacity": "Жойлар сони чекланмаган",
+      "deadline": "Рўйхатдан ўтиш: {date}",
+      "cancelledBanner": "Бу тадбир бекор қилинди",
+      "cancelledReason": "Сабаб: {reason}",
+      "doneBanner": "Бу тадбир якунланди"
+    },
+    "form": {
+      "titleLabel": "Тадбир номи",
+      "titlePlaceholder": "Масалан, кузги жамоавий пикник",
+      "descriptionLabel": "Тавсиф",
+      "descriptionPlaceholder": "Тадбир ҳақида қисқача ёзинг",
+      "categoryLabel": "Тоифа",
+      "startsAtLabel": "Бошланиш вақти",
+      "endsAtLabel": "Тугаш вақти",
+      "placeLabel": "Манзил",
+      "placePlaceholder": "Масалан, бўлим йиғилишлар зали",
+      "placeUrlLabel": "Манзил ҳаволаси",
+      "capacityLabel": "Жойлар сони",
+      "capacityPlaceholder": "Чекланмаган",
+      "waitlistEnabledLabel": "Жойлар тугаса навбат очилсин",
+      "rsvpDeadlineLabel": "Рўйхатдан ўтиш муддати",
+      "costNoteLabel": "Харажат ҳақида эслатма",
+      "costNotePlaceholder": "Масалан, транспорт бўлим ҳисобидан",
+      "remindersLabel": "Эслатмалар",
+      "reminderDayBefore": "1 кун олдин",
+      "reminderHourBefore": "1 соат олдин",
+      "submitCreate": "Тадбирни яратиш",
+      "submitUpdate": "Ўзгаришларни сақлаш",
+      "validation": {
+        "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлиши керак"
+      }
+    },
+    "diff": {
+      "title": "Нималар ўзгарди",
+      "field": {
+        "title": "Номи",
+        "startsAt": "Бошланиш вақти",
+        "endsAt": "Тугаш вақти",
+        "place": "Манзил",
+        "placeUrl": "Манзил ҳаволаси",
+        "capacity": "Жойлар сони",
+        "costNote": "Харажат эслатмаси",
+        "description": "Тавсиф"
+      }
+    },
+    "cancelDialog": {
+      "title": "Тадбирни бекор қилиш",
+      "body": "Рўйхатдан ўтган барча ходимларга хабар боради. Бу амални ортга қайтариб бўлмайди.",
+      "reasonLabel": "Сабаб",
+      "reasonPlaceholder": "Ходимларга тушунтиринг",
+      "confirm": "Ҳа, бекор қилиш",
+      "keepEvent": "Йўқ, сақлаб қолиш"
+    },
+    "rsvp": {
+      "title": "Иштирок этасизми?",
+      "status": {
+        "yes": "Ҳа, бораман",
+        "no": "Бормайман",
+        "maybe": "Эҳтимол",
+        "waitlist": "Навбатда"
+      },
+      "guestsLabel": "Меҳмонлар сони",
+      "noteLabel": "Изоҳ (ихтиёрий)",
+      "notePlaceholder": "Масалан, аллергия ёки бошқа эслатма",
+      "submit": "Юбориш",
+      "update": "Янгилаш",
+      "deadlinePassed": "Рўйхатдан ўтиш муддати тугаган",
+      "eventFull": "Жойлар тўлган, навбатга ёзилдингиз",
+      "confirmedToast": "Иштирокингиз қайд этилди",
+      "waitlistedToast": "Жойлар тўлган -- навбатга қўйилдингиз",
+      "myStatus": "Сизнинг жавобингиз: {status}",
+      "notYet": "Ҳали жавоб бермадингиз"
+    },
+    "attendees": {
+      "title": "Иштирокчилар",
+      "titleCount": "Иштирокчилар ({count})",
+      "empty": "Ҳозирча ҳеч ким жавоб бермади",
+      "guestsSuffix": "+{count} меҳмон"
+    },
+    "comments": {
+      "title": "Муҳокама",
+      "empty": "Ҳозирча изоҳ йўқ. Биринчи бўлинг.",
+      "placeholder": "Изоҳ ёзинг",
+      "submit": "Юбориш",
+      "delete": "Ўчириш",
+      "deleteConfirm": "Изоҳни ўчирмоқчимисиз?"
+    },
+    "carpool": {
+      "title": "Бирга бориш",
+      "empty": "Ҳозирча бирга бориш таклифлари йўқ",
+      "offer": "Машина таклиф қилиш",
+      "seatsLabel": "Бўш ўриндиқлар",
+      "departurePlaceLabel": "Жўнаш нуқтаси",
+      "departureAtLabel": "Жўнаш вақти",
+      "noteLabel": "Изоҳ",
+      "driver": "Ҳайдовчи: {name}",
+      "seatsTaken": "{claimed} / {seats} ўрин банд",
+      "claim": "Ўрин банд қилиш",
+      "release": "Воз кечиш",
+      "waitlisted": "Навбатда",
+      "confirmed": "Тасдиқланган",
+      "passengers": "Йўловчилар",
+      "driverCannotClaim": "Ҳайдовчи ўз таклифидан ўрин ололмайди",
+      "cancelled": "Бу таклиф бекор қилинган"
+    },
+    "items": {
+      "title": "Ким нима олиб келади",
+      "empty": "Ҳозирча буюмлар рўйхати бўш",
+      "add": "Буюм қўшиш",
+      "labelPlaceholder": "Масалан, чой-пой",
+      "quantityLabel": "Миқдори",
+      "claim": "Мен олиб келаман",
+      "release": "Воз кечиш",
+      "claimedBy": "Олиб келади: {name}",
+      "claimedByMe": "Сиз олиб келасиз",
+      "alreadyClaimed": "Бу буюмни аллақачон бошқа ходим олди"
+    },
+    "polls": {
+      "title": "Сўровномалар",
+      "empty": "Ҳозирча сўровнома йўқ",
+      "create": "Сўровнома яратиш",
+      "kindLabel": "Тури",
+      "kind": {
+        "date": "Сана танлаш",
+        "single": "Битта вариант",
+        "multi": "Бир нечта вариант"
+      },
+      "questionLabel": "Савол",
+      "questionPlaceholder": "Масалан, пикник учун қайси сана қулай?",
+      "anonymousLabel": "Аноним овоз бериш",
+      "closesAtLabel": "Якунланиш вақти",
+      "optionsLabel": "Вариантлар",
+      "optionPlaceholder": "Вариант матни",
+      "addOption": "Вариант қўшиш",
+      "removeOption": "Олиб ташлаш",
+      "vote": "Овоз бериш",
+      "changeVote": "Овозни ўзгартириш",
+      "totalVotes": "{count} та овоз",
+      "closed": "Якунланган",
+      "yourVote": "Сизнинг овозингиз",
+      "createdBy": "Яратди: {name}"
+    },
+    "photos": {
+      "title": "Фотосуратлар",
+      "empty": "Ҳозирча фотосурат йўқ",
+      "add": "Ҳавола қўшиш",
+      "urlLabel": "Расм ҳаволаси",
+      "captionLabel": "Изоҳ (ихтиёрий)",
+      "delete": "Ўчириш"
+    },
+    "feedback": {
+      "title": "Фикр-мулоҳаза",
+      "empty": "Ҳозирча фикр билдирилмаган",
+      "ratingLabel": "Баҳо",
+      "commentLabel": "Фикрингиз (ихтиёрий)",
+      "anonymousLabel": "Аноним қолдириш",
+      "submit": "Юбориш",
+      "update": "Янгилаш",
+      "average": "Ўртача баҳо: {rating} / 5",
+      "yours": "Сизнинг баҳойингиз",
+      "anonymousAuthor": "Аноним",
+      "thankYou": "Фикрингиз учун раҳмат"
+    },
+    "ics": {
+      "exportEvent": "Тақвимга қўшиш (.иcс)",
+      "exportMine": "Менинг тадбирларим (.иcс)"
+    },
+    "tabs": {
+      "overview": "Умумий",
+      "rsvp": "Иштирок",
+      "carpool": "Бирга бориш",
+      "items": "Буюмлар",
+      "polls": "Сўровномалар",
+      "photos": "Фотосуратлар",
+      "feedback": "Фикр-мулоҳаза",
+      "comments": "Муҳокама"
+    },
+    "filters": {
+      "from": "Бошланиш",
+      "to": "Тугаш"
+    }
+  },
+  "personal": {
+    "title": "Шахсий",
+    "tabs": {
+      "today": "Бугун",
+      "sprints": "Даврлар",
+      "tasks": "Вазифалар",
+      "notes": "Қайдлар",
+      "canvas": "Доска",
+      "pomodoro": "Помодоро"
+    },
+    "today": {
+      "tasks": {
+        "title": "Бугунги вазифалар"
+      },
+      "empty": {
+        "title": "Бугун учун ҳеч нарса режалаштирилмаган",
+        "body": "Бу ерда кўриш учун вазифа қўшинг ёки давр бошланг."
+      },
+      "focus": "Фокус"
+    },
+    "sprints": {
+      "active": {
+        "title": "Фаол даврлар"
+      },
+      "empty": {
+        "title": "Ҳали даврлар йўқ",
+        "body": "Ишингизга мақсад ва вақт чегараси белгилаш учун давр бошланг."
+      },
+      "create": {
+        "action": "Янги давр",
+        "title": "Янги давр",
+        "submit": "Давр яратиш"
+      },
+      "goal": "Мақсад",
+      "goalPlaceholder": "Нимага эришмоқчисиз?",
+      "history": {
+        "title": "Тарих ({count})"
+      },
+      "rollover": {
+        "action": "Кўчириш",
+        "toast": "{count} та тугалланмаган вазифа янги даврга кўчирилди"
+      },
+      "complete": {
+        "action": "Якунланган деб белгилаш"
+      },
+      "kind": {
+        "threeHour": "3 соат",
+        "day": "Кун",
+        "week": "Ҳафта",
+        "custom": "Ихтиёрий"
+      },
+      "status": {
+        "active": "Фаол",
+        "completed": "Якунланган",
+        "archived": "Архивланган"
+      }
+    },
+    "tasks": {
+      "inbox": "Кириш қутиси",
+      "addPlaceholder": "Вазифа қўшиш",
+      "toggleDone": "Бажарилган деб белгилаш",
+      "delete": "Вазифани ўчириш",
+      "deleted": {
+        "toast": "Вазифа ўчирилди"
+      },
+      "dragHandle": "Тартибни ўзгартириш учун тортинг",
+      "indent": "Ичкарига суриш (қуйи вазифа қилиш)",
+      "outdent": "Ташқарига чиқариш",
+      "empty": {
+        "section": "Бу ерда ҳали вазифалар йўқ."
+      }
+    },
+    "notes": {
+      "create": "Янги қайд",
+      "newTitle": "Янги қайд",
+      "bodyPlaceholder": "Нимадир ёзинг...",
+      "delete": "Қайдни ўчириш",
+      "deleted": {
+        "toast": "Қайд ўчирилди"
+      },
+      "pin": "Маҳкамлаш",
+      "unpin": "Маҳкамлашни бекор қилиш",
+      "empty": {
+        "title": "Ҳали қайдлар йўқ",
+        "body": "Қайдлар фақат сиз учун -- хоҳлаган нарсангизни ёзиб қўйинг."
+      }
+    },
+    "canvas": {
+      "create": "Янги доска",
+      "newTitle": "Янги доска",
+      "open": "Очиш",
+      "back": "Доскаларга қайтиш",
+      "delete": "Доскани ўчириш",
+      "deleted": {
+        "toast": "Доска ўчирилди"
+      },
+      "empty": {
+        "title": "Ҳали доскалар йўқ",
+        "body": "Доска -- эскиз ва эслатма қоғозлари учун эркин жой."
+      },
+      "addSticky": "Эслатма қоғоз қўшиш",
+      "undo": "Бекор қилиш",
+      "redo": "Қайтариш",
+      "zoomIn": "Катталаштириш",
+      "zoomOut": "Кичиклаштириш",
+      "strokeWidth": "Чизиқ қалинлиги",
+      "emptyText": "Матн",
+      "tool": {
+        "select": "Танлаш",
+        "pen": "Қалам",
+        "rectangle": "Тўртбурчак",
+        "ellipse": "Эллипс",
+        "arrow": "Ўқ",
+        "text": "Матн",
+        "eraser": "Ўчирғич"
+      }
+    },
+    "pomodoro": {
+      "widget": {
+        "label": "Помодоро",
+        "aria": "Помодоро таймери"
+      },
+      "phase": {
+        "idle": "Тайёр",
+        "focus": "Фокус",
+        "shortBreak": "Қисқа танаффус",
+        "longBreak": "Узоқ танаффус"
+      },
+      "action": {
+        "startFocus": "Фокусни бошлаш",
+        "startShortBreak": "Танаффусни бошлаш",
+        "pause": "Пауза",
+        "resume": "Давом эттириш",
+        "skip": "Ўтказиб юбориш",
+        "stop": "Тўхтатиш"
+      },
+      "notification": {
+        "body": "Вақт тугади"
+      },
+      "sound": {
+        "chime": "Оҳанг",
+        "bell": "Қўнғироқ",
+        "digital": "Рақамли",
+        "none": "Овозсиз"
+      },
+      "notifications": {
+        "on": "Билдиришномалар ёқилган",
+        "off": "Билдиришномалар ўчирилган"
+      },
+      "settings": {
+        "title": "Помодоро созламалари",
+        "focusMin": "Фокус (дақиқа)",
+        "shortBreakMin": "Қисқа танаффус (дақиқа)",
+        "longBreakMin": "Узоқ танаффус (дақиқа)",
+        "cyclesBeforeLong": "Узоқ танаффусдан олдинги фокус сони",
+        "sound": "Овоз",
+        "notifications": "Браузер билдиришномалари",
+        "autoStart": "Кейинги босқични автоматик бошлаш"
+      },
+      "stats": {
+        "todayFocus": "Бугунги фокус",
+        "todaySessions": "Бугунги сеанслар",
+        "weekFocus": "Шу ҳафталик фокус",
+        "weekSessions": "Шу ҳафталик сеанслар",
+        "minutesShort": "дақ"
+      },
+      "log": {
+        "title": "Сеанслар журнали",
+        "completed": "Якунланган",
+        "skipped": "Ўтказиб юборилган",
+        "empty": {
+          "title": "Ҳали сеанслар йўқ",
+          "body": "Бу ерда кўриш учун фокус сеансини бошланг."
+        }
+      }
+    }
+  },
+  "projects": {
+    "title": "Гуруҳ лойиҳалари",
+    "emptyTitle": "Ҳали лойиҳалар йўқ",
+    "emptyBody": "Биринчи гуруҳ лойиҳасини яратинг -- шаблондан ёки бошидан.",
+    "noIdTitle": "Лойиҳа кўрсатилмаган",
+    "noIdBody": "Ҳаволада лойиҳа идентификатори йўқ.",
+    "tile": {
+      "progress": "{percent}% бажарилди"
+    },
+    "field": {
+      "title": "Номи",
+      "titlePlaceholder": "Лойиҳа номини киритинг",
+      "owner": "Масъул",
+      "ownerPlaceholder": "Масъулни танланг",
+      "members": "Аъзолар",
+      "template": "Шаблон",
+      "milestones": "Босқичлар",
+      "objective": "Умумий вазифалар",
+      "subjective": "Шахсий вазифалар"
+    },
+    "status": {
+      "planning": "Режалаштирилмоқда",
+      "active": "Фаол",
+      "on_hold": "Тўхтатилган",
+      "done": "Якунланган",
+      "archived": "Архивланган"
+    },
+    "create": {
+      "button": "Янги лойиҳа",
+      "title": "Гуруҳ лойиҳасини яратиш",
+      "fromTemplate": "Шаблондан",
+      "fromScratch": "Бошидан",
+      "submit": "Яратиш",
+      "success": "Лойиҳа яратилди",
+      "error": "Лойиҳани яратиб бўлмади"
+    },
+    "milestone": {
+      "addPlaceholder": "Босқич номини киритинг"
+    },
+    "card": {
+      "addObjectivePlaceholder": "Умумий вазифа қўшиш",
+      "addSubjectivePlaceholder": "Шахсий вазифа қўшиш"
+    },
+    "action": {
+      "archive": "Лойиҳани архивлаш"
+    }
+  },
+  "structure": {
+    "nav": {
+      "units": "Тузилма",
+      "people": "Ходимлар"
+    },
+    "units": {
+      "title": "Тузилма",
+      "subtitle": "{departmentName} бўлимлари ва лавозимлари",
+      "empty": {
+        "title": "Ҳали бўлим йўқ",
+        "body": "Бўлимни тузганингиздан кейин ходимларни унга тақсимлашингиз мумкин.",
+        "action": "Бўлим қўшиш"
+      },
+      "addUnit": "Бўлим қўшиш",
+      "addSubUnit": "Ички бўлим қўшиш",
+      "rename": "Номини ўзгартириш",
+      "renameLabel": "Бўлим номи",
+      "delete": "Ўчириш",
+      "deleteConfirm": {
+        "title": "«{name}» ўчирилсинми?",
+        "body": "Аъзолар бўлимсиз қолади. Бир муддат «Бекор қилиш» билан қайтариш мумкин.",
+        "confirm": "Ўчириш",
+        "cancel": "Бекор қилиш"
+      },
+      "deletedToast": "«{name}» ўчирилди",
+      "undo": "Бекор қилиш",
+      "restoredToast": "«{name}» тикланди",
+      "colourLabel": "Ранг",
+      "colourAuto": "Автоматик",
+      "settingsNotice": {
+        "structureEdit": "Ҳозирча тузилмани фақат бўлим бошлиғи таҳрирлай олади",
+        "selfAssign": "Ҳозирча лавозимларни фақат бўлим бошлиғи белгилай олади"
+      },
+      "dragHint": "Тартибини ўзгартириш учун тортинг",
+      "view": {
+        "tree": "Рўйхат",
+        "chart": "Тузилма схемаси"
+      },
+      "chart": {
+        "exportPng": "PNG сифатида сақлаш",
+        "noHead": "Бошлиғи ҳали тайинланмаган",
+        "headBadge": "Бошлиғи",
+        "deputyBadge": "Ўринбосари",
+        "memberCount": "{count} киши",
+        "keyboardHint": "Бўлимлар орасида ўтиш учун стрелка тугмаларидан фойдаланинг"
+      },
+      "validation": {
+        "nameRequired": "Номини киритинг"
+      },
+      "addDialog": {
+        "title": "Янги бўлим",
+        "namePlaceholder": "Масалан, Мониторинг гуруҳи",
+        "parentLabel": "Юқори бўлим",
+        "rootOption": "Йўқ — асосий бўлим",
+        "create": "Яратиш",
+        "cancel": "Бекор қилиш"
+      }
+    },
+    "roles": {
+      "roleLabel": {
+        "head": "Бўлим бошлиғи",
+        "deputy": "Ўринбосар",
+        "member": "Аъзо"
+      },
+      "join": "Ушбу бўлимга қўшилиш",
+      "joinAs": "{role} сифатида қўшилиш",
+      "leave": "Бўлимдан чиқиш",
+      "assign": "Тайинлаш",
+      "assignDialog": {
+        "title": "«{unitName}» бўлимига тайинлаш",
+        "person": "Ходим",
+        "role": "Лавозим",
+        "submit": "Тайинлаш",
+        "cancel": "Бекор қилиш"
+      },
+      "removeConfirm": {
+        "title": "{name} «{unitName}» бўлимидан чиқарилсинми?",
+        "confirm": "Чиқариш",
+        "cancel": "Бекор қилиш"
+      },
+      "assignedToast": "{name} {role} этиб тайинланди",
+      "removedToast": "{name} бўлимдан чиқарилди"
+    },
+    "people": {
+      "title": "Ходимлар",
+      "subtitle": "{departmentName} жамоаси, бўлимлар бўйича",
+      "empty": {
+        "title": "Ҳали аъзо йўқ"
+      },
+      "searchPlaceholder": "Ходимни қидириш",
+      "unassignedGroup": "Бўлимсиз",
+      "memberCard": {
+        "noUnit": "Бўлим белгиланмаган"
+      }
+    },
+    "common": {
+      "head": "Бошлиғи",
+      "member": "Аъзо"
+    }
+  },
+  "work": {
+    "title": "Вазифалар",
+    "view": {
+      "board": "Доска",
+      "table": "Жадвал",
+      "timeline": "График",
+      "calendar": "Тақвим",
+      "mine": "Менинг вазифаларим",
+      "archive": "Архив"
+    },
+    "board": {
+      "department": "Бўлим",
+      "unassigned": "Бириктирилмаган",
+      "columnEmpty": "Вазифалар йўқ",
+      "emptyTitle": "Бошқарма аъзолари топилмади",
+      "emptyBody": "Доска кўриниши учун аввал бошқармага аъзолар қўшилиши керак.",
+      "moved": "\"{title}\" {target} устунига кўчирилди"
+    },
+    "quickAdd": {
+      "placeholder": "Тез қўшиш: \"Нодира: ЭГДИ пакети, жума\"",
+      "created": "\"{title}\" яратилди",
+      "error": "Вазифани яратиб бўлмади",
+      "unknownAssignee": "\"{name}\" номли ходим топилмади"
+    },
+    "filter": {
+      "placeholder": "assignee:@me due:<=friday label:urgent",
+      "apply": "Қўллаш",
+      "clear": "Тозалаш",
+      "saveAs": "Кўриниш сифатида сақлаш",
+      "viewName": "Кўриниш номи",
+      "saved": "Кўриниш сақланди",
+      "saveError": "Кўринишни сақлаб бўлмади",
+      "savedViews": "Сақланган кўринишлар",
+      "noSavedViews": "Сақланган кўринишлар йўқ"
+    },
+    "field": {
+      "title": "Сарлавҳа",
+      "description": "Тавсиф",
+      "assignee": "Кимга",
+      "giver": "Кимдан",
+      "priority": "Муҳимлик",
+      "due": "Муддат",
+      "start": "Бошланиш",
+      "status": "Ҳолат",
+      "unassigned": "Бириктирилмаган",
+      "noGiver": "Кўрсатилмаган",
+      "watchers": "Кузатувчилар",
+      "links": "Ҳаволалар",
+      "checklist": "Бажариш рўйхати",
+      "comments": "Изоҳлар",
+      "activity": "Тарих"
+    },
+    "card": {
+      "peekTitle": "Вазифа тафсилотлари",
+      "markDone": "Бажарилди деб белгилаш",
+      "archive": "Архивлаш",
+      "archived": "Вазифа архивланди",
+      "restore": "Тиклаш",
+      "watch": "Кузатиш",
+      "watching": "Кузатилмоқда",
+      "moveTo": "Устунга кўчириш",
+      "newLabel": "Янги ёрлиқ",
+      "descriptionPlaceholder": "Тавсиф қўшинг",
+      "addLinkPlaceholder": "Ҳавола манзилини киритинг",
+      "unfurlError": "Ҳаволани юклаб бўлмади",
+      "addChecklistItem": "Банд қўшиш",
+      "addCommentPlaceholder": "Изоҳ ёзинг, @ билан ходимни белгиланг",
+      "backToBoard": "Доскага қайтиш",
+      "noIdTitle": "Вазифа кўрсатилмаган",
+      "noIdBody": "Ҳаволада вазифа идентификатори йўқ."
+    },
+    "priority": {
+      "none": "Муҳимлик йўқ",
+      "low": "Паст",
+      "medium": "Ўртача",
+      "high": "Юқори",
+      "urgent": "Шошилинч"
+    },
+    "risk": {
+      "atRisk": "Муддат яқинлашмоқда",
+      "overdue": "Муддати ўтган"
+    },
+    "status": {
+      "active": "Фаол",
+      "done": "Бажарилди",
+      "archived": "Архивланган"
+    },
+    "activity": {
+      "created": "вазифани яратди",
+      "assigned": "бириктирмани ўзгартирди",
+      "status": "ҳолатни ўзгартирди",
+      "due": "муддатни ўзгартирди",
+      "comment": "изоҳ қолдирди",
+      "checklist": "рўйхатга банд қўшди",
+      "system": "Тизим"
+    },
+    "table": {
+      "open": "Очиш",
+      "emptyTitle": "Вазифалар топилмади",
+      "emptyBody": "Филтрни ўзгартиринг ёки янги вазифа қўшинг."
+    },
+    "timeline": {
+      "today": "Бугун",
+      "emptyTitle": "Муддати белгиланган вазифалар йўқ",
+      "emptyBody": "Графикда фақат муддати бор фаол вазифалар кўринади."
+    },
+    "calendar": {
+      "prev": "Олдинги ой",
+      "next": "Кейинги ой",
+      "today": "Бугун",
+      "more": "яна {count} та",
+      "weekday": {
+        "mon": "Ду",
+        "tue": "Се",
+        "wed": "Ч",
+        "thu": "Па",
+        "fri": "Жу",
+        "sat": "Ш",
+        "sun": "Я"
+      }
+    },
+    "mine": {
+      "overdue": "Муддати ўтган",
+      "atRisk": "Муддат яқин",
+      "rest": "Қолганлари",
+      "emptyTitle": "Сизга бириктирилган вазифалар йўқ",
+      "emptyBody": "Сизга бириктирилган вазифалар шу ерда кўринади."
+    },
+    "archive": {
+      "emptyTitle": "Архив бўш",
+      "emptyBody": "Бажарилган ва архивланган вазифалар шу ерда кўринади."
+    },
+    "action": {
+      "save": "Сақлаш",
+      "delete": "Ўчириш",
+      "send": "Юбориш"
+    }
   }
 }

@@ -38,7 +38,7 @@
     "milestone": {
       "addPlaceholder": "Босқич номини киритинг"
     },
-    "task": {
+    "card": {
       "addObjectivePlaceholder": "Умумий вазифа қўшиш",
       "addSubjectivePlaceholder": "Шахсий вазифа қўшиш"
     },
