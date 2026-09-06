@@ -1,6 +1,6 @@
 {
   "$schema": "./gates.schema.json",
-  "version": 1,
+  "version": 2,
   "limits": {
     "MAX_FIX_ROUNDS": 3,
     "MAX_EPIC_ROUNDS": 2,
@@ -24,14 +24,14 @@
     "i18n": { "cmd": "node agentic/scripts/check-i18n.mjs", "blocking": true, "timeout_s": 120 },
     "secrets": { "cmd": "node agentic/scripts/check-secrets.mjs", "blocking": true, "timeout_s": 120 },
     "build": { "cmd": "pnpm -r --if-present build", "blocking": true, "timeout_s": 1200 },
-    "migrate": { "cmd": "pnpm --filter @devon/db migrate:verify", "blocking": true, "timeout_s": 600 },
-    "e2e-smoke": { "cmd": "pnpm --filter @devon/web test:e2e -- --grep @smoke", "blocking": true, "timeout_s": 1200 },
-    "e2e": { "cmd": "pnpm --filter @devon/web test:e2e", "blocking": true, "timeout_s": 2400 },
-    "a11y": { "cmd": "pnpm --filter @devon/web test:a11y", "blocking": true, "timeout_s": 1200 },
-    "bundle": { "cmd": "node agentic/scripts/check-bundle.mjs", "blocking": true, "timeout_s": 120 },
-    "security": { "cmd": "pnpm -w --if-present security:scan", "blocking": true, "timeout_s": 900 },
-    "perf": { "cmd": "pnpm -w --if-present perf:check", "blocking": true, "timeout_s": 1800 },
-    "ai-evals": { "cmd": "pnpm --filter @devon/ai --if-present evals", "blocking": false, "blocking_on_release": true, "timeout_s": 1800 },
+    "migrate": { "cmd": "pnpm --filter @devon/db migrate:verify", "blocking": true, "timeout_s": 600, "requires": ["packages/db/package.json"] },
+    "e2e-smoke": { "cmd": "pnpm --filter @devon/web test:e2e -- --grep @smoke", "blocking": true, "timeout_s": 1200, "requires": ["apps/web/package.json", "e2e/package.json"] },
+    "e2e": { "cmd": "pnpm --filter @devon/web test:e2e", "blocking": true, "timeout_s": 2400, "requires": ["apps/web/package.json", "e2e/package.json"] },
+    "a11y": { "cmd": "pnpm --filter @devon/web test:a11y", "blocking": true, "timeout_s": 1200, "requires": ["apps/web/package.json", "e2e/package.json"] },
+    "bundle": { "cmd": "node agentic/scripts/check-bundle.mjs", "blocking": true, "timeout_s": 120, "requires": ["apps/web/package.json"] },
+    "security": { "cmd": "pnpm -w --if-present security:scan", "blocking": true, "timeout_s": 900, "requires_cmd": ["semgrep", "trivy"], "optional_local": true },
+    "perf": { "cmd": "pnpm -w --if-present perf:check", "blocking": true, "timeout_s": 1800, "requires_cmd": ["lhci", "k6"], "optional_local": true },
+    "ai-evals": { "cmd": "pnpm --filter @devon/ai --if-present evals", "blocking": false, "blocking_on_release": true, "timeout_s": 1800, "requires": ["packages/ai/package.json"], "optional_local": true },
     "deps": { "cmd": "pnpm audit --audit-level=high", "blocking": false, "blocking_on_release": true, "timeout_s": 300 }
   },
   "protected_paths": [
