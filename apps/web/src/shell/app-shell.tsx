@@ -119,7 +119,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const trailing = (
     <>
       {isDemo ? (
-        <DemoChip label={t('shell.demo.chip.label')} popoverText={t('shell.demo.popover')} />
+        <DemoChip
+          // Full label at >=768; the short one below that (spec.md §3.5: "using the short label
+          // ('Demo'), never a truncated long label") -- the long label wrapped to two lines inside
+          // the chip's fixed 24px height at 390px, visibly overlapping the rest of the top bar.
+          label={isDesktop ? t('shell.demo.chip.label') : t('shell.demo.chip.short')}
+          popoverText={t('shell.demo.popover')}
+        />
       ) : null}
       <LocaleMenu
         triggerLabel={t('shell.locale.aria')}
@@ -199,8 +205,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {WORDMARK}
             </span>
           ) : (
-            <span data-shell-label className="font-display text-h3 text-foreground">
-              {WORDMARK}
+            // spec.md §3.5: "wordmark (mark only, no wordtext below 420 px)" -- the five 44px top-bar
+            // targets (☰ · wordmark · search · language · avatar) only fit a 358px content width at
+            // their full size each; the full "WorkPortal" wordtext at any size left too little room
+            // for the rest of the row and forced other targets to wrap/overlap (found end-to-end at
+            // 390px, 2026-09). A single-letter mark is the smallest faithful reading of "mark only"
+            // without inventing a graphical logo asset nothing in this repo defines yet.
+            <span
+              data-shell-label
+              aria-hidden="true"
+              className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-sidebar-accent font-display text-body text-sidebar-foreground"
+            >
+              {WORDMARK.charAt(0)}
             </span>
           )
         }
