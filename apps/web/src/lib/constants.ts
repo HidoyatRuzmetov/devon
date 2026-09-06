@@ -11,3 +11,7 @@ export const LOCALE_STORAGE_KEY = 'devon_locale'
 export const THEME_STORAGE_KEY = 'devon_theme'
 export const SIDEBAR_COLLAPSED_STORAGE_KEY = 'devon_sidebar_collapsed'
 export const LOCALE_COOKIE_NAME = 'wp_locale'
+/** `useDepartment()`'s switcher stub (`src/lib/session.ts`) -- a client-only override of `Me.
+ * activeDepartmentId` until a real "switch department" endpoint exists. Per-browser, not per-account:
+ * exactly the same caveat `THEME_STORAGE_KEY` already carries. */
+export const ACTIVE_DEPARTMENT_STORAGE_KEY = 'devon_active_department_id'

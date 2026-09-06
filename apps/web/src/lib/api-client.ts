@@ -99,6 +99,26 @@ async function send<T>(
   return schema.parse(await res.json())
 }
 
+/**
+ * The typed API client helper every `src/features/<name>` module builds its own endpoint functions
+ * on (MODULE-GUIDE.md "Web features" / "Typed API client"), instead of hand-rolling `fetch` --
+ * same-origin, `credentials: 'include'`, RFC 9457 `Problem` parsing into `ApiError`, and a `zod`
+ * schema on every response, exactly like every function below this point already does.
+ *
+ * ```ts
+ * // src/features/people/api.ts
+ * import { apiClient } from '../../lib/api-client.js'
+ * export const fetchPeople = () => apiClient.get('/api/v1/people', peopleListSchema)
+ * ```
+ */
+export const apiClient = {
+  get,
+  post: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
+    send(path, 'POST', body, schema, csrfToken),
+  patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
+    send(path, 'PATCH', body, schema, csrfToken),
+}
+
 export function fetchInstance(): Promise<InstancePublic> {
   return get('/api/v1/instance', instancePublicSchema)
 }

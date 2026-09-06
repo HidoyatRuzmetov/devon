@@ -6,8 +6,38 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, extname } from 'node:path'
 
 const root = process.cwd()
-const cfg = Object.assign({ src: 'apps/web/src', messages: 'packages/i18n/messages', locales: ['uz', 'ru', 'en'], allow_hardcoded: [] },
+const cfg = Object.assign({ src: 'apps/web/src', messages: 'packages/i18n/messages', modules: 'packages/i18n/messages/modules', locales: ['uz', 'ru', 'en'], allow_hardcoded: [] },
   existsSync(join(root, 'agentic', 'i18n.config.json')) ? JSON.parse(readFileSync(join(root, 'agentic', 'i18n.config.json'), 'utf8')) : {})
+
+// Modules (MODULE-GUIDE.md "i18n messages") never edit the shared catalogues -- each drops its own
+// `messages/modules/<name>/<locale>.json`, and `pnpm --filter @devon/i18n messages:merge` folds those
+// into the `<locale>.generated.json` the running app loads. This gate merges the same module files
+// in-memory instead of trusting that generated output, so "the gate is green" never depends on someone
+// having remembered to re-run the merge before checking it in.
+function listModuleNames() {
+  const dir = join(root, cfg.modules)
+  if (!existsSync(dir)) return []
+  return readdirSync(dir, { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort()
+}
+function mergeModulesInto(tree, locale) {
+  for (const name of listModuleNames()) {
+    const p = join(root, cfg.modules, name, `${locale}.json`)
+    if (!existsSync(p)) continue
+    deepMerge(tree, JSON.parse(readFileSync(p, 'utf8')))
+  }
+  return tree
+}
+function deepMerge(base, incoming) {
+  for (const [k, v] of Object.entries(incoming)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      if (!base[k] || typeof base[k] !== 'object') base[k] = {}
+      deepMerge(base[k], v)
+    } else {
+      base[k] = v
+    }
+  }
+  return base
+}
 
 if (!existsSync(join(root, cfg.src))) { console.log(`[i18n] WARNING: ${cfg.src} not found yet — nothing to check (this becomes a real check once the web app exists)`); process.exit(0) }
 
@@ -19,7 +49,8 @@ const dict = {}
 for (const l of cfg.locales) {
   const p = join(root, cfg.messages, `${l}.json`)
   if (!existsSync(p)) { console.error(`[i18n] missing locale file ${p}`); process.exit(1) }
-  dict[l] = flatten(JSON.parse(readFileSync(p, 'utf8')))
+  const tree = mergeModulesInto(JSON.parse(readFileSync(p, 'utf8')), l)
+  dict[l] = flatten(tree)
 }
 const base = cfg.locales[0]
 let errors = 0

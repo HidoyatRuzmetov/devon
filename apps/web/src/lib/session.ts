@@ -1,6 +1,7 @@
 // Query/mutation hooks wrapping `api-client.ts` (design.md §1.7). Kept separate from the client
 // itself so components never call `fetch`/`useQuery` with a hand-rolled key -- every consumer of "am
 // I signed in" or "what does this instance look like" reads the same cached query.
+import * as React from 'react'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { setLocale, type Locale } from '@devon/i18n'
 import {
@@ -13,6 +14,7 @@ import {
 } from './api-client.js'
 import type { InstancePublic, Me, Readyz } from './api-schemas.js'
 import { persistLocale } from './locale-boot.js'
+import { ACTIVE_DEPARTMENT_STORAGE_KEY } from './constants.js'
 
 export function useInstanceQuery(): UseQueryResult<InstancePublic, Error> {
   return useQuery({ queryKey: ['instance'], queryFn: fetchInstance })
@@ -77,4 +79,83 @@ export function useLogoutMutation() {
       queryClient.removeQueries({ queryKey: ['admin'] })
     },
   })
+}
+
+// --- useSession() / useDepartment() (MODULE-GUIDE.md "Web features") -----------------------------
+// The one place a feature module reads "who is signed in" / "which department" -- both sit on top of
+// `useMeQuery()` above, never a second network call of their own.
+
+export type Session = {
+  user: Me['user'] | null
+  memberships: Me['memberships']
+  membershipCount: number
+  /** True while the very first `/me` request is in flight -- render a loading state, never a
+   * logged-out one, until this settles (design.md §8.2). */
+  isLoading: boolean
+  isAuthenticated: boolean
+}
+
+export function useSession(): Session {
+  const meQuery = useMeQuery()
+  const me = meQuery.data
+  return {
+    user: me?.user ?? null,
+    memberships: me?.memberships ?? [],
+    membershipCount: me?.membershipCount ?? 0,
+    isLoading: meQuery.isPending,
+    isAuthenticated: Boolean(me),
+  }
+}
+
+function readStoredDepartmentId(): string | null {
+  try {
+    return window.localStorage.getItem(ACTIVE_DEPARTMENT_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+function storeDepartmentId(id: string | null): void {
+  try {
+    if (id) window.localStorage.setItem(ACTIVE_DEPARTMENT_STORAGE_KEY, id)
+    else window.localStorage.removeItem(ACTIVE_DEPARTMENT_STORAGE_KEY)
+  } catch {
+    // Storage disabled -- the switch still works for the rest of this session (in-memory state).
+  }
+}
+
+export type Department = { departmentId: string; name: string; role: 'head' | 'member' }
+
+export type UseDepartmentResult = {
+  /** `null` until memberships load, or for a user with none yet. */
+  department: Department | null
+  departmentId: string | null
+  memberships: readonly Department[]
+  /** Switcher stub (MODULE-GUIDE.md "Web features"): sets the active department client-side only --
+   * there is no server endpoint yet for "which department is this request acting for" (that arrives
+   * with the epic that needs more than one). A feature building real department-switching UI reads
+   * `memberships` and calls this; nothing else needs to change when the server-backed version lands. */
+  setDepartmentId(id: string | null): void
+}
+
+/** Resolution order: the server's `activeDepartmentId` (once a later epic populates it) → this
+ * browser's stored switcher choice, if it is still a membership the user actually has → the user's
+ * first membership → `null` (no department at all yet). */
+export function useDepartment(): UseDepartmentResult {
+  const { memberships } = useSession()
+  const [override, setOverride] = React.useState<string | null>(readStoredDepartmentId)
+  const meQuery = useMeQuery()
+
+  const serverActiveId = meQuery.data?.activeDepartmentId ?? null
+  const overrideIsValid = override !== null && memberships.some((m) => m.departmentId === override)
+  const departmentId =
+    serverActiveId ?? (overrideIsValid ? override : (memberships[0]?.departmentId ?? null))
+  const department = memberships.find((m) => m.departmentId === departmentId) ?? null
+
+  const setDepartmentId = React.useCallback((id: string | null) => {
+    setOverride(id)
+    storeDepartmentId(id)
+  }, [])
+
+  return { department, departmentId, memberships, setDepartmentId }
 }

@@ -4,10 +4,15 @@
 // never two different claims). Import attributes are required here: this package is `type: module`
 // + `moduleResolution: NodeNext`, and real Node ESM (not just a bundler) refuses a bare
 // `import x from './x.json'` in that mode (verified empirically while building this file).
-import uzLatn from '../messages/uz-Latn.json' with { type: 'json' }
-import uzCyrl from '../messages/uz-Cyrl.json' with { type: 'json' }
-import ru from '../messages/ru.json' with { type: 'json' }
-import en from '../messages/en.json' with { type: 'json' }
+//
+// These are the *generated* catalogues (MODULE-GUIDE.md "i18n messages"): `messages/<locale>.json`
+// (hand-authored core strings) merged with every `messages/modules/<module>/<locale>.json`, by
+// `src/cli/merge-messages.ts` -- `pnpm build`/`pnpm dev` in this package regenerate them, so a module
+// dropping in a new message file never requires editing this one.
+import uzLatn from '../messages/uz-Latn.generated.json' with { type: 'json' }
+import uzCyrl from '../messages/uz-Cyrl.generated.json' with { type: 'json' }
+import ru from '../messages/ru.generated.json' with { type: 'json' }
+import en from '../messages/en.generated.json' with { type: 'json' }
 import { LOCALES, type Locale } from './locale.js'
 
 export type MessageTree = { [key: string]: string | MessageTree }

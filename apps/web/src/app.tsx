@@ -1,10 +1,11 @@
 import * as React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { TooltipProvider } from '@devon/ui'
+import { StateView, TooltipProvider } from '@devon/ui'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import { useMeQuery } from './lib/session.js'
-import { useRouteName } from './lib/router.js'
+import { useRouteName, useRoutePath } from './lib/router.js'
+import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
 import { AuthShell } from './shell/auth-shell.js'
 import { HomeRoute } from './routes/home.js'
@@ -26,11 +27,29 @@ function LocaleReconciler() {
   return null
 }
 
-/** design.md §6: five routes, two chrome families -- `AppShell` (`/`, `/admin`, `/404`) and the
+/** design.md §6: five core routes, two chrome families -- `AppShell` (`/`, `/admin`, `/404`) and the
  * lighter `AuthShell` (`/login`, `/setup`). See `src/lib/router.tsx` for why this is a small
- * dependency-free switch rather than `@tanstack/react-router` in this item. */
+ * dependency-free switch rather than `@tanstack/react-router` in this item.
+ *
+ * A `src/features/<name>/manifest.ts(x)` route (MODULE-GUIDE.md "Web features") is checked first, by
+ * exact pathname, before falling through to the five core routes below -- the switch itself is never
+ * edited to add one. */
 function RouteOutlet() {
+  const path = useRoutePath()
   const name = useRouteName()
+
+  const featureRoute = matchFeatureRoute(path)
+  if (featureRoute) {
+    const FeatureComponent = featureRoute.component
+    return (
+      <AppShell>
+        <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
+          <FeatureComponent />
+        </React.Suspense>
+      </AppShell>
+    )
+  }
+
   switch (name) {
     case 'home':
       return (

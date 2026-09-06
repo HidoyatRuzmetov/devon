@@ -12,6 +12,7 @@ import { CommandPalette, type CommandPaletteGroup } from '@devon/ui'
 import { LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { navigate } from '../lib/router.js'
 import { setThemePreference, type ThemePreference } from '../lib/theme.js'
+import { getFeatureCommandEntries } from '../features/registry.js'
 
 export interface CommandPaletteControllerProps {
   open: boolean
@@ -85,6 +86,17 @@ export function CommandPaletteController({
               },
             ]
           : []),
+        // Every `src/features/<name>/manifest.ts(x)`'s own `commands` (MODULE-GUIDE.md "Web
+        // features") -- a feature never edits this file to appear in the palette.
+        ...getFeatureCommandEntries().map((entry) => ({
+          id: entry.id,
+          label: t(entry.labelKey),
+          ...(entry.icon ? { icon: entry.icon } : {}),
+          onSelect: () => {
+            close()
+            navigate(entry.path)
+          },
+        })),
       ],
     },
     {

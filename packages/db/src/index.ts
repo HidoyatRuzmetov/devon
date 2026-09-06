@@ -14,6 +14,30 @@ export {
 export type { AuditEventInput, PrivateReadInput, ChainVerification } from './audit.js'
 export { verifyChain } from './audit.js'
 
+export type { OutboxEventInput, OutboxEventRecord } from './events.js'
+
+export {
+  subscribe,
+  clearSubscriptions,
+  dispatch,
+  drainOutboxOnce,
+  startEventsWorker,
+  type EventHandler,
+  type DispatchOutcome,
+  type DrainResult,
+  type EventsWorkerHandle,
+} from './events-worker.js'
+
+export {
+  readMigrationFiles,
+  substituteVars,
+  applyMigrations,
+  runMigrateApply,
+  type MigrationFile,
+  type ApplyMigrationsResult,
+  type MigrateEnv,
+} from './migrate.js'
+
 export {
   TENANCY,
   GLOBAL_ALLOWLIST,

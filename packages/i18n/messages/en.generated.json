@@ -1,0 +1,170 @@
+{
+  "shell": {
+    "nav": {
+      "home": "Home",
+      "admin": "Administration"
+    },
+    "skip": "Skip to main content",
+    "credit": "A Ministry of Digital Technologies system",
+    "menu": {
+      "open": "Open menu"
+    },
+    "sidebar": {
+      "toggle": "Collapse sidebar",
+      "expand": "Expand sidebar"
+    },
+    "search": {
+      "trigger": "Search or action",
+      "aria": "Search and actions"
+    },
+    "locale": {
+      "aria": "Interface language",
+      "code": "EN",
+      "options": {
+        "uzLatn": "Oʻzbekcha (lotin)",
+        "uzCyrl": "Ўзбекча (кирилл)",
+        "ru": "Русский",
+        "en": "English"
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Match system"
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts"
+    },
+    "account": {
+      "signout": "Sign out"
+    },
+    "demo": {
+      "chip": {
+        "label": "Demo data",
+        "short": "Demo"
+      },
+      "popover": "Demonstration mode. All data in this system was created for testing."
+    }
+  },
+  "cmd": {
+    "placeholder": "Search or choose an action",
+    "group": {
+      "goto": "Go to",
+      "settings": "Settings",
+      "account": "Account"
+    },
+    "item": {
+      "home": "Go to Home",
+      "admin": "Go to Administration",
+      "locale": "Change interface language",
+      "theme": "Change theme",
+      "shortcuts": "Keyboard shortcuts",
+      "signout": "Sign out"
+    },
+    "empty": {
+      "message": "Nothing found",
+      "action": "Clear search"
+    },
+    "hint": "↑↓ select · ↵ open · Esc close"
+  },
+  "home": {
+    "eyebrow": "TODAY",
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "day": "Good afternoon, {name}",
+      "evening": "Good evening, {name}",
+      "night": "Hello, {name}"
+    },
+    "empty": {
+      "member": {
+        "title": "Your work will appear here",
+        "body": "Nothing yet. You can find any page through search."
+      },
+      "action": "Open search",
+      "admin": {
+        "title": "The system is running",
+        "body": "No departments yet. You can check system status on the administration page.",
+        "action": "Go to Administration"
+      },
+      "demo": {
+        "title": "The demo department is ready"
+      }
+    }
+  },
+  "state": {
+    "error": {
+      "title": "Could not load the data",
+      "body": "Try again. If it happens again, send the request number to your administrator.",
+      "action": "Try again",
+      "requestId": "Request number: {id}"
+    },
+    "denied": {
+      "title": "This page is not open to you",
+      "body": "This page is for the system administrator only. If you need access, ask your head of department.",
+      "action": "Back to Home"
+    },
+    "offline": {
+      "banner": "No internet connection",
+      "body": "Showing the last loaded data.",
+      "empty": "This page will open once the connection is back."
+    },
+    "loading": "Loading",
+    "notfound": {
+      "title": "Page not found",
+      "body": "The link may be out of date or incorrect."
+    }
+  },
+  "toast": {
+    "copied": "Copied",
+    "saveError": "Could not save"
+  },
+  "action": {
+    "undo": "Undo"
+  },
+  "login": {
+    "title": "Sign in",
+    "identifier": "Login or email",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Incorrect login or password",
+    "locked": "The account is temporarily locked. Try again in 15 minutes.",
+    "signedOut": "You have signed out",
+    "offline": "Try again when the connection is back.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "setup": {
+    "eyebrow": "FIRST RUN",
+    "title": "Create the system administrator",
+    "body": "This link works only once.",
+    "family": "Family name",
+    "given": "Given name",
+    "patronymic": "Patronymic (optional)",
+    "submit": "Create administrator",
+    "passwordHint": "At least 12 characters",
+    "copyAction": "Copy",
+    "done": {
+      "title": "The administrator account was created",
+      "action": "Sign in"
+    },
+    "used": {
+      "title": "This link has already been used",
+      "body": "The system administrator has already been created.",
+      "action": "Go to the sign-in page"
+    }
+  },
+  "admin": {
+    "eyebrow": "SYSTEM",
+    "title": "Administration",
+    "health": {
+      "title": "System status",
+      "api": "API",
+      "db": "Database",
+      "queue": "Queue",
+      "up": "Running",
+      "down": "Not running",
+      "refresh": "Refresh"
+    }
+  }
+}

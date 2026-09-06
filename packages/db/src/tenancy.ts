@@ -14,6 +14,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.instance_settings': 'global',
   'app.seed_runs': 'global',
   'app.idempotency_keys': 'global',
+  'app.outbox_events': 'global',
+  'app._migrations': 'global',
   'audit.events': 'audit',
   'audit.private_reads': 'audit',
   'audit.anchors': 'audit',
@@ -34,6 +36,10 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
   'app.instance_settings': 'Singleton instance configuration, not tenant data.',
   'app.seed_runs': 'Delivery bookkeeping for the demo seed, not tenant data.',
   'app.idempotency_keys': 'Request replay-protection keyed by (key, route), not tenant data.',
+  'app.outbox_events':
+    'Instance-wide event bus plumbing for background workers (mirrors audit.events), not tenant data; a department-scoped event still carries its department_id as a plain column for a subscriber to filter on.',
+  'app._migrations':
+    'Migration-runner bookkeeping (which .sql files have applied), not tenant data.',
 })
 
 export type TenancyCoverageResult = {

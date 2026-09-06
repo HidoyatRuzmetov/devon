@@ -7,15 +7,9 @@ import { sql, inArray } from 'drizzle-orm'
 import { Client } from 'pg'
 import { withContext, type RequestContext } from '../context.js'
 import * as schema from '../schema/index.js'
-import {
-  DEMO_DELETE_ORDER,
-  DEMO_DEPARTMENT,
-  DEMO_MEMBERSHIPS,
-  DEMO_USERS,
-  computeDemoChecksum,
-  demoPasswordHash,
-} from './fixtures.js'
+import { DEMO_DELETE_ORDER, DEMO_DEPARTMENT, computeDemoChecksum } from './fixtures.js'
 import { assertSeedAllowed, type SeedEnv } from './guard.js'
+import { loadSeedModules } from './module-loader.js'
 
 export const SEED_NAME = 'demo'
 const ADVISORY_LOCK_NAME = 'devon.seed'
@@ -99,49 +93,16 @@ export async function runSeedDemo(
         }
       }
 
-      const insertedUsers = await tx.drizzle
-        .insert(schema.users)
-        .values(
-          DEMO_USERS.map((user) => ({
-            id: user.id,
-            login: user.login,
-            passwordHash: demoPasswordHash(user.id),
-            givenName: user.givenName,
-            familyName: user.familyName,
-            title: user.title,
-            role: user.role,
-            locale: 'uz-Latn' as const,
-          })),
-        )
-        .onConflictDoNothing()
-        .returning({ id: schema.users.id })
-
-      const insertedDepartments = await tx.drizzle
-        .insert(schema.departments)
-        .values({
-          id: DEMO_DEPARTMENT.id,
-          name: DEMO_DEPARTMENT.name,
-          slug: DEMO_DEPARTMENT.slug,
-          localeDefault: DEMO_DEPARTMENT.localeDefault,
-        })
-        .onConflictDoNothing()
-        .returning({ id: schema.departments.id })
-
-      const insertedMemberships = await tx.drizzle
-        .insert(schema.memberships)
-        .values(
-          DEMO_MEMBERSHIPS.map((membership) => ({
-            id: membership.id,
-            departmentId: membership.departmentId,
-            userId: membership.userId,
-            role: membership.role,
-          })),
-        )
-        .onConflictDoNothing()
-        .returning({ id: schema.memberships.id })
-
-      const rowsWritten =
-        insertedUsers.length + insertedDepartments.length + insertedMemberships.length
+      // Every module under `src/seed/modules/*.ts`, in ascending `order` (MODULE-GUIDE.md "Seeds") --
+      // `core.ts` (order 0) writes the department/users/memberships every other module's fixtures
+      // reference; this transaction/advisory-lock/checksum wrapper is the only thing that stays here.
+      // Sequential, not Promise.all: a later module's fixtures can depend on an earlier module having
+      // already inserted the row they reference (the exact reason `order` exists).
+      const seedModules = await loadSeedModules()
+      let rowsWritten = 0
+      for (let i = 0; i < seedModules.length; i += 1) {
+        rowsWritten += await seedModules[i]!.seed({ tx })
+      }
 
       await tx.raw(
         sql`update app.instance_settings

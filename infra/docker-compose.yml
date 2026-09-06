@@ -44,7 +44,13 @@ services:
   # --- Started by `pnpm setup` / `pnpm start` (I-18). Nothing else is. ------------------------------
 
   postgres:
-    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    # `postgres:17-alpine` has no `vector` extension -- `migrations/0000_extensions.sql` (`create
+    # extension if not exists vector`) fails against it every time, on every machine, from a cold
+    # `pnpm start` (found while proving that command boots: MODULE-GUIDE.md work, 2026-09).
+    # `test/harness.ts` already pins this exact image for the identical reason ("the plain postgres:17
+    # image has no vector extension"); this brings the real compose file's image into parity with what
+    # the migrate-gate has tested against all along, and with TECH-SPEC §1.2 (Postgres 17, pgvector 0.8).
+    image: pgvector/pgvector:0.8.6-pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
     container_name: devon-postgres
     restart: unless-stopped
     logging: *default-logging

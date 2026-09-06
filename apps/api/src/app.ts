@@ -18,11 +18,7 @@ import sessionPlugin from './plugins/session.js'
 import authorizePlugin from './plugins/authorize.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
-import instanceRoutes from './modules/instance.js'
-import setupRoutes from './modules/setup.js'
-import authRoutes from './modules/auth.js'
-import meRoutes from './modules/me.js'
-import adminPlugin from './modules/admin.js'
+import { loadApiModules } from './module-loader.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -101,11 +97,18 @@ export async function buildApp(deps: Deps, config: Config): Promise<FastifyInsta
 
   await app.register(healthRoutes)
   await app.register(openapiRoutes)
-  await app.register(instanceRoutes, { prefix: '/api/v1' })
-  await app.register(setupRoutes, { prefix: '/api/v1' })
-  await app.register(authRoutes, { prefix: '/api/v1/auth' })
-  await app.register(meRoutes, { prefix: '/api/v1' })
-  await app.register(adminPlugin, { prefix: '/api/v1/admin' })
+
+  // Every domain module under `src/modules/<name>/index.ts` -- discovered, not listed here, so a new
+  // module never requires an edit to this file (MODULE-GUIDE.md "API modules"). `app.register()`
+  // enqueues into Fastify's (avvio) boot queue synchronously, in call order, the instant it is
+  // invoked -- `.map()` below calls it for every module in the loader's deterministic (alphabetical)
+  // order before anything is awaited, so `Promise.all` here parallelises only the awaiting, never the
+  // registration order itself.
+  await Promise.all(
+    (await loadApiModules()).map((mod) =>
+      app.register(mod.plugin, { prefix: `/api/v1${mod.prefix}` }),
+    ),
+  )
 
   return app
 }

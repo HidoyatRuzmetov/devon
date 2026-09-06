@@ -1,16 +1,16 @@
 // POST /api/v1/auth/login (public, rate-limited) and POST /api/v1/auth/logout (authenticated) --
 // design.md §1.7, AC-13.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { loginBodySchema } from '../schemas.js'
-import { sendProblem } from '../lib/problem-reply.js'
-import { hashPassword, verifyPassword } from '../lib/password.js'
+import { loginBodySchema } from '../../schemas.js'
+import { sendProblem } from '../../lib/problem-reply.js'
+import { hashPassword, verifyPassword } from '../../lib/password.js'
 import {
   CSRF_COOKIE_NAME,
   csrfCookieOptions,
   expiredSessionCookieOptions,
   sessionCookieOptions,
-} from '../lib/cookies.js'
-import { requestIp, requestUserAgent } from '../plugins/session.js'
+} from '../../lib/cookies.js'
+import { requestIp, requestUserAgent } from '../../plugins/session.js'
 
 const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 
@@ -103,3 +103,6 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
 }
 
 export default authRoutes
+
+// Auto-discovery (MODULE-GUIDE.md "API modules"): mounted at `/api/v1/auth`.
+export const prefix = '/auth'

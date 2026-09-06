@@ -4,7 +4,8 @@
 // department, one head, one member is enough to prove the mechanism (deterministic ids, ON CONFLICT DO
 // NOTHING, the data-driven demo chip) generically.
 import { createHash } from 'node:crypto'
-import { demoId, uuidv5 } from './ids.js'
+import { hash } from '@node-rs/argon2'
+import { demoId } from './ids.js'
 
 export type DemoRole = 'head' | 'member'
 
@@ -65,12 +66,17 @@ export const DEMO_MEMBERSHIPS: readonly DemoMembershipFixture[] = DEMO_USERS.map
 }))
 
 /**
- * Deterministic and unusable by design. No login flow issues real credentials for these accounts in
- * this epic (auth ships in EPIC-001); the value exists only to satisfy `password_hash not null` and is
- * never printed, logged or returned by any endpoint.
+ * The one password every demo account shares -- documented here, in `MODULE-GUIDE.md` ("Running the
+ * app") and nowhere else. A real argon2id hash (via `verifyPassword`, `apps/api/src/lib/password.ts`)
+ * so `POST /api/v1/auth/login` actually accepts it -- every module needs a working demo session to be
+ * testable end to end. `hash()` salts randomly per call, so two demo users get two different hash
+ * strings for the same password; that has no effect on `ON CONFLICT DO NOTHING` idempotence, which is
+ * keyed by each user's deterministic id, never by this value.
  */
-export function demoPasswordHash(userId: string): string {
-  return `demo$unusable$${uuidv5(`password.${userId}`)}`
+export const DEMO_PASSWORD = 'Ishonchli#2026' // sample demo-only credential, not a production secret
+
+export function demoPasswordHash(): Promise<string> {
+  return hash(DEMO_PASSWORD)
 }
 
 /**

@@ -9,6 +9,7 @@ export {
   DEMO_USERS,
   DEMO_MEMBERSHIPS,
   DEMO_DELETE_ORDER,
+  DEMO_PASSWORD,
   computeDemoChecksum,
   demoPasswordHash,
   type DemoRole,
@@ -23,3 +24,4 @@ export {
   type SeedDemoOutcome,
   type ResetDemoOutcome,
 } from './demo.js'
+export { loadSeedModules, type SeedModule, type SeedModuleContext } from './module-loader.js'

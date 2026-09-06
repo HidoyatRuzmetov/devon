@@ -12,6 +12,7 @@ import {
   type AuditEventInput,
   type PrivateReadInput,
 } from './audit.js'
+import { insertOutboxEvent, type OutboxEventInput } from './events.js'
 import * as schema from './schema/index.js'
 
 export type Role = 'super_admin' | 'head' | 'member'
@@ -28,6 +29,7 @@ export type RequestContext = {
 }
 
 export type { AuditEventInput, PrivateReadInput } from './audit.js'
+export type { OutboxEventInput, OutboxEventRecord } from './events.js'
 
 /** Thrown by `Tx.raw()` when the transaction it was called on did not originate from `withContext()`
  * (or has already ended -- see the guard below). Never caught silently: a caller seeing this has a
@@ -48,6 +50,10 @@ export interface Tx {
   audit(event: AuditEventInput): void
   /** I-2: records a Restricted-field read by the head or the super admin. */
   privateRead(input: PrivateReadInput): void
+  /** Domain event bus (MODULE-GUIDE.md "Domain events"): buffered and flushed inside THIS transaction,
+   * right before commit, exactly like `audit()` -- an event can never be observed by a worker before
+   * the write that caused it has actually committed. */
+  emit(event: OutboxEventInput): void
 }
 
 // Module-private connection pool. Not exported under any name, by design (handoff contract).
@@ -82,6 +88,23 @@ export async function closePool(): Promise<void> {
   }
 }
 
+/**
+ * A raw connection with no tenancy GUCs set -- for the one kind of caller that is legitimately
+ * cross-department by nature: the outbox worker (`src/events-worker.ts`), draining events across every
+ * department at once. `app.outbox_events` carries no RLS policy (it is `global` in `tenancy.ts`, same
+ * class as `audit.events`), so this cannot be used to bypass a department-scoped table's row security
+ * -- an RLS-protected table simply returns zero rows to a connection with no department GUC set, it
+ * does not leak. Not exported from `src/index.ts` (the package's public API): only the worker needs it.
+ */
+export async function withRawClient<T>(fn: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await getPool().connect()
+  try {
+    return await fn(client)
+  } finally {
+    client.release()
+  }
+}
+
 function toGuc(value: string | null | undefined): string {
   return value ?? ''
 }
@@ -109,6 +132,7 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
       const db = drizzle(client, { schema })
       const auditQueue: AuditEventInput[] = []
       const privateReadQueue: PrivateReadInput[] = []
+      const eventQueue: OutboxEventInput[] = []
       let contextVerified: boolean | null = null
 
       const assertContextEstablished = async (): Promise<void> => {
@@ -136,6 +160,9 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
         privateRead(input) {
           privateReadQueue.push(input)
         },
+        emit(event) {
+          eventQueue.push(event)
+        },
       }
 
       const result = await fn(tx)
@@ -146,6 +173,9 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
       // here does not reorder the chain -- it just avoids an await-in-a-loop over independent rows.
       await Promise.all(auditQueue.map((event) => insertAuditEvent(client, ctx, event)))
       await Promise.all(privateReadQueue.map((input) => insertPrivateRead(client, ctx, input)))
+      // Same atomicity argument as the audit queue above, applied to the outbox: a subscriber must
+      // never be able to observe an event whose causing write did not, in the end, commit.
+      await Promise.all(eventQueue.map((event) => insertOutboxEvent(client, ctx, event)))
 
       await client.query('commit')
       return result

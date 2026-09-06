@@ -1,12 +1,12 @@
 // GET /api/v1/me, PATCH /api/v1/me -- design.md §1.7. `own_account` (I-1/I-7): only the signed-in user
 // themselves, never a head, never the super admin, ever.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { meSchema, patchMeSchema } from '../schemas.js'
-import { checkCsrf } from '../lib/csrf.js'
-import { CSRF_COOKIE_NAME } from '../lib/cookies.js'
-import { requestIp, requestUserAgent } from '../plugins/session.js'
-import { toPublicUser } from '../lib/user-view.js'
-import type { UserRecord } from '../types.js'
+import { meSchema, patchMeSchema } from '../../schemas.js'
+import { checkCsrf } from '../../lib/csrf.js'
+import { CSRF_COOKIE_NAME } from '../../lib/cookies.js'
+import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { toPublicUser } from '../../lib/user-view.js'
+import type { UserRecord } from '../../types.js'
 
 function toMe(user: UserRecord, isDemo: boolean, csrfToken: string) {
   return {
@@ -69,3 +69,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
 }
 
 export default meRoutes
+
+// Auto-discovery (MODULE-GUIDE.md "API modules"): mounted at `/api/v1` -- `GET /me` below becomes
+// `GET /api/v1/me`.
+export const prefix = ''

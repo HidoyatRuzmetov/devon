@@ -2,7 +2,7 @@
 // other non-sensitive instance flags; the demo *seed* itself is EPIC-000.demo's job (this item's DOES
 // NOT list).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { LOCALES, instancePublicSchema } from '../schemas.js'
+import { LOCALES, instancePublicSchema } from '../../schemas.js'
 
 const instanceRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -31,3 +31,7 @@ const instanceRoutes: FastifyPluginAsyncZod = async (app) => {
 }
 
 export default instanceRoutes
+
+// Auto-discovery (MODULE-GUIDE.md "API modules"): mounted at exactly `/api/v1` (no extra segment) --
+// `GET /instance` below becomes `GET /api/v1/instance`.
+export const prefix = ''

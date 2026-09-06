@@ -4,9 +4,9 @@
 // `denyForSubject` the matched routes' global `preHandler` uses -- the only way two different code
 // paths (a real route's preHandler vs. a 404 handler) can be guaranteed to emit byte-identical bodies.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import { denyForSubject } from '../plugins/authorize.js'
-import { sendProblem } from '../lib/problem-reply.js'
-import { adminInstanceSchema, chainVerificationSchema } from '../schemas.js'
+import { denyForSubject } from '../../plugins/authorize.js'
+import { sendProblem } from '../../lib/problem-reply.js'
+import { adminInstanceSchema, chainVerificationSchema } from '../../schemas.js'
 
 const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   const instanceSubject = () => ({ kind: 'instance' as const })
@@ -53,3 +53,6 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
 }
 
 export default adminPlugin
+
+// Auto-discovery (MODULE-GUIDE.md "API modules"): mounted at `/api/v1/admin`.
+export const prefix = '/admin'
