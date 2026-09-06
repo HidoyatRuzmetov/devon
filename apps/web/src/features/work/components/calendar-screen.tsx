@@ -50,7 +50,10 @@ export default function CalendarScreen() {
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   const month = parseMonthKey(search.get('month'))
-  const cardsQuery = useCardsQuery({ q: q || undefined, limit: 300 })
+  // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
+  // max(100)`) -- 300 always got a flat 422 (H1: confirmed live, the calendar view's own error
+  // state, not an empty month).
+  const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
 
   const days = buildGrid(month)
   const today = new Date()

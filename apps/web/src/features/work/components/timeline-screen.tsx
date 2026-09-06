@@ -35,7 +35,10 @@ export default function TimelineScreen() {
   const locale = useLocale()
   const search = useSearchParams()
   const q = search.get('q') ?? ''
-  const cardsQuery = useCardsQuery({ q: q || undefined, limit: 200 })
+  // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
+  // max(100)`) -- 200 always got a flat 422 (H1: confirmed live, the timeline view's own error
+  // state, not an empty board).
+  const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
   const members = useMembers()
 
   const today = startOfDay(new Date())

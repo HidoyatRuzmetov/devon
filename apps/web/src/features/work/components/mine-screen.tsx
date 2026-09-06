@@ -59,7 +59,10 @@ export default function MineScreen() {
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   const combinedQuery = q ? `${q} assignee:@me` : 'assignee:@me'
-  const cardsQuery = useCardsQuery({ q: combinedQuery, limit: 200 })
+  // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
+  // max(100)`) -- 200 always got a flat 422 (H1: confirmed live, "Mening vazifalarim" errored for
+  // every signed-in user instead of showing their cards).
+  const cardsQuery = useCardsQuery({ q: combinedQuery, limit: 100 })
 
   const cards = cardsQuery.data ?? []
   const overdue = cards.filter((c) => c.risk === 'overdue')

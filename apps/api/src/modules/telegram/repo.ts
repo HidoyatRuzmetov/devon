@@ -318,7 +318,14 @@ export async function setGroupKinds(
   kinds: GroupKind[],
 ): Promise<void> {
   await withContext(toRequestContext(ctx, { departmentId, actorRole: 'head' }), async (tx) => {
-    await tx.raw(sql`update app.telegram_groups set kinds = ${kinds}::text[] where id = ${groupId}`)
+    // sql.param(): a bare array here would hit drizzle's "expand into a parenthesized value list"
+    // rule (built for `where col in (${arr})`), producing `()::text[]` for an empty `kinds` (a flat
+    // syntax error) or a `record`-cast error otherwise -- the same bug confirmed live in
+    // `work/repo.ts`'s `createCard`. `sql.param()` binds the whole array as ONE driver parameter,
+    // which node-postgres serialises into a real Postgres array literal.
+    await tx.raw(
+      sql`update app.telegram_groups set kinds = ${sql.param(kinds)}::text[] where id = ${groupId}`,
+    )
     tx.audit({
       action: 'telegram.group_kinds_updated',
       subjectType: 'telegram_group',

@@ -142,6 +142,13 @@ export type NewEvent = {
 }
 
 export async function insertEvent(tx: Tx, e: NewEvent): Promise<void> {
+  // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
+  // array bound this way into a real Postgres array literal) -- interpolating the bare array
+  // instead lets drizzle's own `sql` tag apply its "expand into a parenthesized value list" rule
+  // (built for `where col in (${arr})`), which for an *insert value* produces a bare `record` --
+  // `()::int[]` for an empty array (a flat syntax error) or `($1, $2)::int[]` for a non-empty one
+  // ("cannot cast type record to int[]") -- the identical bug confirmed live in `work/repo.ts`'s
+  // `createCard` (quick-add crashed every card create with zero labels).
   await tx.raw(sql`
     insert into app.events
       (id, department_id, organizer_user_id, title, description, category, illustration_key,
@@ -151,7 +158,7 @@ export async function insertEvent(tx: Tx, e: NewEvent): Promise<void> {
       (${e.id}, ${e.departmentId}, ${e.organizerUserId}, ${e.title}, ${e.description}, ${e.category}::app.event_category,
        ${e.illustrationKey}, ${e.startsAt}, ${e.endsAt}, ${e.timezone}, ${e.place}, ${e.placeUrl},
        ${e.capacity}, ${e.waitlistEnabled}, ${e.rsvpDeadline}, ${e.costNote},
-       ${e.reminderOffsetsMinutes}::int[], 'open')
+       ${sql.param(e.reminderOffsetsMinutes)}::int[], 'open')
   `)
 }
 
@@ -186,7 +193,7 @@ export async function updateEventFields(
       timezone = ${patch.timezone}, place = ${patch.place}, place_url = ${patch.placeUrl},
       capacity = ${patch.capacity}, waitlist_enabled = ${patch.waitlistEnabled},
       rsvp_deadline = ${patch.rsvpDeadline}, cost_note = ${patch.costNote},
-      reminder_offsets_minutes = ${patch.reminderOffsetsMinutes}::int[],
+      reminder_offsets_minutes = ${sql.param(patch.reminderOffsetsMinutes)}::int[],
       updated_summary = ${updatedSummaryJson}, status = ${status}::app.event_status,
       updated_at = now(), version = version + 1
     where id = ${eventId}

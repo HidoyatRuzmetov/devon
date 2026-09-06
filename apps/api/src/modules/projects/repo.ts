@@ -141,6 +141,13 @@ export async function createProject(
       dueOn: m.dueOn,
       doneAt: null,
     }))
+    // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
+    // array bound this way into a real Postgres array literal) -- interpolating the bare array
+    // instead lets drizzle's own `sql` tag apply its "expand into a parenthesized value list" rule
+    // (built for `where col in (${arr})`), which for an *insert value* produces a bare `record` --
+    // `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]` for a non-empty
+    // one ("cannot cast type record to uuid[]") -- the identical bug confirmed live in
+    // `work/repo.ts`'s `createCard` (quick-add crashed every card create with zero labels).
     await tx.raw(
       sql`insert into app.projects (
             id, department_id, title, description, colour, owner_user_id, members, status,
@@ -148,7 +155,7 @@ export async function createProject(
           ) values (
             ${id}, ${input.departmentId}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
-            ${input.colour ?? '#6366f1'}, ${input.ownerUserId}, ${sql`${input.members}::uuid[]`},
+            ${input.colour ?? '#6366f1'}, ${input.ownerUserId}, ${sql.param(input.members)}::uuid[],
             ${input.status ?? 'planning'}, ${input.startOn ?? null}, ${input.targetOn ?? null},
             ${JSON.stringify(milestones)}::jsonb
           )`,
@@ -220,7 +227,9 @@ export async function patchProject(
     }
     if (patch.colour !== undefined) sets.push(sql`colour = ${patch.colour}`)
     if (patch.ownerUserId !== undefined) sets.push(sql`owner_user_id = ${patch.ownerUserId}`)
-    if (patch.members !== undefined) sets.push(sql`members = ${sql`${patch.members}::uuid[]`}`)
+    // sql.param(): the bare array here hits the same "cannot cast type record to uuid[]" / empty-
+    // array syntax error bug this file's `createProject` header comment explains.
+    if (patch.members !== undefined) sets.push(sql`members = ${sql.param(patch.members)}::uuid[]`)
     if (patch.status !== undefined) sets.push(sql`status = ${patch.status}`)
     if (patch.startOn !== undefined) sets.push(sql`start_on = ${patch.startOn}`)
     if (patch.targetOn !== undefined) sets.push(sql`target_on = ${patch.targetOn}`)

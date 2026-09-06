@@ -295,6 +295,13 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
     const description = input.description
       ? { format: 'markdown' as const, text: input.description }
       : null
+    // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
+    // array bound this way into a real Postgres array literal) -- interpolating the bare array as
+    // `${arr}::uuid[]` instead lets drizzle's own `sql` tag apply its "expand into a parenthesized
+    // value list" rule (built for `where col in (${arr})`), which for an *insert value* produces a
+    // bare `record` -- `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]`
+    // for a non-empty one ("cannot cast type record to uuid[]") -- confirmed live: quick-add crashed
+    // every card create with zero labels, which is every quick-added card.
     await tx.raw(
       sql`insert into app.cards (
             id, department_id, kind, title, description, assignee_user_id, giver_user_id,
@@ -306,7 +313,7 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
             ${input.assigneeUserId ?? null}, ${input.giverUserId ?? null},
             ${input.projectId ?? null}, ${input.projectScope ?? 'none'}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
-            ${sql`${input.labels ?? []}::uuid[]`}, ${JSON.stringify(input.links ?? [])}::jsonb,
+            ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,
             ${input.orderKey ?? 'a0'}, ${input.createdByUserId}
           )`,
     )
@@ -383,9 +390,11 @@ export async function patchCard(
     if (patch.priority !== undefined) sets.push(sql`priority = ${patch.priority}`)
     if (patch.startAt !== undefined) sets.push(sql`start_at = ${patch.startAt}`)
     if (patch.dueAt !== undefined) sets.push(sql`due_at = ${patch.dueAt}`)
-    if (patch.labels !== undefined) sets.push(sql`labels = ${sql`${patch.labels}::uuid[]`}`)
+    // sql.param(): see createCard's header -- interpolating the bare array here hits the exact same
+    // "cannot cast type record to uuid[]" / empty-array syntax error bug.
+    if (patch.labels !== undefined) sets.push(sql`labels = ${sql.param(patch.labels)}::uuid[]`)
     if (patch.links !== undefined) sets.push(sql`links = ${JSON.stringify(patch.links)}::jsonb`)
-    if (patch.watchers !== undefined) sets.push(sql`watchers = ${sql`${patch.watchers}::uuid[]`}`)
+    if (patch.watchers !== undefined) sets.push(sql`watchers = ${sql.param(patch.watchers)}::uuid[]`)
     if (patch.orderKey !== undefined) sets.push(sql`order_key = ${patch.orderKey}`)
     if (patch.status !== undefined) {
       sets.push(sql`status = ${patch.status}`)
@@ -525,7 +534,7 @@ export async function addComment(
     await tx.raw(
       sql`insert into app.card_comments (id, department_id, card_id, author_user_id, body, mentions)
           values (${id}, ${departmentId}, ${cardId}, ${authorUserId},
-            ${JSON.stringify({ format: 'markdown', text })}::jsonb, ${sql`${mentions}::uuid[]`})`,
+            ${JSON.stringify({ format: 'markdown', text })}::jsonb, ${sql.param(mentions)}::uuid[])`,
     )
     await tx.raw(
       sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
