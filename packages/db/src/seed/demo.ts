@@ -159,6 +159,16 @@ export async function runResetDemo(
         }
       }
 
+      // Sessions aren't part of `DEMO_DELETE_ORDER` (they're not "demo data" -- a session row is
+      // created by a real login against a demo account, not by any seed module), but they still hold
+      // an `app.sessions.user_id` FK straight at `app.users`. Logging into a demo account and then
+      // running `seed:reset --demo` is the ordinary path (it is exactly how a demo gets reset between
+      // presentations), so this must not depend on every such session already having expired --
+      // without this delete, `deletedUsers` below fails with `sessions_user_id_fkey`.
+      await tx.drizzle
+        .delete(schema.sessions)
+        .where(inArray(schema.sessions.userId, [...DEMO_DELETE_ORDER[2].ids]))
+
       // Delete order mirrors `DEMO_DELETE_ORDER` (children before parents, FK-safe): memberships,
       // then departments, then users. That constant is the single source of truth for *which* ids are
       // "demo" ids; the queries below just walk it in order.

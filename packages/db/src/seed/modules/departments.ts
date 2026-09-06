@@ -6,12 +6,24 @@
 // RLS on `app.departments`/`app.memberships` requires `department_id = current_setting('app.department_id')`
 // on every write (`migrations/0005_rls.sql`) -- the single `tx` this module receives is bound to the
 // *existing* demo department's id for the whole seed run (`demo.ts`'s `demoContext()`), so a second and
-// third department cannot be created through it. Each new department therefore opens its own short
-// `withContext()` call with that department's own id as the GUC, exactly as a real approved
-// `POST /departments/requests/:id/approve` request would (see
-// `apps/api/src/modules/departments/repo.ts`'s `approveDepartmentRequest`, which does the same thing
-// for the same reason) -- still `@devon/db`'s production `withContext()`, never a bespoke connection,
-// just not the one shared `tx`.
+// third department's rows need that GUC pointed at their own id instead while they're written.
+//
+// A real approved `POST /departments/requests/:id/approve` request gets this for free: it opens its
+// own fresh `withContext()` with the new department's id as the GUC from the start
+// (`apps/api/src/modules/departments/repo.ts`'s `approveDepartmentRequest`), because by the time that
+// request runs, the department's future head/members were already committed by their own, earlier,
+// already-finished requests (registration, join-by-link, ...). This seed run has no such luxury --
+// `demo.ts` wraps every module's `seed()` in one shared transaction on one connection specifically so
+// a later module can see an earlier module's still-uncommitted inserts (its own header comment: "a
+// later module's fixtures can depend on an earlier module having already inserted the row they
+// reference"). `accounts.ts` (order 10) inserts this module's head/member users into that same
+// uncommitted transaction, so a *second*, independently-opened `withContext()` here -- a different
+// pooled connection, hence a different Postgres session -- could never see them: MVCC visibility does
+// not cross sessions, committed or not, which is exactly the `memberships_user_id_fkey` violation this
+// used to throw. Fix: stay on the one shared `tx` (same connection, same transaction, so it always
+// sees the whole run's own prior writes) and flip only the `app.department_id` GUC around each new
+// department's writes via `tx.raw(set_config(..., true))`, restoring it before returning so the rest
+// of `seed()` (and every module after this one) still sees `DEMO_DEPARTMENT.id`, unchanged.
 import { randomBytes } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { hash } from '@node-rs/argon2'
