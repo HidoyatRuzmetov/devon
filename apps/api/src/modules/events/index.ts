@@ -250,7 +250,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       try {
         const updated = await service.upsertRsvp(
           toDbContext(req),
-          req.actor!.userId,
+          currentActor(req),
           req.params.eventId,
           req.body,
         )

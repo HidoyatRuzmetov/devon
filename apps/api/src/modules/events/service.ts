@@ -370,10 +370,11 @@ export async function cancelEvent(
 
 export async function upsertRsvp(
   ctx: RequestContext,
-  userId: string,
+  actor: Actor,
   eventId: string,
   body: { status: string; guests: number; note?: string | undefined },
 ): Promise<EventDto> {
+  const userId = actor.userId
   return withContext(ctx, async (tx) => {
     const event = await repo.getEventRow(tx, eventId)
     if (!event) throw new EventNotFoundError()
@@ -450,7 +451,7 @@ export async function upsertRsvp(
       maybeCount: counts.maybe_count,
       waitlistCount: counts.waitlist_count,
       myRsvp: my,
-      canManage: row!.organizer_user_id === userId,
+      canManage: row!.organizer_user_id === userId || actor.isHead,
     })
   })
 }
