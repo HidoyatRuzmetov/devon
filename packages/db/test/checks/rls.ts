@@ -1,6 +1,7 @@
 // Backs `test/integration/rls.isolation.test.ts` and `migrate:verify` (design §2.4/§4(a), item AC-10).
 // Deliberately exercises the *production* code path -- `withContext()`/`Tx.drizzle`/`tx.raw()` from
 // `../../src/context.js` -- rather than a reimplementation, so a bug in the real wrapper shows up here.
+import { randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { Client } from 'pg'
 import { configurePool, withContext, type RequestContext } from '../../src/context.js'
@@ -113,14 +114,40 @@ export async function runRlsIsolationChecks(
     })
   })
 
+  // `app.memberships` carries two *additive* self-read policies alongside the base department-scoped
+  // one (`memberships_read_own`, `migrations/0100_accounts_departments.sql`; `memberships_self_read`,
+  // `migrations/0200_structure.sql` -- independently added by two modules for the same reason: `GET
+  // /me` and `Actor.memberships` need to list every department a user belongs to, which is impossible
+  // to ask with a department_id already chosen, since resolving that list is what *establishes* which
+  // department a request acts for). Both policies are `user_id = app.current_user_id()` only, so an
+  // unset department context on this one table no longer means zero rows -- it means "only the calling
+  // user's own row(s), never anyone else's". See docs/04-escalations/
+  // INTEGRATION-memberships-self-read-vs-I-1.md for the open question of whether I-1 should be read to
+  // allow this; the check below asserts the guarantee that is actually true today either way.
   await withContext({ ...contextFor(a, 'probe-no-context'), departmentId: null }, async (tx) => {
     const memberships = await tx.drizzle.select().from(schema.memberships)
     results.push({
-      name: 'unset department context returns zero rows, never all rows (default-deny)',
-      ok: memberships.length === 0,
+      name: 'unset department context on app.memberships never crosses users (self-read carve-out, see escalation)',
+      ok: memberships.every((m) => m.userId === a.userId),
       detail: `rows=${memberships.length}`,
     })
   })
+
+  // A user with no memberships of their own at all (every `seedDepartments()` user has exactly one,
+  // in their own department, so this has to be a fresh id, not one of `seeded`) must still see zero
+  // rows with no department context -- proving the carve-out is genuinely self-scoped, not "any
+  // authenticated user sees everything once department_id is null".
+  await withContext(
+    { ...contextFor(a, 'probe-no-context-stranger'), userId: randomUUID(), departmentId: null },
+    async (tx) => {
+      const memberships = await tx.drizzle.select().from(schema.memberships)
+      results.push({
+        name: 'unset department context returns zero rows for a user with no memberships of their own',
+        ok: memberships.length === 0,
+        detail: `rows=${memberships.length}`,
+      })
+    },
+  )
 
   return results
 }

@@ -55,8 +55,13 @@ describe('RLS cross-department isolation (AC-10, item handoff)', () => {
     expect(failed).toEqual([])
   })
 
-  it('an unset department context returns zero rows, never all rows', () => {
-    const r = isolationResults.find((x) => x.name.includes('default-deny'))
+  it('an unset department context on app.memberships never crosses users (self-read carve-out)', () => {
+    const r = isolationResults.find((x) => x.name.includes('self-read carve-out'))
+    expect(r?.ok).toBe(true)
+  })
+
+  it('an unset department context returns zero rows for a user with no memberships of their own', () => {
+    const r = isolationResults.find((x) => x.name.includes('no memberships of their own'))
     expect(r?.ok).toBe(true)
   })
 
