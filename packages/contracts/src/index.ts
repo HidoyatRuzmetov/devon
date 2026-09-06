@@ -29,3 +29,17 @@ export {
   type FieldTier,
   type ReadableTier,
 } from './field-tiers.js'
+
+export {
+  parseFilterQuery,
+  serializeFilterQuery,
+  resolveDateWord,
+  matchesFilterQuery,
+  cardMatchesFilterText,
+  type CardFilterStatus,
+  type CompareOp,
+  type FilterClause,
+  type FilterQuery,
+  type FilterableCard,
+  type FilterContext,
+} from './filter-grammar.js'
