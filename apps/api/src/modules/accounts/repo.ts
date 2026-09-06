@@ -238,9 +238,14 @@ export async function enrollTotp(
     // Pending, not yet enabled: `verifyTotpEnroll` flips `totp_enabled` only after the first code
     // proves the authenticator app was actually set up correctly (never enabled on the strength of
     // "the server generated a secret" alone).
+    // Upsert, not a plain UPDATE: an UPDATE against a user with no `app.user_security` row yet (the
+    // demo seed's users, or any account created before its creator inserted the row) silently
+    // matched zero rows, so enrol returned a secret the later `verifyTotpEnroll` could never find.
     await tx.raw(
-      sql`update app.user_security set totp_secret_enc = ${encrypted}, totp_enabled = false, updated_at = now()
-          where user_id = ${userId}`,
+      sql`insert into app.user_security (user_id, totp_secret_enc, totp_enabled)
+          values (${userId}, ${encrypted}, false)
+          on conflict (user_id) do update
+            set totp_secret_enc = excluded.totp_secret_enc, totp_enabled = false, updated_at = now()`,
     )
   })
   return { secret, otpauthUri: otpauthUri(secret, login) }
@@ -260,9 +265,13 @@ export async function verifyTotpEnroll(
 
     const recoveryCodes = generateRecoveryCodes()
     const hashes = recoveryCodes.map((c) => sha256Hex(c))
+    // `sql.param()`, not a bare `${hashes}`: drizzle's `sql` tag expands a plain array into a
+    // parenthesized value list (`($1, $2, ...)`), which Postgres rejects here as "expression is of
+    // type record" against the `text[]` column (`notifications/repo.ts`'s `markRead` documents the
+    // same trap). A single bound parameter is serialised by node-postgres as a real array literal.
     await tx.raw(
       sql`update app.user_security
-          set totp_enabled = true, recovery_codes_hash = ${hashes}, updated_at = now()
+          set totp_enabled = true, recovery_codes_hash = ${sql.param(hashes)}::text[], updated_at = now()
           where user_id = ${userId}`,
     )
     tx.audit({ action: 'accounts.2fa_enabled', subjectType: 'user', subjectId: userId })
@@ -339,7 +348,8 @@ export async function consumeLoginChallenge(
         matched = true
         const remaining = security.recoveryCodesHash.filter((_, i) => i !== idx)
         await tx.raw(
-          sql`update app.user_security set recovery_codes_hash = ${remaining}, updated_at = now()
+          sql`update app.user_security
+              set recovery_codes_hash = ${sql.param(remaining)}::text[], updated_at = now()
               where user_id = ${found.user_id}`,
         )
       }
