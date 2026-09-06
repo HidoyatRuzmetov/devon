@@ -25,7 +25,7 @@ let concurrencyResults: CheckResult[]
 beforeAll(async () => {
   db = await startMigratedDatabase()
   seeded = await seedDepartments(db.superuserUrl, 4)
-  isolationResults = await runRlsIsolationChecks(db.appUrl, seeded)
+  isolationResults = await runRlsIsolationChecks(db.appUrl, seeded, db.superuserUrl)
   printReport('rls.isolation (Drizzle + raw)', isolationResults)
 
   pgbouncer = await startPgBouncer(db)
@@ -55,14 +55,38 @@ describe('RLS cross-department isolation (AC-10, item handoff)', () => {
     expect(failed).toEqual([])
   })
 
-  it('an unset department context on app.memberships never crosses users (self-read carve-out)', () => {
-    const r = isolationResults.find((x) => x.name.includes('self-read carve-out'))
+  it('an unset department context on app.memberships never crosses users (I-1a self-read carve-out)', () => {
+    const r = isolationResults.find((x) => x.name.includes('app.memberships never crosses users'))
     expect(r?.ok).toBe(true)
   })
 
-  it('an unset department context returns zero rows for a user with no memberships of their own', () => {
-    const r = isolationResults.find((x) => x.name.includes('no memberships of their own'))
+  it("an unset department context on app.departments shows only the caller's own departments", () => {
+    const r = isolationResults.find((x) =>
+      x.name.includes("app.departments shows only the caller's own"),
+    )
     expect(r?.ok).toBe(true)
+  })
+
+  it('an unset department context returns zero rows of both tables for a user with no memberships of their own', () => {
+    const failed = isolationResults.filter(
+      (x) => x.name.includes('no memberships of their own') && !x.ok,
+    )
+    expect(failed).toEqual([])
+    expect(
+      isolationResults.filter((x) => x.name.includes('no memberships of their own')),
+    ).toHaveLength(2)
+  })
+
+  it('every other department-owned table returns zero rows with no department context (default-deny)', () => {
+    const sweep = isolationResults.filter((x) =>
+      x.name.includes('default-deny, no self-read carve-out'),
+    )
+    expect(sweep.length).toBeGreaterThan(0)
+    expect(sweep.filter((x) => !x.ok)).toEqual([])
+    const nonVacuous = isolationResults.find((x) =>
+      x.name.includes('default-deny sweep is non-vacuous'),
+    )
+    expect(nonVacuous?.ok).toBe(true)
   })
 
   it('every isolation check passes', () => {

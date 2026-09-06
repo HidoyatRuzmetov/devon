@@ -78,3 +78,21 @@ only how that one read is authorized.
 2026-09-06 (CTO session): **Accepted.** The user-scoped self-read of one's own membership rows is the
 correct reading; it is now written into INVARIANTS.md as I-1a. Keep the shipped policies and the narrowed
 RLS check. No other table may get a self-read carve-out.
+
+## Follow-up (2026-09-06, gate hardening after the answer)
+
+- `migrate:verify` now proves the narrowed invariant rather than asserting it in prose: with no
+  department context, every `department_owned` table other than `app.memberships` returns zero rows to
+  a signed-in member (swept from the `TENANCY` registry, seeded rows on `app.units` and `app.cards` so
+  the sweep is non-vacuous), a stranger with no memberships sees zero rows of `app.memberships` and
+  `app.departments`, and no `department_owned`/`tenant_root` table carries a policy that keys on
+  `current_user_id()` without `current_department_id()` beyond the allowlisted I-1a policies
+  (`packages/db/test/checks/rls.ts`, `packages/db/test/checks/tenancy.ts`).
+- **Wording gap to close in I-1a.** `0200_structure.sql` also ships `departments_self_read` on
+  `app.departments` (`tenant_root`): a department row is readable with no context iff one of the
+  caller's own *active* memberships points at it. It is load-bearing (`listActiveMembershipsForUser`
+  joins `app.departments` for `GET /me`'s department names) and never exposes another department, so
+  the gate treats it as the same carve-out one join away. I-1a's sentence "no other table gets a
+  self-read carve-out" does not mention it; `agentic/INVARIANTS.md` should either name
+  `app.departments` (own active departments only) alongside `memberships`, or the policy should be
+  replaced. The gate encodes the former; the decision is the CTO's.

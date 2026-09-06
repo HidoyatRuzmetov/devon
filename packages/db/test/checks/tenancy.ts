@@ -20,6 +20,20 @@ const REFERENCES_DEPARTMENT_FN = (expr: string | null) =>
 const REFERENCES_ACTOR_ROLE_FN = (expr: string | null) =>
   !!expr && expr.includes('current_actor_role')
 const REFERENCES_USER_FN = (expr: string | null) => !!expr && expr.includes('current_user_id')
+/** The shape of a self-read carve-out: a policy expression that keys on the caller's user id with no
+ * department condition anywhere in it (`using (user_id = app.current_user_id())`). */
+const KEYS_ON_USER_ALONE = (expr: string | null) =>
+  REFERENCES_USER_FN(expr) && !REFERENCES_DEPARTMENT_FN(expr)
+
+/** I-1a (`agentic/INVARIANTS.md`): the one permitted self-read carve-out is a signed-in user reading
+ * their OWN `app.memberships` rows with no department context, plus its one-join-away shadow on
+ * `app.departments` (`departments_self_read`: a department row is visible iff one of the caller's own
+ * active memberships points at it -- what `listActiveMembershipsForUser` joins for `GET /me`). No other
+ * department-owned or tenant-root table may carry a policy of that shape; adding one fails this gate. */
+const SELF_READ_CARVE_OUT: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  'app.memberships': ['memberships_read_own', 'memberships_self_read'],
+  'app.departments': ['departments_self_read'],
+})
 
 export async function runTenancyRegistryChecks(client: ClientBase): Promise<CheckResult[]> {
   const results: CheckResult[] = []
@@ -51,6 +65,16 @@ export async function runTenancyRegistryChecks(client: ClientBase): Promise<Chec
     if (cls === 'department_owned' || cls === 'tenant_root') {
       const rls = await rlsState(client, schema, table)
       push(`${qualified} has RLS enabled and forced`, rls.enabled && rls.forced)
+      const allowed = SELF_READ_CARVE_OUT[qualified] ?? []
+      const rogue = (await policies(client, schema, table))
+        .filter((p) => KEYS_ON_USER_ALONE(p.qual) || KEYS_ON_USER_ALONE(p.withCheck))
+        .map((p) => p.policyname)
+        .filter((name) => !allowed.includes(name))
+      push(
+        `${qualified} has no self-read carve-out beyond I-1a (no policy keys on current_user_id() without current_department_id())`,
+        rogue.length === 0,
+        rogue.join(', '),
+      )
     }
 
     if (cls === 'department_owned') {
