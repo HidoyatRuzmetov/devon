@@ -12,6 +12,19 @@
  */
 @import 'tailwindcss';
 
+/* Consumers (`apps/web`, Storybook, ...) import this file for tokens, but Tailwind v4's automatic
+ * content detection treats `@devon/ui` as a `node_modules` dependency (it's resolved through a pnpm
+ * workspace symlink and pre-bundled by Vite's dependency optimizer) and never scans its `.tsx` source
+ * for utility classes -- verified empirically: a class used only inside `packages/ui/src` (`bg-
+ * attention` in `demo-chip.tsx`, plain `bg-sidebar` in `sidebar.tsx`) never made it into the generated
+ * CSS, while a class used in *both* places, or only in `apps/web`'s own source (`bg-sidebar-accent`,
+ * `bg-primary`), did. An explicit `@source` here is carried into every consumer's build once compiled
+ * (it travels with `@import`), so declaring it once, next to the tokens every consumer already
+ * imports, fixes every current and future consumer without each one needing to know this package's
+ * physical layout on disk.
+ */
+@source '../';
+
 @theme {
   /* -- Colour, light (default) -- DESIGN.md §2.1 ------------------------------------------------ */
   --color-background: oklch(97% 0.007 88);
