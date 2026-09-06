@@ -113,7 +113,9 @@ export const notificationPrefs = appSchema.table(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('notification_prefs_user_reason_channel_key').on(t.userId, t.reason, t.channel)],
+  (t) => [
+    uniqueIndex('notification_prefs_user_reason_channel_key').on(t.userId, t.reason, t.channel),
+  ],
 )
 
 /** One row per user; `null` fields inherit the department default (department_default) computed by

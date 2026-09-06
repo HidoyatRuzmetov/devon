@@ -1,0 +1,51 @@
+{
+  "telegram": {
+    "title": "Telegram",
+    "notConfigured": {
+      "title": "Telegram is not connected yet",
+      "body": "Ask your administrator to set up the Telegram bot for this instance."
+    },
+    "personal": {
+      "title": "Your Telegram",
+      "linkedBadge": "Connected",
+      "notLinkedBadge": "Not connected",
+      "codeBody": "Open the bot in Telegram, or scan the code, to connect your account.",
+      "qrAlt": "QR code to connect Telegram",
+      "openInTelegram": "Open in Telegram",
+      "codeExpires": "Code expires at {time}",
+      "connectButton": "Get a connection code",
+      "unlink": "Disconnect Telegram",
+      "unlinked": "Telegram disconnected",
+      "mute": {
+        "title": "Mute notifications",
+        "off": "Unmute",
+        "forMinutes": "{minutes} min",
+        "until": "Muted until {date}",
+        "applied": "Updated"
+      }
+    },
+    "group": {
+      "title": "Department group",
+      "body": "Connect a Telegram group to receive department events, polls and announcements.",
+      "untitled": "Untitled group",
+      "disconnect": "Disconnect",
+      "disconnected": "Group disconnected",
+      "updated": "Updated",
+      "codeBody": "In the group, send /connect with this code.",
+      "codeExpires": "Code expires at {time}",
+      "connectButton": "Get a connection code",
+      "copyCode": "Copy code",
+      "empty": {
+        "title": "No groups connected",
+        "body": "Add the bot to a Telegram group, then use a connection code here."
+      },
+      "kinds": {
+        "events": "Events",
+        "polls": "Polls",
+        "announcements": "Announcements",
+        "weekly_summary": "Weekly summary",
+        "deadlines": "Deadlines"
+      }
+    }
+  }
+}

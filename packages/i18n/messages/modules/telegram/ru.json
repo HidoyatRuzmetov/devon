@@ -1,0 +1,51 @@
+{
+  "telegram": {
+    "title": "Telegram",
+    "notConfigured": {
+      "title": "Telegram ещё не подключён",
+      "body": "Обратитесь к администратору, чтобы настроить Telegram-бота для этой системы."
+    },
+    "personal": {
+      "title": "Ваш Telegram",
+      "linkedBadge": "Подключён",
+      "notLinkedBadge": "Не подключён",
+      "codeBody": "Откройте бота в Telegram или отсканируйте код, чтобы привязать аккаунт.",
+      "qrAlt": "QR-код для привязки Telegram",
+      "openInTelegram": "Открыть в Telegram",
+      "codeExpires": "Код действителен до {time}",
+      "connectButton": "Получить код привязки",
+      "unlink": "Отвязать Telegram",
+      "unlinked": "Telegram отвязан",
+      "mute": {
+        "title": "Отключить уведомления",
+        "off": "Включить обратно",
+        "forMinutes": "{minutes} мин",
+        "until": "Отключено до {date}",
+        "applied": "Обновлено"
+      }
+    },
+    "group": {
+      "title": "Групповой чат отдела",
+      "body": "Подключите группу Telegram, чтобы получать мероприятия, опросы и объявления отдела.",
+      "untitled": "Группа без названия",
+      "disconnect": "Отключить",
+      "disconnected": "Группа отключена",
+      "updated": "Обновлено",
+      "codeBody": "В группе отправьте /connect с этим кодом.",
+      "codeExpires": "Код действителен до {time}",
+      "connectButton": "Получить код подключения",
+      "copyCode": "Скопировать код",
+      "empty": {
+        "title": "Нет подключённых групп",
+        "body": "Добавьте бота в группу Telegram, затем используйте здесь код подключения."
+      },
+      "kinds": {
+        "events": "Мероприятия",
+        "polls": "Опросы",
+        "announcements": "Объявления",
+        "weekly_summary": "Еженедельная сводка",
+        "deadlines": "Сроки"
+      }
+    }
+  }
+}

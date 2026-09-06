@@ -34,7 +34,12 @@ const VALID_TITLE = { 'uz-Latn': 'a', 'uz-Cyrl': 'b', ru: 'c', en: 'd' }
 describe('parseNotifyBlock ("handle unknown ones gracefully")', () => {
   it('parses a well-formed notify block', () => {
     const parsed = parseNotifyBlock({
-      notify: { targetUserIds: ['u1', 'u2'], title: VALID_TITLE, deepLink: '/cards/1', eventAt: '2026-09-06T10:00:00.000Z' },
+      notify: {
+        targetUserIds: ['u1', 'u2'],
+        title: VALID_TITLE,
+        deepLink: '/cards/1',
+        eventAt: '2026-09-06T10:00:00.000Z',
+      },
     })
     expect(parsed).toEqual({
       targetUserIds: ['u1', 'u2'],
@@ -65,7 +70,9 @@ describe('parseNotifyBlock ("handle unknown ones gracefully")', () => {
   })
 
   it('returns null when targetUserIds contains a non-string entry', () => {
-    expect(parseNotifyBlock({ notify: { targetUserIds: ['u1', 42], title: VALID_TITLE } })).toBeNull()
+    expect(
+      parseNotifyBlock({ notify: { targetUserIds: ['u1', 42], title: VALID_TITLE } }),
+    ).toBeNull()
   })
 
   it('returns null when title is missing a locale', () => {

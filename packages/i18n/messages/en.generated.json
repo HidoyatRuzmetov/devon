@@ -166,5 +166,143 @@
       "down": "Not running",
       "refresh": "Refresh"
     }
+  },
+  "inbox": {
+    "title": "Inbox",
+    "eyebrow": "NOTIFICATIONS",
+    "markAllRead": "Mark all as read",
+    "calendarLink": "Calendar link",
+    "tabs": {
+      "inbox": "All",
+      "unread": "Unread",
+      "archived": "Archived"
+    },
+    "empty": {
+      "inbox": {
+        "title": "Your inbox is empty",
+        "body": "Notifications about your work will appear here."
+      },
+      "unread": {
+        "title": "Nothing unread",
+        "body": "You are all caught up."
+      },
+      "archived": {
+        "title": "No archived notifications",
+        "body": "Notifications you archive will appear here."
+      }
+    },
+    "reason": {
+      "assigned": "Assignment",
+      "mentioned": "Mention",
+      "due": "Deadline",
+      "updated": "Update",
+      "rsvp": "RSVP",
+      "poll": "Poll",
+      "decision": "Decision",
+      "digest": "Summary",
+      "system": "System"
+    },
+    "channel": {
+      "inapp": "In-app",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "row": {
+      "unread": "Unread",
+      "archive": "Archive",
+      "archived": "Archived",
+      "snooze": "Snooze",
+      "snoozed": "Snoozed",
+      "snoozeOptions": {
+        "hour": "In 1 hour",
+        "tomorrow": "Tomorrow morning",
+        "nextWeek": "Next week"
+      }
+    },
+    "detail": {
+      "title": "Notification",
+      "close": "Close",
+      "openLink": "Open"
+    },
+    "preferences": {
+      "title": "Notification preferences",
+      "body": "Choose which notifications reach you, and where.",
+      "reasonColumn": "Notification type",
+      "toggleAria": "{reason} via {channel}",
+      "digestFrequency": "Summary frequency",
+      "digestMode": {
+        "instant": "Instant",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "off": "Off"
+      },
+      "quietHours": {
+        "title": "Quiet hours",
+        "usingDepartmentDefault": "Using your department's default: {range}",
+        "usingPersonal": "Your own hours: {range}",
+        "start": "Starts",
+        "end": "Ends",
+        "weekends": "Include weekends",
+        "tooLoud": "This range must be at least as quiet as your department's default.",
+        "useDefault": "Use department default"
+      },
+      "calendar": {
+        "title": "Calendar feed",
+        "body": "Add your deadlines and events to any calendar app.",
+        "reveal": "Get the link",
+        "copy": "Copy link"
+      },
+      "save": "Save",
+      "saved": "Preferences saved"
+    }
+  },
+  "telegram": {
+    "title": "Telegram",
+    "notConfigured": {
+      "title": "Telegram is not connected yet",
+      "body": "Ask your administrator to set up the Telegram bot for this instance."
+    },
+    "personal": {
+      "title": "Your Telegram",
+      "linkedBadge": "Connected",
+      "notLinkedBadge": "Not connected",
+      "codeBody": "Open the bot in Telegram, or scan the code, to connect your account.",
+      "qrAlt": "QR code to connect Telegram",
+      "openInTelegram": "Open in Telegram",
+      "codeExpires": "Code expires at {time}",
+      "connectButton": "Get a connection code",
+      "unlink": "Disconnect Telegram",
+      "unlinked": "Telegram disconnected",
+      "mute": {
+        "title": "Mute notifications",
+        "off": "Unmute",
+        "forMinutes": "{minutes} min",
+        "until": "Muted until {date}",
+        "applied": "Updated"
+      }
+    },
+    "group": {
+      "title": "Department group",
+      "body": "Connect a Telegram group to receive department events, polls and announcements.",
+      "untitled": "Untitled group",
+      "disconnect": "Disconnect",
+      "disconnected": "Group disconnected",
+      "updated": "Updated",
+      "codeBody": "In the group, send /connect with this code.",
+      "codeExpires": "Code expires at {time}",
+      "connectButton": "Get a connection code",
+      "copyCode": "Copy code",
+      "empty": {
+        "title": "No groups connected",
+        "body": "Add the bot to a Telegram group, then use a connection code here."
+      },
+      "kinds": {
+        "events": "Events",
+        "polls": "Polls",
+        "announcements": "Announcements",
+        "weekly_summary": "Weekly summary",
+        "deadlines": "Deadlines"
+      }
+    }
   }
 }

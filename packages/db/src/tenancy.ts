@@ -51,7 +51,7 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'Migration-runner bookkeeping (which .sql files have applied), not tenant data.',
   'app.telegram_link_codes':
     'Bootstrap-only: a one-time linking code exists before any Telegram chat is associated with a ' +
-    'user, exactly like app.setup_tokens (AC-12\'s pattern reused for /start <code>).',
+    "user, exactly like app.setup_tokens (AC-12's pattern reused for /start <code>).",
   'app.telegram_links':
     'A Telegram webhook update carries only a chat id; the (chat_id -> user_id) mapping must be ' +
     'resolvable before any per-request user/department context exists, the same bootstrap shape as ' +

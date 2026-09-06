@@ -1,0 +1,91 @@
+{
+  "inbox": {
+    "title": "Inbox",
+    "eyebrow": "NOTIFICATIONS",
+    "markAllRead": "Mark all as read",
+    "calendarLink": "Calendar link",
+    "tabs": {
+      "inbox": "All",
+      "unread": "Unread",
+      "archived": "Archived"
+    },
+    "empty": {
+      "inbox": {
+        "title": "Your inbox is empty",
+        "body": "Notifications about your work will appear here."
+      },
+      "unread": {
+        "title": "Nothing unread",
+        "body": "You are all caught up."
+      },
+      "archived": {
+        "title": "No archived notifications",
+        "body": "Notifications you archive will appear here."
+      }
+    },
+    "reason": {
+      "assigned": "Assignment",
+      "mentioned": "Mention",
+      "due": "Deadline",
+      "updated": "Update",
+      "rsvp": "RSVP",
+      "poll": "Poll",
+      "decision": "Decision",
+      "digest": "Summary",
+      "system": "System"
+    },
+    "channel": {
+      "inapp": "In-app",
+      "telegram": "Telegram",
+      "email": "Email"
+    },
+    "row": {
+      "unread": "Unread",
+      "archive": "Archive",
+      "archived": "Archived",
+      "snooze": "Snooze",
+      "snoozed": "Snoozed",
+      "snoozeOptions": {
+        "hour": "In 1 hour",
+        "tomorrow": "Tomorrow morning",
+        "nextWeek": "Next week"
+      }
+    },
+    "detail": {
+      "title": "Notification",
+      "close": "Close",
+      "openLink": "Open"
+    },
+    "preferences": {
+      "title": "Notification preferences",
+      "body": "Choose which notifications reach you, and where.",
+      "reasonColumn": "Notification type",
+      "toggleAria": "{reason} via {channel}",
+      "digestFrequency": "Summary frequency",
+      "digestMode": {
+        "instant": "Instant",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "off": "Off"
+      },
+      "quietHours": {
+        "title": "Quiet hours",
+        "usingDepartmentDefault": "Using your department's default: {range}",
+        "usingPersonal": "Your own hours: {range}",
+        "start": "Starts",
+        "end": "Ends",
+        "weekends": "Include weekends",
+        "tooLoud": "This range must be at least as quiet as your department's default.",
+        "useDefault": "Use department default"
+      },
+      "calendar": {
+        "title": "Calendar feed",
+        "body": "Add your deadlines and events to any calendar app.",
+        "reveal": "Get the link",
+        "copy": "Copy link"
+      },
+      "save": "Save",
+      "saved": "Preferences saved"
+    }
+  }
+}

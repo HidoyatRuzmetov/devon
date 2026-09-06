@@ -267,8 +267,9 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   // Sensible defaults: every reason on `inapp` (always on, matching the taste rule "no dead ends" --
   // the inbox itself is never optional), `due`/`digest` also on Telegram once linked, everything else
   // off Telegram by default until the person opts in from Settings.
-  const TELEGRAM_DEFAULT_ON: ReadonlySet<(typeof schema.notificationReasonEnum.enumValues)[number]> =
-    new Set(['due', 'digest', 'system'])
+  const TELEGRAM_DEFAULT_ON: ReadonlySet<
+    (typeof schema.notificationReasonEnum.enumValues)[number]
+  > = new Set(['due', 'digest', 'system'])
   for (const user of DEMO_USERS) {
     written += await asUser(tx, user.id, async () => {
       const inserted = await tx.drizzle

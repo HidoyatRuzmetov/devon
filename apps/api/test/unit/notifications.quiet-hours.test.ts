@@ -54,7 +54,12 @@ describe('isQuieterOrEqual ("personal override to quieter", TECH-SPEC §7)', () 
 
   it('accepts a personal window with strictly more quiet minutes', () => {
     // 19:30-08:30 = 13h/day, strictly more than the department default's 20:00-08:00 = 12h/day.
-    expect(isQuieterOrEqual({ startMinute: 19 * 60 + 30, endMinute: 8 * 60 + 30, includeWeekends: true }, dept)).toBe(true)
+    expect(
+      isQuieterOrEqual(
+        { startMinute: 19 * 60 + 30, endMinute: 8 * 60 + 30, includeWeekends: true },
+        dept,
+      ),
+    ).toBe(true)
   })
 
   it('accepts an identical window', () => {
@@ -62,7 +67,9 @@ describe('isQuieterOrEqual ("personal override to quieter", TECH-SPEC §7)', () 
   })
 
   it('rejects a personal window with fewer quiet minutes ("louder")', () => {
-    expect(isQuieterOrEqual({ startMinute: 22 * 60, endMinute: 6 * 60, includeWeekends: true }, dept)).toBe(false)
+    expect(
+      isQuieterOrEqual({ startMinute: 22 * 60, endMinute: 6 * 60, includeWeekends: true }, dept),
+    ).toBe(false)
   })
 
   it('rejects turning weekend quiet off when the department default has it on, even with equal minutes', () => {

@@ -1,7 +1,11 @@
 // Per-person ICS feed (TECH-SPEC §3.4/§7). Pure and stateless -- see `ics.ts`'s header comment for
 // why the token needs no database row.
 import { describe, expect, it } from 'vitest'
-import { buildIcsCalendar, signIcsToken, verifyIcsToken } from '../../src/modules/notifications/ics.js'
+import {
+  buildIcsCalendar,
+  signIcsToken,
+  verifyIcsToken,
+} from '../../src/modules/notifications/ics.js'
 import type { IcsItem } from '../../src/modules/notifications/repo.js'
 
 const USER_ID = '11111111-1111-1111-1111-111111111111'
@@ -53,7 +57,7 @@ describe('buildIcsCalendar', () => {
     expect(ics).not.toContain('BEGIN:VEVENT')
   })
 
-  it('renders one VEVENT per item, with the requested locale\'s title as SUMMARY', () => {
+  it("renders one VEVENT per item, with the requested locale's title as SUMMARY", () => {
     const ics = buildIcsCalendar([SAMPLE_ITEM], 'ru', 'https://portal.example')
     expect(ics).toContain('BEGIN:VEVENT')
     expect(ics).toContain('SUMMARY:Командный выезд')
@@ -63,7 +67,10 @@ describe('buildIcsCalendar', () => {
   })
 
   it('falls back to uz-Latn when the requested locale key is missing', () => {
-    const partialItem: IcsItem = { ...SAMPLE_ITEM, title: { ...SAMPLE_ITEM.title, en: '' } as never }
+    const partialItem: IcsItem = {
+      ...SAMPLE_ITEM,
+      title: { ...SAMPLE_ITEM.title, en: '' } as never,
+    }
     const ics = buildIcsCalendar([partialItem], 'uz-Latn', 'https://portal.example')
     expect(ics).toContain('SUMMARY:Jamoaviy sayr')
   })

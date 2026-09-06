@@ -5,7 +5,11 @@
 // store yet, is fed straight in as `input`, and none of those values may appear anywhere in the
 // output -- because `buildTelegramPointer` never reads those keys in the first place.
 import { describe, expect, it } from 'vitest'
-import { absoluteDeepLink, buildTelegramPointer, FORBIDDEN_CONTACT_FIELDS } from '../../src/modules/telegram/pointer.js'
+import {
+  absoluteDeepLink,
+  buildTelegramPointer,
+  FORBIDDEN_CONTACT_FIELDS,
+} from '../../src/modules/telegram/pointer.js'
 
 const ADVERSARIAL_USER_RECORD = {
   title: 'Ertaga muddati: "III chorak hisoboti"',
@@ -53,7 +57,12 @@ describe('buildTelegramPointer (pointer not payload)', () => {
   })
 
   it('degrades gracefully when the expected fields are missing (never throws)', () => {
-    expect(buildTelegramPointer({})).toEqual({ title: '', body: null, deepLink: null, eventAt: null })
+    expect(buildTelegramPointer({})).toEqual({
+      title: '',
+      body: null,
+      deepLink: null,
+      eventAt: null,
+    })
   })
 
   it('ignores non-string values for every field instead of coercing them', () => {
@@ -64,15 +73,19 @@ describe('buildTelegramPointer (pointer not payload)', () => {
 
 describe('absoluteDeepLink', () => {
   it('joins a public URL and a path with exactly one slash', () => {
-    expect(absoluteDeepLink('https://portal.example', '/cards/1')).toBe('https://portal.example/cards/1')
-    expect(absoluteDeepLink('https://portal.example/', '/cards/1')).toBe('https://portal.example/cards/1')
+    expect(absoluteDeepLink('https://portal.example', '/cards/1')).toBe(
+      'https://portal.example/cards/1',
+    )
+    expect(absoluteDeepLink('https://portal.example/', '/cards/1')).toBe(
+      'https://portal.example/cards/1',
+    )
   })
 
   it('returns null for a null path (nothing to link to)', () => {
     expect(absoluteDeepLink('https://portal.example', null)).toBeNull()
   })
 
-  it('never carries a query string or token -- the deep link is only ever what the caller\'s own path says', () => {
+  it("never carries a query string or token -- the deep link is only ever what the caller's own path says", () => {
     const link = absoluteDeepLink('https://portal.example', '/cards/1')
     expect(link).not.toContain('?')
   })

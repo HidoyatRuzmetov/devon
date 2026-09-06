@@ -1,0 +1,51 @@
+{
+  "telegram": {
+    "title": "Telegram",
+    "notConfigured": {
+      "title": "Telegram hali ulanmagan",
+      "body": "Ushbu tizim uchun Telegram botini sozlashni administratordan soʻrang."
+    },
+    "personal": {
+      "title": "Sizning Telegramingiz",
+      "linkedBadge": "Ulangan",
+      "notLinkedBadge": "Ulanmagan",
+      "codeBody": "Hisobingizni ulash uchun botni Telegramda oching yoki kodni skanerlang.",
+      "qrAlt": "Telegramni ulash uchun QR-kod",
+      "openInTelegram": "Telegramda ochish",
+      "codeExpires": "Kod {time} da eskiradi",
+      "connectButton": "Ulash kodini olish",
+      "unlink": "Telegramni uzish",
+      "unlinked": "Telegram uzildi",
+      "mute": {
+        "title": "Bildirishnomalarni oʻchirish",
+        "off": "Yoqish",
+        "forMinutes": "{minutes} daqiqaga",
+        "until": "{date} gacha oʻchirilgan",
+        "applied": "Yangilandi"
+      }
+    },
+    "group": {
+      "title": "Boʻlim guruhi",
+      "body": "Boʻlim tadbirlari, soʻrovnomalari va eʼlonlarini olish uchun Telegram guruhini ulang.",
+      "untitled": "Nomsiz guruh",
+      "disconnect": "Uzish",
+      "disconnected": "Guruh uzildi",
+      "updated": "Yangilandi",
+      "codeBody": "Guruhda ushbu kod bilan /connect buyrugʻini yuboring.",
+      "codeExpires": "Kod {time} da eskiradi",
+      "connectButton": "Ulash kodini olish",
+      "copyCode": "Kodni nusxalash",
+      "empty": {
+        "title": "Ulangan guruh yoʻq",
+        "body": "Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodidan foydalaning."
+      },
+      "kinds": {
+        "events": "Tadbirlar",
+        "polls": "Soʻrovnomalar",
+        "announcements": "Eʼlonlar",
+        "weekly_summary": "Haftalik xulosa",
+        "deadlines": "Muddatlar"
+      }
+    }
+  }
+}
