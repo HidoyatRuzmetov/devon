@@ -102,6 +102,15 @@ export function createRepo(): Deps {
       })
     },
 
+    async superAdminExists() {
+      return withContext(anonymousCtx(), async (tx) => {
+        const rows = await tx.raw<{ count: number }>(
+          sql`select count(*)::int as count from app.users where role = 'super_admin' and deleted_at is null`,
+        )
+        return (rows[0]?.count ?? 0) > 0
+      })
+    },
+
     async getInstanceSettings(): Promise<InstanceSettingsRecord> {
       return withContext(anonymousCtx(), async (tx) => {
         const rows = await tx.drizzle
@@ -197,10 +206,14 @@ export function createRepo(): Deps {
 
     async ensureSetupToken() {
       return withContext(anonymousCtx(), async (tx) => {
-        const userCountRows = await tx.raw<{ count: number }>(
-          sql`select count(*)::int as count from app.users where deleted_at is null`,
+        // Not `countUsers() === 0`: this doc comment's own contract says "null when a super admin
+        // already exists", and `pnpm start --demo` seeds dozens of ordinary `head`/`member` users
+        // before the API ever boots, which used to make this always bail out on a demo instance --
+        // no super admin could ever be bootstrapped there (H1, found live).
+        const superAdminRows = await tx.raw<{ count: number }>(
+          sql`select count(*)::int as count from app.users where role = 'super_admin' and deleted_at is null`,
         )
-        if ((userCountRows[0]?.count ?? 0) > 0) return null
+        if ((superAdminRows[0]?.count ?? 0) > 0) return null
 
         const existing = await tx.drizzle
           .select({ id: schema.setupTokens.id })

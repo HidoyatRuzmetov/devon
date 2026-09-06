@@ -91,6 +91,10 @@ export function createFakeDeps(state: FakeState): Deps {
       return state.users.filter((u) => u.status !== 'deleted').length
     },
 
+    async superAdminExists() {
+      return state.users.some((u) => u.status !== 'deleted' && u.role === 'super_admin')
+    },
+
     async getInstanceSettings(): Promise<InstanceSettingsRecord> {
       return state.instanceSettings
     },

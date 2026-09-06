@@ -14,7 +14,13 @@ export async function printSetupUrlIfNeeded(
 ): Promise<void> {
   const issued = await deps.ensureSetupToken()
   if (!issued) return
-  const url = `${config.DEVON_PUBLIC_URL}/setup/${issued.token}`
+  // `?token=`, never a `/setup/<token>` path segment -- the frontend route is the fixed `/setup`
+  // (`routes/setup.tsx`'s own header: "the API's single-use token travels as a `?token=` query
+  // param"; `lib/router.tsx`'s five-route switch has no `/setup/:token` case at all). A path-segment
+  // URL here 404s the operator's very first click (H1, confirmed live: "Sahifa topilmadi" /
+  // "havola eskirgan yoki notoʻgʻri" on the exact link this function prints) -- the one link a
+  // brand-new instance's operator cannot fail to use.
+  const url = `${config.DEVON_PUBLIC_URL}/setup?token=${issued.token}`
   app.log.info({ setupUrl: url, expiresAt: issued.expiresAt.toISOString() }, 'first-boot setup URL')
   // Deliberately also a plain stdout line: this is the one message an operator with no log
   // aggregation must be able to see and copy on a bare `pnpm start`.

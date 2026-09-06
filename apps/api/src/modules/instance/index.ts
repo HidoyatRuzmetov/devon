@@ -12,11 +12,15 @@ const instanceRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: instancePublicSchema } },
     },
     async (_req, reply) => {
-      const [settings, userCount] = await Promise.all([
+      const [settings, userCount, hasSuperAdmin] = await Promise.all([
         app.devon.getInstanceSettings(),
         app.devon.countUsers(),
+        app.devon.superAdminExists(),
       ])
-      reply.header('etag', `"instance-${userCount}-${settings.isDemo ? 1 : 0}"`)
+      reply.header(
+        'etag',
+        `"instance-${userCount}-${settings.isDemo ? 1 : 0}-${hasSuperAdmin ? 1 : 0}"`,
+      )
       reply.header('cache-control', 'public, max-age=0, must-revalidate')
       return {
         isDemo: settings.isDemo,
@@ -24,7 +28,11 @@ const instanceRoutes: FastifyPluginAsyncZod = async (app) => {
         registrationOpen: settings.registrationOpen,
         locales: [...LOCALES],
         defaultLocale: 'uz-Latn' as const,
-        setupRequired: userCount === 0,
+        // Not `userCount === 0`: `pnpm start --demo` seeds dozens of ordinary `head`/`member` users
+        // before the API ever boots, so that always read `false` on a demo instance -- the setup
+        // screen read "already used" even with a live, unconsumed token and zero super admins (H1,
+        // found live). What actually gates first-boot setup is whether a super admin exists.
+        setupRequired: !hasSuperAdmin,
       }
     },
   )

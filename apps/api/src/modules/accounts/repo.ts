@@ -196,13 +196,17 @@ type UserSecurityRow = {
 }
 
 async function selectUserSecurity(tx: Tx, userId: string): Promise<UserSecurityRow | null> {
+  // `Tx.raw()` is a plain, un-schema'd SQL query -- drizzle's own column-level date mapping never
+  // runs on it, so the node-postgres driver as drizzle configures it (`node-postgres/session.ts`)
+  // hands back TIMESTAMPTZ columns as raw strings on this path, never a `Date` (confirmed in the
+  // wild by `structure/repo.ts`'s identical bug: "assigned_at.toISOString is not a function").
   const rows = await tx.raw<{
     user_id: string
     totp_secret_enc: string | null
     totp_enabled: boolean
     recovery_codes_hash: string[] | null
     failed_login_count: number
-    locked_until: Date | null
+    locked_until: Date | string | null
   }>(sql`select * from app.user_security where user_id = ${userId}`)
   const row = rows[0]
   if (!row) return null
@@ -212,7 +216,7 @@ async function selectUserSecurity(tx: Tx, userId: string): Promise<UserSecurityR
     totpEnabled: row.totp_enabled,
     recoveryCodesHash: row.recovery_codes_hash ?? [],
     failedLoginCount: row.failed_login_count,
-    lockedUntil: row.locked_until,
+    lockedUntil: row.locked_until === null ? null : new Date(row.locked_until),
   }
 }
 
@@ -310,12 +314,13 @@ export async function consumeLoginChallenge(
 ): Promise<{ ok: true; userId: string } | { ok: false; reason: 'invalid' | 'locked' }> {
   const tokenHash = sha256Hex(rawToken)
   return withContext(anonymousCtx(), async (tx) => {
-    const rows = await tx.raw<{ id: string; user_id: string; expires_at: Date }>(
+    const rows = await tx.raw<{ id: string; user_id: string; expires_at: Date | string }>(
       sql`select id, user_id, expires_at from app.login_challenges
           where token_hash = ${tokenHash} and consumed_at is null`,
     )
     const found = rows[0]
-    if (!found || found.expires_at.getTime() <= Date.now()) return { ok: false, reason: 'invalid' }
+    if (!found || new Date(found.expires_at).getTime() <= Date.now())
+      return { ok: false, reason: 'invalid' }
 
     const security = await selectUserSecurity(tx, found.user_id)
     if (security?.lockedUntil && security.lockedUntil.getTime() > Date.now()) {
@@ -455,11 +460,12 @@ export async function cancelAccountDeletion(userId: string, ctx: AuditCtx): Prom
 
 export async function getPendingDeletion(userId: string): Promise<Date | null> {
   return withContext(anonymousCtx(), async (tx) => {
-    const rows = await tx.raw<{ scheduled_for: Date }>(
+    const rows = await tx.raw<{ scheduled_for: Date | string }>(
       sql`select scheduled_for from app.account_deletion_requests
           where user_id = ${userId} and completed_at is null and cancelled_at is null
           order by requested_at desc limit 1`,
     )
-    return rows[0]?.scheduled_for ?? null
+    const scheduledFor = rows[0]?.scheduled_for
+    return scheduledFor === undefined ? null : new Date(scheduledFor)
   })
 }

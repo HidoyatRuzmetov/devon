@@ -33,6 +33,13 @@ export type Deps = {
   now(): Date
 
   countUsers(): Promise<number>
+  /** Whether any `role = 'super_admin'` user exists yet -- the actual "has this instance been
+   * bootstrapped" question `setupRequired` and `ensureSetupToken()` both need. Deliberately not
+   * `countUsers() === 0`: `pnpm start --demo` seeds dozens of ordinary `head`/`member` users before
+   * the API ever boots (H1, found live -- every demo boot's `setupRequired` was `false` and its
+   * setup link read "already used" even though zero super admins existed and the token was still
+   * unconsumed, because `countUsers()` counts every role, not just this one). */
+  superAdminExists(): Promise<boolean>
   getInstanceSettings(): Promise<InstanceSettingsRecord>
 
   findUserByLogin(login: string): Promise<UserRecord | null>

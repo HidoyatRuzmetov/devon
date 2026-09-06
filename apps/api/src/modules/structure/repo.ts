@@ -454,7 +454,12 @@ type UnitRoleRow = {
   user_id: string
   role: 'head' | 'deputy' | 'member'
   assigned_by: string
-  assigned_at: Date
+  // `tx.raw()` is a plain, un-schema'd SQL query (unlike `tx.drizzle`'s typed builder), so none of
+  // drizzle's own column-level date mapping runs on it -- the node-postgres driver as drizzle
+  // configures it (`node-postgres/session.ts`) hands back TIMESTAMPTZ/TIMESTAMP/DATE columns as raw
+  // strings on that path, never a `Date` (H1: this was `r.assigned_at.toISOString is not a function`
+  // in production, not a type-only mismatch), so this is typed to match reality.
+  assigned_at: Date | string
 }
 
 function toUnitRoleDto(r: UnitRoleRow) {
@@ -464,7 +469,7 @@ function toUnitRoleDto(r: UnitRoleRow) {
     userId: r.user_id,
     role: r.role,
     assignedBy: r.assigned_by,
-    assignedAt: r.assigned_at.toISOString(),
+    assignedAt: new Date(r.assigned_at).toISOString(),
   }
 }
 

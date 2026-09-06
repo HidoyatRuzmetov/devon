@@ -39,9 +39,21 @@ describe('GET /api/v1/instance', () => {
     expect(res.json().locales).toEqual(['uz-Latn', 'uz-Cyrl', 'ru', 'en'])
   })
 
-  it('reports setupRequired=false once a user exists', async () => {
+  // `setupRequired` tracks whether a super admin has ever been bootstrapped, not "any user exists"
+  // (H1, found live via a demo instance: `pnpm start --demo` seeds dozens of ordinary `head`/`member`
+  // users before the API ever boots, which used to make this always report `false` -- the setup
+  // screen read "already used" even with zero super admins and a live, unconsumed token).
+  it('still reports setupRequired=true once an ordinary member exists', async () => {
     const state = createFakeState()
-    await seedUser(state, { login: 'a', password: 'Str0ngExampleValue123' })
+    await seedUser(state, { login: 'a', password: 'Str0ngExampleValue123', role: 'member' })
+    const { app } = await buildTestApp(state)
+    const res = await app.inject({ method: 'GET', url: '/api/v1/instance' })
+    expect(res.json().setupRequired).toBe(true)
+  })
+
+  it('reports setupRequired=false once a super admin exists', async () => {
+    const state = createFakeState()
+    await seedUser(state, { login: 'a', password: 'Str0ngExampleValue123', role: 'super_admin' })
     const { app } = await buildTestApp(state)
     const res = await app.inject({ method: 'GET', url: '/api/v1/instance' })
     expect(res.json().setupRequired).toBe(false)

@@ -102,11 +102,21 @@ type NotificationSqlRow = {
   title: LocalizedText
   body: LocalizedText | null
   deep_link: string | null
-  event_at: Date | null
-  read_at: Date | null
-  archived_at: Date | null
-  snoozed_until: Date | null
-  created_at: Date
+  // `Tx.raw()` is a plain, un-schema'd SQL query -- none of drizzle's own column-level date mapping
+  // runs on it, so the node-postgres driver as drizzle configures it (`node-postgres/session.ts`)
+  // hands back TIMESTAMPTZ columns as raw strings on this path, never a `Date` (confirmed in the
+  // wild: `structure/repo.ts`'s `toUnitRoleDto` threw "assigned_at.toISOString is not a function"
+  // from the exact same pattern). Typed as `Date | string` here to match what actually comes back;
+  // `fromSqlRow` below normalises to real `Date`s so every caller's `.toISOString()` stays valid.
+  event_at: Date | string | null
+  read_at: Date | string | null
+  archived_at: Date | string | null
+  snoozed_until: Date | string | null
+  created_at: Date | string
+}
+
+function toDate(v: Date | string): Date {
+  return v instanceof Date ? v : new Date(v)
 }
 
 function fromSqlRow(r: NotificationSqlRow): NotificationRow {
@@ -120,11 +130,11 @@ function fromSqlRow(r: NotificationSqlRow): NotificationRow {
     title: r.title,
     body: r.body,
     deepLink: r.deep_link,
-    eventAt: r.event_at,
-    readAt: r.read_at,
-    archivedAt: r.archived_at,
-    snoozedUntil: r.snoozed_until,
-    createdAt: r.created_at,
+    eventAt: r.event_at === null ? null : toDate(r.event_at),
+    readAt: r.read_at === null ? null : toDate(r.read_at),
+    archivedAt: r.archived_at === null ? null : toDate(r.archived_at),
+    snoozedUntil: r.snoozed_until === null ? null : toDate(r.snoozed_until),
+    createdAt: toDate(r.created_at),
   }
 }
 
@@ -210,10 +220,16 @@ export async function listNotifications(userId: string, opts: ListOpts): Promise
 }
 
 export async function markRead(ctx: AuditCtx, userId: string, ids: string[]): Promise<number> {
+  if (ids.length === 0) return 0
   return withContext(toRequestContext(ctx, { userId }), async (tx) => {
+    // Drizzle's `sql` template expands an interpolated plain array into a parenthesized value list
+    // (`(el1, el2, ...)`), not a single array-typed bind parameter -- `= any($1::uuid[])` here used to
+    // bind that parenthesized list as one `record` value and fail to cast to `uuid[]` ("cannot cast
+    // type record to uuid[]", confirmed in the wild via the identical bug in `events/repo.ts`). `in`
+    // is exactly the clause that expansion is for.
     const rows = await tx.raw<{ id: string }>(sql`
       update app.notifications set read_at = now()
-      where id = any(${ids}::uuid[]) and read_at is null
+      where id in ${ids} and read_at is null
       returning id
     `)
     if (rows.length > 0)
@@ -250,10 +266,11 @@ export async function archiveNotifications(
   userId: string,
   ids: string[],
 ): Promise<number> {
+  if (ids.length === 0) return 0
   return withContext(toRequestContext(ctx, { userId }), async (tx) => {
     const rows = await tx.raw<{ id: string }>(sql`
       update app.notifications set archived_at = now(), read_at = coalesce(read_at, now())
-      where id = any(${ids}::uuid[]) and archived_at is null
+      where id in ${ids} and archived_at is null
       returning id
     `)
     if (rows.length > 0)
@@ -609,7 +626,7 @@ export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promi
       id: string
       title: LocalizedText
       deep_link: string | null
-      event_at: Date
+      event_at: Date | string
     }>(sql`
       select id, title, deep_link, event_at from app.notifications
       where event_at is not null and event_at >= now() - (${fromDaysAgo} || ' days')::interval
@@ -620,7 +637,7 @@ export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promi
       id: r.id,
       title: r.title,
       deepLink: r.deep_link,
-      eventAt: r.event_at,
+      eventAt: toDate(r.event_at),
     }))
   })
 }

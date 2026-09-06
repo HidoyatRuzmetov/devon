@@ -10,6 +10,7 @@
 // `fixtures.ts` is core's file, not this module's (MODULE-GUIDE.md's touches list) -- this module
 // creates its own department and users the same way `core.ts` creates the foundation's, with its own
 // `demoId(...)` namespace, and never edits `fixtures.ts`/`DEMO_DELETE_ORDER`.
+import { sql } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import * as structureSchema from '../../schema/structure.js'
 import { DEMO_DEPARTMENT, DEMO_USERS, demoPasswordHash } from '../fixtures.js'
@@ -111,32 +112,6 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .onConflictDoNothing()
     .returning({ id: schema.users.id })
 
-  const insertedDepartments = await tx.drizzle
-    .insert(schema.departments)
-    .values({
-      id: ATI_DEPARTMENT_ID,
-      name: 'Axborot-tahlil va ijro intizomi boshqarmasi',
-      slug: 'axborot-tahlil-va-ijro',
-      localeDefault: 'uz-Latn',
-      createdAt: new Date('2026-08-10T07:00:00Z'),
-    })
-    .onConflictDoNothing()
-    .returning({ id: schema.departments.id })
-
-  const insertedMemberships = await tx.drizzle
-    .insert(schema.memberships)
-    .values(
-      ATI_USERS.map((u) => ({
-        id: demoId(`structure.membership.${u.login}`),
-        departmentId: ATI_DEPARTMENT_ID,
-        userId: u.id,
-        role: u.membershipRole,
-        joinedAt: new Date('2026-08-10T07:00:00Z'),
-      })),
-    )
-    .onConflictDoNothing()
-    .returning({ id: schema.memberships.id })
-
   const rahimov = ATI_USERS[0]!.id
   const tosheva = ATI_USERS[1]!.id
   const nazarov = ATI_USERS[2]!.id
@@ -144,43 +119,162 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   const qodirov = ATI_USERS[4]!.id
   const ergasheva = ATI_USERS[5]!.id
 
-  const insertedUnits = await tx.drizzle
+  // RLS (`units_scope`/`unit_roles_scope`/`departments`/`memberships`, 0005_rls.sql & 0200_structure.sql)
+  // checks every row against the single `app.department_id` GUC live on this connection right now --
+  // it cannot straddle two departments in one statement. This module writes into *two* departments
+  // (a brand-new "Axborot-tahlil..." department, and the foundation's own demo department from
+  // `core.ts`), on the one shared `tx` every seed module runs on (`demo.ts`), so each department's
+  // rows must be its own statement, wrapped by flipping the GUC to that department's id and back --
+  // exactly like `departments.ts`'s `createDepartmentWithHead` (see that file's header for the fuller
+  // explanation of why a fresh `withContext()` here would not work either: MVCC visibility does not
+  // cross Postgres sessions, and `core.ts`'s/`accounts.ts`'s users and department for this run are
+  // still uncommitted on the *shared* connection alone).
+  const atiRowsWritten = await (async () => {
+    await tx.raw(sql`select set_config('app.department_id', ${ATI_DEPARTMENT_ID}, true)`)
+    try {
+      return await seedAtiDepartment()
+    } finally {
+      await tx.raw(sql`select set_config('app.department_id', ${DEMO_DEPARTMENT.id}, true)`)
+    }
+  })()
+
+  async function seedAtiDepartment(): Promise<number> {
+    const insertedDepartments = await tx.drizzle
+      .insert(schema.departments)
+      .values({
+        id: ATI_DEPARTMENT_ID,
+        name: 'Axborot-tahlil va ijro intizomi boshqarmasi',
+        slug: 'axborot-tahlil-va-ijro',
+        localeDefault: 'uz-Latn',
+        createdAt: new Date('2026-08-10T07:00:00Z'),
+      })
+      .onConflictDoNothing()
+      .returning({ id: schema.departments.id })
+
+    const insertedMemberships = await tx.drizzle
+      .insert(schema.memberships)
+      .values(
+        ATI_USERS.map((u) => ({
+          id: demoId(`structure.membership.${u.login}`),
+          departmentId: ATI_DEPARTMENT_ID,
+          userId: u.id,
+          role: u.membershipRole,
+          joinedAt: new Date('2026-08-10T07:00:00Z'),
+        })),
+      )
+      .onConflictDoNothing()
+      .returning({ id: schema.memberships.id })
+
+    const insertedUnits = await tx.drizzle
+      .insert(structureSchema.units)
+      .values([
+        {
+          id: U_ANALYTICS,
+          departmentId: ATI_DEPARTMENT_ID,
+          parentUnitId: null,
+          name: 'Axborot-tahlil boʻlimi',
+          colour: 6,
+          sort: 0,
+          path: path(U_ANALYTICS),
+          createdBy: rahimov,
+          createdAt: new Date('2026-08-11T08:00:00Z'),
+        },
+        {
+          id: U_MONITORING,
+          departmentId: ATI_DEPARTMENT_ID,
+          parentUnitId: U_ANALYTICS,
+          name: 'Monitoring guruhi',
+          colour: 5,
+          sort: 0,
+          path: path(U_ANALYTICS, U_MONITORING),
+          createdBy: tosheva,
+          createdAt: new Date('2026-08-12T09:30:00Z'),
+        },
+        {
+          id: U_EXECUTION,
+          departmentId: ATI_DEPARTMENT_ID,
+          parentUnitId: null,
+          name: 'Ijro intizomi boʻlimi',
+          colour: 2,
+          sort: 1,
+          path: path(U_EXECUTION),
+          createdBy: rahimov,
+          createdAt: new Date('2026-08-11T08:05:00Z'),
+        },
+      ])
+      .onConflictDoNothing()
+      .returning({ id: structureSchema.units.id })
+
+    const insertedUnitRoles = await tx.drizzle
+      .insert(structureSchema.unitRoles)
+      .values([
+        // Self-assigned (assignedBy === userId): Madina claims headship of Axborot-tahlil bo'limi.
+        {
+          id: demoId('structure.unit-role.tosheva-head'),
+          departmentId: ATI_DEPARTMENT_ID,
+          unitId: U_ANALYTICS,
+          userId: tosheva,
+          role: 'head',
+          assignedBy: tosheva,
+          assignedAt: new Date('2026-08-12T09:00:00Z'),
+        },
+        {
+          id: demoId('structure.unit-role.nazarov-deputy'),
+          departmentId: ATI_DEPARTMENT_ID,
+          unitId: U_ANALYTICS,
+          userId: nazarov,
+          role: 'deputy',
+          assignedBy: tosheva,
+          assignedAt: new Date('2026-08-13T10:00:00Z'),
+        },
+        // Self-assigned into the sub-bo'lim, as a plain member.
+        {
+          id: demoId('structure.unit-role.qodirov-member'),
+          departmentId: ATI_DEPARTMENT_ID,
+          unitId: U_MONITORING,
+          userId: qodirov,
+          role: 'member',
+          assignedBy: qodirov,
+          assignedAt: new Date('2026-08-14T11:00:00Z'),
+        },
+        // Department head assigns Zarina as head of the second bo'lim (design.md: "head can assign
+        // others").
+        {
+          id: demoId('structure.unit-role.ergasheva-head'),
+          departmentId: ATI_DEPARTMENT_ID,
+          unitId: U_EXECUTION,
+          userId: ergasheva,
+          role: 'head',
+          assignedBy: rahimov,
+          assignedAt: new Date('2026-08-15T12:00:00Z'),
+        },
+        {
+          id: demoId('structure.unit-role.yoqubova-member'),
+          departmentId: ATI_DEPARTMENT_ID,
+          unitId: U_EXECUTION,
+          userId: yoqubova,
+          role: 'member',
+          assignedBy: yoqubova,
+          assignedAt: new Date('2026-08-16T13:00:00Z'),
+        },
+      ])
+      .onConflictDoNothing()
+      .returning({ id: structureSchema.unitRoles.id })
+
+    return (
+      insertedDepartments.length +
+      insertedMemberships.length +
+      insertedUnits.length +
+      insertedUnitRoles.length
+    )
+  }
+
+  // The flat department (foundation's own demo department): two sibling bo'limlar, deliberately zero
+  // unit-head assignments -- proves the org chart renders a complete, headless department too. GUC is
+  // already back to `DEMO_DEPARTMENT.id` from the `finally` above.
+  const insertedFlatUnits = await tx.drizzle
     .insert(structureSchema.units)
     .values([
-      {
-        id: U_ANALYTICS,
-        departmentId: ATI_DEPARTMENT_ID,
-        parentUnitId: null,
-        name: 'Axborot-tahlil boʻlimi',
-        colour: 6,
-        sort: 0,
-        path: path(U_ANALYTICS),
-        createdBy: rahimov,
-        createdAt: new Date('2026-08-11T08:00:00Z'),
-      },
-      {
-        id: U_MONITORING,
-        departmentId: ATI_DEPARTMENT_ID,
-        parentUnitId: U_ANALYTICS,
-        name: 'Monitoring guruhi',
-        colour: 5,
-        sort: 0,
-        path: path(U_ANALYTICS, U_MONITORING),
-        createdBy: tosheva,
-        createdAt: new Date('2026-08-12T09:30:00Z'),
-      },
-      {
-        id: U_EXECUTION,
-        departmentId: ATI_DEPARTMENT_ID,
-        parentUnitId: null,
-        name: 'Ijro intizomi boʻlimi',
-        colour: 2,
-        sort: 1,
-        path: path(U_EXECUTION),
-        createdBy: rahimov,
-        createdAt: new Date('2026-08-11T08:05:00Z'),
-      },
-      // The flat department: two sibling bo'limlar, deliberately zero unit-head assignments below.
       {
         id: F_SUPPORT,
         departmentId: DEMO_DEPARTMENT.id,
@@ -207,61 +301,12 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .onConflictDoNothing()
     .returning({ id: structureSchema.units.id })
 
-  const insertedUnitRoles = await tx.drizzle
+  // Flat department: `demo.xodim` self-assigns into "Kontent" as a plain member -- no head, by
+  // design, to prove the org chart renders a headless bo'lim correctly. `demo.boshliq` is left
+  // unassigned to any unit, to prove the People page's "unassigned" bucket too.
+  const insertedFlatUnitRoles = await tx.drizzle
     .insert(structureSchema.unitRoles)
     .values([
-      // Self-assigned (assignedBy === userId): Madina claims headship of Axborot-tahlil bo'limi.
-      {
-        id: demoId('structure.unit-role.tosheva-head'),
-        departmentId: ATI_DEPARTMENT_ID,
-        unitId: U_ANALYTICS,
-        userId: tosheva,
-        role: 'head',
-        assignedBy: tosheva,
-        assignedAt: new Date('2026-08-12T09:00:00Z'),
-      },
-      {
-        id: demoId('structure.unit-role.nazarov-deputy'),
-        departmentId: ATI_DEPARTMENT_ID,
-        unitId: U_ANALYTICS,
-        userId: nazarov,
-        role: 'deputy',
-        assignedBy: tosheva,
-        assignedAt: new Date('2026-08-13T10:00:00Z'),
-      },
-      // Self-assigned into the sub-bo'lim, as a plain member.
-      {
-        id: demoId('structure.unit-role.qodirov-member'),
-        departmentId: ATI_DEPARTMENT_ID,
-        unitId: U_MONITORING,
-        userId: qodirov,
-        role: 'member',
-        assignedBy: qodirov,
-        assignedAt: new Date('2026-08-14T11:00:00Z'),
-      },
-      // Department head assigns Zarina as head of the second bo'lim (design.md: "head can assign
-      // others").
-      {
-        id: demoId('structure.unit-role.ergasheva-head'),
-        departmentId: ATI_DEPARTMENT_ID,
-        unitId: U_EXECUTION,
-        userId: ergasheva,
-        role: 'head',
-        assignedBy: rahimov,
-        assignedAt: new Date('2026-08-15T12:00:00Z'),
-      },
-      {
-        id: demoId('structure.unit-role.yoqubova-member'),
-        departmentId: ATI_DEPARTMENT_ID,
-        unitId: U_EXECUTION,
-        userId: yoqubova,
-        role: 'member',
-        assignedBy: yoqubova,
-        assignedAt: new Date('2026-08-16T13:00:00Z'),
-      },
-      // Flat department: `demo.xodim` self-assigns into "Kontent" as a plain member -- no head, by
-      // design, to prove the org chart renders a headless bo'lim correctly. `demo.boshliq` is left
-      // unassigned to any unit, to prove the People page's "unassigned" bucket too.
       {
         id: demoId('structure.unit-role.xodim-member'),
         departmentId: DEMO_DEPARTMENT.id,
@@ -276,10 +321,6 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .returning({ id: structureSchema.unitRoles.id })
 
   return (
-    insertedUsers.length +
-    insertedDepartments.length +
-    insertedMemberships.length +
-    insertedUnits.length +
-    insertedUnitRoles.length
+    insertedUsers.length + atiRowsWritten + insertedFlatUnits.length + insertedFlatUnitRoles.length
   )
 }

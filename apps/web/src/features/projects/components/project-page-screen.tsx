@@ -27,7 +27,11 @@ import {
 function useProjectCards(title: string | undefined) {
   return useQuery({
     queryKey: ['projects', 'cards', title],
-    queryFn: async () => (await fetchCards({ q: `project:"${title}"`, limit: 300 })).items,
+    // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
+    // max(100)`) -- asking for 300 always got a flat 422 (H1: confirmed live, every project page's
+    // task list silently rendered "0/0" instead of erroring loudly). A project outgrowing 100 open
+    // objective+subjective cards needs real pagination here, not a bigger magic number to outrun.
+    queryFn: async () => (await fetchCards({ q: `project:"${title}"`, limit: 100 })).items,
     enabled: Boolean(title),
   })
 }

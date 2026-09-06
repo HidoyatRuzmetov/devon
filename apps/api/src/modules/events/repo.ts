@@ -42,6 +42,37 @@ export type EventRow = {
   organizer_family_name: string
 }
 
+// What `EVENT_SELECT` actually comes back as over `Tx.raw()`: a plain, un-schema'd SQL query, so none
+// of drizzle's own column-level date mapping runs on it -- the node-postgres driver as drizzle
+// configures it (`node-postgres/session.ts`) hands back TIMESTAMPTZ columns as raw strings on this
+// path, never a `Date` (confirmed in the wild by `structure/repo.ts`'s identical bug: "assigned_at.
+// toISOString is not a function"). `service.ts` calls `.toISOString()` on every one of `EventRow`'s
+// date fields, so those must be real `Date`s by the time a row leaves this file -- `toEventRow` below
+// normalises immediately after each query, at every one of this type's three producers.
+type EventSqlRow = Omit<
+  EventRow,
+  'starts_at' | 'ends_at' | 'rsvp_deadline' | 'cancelled_at' | 'created_at' | 'updated_at'
+> & {
+  starts_at: Date | string
+  ends_at: Date | string
+  rsvp_deadline: Date | string | null
+  cancelled_at: Date | string | null
+  created_at: Date | string
+  updated_at: Date | string
+}
+
+function toEventRow(r: EventSqlRow): EventRow {
+  return {
+    ...r,
+    starts_at: new Date(r.starts_at),
+    ends_at: new Date(r.ends_at),
+    rsvp_deadline: r.rsvp_deadline === null ? null : new Date(r.rsvp_deadline),
+    cancelled_at: r.cancelled_at === null ? null : new Date(r.cancelled_at),
+    created_at: new Date(r.created_at),
+    updated_at: new Date(r.updated_at),
+  }
+}
+
 const EVENT_SELECT = sql`
   select e.id, e.department_id, e.title, e.description, e.category, e.illustration_key,
          e.starts_at, e.ends_at, e.timezone, e.place, e.place_url, e.capacity, e.waitlist_enabled,
@@ -53,10 +84,10 @@ const EVENT_SELECT = sql`
 `
 
 export async function getEventRow(tx: Tx, eventId: string): Promise<EventRow | null> {
-  const rows = await tx.raw<EventRow>(
+  const rows = await tx.raw<EventSqlRow>(
     sql`${EVENT_SELECT} where e.id = ${eventId} and e.deleted_at is null`,
   )
-  return rows[0] ?? null
+  return rows[0] ? toEventRow(rows[0]) : null
 }
 
 export async function listEventRows(
@@ -65,19 +96,20 @@ export async function listEventRows(
 ): Promise<EventRow[]> {
   const from = opts.from ?? null
   const to = opts.to ?? null
-  return tx.raw<EventRow>(sql`
+  const rows = await tx.raw<EventSqlRow>(sql`
     ${EVENT_SELECT}
     where e.deleted_at is null
       and (${from}::timestamptz is null or e.ends_at >= ${from})
       and (${to}::timestamptz is null or e.starts_at <= ${to})
     order by e.starts_at asc
   `)
+  return rows.map(toEventRow)
 }
 
 /** The signed-in user's own combined calendar feed (TECH-SPEC §3.4: "ICS ... per person") -- every
  * event they RSVPed yes or maybe to, past or future, excluding cancelled events. */
 export async function listMyIcsEvents(tx: Tx, userId: string): Promise<EventRow[]> {
-  return tx.raw<EventRow>(sql`
+  const rows = await tx.raw<EventSqlRow>(sql`
     ${EVENT_SELECT}
     where e.deleted_at is null and e.status <> 'cancelled'
       and exists (
@@ -86,6 +118,7 @@ export async function listMyIcsEvents(tx: Tx, userId: string): Promise<EventRow[
       )
     order by e.starts_at asc
   `)
+  return rows.map(toEventRow)
 }
 
 export type NewEvent = {
@@ -218,7 +251,7 @@ export async function getRsvpCountsForEvents(
       coalesce(sum(case when status = 'yes' then 1 + guests else 0 end), 0)::int as going_units,
       count(*) filter (where status = 'maybe')::int as maybe_count,
       count(*) filter (where status = 'waitlist')::int as waitlist_count
-    from app.event_rsvps where event_id = any(${eventIds}::uuid[]) group by event_id
+    from app.event_rsvps where event_id in ${eventIds} group by event_id
   `)
 }
 
@@ -237,7 +270,7 @@ export async function getMyRsvpsForEvents(
   if (eventIds.length === 0) return []
   return tx.raw<MyRsvpForEventRow>(sql`
     select event_id, status, guests, note from app.event_rsvps
-    where event_id = any(${eventIds}::uuid[]) and user_id = ${userId}
+    where event_id in ${eventIds} and user_id = ${userId}
   `)
 }
 
@@ -305,7 +338,7 @@ export async function listWaitlistedRsvps(
 export async function promoteRsvps(tx: Tx, ids: readonly string[]): Promise<void> {
   if (ids.length === 0) return
   await tx.raw(sql`
-    update app.event_rsvps set status = 'yes', changed_at = now() where id = any(${ids}::uuid[])
+    update app.event_rsvps set status = 'yes', changed_at = now() where id in ${ids}
   `)
 }
 
@@ -495,7 +528,7 @@ export async function promoteCarpoolSeats(
   if (userIds.length === 0) return
   await tx.raw(sql`
     update app.carpool_seats set status = 'confirmed'
-    where carpool_id = ${carpoolId} and user_id = any(${userIds}::uuid[])
+    where carpool_id = ${carpoolId} and user_id in ${userIds}
   `)
 }
 

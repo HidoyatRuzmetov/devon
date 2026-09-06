@@ -27,7 +27,7 @@
 import { randomBytes } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { hash } from '@node-rs/argon2'
-import { withContext } from '../../context.js'
+import type { Tx } from '../../context.js'
 import * as schema from '../../schema/index.js'
 import { DEMO_DEPARTMENT } from '../fixtures.js'
 import { demoId } from '../ids.js'
@@ -76,67 +76,69 @@ const NEW_DEPARTMENTS: NewDeptSpec[] = [
 const CORE_EXTRA_MEMBER_INDEXES = Array.from({ length: 10 }, (_, i) => i + 26) // 26..35
 const PENDING_REQUEST_USER_INDEX = 36
 
-async function createDepartmentWithHead(spec: NewDeptSpec): Promise<number> {
+/**
+ * Writes on the *shared* `tx` (same connection, same still-open transaction as every other seed
+ * module -- see file header): `accounts.ts` (order 10) inserted this department's head/member users
+ * into that same transaction, and MVCC visibility does not cross Postgres sessions, so a second,
+ * independently-opened connection here could never see those still-uncommitted rows (the
+ * `memberships_user_id_fkey` violation this used to throw). Instead we flip the `app.department_id`
+ * GUC to this department's id for the duration of these writes -- `SET LOCAL` semantics
+ * (`set_config(..., true)`), same transaction, so it does not leak past commit -- and restore it to
+ * `DEMO_DEPARTMENT.id` before returning so the rest of `seed()` (and every module after this one)
+ * still sees the original department in scope.
+ */
+async function createDepartmentWithHead(tx: Tx, spec: NewDeptSpec): Promise<number> {
   const departmentId = demoId(spec.key)
   const headUserId = extraUserId(EXTRA_USERS[spec.headIndex]!)
   const joinKey = generateJoinKey()
   const joinPasswordHash = await hash(generateJoinPassword())
 
-  return withContext(
-    {
-      requestId: `seed-departments-${spec.key}`,
-      userId: null,
-      actorRole: 'super_admin',
+  await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
+  try {
+    let rows = 0
+
+    const insertedDept = await tx.drizzle
+      .insert(schema.departments)
+      .values({ id: departmentId, name: spec.name, slug: spec.slug, localeDefault: 'uz-Latn' })
+      .onConflictDoNothing()
+      .returning({ id: schema.departments.id })
+    rows += insertedDept.length
+
+    if (insertedDept.length > 0) {
+      await tx.raw(
+        sql`update app.departments
+            set join_key = ${joinKey}, join_password_hash = ${joinPasswordHash}, join_requires_approval = false
+            where id = ${departmentId}`,
+      )
+    }
+
+    const membershipRows = [
+      { id: demoId(`membership.${spec.key}.head`), userId: headUserId, role: 'head' as const },
+      ...spec.memberIndexes.map((idx) => ({
+        id: demoId(`membership.${spec.key}.member.${idx}`),
+        userId: extraUserId(EXTRA_USERS[idx]!),
+        role: 'member' as const,
+      })),
+    ]
+    const insertedMemberships = await tx.drizzle
+      .insert(schema.memberships)
+      .values(membershipRows.map((m) => ({ ...m, departmentId })))
+      .onConflictDoNothing()
+      .returning({ id: schema.memberships.id })
+    rows += insertedMemberships.length
+
+    tx.audit({
+      action: 'departments.demo_seeded',
+      subjectType: 'department',
+      subjectId: departmentId,
       departmentId,
-      actingForUserId: null,
-      viewAs: false,
-      ip: '127.0.0.1',
-      userAgent: 'devon-seed/departments',
-    },
-    async (tx) => {
-      let rows = 0
+      after: { name: spec.name, joinKey },
+    })
 
-      const insertedDept = await tx.drizzle
-        .insert(schema.departments)
-        .values({ id: departmentId, name: spec.name, slug: spec.slug, localeDefault: 'uz-Latn' })
-        .onConflictDoNothing()
-        .returning({ id: schema.departments.id })
-      rows += insertedDept.length
-
-      if (insertedDept.length > 0) {
-        await tx.raw(
-          sql`update app.departments
-              set join_key = ${joinKey}, join_password_hash = ${joinPasswordHash}, join_requires_approval = false
-              where id = ${departmentId}`,
-        )
-      }
-
-      const membershipRows = [
-        { id: demoId(`membership.${spec.key}.head`), userId: headUserId, role: 'head' as const },
-        ...spec.memberIndexes.map((idx) => ({
-          id: demoId(`membership.${spec.key}.member.${idx}`),
-          userId: extraUserId(EXTRA_USERS[idx]!),
-          role: 'member' as const,
-        })),
-      ]
-      const insertedMemberships = await tx.drizzle
-        .insert(schema.memberships)
-        .values(membershipRows.map((m) => ({ ...m, departmentId })))
-        .onConflictDoNothing()
-        .returning({ id: schema.memberships.id })
-      rows += insertedMemberships.length
-
-      tx.audit({
-        action: 'departments.demo_seeded',
-        subjectType: 'department',
-        subjectId: departmentId,
-        departmentId,
-        after: { name: spec.name, joinKey },
-      })
-
-      return rows
-    },
-  )
+    return rows
+  } finally {
+    await tx.raw(sql`select set_config('app.department_id', ${DEMO_DEPARTMENT.id}, true)`)
+  }
 }
 
 export async function seed(ctx: SeedModuleContext): Promise<number> {
@@ -146,7 +148,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   // The two new departments each need their own transaction (see file header) -- sequential, not
   // Promise.all, so a duplicate-slug race between them can never happen even though their ids differ.
   for (const spec of NEW_DEPARTMENTS) {
-    rows += await createDepartmentWithHead(spec)
+    rows += await createDepartmentWithHead(tx, spec)
   }
 
   // The existing demo department (core.ts, order 0) gets its own invite fields via the shared `tx`,

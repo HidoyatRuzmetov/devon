@@ -109,6 +109,42 @@ function toGuc(value: string | null | undefined): string {
   return value ?? ''
 }
 
+// Postgres OIDs for `timestamp`/`timestamptz` only (`select oid, typname from pg_type where typname
+// in ('timestamp','timestamptz')` -- stable, built-in system OIDs, never per-database). Deliberately
+// NOT `date` (OID 1082): plain `date` columns (`projects.start_on`/`target_on`, ...) are modelled
+// end to end as bare `YYYY-MM-DD` strings -- `schemas.ts`'s `z.string()`, not `z.coerce.date()` --
+// reviving those to real `Date`s here would break their response schemas the same way leaving
+// `timestamptz` unrevived breaks everything below. Drizzle's own node-postgres driver setup
+// (`drizzle-orm/node-postgres/session.ts`) deliberately overrides the node-postgres type parser for
+// timestamp-shaped OIDs to hand back the server's raw text instead of a parsed `Date` -- correct for
+// drizzle's *typed* query builder (`Tx.drizzle`), which does its own column-aware parsing afterwards,
+// but `Tx.raw()` has no column metadata to parse *with*, so every caller across the codebase that
+// types a raw row's timestamp column as `Date` (there are dozens -- `structure/repo.ts`'s
+// `assigned_at`, `events/repo.ts`'s `starts_at`, `accounts/repo.ts`'s `expires_at`, ...) was actually
+// holding a string at runtime and crashing the first time it called `.toISOString()`/`.getTime()`
+// (H1, found live: "assigned_at.toISOString is not a function"). Fixed once, here, using the query
+// result's own field metadata (`pg`'s `QueryResult.fields[].dataTypeID`) to convert exactly the
+// columns Postgres itself says are timestamp/timestamptz -- never a string-shape guess -- so every
+// existing `Date`-typed raw row genuinely is one from this point on.
+const TIMESTAMP_OIDS = new Set([1114, 1184]) // timestamp, timestamptz
+
+function reviveTimestamps<R>(
+  rows: R[],
+  fields: readonly { name: string; dataTypeID: number }[] | undefined,
+): R[] {
+  if (!fields || fields.length === 0 || rows.length === 0) return rows
+  const dateColumns = fields.filter((f) => TIMESTAMP_OIDS.has(f.dataTypeID)).map((f) => f.name)
+  if (dateColumns.length === 0) return rows
+  for (const row of rows) {
+    const record = row as Record<string, unknown>
+    for (const col of dateColumns) {
+      const value = record[col]
+      if (typeof value === 'string') record[col] = new Date(value)
+    }
+  }
+  return rows
+}
+
 export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promise<T>): Promise<T> {
   const client: PoolClient = await getPool().connect()
   try {
@@ -152,7 +188,7 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
         async raw<R = unknown>(query: SQL): Promise<R[]> {
           await assertContextEstablished()
           const result = await db.execute(query)
-          return [...result.rows] as R[]
+          return reviveTimestamps([...result.rows], result.fields) as R[]
         },
         audit(event) {
           auditQueue.push(event)
