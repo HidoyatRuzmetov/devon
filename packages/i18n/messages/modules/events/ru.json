@@ -1,0 +1,239 @@
+{
+  "events": {
+    "title": "Мероприятия",
+    "view": {
+      "list": "Список",
+      "calendar": "Календарь"
+    },
+    "actions": {
+      "create": "Создать мероприятие",
+      "edit": "Редактировать",
+      "save": "Сохранить",
+      "cancelEvent": "Отменить мероприятие",
+      "close": "Закрыть",
+      "retry": "Повторить",
+      "back": "Назад"
+    },
+    "empty": {
+      "title": "Пока нет мероприятий",
+      "body": "Создайте первое мероприятие для своей команды.",
+      "action": "Создать мероприятие"
+    },
+    "loading": {
+      "title": "Загрузка мероприятий"
+    },
+    "error": {
+      "title": "Не удалось загрузить мероприятия",
+      "body": "Что-то пошло не так. Попробуйте ещё раз."
+    },
+    "forbidden": {
+      "title": "Нет доступа",
+      "body": "Чтобы видеть мероприятия, нужно быть участником отдела."
+    },
+    "offline": {
+      "title": "Нет соединения",
+      "body": "Список мероприятий обновится, когда появится интернет."
+    },
+    "category": {
+      "team_building": "Тимбилдинг",
+      "sports": "Спорт",
+      "volunteering": "Волонтёрство",
+      "social": "Общение",
+      "training": "Обучение",
+      "family": "Семейное",
+      "other": "Другое"
+    },
+    "status": {
+      "draft": "Черновик",
+      "open": "Открыто",
+      "full": "Мест нет",
+      "cancelled": "Отменено",
+      "done": "Завершено"
+    },
+    "card": {
+      "organizer": "Организатор: {name}",
+      "going": "Идут: {count}",
+      "waitlisted": "В очереди: {count}",
+      "capacity": "{going} / {capacity} мест",
+      "unlimitedCapacity": "Количество мест не ограничено",
+      "deadline": "Регистрация до: {date}",
+      "cancelledBanner": "Это мероприятие отменено",
+      "cancelledReason": "Причина: {reason}",
+      "doneBanner": "Это мероприятие завершено"
+    },
+    "form": {
+      "titleLabel": "Название мероприятия",
+      "titlePlaceholder": "Например, осенний командный пикник",
+      "descriptionLabel": "Описание",
+      "descriptionPlaceholder": "Коротко расскажите о мероприятии",
+      "categoryLabel": "Категория",
+      "startsAtLabel": "Начало",
+      "endsAtLabel": "Окончание",
+      "placeLabel": "Место",
+      "placePlaceholder": "Например, зал совещаний отдела",
+      "placeUrlLabel": "Ссылка на место",
+      "capacityLabel": "Количество мест",
+      "capacityPlaceholder": "Без ограничения",
+      "waitlistEnabledLabel": "Открыть очередь, если мест не останется",
+      "rsvpDeadlineLabel": "Срок регистрации",
+      "costNoteLabel": "Заметка о расходах",
+      "costNotePlaceholder": "Например, транспорт за счёт отдела",
+      "remindersLabel": "Напоминания",
+      "reminderDayBefore": "за 1 день",
+      "reminderHourBefore": "за 1 час",
+      "submitCreate": "Создать мероприятие",
+      "submitUpdate": "Сохранить изменения",
+      "validation": {
+        "endsBeforeStarts": "Окончание должно быть позже начала"
+      }
+    },
+    "diff": {
+      "title": "Что изменилось",
+      "field": {
+        "title": "Название",
+        "startsAt": "Начало",
+        "endsAt": "Окончание",
+        "place": "Место",
+        "placeUrl": "Ссылка на место",
+        "capacity": "Количество мест",
+        "costNote": "Заметка о расходах",
+        "description": "Описание"
+      }
+    },
+    "cancelDialog": {
+      "title": "Отменить мероприятие",
+      "body": "Всем зарегистрированным сотрудникам придёт уведомление. Это действие необратимо.",
+      "reasonLabel": "Причина",
+      "reasonPlaceholder": "Объясните сотрудникам, что произошло",
+      "confirm": "Да, отменить",
+      "keepEvent": "Нет, оставить"
+    },
+    "rsvp": {
+      "title": "Вы участвуете?",
+      "status": {
+        "yes": "Да, приду",
+        "no": "Не приду",
+        "maybe": "Возможно",
+        "waitlist": "В очереди"
+      },
+      "guestsLabel": "Количество гостей",
+      "noteLabel": "Комментарий (необязательно)",
+      "notePlaceholder": "Например, аллергия или другая заметка",
+      "submit": "Отправить",
+      "update": "Обновить",
+      "deadlinePassed": "Срок регистрации истёк",
+      "eventFull": "Мест нет -- вы добавлены в очередь",
+      "confirmedToast": "Ваше участие зафиксировано",
+      "waitlistedToast": "Мест нет -- вы поставлены в очередь",
+      "myStatus": "Ваш ответ: {status}",
+      "notYet": "Вы ещё не ответили"
+    },
+    "attendees": {
+      "title": "Участники",
+      "empty": "Пока никто не ответил",
+      "guestsSuffix": "+{count} гостей"
+    },
+    "comments": {
+      "title": "Обсуждение",
+      "empty": "Пока нет комментариев. Будьте первым.",
+      "placeholder": "Напишите комментарий",
+      "submit": "Отправить",
+      "delete": "Удалить",
+      "deleteConfirm": "Удалить комментарий?"
+    },
+    "carpool": {
+      "title": "Совместные поездки",
+      "empty": "Пока нет предложений по совместной поездке",
+      "offer": "Предложить машину",
+      "seatsLabel": "Свободные места",
+      "departurePlaceLabel": "Место отправления",
+      "departureAtLabel": "Время отправления",
+      "noteLabel": "Комментарий",
+      "driver": "Водитель: {name}",
+      "seatsTaken": "{claimed} / {seats} мест занято",
+      "claim": "Занять место",
+      "release": "Отказаться",
+      "waitlisted": "В очереди",
+      "confirmed": "Подтверждено",
+      "passengers": "Пассажиры",
+      "driverCannotClaim": "Водитель не может занять место в своей же поездке",
+      "cancelled": "Это предложение отменено"
+    },
+    "items": {
+      "title": "Кто что приносит",
+      "empty": "Список пока пуст",
+      "add": "Добавить пункт",
+      "labelPlaceholder": "Например, чай и печенье",
+      "quantityLabel": "Количество",
+      "claim": "Я принесу",
+      "release": "Отказаться",
+      "claimedBy": "Принесёт: {name}",
+      "claimedByMe": "Вы принесёте это",
+      "alreadyClaimed": "Этот пункт уже занят другим сотрудником"
+    },
+    "polls": {
+      "title": "Опросы",
+      "empty": "Пока нет опросов",
+      "create": "Создать опрос",
+      "kindLabel": "Тип",
+      "kind": {
+        "date": "Выбор даты",
+        "single": "Один вариант",
+        "multi": "Несколько вариантов"
+      },
+      "questionLabel": "Вопрос",
+      "questionPlaceholder": "Например, какая дата подходит для пикника?",
+      "anonymousLabel": "Анонимное голосование",
+      "closesAtLabel": "Завершение",
+      "optionsLabel": "Варианты",
+      "optionPlaceholder": "Текст варианта",
+      "addOption": "Добавить вариант",
+      "removeOption": "Убрать",
+      "vote": "Проголосовать",
+      "changeVote": "Изменить голос",
+      "totalVotes": "Голосов: {count}",
+      "closed": "Завершён",
+      "yourVote": "Ваш голос",
+      "createdBy": "Создал(а): {name}"
+    },
+    "photos": {
+      "title": "Фотографии",
+      "empty": "Пока нет фотографий",
+      "add": "Добавить ссылку",
+      "urlLabel": "Ссылка на изображение",
+      "captionLabel": "Подпись (необязательно)",
+      "delete": "Удалить"
+    },
+    "feedback": {
+      "title": "Отзывы",
+      "empty": "Пока нет отзывов",
+      "ratingLabel": "Оценка",
+      "commentLabel": "Комментарий (необязательно)",
+      "anonymousLabel": "Оставить анонимно",
+      "submit": "Отправить",
+      "update": "Обновить",
+      "average": "Средняя оценка: {rating} из 5",
+      "yours": "Ваша оценка",
+      "anonymousAuthor": "Анонимно",
+      "thankYou": "Спасибо за отзыв"
+    },
+    "ics": {
+      "exportEvent": "Добавить в календарь (.ics)",
+      "exportMine": "Мои мероприятия (.ics)"
+    },
+    "tabs": {
+      "overview": "Обзор",
+      "rsvp": "Участие",
+      "carpool": "Поездки",
+      "items": "Пункты",
+      "polls": "Опросы",
+      "photos": "Фото",
+      "feedback": "Отзывы",
+      "comments": "Обсуждение"
+    },
+    "filters": {
+      "from": "С",
+      "to": "По"
+    }
+  }
+}

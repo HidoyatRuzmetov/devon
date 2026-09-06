@@ -1,0 +1,239 @@
+{
+  "events": {
+    "title": "Events",
+    "view": {
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "actions": {
+      "create": "Create event",
+      "edit": "Edit",
+      "save": "Save",
+      "cancelEvent": "Cancel event",
+      "close": "Close",
+      "retry": "Retry",
+      "back": "Back"
+    },
+    "empty": {
+      "title": "No events yet",
+      "body": "Create the first event for your team.",
+      "action": "Create event"
+    },
+    "loading": {
+      "title": "Loading events"
+    },
+    "error": {
+      "title": "Couldn't load events",
+      "body": "Something went wrong. Please try again."
+    },
+    "forbidden": {
+      "title": "No access",
+      "body": "You need to be a member of the department to see events."
+    },
+    "offline": {
+      "title": "No connection",
+      "body": "The event list will update once you're back online."
+    },
+    "category": {
+      "team_building": "Team building",
+      "sports": "Sports",
+      "volunteering": "Volunteering",
+      "social": "Social",
+      "training": "Training",
+      "family": "Family",
+      "other": "Other"
+    },
+    "status": {
+      "draft": "Draft",
+      "open": "Open",
+      "full": "Full",
+      "cancelled": "Cancelled",
+      "done": "Done"
+    },
+    "card": {
+      "organizer": "Organiser: {name}",
+      "going": "{count} going",
+      "waitlisted": "{count} waitlisted",
+      "capacity": "{going} / {capacity} spots",
+      "unlimitedCapacity": "No capacity limit",
+      "deadline": "RSVP by {date}",
+      "cancelledBanner": "This event was cancelled",
+      "cancelledReason": "Reason: {reason}",
+      "doneBanner": "This event is done"
+    },
+    "form": {
+      "titleLabel": "Event title",
+      "titlePlaceholder": "E.g. autumn team picnic",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "A short description of the event",
+      "categoryLabel": "Category",
+      "startsAtLabel": "Starts at",
+      "endsAtLabel": "Ends at",
+      "placeLabel": "Place",
+      "placePlaceholder": "E.g. the department meeting room",
+      "placeUrlLabel": "Place link",
+      "capacityLabel": "Capacity",
+      "capacityPlaceholder": "Unlimited",
+      "waitlistEnabledLabel": "Open a waitlist once full",
+      "rsvpDeadlineLabel": "RSVP deadline",
+      "costNoteLabel": "Cost note",
+      "costNotePlaceholder": "E.g. transport covered by the department",
+      "remindersLabel": "Reminders",
+      "reminderDayBefore": "1 day before",
+      "reminderHourBefore": "1 hour before",
+      "submitCreate": "Create event",
+      "submitUpdate": "Save changes",
+      "validation": {
+        "endsBeforeStarts": "The end time must be after the start time"
+      }
+    },
+    "diff": {
+      "title": "What changed",
+      "field": {
+        "title": "Title",
+        "startsAt": "Start time",
+        "endsAt": "End time",
+        "place": "Place",
+        "placeUrl": "Place link",
+        "capacity": "Capacity",
+        "costNote": "Cost note",
+        "description": "Description"
+      }
+    },
+    "cancelDialog": {
+      "title": "Cancel event",
+      "body": "Everyone who RSVPed will be notified. This cannot be undone.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Let people know what happened",
+      "confirm": "Yes, cancel",
+      "keepEvent": "No, keep it"
+    },
+    "rsvp": {
+      "title": "Are you going?",
+      "status": {
+        "yes": "Yes, I'll go",
+        "no": "Not going",
+        "maybe": "Maybe",
+        "waitlist": "Waitlisted"
+      },
+      "guestsLabel": "Guests",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "E.g. an allergy or other note",
+      "submit": "Submit",
+      "update": "Update",
+      "deadlinePassed": "The RSVP deadline has passed",
+      "eventFull": "This event is full -- you've been waitlisted",
+      "confirmedToast": "Your RSVP is recorded",
+      "waitlistedToast": "Full -- you've been added to the waitlist",
+      "myStatus": "Your answer: {status}",
+      "notYet": "You haven't answered yet"
+    },
+    "attendees": {
+      "title": "Attendees",
+      "empty": "No one has answered yet",
+      "guestsSuffix": "+{count} guests"
+    },
+    "comments": {
+      "title": "Discussion",
+      "empty": "No comments yet. Be the first.",
+      "placeholder": "Write a comment",
+      "submit": "Post",
+      "delete": "Delete",
+      "deleteConfirm": "Delete this comment?"
+    },
+    "carpool": {
+      "title": "Carpooling",
+      "empty": "No carpool offers yet",
+      "offer": "Offer a ride",
+      "seatsLabel": "Seats available",
+      "departurePlaceLabel": "Departure point",
+      "departureAtLabel": "Departure time",
+      "noteLabel": "Note",
+      "driver": "Driver: {name}",
+      "seatsTaken": "{claimed} / {seats} seats taken",
+      "claim": "Claim a seat",
+      "release": "Give up seat",
+      "waitlisted": "Waitlisted",
+      "confirmed": "Confirmed",
+      "passengers": "Passengers",
+      "driverCannotClaim": "The driver can't claim a seat on their own offer",
+      "cancelled": "This offer was cancelled"
+    },
+    "items": {
+      "title": "Who brings what",
+      "empty": "The list is empty for now",
+      "add": "Add an item",
+      "labelPlaceholder": "E.g. tea and biscuits",
+      "quantityLabel": "Quantity",
+      "claim": "I'll bring this",
+      "release": "Give up",
+      "claimedBy": "Bringing it: {name}",
+      "claimedByMe": "You're bringing this",
+      "alreadyClaimed": "Someone else already claimed this item"
+    },
+    "polls": {
+      "title": "Polls",
+      "empty": "No polls yet",
+      "create": "Create a poll",
+      "kindLabel": "Kind",
+      "kind": {
+        "date": "Pick a date",
+        "single": "Single choice",
+        "multi": "Multiple choice"
+      },
+      "questionLabel": "Question",
+      "questionPlaceholder": "E.g. which date works for the picnic?",
+      "anonymousLabel": "Anonymous voting",
+      "closesAtLabel": "Closes at",
+      "optionsLabel": "Options",
+      "optionPlaceholder": "Option text",
+      "addOption": "Add option",
+      "removeOption": "Remove",
+      "vote": "Vote",
+      "changeVote": "Change vote",
+      "totalVotes": "{count} votes",
+      "closed": "Closed",
+      "yourVote": "Your vote",
+      "createdBy": "Created by {name}"
+    },
+    "photos": {
+      "title": "Photos",
+      "empty": "No photos yet",
+      "add": "Add a link",
+      "urlLabel": "Image link",
+      "captionLabel": "Caption (optional)",
+      "delete": "Delete"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "empty": "No feedback yet",
+      "ratingLabel": "Rating",
+      "commentLabel": "Comment (optional)",
+      "anonymousLabel": "Leave anonymously",
+      "submit": "Submit",
+      "update": "Update",
+      "average": "Average rating: {rating} / 5",
+      "yours": "Your rating",
+      "anonymousAuthor": "Anonymous",
+      "thankYou": "Thanks for your feedback"
+    },
+    "ics": {
+      "exportEvent": "Add to calendar (.ics)",
+      "exportMine": "My events (.ics)"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "rsvp": "RSVP",
+      "carpool": "Carpool",
+      "items": "Items",
+      "polls": "Polls",
+      "photos": "Photos",
+      "feedback": "Feedback",
+      "comments": "Discussion"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To"
+    }
+  }
+}

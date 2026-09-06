@@ -19,6 +19,20 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'audit.events': 'audit',
   'audit.private_reads': 'audit',
   'audit.anchors': 'audit',
+
+  // EPIC-008 events (MODULE-GUIDE.md "DB: schema").
+  'app.events': 'department_owned',
+  'app.event_rsvps': 'department_owned',
+  'app.event_comments': 'department_owned',
+  'app.carpools': 'department_owned',
+  'app.carpool_seats': 'department_owned',
+  'app.event_items': 'department_owned',
+  'app.polls': 'department_owned',
+  'app.poll_options': 'department_owned',
+  'app.poll_votes': 'department_owned',
+  'app.event_photos': 'department_owned',
+  'app.event_feedback': 'department_owned',
+  'app.event_reminder_jobs': 'global',
 })
 
 /**
@@ -38,6 +52,8 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
   'app.idempotency_keys': 'Request replay-protection keyed by (key, route), not tenant data.',
   'app.outbox_events':
     'Instance-wide event bus plumbing for background workers (mirrors audit.events), not tenant data; a department-scoped event still carries its department_id as a plain column for a subscriber to filter on.',
+  'app.event_reminder_jobs':
+    'EPIC-008: the reminder worker polls this queue across every department at once, exactly like app.outbox_events; department_id is a plain column for filtering/audit, not a row-visibility boundary.',
   'app._migrations':
     'Migration-runner bookkeeping (which .sql files have applied), not tenant data.',
 })

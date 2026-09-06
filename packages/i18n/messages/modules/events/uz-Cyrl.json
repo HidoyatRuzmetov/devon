@@ -1,0 +1,239 @@
+{
+  "events": {
+    "title": "Тадбирлар",
+    "view": {
+      "list": "Рўйхат",
+      "calendar": "Тақвим"
+    },
+    "actions": {
+      "create": "Тадбир яратиш",
+      "edit": "Таҳрирлаш",
+      "save": "Сақлаш",
+      "cancelEvent": "Тадбирни бекор қилиш",
+      "close": "Ёпиш",
+      "retry": "Қайта уриниш",
+      "back": "Орқага"
+    },
+    "empty": {
+      "title": "Ҳозирча тадбирлар йўқ",
+      "body": "Жамоангиз учун биринчи тадбирни шу ерда яратинг.",
+      "action": "Тадбир яратиш"
+    },
+    "loading": {
+      "title": "Тадбирлар юкланмоқда"
+    },
+    "error": {
+      "title": "Тадбирларни юклаб бўлмади",
+      "body": "Нимадир хато кетди. Қайта уриниб кўринг."
+    },
+    "forbidden": {
+      "title": "Рухсат йўқ",
+      "body": "Тадбирларни кўриш учун бўлим аъзоси бўлишингиз керак."
+    },
+    "offline": {
+      "title": "Алоқа йўқ",
+      "body": "Интернет тикланганда тадбирлар рўйхати янгиланади."
+    },
+    "category": {
+      "team_building": "Жамоа қуриш",
+      "sports": "Спорт",
+      "volunteering": "Кўнгиллилик",
+      "social": "Ижтимоий",
+      "training": "Тренинг",
+      "family": "Оилавий",
+      "other": "Бошқа"
+    },
+    "status": {
+      "draft": "Қоралама",
+      "open": "Очиқ",
+      "full": "Жойлар тўлган",
+      "cancelled": "Бекор қилинган",
+      "done": "Якунланган"
+    },
+    "card": {
+      "organizer": "Ташкилотчи: {name}",
+      "going": "{count} киши боради",
+      "waitlisted": "{count} киши навбатда",
+      "capacity": "{going} / {capacity} жой",
+      "unlimitedCapacity": "Жойлар сони чекланмаган",
+      "deadline": "Рўйхатдан ўтиш: {date}",
+      "cancelledBanner": "Бу тадбир бекор қилинди",
+      "cancelledReason": "Сабаб: {reason}",
+      "doneBanner": "Бу тадбир якунланди"
+    },
+    "form": {
+      "titleLabel": "Тадбир номи",
+      "titlePlaceholder": "Масалан, кузги жамоавий пикник",
+      "descriptionLabel": "Тавсиф",
+      "descriptionPlaceholder": "Тадбир ҳақида қисқача ёзинг",
+      "categoryLabel": "Тоифа",
+      "startsAtLabel": "Бошланиш вақти",
+      "endsAtLabel": "Тугаш вақти",
+      "placeLabel": "Манзил",
+      "placePlaceholder": "Масалан, бўлим йиғилишлар зали",
+      "placeUrlLabel": "Манзил ҳаволаси",
+      "capacityLabel": "Жойлар сони",
+      "capacityPlaceholder": "Чекланмаган",
+      "waitlistEnabledLabel": "Жойлар тугаса навбат очилсин",
+      "rsvpDeadlineLabel": "Рўйхатдан ўтиш муддати",
+      "costNoteLabel": "Харажат ҳақида эслатма",
+      "costNotePlaceholder": "Масалан, транспорт бўлим ҳисобидан",
+      "remindersLabel": "Эслатмалар",
+      "reminderDayBefore": "1 кун олдин",
+      "reminderHourBefore": "1 соат олдин",
+      "submitCreate": "Тадбирни яратиш",
+      "submitUpdate": "Ўзгаришларни сақлаш",
+      "validation": {
+        "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлиши керак"
+      }
+    },
+    "diff": {
+      "title": "Нималар ўзгарди",
+      "field": {
+        "title": "Номи",
+        "startsAt": "Бошланиш вақти",
+        "endsAt": "Тугаш вақти",
+        "place": "Манзил",
+        "placeUrl": "Манзил ҳаволаси",
+        "capacity": "Жойлар сони",
+        "costNote": "Харажат эслатмаси",
+        "description": "Тавсиф"
+      }
+    },
+    "cancelDialog": {
+      "title": "Тадбирни бекор қилиш",
+      "body": "Рўйхатдан ўтган барча ходимларга хабар боради. Бу амални ортга қайтариб бўлмайди.",
+      "reasonLabel": "Сабаб",
+      "reasonPlaceholder": "Ходимларга тушунтиринг",
+      "confirm": "Ҳа, бекор қилиш",
+      "keepEvent": "Йўқ, сақлаб қолиш"
+    },
+    "rsvp": {
+      "title": "Иштирок этасизми?",
+      "status": {
+        "yes": "Ҳа, бораман",
+        "no": "Бормайман",
+        "maybe": "Эҳтимол",
+        "waitlist": "Навбатда"
+      },
+      "guestsLabel": "Меҳмонлар сони",
+      "noteLabel": "Изоҳ (ихтиёрий)",
+      "notePlaceholder": "Масалан, аллергия ёки бошқа эслатма",
+      "submit": "Юбориш",
+      "update": "Янгилаш",
+      "deadlinePassed": "Рўйхатдан ўтиш муддати тугаган",
+      "eventFull": "Жойлар тўлган, навбатга ёзилдингиз",
+      "confirmedToast": "Иштирокингиз қайд этилди",
+      "waitlistedToast": "Жойлар тўлган -- навбатга қўйилдингиз",
+      "myStatus": "Сизнинг жавобингиз: {status}",
+      "notYet": "Ҳали жавоб бермадингиз"
+    },
+    "attendees": {
+      "title": "Иштирокчилар",
+      "empty": "Ҳозирча ҳеч ким жавоб бермади",
+      "guestsSuffix": "+{count} меҳмон"
+    },
+    "comments": {
+      "title": "Муҳокама",
+      "empty": "Ҳозирча изоҳ йўқ. Биринчи бўлинг.",
+      "placeholder": "Изоҳ ёзинг",
+      "submit": "Юбориш",
+      "delete": "Ўчириш",
+      "deleteConfirm": "Изоҳни ўчирмоқчимисиз?"
+    },
+    "carpool": {
+      "title": "Бирга бориш",
+      "empty": "Ҳозирча бирга бориш таклифлари йўқ",
+      "offer": "Машина таклиф қилиш",
+      "seatsLabel": "Бўш ўриндиқлар",
+      "departurePlaceLabel": "Жўнаш нуқтаси",
+      "departureAtLabel": "Жўнаш вақти",
+      "noteLabel": "Изоҳ",
+      "driver": "Ҳайдовчи: {name}",
+      "seatsTaken": "{claimed} / {seats} ўрин банд",
+      "claim": "Ўрин банд қилиш",
+      "release": "Воз кечиш",
+      "waitlisted": "Навбатда",
+      "confirmed": "Тасдиқланган",
+      "passengers": "Йўловчилар",
+      "driverCannotClaim": "Ҳайдовчи ўз таклифидан ўрин ололмайди",
+      "cancelled": "Бу таклиф бекор қилинган"
+    },
+    "items": {
+      "title": "Ким нима олиб келади",
+      "empty": "Ҳозирча буюмлар рўйхати бўш",
+      "add": "Буюм қўшиш",
+      "labelPlaceholder": "Масалан, чой-пой",
+      "quantityLabel": "Миқдори",
+      "claim": "Мен олиб келаман",
+      "release": "Воз кечиш",
+      "claimedBy": "Олиб келади: {name}",
+      "claimedByMe": "Сиз олиб келасиз",
+      "alreadyClaimed": "Бу буюмни аллақачон бошқа ходим олди"
+    },
+    "polls": {
+      "title": "Сўровномалар",
+      "empty": "Ҳозирча сўровнома йўқ",
+      "create": "Сўровнома яратиш",
+      "kindLabel": "Тури",
+      "kind": {
+        "date": "Сана танлаш",
+        "single": "Битта вариант",
+        "multi": "Бир нечта вариант"
+      },
+      "questionLabel": "Савол",
+      "questionPlaceholder": "Масалан, пикник учун қайси сана қулай?",
+      "anonymousLabel": "Аноним овоз бериш",
+      "closesAtLabel": "Якунланиш вақти",
+      "optionsLabel": "Вариантлар",
+      "optionPlaceholder": "Вариант матни",
+      "addOption": "Вариант қўшиш",
+      "removeOption": "Олиб ташлаш",
+      "vote": "Овоз бериш",
+      "changeVote": "Овозни ўзгартириш",
+      "totalVotes": "{count} та овоз",
+      "closed": "Якунланган",
+      "yourVote": "Сизнинг овозингиз",
+      "createdBy": "Яратди: {name}"
+    },
+    "photos": {
+      "title": "Фотосуратлар",
+      "empty": "Ҳозирча фотосурат йўқ",
+      "add": "Ҳавола қўшиш",
+      "urlLabel": "Расм ҳаволаси",
+      "captionLabel": "Изоҳ (ихтиёрий)",
+      "delete": "Ўчириш"
+    },
+    "feedback": {
+      "title": "Фикр-мулоҳаза",
+      "empty": "Ҳозирча фикр билдирилмаган",
+      "ratingLabel": "Баҳо",
+      "commentLabel": "Фикрингиз (ихтиёрий)",
+      "anonymousLabel": "Аноним қолдириш",
+      "submit": "Юбориш",
+      "update": "Янгилаш",
+      "average": "Ўртача баҳо: {rating} / 5",
+      "yours": "Сизнинг баҳойингиз",
+      "anonymousAuthor": "Аноним",
+      "thankYou": "Фикрингиз учун раҳмат"
+    },
+    "ics": {
+      "exportEvent": "Тақвимга қўшиш (.иcс)",
+      "exportMine": "Менинг тадбирларим (.иcс)"
+    },
+    "tabs": {
+      "overview": "Умумий",
+      "rsvp": "Иштирок",
+      "carpool": "Бирга бориш",
+      "items": "Буюмлар",
+      "polls": "Сўровномалар",
+      "photos": "Фотосуратлар",
+      "feedback": "Фикр-мулоҳаза",
+      "comments": "Муҳокама"
+    },
+    "filters": {
+      "from": "Бошланиш",
+      "to": "Тугаш"
+    }
+  }
+}

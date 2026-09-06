@@ -79,6 +79,20 @@ async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return schema.parse(await res.json())
 }
 
+/** `DELETE`, same shape as `get`/`send` -- added for EPIC-008 (events: releasing an RSVP-adjacent
+ * claim -- a carpool seat, a "who brings what" item, a comment, a photo -- is modelled as removing a
+ * resource, not posting an "un-" action). Every future module needing `DELETE` reaches for this
+ * instead of hand-rolling `fetch`, exactly like `get`/`post`/`patch` already. */
+async function del<T>(path: string, schema: z.ZodType<T>, csrfToken?: string): Promise<T> {
+  const res = await raw(path, {
+    method: 'DELETE',
+    headers: csrfToken ? { [CSRF_HEADER]: csrfToken } : {},
+  })
+  if (!res.ok) await parseErrorAndThrow(res)
+  if (res.status === 204) return undefined as T
+  return schema.parse(await res.json())
+}
+
 async function send<T>(
   path: string,
   method: 'POST' | 'PATCH',
@@ -117,6 +131,7 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
+  delete: <T>(path: string, schema: z.ZodType<T>, csrfToken?: string) => del(path, schema, csrfToken),
 }
 
 export function fetchInstance(): Promise<InstancePublic> {
