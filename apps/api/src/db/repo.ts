@@ -37,6 +37,22 @@ function anonymousCtx(): RequestContext {
   }
 }
 
+/** No department chosen yet (unlike `toDbContext`, which always carries one it already knows) --
+ * only `app.user_id` is set, which is exactly what `app.memberships`'s additive `memberships_self_read`
+ * policy (`migrations/0200_structure.sql`) keys on. See `listActiveMembershipsForUser` below. */
+function selfCtx(userId: string): RequestContext {
+  return {
+    requestId: randomUUID(),
+    userId,
+    actorRole: null,
+    departmentId: null,
+    actingForUserId: null,
+    viewAs: false,
+    ip: '',
+    userAgent: '',
+  }
+}
+
 function toDbContext(ctx: AuditCtx): RequestContext {
   return {
     requestId: ctx.requestId,
@@ -131,6 +147,22 @@ export function createRepo(): Deps {
 
     async findUserById(id) {
       return withContext(anonymousCtx(), (tx) => selectUserById(tx, id))
+    },
+
+    async listActiveMembershipsForUser(userId) {
+      return withContext(selfCtx(userId), async (tx) => {
+        const rows = await tx.drizzle
+          .select({ departmentId: schema.memberships.departmentId, role: schema.memberships.role })
+          .from(schema.memberships)
+          .where(
+            and(
+              eq(schema.memberships.userId, userId),
+              eq(schema.memberships.status, 'active'),
+              isNull(schema.memberships.deletedAt),
+            ),
+          )
+        return rows.map((r) => ({ departmentId: r.departmentId, role: r.role }))
+      })
     },
 
     async updateUserProfile(userId, patch, ctx) {

@@ -5,6 +5,7 @@
 // (design.md, this item's test/vitest.config.ts) never needs Postgres or Testcontainers, because tests
 // inject `test/unit/fake-deps.ts` instead of `src/db/repo.ts`'s real implementation.
 import type { ChainVerification } from '@devon/db'
+import type { Membership } from '@devon/contracts'
 import type {
   AuditCtx,
   InstanceSettingsRecord,
@@ -38,6 +39,17 @@ export type Deps = {
 
   findUserByLogin(login: string): Promise<UserRecord | null>
   findUserById(id: string): Promise<UserRecord | null>
+
+  /**
+   * Every active department this user belongs to (root-cause fix for `@devon/contracts`'s `can()`
+   * `department_child` check, which was permanently `not_a_member` for every real request until this
+   * existed -- see `src/lib/actor.ts`'s doc comment and this item's report for the full story: EPIC-002
+   * owns `/me` and its own `memberships: []` stub, this seam only feeds `Actor.memberships`). Backed
+   * by `app.memberships`'s additive `memberships_self_read` RLS policy (`migrations/0200_structure.sql`)
+   * so it works before any per-request department context is chosen.
+   */
+  listActiveMembershipsForUser(userId: string): Promise<Membership[]>
+
   updateUserProfile(
     userId: string,
     patch: { locale?: string | undefined; timezone?: string | undefined },

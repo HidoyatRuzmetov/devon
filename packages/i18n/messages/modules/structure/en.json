@@ -1,0 +1,83 @@
+{
+  "structure": {
+    "nav": { "units": "Structure", "people": "People" },
+    "units": {
+      "title": "Structure",
+      "subtitle": "Units and roles in {departmentName}",
+      "empty": {
+        "title": "No units yet",
+        "body": "Create the first unit, then place people into it.",
+        "action": "Add a unit"
+      },
+      "addUnit": "Add a unit",
+      "addSubUnit": "Add a sub-unit",
+      "rename": "Rename",
+      "renameLabel": "Unit name",
+      "delete": "Delete",
+      "deleteConfirm": {
+        "title": "Delete “{name}”?",
+        "body": "Members become unassigned. You can undo this for a short while.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "deletedToast": "“{name}” deleted",
+      "undo": "Undo",
+      "restoredToast": "“{name}” restored",
+      "colourLabel": "Colour",
+      "colourAuto": "Automatic",
+      "settingsNotice": {
+        "structureEdit": "Only the department head can edit the structure right now",
+        "selfAssign": "Only the department head can assign unit roles right now"
+      },
+      "dragHint": "Drag to reorder",
+      "view": { "tree": "List", "chart": "Org chart" },
+      "chart": {
+        "exportPng": "Export as PNG",
+        "noHead": "No head assigned yet",
+        "headBadge": "Head",
+        "deputyBadge": "Deputy",
+        "memberCount": "{count} people",
+        "keyboardHint": "Use the arrow keys to move between units"
+      },
+      "validation": { "nameRequired": "Enter a name" },
+      "addDialog": {
+        "title": "New unit",
+        "namePlaceholder": "e.g. Monitoring group",
+        "parentLabel": "Parent unit",
+        "rootOption": "None — top level",
+        "create": "Create",
+        "cancel": "Cancel"
+      }
+    },
+    "roles": {
+      "roleLabel": { "head": "Unit head", "deputy": "Deputy", "member": "Member" },
+      "join": "Join this unit",
+      "joinAs": "Join as {role}",
+      "leave": "Leave this unit",
+      "assign": "Assign",
+      "assignDialog": {
+        "title": "Assign to “{unitName}”",
+        "person": "Person",
+        "role": "Role",
+        "submit": "Assign",
+        "cancel": "Cancel"
+      },
+      "removeConfirm": {
+        "title": "Remove {name} from “{unitName}”?",
+        "confirm": "Remove",
+        "cancel": "Cancel"
+      },
+      "assignedToast": "{name} assigned as {role}",
+      "removedToast": "{name} removed from the unit"
+    },
+    "people": {
+      "title": "People",
+      "subtitle": "Everyone in {departmentName}, grouped by unit",
+      "empty": { "title": "No members yet" },
+      "searchPlaceholder": "Search people",
+      "unassignedGroup": "Unassigned",
+      "memberCard": { "noUnit": "No unit assigned" }
+    },
+    "common": { "head": "Head", "member": "Member" }
+  }
+}

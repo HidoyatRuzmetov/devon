@@ -1,0 +1,83 @@
+{
+  "structure": {
+    "nav": { "units": "Tuzilma", "people": "Xodimlar" },
+    "units": {
+      "title": "Tuzilma",
+      "subtitle": "{departmentName} boʻlimlari va lavozimlari",
+      "empty": {
+        "title": "Hali boʻlim yoʻq",
+        "body": "Boʻlimni tuzganingizdan keyin xodimlarni unga taqsimlashingiz mumkin.",
+        "action": "Boʻlim qoʻshish"
+      },
+      "addUnit": "Boʻlim qoʻshish",
+      "addSubUnit": "Ichki boʻlim qoʻshish",
+      "rename": "Nomini oʻzgartirish",
+      "renameLabel": "Boʻlim nomi",
+      "delete": "Oʻchirish",
+      "deleteConfirm": {
+        "title": "«{name}» oʻchirilsinmi?",
+        "body": "Aʼzolar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarish mumkin.",
+        "confirm": "Oʻchirish",
+        "cancel": "Bekor qilish"
+      },
+      "deletedToast": "«{name}» oʻchirildi",
+      "undo": "Bekor qilish",
+      "restoredToast": "«{name}» tiklandi",
+      "colourLabel": "Rang",
+      "colourAuto": "Avtomatik",
+      "settingsNotice": {
+        "structureEdit": "Hozircha tuzilmani faqat boʻlim boshligʻi tahrirlay oladi",
+        "selfAssign": "Hozircha lavozimlarni faqat boʻlim boshligʻi belgilay oladi"
+      },
+      "dragHint": "Tartibini oʻzgartirish uchun torting",
+      "view": { "tree": "Roʻyxat", "chart": "Tuzilma sxemasi" },
+      "chart": {
+        "exportPng": "PNG sifatida saqlash",
+        "noHead": "Boshligʻi hali tayinlanmagan",
+        "headBadge": "Boshligʻi",
+        "deputyBadge": "Oʻrinbosari",
+        "memberCount": "{count} kishi",
+        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning"
+      },
+      "validation": { "nameRequired": "Nomini kiriting" },
+      "addDialog": {
+        "title": "Yangi boʻlim",
+        "namePlaceholder": "Masalan, Monitoring guruhi",
+        "parentLabel": "Yuqori boʻlim",
+        "rootOption": "Yoʻq — asosiy boʻlim",
+        "create": "Yaratish",
+        "cancel": "Bekor qilish"
+      }
+    },
+    "roles": {
+      "roleLabel": { "head": "Boʻlim boshligʻi", "deputy": "Oʻrinbosar", "member": "Aʼzo" },
+      "join": "Ushbu boʻlimga qoʻshilish",
+      "joinAs": "{role} sifatida qoʻshilish",
+      "leave": "Boʻlimdan chiqish",
+      "assign": "Tayinlash",
+      "assignDialog": {
+        "title": "«{unitName}» boʻlimiga tayinlash",
+        "person": "Xodim",
+        "role": "Lavozim",
+        "submit": "Tayinlash",
+        "cancel": "Bekor qilish"
+      },
+      "removeConfirm": {
+        "title": "{name} «{unitName}» boʻlimidan chiqarilsinmi?",
+        "confirm": "Chiqarish",
+        "cancel": "Bekor qilish"
+      },
+      "assignedToast": "{name} {role} etib tayinlandi",
+      "removedToast": "{name} boʻlimdan chiqarildi"
+    },
+    "people": {
+      "title": "Xodimlar",
+      "subtitle": "{departmentName} jamoasi, boʻlimlar boʻyicha",
+      "empty": { "title": "Hali aʼzo yoʻq" },
+      "searchPlaceholder": "Xodimni qidirish",
+      "unassignedGroup": "Boʻlimsiz",
+      "memberCard": { "noUnit": "Boʻlim belgilanmagan" }
+    },
+    "common": { "head": "Boshligʻi", "member": "Aʼzo" }
+  }
+}

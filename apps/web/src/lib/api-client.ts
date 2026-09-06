@@ -79,6 +79,20 @@ async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   return schema.parse(await res.json())
 }
 
+/** No feature needed a DELETE call until structure's bo'lim/unit-role removal (EPIC-003) -- added
+ * here, next to `get`/`send`, rather than reinventing it per-feature, the same "one place `fetch` is
+ * called" reasoning this file's own header states. A 204 (no body) is the common case; a 200 with a
+ * body (e.g. "here's the `deletedAt` you'll need to undo this") is also supported. */
+async function del<T>(path: string, schema: z.ZodType<T>, csrfToken?: string): Promise<T> {
+  const res = await raw(path, {
+    method: 'DELETE',
+    ...(csrfToken ? { headers: { [CSRF_HEADER]: csrfToken } } : {}),
+  })
+  if (!res.ok) await parseErrorAndThrow(res)
+  if (res.status === 204) return undefined as T
+  return schema.parse(await res.json())
+}
+
 async function send<T>(
   path: string,
   method: 'POST' | 'PATCH',
@@ -117,6 +131,8 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
+  delete: <T>(path: string, schema: z.ZodType<T>, csrfToken?: string) =>
+    del(path, schema, csrfToken),
 }
 
 export function fetchInstance(): Promise<InstancePublic> {

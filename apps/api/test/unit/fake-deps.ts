@@ -5,6 +5,7 @@
 // `src/db/repo.ts`; it is proved separately by `setup:prove` / `session:prove` / `admin:prove`.
 import { randomUUID, createHash } from 'node:crypto'
 import { hashPassword } from '../../src/lib/password.js'
+import type { Membership } from '@devon/contracts'
 import type {
   Deps,
   CreatedSession,
@@ -41,7 +42,7 @@ export type FakeState = {
   /** EPIC-002: `{ userId, departmentId, name, role }` rows a test can seed so `listMembershipsForUser`
    * has something to return -- empty by default (mirrors `buildActor`'s EPIC-000 "nobody can be a
    * member of a department that cannot yet be created" starting point, now populated when a test cares). */
-  memberships: Array<MembershipView & { userId: string }>
+  membershipRows: Array<MembershipView & { userId: string }>
   /** EPIC-001: `userId`s with TOTP 2FA enabled -- a test opts a seeded user into the login-challenge
    * path (instead of an immediate session) by adding their id here. Empty by default: 2FA off. */
   twoFactorEnabled: Set<string>
@@ -49,6 +50,9 @@ export type FakeState = {
    * exercising `POST /accounts/2fa/login-verify` can find which user a captured token belongs to. */
   loginChallenges: Map<string, { userId: string }>
   instanceSettings: InstanceSettingsRecord
+  /** `userId -> memberships` (`listActiveMembershipsForUser`'s fake). Empty by default, matching a
+   * fresh account with no department yet -- a test that needs a member sets this directly. */
+  memberships: Record<string, Membership[]>
   dbReady: boolean
   migrationsApplied: boolean
   /** Set by a test to force the very next `consumeSetupToken` call to observe zero rows on its
@@ -63,7 +67,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     sessions: [],
     setupTokens: [],
     auditEvents: [],
-    memberships: [],
+    membershipRows: [],
     twoFactorEnabled: new Set(),
     loginChallenges: new Map(),
     instanceSettings: {
@@ -71,6 +75,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
       registrationOpen: true,
       maintenance: { enabled: false, message: null },
     },
+    memberships: {},
     dbReady: true,
     migrationsApplied: true,
     forceSetupRaceLoss: false,
@@ -96,6 +101,10 @@ export function createFakeDeps(state: FakeState): Deps {
 
     async findUserById(id) {
       return state.users.find((u) => u.id === id) ?? null
+    },
+
+    async listActiveMembershipsForUser(userId) {
+      return state.memberships[userId] ?? []
     },
 
     async updateUserProfile(userId, patch, ctx) {
@@ -224,7 +233,7 @@ export function createFakeDeps(state: FakeState): Deps {
     },
 
     async listMembershipsForUser(userId): Promise<MembershipView[]> {
-      return state.memberships
+      return state.membershipRows
         .filter((m) => m.userId === userId)
         .map(({ departmentId, name, role }) => ({ departmentId, name, role }))
     },
