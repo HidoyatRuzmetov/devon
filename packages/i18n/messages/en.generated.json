@@ -166,5 +166,182 @@
       "down": "Not running",
       "refresh": "Refresh"
     }
+  },
+  "personal": {
+    "title": "Personal",
+    "tabs": {
+      "today": "Today",
+      "sprints": "Periods",
+      "tasks": "To-dos",
+      "notes": "Notes",
+      "canvas": "Canvas",
+      "pomodoro": "Pomodoro"
+    },
+    "today": {
+      "tasks": {
+        "title": "Today's to-dos"
+      },
+      "empty": {
+        "title": "Nothing planned for today",
+        "body": "Add a to-do or start a period to see it here."
+      },
+      "focus": "Focus"
+    },
+    "sprints": {
+      "active": {
+        "title": "Active periods"
+      },
+      "empty": {
+        "title": "No periods yet",
+        "body": "Start a period to give your work a goal and a time box."
+      },
+      "create": {
+        "action": "New period",
+        "title": "New period",
+        "submit": "Create period"
+      },
+      "goal": "Goal",
+      "goalPlaceholder": "What are you trying to get done?",
+      "history": {
+        "title": "History ({count})"
+      },
+      "rollover": {
+        "action": "Roll over",
+        "toast": "Moved {count} unfinished to-dos to a new period"
+      },
+      "complete": {
+        "action": "Mark complete"
+      },
+      "kind": {
+        "threeHour": "3 hours",
+        "day": "Day",
+        "week": "Week",
+        "custom": "Custom"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "archived": "Archived"
+      }
+    },
+    "tasks": {
+      "inbox": "Inbox",
+      "addPlaceholder": "Add a to-do",
+      "toggleDone": "Mark done",
+      "delete": "Delete to-do",
+      "deleted": {
+        "toast": "To-do deleted"
+      },
+      "dragHandle": "Drag to reorder",
+      "indent": "Indent (make sub-item)",
+      "outdent": "Outdent",
+      "empty": {
+        "section": "No to-dos here yet."
+      }
+    },
+    "notes": {
+      "create": "New note",
+      "newTitle": "New note",
+      "bodyPlaceholder": "Write something...",
+      "delete": "Delete note",
+      "deleted": {
+        "toast": "Note deleted"
+      },
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "empty": {
+        "title": "No notes yet",
+        "body": "Notes are just for you -- jot down anything."
+      }
+    },
+    "canvas": {
+      "create": "New canvas",
+      "newTitle": "New canvas",
+      "open": "Open",
+      "back": "Back to canvases",
+      "delete": "Delete canvas",
+      "deleted": {
+        "toast": "Canvas deleted"
+      },
+      "empty": {
+        "title": "No canvases yet",
+        "body": "A canvas is a free-form board for sketches and sticky notes."
+      },
+      "addSticky": "Add sticky note",
+      "undo": "Undo",
+      "redo": "Redo",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "strokeWidth": "Stroke width",
+      "emptyText": "Text",
+      "tool": {
+        "select": "Select",
+        "pen": "Pen",
+        "rectangle": "Rectangle",
+        "ellipse": "Ellipse",
+        "arrow": "Arrow",
+        "text": "Text",
+        "eraser": "Eraser"
+      }
+    },
+    "pomodoro": {
+      "widget": {
+        "label": "Pomodoro",
+        "aria": "Pomodoro timer"
+      },
+      "phase": {
+        "idle": "Ready",
+        "focus": "Focus",
+        "shortBreak": "Short break",
+        "longBreak": "Long break"
+      },
+      "action": {
+        "startFocus": "Start focus",
+        "startShortBreak": "Start break",
+        "pause": "Pause",
+        "resume": "Resume",
+        "skip": "Skip",
+        "stop": "Stop"
+      },
+      "notification": {
+        "body": "Time's up"
+      },
+      "sound": {
+        "chime": "Chime",
+        "bell": "Bell",
+        "digital": "Digital",
+        "none": "Silent"
+      },
+      "notifications": {
+        "on": "Notifications on",
+        "off": "Notifications off"
+      },
+      "settings": {
+        "title": "Pomodoro settings",
+        "focusMin": "Focus (minutes)",
+        "shortBreakMin": "Short break (minutes)",
+        "longBreakMin": "Long break (minutes)",
+        "cyclesBeforeLong": "Focus sessions before a long break",
+        "sound": "Sound",
+        "notifications": "Browser notifications",
+        "autoStart": "Start the next phase automatically"
+      },
+      "stats": {
+        "todayFocus": "Focus today",
+        "todaySessions": "Sessions today",
+        "weekFocus": "Focus this week",
+        "weekSessions": "Sessions this week",
+        "minutesShort": "min"
+      },
+      "log": {
+        "title": "Session log",
+        "completed": "Completed",
+        "skipped": "Skipped",
+        "empty": {
+          "title": "No sessions yet",
+          "body": "Start a focus session to see it here."
+        }
+      }
+    }
   }
 }

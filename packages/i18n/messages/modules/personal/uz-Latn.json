@@ -1,0 +1,137 @@
+{
+  "personal": {
+    "title": "Shaxsiy",
+    "tabs": {
+      "today": "Bugun",
+      "sprints": "Davrlar",
+      "tasks": "Vazifalar",
+      "notes": "Qaydlar",
+      "canvas": "Doska",
+      "pomodoro": "Pomodoro"
+    },
+    "today": {
+      "tasks": { "title": "Bugungi vazifalar" },
+      "empty": {
+        "title": "Bugun uchun hech narsa rejalashtirilmagan",
+        "body": "Bu yerda koʻrish uchun vazifa qoʻshing yoki davr boshlang."
+      },
+      "focus": "Fokus"
+    },
+    "sprints": {
+      "active": { "title": "Faol davrlar" },
+      "empty": {
+        "title": "Hali davrlar yoʻq",
+        "body": "Ishingizga maqsad va vaqt chegarasi belgilash uchun davr boshlang."
+      },
+      "create": { "action": "Yangi davr", "title": "Yangi davr", "submit": "Davr yaratish" },
+      "goal": "Maqsad",
+      "goalPlaceholder": "Nimaga erishmoqchisiz?",
+      "history": { "title": "Tarix ({count})" },
+      "rollover": {
+        "action": "Koʻchirish",
+        "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
+      },
+      "complete": { "action": "Yakunlangan deb belgilash" },
+      "kind": { "threeHour": "3 soat", "day": "Kun", "week": "Hafta", "custom": "Ixtiyoriy" },
+      "status": { "active": "Faol", "completed": "Yakunlangan", "archived": "Arxivlangan" }
+    },
+    "tasks": {
+      "inbox": "Kirish qutisi",
+      "addPlaceholder": "Vazifa qoʻshish",
+      "toggleDone": "Bajarilgan deb belgilash",
+      "delete": "Vazifani oʻchirish",
+      "deleted": { "toast": "Vazifa oʻchirildi" },
+      "dragHandle": "Tartibni oʻzgartirish uchun torting",
+      "indent": "Ichkariga surish (quyi vazifa qilish)",
+      "outdent": "Tashqariga chiqarish",
+      "empty": { "section": "Bu yerda hali vazifalar yoʻq." }
+    },
+    "notes": {
+      "create": "Yangi qayd",
+      "newTitle": "Yangi qayd",
+      "bodyPlaceholder": "Nimadir yozing...",
+      "delete": "Qaydni oʻchirish",
+      "deleted": { "toast": "Qayd oʻchirildi" },
+      "pin": "Mahkamlash",
+      "unpin": "Mahkamlashni bekor qilish",
+      "empty": {
+        "title": "Hali qaydlar yoʻq",
+        "body": "Qaydlar faqat siz uchun -- xohlagan narsangizni yozib qoʻying."
+      }
+    },
+    "canvas": {
+      "create": "Yangi doska",
+      "newTitle": "Yangi doska",
+      "open": "Ochish",
+      "back": "Doskalarga qaytish",
+      "delete": "Doskani oʻchirish",
+      "deleted": { "toast": "Doska oʻchirildi" },
+      "empty": {
+        "title": "Hali doskalar yoʻq",
+        "body": "Doska -- eskiz va eslatma qogʻozlari uchun erkin joy."
+      },
+      "addSticky": "Eslatma qogʻoz qoʻshish",
+      "undo": "Bekor qilish",
+      "redo": "Qaytarish",
+      "zoomIn": "Kattalashtirish",
+      "zoomOut": "Kichiklashtirish",
+      "strokeWidth": "Chiziq qalinligi",
+      "emptyText": "Matn",
+      "tool": {
+        "select": "Tanlash",
+        "pen": "Qalam",
+        "rectangle": "Toʻrtburchak",
+        "ellipse": "Ellips",
+        "arrow": "Oʻq",
+        "text": "Matn",
+        "eraser": "Oʻchirgʻich"
+      }
+    },
+    "pomodoro": {
+      "widget": { "label": "Pomodoro", "aria": "Pomodoro taymeri" },
+      "phase": {
+        "idle": "Tayyor",
+        "focus": "Fokus",
+        "shortBreak": "Qisqa tanaffus",
+        "longBreak": "Uzoq tanaffus"
+      },
+      "action": {
+        "startFocus": "Fokusni boshlash",
+        "startShortBreak": "Tanaffusni boshlash",
+        "pause": "Pauza",
+        "resume": "Davom ettirish",
+        "skip": "Oʻtkazib yuborish",
+        "stop": "Toʻxtatish"
+      },
+      "notification": { "body": "Vaqt tugadi" },
+      "sound": { "chime": "Ohang", "bell": "Qoʻngʻiroq", "digital": "Raqamli", "none": "Ovozsiz" },
+      "notifications": { "on": "Bildirishnomalar yoqilgan", "off": "Bildirishnomalar oʻchirilgan" },
+      "settings": {
+        "title": "Pomodoro sozlamalari",
+        "focusMin": "Fokus (daqiqa)",
+        "shortBreakMin": "Qisqa tanaffus (daqiqa)",
+        "longBreakMin": "Uzoq tanaffus (daqiqa)",
+        "cyclesBeforeLong": "Uzoq tanaffusdan oldingi fokus soni",
+        "sound": "Ovoz",
+        "notifications": "Brauzer bildirishnomalari",
+        "autoStart": "Keyingi bosqichni avtomatik boshlash"
+      },
+      "stats": {
+        "todayFocus": "Bugungi fokus",
+        "todaySessions": "Bugungi seanslar",
+        "weekFocus": "Shu haftalik fokus",
+        "weekSessions": "Shu haftalik seanslar",
+        "minutesShort": "daq"
+      },
+      "log": {
+        "title": "Seanslar jurnali",
+        "completed": "Yakunlangan",
+        "skipped": "Oʻtkazib yuborilgan",
+        "empty": {
+          "title": "Hali seanslar yoʻq",
+          "body": "Bu yerda koʻrish uchun fokus seansini boshlang."
+        }
+      }
+    }
+  }
+}

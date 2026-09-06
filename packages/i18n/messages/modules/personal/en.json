@@ -3,39 +3,48 @@
     "title": "Personal",
     "tabs": {
       "today": "Today",
-      "sprints": "Sprints",
-      "tasks": "Tasks",
+      "sprints": "Periods",
+      "tasks": "To-dos",
       "notes": "Notes",
       "canvas": "Canvas",
       "pomodoro": "Pomodoro"
     },
     "today": {
-      "tasks": { "title": "Today's tasks" },
-      "empty": { "title": "Nothing planned for today", "body": "Add a task or start a sprint to see it here." },
+      "tasks": { "title": "Today's to-dos" },
+      "empty": {
+        "title": "Nothing planned for today",
+        "body": "Add a to-do or start a period to see it here."
+      },
       "focus": "Focus"
     },
     "sprints": {
-      "active": { "title": "Active sprints" },
-      "empty": { "title": "No sprints yet", "body": "Start a sprint to give your work a goal and a time box." },
-      "create": { "action": "New sprint", "title": "New sprint", "submit": "Create sprint" },
+      "active": { "title": "Active periods" },
+      "empty": {
+        "title": "No periods yet",
+        "body": "Start a period to give your work a goal and a time box."
+      },
+      "create": { "action": "New period", "title": "New period", "submit": "Create period" },
       "goal": "Goal",
       "goalPlaceholder": "What are you trying to get done?",
       "history": { "title": "History ({count})" },
-      "rollover": { "action": "Roll over", "toast": "Moved {count} unfinished task(s) to a new sprint" },
+      "rollover": {
+        "action": "Roll over",
+        "toast": "Moved {count} unfinished to-dos to a new period"
+      },
       "complete": { "action": "Mark complete" },
       "kind": { "threeHour": "3 hours", "day": "Day", "week": "Week", "custom": "Custom" },
       "status": { "active": "Active", "completed": "Completed", "archived": "Archived" }
     },
     "tasks": {
       "inbox": "Inbox",
-      "addPlaceholder": "Add a task",
+      "addPlaceholder": "Add a to-do",
       "toggleDone": "Mark done",
-      "delete": "Delete task",
-      "deleted": { "toast": "Task deleted" },
+      "delete": "Delete to-do",
+      "deleted": { "toast": "To-do deleted" },
       "dragHandle": "Drag to reorder",
-      "indent": "Indent (make subtask)",
+      "indent": "Indent (make sub-item)",
       "outdent": "Outdent",
-      "empty": { "section": "No tasks here yet." }
+      "empty": { "section": "No to-dos here yet." }
     },
     "notes": {
       "create": "New note",
@@ -54,7 +63,10 @@
       "back": "Back to canvases",
       "delete": "Delete canvas",
       "deleted": { "toast": "Canvas deleted" },
-      "empty": { "title": "No canvases yet", "body": "A canvas is a free-form board for sketches and sticky notes." },
+      "empty": {
+        "title": "No canvases yet",
+        "body": "A canvas is a free-form board for sketches and sticky notes."
+      },
       "addSticky": "Add sticky note",
       "undo": "Undo",
       "redo": "Redo",
@@ -74,7 +86,12 @@
     },
     "pomodoro": {
       "widget": { "label": "Pomodoro", "aria": "Pomodoro timer" },
-      "phase": { "idle": "Ready", "focus": "Focus", "shortBreak": "Short break", "longBreak": "Long break" },
+      "phase": {
+        "idle": "Ready",
+        "focus": "Focus",
+        "shortBreak": "Short break",
+        "longBreak": "Long break"
+      },
       "action": {
         "startFocus": "Start focus",
         "startShortBreak": "Start break",
