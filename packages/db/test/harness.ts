@@ -55,7 +55,15 @@ export function generateTestCredentials(): TestCredentials {
 }
 
 /** Applies every migration file, in order, as the superuser, substituting `${...}` role passwords.
- * Safe to call twice in a row (idempotence, design §2.7 step 2). */
+ * Safe to call twice in a row (idempotence, design §2.7 step 2).
+ *
+ * Also creates and records into the `app._migrations` bookkeeping table -- the same table
+ * `src/migrate.ts`'s production `applyMigrations` creates and maintains -- so that this harness
+ * actually mirrors production database state (TENANCY classifies `app._migrations` as `global`, and
+ * `test/checks/tenancy.ts` asserts it exists). Recording uses `on conflict do nothing` because this
+ * function re-runs every file's raw SQL on each call rather than skipping already-applied ones (that
+ * skip-logic lives in production `migrate.ts`, not here), so a second call would otherwise re-insert
+ * the same names. */
 export async function applyMigrations(
   superuserConnectionString: string,
   creds: TestCredentials,
@@ -68,10 +76,24 @@ export async function applyMigrations(
       POSTGRES_MIGRATOR_PASSWORD: creds.migratorPassword,
       POSTGRES_APP_PASSWORD: creds.appPassword,
     }
+    // Bootstrap-safe: `0000_extensions.sql` also does `create schema if not exists app`, so this
+    // never races or conflicts with it -- it just lets the tracking table exist before migration 0000
+    // has necessarily run yet (a brand-new database). Matches `src/migrate.ts`.
+    await client.query('create schema if not exists app')
+    await client.query(
+      `create table if not exists app._migrations (
+         name text primary key,
+         applied_at timestamptz not null default now()
+       )`,
+    )
     for (const file of files) {
       const sql = substituteVars(file.sql, vars)
       try {
         await client.query(sql)
+        await client.query(
+          'insert into app._migrations (name) values ($1) on conflict (name) do nothing',
+          [file.name],
+        )
       } catch (err) {
         throw new Error(`migration ${file.name} failed: ${(err as Error).message}`, { cause: err })
       }
