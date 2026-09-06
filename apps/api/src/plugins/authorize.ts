@@ -42,6 +42,12 @@ export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Obj
   // in at all (TECH-SPEC §2.2: "if logged out, register/login first, then the password prompt") --
   // this preview never returns anything sensitive (no join password, no member list).
   { method: 'GET', url: '/api/v1/departments/join/:key' },
+  // notifications module (MODULE-GUIDE.md "API modules": public routes are the one intentional
+  // shared-file edit): a calendar app's "subscribe by URL" feature carries no session cookie, and
+  // Telegram's webhook likewise calls this API with no cookie -- both routes verify their own
+  // per-request secret instead (an HMAC-signed token, and a configured webhook path secret).
+  { method: 'GET', url: '/api/v1/notifications/ics/:userId/:token' },
+  { method: 'POST', url: '/api/v1/telegram/webhook/:secret' },
 ])
 
 /**

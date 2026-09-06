@@ -37,6 +37,15 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.personal_canvases': 'user_owned',
   'app.pomodoro_settings': 'user_owned',
   'app.pomodoro_sessions': 'user_owned',
+  'app.notifications': 'user_owned',
+  'app.notification_prefs': 'user_owned',
+  'app.notification_quiet_hours': 'user_owned',
+  'app.notification_deliveries': 'user_owned',
+  'app.notification_department_settings': 'department_owned',
+  'app.telegram_link_codes': 'global',
+  'app.telegram_links': 'global',
+  'app.telegram_group_connect_codes': 'global',
+  'app.telegram_groups': 'global',
   'audit.events': 'audit',
   'audit.private_reads': 'audit',
   'audit.anchors': 'audit',
@@ -87,6 +96,22 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'Join-by-key rate-limiting/audit keyed by (key, ip); a wrong-key attempt has no department to scope to (EPIC-002).',
   'app.account_deletion_requests':
     'Self-service account deletion is identity-scoped, not tenant data (EPIC-001).',
+  'app.telegram_link_codes':
+    'Bootstrap-only: a one-time linking code exists before any Telegram chat is associated with a ' +
+    "user, exactly like app.setup_tokens (AC-12's pattern reused for /start <code>).",
+  'app.telegram_links':
+    'A Telegram webhook update carries only a chat id; the (chat_id -> user_id) mapping must be ' +
+    'resolvable before any per-request user/department context exists, the same bootstrap shape as ' +
+    'app.sessions ("looked up by token before you know who is asking"). Per-user visibility is ' +
+    'enforced at the application layer (can()), never by RLS, exactly like app.sessions already is.',
+  'app.telegram_groups':
+    'A department Telegram group is likewise resolved by chat id from an inbound webhook update, ' +
+    'before any department context exists -- same bootstrap shape as app.telegram_links above. ' +
+    'Per-department visibility is enforced by can() with a department_child subject on every route ' +
+    'that reads or writes this table from an authenticated session.',
+  'app.telegram_group_connect_codes':
+    'Bootstrap-only, mirrors app.telegram_link_codes: a group `/connect <code>` is consumed by an ' +
+    'inbound webhook update before any department context exists for that request.',
 })
 
 export type TenancyCoverageResult = {

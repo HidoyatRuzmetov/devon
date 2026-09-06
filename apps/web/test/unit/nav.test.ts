@@ -5,15 +5,16 @@ import { NAV_ENTRIES } from '../../src/shell/nav.js'
 describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // Core entries (`home`, `admin`) plus whatever `src/features/*/manifest.ts(x)` registers
   // (MODULE-GUIDE.md "Web features"), flattened in alphabetical directory order
-  // (`registry.ts`'s `import.meta.glob` sort): accounts, departments, events, personal, projects,
-  // structure, work. Every one of those sidebar entries is visible to every signed-in role except
-  // `department-requests` (the super-admin approval queue) and the core `admin` entry, which stay
-  // `super_admin`-only -- 'personal' (EPIC-009) included: a personal workspace belongs to whoever is
-  // signed in, never gated by role (I-1: owner-only, no exception, ever).
+  // (`registry.ts`'s `import.meta.glob` sort): accounts, departments, events, inbox, personal,
+  // projects, structure, work. Every one of those sidebar entries is visible to every signed-in role
+  // except `department-requests` (the super-admin approval queue) and the core `admin` entry, which
+  // stay `super_admin`-only -- 'personal' (EPIC-009) and 'inbox' (EPIC-010) included: a personal
+  // workspace and a notification inbox both belong to whoever is signed in, never gated by role.
   const featureEntryIds = [
     'account-settings',
     'departments',
     'events',
+    'inbox',
     'personal',
     'projects',
     'structure',
@@ -40,6 +41,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'departments',
       'department-requests',
       'events',
+      'inbox',
       'personal',
       'projects',
       'structure',

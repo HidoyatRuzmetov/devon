@@ -1,0 +1,91 @@
+{
+  "inbox": {
+    "title": "Bildirishnomalar",
+    "eyebrow": "XABARLAR",
+    "markAllRead": "Barchasini oʻqilgan deb belgilash",
+    "calendarLink": "Taqvim havolasi",
+    "tabs": {
+      "inbox": "Barchasi",
+      "unread": "Oʻqilmagan",
+      "archived": "Arxiv"
+    },
+    "empty": {
+      "inbox": {
+        "title": "Bildirishnomalar yoʻq",
+        "body": "Ishingizga oid bildirishnomalar shu yerda koʻrinadi."
+      },
+      "unread": {
+        "title": "Oʻqilmagan narsa yoʻq",
+        "body": "Barcha bildirishnomalarni koʻrib chiqdingiz."
+      },
+      "archived": {
+        "title": "Arxivlangan bildirishnoma yoʻq",
+        "body": "Arxivlagan bildirishnomalaringiz shu yerda koʻrinadi."
+      }
+    },
+    "reason": {
+      "assigned": "Topshiriq",
+      "mentioned": "Eslatish",
+      "due": "Muddat",
+      "updated": "Yangilanish",
+      "rsvp": "Ishtirok",
+      "poll": "Soʻrovnoma",
+      "decision": "Qaror",
+      "digest": "Xulosa",
+      "system": "Tizim"
+    },
+    "channel": {
+      "inapp": "Ilovada",
+      "telegram": "Telegram",
+      "email": "Elektron pochta"
+    },
+    "row": {
+      "unread": "Oʻqilmagan",
+      "archive": "Arxivlash",
+      "archived": "Arxivlandi",
+      "snooze": "Kechiktirish",
+      "snoozed": "Kechiktirildi",
+      "snoozeOptions": {
+        "hour": "1 soatga",
+        "tomorrow": "Ertaga ertalab",
+        "nextWeek": "Keyingi haftaga"
+      }
+    },
+    "detail": {
+      "title": "Bildirishnoma",
+      "close": "Yopish",
+      "openLink": "Ochish"
+    },
+    "preferences": {
+      "title": "Bildirishnoma sozlamalari",
+      "body": "Qanday bildirishnomalar va qayerga kelishini tanlang.",
+      "reasonColumn": "Bildirishnoma turi",
+      "toggleAria": "{reason} — {channel} orqali",
+      "digestFrequency": "Xulosa chastotasi",
+      "digestMode": {
+        "instant": "Darhol",
+        "daily": "Har kuni",
+        "weekly": "Har hafta",
+        "off": "Oʻchirilgan"
+      },
+      "quietHours": {
+        "title": "Tinch soatlar",
+        "usingDepartmentDefault": "Boʻlimning andozasi qoʻllanmoqda: {range}",
+        "usingPersonal": "Shaxsiy vaqtingiz: {range}",
+        "start": "Boshlanishi",
+        "end": "Tugashi",
+        "weekends": "Dam olish kunlarini ham qamrab olsin",
+        "tooLoud": "Bu oraliq boʻlim andozasidan kamida shuncha tinch boʻlishi kerak.",
+        "useDefault": "Boʻlim andozasidan foydalanish"
+      },
+      "calendar": {
+        "title": "Taqvim lentasi",
+        "body": "Muddatlaringiz va tadbirlaringizni istalgan taqvim ilovasiga qoʻshing.",
+        "reveal": "Havolani olish",
+        "copy": "Havolani nusxalash"
+      },
+      "save": "Saqlash",
+      "saved": "Sozlamalar saqlandi"
+    }
+  }
+}
