@@ -9,6 +9,10 @@ additions are made by the human or via an ADR merged by `wp-release`.
   through Postgres row-level security (`select set_config('app.department_id', $1, true)`) and the
   repository layer. Personal-workspace rows carry `user_id` and are readable by that user only, never
   by the head, never by the super admin's view-as. No raw query bypasses either.
+- I-1a One exception to I-1, by decision on 2026-09-06: a signed-in user may read their OWN rows of
+  `memberships` without department context (`user_id = app.current_user_id()`), because "which
+  departments am I in" is what establishes department context. The policy must never return another
+  user's row, and no other table gets a self-read carve-out. Verified by migrate:verify's RLS checks.
 - I-2 The system stores no HR-grade personal data (no birth dates, IDs, addresses, documents).
   Contact details beyond work fields are optional, never returned by list endpoints, and reads by the
   head or super admin are logged.

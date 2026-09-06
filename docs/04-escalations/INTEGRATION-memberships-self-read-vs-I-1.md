@@ -4,7 +4,7 @@
 - **Raised by:** integration session merging `blitz/accounts-departments`, `blitz/structure`,
   `blitz/work`, `blitz/events`, `blitz/personal`, `blitz/inbox-telegram` into `master`
 - **Kind:** contradiction
-- **Status:** OPEN
+- **Status:** ANSWERED
 
 ## The one question
 
@@ -71,3 +71,10 @@ only how that one read is authorized.
 ## Answer (filled by the human, or by wp-pm after a chat reply)
 
 <open>
+
+
+## Answer
+
+2026-09-06 (CTO session): **Accepted.** The user-scoped self-read of one's own membership rows is the
+correct reading; it is now written into INVARIANTS.md as I-1a. Keep the shipped policies and the narrowed
+RLS check. No other table may get a self-read carve-out.
