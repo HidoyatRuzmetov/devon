@@ -9,7 +9,9 @@
 // brand-new department id) instead use `actorRole: 'super_admin'` purely as an RLS-evaluation choice
 // for that one internal query -- never as a stand-in for the real actor's authorization, which the
 // caller (`index.ts`) has already decided via `can()` before any of these functions run. See
-// `apps/api/src/db/repo.ts`'s `listMembershipsForUser` for the identical, already-reviewed pattern.
+// `apps/api/src/db/repo.ts`'s `listActiveMembershipsForUser` for the identical, already-reviewed
+// pattern (`GET /me`'s only remaining source of membership rows once `listMembershipsForUser` --
+// this same idea, duplicated -- was folded into it while integrating the `work` module).
 import { randomBytes, randomUUID } from 'node:crypto'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'

@@ -1,0 +1,623 @@
+// Work core (TECH-SPEC §3.2/§4, EPIC-004): cards, checklist, comments, activity, labels, the People
+// board, saved views, filter grammar, archive. Every route is `{kind:'department_child'}`, scoped to
+// `req.actor.departmentId` (this build's one active department per session -- EPIC-002 has not
+// shipped a switcher yet, see `apps/api/src/lib/actor.ts`).
+import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
+import { checkCsrf } from '../../lib/csrf.js'
+import { sendProblem } from '../../lib/problem-reply.js'
+import { contextFromRequest } from './context.js'
+import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
+import * as repo from './repo.js'
+import {
+  archiveListSchema,
+  boardSchema,
+  cardChecklistParamsSchema,
+  cardDetailSchema,
+  cardListQuerySchema,
+  cardListSchema,
+  createCardBodySchema,
+  createChecklistItemBodySchema,
+  createCommentBodySchema,
+  createLabelBodySchema,
+  createSavedViewBodySchema,
+  idParamsSchema,
+  labelListSchema,
+  patchCardBodySchema,
+  patchChecklistItemBodySchema,
+  savedViewListSchema,
+  unfurlBodySchema,
+  unfurlResultSchema,
+  type CardDTO,
+} from './schemas.js'
+
+function departmentChildSubject(departmentId: string | null) {
+  return { kind: 'department_child' as const, departmentId: departmentId ?? '' }
+}
+
+/** `''` (no membership) never satisfies `can()` for any real department id, so this is a safe,
+ * fail-closed default -- a request with no active department is denied, never accidentally scoped to
+ * "no filter at all". */
+function requireDepartmentId(req: {
+  actor: { departmentId: string | null } | null
+}): string | null {
+  return req.actor?.departmentId ?? null
+}
+
+function toFilterable(
+  card: CardDTO,
+  projectNames: Map<string, string>,
+  labelNames: Map<string, string>,
+): FilterableCard {
+  return {
+    id: card.id,
+    title: card.title,
+    description: card.description?.text ?? null,
+    status: card.status,
+    assigneeUserId: card.assigneeUserId,
+    giverUserId: card.giverUserId,
+    dueAt: card.dueAt,
+    projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
+    labelNames: card.labels.map((id) => labelNames.get(id) ?? '').filter(Boolean),
+    unitName: null, // EPIC-003 (structure/bo'limlar) has not shipped yet
+  }
+}
+
+const workRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.get(
+    '/board',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { response: { 200: boardSchema } },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)
+      if (!departmentId) return reply.send({ members: [], columns: [], unassigned: [], labels: [] })
+      const ctx = contextFromRequest(req)
+      const [members, cards, labels] = await Promise.all([
+        repo.getMembers(ctx, departmentId),
+        repo.listCards(ctx, departmentId, { excludeArchived: true }),
+        repo.getLabels(ctx, departmentId),
+      ])
+      const active = cards.filter((c) => c.status !== 'done')
+      const byAssignee = new Map<string, CardDTO[]>()
+      const unassigned: CardDTO[] = []
+      for (const card of active) {
+        if (!card.assigneeUserId) {
+          unassigned.push(card)
+          continue
+        }
+        const list = byAssignee.get(card.assigneeUserId) ?? []
+        list.push(card)
+        byAssignee.set(card.assigneeUserId, list)
+      }
+      const columns = members.map((member) => ({
+        member,
+        cards: byAssignee.get(member.userId) ?? [],
+      }))
+      reply.send({ members, columns, unassigned, labels })
+    },
+  )
+
+  app.get(
+    '/cards',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { querystring: cardListQuerySchema, response: { 200: cardListSchema } },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)
+      if (!departmentId) return reply.send({ items: [], nextCursor: null })
+      const ctx = contextFromRequest(req)
+      const [cards, members, labels, projectNames] = await Promise.all([
+        repo.listCards(ctx, departmentId, {}),
+        repo.getMembers(ctx, departmentId),
+        repo.getLabels(ctx, departmentId),
+        repo.getProjectNames(ctx, departmentId),
+      ])
+      const labelNames = new Map(labels.map((l) => [l.id, l.name]))
+      const resolveUserIds = (token: string): string[] => {
+        const needle = token.replace(/^@/, '').toLowerCase()
+        return members
+          .filter(
+            (m) =>
+              m.givenName.toLowerCase().includes(needle) ||
+              m.familyName.toLowerCase().includes(needle),
+          )
+          .map((m) => m.userId)
+      }
+
+      let filtered = cards
+      if (req.query.q && req.query.q.trim().length > 0) {
+        const query = parseFilterQuery(req.query.q)
+        filtered = cards.filter((c) =>
+          matchesFilterQuery(toFilterable(c, projectNames, labelNames), query, {
+            meUserId: req.actor!.userId,
+            resolveUserIds,
+          }),
+        )
+      }
+      if (req.query.mine) {
+        filtered = filtered.filter((c) => c.assigneeUserId === req.actor!.userId)
+      }
+
+      const limit = req.query.limit ?? 50
+      const cursorIndex = req.query.cursor ? Number(req.query.cursor) : 0
+      const page = filtered.slice(cursorIndex, cursorIndex + limit)
+      const nextCursor = cursorIndex + limit < filtered.length ? String(cursorIndex + limit) : null
+      reply.send({ items: page, nextCursor })
+    },
+  )
+
+  app.post(
+    '/cards',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: createCardBodySchema, response: { 201: cardDetailSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const card = await repo.createCard(ctx, {
+        departmentId,
+        title: req.body.title,
+        description: req.body.description,
+        kind: req.body.kind,
+        assigneeUserId: req.body.assigneeUserId,
+        giverUserId: req.body.giverUserId,
+        priority: req.body.priority,
+        startAt: req.body.startAt,
+        dueAt: req.body.dueAt,
+        labels: req.body.labels,
+        links: req.body.links,
+        projectId: req.body.projectId,
+        projectScope: req.body.projectScope,
+        orderKey: req.body.orderKey,
+        createdByUserId: req.actor!.userId,
+      })
+      reply.code(201).send({ ...card, checklist: [], comments: [], activity: [] })
+    },
+  )
+
+  app.get(
+    '/cards/:id',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 200: cardDetailSchema } },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const card = await repo.getCard(ctx, departmentId, req.params.id)
+      if (!card) return sendProblem(reply, 'not_found')
+      const [checklist, comments, activity] = await Promise.all([
+        repo.getChecklist(ctx, card.id),
+        repo.getComments(ctx, card.id),
+        repo.getActivity(ctx, card.id),
+      ])
+      reply.send({ ...card, checklist, comments, activity })
+    },
+  )
+
+  app.patch(
+    '/cards/:id',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: idParamsSchema,
+        body: patchCardBodySchema,
+        response: { 200: cardDetailSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const { version, ...patch } = req.body
+      const result = await repo.patchCard(
+        ctx,
+        departmentId,
+        req.params.id,
+        patch,
+        version,
+        req.actor!.userId,
+      )
+      if (!result.ok) {
+        return sendProblem(reply, result.reason === 'conflict' ? 'conflict' : 'not_found')
+      }
+      const [checklist, comments, activity] = await Promise.all([
+        repo.getChecklist(ctx, result.card.id),
+        repo.getComments(ctx, result.card.id),
+        repo.getActivity(ctx, result.card.id),
+      ])
+      reply.send({ ...result.card, checklist, comments, activity })
+    },
+  )
+
+  app.post(
+    '/cards/:id/restore',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ok = await repo.restoreCard(
+        contextFromRequest(req),
+        departmentId,
+        req.params.id,
+        req.actor!.userId,
+      )
+      if (!ok) return sendProblem(reply, 'not_found')
+      reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/cards/:id/checklist',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: idParamsSchema,
+        body: createChecklistItemBodySchema,
+        response: { 201: z.object({ id: z.string().uuid() }) },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const id = await repo.addChecklistItem(
+        contextFromRequest(req),
+        departmentId,
+        req.params.id,
+        req.body,
+      )
+      reply.code(201).send({ id })
+    },
+  )
+
+  app.patch(
+    '/cards/:id/checklist/:itemId',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: cardChecklistParamsSchema,
+        body: patchChecklistItemBodySchema,
+        response: { 204: z.undefined() },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ok = await repo.patchChecklistItem(
+        contextFromRequest(req),
+        departmentId,
+        req.params.itemId,
+        req.body,
+      )
+      if (!ok) return sendProblem(reply, 'not_found')
+      reply.code(204).send()
+    },
+  )
+
+  app.delete(
+    '/cards/:id/checklist/:itemId',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: cardChecklistParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ok = await repo.deleteChecklistItem(
+        contextFromRequest(req),
+        departmentId,
+        req.params.itemId,
+      )
+      if (!ok) return sendProblem(reply, 'not_found')
+      reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/cards/:id/comments',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: idParamsSchema,
+        body: createCommentBodySchema,
+        response: { 201: z.object({ id: z.string().uuid() }) },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const id = await repo.addComment(
+        contextFromRequest(req),
+        departmentId,
+        req.params.id,
+        req.actor!.userId,
+        req.body.text,
+        req.body.mentions ?? [],
+      )
+      reply.code(201).send({ id })
+    },
+  )
+
+  app.get(
+    '/cards/:id/activity',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 200: z.array(z.any()) } },
+    },
+    async (req, reply) => {
+      reply.send(await repo.getActivity(contextFromRequest(req), req.params.id))
+    },
+  )
+
+  app.get(
+    '/labels',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { response: { 200: labelListSchema } },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)
+      reply.send(departmentId ? await repo.getLabels(contextFromRequest(req), departmentId) : [])
+    },
+  )
+
+  app.post(
+    '/labels',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: createLabelBodySchema, response: { 201: labelListSchema.element } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const label = await repo.createLabel(
+        contextFromRequest(req),
+        departmentId,
+        req.body.name,
+        req.body.colour ?? '#6366f1',
+      )
+      reply.code(201).send(label)
+    },
+  )
+
+  app.get(
+    '/views',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { response: { 200: savedViewListSchema } },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)
+      if (!departmentId) return reply.send([])
+      reply.send(
+        await repo.listSavedViews(contextFromRequest(req), departmentId, req.actor!.userId),
+      )
+    },
+  )
+
+  app.post(
+    '/views',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: createSavedViewBodySchema, response: { 201: savedViewListSchema.element } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const view = await repo.createSavedView(
+        contextFromRequest(req),
+        departmentId,
+        req.actor!.userId,
+        req.body,
+      )
+      reply.code(201).send(view)
+    },
+  )
+
+  app.delete(
+    '/views/:id',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ok = await repo.deleteSavedView(
+        contextFromRequest(req),
+        departmentId,
+        req.actor!.userId,
+        req.params.id,
+      )
+      if (!ok) return sendProblem(reply, 'not_found')
+      reply.code(204).send()
+    },
+  )
+
+  app.get(
+    '/archive',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        querystring: z.object({ userId: z.string().uuid() }),
+        response: { 200: archiveListSchema },
+      },
+    },
+    async (req, reply) => {
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const [members, items] = await Promise.all([
+        repo.getMembers(ctx, departmentId),
+        repo.listArchiveForMember(ctx, departmentId, req.query.userId),
+      ])
+      const member = members.find((m) => m.userId === req.query.userId)
+      if (!member) return sendProblem(reply, 'not_found')
+      reply.send({ member, items })
+    },
+  )
+
+  app.post(
+    '/links/unfurl',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: unfurlBodySchema, response: { 200: unfurlResultSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      try {
+        reply.send(await unfurlLink(req.body.url))
+      } catch (err) {
+        if (err instanceof UnsafeUrlError) {
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'url', code: 'unsafe_url' }],
+          })
+        }
+        throw err
+      }
+    },
+  )
+
+  app.post(
+    '/cards/:id/watchers',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 200: cardDetailSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const existing = await repo.getCard(ctx, departmentId, req.params.id)
+      if (!existing) return sendProblem(reply, 'not_found')
+      const userId = req.actor!.userId
+      const nextWatchers = existing.watchers.includes(userId)
+        ? existing.watchers.filter((w) => w !== userId)
+        : [...existing.watchers, userId]
+      const result = await repo.patchCard(
+        ctx,
+        departmentId,
+        req.params.id,
+        { watchers: nextWatchers },
+        undefined,
+        userId,
+      )
+      if (!result.ok) return sendProblem(reply, 'not_found')
+      const [checklist, comments, activity] = await Promise.all([
+        repo.getChecklist(ctx, result.card.id),
+        repo.getComments(ctx, result.card.id),
+        repo.getActivity(ctx, result.card.id),
+      ])
+      reply.send({ ...result.card, checklist, comments, activity })
+    },
+  )
+}
+
+export default workRoutes
+
+// Auto-discovery (MODULE-GUIDE.md "API modules"): mounted at `/api/v1` -- `GET /board` below becomes
+// `GET /api/v1/board`.
+export const prefix = ''

@@ -1,0 +1,49 @@
+{
+  "projects": {
+    "title": "Guruh loyihalari",
+    "emptyTitle": "Hali loyihalar yoʻq",
+    "emptyBody": "Birinchi guruh loyihasini yarating -- shablondan yoki boshidan.",
+    "noIdTitle": "Loyiha koʻrsatilmagan",
+    "noIdBody": "Havolada loyiha identifikatori yoʻq.",
+    "tile": {
+      "progress": "{percent}% bajarildi"
+    },
+    "field": {
+      "title": "Nomi",
+      "titlePlaceholder": "Loyiha nomini kiriting",
+      "owner": "Mas'ul",
+      "ownerPlaceholder": "Mas'ulni tanlang",
+      "members": "Aʼzolar",
+      "template": "Shablon",
+      "milestones": "Bosqichlar",
+      "objective": "Umumiy vazifalar",
+      "subjective": "Shaxsiy vazifalar"
+    },
+    "status": {
+      "planning": "Rejalashtirilmoqda",
+      "active": "Faol",
+      "on_hold": "Toʻxtatilgan",
+      "done": "Yakunlangan",
+      "archived": "Arxivlangan"
+    },
+    "create": {
+      "button": "Yangi loyiha",
+      "title": "Guruh loyihasini yaratish",
+      "fromTemplate": "Shablondan",
+      "fromScratch": "Boshidan",
+      "submit": "Yaratish",
+      "success": "Loyiha yaratildi",
+      "error": "Loyihani yaratib boʻlmadi"
+    },
+    "milestone": {
+      "addPlaceholder": "Bosqich nomini kiriting"
+    },
+    "task": {
+      "addObjectivePlaceholder": "Umumiy vazifa qoʻshish",
+      "addSubjectivePlaceholder": "Shaxsiy vazifa qoʻshish"
+    },
+    "action": {
+      "archive": "Loyihani arxivlash"
+    }
+  }
+}

@@ -5,10 +5,10 @@
 // (design.md, this item's test/vitest.config.ts) never needs Postgres or Testcontainers, because tests
 // inject `test/unit/fake-deps.ts` instead of `src/db/repo.ts`'s real implementation.
 import type { ChainVerification } from '@devon/db'
-import type { Membership } from '@devon/contracts'
 import type {
   AuditCtx,
   InstanceSettingsRecord,
+  MembershipRecord,
   SessionRecord,
   SetupInput,
   UserRecord,
@@ -29,8 +29,6 @@ export type LoadedSession = {
 
 export type ConsumeSetupTokenResult = { ok: true; user: UserRecord } | { ok: false }
 
-export type MembershipView = { departmentId: string; name: string; role: 'head' | 'member' }
-
 export type Deps = {
   now(): Date
 
@@ -40,15 +38,17 @@ export type Deps = {
   findUserByLogin(login: string): Promise<UserRecord | null>
   findUserById(id: string): Promise<UserRecord | null>
 
-  /**
-   * Every active department this user belongs to (root-cause fix for `@devon/contracts`'s `can()`
-   * `department_child` check, which was permanently `not_a_member` for every real request until this
-   * existed -- see `src/lib/actor.ts`'s doc comment and this item's report for the full story: EPIC-002
-   * owns `/me` and its own `memberships: []` stub, this seam only feeds `Actor.memberships`). Backed
-   * by `app.memberships`'s additive `memberships_self_read` RLS policy (`migrations/0200_structure.sql`)
-   * so it works before any per-request department context is chosen.
-   */
-  listActiveMembershipsForUser(userId: string): Promise<Membership[]>
+  /** Every active (`memberships.status = 'active'`, department not soft-deleted) department
+   * membership for `userId`, department-name joined in -- root-cause fix for `@devon/contracts`'s
+   * `can()` `department_child` check, which was permanently `not_a_member` for every real request
+   * until this existed (`src/lib/actor.ts`'s doc comment has the full story), and also `GET /me`'s
+   * only source of membership rows (folded in while integrating this module alongside `accounts-
+   * departments`, which had its own, near-identical `listMembershipsForUser` -- see this item's
+   * report). Backed by `app.memberships`'s additive `memberships_read_own`/`memberships_self_read`
+   * RLS policies (`migrations/0100_accounts_departments.sql`, `migrations/0200_structure.sql`) so it
+   * works before any per-request department context is chosen. Ordered so the first row is a stable
+   * "default active department" until a real switcher lands (`joined_at` ascending, ties by id). */
+  listActiveMembershipsForUser(userId: string): Promise<MembershipRecord[]>
 
   updateUserProfile(
     userId: string,
@@ -81,14 +81,6 @@ export type Deps = {
   revokeSession(sessionId: string, reason: string, ctx: AuditCtx): Promise<void>
 
   recordAccessDenied(ctx: AuditCtx, info: { route: string; reason: string }): Promise<void>
-
-  /** EPIC-002: every active department membership for `userId`, across every department -- backs
-   * `Actor.memberships` (`lib/actor.ts`) and `GET /me`'s `memberships` field. `app.memberships`' RLS
-   * scopes a normal read to the single per-request department GUC (`migrations/0005_rls.sql`); this
-   * one legitimate cross-department case is covered by the additional `memberships_read_own` policy
-   * `migrations/0100_accounts_departments.sql` adds ("my own rows, any department"), so the real
-   * implementation runs this under the user's own id, not `super_admin`/view-as. */
-  listMembershipsForUser(userId: string): Promise<MembershipView[]>
 
   /** EPIC-001: whether `userId` has TOTP 2FA enabled -- `POST /auth/login` (a core, pre-EPIC-001
    * route) consults this to decide between starting a session immediately and starting a login

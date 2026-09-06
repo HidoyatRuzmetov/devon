@@ -1,0 +1,49 @@
+{
+  "projects": {
+    "title": "Гуруҳ лойиҳалари",
+    "emptyTitle": "Ҳали лойиҳалар йўқ",
+    "emptyBody": "Биринчи гуруҳ лойиҳасини яратинг -- шаблондан ёки бошидан.",
+    "noIdTitle": "Лойиҳа кўрсатилмаган",
+    "noIdBody": "Ҳаволада лойиҳа идентификатори йўқ.",
+    "tile": {
+      "progress": "{percent}% бажарилди"
+    },
+    "field": {
+      "title": "Номи",
+      "titlePlaceholder": "Лойиҳа номини киритинг",
+      "owner": "Масъул",
+      "ownerPlaceholder": "Масъулни танланг",
+      "members": "Аъзолар",
+      "template": "Шаблон",
+      "milestones": "Босқичлар",
+      "objective": "Умумий вазифалар",
+      "subjective": "Шахсий вазифалар"
+    },
+    "status": {
+      "planning": "Режалаштирилмоқда",
+      "active": "Фаол",
+      "on_hold": "Тўхтатилган",
+      "done": "Якунланган",
+      "archived": "Архивланган"
+    },
+    "create": {
+      "button": "Янги лойиҳа",
+      "title": "Гуруҳ лойиҳасини яратиш",
+      "fromTemplate": "Шаблондан",
+      "fromScratch": "Бошидан",
+      "submit": "Яратиш",
+      "success": "Лойиҳа яратилди",
+      "error": "Лойиҳани яратиб бўлмади"
+    },
+    "milestone": {
+      "addPlaceholder": "Босқич номини киритинг"
+    },
+    "task": {
+      "addObjectivePlaceholder": "Умумий вазифа қўшиш",
+      "addSubjectivePlaceholder": "Шахсий вазифа қўшиш"
+    },
+    "action": {
+      "archive": "Лойиҳани архивлаш"
+    }
+  }
+}

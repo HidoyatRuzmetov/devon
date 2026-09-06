@@ -81,14 +81,26 @@ async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
 
 /** No feature needed a DELETE call until structure's bo'lim/unit-role removal (EPIC-003) -- added
  * here, next to `get`/`send`, rather than reinventing it per-feature, the same "one place `fetch` is
- * called" reasoning this file's own header states. A 204 (no body) is the common case; a 200 with a
- * body (e.g. "here's the `deletedAt` you'll need to undo this") is also supported. */
-async function del<T>(path: string, schema: z.ZodType<T>, csrfToken?: string): Promise<T> {
+ * called" reasoning this file's own header states. Two shapes, both real: structure's unit delete
+ * replies `200` with a body (`{ deletedAt }`, so the caller can undo it) and takes a response schema;
+ * work's card-checklist/saved-view deletes always reply `204` and have nothing to parse, so they call
+ * this with no schema at all. Overloaded rather than two differently-named methods, so every feature's
+ * `api.ts` still reaches this through the one `apiClient.delete` this file's header promises. */
+async function del<T>(path: string, schema: z.ZodType<T>, csrfToken?: string): Promise<T>
+async function del(path: string, csrfToken?: string): Promise<void>
+async function del<T>(
+  path: string,
+  schemaOrCsrfToken?: z.ZodType<T> | string,
+  maybeCsrfToken?: string,
+): Promise<T | void> {
+  const schema = typeof schemaOrCsrfToken === 'string' ? undefined : schemaOrCsrfToken
+  const csrfToken = schema ? maybeCsrfToken : (schemaOrCsrfToken as string | undefined)
   const res = await raw(path, {
     method: 'DELETE',
     ...(csrfToken ? { headers: { [CSRF_HEADER]: csrfToken } } : {}),
   })
   if (!res.ok) await parseErrorAndThrow(res)
+  if (!schema) return
   if (res.status === 204) return undefined as T
   return schema.parse(await res.json())
 }
@@ -131,8 +143,7 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
-  delete: <T>(path: string, schema: z.ZodType<T>, csrfToken?: string) =>
-    del(path, schema, csrfToken),
+  delete: del,
 }
 
 export function fetchInstance(): Promise<InstancePublic> {

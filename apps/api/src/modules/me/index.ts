@@ -6,26 +6,31 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { CSRF_COOKIE_NAME } from '../../lib/cookies.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import { toPublicUser } from '../../lib/user-view.js'
-import type { MembershipView } from '../../deps.js'
-import type { UserRecord } from '../../types.js'
+import type { MembershipRecord, UserRecord } from '../../types.js'
 
-// EPIC-002: real memberships via `Deps.listMembershipsForUser` -- the same call `plugins/session.ts`'s
+// Real memberships via `Deps.listActiveMembershipsForUser` -- the same call `plugins/session.ts`'s
 // `buildActor` makes for `req.actor.memberships`, run again here because the response also needs each
 // department's display `name`, which `Actor.memberships` deliberately does not carry (permissions.ts's
 // `Membership` type is `{ departmentId, role }` only).
-function toMe(user: UserRecord, memberships: MembershipView[], isDemo: boolean, csrfToken: string) {
+function toMe(
+  user: UserRecord,
+  memberships: readonly MembershipRecord[],
+  isDemo: boolean,
+  csrfToken: string,
+) {
   return {
     user: toPublicUser(user),
     memberships: memberships.map((m) => ({
       departmentId: m.departmentId,
-      name: m.name,
+      name: m.departmentName,
       role: m.role,
     })),
     membershipCount: memberships.length,
-    // No "switch department" endpoint yet (MODULE-GUIDE.md "Web features"): the first membership is
-    // as good a default as any until one exists -- `useDepartment()`'s client-side override still wins
-    // in the browser for anyone who has picked a different one (`activeDepartmentId` here only seeds
-    // that resolution order's first candidate).
+    // No "switch department" endpoint yet (MODULE-GUIDE.md "Web features"): the first membership
+    // (`joined_at` ascending, `listActiveMembershipsForUser`'s own order) is as good a default as any
+    // until one exists -- `useDepartment()`'s client-side override still wins in the browser for
+    // anyone who has picked a different one (`activeDepartmentId` here only seeds that resolution
+    // order's first candidate).
     activeDepartmentId: memberships[0]?.departmentId ?? null,
     actingForUserId: null,
     instance: { isDemo, maintenance: false },
@@ -48,7 +53,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const [settings, memberships] = await Promise.all([
         app.devon.getInstanceSettings(),
-        app.devon.listMembershipsForUser(req.actorUser!.id),
+        app.devon.listActiveMembershipsForUser(req.actorUser!.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
       reply.send(toMe(req.actorUser!, memberships, settings.isDemo, csrfToken))
@@ -79,7 +84,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       })
       const [settings, memberships] = await Promise.all([
         app.devon.getInstanceSettings(),
-        app.devon.listMembershipsForUser(updated.id),
+        app.devon.listActiveMembershipsForUser(updated.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
       reply.send(toMe(updated, memberships, settings.isDemo, csrfToken))

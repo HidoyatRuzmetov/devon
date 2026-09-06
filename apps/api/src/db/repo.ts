@@ -12,14 +12,8 @@ import {
   createLoginChallenge as accountsCreateLoginChallenge,
   getTwoFactorStatus as accountsGetTwoFactorStatus,
 } from '../modules/accounts/repo.js'
-import type {
-  Deps,
-  CreatedSession,
-  LoadedSession,
-  ConsumeSetupTokenResult,
-  MembershipView,
-} from '../deps.js'
-import type { AuditCtx, InstanceSettingsRecord, UserRecord } from '../types.js'
+import type { Deps, CreatedSession, LoadedSession, ConsumeSetupTokenResult } from '../deps.js'
+import type { AuditCtx, InstanceSettingsRecord, MembershipRecord, UserRecord } from '../types.js'
 
 const SESSION_ABSOLUTE_DAYS = 30
 const SETUP_TOKEN_TTL_HOURS = 24
@@ -149,19 +143,31 @@ export function createRepo(): Deps {
       return withContext(anonymousCtx(), (tx) => selectUserById(tx, id))
     },
 
-    async listActiveMembershipsForUser(userId) {
+    async listActiveMembershipsForUser(userId): Promise<MembershipRecord[]> {
+      // No department chosen yet for this request (unlike `toDbContext`, which always carries one it
+      // already knows) -- only `app.user_id` is set, which is exactly what `app.memberships`'s (and
+      // `app.departments`'s) additive self-read policies key on (`memberships_read_own` in
+      // `migrations/0100_accounts_departments.sql`, `memberships_self_read`/`departments_self_read` in
+      // `migrations/0200_structure.sql` -- all three narrowly "my own rows, any department", combined
+      // with the base policies by Postgres's permissive-OR semantics). `anonymousCtx()` would not work
+      // here: its `userId: null` means `app.current_user_id()` is null inside the transaction, so every
+      // one of those `user_id = app.current_user_id()` policies would reject every row.
       return withContext(selfCtx(userId), async (tx) => {
-        const rows = await tx.drizzle
-          .select({ departmentId: schema.memberships.departmentId, role: schema.memberships.role })
-          .from(schema.memberships)
-          .where(
-            and(
-              eq(schema.memberships.userId, userId),
-              eq(schema.memberships.status, 'active'),
-              isNull(schema.memberships.deletedAt),
-            ),
-          )
-        return rows.map((r) => ({ departmentId: r.departmentId, role: r.role }))
+        const rows = await tx.raw<{ department_id: string; department_name: string; role: string }>(
+          sql`select m.department_id, d.name as department_name, m.role
+              from app.memberships m
+              join app.departments d on d.id = m.department_id
+              where m.user_id = ${userId}
+                and m.status = 'active'
+                and m.deleted_at is null
+                and d.deleted_at is null
+              order by m.joined_at asc, m.id asc`,
+        )
+        return rows.map((r) => ({
+          departmentId: r.department_id,
+          departmentName: r.department_name,
+          role: r.role as 'head' | 'member',
+        }))
       })
     },
 
@@ -342,50 +348,6 @@ export function createRepo(): Deps {
           after: { reason },
         })
       })
-    },
-
-    async listMembershipsForUser(userId): Promise<MembershipView[]> {
-      // `app.user_id` GUC is set to the real `userId`, so `memberships_read_own`
-      // (migrations/0100_accounts_departments.sql) permits exactly "my own rows, any department" --
-      // never anyone else's. `app.actor_role` is set to `super_admin` only to satisfy `departments_read`
-      // (0005_rls.sql: `... or current_actor_role() = 'super_admin'`) for the join below, a query-local
-      // RLS-evaluation choice with no bearing on the actual request's `can()` authorization (which never
-      // reads these Postgres GUCs -- see `packages/contracts/src/permissions.ts`), scoped to exactly the
-      // department rows `memberships_read_own` already proved this user belongs to.
-      return withContext(
-        {
-          requestId: randomUUID(),
-          userId,
-          actorRole: 'super_admin',
-          departmentId: null,
-          actingForUserId: null,
-          viewAs: false,
-          ip: '',
-          userAgent: '',
-        },
-        async (tx) => {
-          const rows = await tx.drizzle
-            .select({
-              departmentId: schema.memberships.departmentId,
-              role: schema.memberships.role,
-              name: schema.departments.name,
-            })
-            .from(schema.memberships)
-            .innerJoin(
-              schema.departments,
-              eq(schema.departments.id, schema.memberships.departmentId),
-            )
-            .where(
-              and(
-                eq(schema.memberships.userId, userId),
-                eq(schema.memberships.status, 'active'),
-                isNull(schema.memberships.deletedAt),
-                isNull(schema.departments.deletedAt),
-              ),
-            )
-          return rows.map((r) => ({ departmentId: r.departmentId, name: r.name, role: r.role }))
-        },
-      )
     },
 
     async recordAccessDenied(ctx, info) {
