@@ -137,3 +137,40 @@ export const accountStatusMessageSchema = z.object({ ok: z.boolean() })
 
 export const sessionIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
 export const userIdParamsSchema = z.object({ userId: z.string().uuid() }).strict()
+
+// --- EPIC-001 photo upload (storage plugin, TECH-SPEC §2.1/§6) -----------------------------------
+
+/** Declared up front so the presigned URL can be bound to a content type and the finalise step can
+ * refuse anything that does not match it byte-for-byte (`lib/storage/image.ts`). The size ceiling
+ * here mirrors the default `STORAGE_MAX_UPLOAD_BYTES`; the route re-checks against the live config. */
+export const avatarUploadUrlBodySchema = z
+  .object({
+    contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+    size: z
+      .number()
+      .int()
+      .positive()
+      .max(5 * 1024 * 1024),
+  })
+  .strict()
+export type AvatarUploadUrlBody = z.infer<typeof avatarUploadUrlBodySchema>
+
+export const avatarUploadUrlResultSchema = z.object({
+  uploadId: z.string().uuid(),
+  url: z.string(),
+  method: z.literal('PUT'),
+  headers: z.record(z.string(), z.string()),
+  expiresAt: z.string(),
+})
+
+export const avatarFinalizeBodySchema = z.object({ uploadId: z.string().uuid() }).strict()
+
+export const avatarResultSchema = z.object({ user: publicUserSchema })
+
+export const avatarImageParamsSchema = z
+  .object({
+    userId: z.string().uuid(),
+    uploadId: z.string().uuid(),
+    size: z.enum(['64', '128', '512']),
+  })
+  .strict()

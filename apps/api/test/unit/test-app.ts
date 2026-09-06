@@ -1,9 +1,16 @@
 // Shared test bootstrap: a real `buildApp()` wired to the in-memory fake `Deps`, so route/permission
 // tests exercise the actual Fastify wiring (onRoute boot guard, authorize preHandler, cookie
 // attributes) without ever touching Postgres.
-import { buildApp } from '../../src/app.js'
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { buildApp, type BuildAppOptions } from '../../src/app.js'
 import type { Config } from '../../src/config.js'
 import { createFakeDeps, createFakeState, type FakeState } from './fake-deps.js'
+
+/** One temp directory per test process for the storage plugin's local driver -- objects an avatar
+ * test writes never land inside the repo, and never collide across parallel vitest workers. */
+const STORAGE_TMP_DIR = mkdtempSync(join(tmpdir(), 'devon-storage-test-'))
 
 export function testConfig(overrides: Partial<Config> = {}): Config {
   return {
@@ -19,14 +26,31 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     // test explicitly passes `remoteAddress`, so the loopback gate is exercised for real (not bypassed).
     DEVON_SETUP_REMOTE: false,
     LOG_LEVEL: 'silent',
+    STORAGE_DRIVER: 'local',
+    STORAGE_LOCAL_DIR: STORAGE_TMP_DIR,
+    STORAGE_S3_REGION: 'us-east-1',
+    STORAGE_S3_BUCKET: 'devon',
+    STORAGE_S3_FORCE_PATH_STYLE: true,
+    STORAGE_MAX_UPLOAD_BYTES: 5 * 1024 * 1024,
+    STORAGE_TIMEOUT_MS: 10_000,
+    // Unit tests never run a clamd; the infected path is exercised through `BuildAppOptions.storage`
+    // (a fake scanner), see `test/unit/accounts/avatar.test.ts`.
+    CLAMAV_MODE: 'off',
+    CLAMAV_HOST: '127.0.0.1',
+    CLAMAV_PORT: 3310,
+    CLAMAV_TIMEOUT_MS: 20_000,
     ...overrides,
   }
 }
 
-export async function buildTestApp(state: FakeState = createFakeState()) {
-  const config = testConfig()
+export async function buildTestApp(
+  state: FakeState = createFakeState(),
+  options: BuildAppOptions & { config?: Partial<Config> } = {},
+) {
+  const { config: configOverrides, ...buildOptions } = options
+  const config = testConfig(configOverrides)
   const deps = createFakeDeps(state)
-  const app = await buildApp(deps, config)
+  const app = await buildApp(deps, config, buildOptions)
   await app.ready()
   return { app, deps, state, config }
 }

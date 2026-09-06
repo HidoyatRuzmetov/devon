@@ -36,7 +36,9 @@
     "sessions": {
       "title": "Qurilmalar va seanslar",
       "subtitle": "Hisobingizga kirilgan barcha qurilmalar ro'yxati.",
-      "empty": { "title": "Faol seanslar yo'q" },
+      "empty": {
+        "title": "Faol seanslar yo'q"
+      },
       "current": "Joriy qurilma",
       "lastSeen": "Oxirgi faollik: {when}",
       "revoke": "Chiqish",
@@ -103,6 +105,29 @@
       "profile": "Profil",
       "security": "Xavfsizlik",
       "dangerZone": "Xavfli hudud"
+    },
+    "photo": {
+      "title": "Profil surati",
+      "subtitle": "Devon'da ismingiz yonida ko'rsatiladi.",
+      "hint": "JPEG, PNG yoki WebP, 5 MB gacha. Surat ko'rsatilishidan oldin zararli dasturlarga tekshiriladi va o'lchami moslanadi.",
+      "choose": "Surat tanlash",
+      "change": "Suratni o'zgartirish",
+      "remove": "Suratni o'chirish",
+      "optional": "Surat (ixtiyoriy)",
+      "uploading": "Yuklanmoqda…",
+      "scanning": "Fayl tekshirilmoqda…",
+      "savedToast": "Surat yangilandi",
+      "removedToast": "Surat o'chirildi",
+      "registerFailedToast": "Hisobingiz yaratildi, lekin suratni yuklab bo'lmadi. Uni Hisob sozlamalarida qo'shishingiz mumkin.",
+      "alt": "Profil suratingiz",
+      "error": {
+        "type": "JPEG, PNG yoki WebP formatidagi rasm tanlang.",
+        "tooLarge": "Fayl hajmi 5 MB dan katta.",
+        "invalidImage": "Bu fayl yaroqli rasm emas.",
+        "infected": "Bu fayl zararli dastur tekshiruvidan o'tmadi va saqlanmadi.",
+        "unavailable": "Surat yuklash hozircha ishlamayapti. Bir necha daqiqadan so'ng qayta urinib ko'ring.",
+        "generic": "Suratni yuklab bo'lmadi. Qayta urinib ko'ring."
+      }
     }
   }
 }

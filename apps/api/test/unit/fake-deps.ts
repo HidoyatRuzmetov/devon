@@ -17,6 +17,7 @@ import type {
   MembershipRecord,
   SessionRecord,
   SetupInput,
+  UploadRecord,
   UserRecord,
 } from '../../src/types.js'
 import type { ChainVerification } from '@devon/db'
@@ -60,6 +61,10 @@ export type FakeState = {
    * race-safe UPDATE, simulating a concurrent winner (AC-12's disproof: "a setup URL that works
    * twice"). */
   forceSetupRaceLoss: boolean
+  /** EPIC-001 photo upload: every `app.uploads` row the storage plugin's presign step created, in
+   * insertion order -- a test reads the status transitions (`pending` -> `finalized`/`rejected`/
+   * `infected`/...) straight off these objects. */
+  uploads: UploadRecord[]
 }
 
 export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
@@ -79,6 +84,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     dbReady: true,
     migrationsApplied: true,
     forceSetupRaceLoss: false,
+    uploads: [],
     ...overrides,
   }
 }
@@ -246,6 +252,83 @@ export function createFakeDeps(state: FakeState): Deps {
       const token = randomUUID() + randomUUID()
       state.loginChallenges.set(token, { userId })
       return token
+    },
+
+    // --- EPIC-001 photo upload (storage plugin) ---------------------------------------------------
+
+    async createUpload(input, ctx) {
+      const upload: UploadRecord = {
+        id: input.id,
+        userId: input.userId,
+        purpose: input.purpose,
+        key: input.key,
+        mime: input.mime,
+        size: input.size,
+        status: 'pending',
+        error: null,
+        createdAt: new Date(),
+        expiresAt: input.expiresAt,
+        finalizedAt: null,
+      }
+      state.uploads.push(upload)
+      state.auditEvents.push({
+        action: 'storage.upload_requested',
+        subjectType: 'upload',
+        subjectId: upload.id,
+        actorUserId: ctx.userId,
+      })
+      return { ...upload }
+    },
+
+    async findOwnUpload(uploadId, userId) {
+      const upload = state.uploads.find((u) => u.id === uploadId && u.userId === userId)
+      return upload ? { ...upload } : null
+    },
+
+    async markUpload(uploadId, userId, patch, ctx) {
+      const upload = state.uploads.find(
+        (u) => u.id === uploadId && u.userId === userId && u.status === 'pending',
+      )
+      if (!upload) return
+      upload.status = patch.status
+      upload.error = patch.error ?? null
+      state.auditEvents.push({
+        action: `storage.upload_${patch.status}`,
+        subjectType: 'upload',
+        subjectId: uploadId,
+        actorUserId: ctx.userId,
+        after: { status: patch.status, error: upload.error },
+      })
+    },
+
+    async setUserAvatar(userId, next, ctx) {
+      const user = state.users.find((u) => u.id === userId)
+      if (!user) throw new Error('user not found')
+      const before = user.avatarKey
+      user.avatarKey = next.avatarKey
+      if (next.uploadId) {
+        const upload = state.uploads.find((u) => u.id === next.uploadId && u.userId === userId)
+        if (upload) {
+          upload.status = 'finalized'
+          upload.finalizedAt = new Date()
+        }
+      }
+      state.auditEvents.push({
+        action: next.avatarKey ? 'accounts.avatar_updated' : 'accounts.avatar_removed',
+        subjectType: 'user',
+        subjectId: userId,
+        actorUserId: ctx.userId,
+        after: { before: { avatarKey: before }, after: { avatarKey: user.avatarKey } },
+      })
+      return user
+    },
+
+    async expirePendingUploads(before, limit) {
+      const due = state.uploads
+        .filter((u) => u.status === 'pending' && u.expiresAt.getTime() < before.getTime())
+        .slice(0, limit)
+      for (const upload of due) upload.status = 'expired'
+      return due.map((u) => ({ id: u.id, userId: u.userId, key: u.key }))
     },
 
     async recordAccessDenied(ctx: AuditCtx, info) {

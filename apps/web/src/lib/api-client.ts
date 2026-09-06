@@ -31,6 +31,9 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     public readonly requestId: string | null,
+    /** `validation_failed` only: the Problem's `errors` list (field path + machine code, never a
+     * value) -- what lets a caller tell "that file was infected" from "that file was not an image". */
+    public readonly errors: ReadonlyArray<{ path: string; code: string }> = [],
   ) {
     super(`API error ${status} (${code})`)
     this.name = 'ApiError'
@@ -63,14 +66,18 @@ async function raw(path: string, init?: RequestInit): Promise<Response> {
 async function parseErrorAndThrow(res: Response): Promise<never> {
   const requestId = res.headers.get('x-request-id')
   let code = 'internal'
+  let errors: ReadonlyArray<{ path: string; code: string }> = []
   try {
     const body: unknown = await res.json()
     const parsed = problemSchema.safeParse(body)
-    if (parsed.success) code = parsed.data.code
+    if (parsed.success) {
+      code = parsed.data.code
+      errors = parsed.data.errors ?? []
+    }
   } catch {
     // Not a Problem body (e.g. a proxy's own HTML error page) -- fall back to 'internal'.
   }
-  throw new ApiError(res.status, code, requestId)
+  throw new ApiError(res.status, code, requestId, errors)
 }
 
 async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
@@ -127,6 +134,34 @@ async function send<T>(
 }
 
 /**
+ * Raw-bytes upload to a presigned URL (EPIC-001 photo upload: `POST /api/v1/accounts/avatar/upload-url`
+ * hands one back). The URL is either same-origin (the API's own local-driver route -- cookies ride
+ * along so the token's user is verified against the session) or a MinIO presigned URL on another
+ * origin, which must be called WITHOUT credentials: MinIO's default CORS allows `*`, and a browser
+ * refuses a credentialed cross-origin request against a wildcard. Deciding by origin keeps the
+ * feature code identical for both storage drivers. No JSON, no response schema: a presigned PUT
+ * answers with an empty 2xx.
+ */
+async function uploadFile(
+  url: string,
+  init: { method: 'PUT'; headers: Record<string, string>; body: Blob },
+): Promise<void> {
+  const sameOrigin = url.startsWith('/') || url.startsWith(`${window.location.origin}/`)
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method: init.method,
+      headers: init.headers,
+      body: init.body,
+      credentials: sameOrigin ? 'include' : 'omit',
+    })
+  } catch (cause) {
+    throw new NetworkError(cause)
+  }
+  if (!res.ok) await parseErrorAndThrow(res)
+}
+
+/**
  * The typed API client helper every `src/features/<name>` module builds its own endpoint functions
  * on (MODULE-GUIDE.md "Web features" / "Typed API client"), instead of hand-rolling `fetch` --
  * same-origin, `credentials: 'include'`, RFC 9457 `Problem` parsing into `ApiError`, and a `zod`
@@ -145,6 +180,7 @@ export const apiClient = {
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
   delete: del,
+  uploadFile,
 }
 
 export function fetchInstance(): Promise<InstancePublic> {

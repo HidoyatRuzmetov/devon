@@ -1,13 +1,20 @@
 // `/register` (EPIC-001, TECH-SPEC §2.1). Reuses the `AuthShell`-less `AppShell` chrome every feature
 // route gets (`app.tsx`'s `RouteOutlet`) -- unauthenticated visitors see it with no department/avatar,
 // same as any other feature route reached while signed out.
+//
+// The optional photo is chosen here but uploaded only *after* the account exists: the presigned-URL
+// endpoint needs a session (an anonymous presign would be an open upload slot for anyone), so the
+// order is register -> session -> presign -> PUT -> finalise, and a photo that fails at any of those
+// steps never blocks the registration that already succeeded -- the account lands on `/departments`
+// with a toast pointing at Account settings instead.
 import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
-import { Button, Input } from '@devon/ui'
+import { Button, Input, initialsFromName, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { navigate, Link } from '../../lib/router.js'
-import { registerAccount } from './api.js'
+import { AVATAR_MAX_BYTES, isAvatarContentType, registerAccount, uploadAvatar } from './api.js'
+import { AvatarPicker } from './avatar-picker.js'
 
 export default function RegisterScreen() {
   const t = useT()
@@ -21,11 +28,26 @@ export default function RegisterScreen() {
   const [patronymic, setPatronymic] = React.useState('')
   const [jobTitle, setJobTitle] = React.useState('')
   const [locale, setLocale] = React.useState<Locale>('uz-Latn')
+  const [photo, setPhoto] = React.useState<File | null>(null)
+  const [photoErrorKey, setPhotoErrorKey] = React.useState<string | null>(null)
   const [errorKey, setErrorKey] = React.useState<string | null>(null)
 
+  function selectPhoto(file: File) {
+    if (!isAvatarContentType(file.type)) {
+      setPhotoErrorKey('accounts.photo.error.type')
+      return
+    }
+    if (file.size > AVATAR_MAX_BYTES) {
+      setPhotoErrorKey('accounts.photo.error.tooLarge')
+      return
+    }
+    setPhotoErrorKey(null)
+    setPhoto(file)
+  }
+
   const mutation = useMutation({
-    mutationFn: () =>
-      registerAccount({
+    mutationFn: async () => {
+      const result = await registerAccount({
         login,
         email: email || undefined,
         password,
@@ -35,7 +57,17 @@ export default function RegisterScreen() {
         title: jobTitle || undefined,
         locale,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tashkent',
-      }),
+      })
+      if (photo) {
+        try {
+          await uploadAvatar(photo, result.csrfToken)
+        } catch {
+          // The account exists and the session is live; only the optional photo failed.
+          toast(t('accounts.photo.registerFailedToast'))
+        }
+      }
+      return result
+    },
     onSuccess: async () => {
       setErrorKey(null)
       await queryClient.invalidateQueries({ queryKey: ['me'] })
@@ -78,6 +110,24 @@ export default function RegisterScreen() {
           <span className="text-small text-foreground">{t('accounts.register.patronymic')}</span>
           <Input value={patronymic} onChange={(e) => setPatronymic(e.target.value)} />
         </label>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-small text-foreground">{t('accounts.photo.optional')}</span>
+          <AvatarPicker
+            currentSrc={null}
+            file={photo}
+            alt={t('accounts.photo.alt')}
+            initials={initialsFromName(givenName, familyName)}
+            hueSeed={login || 'new-account'}
+            onSelect={selectPhoto}
+            onRemove={() => {
+              setPhoto(null)
+              setPhotoErrorKey(null)
+            }}
+            errorKey={photoErrorKey}
+            disabled={mutation.isPending}
+          />
+        </div>
 
         <label className="flex flex-col gap-1.5">
           <span className="text-small text-foreground">{t('accounts.register.jobTitle')}</span>

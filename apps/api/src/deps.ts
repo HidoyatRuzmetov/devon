@@ -11,6 +11,8 @@ import type {
   MembershipRecord,
   SessionRecord,
   SetupInput,
+  UploadRecord,
+  UploadStatus,
   UserRecord,
 } from './types.js'
 
@@ -28,6 +30,17 @@ export type LoadedSession = {
 }
 
 export type ConsumeSetupTokenResult = { ok: true; user: UserRecord } | { ok: false }
+
+export type CreateUploadInput = {
+  /** Chosen by the caller (it is also part of the object key), never by the database. */
+  id: string
+  userId: string
+  purpose: 'avatar'
+  key: string
+  mime: string
+  size: number
+  expiresAt: Date
+}
 
 export type Deps = {
   now(): Date
@@ -95,6 +108,38 @@ export type Deps = {
    * client for `POST /accounts/2fa/login-verify` to consume. See `getTwoFactorStatus`'s comment for
    * why this is on `Deps` rather than a direct cross-module repo import. */
   createLoginChallenge(userId: string): Promise<string>
+
+  // --- EPIC-001 photo upload (storage plugin, TECH-SPEC §6) --------------------------------------
+  // On `Deps` (rather than `modules/accounts/repo.ts`'s direct `withContext` style) for the same reason
+  // as the 2FA pair above: the whole presign -> upload -> scan -> resize -> finalise flow is exercised
+  // end to end by `test/unit/accounts/avatar.test.ts` against the in-memory fake and a temp-dir store,
+  // which is the only way that pipeline gets a deterministic, Postgres-free test.
+
+  /** One `app.uploads` row for a presigned URL the API is about to hand out. Audits. */
+  createUpload(input: CreateUploadInput, ctx: AuditCtx): Promise<UploadRecord>
+  /** Owner-scoped lookup: `null` for another user's upload exactly like for a non-existent one. */
+  findOwnUpload(uploadId: string, userId: string): Promise<UploadRecord | null>
+  /** Moves an upload out of `pending` (rejected / infected / scan_failed / expired). Audits. */
+  markUpload(
+    uploadId: string,
+    userId: string,
+    patch: { status: Exclude<UploadStatus, 'pending' | 'finalized'>; error?: string | null },
+    ctx: AuditCtx,
+  ): Promise<void>
+  /** Sets (or, with `null`, clears) `users.avatar_key`, marks `uploadId` finalised when given, and
+   * writes the audit event + outbox event -- all in ONE transaction (I-5). Returns the updated user. */
+  setUserAvatar(
+    userId: string,
+    next: { avatarKey: string | null; uploadId: string | null },
+    ctx: AuditCtx,
+  ): Promise<UserRecord>
+  /** Retention sweep (TECH-SPEC §6 `retention.sweep`: "temp uploads only"): flips up to `limit`
+   * pending uploads whose `expires_at` is before `before` to `expired`, returning them so the caller
+   * can delete the objects. Cross-user by design (see `tenancy.ts`'s allow-list reason). */
+  expirePendingUploads(
+    before: Date,
+    limit: number,
+  ): Promise<Array<{ id: string; userId: string; key: string }>>
 
   verifyAuditChain(): Promise<ChainVerification>
   checkDbReady(): Promise<boolean>
