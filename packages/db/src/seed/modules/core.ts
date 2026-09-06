@@ -4,6 +4,10 @@
 // inline in `runSeedDemo` (the transaction/lock/checksum wrapper itself still lives there); the demo
 // rows and their idempotence guarantee (`ON CONFLICT DO NOTHING` against deterministic UUIDv5 ids) are
 // unchanged.
+//
+// Deliberately the one module without a `reset()`: its rows are exactly `fixtures.ts`'s
+// `DEMO_DELETE_ORDER`, which `runResetDemo` deletes itself -- last, after every other module's
+// `reset()` has removed the rows that point at these users/department.
 import * as schema from '../../schema/index.js'
 import { DEMO_DEPARTMENT, DEMO_MEMBERSHIPS, DEMO_USERS, demoPasswordHash } from '../fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'

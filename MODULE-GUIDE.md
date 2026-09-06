@@ -123,20 +123,40 @@ drizzle-kit's journal) — `migrate:apply` against an already-migrated database 
 Add `packages/db/src/seed/modules/<name>.ts`:
 
 ```ts
+import { inArray } from 'drizzle-orm'
 import type { SeedModuleContext } from '../module-loader.js'
 
 export const order = 100 // core.ts (department/users/memberships) is 0 — run after it
+
+const ROWS = [{ id: demoId('my.thing.1'), ... }] // name every id once, so seed() and reset() agree
+
 export async function seed(ctx: SeedModuleContext): Promise<number> {
-  const inserted = await ctx.tx.drizzle.insert(schema.myTable).values([...]).onConflictDoNothing().returning()
+  const inserted = await ctx.tx.drizzle.insert(schema.myTable).values(ROWS).onConflictDoNothing().returning()
   return inserted.length // rows this module actually wrote
+}
+
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const deleted = await ctx.tx.drizzle
+    .delete(schema.myTable)
+    .where(inArray(schema.myTable.id, ROWS.map((r) => r.id)))
+    .returning()
+  return deleted.length // rows this module actually deleted -- children before parents
 }
 ```
 
 `packages/db/src/seed/module-loader.ts` discovers every file under `src/seed/modules/`, and
 `runSeedDemo` (`src/seed/demo.ts`) calls each module's `seed()` in ascending `order`, inside the one
-transaction/advisory-lock/checksum wrapper it already owns. Use deterministic ids
+transaction/advisory-lock/checksum wrapper it already owns. `runResetDemo` (`seed:reset --demo`) calls
+each module's `reset()` in *descending* `order` — so your rows are gone before the users/departments
+they point at are — and only then deletes `core.ts`'s foundation rows. Use deterministic ids
 (`packages/db/src/seed/ids.ts`'s `demoId('your.thing')`) and `ON CONFLICT DO NOTHING` so a second
-`seed:demo` run writes zero rows for your module too. Uzbek three-part names, believable dates around
+`seed:demo` run writes zero rows for your module too, and delete exactly those ids in `reset()`:
+`test/seed.idempotence.test.ts` asserts that after a reset every `app.*` table is back to its pre-seed
+row count, so a row without a matching delete fails the migrate gate. Rows that live in a second demo
+department, or in an owner-only table (personal workspace, notifications), sit behind RLS the shared
+seed context cannot reach — write *and* delete them under `packages/db/src/seed/scope.ts`'s
+`asDepartment(tx, id, fn)` / `asUser(tx, id, fn)`, never through a second `withContext()` (a different
+connection cannot see the run's own uncommitted rows). Uzbek three-part names, believable dates around
 2026-09 — match `fixtures.ts`'s existing style.
 
 ## i18n messages

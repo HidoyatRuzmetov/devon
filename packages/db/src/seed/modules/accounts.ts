@@ -2,6 +2,7 @@
 // (`demo.boshliq`/`demo.xodim`, order 0), so `departments.ts` (order 20, below this module's order 10)
 // has enough people to spread across three departments. `order: 10` -- after `core.ts` (0), before
 // `departments.ts` (20), per MODULE-GUIDE.md "DB: seeds".
+import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import { demoId } from '../ids.js'
 import { demoPasswordHash } from '../fixtures.js'
@@ -163,4 +164,22 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .returning({ id: schema.users.id })
 
   return inserted.length
+}
+
+/** Deletes the 38 extra users. Their memberships (`departments.ts`, order 20) are already gone by the
+ * time this runs (`runResetDemo` walks modules in descending `order`). Every demo account shares
+ * `DEMO_PASSWORD`, so any of them may have been logged into since the seed -- their sessions go first,
+ * for exactly the reason `demo.ts` deletes the core accounts' sessions (`sessions_user_id_fkey`). */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  const userIds = EXTRA_USERS.map(extraUserId)
+
+  await tx.drizzle.delete(schema.sessions).where(inArray(schema.sessions.userId, userIds))
+
+  const deleted = await tx.drizzle
+    .delete(schema.users)
+    .where(inArray(schema.users.id, userIds))
+    .returning({ id: schema.users.id })
+
+  return deleted.length
 }

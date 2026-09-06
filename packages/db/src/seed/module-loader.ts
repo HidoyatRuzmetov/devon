@@ -1,10 +1,11 @@
 // Auto-discovers demo-seed modules under `src/seed/modules/<name>.ts` (MODULE-GUIDE.md "Seeds"). Each
-// file exports `{ order, seed(ctx) }`; `demo.ts`'s `runSeedDemo` calls every discovered module's
-// `seed()`, in ascending `order`, inside the one transaction/advisory-lock/checksum wrapper it already
-// owns -- a module never opens its own connection or does its own locking. `order` is a plain number,
-// not a convention over filenames, so two modules can share a tier (both `100`) and still sort
-// deterministically against each other (by name, as a tiebreak) without either one caring what the
-// other picked.
+// file exports `{ order, seed(ctx), reset?(ctx) }`; `demo.ts`'s `runSeedDemo` calls every discovered
+// module's `seed()`, in ascending `order`, inside the one transaction/advisory-lock/checksum wrapper it
+// already owns -- a module never opens its own connection or does its own locking -- and `runResetDemo`
+// calls every module's `reset()` in *descending* `order` (children before the parents they point at)
+// before deleting `core.ts`'s own rows. `order` is a plain number, not a convention over filenames, so
+// two modules can share a tier (both `100`) and still sort deterministically against each other (by
+// name, as a tiebreak) without either one caring what the other picked.
 import { existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { Tx } from '../context.js'
@@ -19,6 +20,15 @@ export type SeedModule = {
    * and returns the number of rows it actually wrote -- summed by `runSeedDemo` into the total the
    * seed:demo CLI prints. */
   seed(ctx: SeedModuleContext): Promise<number>
+  /** Deletes exactly the rows this module's `seed()` writes -- matched by the same deterministic
+   * `demoId(...)` ids, children before parents within the module -- and returns the number of rows it
+   * actually deleted (summed by `runResetDemo`). Optional only for a module whose rows are already
+   * covered by `fixtures.ts`'s `DEMO_DELETE_ORDER` (today: `core.ts`); every module that writes a row
+   * of its own must implement it, or `seed:reset --demo` leaves that row behind. Runs inside the same
+   * shared transaction as `seed()`, under the same `demoContext()`: a module whose rows live in another
+   * department or are owner-only under RLS re-points the GUC with `scope.ts`'s `asDepartment`/`asUser`
+   * exactly as its `seed()` did to write them. */
+  reset?(ctx: SeedModuleContext): Promise<number>
 }
 
 const DEFAULT_MODULES_DIR = fileURLToPath(new URL('./modules', import.meta.url))
@@ -48,6 +58,11 @@ export async function loadSeedModules(dir: string = DEFAULT_MODULES_DIR): Promis
     if (typeof imported.order !== 'number' || typeof imported.seed !== 'function') {
       throw new Error(
         `seed module loader: "src/seed/modules/${name}.ts" must export { order: number, seed(ctx) }`,
+      )
+    }
+    if (imported.reset !== undefined && typeof imported.reset !== 'function') {
+      throw new Error(
+        `seed module loader: "src/seed/modules/${name}.ts" exports a non-function reset -- it must be reset(ctx) or absent`,
       )
     }
     modules.push({ name, mod: imported as SeedModule })
