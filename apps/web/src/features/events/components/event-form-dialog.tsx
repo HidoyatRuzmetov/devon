@@ -61,7 +61,7 @@ export function EventFormDialog({
   onOpenChange: (open: boolean) => void
   /** `null` for create; the event being edited otherwise. */
   event: EventDto | null
-  onSubmit: (values: EventFormValues) => Promise<void>
+  onSubmit(values: EventFormValues): Promise<void>
   submitting: boolean
 }) {
   const t = useT()
@@ -129,7 +129,10 @@ export function EventFormDialog({
               id="event-category"
               value={values.category}
               onChange={(e) => set('category', e.target.value)}
-              options={EVENT_CATEGORIES.map((c) => ({ value: c, label: t(`events.category.${c}`) }))}
+              options={EVENT_CATEGORIES.map((c) => ({
+                value: c,
+                label: t(`events.category.${c}`),
+              }))}
             />
           </Field>
 

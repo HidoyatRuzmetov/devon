@@ -121,7 +121,12 @@ export function claimCarpoolSeat(
   seats: number,
   csrfToken: string,
 ) {
-  return apiClient.post(`${BASE}/${eventId}/carpools/${carpoolId}/claim`, { seats }, voidSchema, csrfToken)
+  return apiClient.post(
+    `${BASE}/${eventId}/carpools/${carpoolId}/claim`,
+    { seats },
+    voidSchema,
+    csrfToken,
+  )
 }
 
 export function releaseCarpoolSeat(eventId: string, carpoolId: string, csrfToken: string) {
@@ -170,7 +175,12 @@ export function voteOnPoll(
   optionIds: string[],
   csrfToken: string,
 ): Promise<PollDto> {
-  return apiClient.post(`${BASE}/${eventId}/polls/${pollId}/vote`, { optionIds }, pollDto, csrfToken)
+  return apiClient.post(
+    `${BASE}/${eventId}/polls/${pollId}/vote`,
+    { optionIds },
+    pollDto,
+    csrfToken,
+  )
 }
 
 export function fetchPhotos(eventId: string) {

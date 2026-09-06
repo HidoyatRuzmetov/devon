@@ -5,7 +5,10 @@ import { Badge } from '@devon/ui'
 import { EventIllustration } from '../illustrations/index.js'
 import type { EventDto } from '../schemas.js'
 
-const STATUS_TONE: Record<EventDto['status'], 'neutral' | 'success' | 'warning' | 'destructive' | 'info'> = {
+const STATUS_TONE: Record<
+  EventDto['status'],
+  'neutral' | 'success' | 'warning' | 'destructive' | 'info'
+> = {
   draft: 'neutral',
   open: 'success',
   full: 'warning',
@@ -39,7 +42,9 @@ export function EventCard({ event, onOpen }: { event: EventDto; onOpen: () => vo
           {event.place ? ` · ${event.place}` : ''}
         </p>
         {event.status === 'cancelled' ? (
-          <p className="text-small font-medium text-destructive">{t('events.card.cancelledBanner')}</p>
+          <p className="text-small font-medium text-destructive">
+            {t('events.card.cancelledBanner')}
+          </p>
         ) : (
           <p className="text-small text-muted-foreground">
             {event.capacity === null

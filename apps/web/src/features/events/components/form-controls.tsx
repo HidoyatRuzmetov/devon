@@ -30,8 +30,10 @@ export interface SelectOption {
   label: string
 }
 
-export interface SelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
+export interface SelectProps extends Omit<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
+  'children'
+> {
   options: readonly SelectOption[]
 }
 
@@ -67,9 +69,9 @@ export interface CheckboxProps {
 }
 
 /** A minimal checkbox (DESIGN.md's celebration burst is out of scope for a plain form control here
- * -- that belongs to the shared primitive once it exists). Fully keyboard-operable native
- * `<button role="checkbox">`, no hidden `<input>` needed since there is no form submission via
- * native `FormData` in this feature (every mutation goes through `apiClient`). */
+ * -- that belongs to the shared primitive once it exists). Fully keyboard-operable: a native button
+ * element with role=checkbox. No hidden input field is needed since there is no form submission via
+ * native FormData in this feature (every mutation goes through apiClient). */
 export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
   ({ checked, onCheckedChange, id, disabled, className }, ref) => (
     <button

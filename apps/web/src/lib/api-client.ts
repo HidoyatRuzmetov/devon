@@ -131,7 +131,8 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
-  delete: <T>(path: string, schema: z.ZodType<T>, csrfToken?: string) => del(path, schema, csrfToken),
+  delete: <T>(path: string, schema: z.ZodType<T>, csrfToken?: string) =>
+    del(path, schema, csrfToken),
 }
 
 export function fetchInstance(): Promise<InstancePublic> {

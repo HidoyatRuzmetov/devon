@@ -16,7 +16,8 @@ export function useCsrfToken(): string {
 }
 
 const keys = {
-  list: (range: api.EventRange) => ['events', 'list', range.from?.toISOString(), range.to?.toISOString()] as const,
+  list: (range: api.EventRange) =>
+    ['events', 'list', range.from?.toISOString(), range.to?.toISOString()] as const,
   detail: (id: string) => ['events', 'detail', id] as const,
   rsvps: (id: string) => ['events', 'rsvps', id] as const,
   comments: (id: string) => ['events', 'comments', id] as const,
@@ -89,7 +90,11 @@ export function useRsvpMutation(eventId: string) {
 }
 
 export function useRsvpsQuery(eventId: string, enabled: boolean) {
-  return useQuery({ queryKey: keys.rsvps(eventId), queryFn: () => api.fetchRsvps(eventId), enabled })
+  return useQuery({
+    queryKey: keys.rsvps(eventId),
+    queryFn: () => api.fetchRsvps(eventId),
+    enabled,
+  })
 }
 
 export function useCommentsQuery(eventId: string, enabled: boolean) {
@@ -155,14 +160,19 @@ export function useReleaseCarpoolSeatMutation(eventId: string) {
 }
 
 export function useItemsQuery(eventId: string, enabled: boolean) {
-  return useQuery({ queryKey: keys.items(eventId), queryFn: () => api.fetchItems(eventId), enabled })
+  return useQuery({
+    queryKey: keys.items(eventId),
+    queryFn: () => api.fetchItems(eventId),
+    enabled,
+  })
 }
 
 export function useAddItemMutation(eventId: string) {
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (input: { label: string; quantity: number }) => api.addItem(eventId, input, csrfToken),
+    mutationFn: (input: { label: string; quantity: number }) =>
+      api.addItem(eventId, input, csrfToken),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: keys.items(eventId) }),
   })
 }
@@ -186,7 +196,11 @@ export function useReleaseItemMutation(eventId: string) {
 }
 
 export function usePollsQuery(eventId: string, enabled: boolean) {
-  return useQuery({ queryKey: keys.polls(eventId), queryFn: () => api.fetchPolls(eventId), enabled })
+  return useQuery({
+    queryKey: keys.polls(eventId),
+    queryFn: () => api.fetchPolls(eventId),
+    enabled,
+  })
 }
 
 export function useCreatePollMutation(eventId: string) {

@@ -29,7 +29,11 @@ function startOfGrid(monthStart: Date): Date {
 }
 
 function sameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
 }
 
 export function CalendarMonth({
@@ -90,7 +94,9 @@ export function CalendarMonth({
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1))}
+          onClick={() =>
+            onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1))
+          }
           aria-label={t('events.actions.back')}
         >
           <ChevronLeft className="size-4" aria-hidden="true" />
@@ -99,7 +105,9 @@ export function CalendarMonth({
         <Button
           variant="secondary"
           size="sm"
-          onClick={() => onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1))}
+          onClick={() =>
+            onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1))
+          }
           aria-label={t('events.actions.back')}
         >
           <ChevronRight className="size-4" aria-hidden="true" />
@@ -132,14 +140,18 @@ export function CalendarMonth({
                     type="button"
                     onClick={() => onOpen(event.id)}
                     className={`truncate rounded-sm px-1.5 py-0.5 text-left text-caption font-medium text-primary-foreground hover:opacity-90 ${
-                      event.status === 'cancelled' ? 'bg-muted-foreground line-through' : 'bg-primary'
+                      event.status === 'cancelled'
+                        ? 'bg-muted-foreground line-through'
+                        : 'bg-primary'
                     }`}
                   >
                     {event.title}
                   </button>
                 ))}
                 {dayEvents.length > 3 ? (
-                  <span className="text-caption text-muted-foreground">+{dayEvents.length - 3}</span>
+                  <span className="text-caption text-muted-foreground">
+                    +{dayEvents.length - 3}
+                  </span>
                 ) : null}
               </div>
             </div>

@@ -60,7 +60,11 @@ export const eventSchema = z.object({
   maybeCount: z.number().int(),
   waitlistCount: z.number().int(),
   myRsvp: z
-    .object({ status: z.enum(RSVP_STATUSES), guests: z.number().int(), note: z.string().nullable() })
+    .object({
+      status: z.enum(RSVP_STATUSES),
+      guests: z.number().int(),
+      note: z.string().nullable(),
+    })
     .nullable(),
   canManage: z.boolean(),
   createdAt: z.string(),
