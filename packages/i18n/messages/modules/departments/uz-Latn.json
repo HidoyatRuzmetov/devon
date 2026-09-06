@@ -1,0 +1,129 @@
+{
+  "departments": {
+    "title": "Bo'limlar",
+    "landing": {
+      "title": "Boshlash uchun bo'lim tanlang",
+      "body": "Hozircha hech qanday bo'limga a'zo emassiz. Yangi bo'lim yarating yoki mavjud bo'limga qo'shiling.",
+      "createCta": "Bo'lim yaratish",
+      "joinCta": "Bo'limga qo'shilish"
+    },
+    "create": {
+      "title": "Yangi bo'lim so'rovi",
+      "subtitle": "So'rovingiz super administratorga yuboriladi va tasdiqlangach bo'lim yaratiladi.",
+      "name": "Bo'lim nomi",
+      "description": "Tavsif (ixtiyoriy)",
+      "unitsTitle": "Bo'linmalar (ixtiyoriy)",
+      "unitName": "Bo'linma nomi",
+      "unitColour": "Rang",
+      "addUnit": "Bo'linma qo'shish",
+      "removeUnit": "O'chirish",
+      "locale": "Til",
+      "submit": "So'rov yuborish",
+      "submitted": "So'rovingiz yuborildi"
+    },
+    "pending": {
+      "title": "So'rovingiz ko'rib chiqilmoqda",
+      "body": "Super administrator so'rovingizni tez orada ko'rib chiqadi.",
+      "status": {
+        "pending": "Kutilmoqda",
+        "approved": "Tasdiqlandi",
+        "rejected": "Rad etildi"
+      },
+      "reasonLabel": "Sabab",
+      "createAnother": "Yangi so'rov yuborish"
+    },
+    "approvalQueue": {
+      "title": "Bo'lim so'rovlari",
+      "empty": { "title": "Ko'rib chiqilmagan so'rovlar yo'q" },
+      "requestedBy": "So'rov beruvchi",
+      "unitsCount": "{count} ta bo'linma",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish",
+      "rejectDialogTitle": "So'rovni rad etish",
+      "rejectReasonLabel": "Sabab",
+      "rejectSubmit": "Rad etish",
+      "approvedToast": "Bo'lim yaratildi",
+      "rejectedToast": "So'rov rad etildi",
+      "filterAll": "Barchasi",
+      "filterPending": "Kutilmoqda"
+    },
+    "invite": {
+      "title": "Taklif",
+      "link": "Havola",
+      "keyLabel": "Kalit",
+      "passwordLabel": "Parol",
+      "copyInvite": "Taklifni nusxalash",
+      "copiedInvite": "Taklif matni nusxalandi",
+      "copiedLink": "Havola nusxalandi",
+      "inviteText": "Bizning bo'limga qo'shiling: {link}, parol: {password}",
+      "rotateKey": "Kalitni yangilash",
+      "rotatePassword": "Parolni yangilash",
+      "rotateKeyConfirm": "Eski havola ishlamay qoladi. Kalitni yangilaysizmi?",
+      "rotatePasswordConfirm": "Eski parol ishlamay qoladi. Parolni yangilaysizmi?",
+      "setPassword": "Parolni o'zim belgilayman",
+      "setPasswordSubmit": "Saqlash",
+      "approvalToggleLabel": "Qo'shilishni tasdiqlash",
+      "approvalToggleBody": "Yoqilgan bo'lsa, yangi a'zolar boshliq tasdiqlashini kutadi.",
+      "passwordHiddenNotice": "Xavfsizlik uchun parol faqat yaratilgan/yangilangan paytda ko'rsatiladi.",
+      "saveNowWarning": "Buni hozir saqlab qo'ying — keyinroq qayta ko'rsatilmaydi."
+    },
+    "join": {
+      "title": "Bo'limga qo'shilish",
+      "byLink": {
+        "title": "Siz taklif qilinyapsiz",
+        "body": "{name} bo'limiga qo'shilish uchun parolni kiriting."
+      },
+      "byForm": {
+        "title": "Kalit va parol orqali qo'shilish",
+        "keyLabel": "Taklif kaliti",
+        "passwordLabel": "Parol"
+      },
+      "submit": "Qo'shilish",
+      "success": "Bo'limga qo'shildingiz",
+      "pendingApproval": "So'rovingiz boshliq tomonidan tasdiqlanishi kerak",
+      "invalidKeyOrPassword": "Kalit yoki parol noto'g'ri",
+      "rateLimited": "Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring."
+    },
+    "members": {
+      "title": "A'zolar",
+      "empty": { "title": "A'zolar yo'q" },
+      "roleHead": "Boshliq",
+      "roleMember": "A'zo",
+      "statusPending": "Tasdiqlanishi kutilmoqda",
+      "joinedAt": "Qo'shilgan sana: {date}",
+      "remove": "O'chirish",
+      "removeConfirm": "{name}ni bo'limdan chiqarasizmi?",
+      "removedToast": "A'zo o'chirildi",
+      "leave": "Bo'limdan chiqish",
+      "leaveConfirm": "Rostdan ham bo'limdan chiqmoqchimisiz?",
+      "leaveBlockedHead": "Boshliq sifatida avval boshqa a'zoga vakolatni topshiring.",
+      "leftToast": "Bo'limdan chiqdingiz",
+      "transfer": "Boshliqlikni topshirish",
+      "transferConfirm": "Boshliqlik {name}ga topshiriladi. Davom etasizmi?",
+      "transferredToast": "Boshliqlik topshirildi"
+    },
+    "settings": {
+      "title": "Bo'lim sozlamalari",
+      "general": "Umumiy",
+      "name": "Nomi",
+      "description": "Tavsif",
+      "allowSelfAssign": "A'zolar o'zini bo'linmaga tayinlashi mumkin",
+      "allowStructureEdit": "A'zolar tuzilmani tahrirlashi mumkin",
+      "telegramGroupLabel": "Telegram guruhini kim ulashi mumkin",
+      "telegramEveryone": "Barcha a'zolar",
+      "telegramHeadOnly": "Faqat boshliq",
+      "quietHoursLabel": "Tinch soatlar",
+      "quietHoursStart": "Boshlanishi",
+      "quietHoursEnd": "Tugashi",
+      "saved": "Sozlamalar saqlandi",
+      "dangerZone": "Xavfli hudud",
+      "requestDeletion": "Bo'limni o'chirishni so'rash",
+      "requestDeletionConfirm": "Super administrator so'rovni ko'rib chiqadi. Davom etasizmi?",
+      "deletionRequested": "O'chirish so'raldi"
+    },
+    "switcher": {
+      "label": "Bo'limni almashtirish",
+      "current": "Joriy bo'lim"
+    }
+  }
+}

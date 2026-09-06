@@ -136,8 +136,30 @@ export function patchMe(
 
 const voidSchema = z.void()
 
-export function login(credentials: { login: string; password: string }): Promise<void> {
-  return send('/api/v1/auth/login', 'POST', credentials, voidSchema)
+// EPIC-001: a password-only login still returns `204` (parsed as `{ requires2fa: false }` below,
+// unchanged behaviour for every account without 2FA enabled); an account with TOTP enabled
+// (`modules/accounts/repo.ts`) returns `200 { requires2fa: true, challengeToken }` instead of a
+// session -- completed by `verifyTwoFactorLogin` below, exactly like `POST /accounts/2fa/login-verify`
+// on the server side.
+const loginResultSchema = z.union([
+  z.object({ requires2fa: z.literal(true), challengeToken: z.string() }),
+  z.object({ requires2fa: z.literal(false) }),
+])
+export type LoginResult = z.infer<typeof loginResultSchema>
+
+export async function login(credentials: { login: string; password: string }): Promise<LoginResult> {
+  const res = await raw('/api/v1/auth/login', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(credentials),
+  })
+  if (!res.ok) await parseErrorAndThrow(res)
+  if (res.status === 204) return { requires2fa: false }
+  return loginResultSchema.parse(await res.json())
+}
+
+export function verifyTwoFactorLogin(input: { challengeToken: string; code: string }): Promise<void> {
+  return send('/api/v1/accounts/2fa/login-verify', 'POST', input, voidSchema)
 }
 
 /** `GET /readyz` answers 200 *or* 503 with the identical `{db, valkey, migrations}` body either way

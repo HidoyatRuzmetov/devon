@@ -16,6 +16,11 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.idempotency_keys': 'global',
   'app.outbox_events': 'global',
   'app._migrations': 'global',
+  'app.department_requests': 'global',
+  'app.user_security': 'global',
+  'app.login_challenges': 'global',
+  'app.join_attempts': 'global',
+  'app.account_deletion_requests': 'global',
   'audit.events': 'audit',
   'audit.private_reads': 'audit',
   'audit.anchors': 'audit',
@@ -40,6 +45,16 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'Instance-wide event bus plumbing for background workers (mirrors audit.events), not tenant data; a department-scoped event still carries its department_id as a plain column for a subscriber to filter on.',
   'app._migrations':
     'Migration-runner bookkeeping (which .sql files have applied), not tenant data.',
+  'app.department_requests':
+    'A request exists before any department does, so it cannot carry a department_id yet; visibility is code-level (own_account for the requester, instance for the super admin approval queue), same reasoning as app.setup_tokens (EPIC-002).',
+  'app.user_security':
+    '2FA/Telegram-link metadata belongs to a user, not a department, exactly like app.sessions (EPIC-001).',
+  'app.login_challenges':
+    'A short-lived login-in-progress row keyed by user, not a department (EPIC-001).',
+  'app.join_attempts':
+    'Join-by-key rate-limiting/audit keyed by (key, ip); a wrong-key attempt has no department to scope to (EPIC-002).',
+  'app.account_deletion_requests':
+    'Self-service account deletion is identity-scoped, not tenant data (EPIC-001).',
 })
 
 export type TenancyCoverageResult = {

@@ -33,6 +33,15 @@ export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Obj
   { method: 'GET', url: '/api/v1/instance' },
   { method: 'POST', url: '/api/v1/setup/:token' },
   { method: 'POST', url: '/api/v1/auth/login' },
+  // EPIC-001: a fresh visitor has no session yet by definition.
+  { method: 'POST', url: '/api/v1/accounts/register' },
+  // EPIC-001: the second step of a 2FA-protected login -- also pre-session by definition (see
+  // `modules/accounts/index.ts`'s header comment).
+  { method: 'POST', url: '/api/v1/accounts/2fa/login-verify' },
+  // EPIC-002: the `/join/:key` landing page needs the department's name before the visitor has signed
+  // in at all (TECH-SPEC §2.2: "if logged out, register/login first, then the password prompt") --
+  // this preview never returns anything sensitive (no join password, no member list).
+  { method: 'GET', url: '/api/v1/departments/join/:key' },
 ])
 
 /**

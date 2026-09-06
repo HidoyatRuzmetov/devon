@@ -28,6 +28,8 @@ export type LoadedSession = {
 
 export type ConsumeSetupTokenResult = { ok: true; user: UserRecord } | { ok: false }
 
+export type MembershipView = { departmentId: string; name: string; role: 'head' | 'member' }
+
 export type Deps = {
   now(): Date
 
@@ -67,6 +69,14 @@ export type Deps = {
   revokeSession(sessionId: string, reason: string, ctx: AuditCtx): Promise<void>
 
   recordAccessDenied(ctx: AuditCtx, info: { route: string; reason: string }): Promise<void>
+
+  /** EPIC-002: every active department membership for `userId`, across every department -- backs
+   * `Actor.memberships` (`lib/actor.ts`) and `GET /me`'s `memberships` field. `app.memberships`' RLS
+   * scopes a normal read to the single per-request department GUC (`migrations/0005_rls.sql`); this
+   * one legitimate cross-department case is covered by the additional `memberships_read_own` policy
+   * `migrations/0100_accounts_departments.sql` adds ("my own rows, any department"), so the real
+   * implementation runs this under the user's own id, not `super_admin`/view-as. */
+  listMembershipsForUser(userId: string): Promise<MembershipView[]>
 
   verifyAuditChain(): Promise<ChainVerification>
   checkDbReady(): Promise<boolean>

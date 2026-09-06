@@ -10,6 +10,7 @@ import type {
   CreatedSession,
   LoadedSession,
   ConsumeSetupTokenResult,
+  MembershipView,
 } from '../../src/deps.js'
 import type {
   AuditCtx,
@@ -37,6 +38,10 @@ export type FakeState = {
   sessions: (SessionRecord & { tokenHash: string; csrfHash: string })[]
   setupTokens: { id: string; tokenHash: string; expiresAt: Date; consumedAt: Date | null }[]
   auditEvents: AuditEvent[]
+  /** EPIC-002: `{ userId, departmentId, name, role }` rows a test can seed so `listMembershipsForUser`
+   * has something to return -- empty by default (mirrors `buildActor`'s EPIC-000 "nobody can be a
+   * member of a department that cannot yet be created" starting point, now populated when a test cares). */
+  memberships: Array<MembershipView & { userId: string }>
   instanceSettings: InstanceSettingsRecord
   dbReady: boolean
   migrationsApplied: boolean
@@ -52,6 +57,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     sessions: [],
     setupTokens: [],
     auditEvents: [],
+    memberships: [],
     instanceSettings: {
       isDemo: false,
       registrationOpen: true,
@@ -207,6 +213,12 @@ export function createFakeDeps(state: FakeState): Deps {
         subjectId: sessionId,
         actorUserId: ctx.userId,
       })
+    },
+
+    async listMembershipsForUser(userId): Promise<MembershipView[]> {
+      return state.memberships
+        .filter((m) => m.userId === userId)
+        .map(({ departmentId, name, role }) => ({ departmentId, name, role }))
     },
 
     async recordAccessDenied(ctx: AuditCtx, info) {
