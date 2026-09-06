@@ -2,6 +2,11 @@
 // `apps/api/src/modules/notifications/repo.ts`: every query goes through `Tx.raw()`, parameterized,
 // never a direct import of `packages/db/src/schema/notifications.ts` (a different package's private
 // schema file -- see that file's own header comment for why).
+//
+// Timestamp columns read through `Tx.raw()` (`expires_at`, `linked_at`, `muted_until`, `connected_at`)
+// arrive as real `Date`s: `packages/db/src/context.ts`'s `reviveTimestamps` converts every column whose
+// `pg` field metadata says timestamp/timestamptz, so the `Date`-typed raw rows below are honest and
+// need no per-call-site coercion (`test/checks/telegram-prove.ts` asserts this against a real Postgres).
 import { randomBytes, randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
@@ -318,7 +323,13 @@ export async function setGroupKinds(
   kinds: GroupKind[],
 ): Promise<void> {
   await withContext(toRequestContext(ctx, { departmentId, actorRole: 'head' }), async (tx) => {
-    await tx.raw(sql`update app.telegram_groups set kinds = ${kinds}::text[] where id = ${groupId}`)
+    // One bound parameter, never a value list: a bare JS array inside the drizzle `sql` template
+    // expands to `($1, $2, ...)` -- a record, which Postgres refuses to cast to `text[]` (and a
+    // one-element list collapses to a malformed array literal). `sql.param` binds the whole array as
+    // a single placeholder, which node-postgres serialises as a real Postgres array literal.
+    await tx.raw(
+      sql`update app.telegram_groups set kinds = ${sql.param(kinds)}::text[] where id = ${groupId}`,
+    )
     tx.audit({
       action: 'telegram.group_kinds_updated',
       subjectType: 'telegram_group',

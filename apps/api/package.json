@@ -15,7 +15,8 @@
     "setup:prove": "tsx test/checks/setup-prove.ts",
     "session:prove": "tsx test/checks/session-prove.ts",
     "admin:prove": "tsx test/checks/admin-prove.ts",
-    "work:prove": "tsx test/checks/work-prove.ts"
+    "work:prove": "tsx test/checks/work-prove.ts",
+    "telegram:prove": "tsx test/checks/telegram-prove.ts"
   },
   "devDependencies": {
     "@devon/config": "workspace:*",
