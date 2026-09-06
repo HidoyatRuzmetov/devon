@@ -12,6 +12,14 @@
  */
 @import 'tailwindcss';
 
+/* Tailwind v4 emits only the utilities it can read verbatim from scanned source. The eight unit hues
+   are chosen at runtime (`unitHueClass(seed)`, `bg-unit-${unit.colour}`), so without this safelist
+   no `bg-unit-N` rule is ever generated and every initials avatar / unit chip renders transparent.
+   Declared here, in the one stylesheet every consumer imports, rather than trusting each caller to
+   spell all eight out. Emitting the utilities also emits the `--color-unit-N` variables (a non-static
+   `@theme` drops variables nothing uses), which `org-chart.tsx` reads via `var(--color-unit-N)`. */
+@source inline("bg-unit-{1,2,3,4,5,6,7,8}");
+
 @theme {
   /* -- Colour, light (default) -- DESIGN.md §2.1 ------------------------------------------------ */
   --color-background: oklch(97% 0.007 88);
