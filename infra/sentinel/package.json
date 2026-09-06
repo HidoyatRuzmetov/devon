@@ -1,0 +1,23 @@
+{
+  "name": "@devon/sentinel",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Loopback-only, ed25519-signed host command executor. Dependency-free by design (ADR-011) -- runs from a plain `node` install, with nothing to `pnpm install`. Not a workspace package (infra/README.md explains why); the scripts below work standalone.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "scripts": {
+    "start": "node src/main.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:unit": "node --test test/*.test.mjs",
+    "prove": "node scripts/prove.mjs",
+    "keygen": "node scripts/keygen.mjs",
+    "typecheck": "echo '@devon/sentinel is plain JS by design (ADR-011); nothing to typecheck'",
+    "lint": "node scripts/lint.mjs",
+    "build": "echo 'built -- @devon/sentinel ships plain JS, nothing to compile'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

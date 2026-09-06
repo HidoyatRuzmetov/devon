@@ -1,0 +1,20 @@
+{
+  "name": "devon",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Devon (WorkPortal) -- internal team and work platform for a department of Uzbekistan's Ministry of Digital Technologies",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.15.0",
+  "engines": {
+    "node": ">=22.11.0"
+  },
+  "scripts": {
+    "setup": "node setup.mjs",
+    "start": "node scripts/start.mjs",
+    "dev": "node scripts/start.mjs",
+    "security:scan": "semgrep --config p/owasp-top-ten --error --quiet . && trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 --quiet ."
+  },
+  "devDependencies": {
+    "turbo": "2.10.12"
+  }
+}

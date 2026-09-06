@@ -1,0 +1,96 @@
+// Public API of @devon/ui (mirrors the @devon/db / @devon/i18n convention: consumers import only
+// from here, never from a deep `src/*` path). Tokens are consumed as CSS, not JS -- see
+// `styles/tokens.css` and `styles/fonts.css`, exported as package subpaths in `package.json`.
+
+export { cn } from './lib/cn.js'
+export { isMacPlatform, modKeyLabel } from './lib/platform.js'
+export { useReducedMotion } from './lib/use-reduced-motion.js'
+export { useFontsLoaded } from './lib/use-fonts-loaded.js'
+export {
+  DUR_MICRO,
+  DUR_STANDARD,
+  DUR_PAGE,
+  DUR_CELEBRATION,
+  EASE_OUT,
+  EASE_IN,
+  EASE_STANDARD,
+  EASE_EMPHASIZED,
+  springSettle,
+  springSheet,
+  springDrag,
+} from './lib/motion-tokens.js'
+
+export { Button, buttonVariants, type ButtonProps } from './primitives/button.js'
+export { IconButton, iconButtonVariants, type IconButtonProps } from './primitives/icon-button.js'
+export { Input, type InputProps } from './primitives/input.js'
+export { Kbd, ModKbd, type KbdProps } from './primitives/kbd.js'
+export { Badge, badgeVariants, type BadgeProps } from './primitives/badge.js'
+export { Avatar, initialsFromName, unitHueClass, type AvatarProps } from './primitives/avatar.js'
+export { Separator } from './primitives/separator.js'
+export { Skeleton, type SkeletonProps } from './primitives/skeleton.js'
+
+export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './primitives/tooltip.js'
+export {
+  Popover,
+  PopoverAnchor,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from './primitives/popover.js'
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './primitives/dropdown-menu.js'
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogTrigger,
+  type DialogContentProps,
+} from './primitives/dialog.js'
+export {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetOverlay,
+  SheetPortal,
+  SheetTrigger,
+  type SheetContentProps,
+} from './primitives/sheet.js'
+export { Toaster, toast, toastWithUndo, type UndoToastOptions } from './primitives/toast.js'
+
+export {
+  StateView,
+  type StateKind,
+  type StateViewAction,
+  type StateViewProps,
+} from './states/state-view.js'
+export { OfflineBanner, type OfflineBannerProps } from './states/offline-banner.js'
+
+export { resolveNavEntries, type NavContext, type NavEntry } from './shell/nav-registry.js'
+export { Sidebar, type SidebarProps } from './shell/sidebar.js'
+export { TopBar, type TopBarProps } from './shell/top-bar.js'
+export { SearchTrigger, type SearchTriggerProps } from './shell/search-trigger.js'
+export { DemoChip, type DemoChipProps } from './shell/demo-chip.js'
+export { LocaleMenu, type LocaleOption, type LocaleMenuProps } from './shell/locale-menu.js'
+export { AvatarMenu, type ThemeOption, type AvatarMenuProps } from './shell/avatar-menu.js'
+export {
+  CommandPalette,
+  type CommandPaletteGroup,
+  type CommandPaletteItem,
+  type CommandPaletteProps,
+} from './shell/command-palette.js'
+export {
+  ShortcutOverlay,
+  type ShortcutEntry,
+  type ShortcutOverlayProps,
+} from './shell/shortcut-overlay.js'

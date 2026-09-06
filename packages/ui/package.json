@@ -1,0 +1,70 @@
+{
+  "name": "@devon/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tokens (DTCG -> Tailwind v4 @theme, Palette B), primitives, state components, shell patterns, Storybook and self-hosted fonts -- the only place Devon UI is styled.",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./styles/fonts.css": "./src/styles/fonts.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --config src/lint/eslint.config.js . && prettier --check --config ../config/prettier.config.js --ignore-unknown \"src/**/*.{ts,tsx,css}\" \"*.{ts,js,json}\"",
+    "test:unit": "vitest run --config src/test-config/vitest.config.ts",
+    "build": "tsc -p tsconfig.json",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "1.2.6",
+    "@radix-ui/react-dialog": "1.1.23",
+    "@radix-ui/react-dropdown-menu": "2.1.24",
+    "@radix-ui/react-popover": "1.1.23",
+    "@radix-ui/react-separator": "1.1.15",
+    "@radix-ui/react-slot": "1.3.3",
+    "@radix-ui/react-tooltip": "1.2.16",
+    "@radix-ui/react-visually-hidden": "1.2.11",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "cmdk": "1.1.1",
+    "lucide-react": "1.41.0",
+    "sonner": "2.0.8",
+    "tailwind-merge": "3.6.0",
+    "vaul": "1.1.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@devon/config": "workspace:*",
+    "@devon/i18n": "workspace:*",
+    "@storybook/addon-a11y": "10.6.0",
+    "@storybook/addon-docs": "10.6.0",
+    "@storybook/addon-themes": "10.6.0",
+    "@storybook/react-vite": "10.6.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "eslint-plugin-storybook": "10.6.0",
+    "jsdom": "30.0.1",
+    "prettier": "3.7.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "storybook": "10.6.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

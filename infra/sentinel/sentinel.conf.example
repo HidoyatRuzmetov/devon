@@ -1,0 +1,27 @@
+# Copy to /etc/devon/sentinel.conf on the host. Mode 0600, owner root:root (ADR-011):
+#   sudo install -o root -g root -m 0600 infra/sentinel/sentinel.conf.example /etc/devon/sentinel.conf
+#   sudo $EDITOR /etc/devon/sentinel.conf   # paste in the real public_key line
+#
+# This file is a plain `key=value` list, one per line, `#` for comments. It carries the PUBLIC key
+# only. The matching PRIVATE key is generated on the operator's machine and never appears here, in
+# this repo, in an .env file, or in the application image (ADR-011):
+#
+#   node infra/sentinel/scripts/keygen.mjs
+
+public_key=<paste the "public_key=" line from keygen.mjs's output here>
+
+# --- Optional overrides. Every one of these has a safe default (design.md §1.9, ADR-011). ----------
+# host=127.0.0.1
+#   Must be 127.0.0.1. The sentinel refuses to start with any other value -- this is not a knob
+#   that widens exposure, it is a guard that fails loudly if this file is ever misconfigured.
+# port=8787
+# freshness_ms=60000
+# nonce_retention_ms=300000
+#   Must stay strictly greater than freshness_ms (a config-time assertion, not just a convention).
+# max_body_bytes=4096
+# log_path=/var/log/devon-sentinel.log
+# nonce_store_path=/var/lib/devon-sentinel/nonces.log
+#
+# There is no "allowed_commands" setting here on purpose: the command allow-list is fixed in
+# infra/sentinel/src/config.mjs / server.mjs, not read from this file. Widening what the sentinel
+# will execute always requires a code change and a new ADR, never a config edit alone.

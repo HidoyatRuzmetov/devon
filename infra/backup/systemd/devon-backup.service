@@ -1,0 +1,11 @@
+[Unit]
+Description=Devon (WorkPortal) database backup (pg_dump + retention)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/devon
+ExecStart=/bin/bash /opt/devon/infra/backup/backup.sh
+User=devon
+Group=devon

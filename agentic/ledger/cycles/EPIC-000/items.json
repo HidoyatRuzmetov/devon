@@ -1,0 +1,345 @@
+{
+  "epic": "EPIC-000",
+  "items": [
+    {
+      "id": "EPIC-000.1",
+      "title": "Toolchain, workspace, CI, .env.example, setup.mjs",
+      "owner": "wp-devops",
+      "class": "B",
+      "covers": [
+        "AC-1",
+        "AC-14"
+      ],
+      "depends_on": [],
+      "touches": [
+        "package.json",
+        "pnpm-workspace.yaml",
+        "turbo.json",
+        "tsconfig.base.json",
+        ".gitattributes",
+        ".npmrc",
+        ".env.example",
+        "setup.mjs",
+        "scripts/start.mjs",
+        "packages/config/**",
+        ".github/workflows/ci.yml",
+        "README.md"
+      ],
+      "does_not": [
+        "does not create any file under apps/** or other packages/**/src — those are the owning items' job",
+        "does not add the nightly release job to ci.yml (that is EPIC-000.10) beyond a placeholder comment",
+        "does not implement the demo seed itself — scripts/start.mjs only shells out to `pnpm --filter @devon/db seed:demo` when --demo is passed; EPIC-000.demo implements that script"
+      ],
+      "parallel_safe": false,
+      "handoff": "Root package.json declares `packageManager: \"pnpm@<pinned>\"` and `engines.node`; corepack provisions pnpm. `node setup.mjs` does the same job on a machine with only Node (shells corepack itself) — README documents both `corepack enable && pnpm setup` and `node setup.mjs` as equally valid first commands, per design.md §4(k). `scripts/start.mjs` is the body of the root `start` script: brings up `docker compose up -d postgres valkey`, waits for readiness, runs `pnpm --filter @devon/db migrate:verify`'s apply step, starts api+web (turbo), and — only when invoked as `pnpm start --demo` or `DEVON_DEMO=1` is set — calls `pnpm --filter @devon/db seed:demo` and exits non-zero if that exits non-zero. `.env.example` is pre-seeded with the full variable list from design.md §7.4. `packages/config` exports shared tsconfig/eslint-flat/prettier/size-limit/vitest presets AND `packages/config/test/workspace-scripts.test.ts`, which enumerates every package in `pnpm-workspace.yaml` and fails if it is missing `typecheck`, `lint`, `test:unit`, `build` scripts — the AC-14 non-vacuity backstop for `pnpm -r --if-present`. README documents: clone → copy `.env.example` to `.env` → `corepack enable && pnpm setup` (or `node setup.mjs`) → `pnpm start --demo` → the printed localhost URL and the demo chip; and that a second `pnpm start --demo` changes no row counts and exits 0.",
+      "markdown": "# Work item: EPIC-000.1 Toolchain, workspace, CI, .env.example, setup.mjs\n\n- **Epic:** EPIC-000   **Owner:** wp-devops\n- **Depends on:** none   **Parallel-safe:** no (root files everyone else reads)\n- **Covers:** AC-1, AC-14\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `package.json`\n- `pnpm-workspace.yaml`\n- `turbo.json`\n- `tsconfig.base.json`\n- `.gitattributes`\n- `.npmrc`\n- `.env.example`\n- `setup.mjs`\n- `scripts/start.mjs`\n- `packages/config/**`\n- `.github/workflows/ci.yml`\n- `README.md`\n\n## DOES NOT\n- create any file under `apps/**` or other `packages/*/src/**` — those belong to the items that own those packages\n- add the nightly release job to `ci.yml` beyond a placeholder comment (that job is EPIC-000.10's)\n- implement the demo seed logic — `scripts/start.mjs` only conditionally shells out to `pnpm --filter @devon/db seed:demo`; EPIC-000.demo writes that script\n\n## Handoff contract\nRoot `package.json` declares `packageManager` and `engines.node`. `scripts/start.mjs` is the body of `pnpm start`: `docker compose up -d postgres valkey` → wait for readiness → apply migrations → start api+web → if `--demo`/`DEVON_DEMO=1`, run `pnpm --filter @devon/db seed:demo` and propagate its exit code. `.env.example` carries the full variable set from design.md §7.4 (NODE_ENV, DEVON_PUBLIC_URL, ports, POSTGRES_*, DATABASE_URL, MIGRATION_DATABASE_URL, VALKEY_URL, SESSION_*, CSRF_SECRET, AUDIT_ANCHOR_PATH, DEVON_SETUP_REMOTE, DEVON_DEMO, DEVON_E2E, SENTINEL_*) — nobody else edits this file. `packages/config/test/workspace-scripts.test.ts` enumerates `pnpm-workspace.yaml` and fails if any package lacks `typecheck`/`lint`/`test:unit`/`build` — every downstream item must declare all four, even as stubs, from day one. README documents the dual bootstrap path (`corepack enable && pnpm setup` OR `node setup.mjs` for a Node-only machine) and the idempotent-seed guarantee.\n\n## Done when\n- gates profile `item` green (mainly `lint`/`secrets`/`build` on `packages/config`, plus a CI dry-run)\n- `wp-reviewer` has no open SEV1/SEV2\n- evidence: a clean-clone dry run exits 0 with no manual step beyond `.env` copy; `workspace-scripts.test.ts` exists and starts enforcing as soon as the first package lands"
+    },
+    {
+      "id": "EPIC-000.2",
+      "title": "@devon/db: schema, audit chain, RLS, tenancy registry, withContext, migrate:verify",
+      "owner": "wp-backend",
+      "class": "C",
+      "covers": [
+        "AC-9",
+        "AC-10",
+        "AC-14"
+      ],
+      "depends_on": [
+        "EPIC-000.1"
+      ],
+      "touches": [
+        "packages/db/package.json",
+        "packages/db/tsconfig.json",
+        "packages/db/drizzle.config.ts",
+        "packages/db/src/schema/**",
+        "packages/db/src/tenancy.ts",
+        "packages/db/src/tiers.ts",
+        "packages/db/src/context.ts",
+        "packages/db/src/audit.ts",
+        "packages/db/src/rls.ts",
+        "packages/db/src/normalize-uz.ts",
+        "packages/db/src/index.ts",
+        "packages/db/migrations/**",
+        "packages/db/test/**"
+      ],
+      "does_not": [
+        "does not touch packages/db/src/seed/** (that is EPIC-000.demo, sequenced after this item)",
+        "does not touch apps/api, apps/web, or packages/contracts",
+        "does not add a down-migration or edit an already-applied migration file (I-15)"
+      ],
+      "parallel_safe": true,
+      "handoff": "`RequestContext`, `Tx` (with `raw()`, `audit()`, `privateRead()`), `withContext()` — the ONLY exported way to reach Postgres, Pool module-private. Every new table MUST be added to `TENANCY` in `packages/db/src/tenancy.ts` or the migrate gate fails. Migrations `0000`–`0006`, expand-only. `migrate:verify` applies twice (idempotence), runs the tenancy registry test, the RLS isolation test (Drizzle path + `tx.raw()`, plus 20 concurrent transactions through PgBouncer), the audit immutability test (three denials as `devon_app`, 500-row concurrent chain build, tamper-then-`verify_chain()` reporting exactly the altered seq), and `migration-lint.mjs`.",
+      "markdown": "# Work item: EPIC-000.2 @devon/db: schema, audit chain, RLS, tenancy registry, withContext, migrate:verify\n\n- **Epic:** EPIC-000   **Owner:** wp-backend\n- **Depends on:** EPIC-000.1   **Parallel-safe:** yes\n- **Covers:** AC-9, AC-10, AC-14\n- **Class:** C (wp-security mandatory on review)\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `packages/db/package.json`\n- `packages/db/tsconfig.json`\n- `packages/db/drizzle.config.ts`\n- `packages/db/src/schema/**`\n- `packages/db/src/tenancy.ts`\n- `packages/db/src/tiers.ts`\n- `packages/db/src/context.ts`\n- `packages/db/src/audit.ts`\n- `packages/db/src/rls.ts`\n- `packages/db/src/normalize-uz.ts`\n- `packages/db/src/index.ts`\n- `packages/db/migrations/**`\n- `packages/db/test/**`\n\n## DOES NOT\n- touch `packages/db/src/seed/**` (that is EPIC-000.demo, sequenced strictly after this item)\n- touch `apps/api`, `apps/web`, or `packages/contracts`\n- add a down-migration or edit an already-applied migration file (I-15)\n\n## Handoff contract\n```ts\nexport type RequestContext = { requestId: string; userId: string|null; actorRole: Role|null; departmentId: string|null; actingForUserId: string|null; viewAs: boolean; ip: string; userAgent: string }\nexport interface Tx {\n  readonly drizzle: DrizzleTransaction\n  raw<R = unknown>(query: SQL): Promise<R[]>          // throws TenancyContextMissing outside withContext\n  audit(event: AuditEventInput): void                  // flushed inside THIS transaction only\n  privateRead(input: { subjectUserId: string; fields: string[] }): void\n}\nexport function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promise<T>): Promise<T>\nexport type AuditEventInput = { action: `${string}.${string}`; subjectType: string; subjectId: string|null; departmentId?: string|null; before?: unknown; after?: unknown }\nexport const TENANCY: Readonly<Record<string, 'tenant_root'|'department_owned'|'user_owned'|'global'|'audit'>>\n```\nGrants + triggers both enforce audit append-only (grants alone or triggers alone is a fail per AC-9's disproof). RLS policies compare a column to a GUC — no sub-select. Unset context = zero rows, never all rows. `EPIC-000.6` and `EPIC-000.demo` import only from this public API.\n\n## Done when\n- gates profile `item` green (typecheck, lint, unit, build; `migrate` runs as part of this item's own verification even though it is not in the `item` profile)\n- `wp-reviewer` and `wp-security` have no open SEV1/SEV2\n- evidence: `migrate:verify` output showing idempotent apply, tenancy registry pass, RLS cross-department isolation (zero rows both via Drizzle and `tx.raw()`), and audit tamper detection reporting exactly the altered seq"
+    },
+    {
+      "id": "EPIC-000.3",
+      "title": "@devon/i18n: four locales, t(), terminology, transliterator",
+      "owner": "wp-frontend",
+      "class": "B",
+      "covers": [
+        "AC-3",
+        "AC-5"
+      ],
+      "depends_on": [
+        "EPIC-000.1"
+      ],
+      "touches": [
+        "packages/i18n/package.json",
+        "packages/i18n/src/**",
+        "packages/i18n/terms.json",
+        "packages/i18n/banned.json",
+        "packages/i18n/TERMS.md",
+        "packages/i18n/messages/uz-Latn.json",
+        "packages/i18n/messages/uz-Cyrl.json",
+        "packages/i18n/messages/ru.json",
+        "packages/i18n/messages/en.json",
+        "packages/i18n/test/**",
+        "agentic/i18n.config.json"
+      ],
+      "does_not": [
+        "does not touch apps/web (EPIC-000.7 adds its own shell keys to the same four message files afterward, sequentially)",
+        "does not touch agentic/scripts/check-i18n.mjs (protected; the gate is configured via agentic/i18n.config.json only, strengthen-only per ADR-012)"
+      ],
+      "parallel_safe": true,
+      "handoff": "`LOCALES`, `DEFAULT_LOCALE`, `LOCALE_LABEL`, `LOCALE_CHIP`, `t()`, `useT()`, `formatDate/Time/Number/Uzs`, `normalizeUz()`. Dotted-key form mandatory (`check-i18n.mjs` only detects `t('a.b.c')`). `agentic/i18n.config.json` points the gate at `apps/web/src` and `packages/i18n/messages`, four locales, empty `allow_hardcoded`. `terms.json` rows require `source.url`(https), `source.quote`, and quote-contains-term; `terms:verify`/`terms:build` run inside `test:unit`. `banned.json` list must not appear as a whole word in any message file.",
+      "markdown": "# Work item: EPIC-000.3 @devon/i18n: four locales, t(), terminology, transliterator\n\n- **Epic:** EPIC-000   **Owner:** wp-frontend\n- **Depends on:** EPIC-000.1   **Parallel-safe:** yes\n- **Covers:** AC-3, AC-5\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `packages/i18n/package.json`\n- `packages/i18n/src/**`\n- `packages/i18n/terms.json`\n- `packages/i18n/banned.json`\n- `packages/i18n/TERMS.md`\n- `packages/i18n/messages/uz-Latn.json`\n- `packages/i18n/messages/uz-Cyrl.json`\n- `packages/i18n/messages/ru.json`\n- `packages/i18n/messages/en.json`\n- `packages/i18n/test/**`\n- `agentic/i18n.config.json`\n\n## DOES NOT\n- touch `apps/web` (EPIC-000.7 adds its own shell keys to the same four files afterward, sequentially, additive only)\n- touch `agentic/scripts/check-i18n.mjs` (protected path; the gate is configured, never rewritten — ADR-012)\n\n## Handoff contract\n```ts\nexport const LOCALES = ['uz-Latn','uz-Cyrl','ru','en'] as const\nexport type Locale = (typeof LOCALES)[number]\nexport const DEFAULT_LOCALE: Locale = 'uz-Latn'\nexport const LOCALE_LABEL: Record<Locale,string>   // autonyms, own script\nexport const LOCALE_CHIP: Record<Locale,string>    // 'OʻZ' | 'ЎЗ' | 'RU' | 'EN'\nexport function t(key: string, params?: Record<string,string|number>): string\nexport function useT(): (key: string, params?: Record<string,string|number>) => string\nexport function formatDate(d: Date, locale: Locale, tz?: string): string   // DD.MM.YYYY\nexport function formatTime(d: Date, locale: Locale, tz?: string): string\nexport function formatNumber(n: number, locale: Locale): string\nexport function formatUzs(n: number, locale: Locale): string\nexport function normalizeUz(input: string): string\n```\nSeed the four message files with the full baseline keys from design.md §9.1–9.4 verbatim (shell, search, locale, demo, states, home, login/setup, admin) so EPIC-000.7 only ever adds, never invents, keys. Every `terms.json` row records `en`, `uzLatn`, `uzCyrl`, `ru`, and `source: {url, publisher, quote, fetchedAt}` — all required; `TERMS.md` is generated and committed, with a test asserting byte-identical regeneration.\n\n## Done when\n- gates profile `item` green, including `i18n` gate on HEAD\n- `wp-reviewer` and `wp-a11y-i18n` have no open SEV1/SEV2 (a11y-i18n fetches ≥5 cited sources and checks shell strings against TERMS.md)\n- evidence: `terms:verify` passes; three deliberate-breakage runs (missing ru key, missing uz-Cyrl key, hard-coded string) each fail `check-i18n.mjs`, then revert cleanly"
+    },
+    {
+      "id": "EPIC-000.4",
+      "title": "@devon/ui: tokens, primitives, state components, Storybook, fonts",
+      "owner": "wp-ui",
+      "class": "B",
+      "covers": [
+        "AC-6",
+        "AC-7"
+      ],
+      "depends_on": [
+        "EPIC-000.1"
+      ],
+      "touches": [
+        "packages/ui/package.json",
+        "packages/ui/src/**",
+        "packages/ui/.storybook/**",
+        "packages/ui/public/fonts/**"
+      ],
+      "does_not": [
+        "does not touch apps/web (EPIC-000.7 consumes these components, does not modify them)",
+        "does not touch packages/i18n message files"
+      ],
+      "parallel_safe": true,
+      "handoff": "Tokens per design.md §2 (DTCG → Tailwind v4 @theme, Palette B). Ship Button, IconButton, Input, DropdownMenu, Popover, Tooltip, Dialog, Sheet, Toast, Skeleton, Kbd, Badge, Avatar, Separator, Sidebar, TopBar, CommandPalette shell, ShortcutOverlay, StateView, new OfflineBanner, and the NavRegistry pattern. Font subsets must cover U+02B0-02FF, U+0400-04FF, U+0500-052F.",
+      "markdown": "# Work item: EPIC-000.4 @devon/ui: tokens, primitives, state components, Storybook, fonts\n\n- **Epic:** EPIC-000   **Owner:** wp-ui\n- **Depends on:** EPIC-000.1   **Parallel-safe:** yes\n- **Covers:** AC-6, AC-7\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `packages/ui/package.json`\n- `packages/ui/src/**`\n- `packages/ui/.storybook/**`\n- `packages/ui/public/fonts/**`\n\n## DOES NOT\n- touch `apps/web` (EPIC-000.7 consumes these components; it does not modify package internals)\n- touch `packages/i18n` message files\n\n## Handoff contract\n```tsx\n<StateView\n  kind={'empty'|'loading'|'error'|'forbidden'|'offline'}\n  titleKey: string\n  bodyKey: string\n  action?: { labelKey: string; onAction: () => void }   // exactly one primary action, data-primary\n/>\n```\nNew component `OfflineBanner` (design.md §8.6: single-action rule — banner carries its own action only when the route still has cached content, else the state block below carries the single action). New pattern `NavRegistry`: `{ id, labelKey, icon, route, visibleWhen }[]`. Every shell label carries `data-shell-label`. No `truncate`/`text-overflow: ellipsis` anywhere in `packages/ui/src/shell/**` — enforce with a package-local lint rule. Self-hosted `woff2` subsets MUST cover U+02B0–02FF (Spacing Modifier Letters, for `Oʻ Gʻ ʼ`), U+0400–04FF and U+0500–052F (Cyrillic + Supplement for `ў ғ қ ҳ`). Storybook ships the glyph page and the formatting page per design.md §12.F, with a `data-font-loaded` attribute for `document.fonts.check()`.\n\n## Done when\n- gates profile `item` green\n- `wp-reviewer` has no open SEV1/SEV2\n- evidence: Storybook glyph page renders without tofu/substitution; `<StateView>` unit test asserts exactly one `data-primary` element per kind"
+    },
+    {
+      "id": "EPIC-000.5",
+      "title": "@devon/contracts: Zod schemas, can(), Problem, field tiers",
+      "owner": "wp-backend",
+      "class": "B",
+      "covers": [
+        "AC-11"
+      ],
+      "depends_on": [
+        "EPIC-000.1"
+      ],
+      "touches": [
+        "packages/contracts/package.json",
+        "packages/contracts/src/**",
+        "packages/contracts/test/**"
+      ],
+      "does_not": [
+        "does not touch packages/db (USER_FIELD_TIER lives in packages/db/src/tiers.ts, owned by EPIC-000.2; this item imports that map rather than redefining it)",
+        "does not touch apps/api or apps/web"
+      ],
+      "parallel_safe": true,
+      "handoff": "Actor/Subject/Action/Decision/DenyReason, can(), Problem/PROBLEM_CODES verbatim per design.md §1.5-1.6. Rules: instance-only for super_admin && !viewAs; personal is owner-only with no exceptions ever; department actions need active membership; viewAs denies all non-read with read_only_view_as; actingFor requires a grantId (none exist yet, so any client value is rejected).",
+      "markdown": "# Work item: EPIC-000.5 @devon/contracts: Zod schemas, can(), Problem, field tiers\n\n- **Epic:** EPIC-000   **Owner:** wp-backend\n- **Depends on:** EPIC-000.1   **Parallel-safe:** yes\n- **Covers:** AC-11\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `packages/contracts/package.json`\n- `packages/contracts/src/**`\n- `packages/contracts/test/**`\n\n## DOES NOT\n- touch `packages/db` (USER_FIELD_TIER lives in `packages/db/src/tiers.ts`, owned by EPIC-000.2; this item imports it rather than redefining it)\n- touch `apps/api` or `apps/web`\n\n## Handoff contract\n```ts\nexport type Role = 'super_admin'|'head'|'member'\nexport type Membership = { departmentId: string; role: Exclude<Role,'super_admin'> }\nexport type Actor = { userId: string; role: Role; memberships: readonly Membership[]; departmentId: string|null; actingFor: { userId: string; role: Role; grantId: string }|null; viewAs: { departmentId: string }|null }\nexport type Action = 'read'|'create'|'update'|'archive'|'delete'|'administer'\nexport type Subject = { kind:'instance' } | { kind:'department'; departmentId:string } | { kind:'department_child'; departmentId:string } | { kind:'personal'; ownerUserId:string } | { kind:'own_account'; userId:string } | { kind:'audit' } | { kind:'public' }\nexport type DenyReason = 'not_authenticated'|'not_super_admin'|'not_a_member'|'not_head'|'not_owner'|'read_only_view_as'|'department_paused'|'maintenance'\nexport type Decision = { allowed:true } | { allowed:false; reason: DenyReason }\nexport function can(actor: Actor|null, action: Action, subject: Subject): Decision\nexport const PROBLEM_CODES = ['unauthenticated','forbidden','not_found','gone','conflict','validation_failed','rate_limited','maintenance','internal'] as const\n```\nUnit-test one assertion per rule (design.md §1.6). `detail` on `Problem` is a frozen literal table; a test asserts `JSON.stringify(problem)` for every code contains no uuid, login, email, `select `, `/src/`, or `at Object.`. `EPIC-000.6` imports these types verbatim.\n\n## Done when\n- gates profile `item` green\n- `wp-reviewer` has no open SEV1/SEV2\n- evidence: one unit-test assertion per `can()` rule listed above, all passing; the Problem no-domain-data test passing for every code"
+    },
+    {
+      "id": "EPIC-000.6",
+      "title": "@devon/api: sessions, setup bootstrap, admin namespace, healthz/readyz, OpenAPI",
+      "owner": "wp-backend",
+      "class": "C",
+      "covers": [
+        "AC-11",
+        "AC-12",
+        "AC-13"
+      ],
+      "depends_on": [
+        "EPIC-000.2",
+        "EPIC-000.5"
+      ],
+      "touches": [
+        "apps/api/package.json",
+        "apps/api/src/**",
+        "apps/api/test/**"
+      ],
+      "does_not": [
+        "does not touch packages/db, packages/contracts, apps/web, or packages/i18n",
+        "does not implement the demo seed (EPIC-000.demo) — this item only exposes instance_settings.is_demo via GET /api/v1/instance"
+      ],
+      "parallel_safe": false,
+      "handoff": "OpenAPI path table (verbatim, design.md §1.7): healthz/readyz/openapi.json/instance (public), setup/{token} (public, loopback-gated), auth/login, auth/logout, me (GET/PATCH), admin/instance, admin/audit/verify, admin/* unmatched → 403. Every route declares config.permission or the server refuses to boot. Sessions are a Postgres row only (no Valkey mirror, ADR-003); cookie HttpOnly+Secure+SameSite=Lax. Setup token: single-use, race-safe via `update ... where consumed_at is null returning id` in the same transaction as the user insert.",
+      "markdown": "# Work item: EPIC-000.6 @devon/api: sessions, setup bootstrap, admin namespace, healthz/readyz, OpenAPI\n\n- **Epic:** EPIC-000   **Owner:** wp-backend\n- **Depends on:** EPIC-000.2, EPIC-000.5   **Parallel-safe:** no\n- **Covers:** AC-11, AC-12, AC-13\n- **Class:** C (wp-security mandatory on review)\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `apps/api/package.json`\n- `apps/api/src/**`\n- `apps/api/test/**`\n\n## DOES NOT\n- touch `packages/db`, `packages/contracts`, `apps/web`, or `packages/i18n`\n- implement the demo seed (EPIC-000.demo) — this item only exposes `instance_settings.is_demo` via `GET /api/v1/instance`\n\n## Handoff contract\n```\nGET    /healthz                    → 200 {status:'ok'}                        public\nGET    /readyz                     → 200 | 503 {db, valkey, migrations}       public\nGET    /api/v1/openapi.json        → 200                                     public\nGET    /api/v1/instance            → 200 InstancePublic                      public\nPOST   /api/v1/setup/{token}       → 201 SetupResult | 410 Problem            public, loopback-gated\nPOST   /api/v1/auth/login          → 204 + Set-Cookie | 401 Problem           public, rate-limited\nPOST   /api/v1/auth/logout         → 204 + expired cookie                    authenticated\nGET    /api/v1/me                  → 200 Me | 401 Problem                    authenticated\nPATCH  /api/v1/me                  → 200 Me                                  own_account\nGET    /api/v1/admin/instance      → 200 AdminInstance | 403 Problem         instance\nGET    /api/v1/admin/audit/verify  → 200 ChainVerification | 403 Problem     instance\nALL    /api/v1/admin/* (unmatched) → 403 Problem (scoped notFoundHandler)    instance\n```\nEvery route declares `config.permission: { action, subject } | { public: true }` or the server throws at registration time. A unit test walks `app.printRoutes()` and asserts the `{public:true}` set equals a checked-in allow-list. `authorize.ts` is one global `preHandler` calling `can()`; on deny it writes `audit.events{action:'access.denied'}` via `tx.audit()` and returns the Problem. Sessions: `app.sessions` row is the sole revocation record; cookie `devon_sid` carries HttpOnly, Secure, SameSite=Lax; logout sets `revoked_at`, checked on every request. Setup: first boot with zero users prints exactly one setup URL (≥128-bit token, hashed at rest); race-safe consumption; 410 forever after, never reprinted once a super admin exists. Admin namespace: byte-identical 403 Problem body for existing and non-existing `/api/v1/admin/*` paths for a non-super-admin.\n\n## Done when\n- gates profile `item` green\n- `wp-reviewer` and `wp-security` have no open SEV1/SEV2\n- evidence: `setup:prove`, `session:prove`, `admin:prove` scripts produce the transcripts named in design.md §9 (first boot, consume, replay 410, cookie replay 401 post-logout, three break attempts on /admin)"
+    },
+    {
+      "id": "EPIC-000.7",
+      "title": "@devon/web: AppFrame shell, locale switch, command palette, states, offline banner",
+      "owner": "wp-frontend",
+      "class": "B",
+      "covers": [
+        "AC-4",
+        "AC-6",
+        "AC-7",
+        "AC-8"
+      ],
+      "depends_on": [
+        "EPIC-000.3",
+        "EPIC-000.4",
+        "EPIC-000.5"
+      ],
+      "touches": [
+        "apps/web/package.json",
+        "apps/web/src/**",
+        "apps/web/test/**",
+        "packages/i18n/messages/uz-Latn.json",
+        "packages/i18n/messages/uz-Cyrl.json",
+        "packages/i18n/messages/ru.json",
+        "packages/i18n/messages/en.json"
+      ],
+      "does_not": [
+        "does not modify packages/ui or packages/i18n source (only adds new leaf keys to the four message JSON files, additive only)",
+        "does not modify packages/contracts or packages/db",
+        "does not touch e2e/** (that is EPIC-000.9)"
+      ],
+      "parallel_safe": false,
+      "handoff": "Routes: /, /login, /setup, /admin, /404 per design.md §6. Locale switch: 2 clicks from every shell screen; persistence via PATCH /api/v1/me {locale} + wp_locale cookie fallback; resolution order user record → localStorage → Accept-Language → uz-Latn. Search trigger is a field-shaped button with a printed Kbd hint, never icon-only. States use <StateView>; forcing via ?__state= behind DEVON_E2E. Demo chip renders only from server bootstrap isDemo flag.",
+      "markdown": "# Work item: EPIC-000.7 @devon/web: AppFrame shell, locale switch, command palette, states, offline banner\n\n- **Epic:** EPIC-000   **Owner:** wp-frontend\n- **Depends on:** EPIC-000.3, EPIC-000.4, EPIC-000.5   **Parallel-safe:** no\n- **Covers:** AC-4, AC-6, AC-7, AC-8\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `apps/web/package.json`\n- `apps/web/src/**`\n- `apps/web/test/**`\n- `packages/i18n/messages/uz-Latn.json`\n- `packages/i18n/messages/uz-Cyrl.json`\n- `packages/i18n/messages/ru.json`\n- `packages/i18n/messages/en.json`\n\n## DOES NOT\n- modify `packages/ui` or `packages/i18n` source (only adds new leaf keys to the four message JSON files, additive only, same commit as the component using them)\n- modify `packages/contracts` or `packages/db`\n- touch `e2e/**` (that is EPIC-000.9)\n\n## Handoff contract\nRoutes this epic: `/`, `/login`, `/setup`, `/admin`, `/404` — implement per design.md §6 (copy, states, one primary action each, no confirm dialogs). Locale switch: top-bar `IconButton` (globe + chip) → click 1 opens menu, click 2 selects — 2 clicks from every shell screen including `/login` and `/setup` at 390px. Persistence: signed in → `PATCH /api/v1/me {locale}`; signed out → `wp_locale` cookie, 1 year, SameSite=Lax; resolution order user record → localStorage → `Accept-Language` → `uz-Latn`. Command palette: field-shaped trigger reading `t('search.trigger')` with a platform-detected `<Kbd>` rendered inside it — never icon-only. States: `<StateView>` from `@devon/ui` for every route; forcing via `?__state=empty|loading|error|forbidden|offline`, compiled out unless `DEVON_E2E=1`. Demo chip renders only from the server bootstrap payload (`instance.isDemo`), never a client env var. Every shell network request must be same-origin — no external font/CDN/analytics call.\n\n## Done when\n- gates profile `item` green (including `i18n` — all four message files updated together)\n- `wp-reviewer` and `wp-a11y-i18n` have no open SEV1/SEV2\n- evidence: locale switch e2e-smoke passes with click-count assertion; StateView renders exactly one primary action per forced state"
+    },
+    {
+      "id": "EPIC-000.8",
+      "title": "infra/: Compose profiles, Caddyfile, sentinel skeleton, backup scripts",
+      "owner": "wp-devops",
+      "class": "C",
+      "covers": [
+        "AC-15",
+        "AC-1"
+      ],
+      "depends_on": [
+        "EPIC-000.1"
+      ],
+      "touches": [
+        "infra/docker-compose.yml",
+        "infra/Caddyfile",
+        "infra/sentinel/**",
+        "infra/backup/**",
+        "infra/README.md"
+      ],
+      "does_not": [
+        "does not touch .github/workflows/ci.yml (EPIC-000.1 owns it; EPIC-000.10 may add only the nightly job)",
+        "does not implement any wipe or pause execution path — the sentinel accepts noop only, by design"
+      ],
+      "parallel_safe": true,
+      "handoff": "Compose starts only postgres+valkey by default; caddy/minio/centrifugo/clamav/pgbackrest/glitchtip behind profiles:. Sentinel wire contract per design.md §1.9 (verification order: peer address → size → parse → signature → freshness(60s) → nonce unseen(300s) → command allow-list); bind 127.0.0.1 explicitly plus an independent peer check.",
+      "markdown": "# Work item: EPIC-000.8 infra/: Compose profiles, Caddyfile, sentinel skeleton, backup scripts\n\n- **Epic:** EPIC-000   **Owner:** wp-devops\n- **Depends on:** EPIC-000.1   **Parallel-safe:** yes\n- **Covers:** AC-15, AC-1\n- **Class:** C (wp-security mandatory on review)\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `infra/docker-compose.yml`\n- `infra/Caddyfile`\n- `infra/sentinel/**`\n- `infra/backup/**`\n- `infra/README.md`\n\n## DOES NOT\n- touch `.github/workflows/ci.yml` (EPIC-000.1 owns it; EPIC-000.10 may add only the nightly job)\n- implement any wipe or pause execution path — the sentinel accepts `noop` only, by design (AC-15 disproof)\n\n## Handoff contract\nCompose starts only `postgres` and `valkey` by default (host ports 55432/56379, overridable); `caddy`, `minio`, `centrifugo`, `clamav`, `pgbackrest`, `glitchtip` sit behind `profiles:` and are not started by `pnpm setup`/`pnpm start`. Images pinned by digest.\n```\nPOST http://127.0.0.1:8787/command   Content-Type: application/json  (≤4096 bytes)\n{ \"v\":1, \"command\":\"noop\", \"nonce\":\"<64 hex>\", \"issued_at\":\"<ISO>\", \"sig\":\"<base64url ed25519 over canonicalJson({v,command,nonce,issued_at})>\" }\n200 {\"ok\":true,...} | 400 malformed/unknown_command | 401 bad_signature/expired/replay | 403 forbidden | 413 too_large\nGET /healthz → 200 {\"ok\":true,\"commands\":[\"noop\"]}\n```\nVerification order, fixed: peer address → size → parse → signature → freshness (|now−issued_at| ≤ 60s) → nonce unseen (retention 300s) → command allow-list. Bind `127.0.0.1` explicitly AND independently check peer address per request. Public key only in `/etc/devon/sentinel.conf` (mode 0600, root-owned); private key never lives in this repo. No destructive command path exists in this epic's sentinel code.\n\n## Done when\n- gates profile `item` green\n- `wp-reviewer` and `wp-security` have no open SEV1/SEV2\n- evidence: four break attempts (non-loopback caller, unsigned, wrong key, replay) each rejected, pasted with `ss -ltnp` showing loopback-only bind"
+    },
+    {
+      "id": "EPIC-000.9",
+      "title": "e2e/: routes.json, Playwright, axe, screenshot + state-forcing + overflow/glyph tests",
+      "owner": "wp-frontend",
+      "class": "B",
+      "covers": [
+        "AC-6",
+        "AC-7",
+        "AC-14"
+      ],
+      "depends_on": [
+        "EPIC-000.7"
+      ],
+      "touches": [
+        "e2e/routes.json",
+        "e2e/**"
+      ],
+      "does_not": [
+        "does not touch apps/web/src (only exercises it) or packages/ui/packages/i18n",
+        "does not touch agentic/gates.json (protected; this item makes the existing e2e/a11y gate commands pass, it does not add new gates)"
+      ],
+      "parallel_safe": false,
+      "handoff": "e2e/routes.json entries {path, name, auth, requires?} for /, /login, /setup, /admin, /404. Screenshot naming per dod.mjs. 390px overflow + glyph substitution assertions per design.md §4(i)/(j). Same-origin network assertion on every shell route. axe zero serious/critical.",
+      "markdown": "# Work item: EPIC-000.9 e2e/: routes.json, Playwright, axe, screenshot + state-forcing + overflow/glyph tests\n\n- **Epic:** EPIC-000   **Owner:** wp-frontend\n- **Depends on:** EPIC-000.7   **Parallel-safe:** no\n- **Covers:** AC-6, AC-7, AC-14\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `e2e/routes.json`\n- `e2e/**`\n\n## DOES NOT\n- touch `apps/web/src` (only exercises it), `packages/ui`, or `packages/i18n`\n- touch `agentic/gates.json` (protected — this item makes the existing gate commands pass, it does not add gates)\n\n## Handoff contract\n`e2e/routes.json` entries: `{path, name, auth, requires?}` for `/`, `/login`, `/setup`, `/admin`, `/404`. State forcing reads `?__state=empty|loading|error|forbidden|offline` (behind `DEVON_E2E=1`). Screenshot naming (read exactly by `agentic/scripts/dod.mjs:34-49`): `<route with non-alnum → _>__<width>__<light|dark>__<uz|ru>.png` written to `agentic/ledger/cycles/EPIC-000/qa-visual/`, plus `manifest.json` with `routes[]` and `states_verified:true`. Build the full 132-shot manifest from design.md §12. 390px overflow assertions: `el.scrollWidth <= el.clientWidth + 1` on every `[data-shell-label]`; no `document.documentElement` horizontal scroll; no computed `text-overflow: ellipsis`. Glyph assertions: advance-width comparison of `Oʻ Gʻ ʼ ў ғ қ ҳ` vs. forced fallback; `document.fonts.check()` true. Same-origin network assertion on every shell route. axe zero serious/critical on every route in `routes.json`. `@smoke`-tagged subset must be fast enough to serve as every other item's `e2e-smoke` gate.\n\n## Done when\n- gates profile `item` green; full `e2e` and `a11y` gates pass at integration time\n- `wp-reviewer` and `wp-qa-visual` have no open SEV1/SEV2\n- evidence: 132-shot manifest complete and named per `dod.mjs`; zero overflow/glyph-substitution failures at 390px in uz-Latn and ru"
+    },
+    {
+      "id": "EPIC-000.10",
+      "title": "Gate-mutation harness, one deliberate defect per blocking gate, ADR-000…013 landing",
+      "owner": "wp-devops",
+      "class": "B",
+      "covers": [
+        "AC-14"
+      ],
+      "depends_on": [
+        "EPIC-000.1",
+        "EPIC-000.2",
+        "EPIC-000.3",
+        "EPIC-000.4",
+        "EPIC-000.5",
+        "EPIC-000.6",
+        "EPIC-000.7",
+        "EPIC-000.8",
+        "EPIC-000.9"
+      ],
+      "touches": [
+        "tools/gate-mutation/**",
+        "docs/adr/ADR-000-security-baseline.md",
+        "docs/adr/ADR-001-monorepo-pins.md",
+        "docs/adr/ADR-002-tenancy-department-id.md",
+        "docs/adr/ADR-003-sessions-cookies.md",
+        "docs/adr/ADR-004-audit-hash-chain.md",
+        "docs/adr/ADR-005-deferred.md",
+        "docs/adr/ADR-006-deferred.md",
+        "docs/adr/ADR-007-deferred.md",
+        "docs/adr/ADR-008-deferred.md",
+        "docs/adr/ADR-009-deferred.md",
+        "docs/adr/ADR-010-tokens-theming.md",
+        "docs/adr/ADR-011-sentinel-pause-wipe.md",
+        "docs/adr/ADR-012-i18n-gate-config.md",
+        "docs/adr/ADR-013-demo-seed.md",
+        ".github/workflows/ci.yml"
+      ],
+      "does_not": [
+        "does not touch agentic/gates.json, agentic/scripts/gate.mjs, or any other protected path — it proves the existing gates fail on a defect, it does not add gates",
+        "does not modify ci.yml beyond adding the nightly release job (all other sections belong to EPIC-000.1)"
+      ],
+      "parallel_safe": false,
+      "handoff": "One deliberate defect per blocking gate (typecheck, lint, unit, i18n, secrets, build, migrate, e2e, a11y, bundle, security); run gate.mjs --profile integration; assert only that gate fails; revert. ADR-000...013 per design.md §6 table, using agentic/templates/adr.md; ADR-005..009 are named deferred stubs only.",
+      "markdown": "# Work item: EPIC-000.10 Gate-mutation harness, one deliberate defect per blocking gate, ADR-000…013 landing\n\n- **Epic:** EPIC-000   **Owner:** wp-devops\n- **Depends on:** EPIC-000.1–EPIC-000.9   **Parallel-safe:** no\n- **Covers:** AC-14\n- **Class:** B\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `tools/gate-mutation/**`\n- `docs/adr/ADR-000-security-baseline.md`\n- `docs/adr/ADR-001-monorepo-pins.md`\n- `docs/adr/ADR-002-tenancy-department-id.md`\n- `docs/adr/ADR-003-sessions-cookies.md`\n- `docs/adr/ADR-004-audit-hash-chain.md`\n- `docs/adr/ADR-005-deferred.md`\n- `docs/adr/ADR-006-deferred.md`\n- `docs/adr/ADR-007-deferred.md`\n- `docs/adr/ADR-008-deferred.md`\n- `docs/adr/ADR-009-deferred.md`\n- `docs/adr/ADR-010-tokens-theming.md`\n- `docs/adr/ADR-011-sentinel-pause-wipe.md`\n- `docs/adr/ADR-012-i18n-gate-config.md`\n- `docs/adr/ADR-013-demo-seed.md`\n- `.github/workflows/ci.yml`\n\n## DOES NOT\n- touch `agentic/gates.json`, `agentic/scripts/gate.mjs`, or any other protected path — it proves the existing gates fail on a defect, it does not add gates\n- modify `ci.yml` beyond adding the nightly release job (all other sections belong to EPIC-000.1)\n\n## Handoff contract\n`tools/gate-mutation` introduces exactly one deliberate defect per blocking gate, runs `agentic/scripts/gate.mjs --profile integration`, asserts that gate and only that gate fails, then reverts — the AC-14 non-vacuity proof. `docs/adr/` gets one file per row of design.md §6: ADR-000 (security baseline), ADR-001 (monorepo/pins), ADR-002 (tenancy = department_id, no tenant_id), ADR-003 (Postgres-only sessions, SameSite=Lax), ADR-004 (hash-chained audit), ADR-010 (tokens/theming), ADR-011 (sentinel, no destructive path), ADR-012 (i18n gate config, strengthen-only), ADR-013 (demo seed). ADR-005–009 are deliberate deferred stubs, each naming the epic that will decide it — do not invent content.\n\n## Done when\n- gates profile `integration` exits 0, every gate `pass`, none `skipped`\n- `wp-reviewer` has no open SEV1/SEV2\n- evidence: one pasted failing run per blocking gate from the mutation harness, plus `last-gate.json` attached; all ADR files present and reviewed"
+    },
+    {
+      "id": "EPIC-000.demo",
+      "title": "Demo seed framework, idempotence, production/demo-flag guard, seed_runs bookkeeping",
+      "owner": "wp-backend",
+      "class": "C",
+      "covers": [
+        "AC-1",
+        "AC-2"
+      ],
+      "depends_on": [
+        "EPIC-000.2",
+        "EPIC-000.6",
+        "EPIC-000.7"
+      ],
+      "touches": [
+        "packages/db/src/seed/**",
+        "packages/db/test/seed.idempotence.test.ts",
+        "packages/db/package.json"
+      ],
+      "does_not": [
+        "does not touch packages/db/src/schema/**, tenancy.ts, context.ts, audit.ts, rls.ts, or any migration file (those are EPIC-000.2's; app.seed_runs already exists from that item's migrations)",
+        "does not touch apps/api or apps/web — the demo chip already renders from instance.isDemo, sourced from a data row this item writes, not from new code paths",
+        "does not touch e2e/routes.json — no new route is introduced by seeding demo data",
+        "does not touch scripts/start.mjs (EPIC-000.1 already wires --demo to shell out to the script this item creates)"
+      ],
+      "parallel_safe": false,
+      "handoff": "pnpm --filter @devon/db seed:demo and seed:reset --demo are the only entry points. pg_advisory_lock + seed_runs(name) PK + deterministic UUIDv5 ids + on conflict do nothing gives exact idempotence. Guard: refuses when NODE_ENV=production unless DEVON_DEMO=1 explicitly set. Sets instance_settings.is_demo=true on success — the only thing that makes the demo chip render.",
+      "markdown": "# Work item: EPIC-000.demo Demo seed framework, idempotence, production/demo-flag guard, seed_runs bookkeeping\n\n- **Epic:** EPIC-000   **Owner:** wp-backend\n- **Depends on:** EPIC-000.2, EPIC-000.6, EPIC-000.7   **Parallel-safe:** no\n- **Covers:** AC-1, AC-2\n- **Class:** C (wp-security mandatory on review — the production-boot guard is a security-relevant control)\n\n## TOUCHES (exhaustive; a diff outside this list is a FAIL)\n- `packages/db/src/seed/**`\n- `packages/db/test/seed.idempotence.test.ts`\n- `packages/db/package.json`\n\n## DOES NOT\n- touch `packages/db/src/schema/**`, `tenancy.ts`, `context.ts`, `audit.ts`, `rls.ts`, or any migration file (those are EPIC-000.2's; `app.seed_runs` already exists from that item's migrations)\n- touch `apps/api` or `apps/web` — the demo chip already renders from `instance.isDemo`, sourced from a data row this item writes, not from new code\n- touch `e2e/routes.json` — no new route is introduced by seeding demo data\n- touch `scripts/start.mjs` (EPIC-000.1 already wires `--demo` to shell out to the script this item creates)\n\n## Handoff contract\n`pnpm --filter @devon/db seed:demo` and `pnpm --filter @devon/db seed:reset --demo` are the only entry points. Seeding: `pg_advisory_lock(hashtext('devon.seed'))` for the run's duration + `app.seed_runs(name)` primary key + deterministic UUIDv5 demo ids + `on conflict do nothing`; a second run prints `demo seed already applied (checksum …) — 0 rows written` and exits 0. Guard (AC-2, disproof-critical): the seed refuses when `NODE_ENV === 'production'` unless `DEVON_DEMO=1` is explicitly set — implement as a single testable `assertSeedAllowed(env)` function. On success it sets `app.instance_settings.is_demo = true`. `seed:reset --demo` deletes only rows in the demo UUIDv5 namespace matching `seed_runs.name`, then the `seed_runs` row itself; never touches `audit.*`; refuses under the same production guard. Add scripts to `packages/db/package.json`: `seed:demo`, `seed:reset`, `seed:demo:matrix` (NODE_ENV × flag truth table), `counts` (per-table row counts).\n\n## Done when\n- gates profile `item` green; `migrate:verify` step 6 (seed idempotence) passes\n- `wp-reviewer` and `wp-security` have no open SEV1/SEV2\n- evidence: clean-clone transcript with before/after row counts identical after a second `seed:demo` run; `seed:demo:matrix` showing the seed refused under `NODE_ENV=production` without the flag and the demo chip absent on a non-demo boot"
+    }
+  ]
+}

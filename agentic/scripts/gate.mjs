@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 // Deterministic gate runner. Usage:
 //   node agentic/scripts/gate.mjs [--profile fast|item|integration|release] [--gates a,b,c] [--json] [--cwd <dir>]
-// Exit 0 when every blocking gate passed, 1 otherwise. Always writes agentic/ledger/last-gate.json.
-// Rules: gates are never weakened here. If package.json is missing at the root, every gate is SKIPPED
-// loudly (pre-scaffold state). Once package.json exists, a missing script is a FAIL, not a skip.
-import { spawn } from 'node:child_process'
+// Exit 0 when every blocking gate passed (per the profile's tolerance for skipped gates), 1 otherwise.
+// Always writes agentic/ledger/last-gate.json.
+//
+// Skips are explicit and loud, never silent:
+//   - no package.json at the root            → every gate SKIPPED (pre-scaffold)
+//   - gate.requires: [paths] missing          → SKIPPED (the part of the repo it checks does not exist yet)
+//   - gate.requires_cmd: [binaries] missing   → SKIPPED (tooling not installed on this machine)
+// Tolerance by profile: fast/item accept skipped gates; integration accepts skipped only for gates
+// marked optional_local (tooling gates such as security/perf); release accepts none.
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 
@@ -21,6 +27,7 @@ if (!names.length) { console.error(`gate: unknown profile "${profile}" and no --
 const scaffolded = existsSync(join(cwd, 'package.json'))
 const isRelease = profile === 'release'
 
+const hasCmd = (bin) => { const r = spawnSync(process.platform === 'win32' ? 'where' : 'which', [bin], { stdio: 'ignore' }); return r.status === 0 }
 function run(cmd, timeoutS) {
   return new Promise((res) => {
     const started = Date.now()
@@ -33,31 +40,37 @@ function run(cmd, timeoutS) {
     child.on('error', (e) => { clearTimeout(timer); res({ code: 127, out: out + '\n' + String(e), ms: Date.now() - started }) })
   })
 }
-
 const tail = (s, n = 60) => s.trim().split(/\r?\n/).slice(-n).join('\n')
+
 const results = []
 const startedAt = new Date().toISOString()
 for (const name of names) {
   const g = cfg.gates[name]
-  if (!g) { results.push({ name, status: 'fail', blocking: true, ms: 0, tail: `unknown gate "${name}" in gates.json` }); continue }
+  if (!g) { results.push({ name, status: 'fail', blocking: true, tolerated: false, ms: 0, tail: `unknown gate "${name}" in gates.json` }); continue }
   const blocking = !!g.blocking || (isRelease && !!g.blocking_on_release)
-  if (!scaffolded) { results.push({ name, status: 'skipped', blocking, ms: 0, tail: 'SKIPPED: no package.json at root (pre-scaffold). This is NOT a pass.' }); continue }
+  const tolerated = profile === 'fast' || profile === 'item' || (profile === 'integration' && !!g.optional_local)
+  let skipReason = null
+  if (!scaffolded) skipReason = 'no package.json at root (pre-scaffold)'
+  else if (Array.isArray(g.requires) && g.requires.some(p => !existsSync(join(cwd, p)))) skipReason = `required path missing: ${g.requires.filter(p => !existsSync(join(cwd, p))).join(', ')}`
+  else if (Array.isArray(g.requires_cmd) && g.requires_cmd.some(b => !hasCmd(b))) skipReason = `required tool not installed: ${g.requires_cmd.filter(b => !hasCmd(b)).join(', ')}`
+  if (skipReason) { results.push({ name, status: 'skipped', blocking, tolerated, ms: 0, tail: `SKIPPED: ${skipReason}. A skipped gate is NOT a pass.` }); continue }
   process.stdout.write(`[gate] ${name} … `)
   const r = await run(g.cmd, g.timeout_s || 600)
   const status = r.code === 0 ? 'pass' : 'fail'
   console.log(`${status.toUpperCase()} (${(r.ms / 1000).toFixed(1)}s)`)
-  results.push({ name, status, blocking, ms: r.ms, code: r.code, cmd: g.cmd, tail: status === 'pass' ? tail(r.out, 5) : tail(r.out, 80) })
+  results.push({ name, status, blocking, tolerated, ms: r.ms, code: r.code, cmd: g.cmd, tail: status === 'pass' ? tail(r.out, 5) : tail(r.out, 80) })
 }
 const failed = results.filter(r => r.status === 'fail' && r.blocking)
 const skipped = results.filter(r => r.status === 'skipped')
-const ok = failed.length === 0 && (skipped.length === 0 || !scaffolded)
-const report = { profile, cwd, startedAt, finishedAt: new Date().toISOString(), scaffolded, ok, failed: failed.map(f => f.name), skipped: skipped.map(s => s.name), results }
+const untolerated = skipped.filter(r => r.blocking && !r.tolerated)
+const ok = failed.length === 0 && untolerated.length === 0
+const report = { profile, cwd, startedAt, finishedAt: new Date().toISOString(), scaffolded, ok, failed: failed.map(f => f.name), skipped: skipped.map(s => s.name), skipped_blocking: untolerated.map(s => s.name), results }
 mkdirSync(join(cwd, 'agentic', 'ledger'), { recursive: true })
 writeFileSync(join(cwd, 'agentic', 'ledger', 'last-gate.json'), JSON.stringify(report, null, 2))
 if (flag('--json')) console.log(JSON.stringify(report, null, 2))
 else {
-  for (const r of results) if (r.status !== 'pass') console.log(`\n--- ${r.name} (${r.status}${r.blocking ? ', blocking' : ''}) ---\n${r.tail}`)
-  console.log(`\n[gate] profile=${profile} ok=${ok} failed=[${failed.map(f => f.name).join(', ')}] skipped=[${skipped.map(s => s.name).join(', ')}]`)
-  if (skipped.length) console.log('[gate] WARNING: skipped gates are not passes. Do not report "gates green" while anything is skipped.')
+  for (const r of results) if (r.status !== 'pass') console.log(`\n--- ${r.name} (${r.status}${r.blocking ? ', blocking' : ''}${r.status === 'skipped' ? (r.tolerated ? ', tolerated in this profile' : ', NOT tolerated in this profile') : ''}) ---\n${r.tail}`)
+  console.log(`\n[gate] profile=${profile} ok=${ok} failed=[${failed.map(f => f.name).join(', ')}] skipped=[${skipped.map(s => s.name).join(', ')}]${untolerated.length ? ` skipped-but-required=[${untolerated.map(s => s.name).join(', ')}]` : ''}`)
+  if (skipped.length) console.log('[gate] WARNING: skipped gates are not passes. Release requires every gate to run.')
 }
 process.exit(ok ? 0 : 1)

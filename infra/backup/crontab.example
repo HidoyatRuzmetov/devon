@@ -1,0 +1,7 @@
+# Alternative to infra/backup/systemd/*.timer for a host without systemd user units set up. Install
+# with `crontab -e` as the account that can reach the Docker daemon and the `devon` network (the same
+# account that runs `docker compose up`).
+#
+# minute hour day month weekday command
+15 2 * * *  /bin/bash /opt/devon/infra/backup/backup.sh >> /var/log/devon-backup.log 2>&1
+30 3 * * 0  /bin/bash /opt/devon/infra/backup/verify.sh >> /var/log/devon-backup-verify.log 2>&1

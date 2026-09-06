@@ -1,0 +1,17 @@
+# Normalise line endings so a Windows clone and a Linux CI runner see identical bytes.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+
+pnpm-lock.yaml text eol=lf -diff linguist-generated
+CHANGELOG.md text eol=lf linguist-generated

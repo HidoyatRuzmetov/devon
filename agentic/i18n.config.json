@@ -1,0 +1,6 @@
+{
+  "src": "apps/web/src",
+  "messages": "packages/i18n/messages",
+  "locales": ["uz-Latn", "uz-Cyrl", "ru", "en"],
+  "allow_hardcoded": []
+}

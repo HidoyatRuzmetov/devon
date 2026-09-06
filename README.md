@@ -22,6 +22,56 @@ bot, and AI that removes clicks. Not an office suite.
    [plugins/wp-agentic/README.md](plugins/wp-agentic/README.md) — the same system as an installable
    Claude Code plugin.
 
+## Getting started (I-18: one command from a fresh clone)
+
+Prerequisites: [Docker](https://docs.docker.com/get-docker/) (Compose v2) and Node ≥ 22.11. Nothing
+else -- pnpm itself is provisioned for you.
+
+```bash
+git clone <this repo> && cd WorkPortal
+cp .env.example .env        # the only manual step; edit values only if you need non-default ports
+```
+
+Then run **either** of these two equally valid first commands -- pick whichever matches what is
+already on your machine:
+
+```bash
+corepack enable && pnpm setup    # machine already has a package-manager shim (npm/pnpm/corepack)
+# -- or --
+node setup.mjs                   # machine has only Node; this shells corepack itself
+```
+
+Both run the same script (`setup.mjs`): it checks your Node version, activates the exact pnpm version
+pinned in `package.json#packageManager` via corepack, runs `pnpm install`, copies `.env.example` to
+`.env` if you skipped the step above, and checks that Docker is on your PATH.
+
+Then boot the app:
+
+```bash
+pnpm start --demo
+```
+
+This brings up Postgres 17 and Valkey (Docker), applies migrations, starts the API and web app, and
+seeds the demo tenant (super admin + departments + people + boards + events, with realistic Uzbek
+names -- TECH-SPEC §14). It prints the URL to open (`http://localhost:5173` by default) once the app
+is reachable; the header shows a **Namoyish / Demo** chip so nobody mistakes the demo tenant for a
+real one. `pnpm start` (without `--demo`) boots the same stack against whatever is already in the
+database, with no seeding and no demo chip. `pnpm dev` is an alias for `pnpm start`.
+
+The demo seed is idempotent: running `pnpm start --demo` a second time against the same database
+changes no row counts and exits 0 (ADR-013) -- safe to re-run any time you are unsure what state your
+local database is in.
+
+To reset: `pnpm --filter @devon/db seed:reset --demo` removes only the demo rows (refuses under
+`NODE_ENV=production`).
+
+### Security scan (`pnpm run security:scan`)
+
+Not part of `pnpm setup`/`pnpm start` and not required for local development. It runs Semgrep (OWASP
+Top Ten ruleset) and Trivy (filesystem vuln + secret scan) and is wired into CI's `integration` and
+`release` gate profiles, which install both tools before running it (`.github/workflows/ci.yml`). If
+you want to run it locally, install `semgrep` and `trivy` yourself first.
+
 ## Layout
 
 ```

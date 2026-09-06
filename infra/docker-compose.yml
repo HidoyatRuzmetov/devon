@@ -1,0 +1,255 @@
+# Devon (WorkPortal) -- single-ministry-box Compose file (TECH-SPEC.md §13, design.md §0/§7.3 W8).
+#
+# `docker compose -f infra/docker-compose.yml up -d postgres valkey` is exactly what `pnpm start`
+# (scripts/start.mjs) runs. Services with no `profiles:` key start by default; every other service
+# below carries a `profiles:` entry and is therefore never started by `pnpm setup`/`pnpm start` --
+# it arrives, wired and tested, with the epic that needs it (design.md "Simplicity budget"):
+#
+#   docker compose -f infra/docker-compose.yml --profile caddy --profile minio up -d
+#
+# Images are pinned by digest (H18.1, ADR-011's sibling decision for the app tier). The tag alongside
+# the digest is for a human reading `docker compose config`, not for resolution -- Docker always
+# resolves the `@sha256:...` part. Re-pin with:
+#   docker buildx imagetools inspect <image>:<tag> | grep '^Digest:'
+#
+# `apps/api` / `apps/web` are not containerised yet -- they do not exist in this epic (EPIC-000 runs
+# them as local processes via `pnpm start`, per scripts/start.mjs). Their Dockerfiles and `api`/`web`/
+# `worker` Compose services land with the epic that ships a production image build (TECH-SPEC §13);
+# `caddy`'s upstream blocks below are written against those future service names so the Caddyfile does
+# not need to change again when they arrive.
+name: devon
+
+x-logging: &default-logging
+  # A ministry box has no ops team watching disk usage; an unrotated container log has taken down more
+  # than one small deployment. 10x10MB per service is generous for debugging and bounded either way.
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "10"
+
+networks:
+  devon:
+    name: devon
+    driver: bridge
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+  minio_data:
+  clamav_data:
+  pgbackrest_repo:
+
+services:
+  # --- Started by `pnpm setup` / `pnpm start` (I-18). Nothing else is. ------------------------------
+
+  postgres:
+    image: postgres:17-alpine@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73
+    container_name: devon-postgres
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      # Only the bootstrap superuser is created here. `devon_migrator` / `devon_app` are created by
+      # packages/db/migrations/0001_roles.sql -- the same migration path runs identically in every
+      # environment, so there is exactly one place that ever creates a database role (I-15).
+      POSTGRES_DB: ${POSTGRES_DB:-devon}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:-devon_local_dev_root}
+      # Uzbek name sorting (design.md §2.2) is a `create collation "uz-x-icu" (provider = icu, ...)`
+      # object created by packages/db/migrations/0006_normalize_uz.sql, which detects ICU support and
+      # falls back gracefully -- it does not require (and this image does not set) a non-default
+      # cluster locale provider at initdb time.
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-devon}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
+    networks: [devon]
+
+  valkey:
+    image: valkey/valkey:8-alpine@sha256:cfb2aa4c8352930130fd45eb231a57310ac326d7323edae12b384b9270c46dda
+    container_name: devon-valkey
+    restart: unless-stopped
+    logging: *default-logging
+    # design.md §0: Valkey exists only for rate limits in this epic -- no persistence needed, so a lost
+    # container loses nothing durable. `--save ""` disables RDB snapshots on purpose.
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "${VALKEY_PORT:-56379}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    networks: [devon]
+
+  # --- Everything below sits behind `profiles:` (design.md §0, W8 handoff). Not started by default. -
+
+  caddy:
+    profiles: ["caddy"]
+    image: caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    container_name: devon-caddy
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      DEVON_PUBLIC_URL: ${DEVON_PUBLIC_URL:-http://localhost:5173}
+      CADDY_TLS_MODE: ${CADDY_TLS_MODE:-internal}
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks: [devon]
+
+  minio:
+    profiles: ["minio"]
+    image: minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b
+    container_name: devon-minio
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      # Not part of .env.example yet -- MinIO arrives with the file-upload epic, which adds these to
+      # the checked-in variable list (design.md §7.4 note: each profiled service's env vars land with
+      # its owning epic). The placeholders below only ever apply when this profile is explicitly
+      # started, which `pnpm setup`/`pnpm start` never does (AC-1).
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-devon_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-devon_local_dev_minio_change_me}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1g
+    networks: [devon]
+
+  centrifugo:
+    profiles: ["centrifugo"]
+    image: centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
+    container_name: devon-centrifugo
+    restart: unless-stopped
+    logging: *default-logging
+    # Centrifugo 6 takes its whole config from CENTRIFUGO_* env vars -- no mounted config file needed,
+    # which keeps this item's TOUCHES to docker-compose.yml (no infra/centrifugo.json to own or drift).
+    command: ["centrifugo"]
+    environment:
+      CENTRIFUGO_ADDRESS: "0.0.0.0" # container-internal bind; only the host port below is published
+      CENTRIFUGO_HTTP_API_INSECURE: "false"
+      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-devon_local_dev_centrifugo_change_me}
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-devon_local_dev_centrifugo_api_change_me}
+    ports:
+      - "${CENTRIFUGO_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks: [devon]
+
+  clamav:
+    profiles: ["clamav"]
+    image: clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
+    container_name: devon-clamav
+    restart: unless-stopped
+    logging: *default-logging
+    ports:
+      - "${CLAMAV_PORT:-3310}:3310"
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      # The image ships clamdcheck.sh; the long start_period covers the first virus-database load,
+      # which is slow and, on an air-gapped box, must be seeded from a mirrored freshclam feed rather
+      # than pulled live (infra/README.md documents the offline mirror step).
+      test: ["CMD-SHELL", "clamdcheck.sh || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2g
+    networks: [devon]
+
+  pgbackrest:
+    profiles: ["pgbackrest"]
+    image: woblerr/pgbackrest:2.54.2@sha256:127eaf6de3382545d6cae1c38e35b871c0952ed74bcbe49d484c360fd92c2cef
+    container_name: devon-pgbackrest
+    restart: unless-stopped
+    logging: *default-logging
+    # Declared here, per the profile skeleton this item owns, but NOT wired: a working pgBackRest
+    # stanza needs archive_mode/archive_command changes to Postgres's own config (a packages/db
+    # concern, not infra/), which is out of this item's TOUCHES and out of EPIC-000's ACs. The backup
+    # path that actually works today is `infra/backup/*.sh` (plain `pg_dump`, tested, documented below).
+    # Wiring pgBackRest for WAL-level PITR is TECH-SPEC §13's "drilled in EPIC-014" follow-up.
+    entrypoint: ["sh", "-c", "echo 'pgbackrest is a declared profile only in EPIC-000; see infra/README.md#backups' && sleep infinity"]
+    volumes:
+      - pgbackrest_repo:/var/lib/pgbackrest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [devon]
+
+  glitchtip:
+    profiles: ["glitchtip"]
+    image: glitchtip/glitchtip:v4.1@sha256:0803e1820215905c305cd0e7c497e5bbdbb2c2c65fcbe6bdc131f4538b8ed048
+    container_name: devon-glitchtip
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      # Same note as MinIO/Centrifugo above: these variables are not in .env.example yet because
+      # GlitchTip is wired up by the observability epic, not this one. Requires a `glitchtip` database
+      # to exist on the `postgres` service -- documented as a one-line manual step in infra/README.md
+      # until that epic adds a proper init migration.
+      DATABASE_URL: ${GLITCHTIP_DATABASE_URL:-postgres://postgres:devon_local_dev_root@postgres:5432/glitchtip}
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-devon_local_dev_glitchtip_secret_change_me}
+      PORT: "8000"
+      EMAIL_URL: ${GLITCHTIP_EMAIL_URL:-consolemail://}
+      GLITCHTIP_DOMAIN: ${GLITCHTIP_DOMAIN:-http://localhost:8080}
+      DEFAULT_FROM_EMAIL: ${GLITCHTIP_FROM_EMAIL:-glitchtip@localhost}
+      CELERY_WORKER_AUTOSCALE: "1,3"
+    ports:
+      - "${GLITCHTIP_PORT:-8080}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks: [devon]

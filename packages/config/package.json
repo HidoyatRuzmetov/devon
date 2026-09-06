@@ -1,0 +1,39 @@
+{
+  "name": "@devon/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared tsconfig / eslint (flat) / prettier / vitest / size-limit presets for every Devon workspace package.",
+  "license": "UNLICENSED",
+  "exports": {
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/node.json": "./tsconfig/node.json",
+    "./tsconfig/react.json": "./tsconfig/react.json",
+    "./eslint/base.js": "./eslint/base.js",
+    "./eslint/react.js": "./eslint/react.js",
+    "./prettier": "./prettier/index.js",
+    "./vitest/base": "./vitest/base.ts",
+    "./size-limit": "./size-limit/index.js"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint . && prettier --check .",
+    "test:unit": "vitest run",
+    "build": "echo built -- @devon/config ships plain JS/JSON presets, nothing to compile"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "9.1.2",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "globals": "15.15.0",
+    "prettier": "3.7.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.69.0",
+    "vitest": "4.1.11"
+  }
+}

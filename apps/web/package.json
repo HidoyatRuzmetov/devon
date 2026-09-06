@@ -1,0 +1,50 @@
+{
+  "name": "@devon/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vite + React 19.2 SPA: AppFrame shell, locale switch, command palette, states, offline banner (EPIC-000.7).",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "vite --config src/vite.config.ts",
+    "build": "vite build --config src/vite.config.ts",
+    "preview": "vite preview --config src/vite.config.ts",
+    "typecheck": "tsc --noEmit -p src/tsconfig.json",
+    "lint": "eslint --config src/lint/eslint.config.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown \"src/**/*.{ts,tsx,css,html}\" \"test/**/*.{ts,tsx}\" \"*.json\"",
+    "test:unit": "vitest run --config test/vitest.config.ts",
+    "test:e2e": "playwright test --config test/e2e/playwright.config.ts",
+    "test:a11y": "playwright test --config test/e2e/playwright.config.ts --grep @a11y"
+  },
+  "dependencies": {
+    "@devon/contracts": "workspace:*",
+    "@devon/i18n": "workspace:*",
+    "@devon/ui": "workspace:*",
+    "@tanstack/react-query": "5.102.8",
+    "lucide-react": "1.41.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@devon/config": "workspace:*",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "globals": "15.15.0",
+    "jsdom": "30.0.1",
+    "prettier": "3.7.1",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

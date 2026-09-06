@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# infra/backup/restore.sh <backup-file> [<target-db>] [--force-production]
+#
+# Restores a pg_dump custom-format backup (as produced by backup.sh) into TARGET_DB. Refuses to
+# target the live POSTGRES_DB unless --force-production is given AND the operator types the target
+# database name back -- restoring is destructive to whatever the target already holds, and this
+# project treats operations that are irreversible in practice as "type to confirm", not undo
+# (I-11 exempts operations irreversible by policy/consequence; design.md §5.2).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
+COMPOSE_FILE="$ROOT/infra/docker-compose.yml"
+
+BACKUP_FILE="${1:-}"
+if [ -z "$BACKUP_FILE" ] || [ ! -f "$BACKUP_FILE" ]; then
+  echo "usage: $(basename "$0") <backup-file> [<target-db>] [--force-production]" >&2
+  exit 1
+fi
+shift || true
+
+TARGET_DB=""
+FORCE_PRODUCTION=false
+for a in "$@"; do
+  if [ "$a" = "--force-production" ]; then FORCE_PRODUCTION=true; else TARGET_DB="$a"; fi
+done
+
+# shellcheck disable=SC1091
+source "$HERE/lib.sh"
+# Fixed before reading .env -- see backup.sh's comment: the right hostname here is the Compose
+# service name on the `devon` network, not .env's host-process-perspective POSTGRES_HOST.
+: "${POSTGRES_HOST:=postgres}"
+load_env_defaults "$ROOT/.env"
+POSTGRES_DB="${POSTGRES_DB:-devon}"
+POSTGRES_SUPERUSER_PASSWORD="${POSTGRES_SUPERUSER_PASSWORD:-devon_local_dev_root}"
+
+if [ -z "$TARGET_DB" ]; then
+  TARGET_DB="${POSTGRES_DB}_restore_$(date -u +%Y%m%dT%H%M%SZ)"
+fi
+
+if [ "$TARGET_DB" = "$POSTGRES_DB" ] && [ "$FORCE_PRODUCTION" != true ]; then
+  echo "[restore] refusing to restore over the live database '$POSTGRES_DB' without --force-production." >&2
+  echo "[restore] restore into a throwaway database and check it first (infra/backup/verify.sh does this weekly)." >&2
+  exit 1
+fi
+
+if [ "$FORCE_PRODUCTION" = true ]; then
+  echo "This will REPLACE every object in '$TARGET_DB' on ${POSTGRES_HOST}. There is no undo (design.md §5.2)."
+  read -r -p "Type the target database name to confirm ('$TARGET_DB'): " CONFIRM
+  if [ "$CONFIRM" != "$TARGET_DB" ]; then
+    echo "[restore] confirmation did not match; aborting. Nothing was touched." >&2
+    exit 1
+  fi
+fi
+
+POSTGRES_IMAGE="$(postgres_image "$COMPOSE_FILE")"
+run_pg() { docker run --rm --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" "$@"; }
+
+EXISTS="$(run_pg psql -h "$POSTGRES_HOST" -U postgres -tA -c "select 1 from pg_database where datname='$TARGET_DB'")"
+if [ "$EXISTS" != "1" ]; then
+  echo "[restore] creating database '$TARGET_DB' on ${POSTGRES_HOST}"
+  run_pg createdb -h "$POSTGRES_HOST" -U postgres "$TARGET_DB"
+fi
+
+echo "[restore] restoring $BACKUP_FILE into $TARGET_DB ..."
+docker run --rm -i --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" \
+  pg_restore -h "$POSTGRES_HOST" -U postgres -d "$TARGET_DB" --clean --if-exists --no-owner < "$BACKUP_FILE"
+
+echo "[restore] done. Target database: $TARGET_DB"

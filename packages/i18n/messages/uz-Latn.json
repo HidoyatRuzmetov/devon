@@ -1,0 +1,170 @@
+{
+  "shell": {
+    "nav": {
+      "home": "Bosh sahifa",
+      "admin": "Boshqaruv"
+    },
+    "skip": "Asosiy qismga oʻtish",
+    "credit": "Raqamli texnologiyalar vazirligi tizimi",
+    "menu": {
+      "open": "Menyuni ochish"
+    },
+    "sidebar": {
+      "toggle": "Yon panelni yigʻish",
+      "expand": "Yon panelni yoyish"
+    },
+    "search": {
+      "trigger": "Qidirish yoki amal",
+      "aria": "Qidirish va amallar"
+    },
+    "locale": {
+      "aria": "Interfeys tili",
+      "code": "OʻZ",
+      "options": {
+        "uzLatn": "Oʻzbekcha (lotin)",
+        "uzCyrl": "Ўзбекча (кирилл)",
+        "ru": "Русский",
+        "en": "English"
+      }
+    },
+    "theme": {
+      "label": "Mavzu",
+      "light": "Yorugʻ",
+      "dark": "Qorongʻi",
+      "system": "Tizim boʻyicha"
+    },
+    "shortcuts": {
+      "title": "Klaviatura yorliqlari"
+    },
+    "account": {
+      "signout": "Chiqish"
+    },
+    "demo": {
+      "chip": {
+        "label": "Demo maʼlumotlar",
+        "short": "Demo"
+      },
+      "popover": "Namoyish rejimi. Bu tizimdagi barcha maʼlumotlar sinov uchun yaratilgan."
+    }
+  },
+  "cmd": {
+    "placeholder": "Qidiring yoki amalni tanlang",
+    "group": {
+      "goto": "Oʻtish",
+      "settings": "Sozlamalar",
+      "account": "Hisob"
+    },
+    "item": {
+      "home": "Bosh sahifaga oʻtish",
+      "admin": "Boshqaruvga oʻtish",
+      "locale": "Interfeys tilini oʻzgartirish",
+      "theme": "Mavzuni oʻzgartirish",
+      "shortcuts": "Klaviatura yorliqlari",
+      "signout": "Tizimdan chiqish"
+    },
+    "empty": {
+      "message": "Hech narsa topilmadi",
+      "action": "Qidiruvni tozalash"
+    },
+    "hint": "↑↓ tanlash · ↵ ochish · Esc yopish"
+  },
+  "home": {
+    "eyebrow": "BUGUN",
+    "greeting": {
+      "morning": "Xayrli tong, {name}",
+      "day": "Xayrli kun, {name}",
+      "evening": "Xayrli kech, {name}",
+      "night": "Assalomu alaykum, {name}"
+    },
+    "empty": {
+      "member": {
+        "title": "Bu yerda sizning ishlaringiz koʻrinadi",
+        "body": "Hozircha hech narsa yoʻq. Istalgan sahifani qidiruv orqali topishingiz mumkin."
+      },
+      "action": "Qidirishni ochish",
+      "admin": {
+        "title": "Tizim ishga tushdi",
+        "body": "Boʻlimlar hali yaratilmagan. Tizim holatini boshqaruv sahifasida koʻrishingiz mumkin.",
+        "action": "Boshqaruvga oʻtish"
+      },
+      "demo": {
+        "title": "Namoyish boʻlimi tayyor"
+      }
+    }
+  },
+  "state": {
+    "error": {
+      "title": "Maʼlumotlarni yuklab boʻlmadi",
+      "body": "Qayta urinib koʻring. Xatolik takrorlansa, soʻrov raqamini administratorga yuboring.",
+      "action": "Qayta urinish",
+      "requestId": "Soʻrov raqami: {id}"
+    },
+    "denied": {
+      "title": "Bu sahifa sizga ochiq emas",
+      "body": "Bu sahifa faqat tizim administratori uchun. Kirish kerak boʻlsa, boʻlim boshligʻiga murojaat qiling.",
+      "action": "Bosh sahifaga qaytish"
+    },
+    "offline": {
+      "banner": "Internet aloqasi yoʻq",
+      "body": "Oxirgi yuklangan maʼlumotlar koʻrsatilmoqda.",
+      "empty": "Bu sahifa aloqa tiklangach ochiladi."
+    },
+    "loading": "Yuklanmoqda",
+    "notfound": {
+      "title": "Sahifa topilmadi",
+      "body": "Havola eskirgan yoki notoʻgʻri boʻlishi mumkin."
+    }
+  },
+  "toast": {
+    "copied": "Nusxa olindi",
+    "saveError": "Saqlab boʻlmadi"
+  },
+  "action": {
+    "undo": "Bekor qilish"
+  },
+  "login": {
+    "title": "Tizimga kirish",
+    "identifier": "Login yoki e-pochta",
+    "password": "Parol",
+    "submit": "Kirish",
+    "error": "Login yoki parol notoʻgʻri",
+    "locked": "Hisob vaqtincha bloklandi. 15 daqiqadan soʻng qayta urinib koʻring.",
+    "signedOut": "Siz tizimdan chiqdingiz",
+    "offline": "Aloqa tiklangach, qayta urinib koʻring.",
+    "showPassword": "Parolni koʻrsatish",
+    "hidePassword": "Parolni yashirish"
+  },
+  "setup": {
+    "eyebrow": "BIRINCHI ISHGA TUSHIRISH",
+    "title": "Tizim administratorini yarating",
+    "body": "Bu havola faqat bir marta ishlaydi.",
+    "family": "Familiya",
+    "given": "Ism",
+    "patronymic": "Otasining ismi (ixtiyoriy)",
+    "submit": "Administratorni yaratish",
+    "passwordHint": "Kamida 12 ta belgi",
+    "copyAction": "Nusxa olish",
+    "done": {
+      "title": "Administrator hisobi yaratildi",
+      "action": "Tizimga kirish"
+    },
+    "used": {
+      "title": "Bu havola allaqachon ishlatilgan",
+      "body": "Tizim administratori allaqachon yaratilgan.",
+      "action": "Kirish sahifasiga oʻtish"
+    }
+  },
+  "admin": {
+    "eyebrow": "TIZIM",
+    "title": "Boshqaruv",
+    "health": {
+      "title": "Tizim holati",
+      "api": "API",
+      "db": "Maʼlumotlar bazasi",
+      "queue": "Navbat",
+      "up": "Ishlamoqda",
+      "down": "Ishlamayapti",
+      "refresh": "Yangilash"
+    }
+  }
+}

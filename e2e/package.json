@@ -1,0 +1,26 @@
+{
+  "name": "devon-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "EPIC-000.9: routes.json-driven Playwright suite -- axe, screenshot manifest, ?__state= forcing, 390px overflow + glyph-substitution assertions, same-origin network check. Deliberately NOT a pnpm workspace package (pnpm-workspace.yaml lists only apps/* and packages/*, and is outside this item's TOUCHES) -- this directory manages its own node_modules via npm so it never needs that file touched. See `playwright.config.ts` for how it reaches the running apps/web + apps/api instead.",
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test --grep @smoke",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:390": "playwright test --grep @390",
+    "test:glyphs": "playwright test --grep @glyphs",
+    "test:states": "playwright test tests/states.spec.ts",
+    "shots": "playwright test tests/screenshots.spec.ts tests/states.spec.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "format": "prettier --check --config prettier.config.js \"**/*.{ts,json}\""
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.1",
+    "axe-core": "4.13.0",
+    "prettier": "3.7.1",
+    "typescript": "5.9.3"
+  }
+}

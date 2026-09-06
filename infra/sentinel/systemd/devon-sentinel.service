@@ -1,0 +1,36 @@
+[Unit]
+Description=Devon (WorkPortal) sentinel -- loopback-only signed command executor (noop only in this release)
+Documentation=file:/opt/devon/infra/README.md
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/devon/infra/sentinel/src/main.mjs
+Restart=on-failure
+RestartSec=5
+
+# Runs as root (see infra/README.md#sentinel): /etc/devon/sentinel.conf is 0600 root-owned by design
+# (ADR-011), and the sentinel must be able to read it. Nothing in THIS epic's code needs root -- the
+# only command is "noop" -- so every privilege below is stripped anyway; running as root today only
+# avoids a second permissions migration when EPIC-013 adds the wipe executor, which genuinely needs
+# host-level access to stop/remove this project's own containers and files. Revisit
+# CapabilityBoundingSet at that point; it must grant exactly what wipe needs, never a blanket set.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+ReadOnlyPaths=/etc/devon/sentinel.conf
+ReadWritePaths=/var/log/devon-sentinel.log /var/lib/devon-sentinel
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

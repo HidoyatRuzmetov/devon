@@ -1,0 +1,59 @@
+# Devon (WorkPortal) reverse proxy (TECH-SPEC.md §13). Only loaded when the `caddy` Compose profile
+# is started -- never by `pnpm setup`/`pnpm start` (AC-1; design.md §0). Not exercised by this epic's
+# gates (no `apps/api`/`apps/web` container exists yet); written now, against the service names those
+# containers will use, so a later epic does not have to touch this file to go live.
+#
+# TLS (H18.1 / air-gap friendly): {$CADDY_TLS_MODE} defaults to Caddy's internal CA, which needs no
+# internet access and no public DNS -- correct for a ministry box with no external connectivity.
+# A ministry with its own CA-issued certificate points DEVON_TLS_CERT_FILE/DEVON_TLS_KEY_FILE at
+# mounted PEM files instead (see the commented block below) and never needs Caddy's public ACME path,
+# which would fail on an air-gapped network anyway.
+{
+	# Caddy's admin API stays on the container's loopback only -- it is not published in
+	# docker-compose.yml, so it is unreachable outside the container regardless.
+	admin 127.0.0.1:2019
+
+	log {
+		output file /data/access.log {
+			roll_size 10mb
+			roll_keep 10
+		}
+		format json
+	}
+}
+
+{$DEVON_PUBLIC_URL:localhost} {
+	encode zstd gzip
+
+	# `internal` = Caddy's own local CA, works fully offline (default, air-gap friendly: no public
+	# DNS or internet reachability required). A ministry with its own CA-issued certificate replaces
+	# this single line with `tls {$DEVON_TLS_CERT_FILE} {$DEVON_TLS_KEY_FILE}` (infra/README.md);
+	# removing the directive entirely switches to Caddy's public ACME path, which needs real internet
+	# and a public DNS name and therefore only makes sense off an air-gapped network.
+	tls {$CADDY_TLS_MODE:internal}
+
+	# `/api/*` and the two operational endpoints go to the API container (apps/api's Dockerfile and
+	# `api` Compose service land with the deployment-image epic; TECH-SPEC §13).
+	@api path /api/* /healthz /readyz
+	handle @api {
+		reverse_proxy api:3000 {
+			# X-Forwarded-For/-Proto/-Host are set by Caddy's reverse_proxy automatically; only the
+			# request id (TECH-SPEC §1.7's `X-Request-Id` / `problem.instance` convention) needs adding.
+			header_up X-Request-Id {http.request.uuid}
+		}
+	}
+
+	# Realtime fan-out (Centrifugo), only reachable once that profile is started.
+	handle /realtime/* {
+		reverse_proxy centrifugo:8000
+	}
+
+	# Everything else: the static SPA build (apps/web's `build` output, served from a mounted volume
+	# once that image exists). 503s here (rather than a blank page) are what decision 16's pause page
+	# renders when the API is down -- Caddy, not the app, is the thing still answering.
+	handle {
+		reverse_proxy web:80 {
+			lb_try_duration 2s
+		}
+	}
+}

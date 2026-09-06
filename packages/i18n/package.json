@@ -1,0 +1,48 @@
+{
+  "name": "@devon/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Four-locale messages (uz-Latn default, uz-Cyrl, ru, en), t()/useT(), terminology (terms.json -> TERMS.md) and Uzbek text helpers.",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --config ../config/eslint/base.js . && prettier --check --config ../config/prettier.config.js --ignore-unknown \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\" \"messages/*.json\"",
+    "test:unit": "vitest run --config test/vitest.config.ts",
+    "build": "tsc -p tsconfig.json",
+    "terms:build": "tsx src/cli/terms-build.ts",
+    "terms:verify": "tsx src/cli/terms-verify.ts",
+    "break:ru": "tsx src/cli/break-locale-key.ts ru",
+    "break:uzc": "tsx src/cli/break-locale-key.ts uz-Cyrl",
+    "break:hardcoded": "tsx src/cli/break-hardcoded.ts"
+  },
+  "dependencies": {
+    "zod": "4.5.4"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@devon/config": "workspace:*",
+    "@testing-library/react": "16.3.3",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.18",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "jsdom": "30.0.1",
+    "prettier": "3.7.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}

@@ -1,0 +1,282 @@
+/**
+ * Devon design tokens -- DESIGN.md §2, Palette B ("Navy-led, product-owned blue", CTO decision
+ * 2026-09-05). Source of truth is OKLCH; every value below traces to a DESIGN.md row. No component
+ * in this package may reach past these tokens for a raw hex or an ad-hoc pixel value.
+ *
+ * Tailwind v4 reads `@theme` to both (a) emit `:root` custom properties and (b) generate matching
+ * utilities (`bg-primary`, `text-h1`, `rounded-md`, `shadow-2`, `w-sidebar`, ...) -- see
+ * https://tailwindcss.com/docs/theme. Dark mode is a real re-tuned theme (DESIGN.md: "swaps values,
+ * never inverts"), applied by overriding the same custom-property names under `[data-theme="dark"]`;
+ * because Tailwind v4 utilities reference `var(--color-*)` rather than inlining the value, this alone
+ * re-themes every utility with no `dark:` variant needed anywhere in the component source.
+ */
+@import 'tailwindcss';
+
+@theme {
+  /* -- Colour, light (default) -- DESIGN.md §2.1 ------------------------------------------------ */
+  --color-background: oklch(97% 0.007 88);
+  --color-foreground: oklch(24% 0.015 240);
+  --color-card: oklch(99% 0 0);
+  --color-muted: oklch(94% 0.006 90);
+  --color-muted-foreground: oklch(50% 0.015 245);
+  --color-border: oklch(90% 0.006 90);
+  --color-primary: oklch(40% 0.09 250);
+  --color-primary-foreground: oklch(99% 0 0);
+  --color-accent: oklch(93% 0.02 250);
+  --color-accent-foreground: oklch(24% 0.015 240);
+  --color-ring: oklch(62% 0.09 250);
+  --color-attention: oklch(74% 0.11 72);
+  --color-attention-foreground: oklch(24% 0.015 240);
+  --color-success: oklch(55% 0.13 152);
+  --color-success-foreground: oklch(99% 0 0);
+  --color-warning: oklch(70% 0.12 70);
+  --color-warning-foreground: oklch(24% 0.015 240);
+  --color-destructive: oklch(52% 0.15 27);
+  --color-destructive-foreground: oklch(99% 0 0);
+  --color-info: oklch(55% 0.08 205);
+  --color-info-foreground: oklch(99% 0 0);
+  --color-sidebar: oklch(22% 0.05 252);
+  --color-sidebar-foreground: oklch(93% 0.01 240);
+  --color-sidebar-accent: oklch(30% 0.05 252);
+  /* Ministry navy, verbatim. Exactly two touchpoints (DESIGN.md §2.1): header hairline + credit
+     line. Never used as chrome, never used for a third purpose. */
+  --color-official: oklch(38% 0.143 258.6);
+
+  /* Unit identity (8-hue categorical set, DESIGN.md §2.1) -- avatars and unit chips only, never a
+     status signal. Fixed hues at L 60% C 0.09 stepped every 45deg. */
+  --color-unit-1: oklch(60% 0.09 20);
+  --color-unit-2: oklch(60% 0.09 65);
+  --color-unit-3: oklch(60% 0.09 110);
+  --color-unit-4: oklch(60% 0.09 155);
+  --color-unit-5: oklch(60% 0.09 200);
+  --color-unit-6: oklch(60% 0.09 245);
+  --color-unit-7: oklch(60% 0.09 290);
+  --color-unit-8: oklch(60% 0.09 335);
+
+  /* -- Typography -- DESIGN.md §2.3 --------------------------------------------------------------- */
+  --font-display: 'Devon Display', 'IBM Plex Serif', 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Devon Sans', 'Inter', 'Golos Text', system-ui, sans-serif;
+  --font-mono: 'Devon Mono', 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Scale (px/line), DESIGN.md §2.3. Tailwind v4 pairs `--text-<key>` with `--text-<key>--line-height`
+     to produce `text-<key>` utilities that set both in one class. */
+  --text-eyebrow: 11px;
+  --text-eyebrow--line-height: 16px;
+  --text-eyebrow--letter-spacing: 0.08em;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-small: 13px;
+  --text-small--line-height: 18px;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-lead: 16px;
+  --text-lead--line-height: 24px;
+  --text-h3: 20px;
+  --text-h3--line-height: 28px;
+  --text-h2: 24px;
+  --text-h2--line-height: 32px;
+  --text-h1: 30px;
+  --text-h1--line-height: 36px;
+  --text-hero: 40px;
+  --text-hero--line-height: 44px;
+
+  /* -- Space -- DESIGN.md §2.4. 4/8/12/16/20/24/32/40/48/64 is exactly Tailwind's own default
+     rem-stepped scale at keys 1/2/3/4/5/6/8/10/12/16 -- no override needed; `--space-*` below is a
+     named alias so raw CSS (outside utility classes) can read the same numbers by their design-doc
+     name instead of a Tailwind key. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+
+  /* -- Radius -- DESIGN.md §2.4 (overrides Tailwind's built-in rounded-sm/md/lg values) ----------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  /* -- Elevation -- DESIGN.md §2.4. Named 1/2/3 rather than Tailwind's sm/md/lg so a reviewer can
+     grep the exact design-doc token. */
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.06);
+  --shadow-2: 0 4px 12px oklch(0 0 0 / 0.08);
+  --shadow-3: 0 12px 32px oklch(0 0 0 / 0.12);
+
+  /* -- Fixed layout numbers -- DESIGN.md §2.4, §3. These are specified sizes, not "ad-hoc pixels". */
+  --width-sidebar: 264px;
+  --width-sidebar-rail: 64px;
+  --width-sidebar-drawer: 300px;
+  --width-content: 1280px;
+  --width-detail-panel: 480px;
+  --height-topbar: 56px;
+}
+
+/* -- Colour, dark theme -- DESIGN.md §2.2. Elevation is lightness tint, not shadow; semantic colours
+   are re-tuned for contrast, not just lightened. Never an filter(invert()) shortcut. */
+[data-theme='dark'] {
+  --color-background: oklch(18% 0.015 250);
+  --color-foreground: oklch(93% 0.01 240);
+  --color-card: oklch(22% 0.015 250);
+  --color-muted: oklch(26% 0.015 250);
+  --color-muted-foreground: oklch(72% 0.015 245);
+  --color-border: oklch(32% 0.015 250);
+  --color-primary: oklch(72% 0.09 250);
+  --color-primary-foreground: oklch(18% 0.015 250);
+  --color-accent: oklch(30% 0.04 250);
+  --color-accent-foreground: oklch(93% 0.01 240);
+  --color-ring: oklch(72% 0.09 250);
+  --color-attention: oklch(80% 0.11 72);
+  --color-attention-foreground: oklch(18% 0.015 250);
+  --color-success: oklch(72% 0.13 152);
+  --color-success-foreground: oklch(14% 0.02 152);
+  --color-warning: oklch(80% 0.12 75);
+  --color-warning-foreground: oklch(18% 0.015 250);
+  --color-destructive: oklch(70% 0.15 27);
+  --color-destructive-foreground: oklch(14% 0.02 27);
+  --color-info: oklch(70% 0.08 205);
+  --color-info-foreground: oklch(14% 0.02 205);
+  --color-sidebar: oklch(13% 0.03 252);
+  --color-sidebar-foreground: oklch(93% 0.01 240);
+  --color-sidebar-accent: oklch(22% 0.04 252);
+  /* Shadows read as tint at 40% opacity in dark theme (DESIGN.md §2.4), not as plain box-shadow. */
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.24);
+  --shadow-2: 0 4px 12px oklch(0 0 0 / 0.32);
+  --shadow-3: 0 12px 32px oklch(0 0 0 / 0.4);
+}
+
+/* -- Motion -- DESIGN.md §2.5. Plain custom properties (not a Tailwind theme namespace): spring
+   physics used by `motion` (motion.dev) live as JS constants in `src/lib/motion-tokens.ts` because a
+   spring cannot be expressed as a CSS value; these covers every CSS-only transition (hover, focus,
+   the offline banner slide, skeleton shimmer). */
+:root {
+  --dur-micro: 140ms;
+  --dur-standard: 220ms;
+  --dur-page: 300ms;
+  --dur-celebration: 480ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Status is never colour alone (DESIGN.md §2.1); reduced motion replaces motion with a crossfade or
+   an instant change, per component -- it never just deletes the feedback (DESIGN.md §2.5). Every
+   component that animates reads this media query itself (see `useReducedMotion`); this global rule
+   is the backstop for the handful of pure-CSS transitions declared with the vars above. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: 0ms;
+    --dur-standard: 0ms;
+    --dur-page: 0ms;
+    --dur-celebration: 0ms;
+  }
+  /* Global backstop for the handful of Radix-driven `animate-[keyframe_140ms_...]` utilities below,
+     whose duration is a literal (Tailwind's arbitrary-animation syntax cannot reference a custom
+     property for the duration segment). Motion is replaced by an instant state change, never
+     deleted -- content still enters/exits, just without the tween (DESIGN.md §2.5). */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* -- Keyframes for Radix `data-state` driven enter/exit (DropdownMenu, Popover, Tooltip, Dialog).
+   Menus/popovers scale .96->1 from the trigger corner at --dur-micro (DESIGN.md §10.3); dialogs and
+   sheets fade+translate at --dur-standard/--dur-page respectively. */
+@keyframes devon-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes devon-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@keyframes devon-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes devon-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes devon-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes devon-slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes devon-slide-out-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes devon-slide-in-top {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes devon-slide-out-top {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+@keyframes devon-shimmer {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}

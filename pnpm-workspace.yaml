@@ -1,0 +1,28 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Exact pins everywhere (TECH-SPEC.md §1.2): pnpm writes exact versions, never ranges, on `pnpm add`.
+saveExact: true
+
+# Fail loudly on a Node/pnpm mismatch instead of installing anyway (I-18: no surprise later). Verified
+# against pnpm 11.15.0: as of pnpm 10+, install-behaviour settings like this one live here, not in
+# .npmrc -- `.npmrc`'s `engine-strict`/`save-exact` are silently ignored by `pnpm add`/`pnpm install`
+# in this pnpm line (empirically checked while building this file; do not move these back to .npmrc).
+engineStrict: true
+
+# Peers are declared deliberately across this stack (React 19.2, Zod 4.5.x shared client/server);
+# auto-install keeps a fresh clone from stalling on an unmet-peer prompt, while still failing loudly
+# (strictPeerDependencies) when something is genuinely missing rather than silently hoisting around it.
+autoInstallPeers: true
+strictPeerDependencies: false
+
+# Do not hoist -- workspace packages must only see what they declare (no phantom dependencies).
+shamefullyHoist: false
+
+allowBuilds:
+  argon2: set this to true or false
+  cpu-features: true
+  esbuild: true
+  protobufjs: true
+  ssh2: true

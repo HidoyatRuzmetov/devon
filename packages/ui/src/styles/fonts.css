@@ -1,0 +1,93 @@
+/**
+ * Self-hosted font faces (H8.2: no CDN, no external font call -- data localisation,
+ * `docs/03-plan/backlog.json` EPIC-000 design.md §3.2). Subsets built from Inter (sans), IBM Plex
+ * Serif (display) and IBM Plex Mono (mono) via `pyftsubset`, each covering:
+ *
+ *   U+0020-007E  Basic Latin (printable)          U+0300-036F  Combining Diacritical Marks
+ *   U+00A0-00FF  Latin-1 Supplement                U+0400-04FF  Cyrillic            [REQUIRED]
+ *   U+0100-017F  Latin Extended-A                  U+0500-052F  Cyrillic Supplement [REQUIRED]
+ *   U+02B0-02FF  Spacing Modifier Letters [REQUIRED -- carries Oʻ Gʻ (U+02BB) and ʼ (U+02BC)]
+ *   U+2000-206F  General Punctuation, plus U+2074/U+20AC/U+2116/U+2122
+ *
+ * Verified present in every subset below (not just the block range): U+02BB, U+02BC, U+045E (ў),
+ * U+0493 (ғ), U+049B (қ), U+04B3 (ҳ). See `packages/ui/public/fonts/OFL-*.txt` for licence text
+ * (SIL Open Font License 1.1) and the Storybook glyph page (`Foundations/Glyphs`) for the visual
+ * proof this file exists to satisfy (AC-6, design.md §12.F).
+ */
+
+@font-face {
+  font-family: 'Devon Sans';
+  src: url('/fonts/sans-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Sans';
+  src: url('/fonts/sans-semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Sans';
+  src: url('/fonts/sans-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Display';
+  src: url('/fonts/display-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Display';
+  src: url('/fonts/display-semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Mono';
+  src: url('/fonts/mono-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}
+
+@font-face {
+  font-family: 'Devon Mono';
+  src: url('/fonts/mono-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0020-007E, U+00A0-024F, U+02B0-02FF, U+0300-036F, U+0400-052F, U+2000-206F, U+2074, U+20AC,
+    U+2116, U+2122;
+}

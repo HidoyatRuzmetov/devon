@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "e2e/routes.json",
+  "description": "EPIC-000.9 handoff contract: every shell route exercised by the e2e suite, the axe gate and the qa-visual screenshot manifest (design.md §1.1, spec.md §12). Entries are {path, name, auth, requires?} verbatim per the frozen work-item handoff; `slug` and `heading` are additive conveniences used only by this suite's own scripts.",
+  "type": "object",
+  "required": ["routes"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "name", "auth", "slug", "chrome"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The URL path Playwright navigates to, e.g. \"/admin\"."
+          },
+          "name": {
+            "type": "string",
+            "description": "The route's internal name (apps/web/src/lib/router.tsx RouteName)."
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+$",
+            "description": "Alphanumeric-only screenshot slug (spec.md §12: \"root\" for \"/\"). agentic/scripts/dod.mjs applies `s.replace(/[^a-z0-9]+/gi, '_')` to whatever a manifest lists, so every slug here is already the stable, unambiguous output of that transform."
+          },
+          "auth": {
+            "type": "string",
+            "enum": ["public", "session", "super_admin"],
+            "description": "public: renders without a session. session: any signed-in user (redirects to /login otherwise). super_admin: the no-permission state renders for anyone else (AC-11)."
+          },
+          "chrome": {
+            "type": "string",
+            "enum": ["auth", "app"],
+            "description": "Which shell wraps this route (apps/web/src/app.tsx's RouteOutlet): \"auth\" (AuthShell) issues zero API calls, so its organic state renders with apps/web alone; \"app\" (AppShell) always calls GET /api/v1/me + /api/v1/instance for the chrome, so its organic state needs apps/api reachable even when the route's own content (a forced state, or /404) does not."
+          },
+          "requires": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["setup_token"] },
+            "description": "Extra preconditions this route's organic (non-forced) render needs, beyond `auth`."
+          },
+          "heading": {
+            "type": "string",
+            "description": "i18n key of the route's organic-state h1/heading, used to assert the real page loaded (not a blank shell) before a screenshot or axe scan."
+          }
+        }
+      }
+    }
+  }
+}

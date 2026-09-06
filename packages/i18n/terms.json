@@ -1,0 +1,153 @@
+[
+  {
+    "id": "task",
+    "en": "Task",
+    "uzLatn": "Vazifa",
+    "uzCyrl": "Вазифа",
+    "ru": "Задача",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6445145",
+      "publisher": "O'zbekiston Respublikasi qonun hujjatlari ma'lumotlari milliy bazasi (LexUZ) -- O'zbekiston Respublikasi Konstitutsiyasi",
+      "quote": "Oʻzbekiston Respublikasi Oliy Majlisining Qonunchilik palatasi va Senati, zarurat boʻlgan taqdirda, muayyan vazifalarni bajarish uchun deputatlar, senatorlar orasidan komissiyalar tuzadi.",
+      "fetchedAt": "2026-09-06T09:10:00Z"
+    },
+    "note": "Seed list per design.md §1.4 (from docs/01-research/uzbekistan-context.md §6 glossary). 'Vazifa' is the Constitution's own word for an assigned duty/task, chosen over the informal loanword 'tapshiriq' spelling variants seen in casual speech."
+  },
+  {
+    "id": "assignment",
+    "en": "Assignment (handed down from a superior)",
+    "uzLatn": "Topshiriq",
+    "uzCyrl": "Топшириқ",
+    "ru": "Поручение",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- O'zbekiston Respublikasining Mehnat kodeksi (28.10.2022 tahriri)",
+      "quote": "Uch ish kunidan kechiktirmay boshqa tarafni yozma shaklda ogohlantirgan holda xodim qoʻshimcha ishni bajarishni muddatidan oldin rad etish, ish beruvchi esa uni bajarish toʻgʻrisidagi topshiriqlarni muddatidan oldin bekor qilish huquqiga ega.",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    },
+    "note": "Distinct from 'vazifa' (task): a topshiriq is specifically handed down by someone with authority over the recipient (a manager to a subordinate), matching the department-head → member direction this platform models."
+  },
+  {
+    "id": "deadline",
+    "en": "Deadline / term",
+    "uzLatn": "Muddat",
+    "uzCyrl": "Муддат",
+    "ru": "Срок",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6445145",
+      "publisher": "LexUZ -- O'zbekiston Respublikasi Konstitutsiyasi",
+      "quote": "Shaxs sudning qarorisiz qirq sakkiz soatdan ortiq muddat ushlab turilishi mumkin emas.",
+      "fetchedAt": "2026-09-06T09:10:00Z"
+    }
+  },
+  {
+    "id": "unit",
+    "en": "Unit (organisational subdivision)",
+    "uzLatn": "Boʻlim",
+    "uzCyrl": "Бўлим",
+    "ru": "Отдел",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- O'zbekiston Respublikasining Mehnat kodeksi",
+      "quote": "UMUMIY QISM I BOʻLIM. UMUMIY QOIDALAR",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    },
+    "note": "The Code uses 'boʻlim' for its own top-level structural division; the same word is the everyday term for an organisational department/unit (e.g. 'kadrlar boʻlimi' -- HR unit) and is what department heads use for their own sub-units in this product."
+  },
+  {
+    "id": "employee",
+    "en": "Employee",
+    "uzLatn": "Xodim",
+    "uzCyrl": "Ходим",
+    "ru": "Сотрудник",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- O'zbekiston Respublikasining Mehnat kodeksi",
+      "quote": "Ish beruvchining mehnat shartlarini xodimning roziligisiz oʻzgartirish huquqi ... ish beruvchi xodim mehnat shartnomasida shart qilib koʻrsatilgan mehnat vazifasini davom ettirayotganida xodimning roziligisiz mehnat shartlarini oʻzgartirishga haqli.",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    }
+  },
+  {
+    "id": "event",
+    "en": "Event",
+    "uzLatn": "Tadbir",
+    "uzCyrl": "Тадбир",
+    "ru": "Мероприятие",
+    "source": {
+      "url": "https://ach.gov.uz/uz/events-nav/news/detail/6a92731c5795f7ed7e864c9e",
+      "publisher": "O'zbekiston Respublikasi Hisob palatasi (ach.gov.uz) -- Prezident nutqining rasmiy matni",
+      "quote": "Hurmatli tadbir ishtirokchilari!",
+      "fetchedAt": "2026-09-06T09:35:00Z"
+    },
+    "note": "Sourced in the calendar/gathering sense ('event with participants'), matching this product's later use for scheduled events -- not the legal 'chora-tadbir' (measure) sense also common in statute text."
+  },
+  {
+    "id": "approval",
+    "en": "Approval",
+    "uzLatn": "Tasdiqlash",
+    "uzCyrl": "Тасдиқлаш",
+    "ru": "Утверждение",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6445145",
+      "publisher": "LexUZ -- O'zbekiston Respublikasi Konstitutsiyasi",
+      "quote": "Oʻzbekiston Respublikasi tarkibiga yangi davlat tuzilmalarini qabul qilish va ularning Oʻzbekiston Respublikasi tarkibidan chiqishi haqidagi qarorlarni tasdiqlash;",
+      "fetchedAt": "2026-09-06T09:10:00Z"
+    }
+  },
+  {
+    "id": "undo",
+    "en": "Undo / repeal",
+    "uzLatn": "Bekor qilish",
+    "uzCyrl": "Бекор қилиш",
+    "ru": "Отменить",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6445145",
+      "publisher": "LexUZ -- O'zbekiston Respublikasi Konstitutsiyasi",
+      "quote": "mahalliy davlat hokimiyati vakillik organlarining qarorlarini, ular qonunchilik normalariga muvofiq boʻlmagan taqdirda, bekor qilish;",
+      "fetchedAt": "2026-09-06T09:10:00Z"
+    },
+    "note": "I-11's undo toast reuses the same everyday verb the Constitution uses for repealing a decision -- no separate software-only word was invented."
+  },
+  {
+    "id": "save",
+    "en": "Save",
+    "uzLatn": "Saqlash",
+    "uzCyrl": "Сақлаш",
+    "ru": "Сохранить",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- document toolbar control on a live government legal-database page",
+      "quote": "MS Word ga saqlash",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    },
+    "note": "The seed list (design.md §1.4) gives the confirmation toast form 'Saqlandi' ('has been saved'); that is the standard perfective inflection of this same root verb, not a separate terminology choice, and is used directly in the shell (see toast.copied for the pattern this epic ships; a generic save-confirmation toast arrives with the first persisted form field, EPIC-004)."
+  },
+  {
+    "id": "buyruq",
+    "en": "Order / decree (administrative)",
+    "uzLatn": "Buyruq",
+    "uzCyrl": "Буйруқ",
+    "ru": "Приказ",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- O'zbekiston Respublikasining Mehnat kodeksi",
+      "quote": "yakka tartibdagi huquqiy hujjatlar — buyruqlar, farmoyishlar, qarorlar (bundan buyon matnda buyruqlar deb yuritiladi) qabul qilishi mumkin.",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    },
+    "note": "RULING (spec.md §9.0 rule 2): the Labor Code defines a buyruq as a signed individual legal act (an employer's formal order, e.g. hiring/firing/discipline). That is not what a search-and-command overlay is. The shell therefore never calls it 'buyruqlar oynasi'; it is named 'Qidirish va amallar' (search.aria) -- 'amal' (action) rather than 'buyruq' (order) for the same reason a search bar is not a chain of command."
+  },
+  {
+    "id": "button_register",
+    "en": "Button label register: verbal noun, not the polite imperative",
+    "uzLatn": "Saqlash",
+    "uzCyrl": "Сақлаш",
+    "ru": "Сохранить",
+    "source": {
+      "url": "https://lex.uz/uz/docs/-6257288",
+      "publisher": "LexUZ -- document toolbar control on a live government legal-database page",
+      "quote": "MS Word ga saqlash",
+      "fetchedAt": "2026-09-06T09:20:00Z"
+    },
+    "note": "RULING (spec.md §14 SEV3-1): a real government digital-service control uses the plain verbal-noun/infinitive form ('saqlash', not the polite imperative 'saqlang'). spec.md §5 follows this form ('Kirish', 'Chiqish', 'Saqlash', 'Yuborish'), which also parallels the Russian infinitive convention the research independently endorses. docs/01-research/uzbekistan-context.md's competing lint rule (bare imperative reads as blunt, prefer '-ing') is about spoken/written correspondence register, not the compact, repeatedly-scanned register of a UI button; this product follows the source evidenced here for buttons specifically."
+  }
+]

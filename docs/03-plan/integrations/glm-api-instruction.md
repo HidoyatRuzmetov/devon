@@ -44,7 +44,7 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api-llm.gpu.uz/v1",
-    api_key="ВАШ_КЛЮЧ",
+    api_key="<ВАШ_КЛЮЧ>",  # placeholder — paste your own key, never commit it
 )
 
 resp = client.chat.completions.create(

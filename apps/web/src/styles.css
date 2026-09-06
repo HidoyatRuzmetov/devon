@@ -1,0 +1,22 @@
+/* @devon/ui ships tokens and self-hosted @font-face declarations (design.md §13); apps/web imports
+   them rather than redeclaring anything (I-9a / H8.2: one place fonts and tokens are declared). */
+@import '@devon/ui/styles/fonts.css';
+@import '@devon/ui/styles/tokens.css';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* WCAG 2.4.11 (design.md §3.1): the sticky 56px top bar must never cover a focused element. */
+:where(main) :focus-visible {
+  scroll-margin-top: 72px;
+}

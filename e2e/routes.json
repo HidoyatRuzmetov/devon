@@ -1,0 +1,46 @@
+{
+  "$schema": "./routes.schema.json",
+  "routes": [
+    {
+      "path": "/",
+      "name": "home",
+      "slug": "root",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "home.eyebrow"
+    },
+    {
+      "path": "/login",
+      "name": "login",
+      "slug": "login",
+      "auth": "public",
+      "chrome": "auth",
+      "heading": "login.title"
+    },
+    {
+      "path": "/setup",
+      "name": "setup",
+      "slug": "setup",
+      "auth": "public",
+      "chrome": "auth",
+      "requires": ["setup_token"],
+      "heading": "setup.used.title"
+    },
+    {
+      "path": "/admin",
+      "name": "admin",
+      "slug": "admin",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.title"
+    },
+    {
+      "path": "/404",
+      "name": "not-found",
+      "slug": "404",
+      "auth": "public",
+      "chrome": "app",
+      "heading": "state.notfound.title"
+    }
+  ]
+}

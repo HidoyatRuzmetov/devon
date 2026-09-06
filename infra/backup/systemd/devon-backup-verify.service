@@ -1,0 +1,13 @@
+[Unit]
+Description=Devon (WorkPortal) weekly automated restore verification (TECH-SPEC.md §13)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/devon
+ExecStart=/bin/bash /opt/devon/infra/backup/verify.sh
+User=devon
+Group=devon
+# A non-zero exit here means the most recent backup did NOT restore cleanly -- wire this unit's
+# failure into whatever alerting the host already has (e.g. `OnFailure=` pointing at a notify unit).

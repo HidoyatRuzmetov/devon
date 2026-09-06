@@ -1,0 +1,46 @@
+{
+  "name": "@devon/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Fastify app: sessions, setup bootstrap, admin namespace, healthz/readyz, OpenAPI (EPIC-000.6).",
+  "license": "UNLICENSED",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --config ../../packages/config/eslint/base.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\"",
+    "test:unit": "vitest run --config test/vitest.config.ts",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "setup:prove": "tsx test/checks/setup-prove.ts",
+    "session:prove": "tsx test/checks/session-prove.ts",
+    "admin:prove": "tsx test/checks/admin-prove.ts"
+  },
+  "devDependencies": {
+    "@devon/config": "workspace:*",
+    "@testcontainers/postgresql": "12.1.0",
+    "@types/node": "22.20.1",
+    "@types/pg": "8.23.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "pg": "8.23.0",
+    "prettier": "3.7.1",
+    "testcontainers": "12.1.0",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "dependencies": {
+    "@devon/contracts": "workspace:*",
+    "@devon/db": "workspace:*",
+    "@fastify/cookie": "11.1.2",
+    "@fastify/rate-limit": "11.2.0",
+    "@fastify/swagger": "9.8.1",
+    "@node-rs/argon2": "2.2.0",
+    "drizzle-orm": "0.45.2",
+    "fastify": "5.12.3",
+    "fastify-plugin": "6.0.0",
+    "fastify-type-provider-zod": "7.0.0",
+    "zod": "4.5.4"
+  }
+}
