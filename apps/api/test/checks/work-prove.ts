@@ -64,8 +64,10 @@ async function main(): Promise<void> {
     const csrf = cookies['devon_csrf']!
     const headers = { cookie, 'x-csrf-token': csrf, 'content-type': 'application/json' }
 
-    step('GET /api/v1/me reports the real membership (this build\'s actor fix)')
-    const me = (await (await fetch(`${server.baseUrl}/api/v1/me`, { headers: { cookie } })).json()) as {
+    step("GET /api/v1/me reports the real membership (this build's actor fix)")
+    const me = (await (
+      await fetch(`${server.baseUrl}/api/v1/me`, { headers: { cookie } })
+    ).json()) as {
       memberships: { departmentId: string }[]
       activeDepartmentId: string | null
     }
@@ -73,7 +75,9 @@ async function main(): Promise<void> {
     assertEqual(me.activeDepartmentId, departmentId, 'activeDepartmentId')
 
     step('GET /api/v1/board with no cards yet')
-    const boardEmpty = (await (await fetch(`${server.baseUrl}/api/v1/board`, { headers: { cookie } })).json()) as {
+    const boardEmpty = (await (
+      await fetch(`${server.baseUrl}/api/v1/board`, { headers: { cookie } })
+    ).json()) as {
       members: { userId: string }[]
     }
     assertEqual(boardEmpty.members.length, 1, 'board has exactly the one member')
@@ -98,9 +102,14 @@ async function main(): Promise<void> {
       checklistTotal: number
       commentCount: number
     }
-    assertTrue(card.checklistTotal === 0 && card.commentCount === 0, 'fresh card has no children yet')
+    assertTrue(
+      card.checklistTotal === 0 && card.commentCount === 0,
+      'fresh card has no children yet',
+    )
 
-    const board = (await (await fetch(`${server.baseUrl}/api/v1/board`, { headers: { cookie } })).json()) as {
+    const board = (await (
+      await fetch(`${server.baseUrl}/api/v1/board`, { headers: { cookie } })
+    ).json()) as {
       columns: { member: { userId: string }; cards: { id: string }[] }[]
     }
     assertEqual(board.columns[0]!.cards.length, 1, "the new card is in the assignee's column")
@@ -145,21 +154,35 @@ async function main(): Promise<void> {
     assertTrue(detail.checklist[0]!.doneAt !== null, 'checklist item is marked done')
     assertTrue(detail.comments[0]!.mentions.includes(user.id), 'comment carries the mention')
     assertTrue(
-      detail.activity.some((a) => a.kind === 'created') && detail.activity.some((a) => a.kind === 'comment'),
+      detail.activity.some((a) => a.kind === 'created') &&
+        detail.activity.some((a) => a.kind === 'comment'),
       'activity timeline has created + comment entries',
     )
 
-    step('filter grammar: GET /cards?q=assignee:@me status:active matches; a mismatched filter does not')
+    step(
+      'filter grammar: GET /cards?q=assignee:@me status:active matches; a mismatched filter does not',
+    )
     const meMatch = (await (
-      await fetch(`${server.baseUrl}/api/v1/cards?q=${encodeURIComponent('assignee:@me status:active')}`, {
+      await fetch(
+        `${server.baseUrl}/api/v1/cards?q=${encodeURIComponent('assignee:@me status:active')}`,
+        {
+          headers: { cookie },
+        },
+      )
+    ).json()) as { items: { id: string }[] }
+    assertTrue(
+      meMatch.items.some((c) => c.id === card.id),
+      'assignee:@me status:active matches the card',
+    )
+    const noMatch = (await (
+      await fetch(`${server.baseUrl}/api/v1/cards?q=${encodeURIComponent('status:done')}`, {
         headers: { cookie },
       })
     ).json()) as { items: { id: string }[] }
-    assertTrue(meMatch.items.some((c) => c.id === card.id), 'assignee:@me status:active matches the card')
-    const noMatch = (await (
-      await fetch(`${server.baseUrl}/api/v1/cards?q=${encodeURIComponent('status:done')}`, { headers: { cookie } })
-    ).json()) as { items: { id: string }[] }
-    assertTrue(!noMatch.items.some((c) => c.id === card.id), 'status:done does not match an active card')
+    assertTrue(
+      !noMatch.items.some((c) => c.id === card.id),
+      'status:done does not match an active card',
+    )
 
     step('optimistic concurrency: a stale version is rejected with 409')
     const staleRes = await fetch(`${server.baseUrl}/api/v1/cards/${card.id}`, {
@@ -179,14 +202,19 @@ async function main(): Promise<void> {
     const archiveList = (await (
       await fetch(`${server.baseUrl}/api/v1/archive?userId=${user.id}`, { headers: { cookie } })
     ).json()) as { items: { id: string }[] }
-    assertTrue(archiveList.items.some((c) => c.id === card.id), 'archived card appears in /archive')
+    assertTrue(
+      archiveList.items.some((c) => c.id === card.id),
+      'archived card appears in /archive',
+    )
     const restoreRes = await fetch(`${server.baseUrl}/api/v1/cards/${card.id}/restore`, {
       method: 'POST',
       headers,
     })
     assertEqual(restoreRes.status, 204, 'restore status')
 
-    step('cross-department isolation: a second department sees none of the first department\'s cards')
+    step(
+      "cross-department isolation: a second department sees none of the first department's cards",
+    )
     const otherDeptId = randomUUID()
     const sharedPasswordHash = (await server.deps.findUserById(user.id))!.passwordHash
     const superuser2 = new Client({ connectionString: db.superuserUrl })
@@ -222,17 +250,23 @@ async function main(): Promise<void> {
     ).json()) as { columns: { cards: unknown[] }[] }
     assertTrue(
       otherBoard.columns.every((c) => c.cards.length === 0),
-      'the second department\'s board shows none of the first department\'s cards',
+      "the second department's board shows none of the first department's cards",
     )
 
     step('projects: create from the built-in template, then complete a milestone')
-    const templatesRes = await fetch(`${server.baseUrl}/api/v1/projects/templates`, { headers: { cookie } })
+    const templatesRes = await fetch(`${server.baseUrl}/api/v1/projects/templates`, {
+      headers: { cookie },
+    })
     const templates = (await templatesRes.json()) as { key: string }[]
     assertTrue(templates.length >= 1, 'at least one project template exists')
     const fromTemplateRes = await fetch(`${server.baseUrl}/api/v1/projects/from-template`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ templateKey: templates[0]!.key, ownerUserId: user.id, members: [user.id] }),
+      body: JSON.stringify({
+        templateKey: templates[0]!.key,
+        ownerUserId: user.id,
+        members: [user.id],
+      }),
     })
     assertEqual(fromTemplateRes.status, 201, 'create project from template status')
     const project = (await fromTemplateRes.json()) as {
@@ -246,7 +280,9 @@ async function main(): Promise<void> {
       { method: 'PATCH', headers, body: JSON.stringify({ done: true }) },
     )
     assertEqual(milestoneRes.status, 200, 'milestone complete status')
-    const afterMilestone = (await milestoneRes.json()) as { milestones: { doneAt: string | null }[] }
+    const afterMilestone = (await milestoneRes.json()) as {
+      milestones: { doneAt: string | null }[]
+    }
     assertTrue(afterMilestone.milestones[0]!.doneAt !== null, 'milestone marked done')
 
     console.log('\nwork:prove PASSED')
