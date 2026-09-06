@@ -12,13 +12,21 @@ const manifest: FeatureManifest = {
   name: 'departments',
   routes: [
     { path: '/departments', component: DepartmentsHubScreen, titleKey: 'departments.title' },
-    { path: '/departments/new', component: CreateRequestScreen, titleKey: 'departments.create.title' },
+    {
+      path: '/departments/new',
+      component: CreateRequestScreen,
+      titleKey: 'departments.create.title',
+    },
     {
       path: '/departments/requests',
       component: ApprovalQueueScreen,
       titleKey: 'departments.approvalQueue.title',
     },
-    { path: '/department', component: DepartmentDetailScreen, titleKey: 'departments.settings.title' },
+    {
+      path: '/department',
+      component: DepartmentDetailScreen,
+      titleKey: 'departments.settings.title',
+    },
     { path: '/join', component: JoinScreen, titleKey: 'departments.join.title' },
   ],
   sidebar: [
@@ -32,7 +40,11 @@ const manifest: FeatureManifest = {
     },
   ],
   commands: [
-    { id: 'departments.create', labelKey: 'departments.landing.createCta', path: '/departments/new' },
+    {
+      id: 'departments.create',
+      labelKey: 'departments.landing.createCta',
+      path: '/departments/new',
+    },
     { id: 'departments.join', labelKey: 'departments.landing.joinCta', path: '/join' },
   ],
 }

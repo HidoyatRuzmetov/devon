@@ -3,11 +3,11 @@
 // MODULE-GUIDE.md "Web features").
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { QRCodeSVG } from 'qrcode.react'
 import { useT } from '@devon/i18n'
 import { Badge, Button, Dialog, DialogContent, Input, Separator, StateView, toast } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
 import {
-  adminResetPassword,
   cancelAccountDeletion,
   changePassword,
   disableTotp,
@@ -62,10 +62,12 @@ function SessionsSection() {
           <li key={s.id} className="flex items-center justify-between gap-3 p-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-body text-foreground">
-                {s.userAgent ?? '—'} {s.isCurrent ? <Badge>{t('accounts.sessions.current')}</Badge> : null}
+                {s.userAgent ?? '—'}{' '}
+                {s.isCurrent ? <Badge>{t('accounts.sessions.current')}</Badge> : null}
               </span>
               <span className="text-small text-muted-foreground">
-                {s.ip ?? '—'} · {t('accounts.sessions.lastSeen', { when: new Date(s.lastSeenAt).toLocaleString() })}
+                {s.ip ?? '—'} ·{' '}
+                {t('accounts.sessions.lastSeen', { when: new Date(s.lastSeenAt).toLocaleString() })}
               </span>
             </div>
             {!s.isCurrent ? (
@@ -114,7 +116,9 @@ function TwoFactorSection() {
   const queryClient = useQueryClient()
   const statusQuery = useQuery({ queryKey: ['accounts', '2fa'], queryFn: fetchTwoFactorStatus })
 
-  const [enrolling, setEnrolling] = React.useState<{ secret: string; otpauthUri: string } | null>(null)
+  const [enrolling, setEnrolling] = React.useState<{ secret: string; otpauthUri: string } | null>(
+    null,
+  )
   const [code, setCode] = React.useState('')
   const [recoveryCodes, setRecoveryCodes] = React.useState<string[] | null>(null)
   const [disableOpen, setDisableOpen] = React.useState(false)
@@ -151,11 +155,17 @@ function TwoFactorSection() {
   if (recoveryCodes) {
     mainContent = (
       <div className="flex flex-col gap-3 rounded-md border border-border bg-muted p-4">
-        <h3 className="text-body font-medium text-foreground">{t('accounts.twoFactor.enroll.recoveryTitle')}</h3>
-        <p className="text-small text-muted-foreground">{t('accounts.twoFactor.enroll.recoveryBody')}</p>
+        <h3 className="text-body font-medium text-foreground">
+          {t('accounts.twoFactor.enroll.recoveryTitle')}
+        </h3>
+        <p className="text-small text-muted-foreground">
+          {t('accounts.twoFactor.enroll.recoveryBody')}
+        </p>
         <ul className="grid grid-cols-2 gap-2 font-mono text-small text-foreground">
           {recoveryCodes.map((c) => (
-            <li key={c} className="rounded-sm border border-border bg-card px-2 py-1">{c}</li>
+            <li key={c} className="rounded-sm border border-border bg-card px-2 py-1">
+              {c}
+            </li>
           ))}
         </ul>
         <Button
@@ -174,13 +184,29 @@ function TwoFactorSection() {
     mainContent = (
       <div className="flex flex-col gap-3 rounded-md border border-border p-4">
         <p className="text-small text-foreground">{t('accounts.twoFactor.enroll.step1')}</p>
-        <code className="break-all rounded-sm bg-muted px-2 py-1 text-small">{enrolling.secret}</code>
+        {/* Fixed black-on-white, never theme tokens: an authenticator app's camera needs the highest
+            contrast it can find, not the current colour scheme. */}
+        <div className="w-fit rounded-md border border-border bg-white p-3">
+          <QRCodeSVG value={enrolling.otpauthUri} size={160} fgColor="#000000" bgColor="#ffffff" />
+        </div>
         <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.twoFactor.enroll.codeLabel')}</span>
+          <span className="text-small text-muted-foreground">
+            {t('accounts.twoFactor.enroll.secretLabel')}
+          </span>
+          <code className="break-all rounded-sm bg-muted px-2 py-1 text-small">
+            {enrolling.secret}
+          </code>
+        </label>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-small text-foreground">
+            {t('accounts.twoFactor.enroll.codeLabel')}
+          </span>
           <Input value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} />
         </label>
         {verify.isError ? (
-          <p role="alert" className="text-small text-destructive">{t('accounts.twoFactor.enroll.error')}</p>
+          <p role="alert" className="text-small text-destructive">
+            {t('accounts.twoFactor.enroll.error')}
+          </p>
         ) : null}
         <Button size="sm" loading={verify.isPending} onClick={() => verify.mutate()}>
           {t('accounts.twoFactor.enroll.verify')}
@@ -195,7 +221,12 @@ function TwoFactorSection() {
     )
   } else {
     mainContent = (
-      <Button size="sm" className="w-fit" loading={enroll.isPending} onClick={() => enroll.mutate()}>
+      <Button
+        size="sm"
+        className="w-fit"
+        loading={enroll.isPending}
+        onClick={() => enroll.mutate()}
+      >
         {t('accounts.twoFactor.enable')}
       </Button>
     )
@@ -219,7 +250,9 @@ function TwoFactorSection() {
         <DialogContent title={t('accounts.twoFactor.disableDialog.title')}>
           <div className="flex flex-col gap-3 pt-4">
             <label className="flex flex-col gap-1.5">
-              <span className="text-small text-foreground">{t('accounts.twoFactor.disableDialog.passwordLabel')}</span>
+              <span className="text-small text-foreground">
+                {t('accounts.twoFactor.disableDialog.passwordLabel')}
+              </span>
               <Input
                 type="password"
                 value={disablePassword}
@@ -227,9 +260,15 @@ function TwoFactorSection() {
               />
             </label>
             {disableError ? (
-              <p role="alert" className="text-small text-destructive">{t('accounts.twoFactor.disableDialog.error')}</p>
+              <p role="alert" className="text-small text-destructive">
+                {t('accounts.twoFactor.disableDialog.error')}
+              </p>
             ) : null}
-            <Button variant="destructive" loading={disable.isPending} onClick={() => disable.mutate()}>
+            <Button
+              variant="destructive"
+              loading={disable.isPending}
+              onClick={() => disable.mutate()}
+            >
               {t('accounts.twoFactor.disableDialog.submit')}
             </Button>
           </div>
@@ -268,10 +307,15 @@ function PasswordSection() {
           <span className="text-small text-foreground">{t('accounts.password.new')}</span>
           <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} />
         </label>
-        {message === 'success' ? (
-          <p role="status" className="text-small text-foreground">{t('accounts.password.success')}</p>
-        ) : message === 'error' ? (
-          <p role="alert" className="text-small text-destructive">{t('accounts.password.error')}</p>
+        {message !== null ? (
+          <p
+            role={message === 'success' ? 'status' : 'alert'}
+            className={
+              message === 'success' ? 'text-small text-foreground' : 'text-small text-destructive'
+            }
+          >
+            {message === 'success' ? t('accounts.password.success') : t('accounts.password.error')}
+          </p>
         ) : null}
         <Button
           size="sm"
@@ -315,7 +359,12 @@ function DeleteAccountSection() {
           <p className="text-small text-foreground">
             {t('accounts.delete.scheduled', { date: new Date(scheduledFor).toLocaleDateString() })}
           </p>
-          <Button variant="secondary" size="sm" loading={cancel.isPending} onClick={() => cancel.mutate()}>
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={cancel.isPending}
+            onClick={() => cancel.mutate()}
+          >
             {t('accounts.delete.cancel')}
           </Button>
         </div>

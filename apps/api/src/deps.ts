@@ -78,6 +78,20 @@ export type Deps = {
    * implementation runs this under the user's own id, not `super_admin`/view-as. */
   listMembershipsForUser(userId: string): Promise<MembershipView[]>
 
+  /** EPIC-001: whether `userId` has TOTP 2FA enabled -- `POST /auth/login` (a core, pre-EPIC-001
+   * route) consults this to decide between starting a session immediately and starting a login
+   * challenge instead (`createLoginChallenge`). Kept on `Deps`, not a direct import of
+   * `modules/accounts/repo.js`'s DB-backed function, so `test/unit/fake-deps.ts` can fake it --
+   * `auth/index.ts` is core code exercised by `test/unit/session.test.ts`, which never touches
+   * Postgres (this file's own header comment). */
+  getTwoFactorStatus(userId: string): Promise<{ enabled: boolean }>
+
+  /** EPIC-001: starts a short-lived (10 min) login challenge for a password-verified user whose
+   * account has 2FA enabled, returning the raw challenge token `POST /auth/login` hands back to the
+   * client for `POST /accounts/2fa/login-verify` to consume. See `getTwoFactorStatus`'s comment for
+   * why this is on `Deps` rather than a direct cross-module repo import. */
+  createLoginChallenge(userId: string): Promise<string>
+
   verifyAuditChain(): Promise<ChainVerification>
   checkDbReady(): Promise<boolean>
   checkMigrationsApplied(): Promise<boolean>

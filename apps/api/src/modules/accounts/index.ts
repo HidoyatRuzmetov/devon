@@ -83,7 +83,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         throw err
       }
       await startSession(user.id, req, reply)
-      reply.code(201).send({ user: toAccountPublicUser(user), csrfToken: req.cookies[CSRF_COOKIE_NAME] ?? '' })
+      reply
+        .code(201)
+        .send({ user: toAccountPublicUser(user), csrfToken: req.cookies[CSRF_COOKIE_NAME] ?? '' })
     },
   )
 
@@ -113,7 +115,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/sessions/:id/revoke',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { params: sessionIdParamsSchema },
     },
     async (req, reply) => {
@@ -131,7 +135,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/sessions/revoke-all',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -157,7 +163,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/2fa/totp/enroll',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { response: { 200: totpEnrollResultSchema } },
     },
     async (req, reply) => {
@@ -174,7 +182,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/2fa/totp/verify',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { body: totpVerifyBodySchema, response: { 200: totpVerifyResultSchema } },
     },
     async (req, reply) => {
@@ -196,7 +206,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/2fa/disable',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { body: totpDisableBodySchema },
     },
     async (req, reply) => {
@@ -239,7 +251,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/password/change',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { body: changePasswordBodySchema },
     },
     async (req, reply) => {
@@ -261,7 +275,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:userId/reset-password',
     {
-      config: { permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) } },
+      config: {
+        permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) },
+      },
       schema: { params: userIdParamsSchema, response: { 200: resetPasswordResultSchema } },
     },
     async (req, reply) => {
@@ -275,7 +291,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/delete',
     {
-      config: { permission: { action: 'delete', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'delete', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { response: { 200: deleteAccountResultSchema } },
     },
     async (req, reply) => {
@@ -288,7 +306,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/delete/cancel',
     {
-      config: { permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return

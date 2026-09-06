@@ -92,7 +92,9 @@ export default function RegisterScreen() {
             value={login}
             onChange={(e) => setLogin(e.target.value.toLowerCase())}
           />
-          <span className="text-small text-muted-foreground">{t('accounts.register.loginHint')}</span>
+          <span className="text-small text-muted-foreground">
+            {t('accounts.register.loginHint')}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1.5">
@@ -109,7 +111,9 @@ export default function RegisterScreen() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <span className="text-small text-muted-foreground">{t('accounts.register.passwordHint')}</span>
+          <span className="text-small text-muted-foreground">
+            {t('accounts.register.passwordHint')}
+          </span>
         </label>
 
         <label className="flex flex-col gap-1.5">

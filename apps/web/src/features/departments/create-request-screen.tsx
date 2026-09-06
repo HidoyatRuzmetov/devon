@@ -25,11 +25,15 @@ function PendingRequestView({
   const t = useT()
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center">
-      <Badge tone={status === 'approved' ? 'success' : status === 'rejected' ? 'destructive' : 'neutral'}>
+      <Badge
+        tone={status === 'approved' ? 'success' : status === 'rejected' ? 'destructive' : 'neutral'}
+      >
         {t(`departments.pending.status.${status}`)}
       </Badge>
       <h1 className="text-h2 text-foreground">{t('departments.pending.title')}</h1>
-      <p className="text-small text-muted-foreground">"{name}" — {t('departments.pending.body')}</p>
+      <p className="text-small text-muted-foreground">
+        &quot;{name}&quot; — {t('departments.pending.body')}
+      </p>
       {status === 'rejected' && reason ? (
         <p className="text-small text-foreground">
           {t('departments.pending.reasonLabel')}: {reason}
@@ -48,7 +52,10 @@ export default function CreateRequestScreen() {
   const t = useT()
   const queryClient = useQueryClient()
   const meQuery = useMeQuery()
-  const requestsQuery = useQuery({ queryKey: ['departments', 'requests', 'mine'], queryFn: fetchMyRequests })
+  const requestsQuery = useQuery({
+    queryKey: ['departments', 'requests', 'mine'],
+    queryFn: fetchMyRequests,
+  })
 
   const [forceForm, setForceForm] = React.useState(false)
   const [name, setName] = React.useState('')
@@ -99,7 +106,10 @@ export default function CreateRequestScreen() {
   }
 
   function addUnit() {
-    setUnits((prev) => [...prev, { name: '', colour: HEX_SWATCHES[prev.length % HEX_SWATCHES.length] }])
+    setUnits((prev) => [
+      ...prev,
+      { name: '', colour: HEX_SWATCHES[prev.length % HEX_SWATCHES.length] },
+    ])
   }
   function updateUnit(i: number, patch: Partial<UnitDraft>) {
     setUnits((prev) => prev.map((u, idx) => (idx === i ? { ...u, ...patch } : u)))

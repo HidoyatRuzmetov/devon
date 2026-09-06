@@ -6,12 +6,12 @@ import type { Locale } from '@devon/i18n'
 
 export type RegisterInput = {
   login: string
-  email?: string
+  email?: string | undefined
   password: string
   givenName: string
   familyName: string
-  patronymic?: string
-  title?: string
+  patronymic?: string | undefined
+  title?: string | undefined
   locale: Locale
   timezone: string
 }
@@ -73,7 +73,12 @@ export function enrollTotp(csrfToken: string) {
 
 const totpVerifyResultSchema = z.object({ recoveryCodes: z.array(z.string()) })
 export function verifyTotpEnroll(code: string, csrfToken: string) {
-  return apiClient.post('/api/v1/accounts/2fa/totp/verify', { code }, totpVerifyResultSchema, csrfToken)
+  return apiClient.post(
+    '/api/v1/accounts/2fa/totp/verify',
+    { code },
+    totpVerifyResultSchema,
+    csrfToken,
+  )
 }
 
 export function disableTotp(password: string, csrfToken: string) {
@@ -94,7 +99,12 @@ export function fetchDeletionStatus() {
   return apiClient.get('/api/v1/accounts/delete/status', deleteResultSchema)
 }
 export function requestAccountDeletion(csrfToken: string) {
-  return apiClient.post('/api/v1/accounts/delete', {}, z.object({ scheduledFor: z.string() }), csrfToken)
+  return apiClient.post(
+    '/api/v1/accounts/delete',
+    {},
+    z.object({ scheduledFor: z.string() }),
+    csrfToken,
+  )
 }
 export function cancelAccountDeletion(csrfToken: string) {
   return apiClient.post('/api/v1/accounts/delete/cancel', {}, z.void(), csrfToken)
@@ -102,5 +112,10 @@ export function cancelAccountDeletion(csrfToken: string) {
 
 const resetPasswordResultSchema = z.object({ temporaryPassword: z.string() })
 export function adminResetPassword(userId: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/accounts/${userId}/reset-password`, {}, resetPasswordResultSchema, csrfToken)
+  return apiClient.post(
+    `/api/v1/accounts/${userId}/reset-password`,
+    {},
+    resetPasswordResultSchema,
+    csrfToken,
+  )
 }

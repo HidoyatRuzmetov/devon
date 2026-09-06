@@ -42,7 +42,9 @@ export default function ApprovalQueueScreen() {
   if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (query.isError) {
     if (query.error instanceof ApiError && query.error.status === 403) {
-      return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+      return (
+        <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+      )
     }
     return <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
   }
@@ -61,7 +63,11 @@ export default function ApprovalQueueScreen() {
           >
             {t('departments.approvalQueue.filterPending')}
           </Button>
-          <Button size="sm" variant={filter === 'all' ? 'primary' : 'secondary'} onClick={() => setFilter('all')}>
+          <Button
+            size="sm"
+            variant={filter === 'all' ? 'primary' : 'secondary'}
+            onClick={() => setFilter('all')}
+          >
             {t('departments.approvalQueue.filterAll')}
           </Button>
         </div>
@@ -80,17 +86,29 @@ export default function ApprovalQueueScreen() {
                     {t('departments.approvalQueue.requestedBy')}: {r.requesterName} ·{' '}
                     {t('departments.approvalQueue.unitsCount', { count: r.units.length })}
                   </p>
-                  {r.description ? <p className="text-small text-muted-foreground">{r.description}</p> : null}
+                  {r.description ? (
+                    <p className="text-small text-muted-foreground">{r.description}</p>
+                  ) : null}
                 </div>
                 <Badge
-                  tone={r.status === 'approved' ? 'success' : r.status === 'rejected' ? 'destructive' : 'neutral'}
+                  tone={
+                    r.status === 'approved'
+                      ? 'success'
+                      : r.status === 'rejected'
+                        ? 'destructive'
+                        : 'neutral'
+                  }
                 >
                   {t(`departments.pending.status.${r.status}`)}
                 </Badge>
               </div>
               {r.status === 'pending' ? (
                 <div className="flex gap-2">
-                  <Button size="sm" loading={approve.isPending} onClick={() => approve.mutate(r.id)}>
+                  <Button
+                    size="sm"
+                    loading={approve.isPending}
+                    onClick={() => approve.mutate(r.id)}
+                  >
                     {t('departments.approvalQueue.approve')}
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => setRejectTarget(r)}>
@@ -107,14 +125,20 @@ export default function ApprovalQueueScreen() {
         <DialogContent title={t('departments.approvalQueue.rejectDialogTitle')}>
           <div className="flex flex-col gap-3 pt-4">
             <label className="flex flex-col gap-1.5">
-              <span className="text-small text-foreground">{t('departments.approvalQueue.rejectReasonLabel')}</span>
+              <span className="text-small text-foreground">
+                {t('departments.approvalQueue.rejectReasonLabel')}
+              </span>
               <textarea
                 className="min-h-20 w-full rounded-sm border border-border bg-card px-3 py-2 text-body text-foreground"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
             </label>
-            <Button variant="destructive" loading={reject.isPending} onClick={() => reject.mutate()}>
+            <Button
+              variant="destructive"
+              loading={reject.isPending}
+              onClick={() => reject.mutate()}
+            >
               {t('departments.approvalQueue.rejectSubmit')}
             </Button>
           </div>

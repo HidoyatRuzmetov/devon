@@ -32,7 +32,10 @@ import {
 const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   const ownAccount = (userId: string) => ({ kind: 'own_account' as const, userId })
   const department = (departmentId: string) => ({ kind: 'department' as const, departmentId })
-  const departmentChild = (departmentId: string) => ({ kind: 'department_child' as const, departmentId })
+  const departmentChild = (departmentId: string) => ({
+    kind: 'department_child' as const,
+    departmentId,
+  })
   const instance = () => ({ kind: 'instance' as const })
 
   function auditCtx(req: FastifyRequest) {
@@ -94,7 +97,9 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/requests',
     {
-      config: { permission: { action: 'create', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: { action: 'create', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
       schema: { body: createDepartmentRequestBodySchema },
     },
     async (req, reply) => {
@@ -184,12 +189,21 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id',
     {
-      config: { permission: { action: 'read', subject: (r) => departmentChild((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChild((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, response: { 200: departmentDetailSchema } },
     },
     async (req, reply) => {
       const role = myRoleIn(req, req.params.id)
-      const detail = await repo.getDepartmentDetail(req.params.id, req.actor!.userId, role ?? 'member')
+      const detail = await repo.getDepartmentDetail(
+        req.params.id,
+        req.actor!.userId,
+        role ?? 'member',
+      )
       if (!detail) {
         sendProblem(reply, 'not_found')
         return
@@ -201,7 +215,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/:id/settings',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, body: patchDepartmentSettingsBodySchema },
     },
     async (req, reply) => {
@@ -214,7 +233,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/deletion-request',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -229,7 +253,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id/invite',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, response: { 200: inviteViewSchema } },
     },
     async (req, reply) => {
@@ -245,8 +274,16 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/invite/rotate-key',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
-      schema: { params: departmentIdParamsSchema, response: { 200: inviteSecretSchema.pick({ joinKey: true }) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: inviteSecretSchema.pick({ joinKey: true }) },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -258,8 +295,16 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/invite/rotate-password',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
-      schema: { params: departmentIdParamsSchema, response: { 200: inviteSecretSchema.pick({ password: true }) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: inviteSecretSchema.pick({ password: true }) },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -271,7 +316,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/invite/password',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, body: setJoinPasswordBodySchema },
     },
     async (req, reply) => {
@@ -284,7 +334,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/:id/invite/approval',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, body: setJoinApprovalBodySchema },
     },
     async (req, reply) => {
@@ -342,7 +397,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id/members',
     {
-      config: { permission: { action: 'read', subject: (r) => departmentChild((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentChild((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema, response: { 200: memberListSchema } },
     },
     async (req, reply) => {
@@ -367,7 +427,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/members/:userId/remove',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: memberParamsSchema },
     },
     async (req, reply) => {
@@ -384,7 +449,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/leave',
     {
-      config: { permission: { action: 'delete', subject: (r) => departmentChild((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChild((r.params as { id: string }).id),
+        },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -401,7 +471,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/members/:userId/transfer-headship',
     {
-      config: { permission: { action: 'update', subject: (r) => department((r.params as { id: string }).id) } },
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
       schema: { params: memberParamsSchema },
     },
     async (req, reply) => {

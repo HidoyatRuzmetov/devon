@@ -4,11 +4,13 @@
 // that until a param route exists.
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { QRCodeSVG } from 'qrcode.react'
 import { useT } from '@devon/i18n'
-import { Badge, Button, Input, Separator, StateView, toast } from '@devon/ui'
+import { Badge, Button, Dialog, DialogContent, Input, Separator, StateView, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
+import { adminResetPassword } from '../accounts/api.js'
 import {
   fetchDepartment,
   fetchInvite,
@@ -31,7 +33,10 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   const t = useT()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
-  const deptQuery = useQuery({ queryKey: ['departments', 'detail', id], queryFn: () => fetchDepartment(id) })
+  const deptQuery = useQuery({
+    queryKey: ['departments', 'detail', id],
+    queryFn: () => fetchDepartment(id),
+  })
 
   const [allowSelfAssign, setAllowSelfAssign] = React.useState(true)
   const [allowStructureEdit, setAllowStructureEdit] = React.useState(true)
@@ -86,7 +91,9 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
         {t('departments.settings.allowStructureEdit')}
       </label>
       <label className="flex flex-col gap-1.5">
-        <span className="text-small text-foreground">{t('departments.settings.telegramGroupLabel')}</span>
+        <span className="text-small text-foreground">
+          {t('departments.settings.telegramGroupLabel')}
+        </span>
         <select
           className="h-11 w-fit rounded-sm border border-border bg-card px-3 text-body text-foreground"
           value={telegramPerm}
@@ -110,11 +117,15 @@ function InviteTab({ id }: { id: string }) {
   const t = useT()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
-  const inviteQuery = useQuery({ queryKey: ['departments', 'invite', id], queryFn: () => fetchInvite(id) })
+  const inviteQuery = useQuery({
+    queryKey: ['departments', 'invite', id],
+    queryFn: () => fetchInvite(id),
+  })
   const [revealedPassword, setRevealedPassword] = React.useState<string | null>(null)
   const [customPassword, setCustomPassword] = React.useState('')
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['departments', 'invite', id] })
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['departments', 'invite', id] })
 
   const rotateKey = useMutation({
     mutationFn: () => rotateJoinKey(id, meQuery.data?.csrfToken ?? ''),
@@ -165,12 +176,23 @@ function InviteTab({ id }: { id: string }) {
               size="sm"
               variant="secondary"
               onClick={() => {
-                void navigator.clipboard.writeText(link).then(() => toast(t('departments.invite.copiedLink')))
+                void navigator.clipboard
+                  .writeText(link)
+                  .then(() => toast(t('departments.invite.copiedLink')))
               }}
             >
-              {t('departments.invite.copiedLink')}
+              {t('departments.invite.copyLink')}
             </Button>
           </div>
+          {/* Fixed black-on-white, never theme tokens: a QR scanner needs the highest contrast the
+              camera can find, not the current colour scheme (design.md's tokens-only rule is about UI
+              chrome, not a machine-readable code's own required contrast). */}
+          <div className="w-fit rounded-md border border-border bg-white p-3">
+            <QRCodeSVG value={link} size={144} fgColor="#000000" bgColor="#ffffff" />
+          </div>
+          <span className="text-small text-muted-foreground">
+            {t('departments.invite.qrLabel')}
+          </span>
         </div>
       ) : null}
 
@@ -184,10 +206,14 @@ function InviteTab({ id }: { id: string }) {
             </Button>
           </div>
         ) : (
-          <p className="text-small text-muted-foreground">{t('departments.invite.passwordHiddenNotice')}</p>
+          <p className="text-small text-muted-foreground">
+            {t('departments.invite.passwordHiddenNotice')}
+          </p>
         )}
         {revealedPassword ? (
-          <p className="text-small text-attention-foreground">{t('departments.invite.saveNowWarning')}</p>
+          <p className="text-small text-attention-foreground">
+            {t('departments.invite.saveNowWarning')}
+          </p>
         ) : null}
       </div>
 
@@ -207,7 +233,8 @@ function InviteTab({ id }: { id: string }) {
           variant="secondary"
           loading={rotatePassword.isPending}
           onClick={() => {
-            if (window.confirm(t('departments.invite.rotatePasswordConfirm'))) rotatePassword.mutate()
+            if (window.confirm(t('departments.invite.rotatePasswordConfirm')))
+              rotatePassword.mutate()
           }}
         >
           {t('departments.invite.rotatePassword')}
@@ -228,17 +255,23 @@ function InviteTab({ id }: { id: string }) {
         </Button>
       </div>
 
-      <label className="flex items-center gap-2 text-body text-foreground">
-        <input
-          type="checkbox"
-          checked={invite.joinRequiresApproval}
-          onChange={(e) => toggleApproval.mutate(e.target.checked)}
-        />
-        <span className="flex flex-col">
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor="join-approval-toggle"
+          className="flex items-center gap-2 text-body text-foreground"
+        >
+          <input
+            id="join-approval-toggle"
+            type="checkbox"
+            checked={invite.joinRequiresApproval}
+            onChange={(e) => toggleApproval.mutate(e.target.checked)}
+          />
           <span>{t('departments.invite.approvalToggleLabel')}</span>
-          <span className="text-small text-muted-foreground">{t('departments.invite.approvalToggleBody')}</span>
-        </span>
-      </label>
+        </label>
+        <p className="pl-6 text-small text-muted-foreground">
+          {t('departments.invite.approvalToggleBody')}
+        </p>
+      </div>
     </div>
   )
 }
@@ -247,7 +280,12 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
   const t = useT()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
-  const membersQuery = useQuery({ queryKey: ['departments', 'members', id], queryFn: () => fetchMembers(id) })
+  const membersQuery = useQuery({
+    queryKey: ['departments', 'members', id],
+    queryFn: () => fetchMembers(id),
+  })
+  const isSuperAdmin = meQuery.data?.user.role === 'super_admin'
+  const [tempPassword, setTempPassword] = React.useState<string | null>(null)
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['departments', 'members', id] })
@@ -275,6 +313,16 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     },
     onError: () => toast(t('departments.members.leaveBlockedHead')),
   })
+  // TECH-SPEC §2.1: super-admin-only, instance-scoped password reset (route permission is
+  // `{action:'administer', subject:{kind:'instance'}}`, never a department permission) -- surfaced
+  // here because the member list is the one screen a super admin already has every user in front of.
+  const resetPassword = useMutation({
+    mutationFn: (userId: string) => adminResetPassword(userId, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (result) => {
+      toast(t('accounts.admin.resetPassword.success'))
+      setTempPassword(result.temporaryPassword)
+    },
+  })
 
   if (membersQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (membersQuery.isError) {
@@ -295,16 +343,23 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
               <li key={m.userId} className="flex items-center justify-between gap-3 p-4">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-body text-foreground">
-                    {name} {m.title ? <span className="text-muted-foreground">· {m.title}</span> : null}
+                    {name}{' '}
+                    {m.title ? <span className="text-muted-foreground">· {m.title}</span> : null}
                   </span>
                   <span className="flex items-center gap-2 text-small text-muted-foreground">
                     <Badge tone={m.role === 'head' ? 'info' : 'neutral'}>
-                      {t(m.role === 'head' ? 'departments.members.roleHead' : 'departments.members.roleMember')}
+                      {t(
+                        m.role === 'head'
+                          ? 'departments.members.roleHead'
+                          : 'departments.members.roleMember',
+                      )}
                     </Badge>
                     {m.status === 'pending_approval' ? (
                       <Badge tone="warning">{t('departments.members.statusPending')}</Badge>
                     ) : null}
-                    {t('departments.members.joinedAt', { date: new Date(m.joinedAt).toLocaleDateString() })}
+                    {t('departments.members.joinedAt', {
+                      date: new Date(m.joinedAt).toLocaleDateString(),
+                    })}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -345,12 +400,52 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
                       {t('departments.members.leave')}
                     </Button>
                   ) : null}
+                  {isSuperAdmin && m.userId !== myUserId ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      loading={resetPassword.isPending && resetPassword.variables === m.userId}
+                      onClick={() => {
+                        if (window.confirm(t('accounts.admin.resetPassword.confirm'))) {
+                          resetPassword.mutate(m.userId)
+                        }
+                      }}
+                    >
+                      {t('accounts.admin.resetPassword.button')}
+                    </Button>
+                  ) : null}
                 </div>
               </li>
             )
           })}
         </ul>
       )}
+
+      <Dialog open={tempPassword !== null} onOpenChange={(open) => !open && setTempPassword(null)}>
+        <DialogContent title={t('accounts.admin.resetPassword.title')}>
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">
+                {t('accounts.admin.resetPassword.tempPasswordLabel')}
+              </span>
+              <code className="break-all rounded-sm border border-border bg-muted px-2 py-1.5 text-body">
+                {tempPassword}
+              </code>
+            </label>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-fit"
+              onClick={async () => {
+                if (tempPassword) await navigator.clipboard.writeText(tempPassword)
+                toast(t('accounts.admin.resetPassword.copied'))
+              }}
+            >
+              {t('accounts.admin.resetPassword.copy')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -399,7 +494,9 @@ export default function DepartmentDetailScreen() {
   }
   if (deptQuery.isError) {
     if (deptQuery.error instanceof ApiError && deptQuery.error.status === 403) {
-      return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+      return (
+        <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+      )
     }
     return <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
   }

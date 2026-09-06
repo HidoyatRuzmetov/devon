@@ -13,10 +13,26 @@ import type { UserRecord } from '../../types.js'
  * overwhelming majority of "password12345"-style registrations without ever calling out to the
  * internet with a user's password (even k-anonymised). */
 export const COMMON_PASSWORDS: ReadonlySet<string> = new Set([
-  'password123', 'password1234', '123456789012', 'qwertyuiop12', 'letmein123456',
-  'iloveyou1234', 'admin1234567', 'welcome12345', 'password@123', '12345678901234',
-  'qwerty123456', 'football1234', 'baseball1234', 'dragon123456', 'superman1234',
-  'trustno112345', '123123123123', 'abc123456789', 'passw0rd12345', 'zaq12wsx34ed',
+  'password123',
+  'password1234',
+  '123456789012',
+  'qwertyuiop12',
+  'letmein123456',
+  'iloveyou1234',
+  'admin1234567',
+  'welcome12345',
+  'password@123',
+  '12345678901234',
+  'qwerty123456',
+  'football1234',
+  'baseball1234',
+  'dragon123456',
+  'superman1234',
+  'trustno112345',
+  '123123123123',
+  'abc123456789',
+  'passw0rd12345',
+  'zaq12wsx34ed',
 ])
 
 export const passwordSchema = z

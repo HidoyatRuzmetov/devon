@@ -34,7 +34,9 @@
     },
     "approvalQueue": {
       "title": "Bo'lim so'rovlari",
-      "empty": { "title": "Ko'rib chiqilmagan so'rovlar yo'q" },
+      "empty": {
+        "title": "Ko'rib chiqilmagan so'rovlar yo'q"
+      },
       "requestedBy": "So'rov beruvchi",
       "unitsCount": "{count} ta bo'linma",
       "approve": "Tasdiqlash",
@@ -50,6 +52,8 @@
     "invite": {
       "title": "Taklif",
       "link": "Havola",
+      "copyLink": "Havolani nusxalash",
+      "qrLabel": "QR kod",
       "keyLabel": "Kalit",
       "passwordLabel": "Parol",
       "copyInvite": "Taklifni nusxalash",
@@ -86,7 +90,9 @@
     },
     "members": {
       "title": "A'zolar",
-      "empty": { "title": "A'zolar yo'q" },
+      "empty": {
+        "title": "A'zolar yo'q"
+      },
       "roleHead": "Boshliq",
       "roleMember": "A'zo",
       "statusPending": "Tasdiqlanishi kutilmoqda",

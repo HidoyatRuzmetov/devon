@@ -34,7 +34,9 @@
     },
     "approvalQueue": {
       "title": "Department requests",
-      "empty": { "title": "No requests to review" },
+      "empty": {
+        "title": "No requests to review"
+      },
       "requestedBy": "Requested by",
       "unitsCount": "{count} unit(s)",
       "approve": "Approve",
@@ -50,6 +52,8 @@
     "invite": {
       "title": "Invite",
       "link": "Link",
+      "copyLink": "Copy link",
+      "qrLabel": "QR code",
       "keyLabel": "Key",
       "passwordLabel": "Password",
       "copyInvite": "Copy invitation",
@@ -86,7 +90,9 @@
     },
     "members": {
       "title": "Members",
-      "empty": { "title": "No members yet" },
+      "empty": {
+        "title": "No members yet"
+      },
       "roleHead": "Head",
       "roleMember": "Member",
       "statusPending": "Awaiting approval",

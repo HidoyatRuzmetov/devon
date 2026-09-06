@@ -26,8 +26,7 @@ export function decryptSecret(encoded: string, csrfSecret: string): string {
   const key = deriveKey(csrfSecret)
   const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'))
   decipher.setAuthTag(Buffer.from(tagHex, 'hex'))
-  return Buffer.concat([
-    decipher.update(Buffer.from(dataHex, 'hex')),
-    decipher.final(),
-  ]).toString('utf8')
+  return Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]).toString(
+    'utf8',
+  )
 }

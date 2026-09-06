@@ -12,7 +12,12 @@ const manifest: FeatureManifest = {
     { path: '/account', component: AccountSettingsScreen, titleKey: 'accounts.settings.title' },
   ],
   sidebar: [
-    { id: 'account-settings', labelKey: 'accounts.settings.title', icon: UserCog, route: '/account' },
+    {
+      id: 'account-settings',
+      labelKey: 'accounts.settings.title',
+      icon: UserCog,
+      route: '/account',
+    },
   ],
   commands: [],
 }

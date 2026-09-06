@@ -14,7 +14,6 @@ import {
   sessionCookieOptions,
 } from '../../lib/cookies.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
-import { createLoginChallenge, getTwoFactorStatus } from '../accounts/repo.js'
 
 const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 
@@ -50,9 +49,9 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
         return
       }
 
-      const twoFactor = await getTwoFactorStatus(user.id)
+      const twoFactor = await app.devon.getTwoFactorStatus(user.id)
       if (twoFactor.enabled) {
-        const challengeToken = await createLoginChallenge(user.id)
+        const challengeToken = await app.devon.createLoginChallenge(user.id)
         reply.code(200).send({ requires2fa: true, challengeToken })
         return
       }

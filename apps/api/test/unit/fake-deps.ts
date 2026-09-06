@@ -42,6 +42,12 @@ export type FakeState = {
    * has something to return -- empty by default (mirrors `buildActor`'s EPIC-000 "nobody can be a
    * member of a department that cannot yet be created" starting point, now populated when a test cares). */
   memberships: Array<MembershipView & { userId: string }>
+  /** EPIC-001: `userId`s with TOTP 2FA enabled -- a test opts a seeded user into the login-challenge
+   * path (instead of an immediate session) by adding their id here. Empty by default: 2FA off. */
+  twoFactorEnabled: Set<string>
+  /** EPIC-001: raw login-challenge tokens issued by `createLoginChallenge`, keyed by token, so a test
+   * exercising `POST /accounts/2fa/login-verify` can find which user a captured token belongs to. */
+  loginChallenges: Map<string, { userId: string }>
   instanceSettings: InstanceSettingsRecord
   dbReady: boolean
   migrationsApplied: boolean
@@ -58,6 +64,8 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     setupTokens: [],
     auditEvents: [],
     memberships: [],
+    twoFactorEnabled: new Set(),
+    loginChallenges: new Map(),
     instanceSettings: {
       isDemo: false,
       registrationOpen: true,
@@ -219,6 +227,16 @@ export function createFakeDeps(state: FakeState): Deps {
       return state.memberships
         .filter((m) => m.userId === userId)
         .map(({ departmentId, name, role }) => ({ departmentId, name, role }))
+    },
+
+    async getTwoFactorStatus(userId) {
+      return { enabled: state.twoFactorEnabled.has(userId) }
+    },
+
+    async createLoginChallenge(userId) {
+      const token = randomUUID() + randomUUID()
+      state.loginChallenges.set(token, { userId })
+      return token
     },
 
     async recordAccessDenied(ctx: AuditCtx, info) {

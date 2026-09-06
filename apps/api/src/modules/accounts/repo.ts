@@ -357,9 +357,7 @@ export async function consumeLoginChallenge(
       return { ok: false, reason: 'invalid' }
     }
 
-    await tx.raw(
-      sql`update app.login_challenges set consumed_at = now() where id = ${found.id}`,
-    )
+    await tx.raw(sql`update app.login_challenges set consumed_at = now() where id = ${found.id}`)
     await tx.raw(
       sql`update app.user_security set failed_login_count = 0, locked_until = null, updated_at = now()
           where user_id = ${found.user_id}`,

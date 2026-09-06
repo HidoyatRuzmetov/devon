@@ -147,7 +147,10 @@ const loginResultSchema = z.union([
 ])
 export type LoginResult = z.infer<typeof loginResultSchema>
 
-export async function login(credentials: { login: string; password: string }): Promise<LoginResult> {
+export async function login(credentials: {
+  login: string
+  password: string
+}): Promise<LoginResult> {
   const res = await raw('/api/v1/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -158,7 +161,10 @@ export async function login(credentials: { login: string; password: string }): P
   return loginResultSchema.parse(await res.json())
 }
 
-export function verifyTwoFactorLogin(input: { challengeToken: string; code: string }): Promise<void> {
+export function verifyTwoFactorLogin(input: {
+  challengeToken: string
+  code: string
+}): Promise<void> {
   return send('/api/v1/accounts/2fa/login-verify', 'POST', input, voidSchema)
 }
 

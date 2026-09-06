@@ -328,6 +328,8 @@
     "invite": {
       "title": "Invite",
       "link": "Link",
+      "copyLink": "Copy link",
+      "qrLabel": "QR code",
       "keyLabel": "Key",
       "passwordLabel": "Password",
       "copyInvite": "Copy invitation",

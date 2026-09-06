@@ -328,6 +328,8 @@
     "invite": {
       "title": "Приглашение",
       "link": "Ссылка",
+      "copyLink": "Копировать ссылку",
+      "qrLabel": "QR-код",
       "keyLabel": "Ключ",
       "passwordLabel": "Пароль",
       "copyInvite": "Скопировать приглашение",

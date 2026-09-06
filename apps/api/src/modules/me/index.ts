@@ -13,12 +13,7 @@ import type { UserRecord } from '../../types.js'
 // `buildActor` makes for `req.actor.memberships`, run again here because the response also needs each
 // department's display `name`, which `Actor.memberships` deliberately does not carry (permissions.ts's
 // `Membership` type is `{ departmentId, role }` only).
-function toMe(
-  user: UserRecord,
-  memberships: MembershipView[],
-  isDemo: boolean,
-  csrfToken: string,
-) {
+function toMe(user: UserRecord, memberships: MembershipView[], isDemo: boolean, csrfToken: string) {
   return {
     user: toPublicUser(user),
     memberships: memberships.map((m) => ({

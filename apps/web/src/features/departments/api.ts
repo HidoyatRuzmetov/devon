@@ -2,7 +2,7 @@
 import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
 
-export type UnitDraft = { name: string; colour?: string }
+export type UnitDraft = { name: string; colour?: string | undefined }
 
 export const departmentRequestSchema = z.object({
   id: z.string().uuid(),
@@ -21,13 +21,21 @@ export const departmentRequestSchema = z.object({
 export type DepartmentRequest = z.infer<typeof departmentRequestSchema>
 const requestListSchema = z.object({ requests: z.array(departmentRequestSchema) })
 
-export function createDepartmentRequest(input: {
-  name: string
-  description?: string
-  units: UnitDraft[]
-  locale: string
-}, csrfToken: string) {
-  return apiClient.post('/api/v1/departments/requests', input, z.object({ id: z.string().uuid() }), csrfToken)
+export function createDepartmentRequest(
+  input: {
+    name: string
+    description?: string | undefined
+    units: UnitDraft[]
+    locale: string
+  },
+  csrfToken: string,
+) {
+  return apiClient.post(
+    '/api/v1/departments/requests',
+    input,
+    z.object({ id: z.string().uuid() }),
+    csrfToken,
+  )
 }
 
 export function fetchMyRequests() {
@@ -45,10 +53,20 @@ const approveResultSchema = z.object({
   joinPassword: z.string(),
 })
 export function approveRequest(id: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/requests/${id}/approve`, {}, approveResultSchema, csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/requests/${id}/approve`,
+    {},
+    approveResultSchema,
+    csrfToken,
+  )
 }
 export function rejectRequest(id: string, reason: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/requests/${id}/reject`, { reason }, z.void(), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/requests/${id}/reject`,
+    { reason },
+    z.void(),
+    csrfToken,
+  )
 }
 
 export const departmentDetailSchema = z.object({
@@ -111,16 +129,36 @@ export function fetchInvite(id: string) {
   return apiClient.get(`/api/v1/departments/${id}/invite`, inviteViewSchema)
 }
 export function rotateJoinKey(id: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/${id}/invite/rotate-key`, {}, z.object({ joinKey: z.string() }), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/${id}/invite/rotate-key`,
+    {},
+    z.object({ joinKey: z.string() }),
+    csrfToken,
+  )
 }
 export function rotateJoinPassword(id: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/${id}/invite/rotate-password`, {}, z.object({ password: z.string() }), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/${id}/invite/rotate-password`,
+    {},
+    z.object({ password: z.string() }),
+    csrfToken,
+  )
 }
 export function setJoinPassword(id: string, password: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/${id}/invite/password`, { password }, z.void(), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/${id}/invite/password`,
+    { password },
+    z.void(),
+    csrfToken,
+  )
 }
 export function setJoinApproval(id: string, joinRequiresApproval: boolean, csrfToken: string) {
-  return apiClient.patch(`/api/v1/departments/${id}/invite/approval`, { joinRequiresApproval }, z.void(), csrfToken)
+  return apiClient.patch(
+    `/api/v1/departments/${id}/invite/approval`,
+    { joinRequiresApproval },
+    z.void(),
+    csrfToken,
+  )
 }
 
 const joinPreviewSchema = z.object({
@@ -159,11 +197,21 @@ export function fetchMembers(id: string) {
   return apiClient.get(`/api/v1/departments/${id}/members`, memberListSchema)
 }
 export function removeMember(id: string, userId: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/${id}/members/${userId}/remove`, {}, z.void(), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/${id}/members/${userId}/remove`,
+    {},
+    z.void(),
+    csrfToken,
+  )
 }
 export function leaveDepartment(id: string, csrfToken: string) {
   return apiClient.post(`/api/v1/departments/${id}/leave`, {}, z.void(), csrfToken)
 }
 export function transferHeadship(id: string, userId: string, csrfToken: string) {
-  return apiClient.post(`/api/v1/departments/${id}/members/${userId}/transfer-headship`, {}, z.void(), csrfToken)
+  return apiClient.post(
+    `/api/v1/departments/${id}/members/${userId}/transfer-headship`,
+    {},
+    z.void(),
+    csrfToken,
+  )
 }

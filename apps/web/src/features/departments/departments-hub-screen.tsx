@@ -4,13 +4,14 @@ import { useQuery } from '@tanstack/react-query'
 import { Building2, Plus, Users } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { Badge, Button, StateView } from '@devon/ui'
-import { useSession } from '../../lib/session.js'
+import { useSession, useDepartment } from '../../lib/session.js'
 import { navigate, Link } from '../../lib/router.js'
 import { fetchMyDepartments } from './api.js'
 
 export default function DepartmentsHubScreen() {
   const t = useT()
   const session = useSession()
+  const { departmentId: activeDepartmentId, setDepartmentId } = useDepartment()
   const query = useQuery({
     queryKey: ['departments', 'mine'],
     queryFn: fetchMyDepartments,
@@ -60,11 +61,30 @@ export default function DepartmentsHubScreen() {
         </div>
       </div>
 
+      {departments.length > 1 ? (
+        <label className="flex w-fit flex-col gap-1.5">
+          <span className="text-small text-foreground">{t('departments.switcher.label')}</span>
+          <select
+            className="h-11 w-64 rounded-sm border border-border bg-card px-3 text-body text-foreground"
+            value={activeDepartmentId ?? ''}
+            onChange={(e) => setDepartmentId(e.target.value || null)}
+          >
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.emoji ? `${d.emoji} ` : ''}
+                {d.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {departments.map((d) => (
           <li key={d.id}>
             <Link
               to={`/department?id=${d.id}`}
+              onClick={() => setDepartmentId(d.id)}
               className="flex flex-col gap-2 rounded-md border border-border bg-card p-4 hover:bg-accent"
             >
               <div className="flex items-center justify-between">
@@ -72,9 +92,18 @@ export default function DepartmentsHubScreen() {
                   {d.emoji ? `${d.emoji} ` : ''}
                   {d.name}
                 </span>
-                <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
-                  {t(d.myRole === 'head' ? 'departments.members.roleHead' : 'departments.members.roleMember')}
-                </Badge>
+                <div className="flex items-center gap-1.5">
+                  {d.id === activeDepartmentId ? (
+                    <Badge tone="success">{t('departments.switcher.current')}</Badge>
+                  ) : null}
+                  <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
+                    {t(
+                      d.myRole === 'head'
+                        ? 'departments.members.roleHead'
+                        : 'departments.members.roleMember',
+                    )}
+                  </Badge>
+                </div>
               </div>
               <span className="flex items-center gap-1 text-small text-muted-foreground">
                 <Users className="size-3.5" aria-hidden="true" /> {d.memberCount}

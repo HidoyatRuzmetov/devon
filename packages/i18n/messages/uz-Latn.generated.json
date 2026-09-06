@@ -328,6 +328,8 @@
     "invite": {
       "title": "Taklif",
       "link": "Havola",
+      "copyLink": "Havolani nusxalash",
+      "qrLabel": "QR kod",
       "keyLabel": "Kalit",
       "passwordLabel": "Parol",
       "copyInvite": "Taklifni nusxalash",

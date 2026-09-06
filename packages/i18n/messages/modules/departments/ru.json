@@ -34,7 +34,9 @@
     },
     "approvalQueue": {
       "title": "Заявки на отделы",
-      "empty": { "title": "Нет заявок на рассмотрении" },
+      "empty": {
+        "title": "Нет заявок на рассмотрении"
+      },
       "requestedBy": "Заявитель",
       "unitsCount": "{count} подразделений",
       "approve": "Одобрить",
@@ -50,6 +52,8 @@
     "invite": {
       "title": "Приглашение",
       "link": "Ссылка",
+      "copyLink": "Копировать ссылку",
+      "qrLabel": "QR-код",
       "keyLabel": "Ключ",
       "passwordLabel": "Пароль",
       "copyInvite": "Скопировать приглашение",
@@ -86,7 +90,9 @@
     },
     "members": {
       "title": "Участники",
-      "empty": { "title": "Нет участников" },
+      "empty": {
+        "title": "Нет участников"
+      },
       "roleHead": "Руководитель",
       "roleMember": "Участник",
       "statusPending": "Ожидает подтверждения",

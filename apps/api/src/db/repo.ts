@@ -8,6 +8,10 @@ import { schema, withContext, type RequestContext, type Tx } from '@devon/db'
 import type { Role } from '@devon/contracts'
 import { hashPassword } from '../lib/password.js'
 import { generateToken, sha256Hex } from '../lib/tokens.js'
+import {
+  createLoginChallenge as accountsCreateLoginChallenge,
+  getTwoFactorStatus as accountsGetTwoFactorStatus,
+} from '../modules/accounts/repo.js'
 import type {
   Deps,
   CreatedSession,
@@ -335,7 +339,10 @@ export function createRepo(): Deps {
               name: schema.departments.name,
             })
             .from(schema.memberships)
-            .innerJoin(schema.departments, eq(schema.departments.id, schema.memberships.departmentId))
+            .innerJoin(
+              schema.departments,
+              eq(schema.departments.id, schema.memberships.departmentId),
+            )
             .where(
               and(
                 eq(schema.memberships.userId, userId),
@@ -377,6 +384,14 @@ export function createRepo(): Deps {
           rowsChecked: Number(row.rows_checked),
         }
       })
+    },
+
+    async getTwoFactorStatus(userId) {
+      return accountsGetTwoFactorStatus(userId)
+    },
+
+    async createLoginChallenge(userId) {
+      return accountsCreateLoginChallenge(userId)
     },
 
     async checkDbReady() {

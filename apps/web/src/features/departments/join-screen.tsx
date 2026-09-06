@@ -44,7 +44,9 @@ export default function JoinScreen() {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center">
         <h1 className="text-h2 text-foreground">
-          {t(outcome === 'success' ? 'departments.join.success' : 'departments.join.pendingApproval')}
+          {t(
+            outcome === 'success' ? 'departments.join.success' : 'departments.join.pendingApproval',
+          )}
         </h1>
         <Button onClick={() => navigate('/departments')}>{t('departments.title')}</Button>
       </div>
@@ -83,7 +85,9 @@ export default function JoinScreen() {
       >
         {!keyFromLink ? (
           <label className="flex flex-col gap-1.5">
-            <span className="text-small text-foreground">{t('departments.join.byForm.keyLabel')}</span>
+            <span className="text-small text-foreground">
+              {t('departments.join.byForm.keyLabel')}
+            </span>
             <Input
               required
               value={key}
@@ -94,8 +98,15 @@ export default function JoinScreen() {
         ) : null}
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('departments.join.byForm.passwordLabel')}</span>
-          <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <span className="text-small text-foreground">
+            {t('departments.join.byForm.passwordLabel')}
+          </span>
+          <Input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
 
         {errorKey ? (

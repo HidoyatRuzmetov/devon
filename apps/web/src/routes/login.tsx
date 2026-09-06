@@ -92,7 +92,13 @@ export function LoginRoute() {
               {t('accounts.login2fa.error')}
             </p>
           ) : null}
-          <Button type="submit" size="lg" className="w-full" loading={twoFaMutation.isPending} disabled={!online}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={twoFaMutation.isPending}
+            disabled={!online}
+          >
             {t('accounts.login2fa.submit')}
           </Button>
           <Button

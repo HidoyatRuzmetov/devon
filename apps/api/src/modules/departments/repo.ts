@@ -15,7 +15,10 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import type { AuditCtx } from '../../types.js'
+import type { Locale } from '../../schemas.js'
 import type { CreateDepartmentRequestBody } from './schemas.js'
+
+export type DepartmentUnit = { name: string; colour?: string }
 
 const JOIN_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // unambiguous: no 0/O, 1/I/L (TECH-SPEC §2.2)
 const JOIN_ATTEMPT_WINDOW_MINUTES = 10
@@ -88,7 +91,11 @@ export async function createDepartmentRequest(
           returning id`,
     )
     const id = rows[0]!.id
-    tx.audit({ action: 'departments.request_created', subjectType: 'department_request', subjectId: id })
+    tx.audit({
+      action: 'departments.request_created',
+      subjectType: 'department_request',
+      subjectId: id,
+    })
     tx.emit({ type: 'departments.request.created', payload: { requestId: id, requesterUserId } })
     return id
   })
@@ -100,8 +107,8 @@ export type DepartmentRequestRow = {
   requesterName: string
   name: string
   description: string | null
-  units: unknown
-  locale: string
+  units: DepartmentUnit[]
+  locale: Locale
   status: 'pending' | 'approved' | 'rejected'
   reason: string | null
   createdAt: Date
@@ -130,8 +137,8 @@ function mapRequestRow(r: {
     requesterName: `${r.requester_given_name} ${r.requester_family_name}`,
     name: r.name,
     description: r.description,
-    units: r.units,
-    locale: r.locale,
+    units: (r.units ?? []) as DepartmentUnit[],
+    locale: r.locale as Locale,
     status: r.status,
     reason: r.reason,
     createdAt: r.created_at,
@@ -143,31 +150,57 @@ function mapRequestRow(r: {
 export async function listDepartmentRequests(
   statusFilter?: 'pending' | 'approved' | 'rejected',
 ): Promise<DepartmentRequestRow[]> {
-  return withContext(adminCtx({ requestId: randomUUID(), userId: null, actorRole: null, actingForUserId: null, ip: '', userAgent: '' }, null), async (tx) => {
-    const rows = await tx.raw<Parameters<typeof mapRequestRow>[0]>(
-      statusFilter
-        ? sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
+  return withContext(
+    adminCtx(
+      {
+        requestId: randomUUID(),
+        userId: null,
+        actorRole: null,
+        actingForUserId: null,
+        ip: '',
+        userAgent: '',
+      },
+      null,
+    ),
+    async (tx) => {
+      const rows = await tx.raw<Parameters<typeof mapRequestRow>[0]>(
+        statusFilter
+          ? sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
               from app.department_requests r join app.users u on u.id = r.requester_user_id
               where r.status = ${statusFilter}
               order by r.created_at desc`
-        : sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
+          : sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
               from app.department_requests r join app.users u on u.id = r.requester_user_id
               order by r.created_at desc`,
-    )
-    return rows.map(mapRequestRow)
-  })
+      )
+      return rows.map(mapRequestRow)
+    },
+  )
 }
 
 export async function listOwnDepartmentRequests(userId: string): Promise<DepartmentRequestRow[]> {
-  return withContext(adminCtx({ requestId: randomUUID(), userId, actorRole: null, actingForUserId: null, ip: '', userAgent: '' }, null), async (tx) => {
-    const rows = await tx.raw<Parameters<typeof mapRequestRow>[0]>(
-      sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
+  return withContext(
+    adminCtx(
+      {
+        requestId: randomUUID(),
+        userId,
+        actorRole: null,
+        actingForUserId: null,
+        ip: '',
+        userAgent: '',
+      },
+      null,
+    ),
+    async (tx) => {
+      const rows = await tx.raw<Parameters<typeof mapRequestRow>[0]>(
+        sql`select r.*, u.given_name as requester_given_name, u.family_name as requester_family_name
           from app.department_requests r join app.users u on u.id = r.requester_user_id
           where r.requester_user_id = ${userId}
           order by r.created_at desc`,
-    )
-    return rows.map(mapRequestRow)
-  })
+      )
+      return rows.map(mapRequestRow)
+    },
+  )
 }
 
 export type ApprovalResult = { departmentId: string; joinKey: string; joinPassword: string }
@@ -288,7 +321,7 @@ export type DepartmentDetail = {
   description: string | null
   emoji: string | null
   colour: string | null
-  localeDefault: string
+  localeDefault: Locale
   status: 'active' | 'paused_by_admin' | 'deletion_requested' | 'archived'
   joinRequiresApproval: boolean
   settings: Required<SettingsJson>
@@ -316,45 +349,60 @@ async function selectDepartmentCore(tx: Tx, departmentId: string) {
 }
 
 /** Every department a user belongs to, with settings/member counts -- for `GET /departments/mine`
- * (the switcher, the settings entry points) and `GET /departments/:id`. */
+ * (the switcher, the settings entry points) and `GET /departments/:id`. One query, not one per
+ * membership (MODULE-GUIDE.md / TECH-SPEC §16: no query in a loop) -- the per-department member count
+ * is a correlated subquery the database evaluates as part of the same round trip. */
 export async function listMyDepartments(userId: string): Promise<DepartmentDetail[]> {
   return withContext(
-    { requestId: randomUUID(), userId, actorRole: 'super_admin', departmentId: null, actingForUserId: null, viewAs: false, ip: '', userAgent: '' },
+    {
+      requestId: randomUUID(),
+      userId,
+      actorRole: 'super_admin',
+      departmentId: null,
+      actingForUserId: null,
+      viewAs: false,
+      ip: '',
+      userAgent: '',
+    },
     async (tx) => {
-      const memberships = await tx.drizzle
-        .select({ departmentId: schema.memberships.departmentId, role: schema.memberships.role })
-        .from(schema.memberships)
-        .where(
-          and(
-            eq(schema.memberships.userId, userId),
-            eq(schema.memberships.status, 'active'),
-            isNull(schema.memberships.deletedAt),
-          ),
-        )
-      const result: DepartmentDetail[] = []
-      for (const m of memberships) {
-        const dept = await selectDepartmentCore(tx, m.departmentId)
-        if (!dept) continue
-        const countRows = await tx.raw<{ count: number }>(
-          sql`select count(*)::int as count from app.memberships
-              where department_id = ${m.departmentId} and status = 'active' and deleted_at is null`,
-        )
-        result.push({
-          id: dept.id,
-          name: dept.name,
-          slug: dept.slug,
-          description: dept.description,
-          emoji: dept.emoji,
-          colour: dept.colour,
-          localeDefault: dept.locale_default,
-          status: dept.status,
-          joinRequiresApproval: dept.join_requires_approval,
-          settings: normalizeSettings(dept.settings),
-          myRole: m.role,
-          memberCount: countRows[0]?.count ?? 0,
-        })
-      }
-      return result
+      const rows = await tx.raw<{
+        id: string
+        name: string
+        slug: string
+        description: string | null
+        emoji: string | null
+        colour: string | null
+        locale_default: string
+        status: DepartmentDetail['status']
+        settings: unknown
+        join_requires_approval: boolean
+        my_role: 'head' | 'member'
+        member_count: number
+      }>(
+        sql`select d.id, d.name, d.slug, d.description, d.emoji, d.colour, d.locale_default, d.status,
+                   d.settings, d.join_requires_approval, m.role as my_role,
+                   (select count(*)::int from app.memberships m2
+                      where m2.department_id = d.id and m2.status = 'active' and m2.deleted_at is null
+                   ) as member_count
+            from app.memberships m
+            join app.departments d on d.id = m.department_id and d.deleted_at is null
+            where m.user_id = ${userId} and m.status = 'active' and m.deleted_at is null
+            order by d.name`,
+      )
+      return rows.map((dept) => ({
+        id: dept.id,
+        name: dept.name,
+        slug: dept.slug,
+        description: dept.description,
+        emoji: dept.emoji,
+        colour: dept.colour,
+        localeDefault: dept.locale_default as Locale,
+        status: dept.status,
+        joinRequiresApproval: dept.join_requires_approval,
+        settings: normalizeSettings(dept.settings),
+        myRole: dept.my_role,
+        memberCount: dept.member_count,
+      }))
     },
   )
 }
@@ -364,41 +412,55 @@ export async function getDepartmentDetail(
   userId: string,
   role: 'head' | 'member',
 ): Promise<DepartmentDetail | null> {
-  return withContext(deptCtx({ requestId: randomUUID(), userId, actorRole: role, actingForUserId: null, ip: '', userAgent: '' }, departmentId, role), async (tx) => {
-    const dept = await selectDepartmentCore(tx, departmentId)
-    if (!dept) return null
-    const countRows = await tx.raw<{ count: number }>(
-      sql`select count(*)::int as count from app.memberships
+  return withContext(
+    deptCtx(
+      {
+        requestId: randomUUID(),
+        userId,
+        actorRole: role,
+        actingForUserId: null,
+        ip: '',
+        userAgent: '',
+      },
+      departmentId,
+      role,
+    ),
+    async (tx) => {
+      const dept = await selectDepartmentCore(tx, departmentId)
+      if (!dept) return null
+      const countRows = await tx.raw<{ count: number }>(
+        sql`select count(*)::int as count from app.memberships
           where department_id = ${departmentId} and status = 'active' and deleted_at is null`,
-    )
-    return {
-      id: dept.id,
-      name: dept.name,
-      slug: dept.slug,
-      description: dept.description,
-      emoji: dept.emoji,
-      colour: dept.colour,
-      localeDefault: dept.locale_default,
-      status: dept.status,
-      joinRequiresApproval: dept.join_requires_approval,
-      settings: normalizeSettings(dept.settings),
-      myRole: role,
-      memberCount: countRows[0]?.count ?? 0,
-    }
-  })
+      )
+      return {
+        id: dept.id,
+        name: dept.name,
+        slug: dept.slug,
+        description: dept.description,
+        emoji: dept.emoji,
+        colour: dept.colour,
+        localeDefault: dept.locale_default as Locale,
+        status: dept.status,
+        joinRequiresApproval: dept.join_requires_approval,
+        settings: normalizeSettings(dept.settings),
+        myRole: role,
+        memberCount: countRows[0]?.count ?? 0,
+      }
+    },
+  )
 }
 
 export type SettingsPatch = {
-  allowSelfAssign?: boolean
-  allowStructureEdit?: boolean
-  joinRequiresApproval?: boolean
-  whoCanConnectTelegramGroup?: 'everyone' | 'head'
-  quietHours?: { start: string; end: string } | null
-  name?: string
-  description?: string | null
-  emoji?: string | null
-  colour?: string | null
-  localeDefault?: string
+  allowSelfAssign?: boolean | undefined
+  allowStructureEdit?: boolean | undefined
+  joinRequiresApproval?: boolean | undefined
+  whoCanConnectTelegramGroup?: ('everyone' | 'head') | undefined
+  quietHours?: { start: string; end: string } | null | undefined
+  name?: string | undefined
+  description?: string | null | undefined
+  emoji?: string | null | undefined
+  colour?: string | null | undefined
+  localeDefault?: Locale | undefined
 }
 
 export async function updateDepartmentSettings(
@@ -446,7 +508,10 @@ export async function updateDepartmentSettings(
   })
 }
 
-export async function requestDepartmentDeletion(departmentId: string, ctx: AuditCtx): Promise<void> {
+export async function requestDepartmentDeletion(
+  departmentId: string,
+  ctx: AuditCtx,
+): Promise<void> {
   await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
     await tx.drizzle
       .update(schema.departments)
@@ -465,18 +530,36 @@ export async function getInvite(
   departmentId: string,
   userId: string,
 ): Promise<{ joinKey: string | null; joinRequiresApproval: boolean; hasPassword: boolean } | null> {
-  return withContext(deptCtx({ requestId: randomUUID(), userId, actorRole: 'head', actingForUserId: null, ip: '', userAgent: '' }, departmentId, 'head'), async (tx) => {
-    const rows = await tx.raw<{ join_key: string | null; join_requires_approval: boolean; join_password_hash: string | null }>(
-      sql`select join_key, join_requires_approval, join_password_hash from app.departments where id = ${departmentId}`,
-    )
-    const row = rows[0]
-    if (!row) return null
-    return {
-      joinKey: row.join_key,
-      joinRequiresApproval: row.join_requires_approval,
-      hasPassword: row.join_password_hash !== null,
-    }
-  })
+  return withContext(
+    deptCtx(
+      {
+        requestId: randomUUID(),
+        userId,
+        actorRole: 'head',
+        actingForUserId: null,
+        ip: '',
+        userAgent: '',
+      },
+      departmentId,
+      'head',
+    ),
+    async (tx) => {
+      const rows = await tx.raw<{
+        join_key: string | null
+        join_requires_approval: boolean
+        join_password_hash: string | null
+      }>(
+        sql`select join_key, join_requires_approval, join_password_hash from app.departments where id = ${departmentId}`,
+      )
+      const row = rows[0]
+      if (!row) return null
+      return {
+        joinKey: row.join_key,
+        joinRequiresApproval: row.join_requires_approval,
+        hasPassword: row.join_password_hash !== null,
+      }
+    },
+  )
 }
 
 export async function rotateJoinKey(departmentId: string, ctx: AuditCtx): Promise<string> {
@@ -497,7 +580,9 @@ export async function rotateJoinPassword(departmentId: string, ctx: AuditCtx): P
   const password = generateJoinPassword()
   const hash = await hashPassword(password)
   await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`)
+    await tx.raw(
+      sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`,
+    )
     tx.audit({
       action: 'departments.invite_password_rotated',
       subjectType: 'department',
@@ -515,7 +600,9 @@ export async function setJoinPassword(
 ): Promise<void> {
   const hash = await hashPassword(password)
   await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`)
+    await tx.raw(
+      sql`update app.departments set join_password_hash = ${hash} where id = ${departmentId}`,
+    )
     tx.audit({
       action: 'departments.invite_password_set',
       subjectType: 'department',
@@ -547,19 +634,41 @@ export async function setJoinApproval(
 // ---------------------------------------------------------------------------------------------
 // Join
 
-export async function getJoinPreview(
-  key: string,
-): Promise<{ name: string; emoji: string | null; colour: string | null; joinRequiresApproval: boolean } | null> {
+export async function getJoinPreview(key: string): Promise<{
+  name: string
+  emoji: string | null
+  colour: string | null
+  joinRequiresApproval: boolean
+} | null> {
   return withContext(
-    { requestId: randomUUID(), userId: null, actorRole: 'super_admin', departmentId: null, actingForUserId: null, viewAs: false, ip: '', userAgent: '' },
+    {
+      requestId: randomUUID(),
+      userId: null,
+      actorRole: 'super_admin',
+      departmentId: null,
+      actingForUserId: null,
+      viewAs: false,
+      ip: '',
+      userAgent: '',
+    },
     async (tx) => {
-      const rows = await tx.raw<{ name: string; emoji: string | null; colour: string | null; join_requires_approval: boolean }>(
+      const rows = await tx.raw<{
+        name: string
+        emoji: string | null
+        colour: string | null
+        join_requires_approval: boolean
+      }>(
         sql`select name, emoji, colour, join_requires_approval from app.departments
             where join_key = ${key} and status = 'active' and deleted_at is null`,
       )
       const row = rows[0]
       if (!row) return null
-      return { name: row.name, emoji: row.emoji, colour: row.colour, joinRequiresApproval: row.join_requires_approval }
+      return {
+        name: row.name,
+        emoji: row.emoji,
+        colour: row.colour,
+        joinRequiresApproval: row.join_requires_approval,
+      }
     },
   )
 }
@@ -574,7 +683,16 @@ export async function joinByKeyAndPassword(
   password: string,
   ctx: AuditCtx,
 ): Promise<JoinOutcome> {
-  const systemCtx = { requestId: ctx.requestId, userId, actorRole: 'super_admin' as const, departmentId: null, actingForUserId: null, viewAs: false, ip: ctx.ip, userAgent: ctx.userAgent }
+  const systemCtx = {
+    requestId: ctx.requestId,
+    userId,
+    actorRole: 'super_admin' as const,
+    departmentId: null,
+    actingForUserId: null,
+    viewAs: false,
+    ip: ctx.ip,
+    userAgent: ctx.userAgent,
+  }
 
   const rateLimited = await withContext(systemCtx, async (tx) => {
     const rows = await tx.raw<{ count: number }>(
@@ -587,7 +705,12 @@ export async function joinByKeyAndPassword(
   if (rateLimited) return { ok: false, reason: 'rate_limited' }
 
   return withContext(systemCtx, async (tx) => {
-    const rows = await tx.raw<{ id: string; join_password_hash: string | null; join_requires_approval: boolean; status: string }>(
+    const rows = await tx.raw<{
+      id: string
+      join_password_hash: string | null
+      join_requires_approval: boolean
+      status: string
+    }>(
       sql`select id, join_password_hash, join_requires_approval, status from app.departments
           where join_key = ${key} and deleted_at is null`,
     )
@@ -602,7 +725,11 @@ export async function joinByKeyAndPassword(
     )
 
     if (!dept || !ok) {
-      tx.audit({ action: 'departments.join_failed', subjectType: 'department', subjectId: dept?.id ?? null })
+      tx.audit({
+        action: 'departments.join_failed',
+        subjectType: 'department',
+        subjectId: dept?.id ?? null,
+      })
       return { ok: false, reason: 'invalid' }
     }
 
@@ -633,7 +760,11 @@ export async function joinByKeyAndPassword(
       departmentId: dept.id,
       after: { status },
     })
-    tx.emit({ type: 'departments.member.joined', departmentId: dept.id, payload: { userId, status } })
+    tx.emit({
+      type: 'departments.member.joined',
+      departmentId: dept.id,
+      payload: { userId, status },
+    })
     return { ok: true, departmentId: dept.id, status }
   })
 }
@@ -658,24 +789,43 @@ export async function listMembers(
   userId: string,
   role: 'head' | 'member',
 ): Promise<MemberRow[]> {
-  return withContext(deptCtx({ requestId: randomUUID(), userId, actorRole: role, actingForUserId: null, ip: '', userAgent: '' }, departmentId, role), async (tx) => {
-    const rows = await tx.drizzle
-      .select({
-        userId: schema.memberships.userId,
-        role: schema.memberships.role,
-        status: schema.memberships.status,
-        joinedAt: schema.memberships.joinedAt,
-        givenName: schema.users.givenName,
-        familyName: schema.users.familyName,
-        patronymic: schema.users.patronymic,
-        title: schema.users.title,
-        avatarKey: schema.users.avatarKey,
-      })
-      .from(schema.memberships)
-      .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
-      .where(and(eq(schema.memberships.departmentId, departmentId), isNull(schema.memberships.deletedAt)))
-    return rows
-  })
+  return withContext(
+    deptCtx(
+      {
+        requestId: randomUUID(),
+        userId,
+        actorRole: role,
+        actingForUserId: null,
+        ip: '',
+        userAgent: '',
+      },
+      departmentId,
+      role,
+    ),
+    async (tx) => {
+      const rows = await tx.drizzle
+        .select({
+          userId: schema.memberships.userId,
+          role: schema.memberships.role,
+          status: schema.memberships.status,
+          joinedAt: schema.memberships.joinedAt,
+          givenName: schema.users.givenName,
+          familyName: schema.users.familyName,
+          patronymic: schema.users.patronymic,
+          title: schema.users.title,
+          avatarKey: schema.users.avatarKey,
+        })
+        .from(schema.memberships)
+        .innerJoin(schema.users, eq(schema.users.id, schema.memberships.userId))
+        .where(
+          and(
+            eq(schema.memberships.departmentId, departmentId),
+            isNull(schema.memberships.deletedAt),
+          ),
+        )
+      return rows
+    },
+  )
 }
 
 export async function removeMember(
@@ -687,7 +837,12 @@ export async function removeMember(
     const rows = await tx.drizzle
       .update(schema.memberships)
       .set({ status: 'removed', leftAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, targetUserId)))
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, targetUserId),
+        ),
+      )
       .returning({ id: schema.memberships.id })
     if (rows.length === 0) return false
     tx.audit({
@@ -709,7 +864,12 @@ export async function leaveDepartment(
     const own = await tx.drizzle
       .select({ role: schema.memberships.role })
       .from(schema.memberships)
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, userId)))
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, userId),
+        ),
+      )
       .limit(1)
     if (own[0]?.role === 'head') {
       return { ok: false, reason: 'is_only_head' as const }
@@ -717,8 +877,18 @@ export async function leaveDepartment(
     await tx.drizzle
       .update(schema.memberships)
       .set({ status: 'removed', leftAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, userId)))
-    tx.audit({ action: 'departments.left', subjectType: 'membership', subjectId: userId, departmentId })
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, userId),
+        ),
+      )
+    tx.audit({
+      action: 'departments.left',
+      subjectType: 'membership',
+      subjectId: userId,
+      departmentId,
+    })
     return { ok: true }
   })
 }
@@ -733,18 +903,33 @@ export async function transferHeadship(
     const target = await tx.drizzle
       .select({ status: schema.memberships.status })
       .from(schema.memberships)
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, toUserId)))
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, toUserId),
+        ),
+      )
       .limit(1)
     if (!target[0] || target[0].status !== 'active') return false
 
     await tx.drizzle
       .update(schema.memberships)
       .set({ role: 'member', updatedAt: new Date() })
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, fromUserId)))
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, fromUserId),
+        ),
+      )
     await tx.drizzle
       .update(schema.memberships)
       .set({ role: 'head', updatedAt: new Date() })
-      .where(and(eq(schema.memberships.departmentId, departmentId), eq(schema.memberships.userId, toUserId)))
+      .where(
+        and(
+          eq(schema.memberships.departmentId, departmentId),
+          eq(schema.memberships.userId, toUserId),
+        ),
+      )
     tx.audit({
       action: 'departments.headship_transferred',
       subjectType: 'department',
