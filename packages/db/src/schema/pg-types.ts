@@ -24,3 +24,26 @@ export const bytea = customType<{ data: Buffer }>({
     return 'bytea'
   },
 })
+
+/** Postgres `bytea`, JS-side as the hex string every hash actually is everywhere else in this
+ * codebase (`sha256Hex()`, `hashesEqual()` -- `apps/api/src/lib/tokens.ts`). Transparently encodes
+ * hex -> `Buffer` on write and decodes back on read, so a token/hash column can be declared `bytea`
+ * (the real column type `migrations/0003_identity.sql` gives `sessions.token_hash`/`csrf_hash` and
+ * `setup_tokens.token_hash`) without every call site doing its own `Buffer.from(x, 'hex')`/
+ * `.toString('hex')`. Plain `text()` on one of these columns is a latent bug, not a style choice: a
+ * hex string written into a `bytea` column round-trips as the ASCII bytes *of* the hex string, not
+ * the digest itself, so every later read produces a value that no comparison against a freshly
+ * computed `sha256Hex()` result can ever match (found end-to-end: `PATCH /api/v1/me` 403s on every
+ * request post-login, because `checkCsrf` -- `apps/api/src/lib/csrf.ts` -- hashes the request's CSRF
+ * header and compares it against exactly this kind of double-encoded value, 2026-09). */
+export const hexBytea = customType<{ data: string; driverData: Buffer }>({
+  dataType() {
+    return 'bytea'
+  },
+  toDriver(value: string): Buffer {
+    return Buffer.from(value, 'hex')
+  },
+  fromDriver(value: Buffer): string {
+    return value.toString('hex')
+  },
+})

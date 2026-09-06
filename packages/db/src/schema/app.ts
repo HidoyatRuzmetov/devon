@@ -15,7 +15,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
-import { citext } from './pg-types.js'
+import { citext, hexBytea } from './pg-types.js'
 
 export const appSchema = pgSchema('app')
 
@@ -59,8 +59,8 @@ export const users = appSchema.table('users', {
 export const sessions = appSchema.table('sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull(),
-  tokenHash: text('token_hash').notNull(),
-  csrfHash: text('csrf_hash').notNull(),
+  tokenHash: hexBytea('token_hash').notNull(),
+  csrfHash: hexBytea('csrf_hash').notNull(),
   deviceLabel: text('device_label'),
   ip: text('ip'),
   userAgent: text('user_agent'),
@@ -73,7 +73,7 @@ export const sessions = appSchema.table('sessions', {
 
 export const setupTokens = appSchema.table('setup_tokens', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tokenHash: text('token_hash').notNull(),
+  tokenHash: hexBytea('token_hash').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   consumedAt: timestamp('consumed_at', { withTimezone: true }),
