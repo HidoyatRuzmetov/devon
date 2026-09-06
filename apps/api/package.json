@@ -14,7 +14,8 @@
     "start": "node dist/server.js",
     "setup:prove": "tsx test/checks/setup-prove.ts",
     "session:prove": "tsx test/checks/session-prove.ts",
-    "admin:prove": "tsx test/checks/admin-prove.ts"
+    "admin:prove": "tsx test/checks/admin-prove.ts",
+    "work:prove": "tsx test/checks/work-prove.ts"
   },
   "devDependencies": {
     "@devon/config": "workspace:*",
