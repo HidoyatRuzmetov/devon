@@ -9,6 +9,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
 import type { Role } from '@devon/contracts'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
+import { pgTimestampToDate } from '../../lib/pg-dates.js'
 import { generateToken, sha256Hex } from '../../lib/tokens.js'
 import { decryptSecret, encryptSecret } from './crypto.js'
 import { generateRecoveryCodes, generateTotpSecret, otpauthUri, verifyTotp } from './totp.js'
@@ -111,6 +112,15 @@ function isUniqueViolation(err: unknown): boolean {
   return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505'
 }
 
+/** A JS string array as ONE `text[]` bind parameter. A bare `${array}` inside drizzle's `sql` template
+ * expands to a `($1, $2, ...)` value list -- a *record*, which Postgres refuses to assign to a `text[]`
+ * column (`expression is of type record`, a 500 on every 2FA enrolment and every recovery-code login
+ * before `test/checks/accounts-prove.ts` caught it). `sql.param` keeps the whole array one placeholder,
+ * which node-postgres serialises as a Postgres array literal; the cast names the element type. */
+function textArray(values: string[]) {
+  return sql`${sql.param(values)}::text[]`
+}
+
 export type SessionView = {
   id: string
   deviceLabel: string | null
@@ -202,7 +212,8 @@ async function selectUserSecurity(tx: Tx, userId: string): Promise<UserSecurityR
     totp_enabled: boolean
     recovery_codes_hash: string[] | null
     failed_login_count: number
-    locked_until: Date | null
+    // timestamptz arrives as text through `raw()`, never as a `Date` -- see `lib/pg-dates.ts`.
+    locked_until: string | null
   }>(sql`select * from app.user_security where user_id = ${userId}`)
   const row = rows[0]
   if (!row) return null
@@ -212,7 +223,7 @@ async function selectUserSecurity(tx: Tx, userId: string): Promise<UserSecurityR
     totpEnabled: row.totp_enabled,
     recoveryCodesHash: row.recovery_codes_hash ?? [],
     failedLoginCount: row.failed_login_count,
-    lockedUntil: row.locked_until,
+    lockedUntil: pgTimestampToDate(row.locked_until),
   }
 }
 
@@ -258,7 +269,7 @@ export async function verifyTotpEnroll(
     const hashes = recoveryCodes.map((c) => sha256Hex(c))
     await tx.raw(
       sql`update app.user_security
-          set totp_enabled = true, recovery_codes_hash = ${hashes}, updated_at = now()
+          set totp_enabled = true, recovery_codes_hash = ${textArray(hashes)}, updated_at = now()
           where user_id = ${userId}`,
     )
     tx.audit({ action: 'accounts.2fa_enabled', subjectType: 'user', subjectId: userId })
@@ -310,12 +321,16 @@ export async function consumeLoginChallenge(
 ): Promise<{ ok: true; userId: string } | { ok: false; reason: 'invalid' | 'locked' }> {
   const tokenHash = sha256Hex(rawToken)
   return withContext(anonymousCtx(), async (tx) => {
-    const rows = await tx.raw<{ id: string; user_id: string; expires_at: Date }>(
+    const rows = await tx.raw<{ id: string; user_id: string; expires_at: string }>(
       sql`select id, user_id, expires_at from app.login_challenges
           where token_hash = ${tokenHash} and consumed_at is null`,
     )
     const found = rows[0]
-    if (!found || found.expires_at.getTime() <= Date.now()) return { ok: false, reason: 'invalid' }
+    // `expires_at` is timestamptz text here, not a `Date` (`lib/pg-dates.ts`); `getTime()` straight on
+    // the raw value was a TypeError on every 2FA login -- `test/checks/accounts-prove.ts` guards it.
+    if (!found || pgTimestampToDate(found.expires_at).getTime() <= Date.now()) {
+      return { ok: false, reason: 'invalid' }
+    }
 
     const security = await selectUserSecurity(tx, found.user_id)
     if (security?.lockedUntil && security.lockedUntil.getTime() > Date.now()) {
@@ -334,7 +349,7 @@ export async function consumeLoginChallenge(
         matched = true
         const remaining = security.recoveryCodesHash.filter((_, i) => i !== idx)
         await tx.raw(
-          sql`update app.user_security set recovery_codes_hash = ${remaining}, updated_at = now()
+          sql`update app.user_security set recovery_codes_hash = ${textArray(remaining)}, updated_at = now()
               where user_id = ${found.user_id}`,
         )
       }
@@ -455,11 +470,12 @@ export async function cancelAccountDeletion(userId: string, ctx: AuditCtx): Prom
 
 export async function getPendingDeletion(userId: string): Promise<Date | null> {
   return withContext(anonymousCtx(), async (tx) => {
-    const rows = await tx.raw<{ scheduled_for: Date }>(
+    const rows = await tx.raw<{ scheduled_for: string }>(
       sql`select scheduled_for from app.account_deletion_requests
           where user_id = ${userId} and completed_at is null and cancelled_at is null
           order by requested_at desc limit 1`,
     )
-    return rows[0]?.scheduled_for ?? null
+    const row = rows[0]
+    return row ? pgTimestampToDate(row.scheduled_for) : null
   })
 }
