@@ -22,6 +22,12 @@
  * (it travels with `@import`), so declaring it once, next to the tokens every consumer already
  * imports, fixes every current and future consumer without each one needing to know this package's
  * physical layout on disk.
+ *
+ * This alone is not enough for the eight unit hues: Tailwind's scanner still needs the literal class
+ * names to appear as text somewhere under the scanned path. `unitHueClass()` in `avatar.tsx` returns
+ * one of eight literal `bg-unit-N` strings from an array (never a `bg-unit-${n}` template) for exactly
+ * that reason -- see its comment. No separate `@source inline(...)` safelist is needed once both are
+ * true.
  */
 @source '../';
 

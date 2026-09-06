@@ -3,13 +3,27 @@ import * as AvatarPrimitive from '@radix-ui/react-avatar'
 import { cn } from '../lib/cn.js'
 
 /** DESIGN.md §2.1: the 8-hue categorical set, used only for avatars and unit chips, never a status
- * signal. `unitHue(seed)` picks a stable hue from a department/unit id so the same unit always
- * renders the same colour without a lookup table. */
-const UNIT_HUE_COUNT = 8
+ * signal. `unitHueClass(seed)` picks a stable hue from a department/unit id so the same unit always
+ * renders the same colour.
+ *
+ * Eight literal class names, never a `bg-unit-${n}` template: Tailwind v4 emits only utilities it can
+ * read verbatim from source, so the template generated no CSS and every initials fallback rendered
+ * transparent. `styles/tokens.css` also safelists the eight (`@source inline`) for callers that build
+ * the string themselves. */
+const UNIT_HUE_CLASSES = [
+  'bg-unit-1',
+  'bg-unit-2',
+  'bg-unit-3',
+  'bg-unit-4',
+  'bg-unit-5',
+  'bg-unit-6',
+  'bg-unit-7',
+  'bg-unit-8',
+] as const
 export function unitHueClass(seed: string): string {
   let hash = 0
   for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
-  return `bg-unit-${(hash % UNIT_HUE_COUNT) + 1}`
+  return UNIT_HUE_CLASSES[hash % UNIT_HUE_CLASSES.length] ?? UNIT_HUE_CLASSES[0]
 }
 
 /** DESIGN.md §3: "initials from three-name rule". `given + family` per spec.md §4.5 ("A.Y."). */
