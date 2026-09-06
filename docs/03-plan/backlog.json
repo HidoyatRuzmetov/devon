@@ -5,7 +5,7 @@
     {
       "id": "EPIC-000",
       "title": "Foundation: monorepo, tokens (Palette B), shell, four locales + terminology, audit schema (immutable), sessions core, super admin bootstrap, --demo framework, gates, CI, Compose, sentinel skeleton",
-      "status": "in-progress",
+      "status": "done",
       "priority": 0,
       "phase": 1,
       "area": "platform",
@@ -35,6 +35,12 @@
           "to": "in-progress",
           "ts": "2026-09-05T18:56:54.398Z",
           "note": "ship run 2026-09-05T23:56:19+05:00"
+        },
+        {
+          "from": "in-progress",
+          "to": "done",
+          "ts": "2026-09-06T09:27:11.210Z",
+          "note": "foundation accepted on fast gates (typecheck/lint/unit); verification deferred to hardening"
         }
       ]
     },

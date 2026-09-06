@@ -115,5 +115,12 @@
   },
   "enabledPlugins": {
     "wp-agentic@workportal-local": true
+  },
+  "worktree": {
+    "baseRef": "head",
+    "symlinkDirectories": [
+      "node_modules"
+    ],
+    "bgIsolation": "none"
   }
 }
