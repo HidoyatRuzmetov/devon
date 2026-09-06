@@ -1,0 +1,49 @@
+{
+  "projects": {
+    "title": "Group projects",
+    "emptyTitle": "No projects yet",
+    "emptyBody": "Start the first group project -- from a template or from scratch.",
+    "noIdTitle": "No project selected",
+    "noIdBody": "This link is missing a project id.",
+    "tile": {
+      "progress": "{percent}% done"
+    },
+    "field": {
+      "title": "Title",
+      "titlePlaceholder": "Enter a project title",
+      "owner": "Owner",
+      "ownerPlaceholder": "Choose an owner",
+      "members": "Members",
+      "template": "Template",
+      "milestones": "Milestones",
+      "objective": "Shared cards",
+      "subjective": "Personal cards"
+    },
+    "status": {
+      "planning": "Planning",
+      "active": "Active",
+      "on_hold": "On hold",
+      "done": "Done",
+      "archived": "Archived"
+    },
+    "create": {
+      "button": "New project",
+      "title": "Create a group project",
+      "fromTemplate": "From a template",
+      "fromScratch": "From scratch",
+      "submit": "Create",
+      "success": "Project created",
+      "error": "Could not create the project"
+    },
+    "milestone": {
+      "addPlaceholder": "Enter a milestone title"
+    },
+    "task": {
+      "addObjectivePlaceholder": "Add a shared card",
+      "addSubjectivePlaceholder": "Add a personal card"
+    },
+    "action": {
+      "archive": "Archive project"
+    }
+  }
+}

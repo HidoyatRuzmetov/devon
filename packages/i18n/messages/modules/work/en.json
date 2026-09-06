@@ -1,0 +1,140 @@
+{
+  "work": {
+    "title": "Cards",
+    "view": {
+      "board": "Board",
+      "table": "Table",
+      "timeline": "Timeline",
+      "calendar": "Calendar",
+      "mine": "Mine",
+      "archive": "Archive"
+    },
+    "board": {
+      "department": "Department",
+      "unassigned": "Unassigned",
+      "columnEmpty": "No cards",
+      "emptyTitle": "No department members found",
+      "emptyBody": "Add people to the department to see the board.",
+      "moved": "\"{title}\" moved to {target}'s column"
+    },
+    "quickAdd": {
+      "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
+      "created": "\"{title}\" created",
+      "error": "Could not create the card",
+      "unknownAssignee": "No member matches \"{name}\""
+    },
+    "filter": {
+      "placeholder": "assignee:@me due:<=friday label:urgent",
+      "apply": "Apply",
+      "clear": "Clear",
+      "saveAs": "Save as view",
+      "viewName": "View name",
+      "saved": "View saved",
+      "saveError": "Could not save the view",
+      "savedViews": "Saved views",
+      "noSavedViews": "No saved views yet"
+    },
+    "field": {
+      "title": "Title",
+      "description": "Description",
+      "assignee": "Assignee",
+      "giver": "Giver",
+      "priority": "Priority",
+      "due": "Due",
+      "start": "Start",
+      "status": "Status",
+      "unassigned": "Unassigned",
+      "noGiver": "No giver",
+      "watchers": "Watchers",
+      "links": "Links",
+      "checklist": "Checklist",
+      "comments": "Comments",
+      "activity": "Activity"
+    },
+    "card": {
+      "peekTitle": "Card details",
+      "markDone": "Mark done",
+      "archive": "Archive",
+      "archived": "Card archived",
+      "restore": "Restore",
+      "watch": "Watch",
+      "watching": "Watching",
+      "moveTo": "Move to",
+      "newLabel": "New label",
+      "descriptionPlaceholder": "Add a description",
+      "addLinkPlaceholder": "Paste a link",
+      "unfurlError": "Could not load that link",
+      "addChecklistItem": "Add an item",
+      "addCommentPlaceholder": "Write a comment, @ to mention someone",
+      "backToBoard": "Back to board",
+      "noIdTitle": "No card selected",
+      "noIdBody": "This link is missing a card id."
+    },
+    "priority": {
+      "none": "No priority",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "risk": {
+      "atRisk": "Due soon",
+      "overdue": "Overdue"
+    },
+    "status": {
+      "active": "Active",
+      "done": "Done",
+      "archived": "Archived"
+    },
+    "activity": {
+      "created": "created the card",
+      "assigned": "changed the assignee",
+      "status": "changed the status",
+      "due": "changed the due date",
+      "comment": "left a comment",
+      "checklist": "added a checklist item",
+      "system": "System"
+    },
+    "table": {
+      "open": "Open",
+      "emptyTitle": "No cards found",
+      "emptyBody": "Adjust the filter or add a new card."
+    },
+    "timeline": {
+      "today": "Today",
+      "emptyTitle": "No cards with a due date",
+      "emptyBody": "The timeline only shows active cards that have a due date."
+    },
+    "calendar": {
+      "prev": "Previous month",
+      "next": "Next month",
+      "today": "Today",
+      "more": "{count} more",
+      "weekday": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "mine": {
+      "overdue": "Overdue",
+      "atRisk": "Due soon",
+      "rest": "Everything else",
+      "emptyTitle": "Nothing assigned to you",
+      "emptyBody": "Cards assigned to you will show up here."
+    },
+    "archive": {
+      "emptyTitle": "Archive is empty",
+      "emptyBody": "Done and archived cards will show up here."
+    },
+    "action": {
+      "save": "Save",
+      "delete": "Delete",
+      "send": "Send"
+    }
+  }
+}

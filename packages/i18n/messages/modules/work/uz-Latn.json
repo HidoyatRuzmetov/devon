@@ -1,0 +1,140 @@
+{
+  "work": {
+    "title": "Vazifalar",
+    "view": {
+      "board": "Doska",
+      "table": "Jadval",
+      "timeline": "Grafik",
+      "calendar": "Taqvim",
+      "mine": "Mening vazifalarim",
+      "archive": "Arxiv"
+    },
+    "board": {
+      "department": "Boʻlim",
+      "unassigned": "Biriktirilmagan",
+      "columnEmpty": "Vazifalar yoʻq",
+      "emptyTitle": "Boshqarma aʼzolari topilmadi",
+      "emptyBody": "Doska koʻrinishi uchun avval boshqarmaga aʼzolar qoʻshilishi kerak.",
+      "moved": "\"{title}\" {target} ustuniga koʻchirildi"
+    },
+    "quickAdd": {
+      "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",
+      "created": "\"{title}\" yaratildi",
+      "error": "Vazifani yaratib boʻlmadi",
+      "unknownAssignee": "\"{name}\" nomli xodim topilmadi"
+    },
+    "filter": {
+      "placeholder": "assignee:@me due:<=friday label:urgent",
+      "apply": "Qoʻllash",
+      "clear": "Tozalash",
+      "saveAs": "Koʻrinish sifatida saqlash",
+      "viewName": "Koʻrinish nomi",
+      "saved": "Koʻrinish saqlandi",
+      "saveError": "Koʻrinishni saqlab boʻlmadi",
+      "savedViews": "Saqlangan koʻrinishlar",
+      "noSavedViews": "Saqlangan koʻrinishlar yoʻq"
+    },
+    "field": {
+      "title": "Sarlavha",
+      "description": "Tavsif",
+      "assignee": "Kimga",
+      "giver": "Kimdan",
+      "priority": "Muhimlik",
+      "due": "Muddat",
+      "start": "Boshlanish",
+      "status": "Holat",
+      "unassigned": "Biriktirilmagan",
+      "noGiver": "Koʻrsatilmagan",
+      "watchers": "Kuzatuvchilar",
+      "links": "Havolalar",
+      "checklist": "Bajarish roʻyxati",
+      "comments": "Izohlar",
+      "activity": "Tarix"
+    },
+    "card": {
+      "peekTitle": "Vazifa tafsilotlari",
+      "markDone": "Bajarildi deb belgilash",
+      "archive": "Arxivlash",
+      "archived": "Vazifa arxivlandi",
+      "restore": "Tiklash",
+      "watch": "Kuzatish",
+      "watching": "Kuzatilmoqda",
+      "moveTo": "Ustunga koʻchirish",
+      "newLabel": "Yangi yorliq",
+      "descriptionPlaceholder": "Tavsif qoʻshing",
+      "addLinkPlaceholder": "Havola manzilini kiriting",
+      "unfurlError": "Havolani yuklab boʻlmadi",
+      "addChecklistItem": "Band qoʻshish",
+      "addCommentPlaceholder": "Izoh yozing, @ bilan xodimni belgilang",
+      "backToBoard": "Doskaga qaytish",
+      "noIdTitle": "Vazifa koʻrsatilmagan",
+      "noIdBody": "Havolada vazifa identifikatori yoʻq."
+    },
+    "priority": {
+      "none": "Muhimlik yoʻq",
+      "low": "Past",
+      "medium": "Oʻrtacha",
+      "high": "Yuqori",
+      "urgent": "Shoshilinch"
+    },
+    "risk": {
+      "atRisk": "Muddat yaqinlashmoqda",
+      "overdue": "Muddati oʻtgan"
+    },
+    "status": {
+      "active": "Faol",
+      "done": "Bajarildi",
+      "archived": "Arxivlangan"
+    },
+    "activity": {
+      "created": "vazifani yaratdi",
+      "assigned": "biriktirmani oʻzgartirdi",
+      "status": "holatni oʻzgartirdi",
+      "due": "muddatni oʻzgartirdi",
+      "comment": "izoh qoldirdi",
+      "checklist": "roʻyxatga band qoʻshdi",
+      "system": "Tizim"
+    },
+    "table": {
+      "open": "Ochish",
+      "emptyTitle": "Vazifalar topilmadi",
+      "emptyBody": "Filtrni oʻzgartiring yoki yangi vazifa qoʻshing."
+    },
+    "timeline": {
+      "today": "Bugun",
+      "emptyTitle": "Muddati belgilangan vazifalar yoʻq",
+      "emptyBody": "Grafikda faqat muddati bor faol vazifalar koʻrinadi."
+    },
+    "calendar": {
+      "prev": "Oldingi oy",
+      "next": "Keyingi oy",
+      "today": "Bugun",
+      "more": "yana {count} ta",
+      "weekday": {
+        "mon": "Du",
+        "tue": "Se",
+        "wed": "Ch",
+        "thu": "Pa",
+        "fri": "Ju",
+        "sat": "Sh",
+        "sun": "Ya"
+      }
+    },
+    "mine": {
+      "overdue": "Muddati oʻtgan",
+      "atRisk": "Muddat yaqin",
+      "rest": "Qolganlari",
+      "emptyTitle": "Sizga biriktirilgan vazifalar yoʻq",
+      "emptyBody": "Sizga biriktirilgan vazifalar shu yerda koʻrinadi."
+    },
+    "archive": {
+      "emptyTitle": "Arxiv boʻsh",
+      "emptyBody": "Bajarilgan va arxivlangan vazifalar shu yerda koʻrinadi."
+    },
+    "action": {
+      "save": "Saqlash",
+      "delete": "Oʻchirish",
+      "send": "Yuborish"
+    }
+  }
+}

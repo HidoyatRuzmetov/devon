@@ -16,10 +16,13 @@
     "test:a11y": "playwright test --config test/e2e/playwright.config.ts --grep @a11y"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "3.1.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "2.2.0",
     "@devon/contracts": "workspace:*",
     "@devon/i18n": "workspace:*",
     "@devon/ui": "workspace:*",
     "@tanstack/react-query": "5.102.8",
+    "fractional-indexing": "4.0.0",
     "lucide-react": "1.41.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

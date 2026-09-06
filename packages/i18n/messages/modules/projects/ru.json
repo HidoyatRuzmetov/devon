@@ -1,0 +1,49 @@
+{
+  "projects": {
+    "title": "Групповые проекты",
+    "emptyTitle": "Проектов пока нет",
+    "emptyBody": "Создайте первый групповой проект -- по шаблону или с нуля.",
+    "noIdTitle": "Проект не указан",
+    "noIdBody": "В ссылке отсутствует идентификатор проекта.",
+    "tile": {
+      "progress": "выполнено {percent}%"
+    },
+    "field": {
+      "title": "Название",
+      "titlePlaceholder": "Введите название проекта",
+      "owner": "Ответственный",
+      "ownerPlaceholder": "Выберите ответственного",
+      "members": "Участники",
+      "template": "Шаблон",
+      "milestones": "Этапы",
+      "objective": "Общие задачи",
+      "subjective": "Личные задачи"
+    },
+    "status": {
+      "planning": "Планируется",
+      "active": "В работе",
+      "on_hold": "Приостановлен",
+      "done": "Завершён",
+      "archived": "В архиве"
+    },
+    "create": {
+      "button": "Новый проект",
+      "title": "Создать групповой проект",
+      "fromTemplate": "По шаблону",
+      "fromScratch": "С нуля",
+      "submit": "Создать",
+      "success": "Проект создан",
+      "error": "Не удалось создать проект"
+    },
+    "milestone": {
+      "addPlaceholder": "Введите название этапа"
+    },
+    "task": {
+      "addObjectivePlaceholder": "Добавить общую задачу",
+      "addSubjectivePlaceholder": "Добавить личную задачу"
+    },
+    "action": {
+      "archive": "Архивировать проект"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 // EPIC-004 demo seed: the rest of the department roster (see `work-fixtures.ts`'s header for why),
-// labels, and ~180 standalone cards spread across every member's column, each with a believable mix
+// labels, and ~230 standalone cards spread across every member's column, each with a believable mix
 // of checklist items, comments (with @mentions) and an activity timeline.
 //
 // `order: 90` -- after `core.ts` (order 0, which this module's users/memberships/cards all reference)
@@ -42,7 +42,7 @@ type NewActivity = typeof workSchema.cardActivity.$inferInsert
  * One standalone card for `assigneeIndex`'s column, deterministic in every field except wall-clock
  * "now" (`NOW` above is itself fixed, so two runs of this function for the same `(assigneeIndex, n)`
  * produce byte-identical rows -- required for `ON CONFLICT DO NOTHING` to actually recognise a repeat
- * run as a repeat, not as ~180 new near-duplicates).
+ * run as a repeat, not as ~230 new near-duplicates).
  */
 function buildStandaloneCard(
   assigneeIndex: number,
@@ -226,14 +226,14 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .returning({ id: workSchema.labels.id })
   written += insertedLabels.length
 
-  // --- standalone cards, ~10 per person across all 16 members ----------------------------------
+  // --- standalone cards, ~14 per person across all 16 members ----------------------------------
   const allCards: NewCard[] = []
   const allChecklist: NewChecklistItem[] = []
   const allComments: NewComment[] = []
   const allActivity: NewActivity[] = []
 
   for (let i = 0; i < ALL_WORK_MEMBER_IDS.length; i += 1) {
-    const cardCount = 8 + (i % 4) // 8..11 cards per person
+    const cardCount = 12 + (i % 6) // 12..17 cards per person (~230 standalone + ~40 project cards ≈ 250 total, TECH-SPEC §14)
     for (let n = 0; n < cardCount; n += 1) {
       const built = buildStandaloneCard(i, n)
       allCards.push(built.card)

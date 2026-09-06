@@ -99,6 +99,18 @@ async function send<T>(
   return schema.parse(await res.json())
 }
 
+/** `DELETE` has no body (every route this hits -- `apps/api/src/lib/csrf.js`'s `checkCsrf` -- reads
+ * the same `x-csrf-token` header as `POST`/`PATCH`, never a body field) and every one of this app's
+ * `DELETE` routes replies `204`, so this always resolves `void` rather than taking a response schema
+ * (module feature `api.ts` files call this the same way `apiClient.post`/`.patch` already work). */
+async function del(path: string, csrfToken?: string): Promise<void> {
+  const res = await raw(path, {
+    method: 'DELETE',
+    headers: csrfToken ? { [CSRF_HEADER]: csrfToken } : {},
+  })
+  if (!res.ok) await parseErrorAndThrow(res)
+}
+
 /**
  * The typed API client helper every `src/features/<name>` module builds its own endpoint functions
  * on (MODULE-GUIDE.md "Web features" / "Typed API client"), instead of hand-rolling `fetch` --
@@ -117,6 +129,7 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
+  delete: del,
 }
 
 export function fetchInstance(): Promise<InstancePublic> {
