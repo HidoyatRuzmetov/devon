@@ -237,6 +237,38 @@ export default function StructureScreen() {
   const structureEditNoticeVisible = !isHead && !settings.allowStructureEdit
   const selfAssignNoticeVisible = !isHead && !settings.allowSelfAssign
 
+  // A plain if/else (not a JSX ternary chain) so no `>...<` boundary in the switch itself can ever be
+  // mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic.
+  let body: React.ReactNode
+  if (units.length === 0) {
+    body = (
+      <StateView
+        kind="empty"
+        titleKey="structure.units.empty.title"
+        bodyKey="structure.units.empty.body"
+        {...(canAddRoot
+          ? {
+              action: {
+                labelKey: 'structure.units.empty.action',
+                onAction: () => setAddParentId(null),
+              },
+            }
+          : {})}
+      />
+    )
+  } else if (view === 'tree') {
+    body = <UnitTree roots={roots} actions={actions} />
+  } else {
+    body = (
+      <OrgChart
+        roots={roots}
+        rolesByUnit={rolesByUnit}
+        membersById={membersById}
+        departmentName={departments.active?.name ?? ''}
+      />
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <DepartmentHeader
@@ -279,30 +311,7 @@ export default function StructureScreen() {
         </button>
       </div>
 
-      {units.length === 0 ? (
-        <StateView
-          kind="empty"
-          titleKey="structure.units.empty.title"
-          bodyKey="structure.units.empty.body"
-          {...(canAddRoot
-            ? {
-                action: {
-                  labelKey: 'structure.units.empty.action',
-                  onAction: () => setAddParentId(null),
-                },
-              }
-            : {})}
-        />
-      ) : view === 'tree' ? (
-        <UnitTree roots={roots} actions={actions} />
-      ) : (
-        <OrgChart
-          roots={roots}
-          rolesByUnit={rolesByUnit}
-          membersById={membersById}
-          departmentName={departments.active?.name ?? ''}
-        />
-      )}
+      {body}
 
       <AddUnitDialog
         open={addParentId !== undefined}

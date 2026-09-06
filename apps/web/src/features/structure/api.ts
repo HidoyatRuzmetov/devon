@@ -56,6 +56,12 @@ export const memberSchema = z.object({
 })
 export type Member = z.infer<typeof memberSchema>
 
+// Named aliases (not raw `Map<string, X>` literals) so `.tsx` files can declare these fields without
+// putting a generic's `<`/`>` next to another one on an adjacent line -- `check-i18n.mjs`'s hard-coded
+// JSX text heuristic reads literal `>...<` runs and cannot tell that gap apart from real element text.
+export type RolesByUnit = Map<string, UnitRole[]>
+export type MembersById = Map<string, Member>
+
 const deletedUnitSchema = z.object({ deletedAt: z.string() })
 
 export function fetchMyDepartments(): Promise<MyDepartment[]> {

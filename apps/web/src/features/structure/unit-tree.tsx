@@ -17,7 +17,7 @@ import {
   unitHueClass,
 } from '@devon/ui'
 import { Check, ChevronRight, GripVertical, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react'
-import type { Member, Unit, UnitRole } from './api.js'
+import type { MembersById, RolesByUnit, Unit } from './api.js'
 import { fullName } from './member-card.js'
 
 const COLOUR_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
@@ -51,8 +51,8 @@ export type TreeActions = {
   canSelfAssign: boolean
   isHead: boolean
   currentUserId: string
-  rolesByUnit: Map<string, UnitRole[]>
-  membersById: Map<string, Member>
+  rolesByUnit: RolesByUnit
+  membersById: MembersById
   onRename(unitId: string, name: string): void
   onColourChange(unitId: string, colour: number | null): void
   onAddChild(parentUnitId: string | null): void

@@ -6,7 +6,7 @@ import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Button, unitHueClass } from '@devon/ui'
 import { Download } from 'lucide-react'
-import type { Member, UnitRole } from './api.js'
+import type { MembersById, RolesByUnit } from './api.js'
 import type { TreeNode } from './unit-tree.js'
 import { fullName } from './member-card.js'
 
@@ -98,8 +98,8 @@ export function OrgChart({
   departmentName,
 }: {
   roots: TreeNode[]
-  rolesByUnit: Map<string, UnitRole[]>
-  membersById: Map<string, Member>
+  rolesByUnit: RolesByUnit
+  membersById: MembersById
   departmentName: string
 }) {
   const t = useT()

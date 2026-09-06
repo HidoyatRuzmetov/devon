@@ -3,19 +3,24 @@ import { resolveNavEntries } from '@devon/ui'
 import { NAV_ENTRIES } from '../../src/shell/nav.js'
 
 describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
-  it('shows only Home to a member', () => {
+  // Core entries (`home`, `admin`) plus whatever `src/features/*/manifest.ts(x)` registers
+  // (MODULE-GUIDE.md "Web features") -- feature sidebar entries carry no `visibleWhen` gate of their
+  // own here, so every signed-in role sees them; only `admin` stays super_admin-only.
+  const featureEntryIds = ['structure', 'people']
+
+  it('shows Home plus every registered feature to a member (no admin)', () => {
     const visible = resolveNavEntries(NAV_ENTRIES, { role: 'member' })
-    expect(visible.map((e) => e.id)).toEqual(['home'])
+    expect(visible.map((e) => e.id)).toEqual(['home', ...featureEntryIds])
   })
 
-  it('shows only Home to a head (unit roles are labels, never permissions -- I-8b)', () => {
+  it('shows Home plus every registered feature to a head, still no admin (unit roles are labels, never permissions -- I-8b)', () => {
     const visible = resolveNavEntries(NAV_ENTRIES, { role: 'head' })
-    expect(visible.map((e) => e.id)).toEqual(['home'])
+    expect(visible.map((e) => e.id)).toEqual(['home', ...featureEntryIds])
   })
 
   it('shows Boshqaruv (admin) only to super_admin', () => {
     const visible = resolveNavEntries(NAV_ENTRIES, { role: 'super_admin' })
-    expect(visible.map((e) => e.id)).toEqual(['home', 'admin'])
+    expect(visible.map((e) => e.id)).toEqual(['home', 'admin', ...featureEntryIds])
   })
 
   it('every entry resolves to a route string starting with /', () => {

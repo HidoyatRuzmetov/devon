@@ -44,15 +44,16 @@ export function MemberCard({ member, compact = false }: { member: Member; compac
           <p className="truncate text-caption text-muted-foreground">{member.title}</p>
         ) : null}
       </div>
-      {member.unitRole ? (
+      {member.unitRole && (
         <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
           {t(ROLE_KEY[member.unitRole])}
         </Badge>
-      ) : !compact ? (
+      )}
+      {!member.unitRole && !compact && (
         <span className="text-caption text-muted-foreground">
           {t('structure.people.memberCard.noUnit')}
         </span>
-      ) : null}
+      )}
     </div>
   )
 }
