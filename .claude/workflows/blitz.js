@@ -86,6 +86,10 @@ if (WAVE === 'all' || WAVE === 1 || WAVE === '1') {
   const i1 = await integrate('Integrate 1', wave1Modules.join('; '))
   log(`integrate 1: ${i1 ? i1.status : 'died'} — ${i1 ? i1.summary.slice(0, 200) : ''}`)
 }
+if (args && args.integrateFirst) {
+  const i1 = await integrate('Integrate 1', `${wave1Modules.join('; ')}. NOTE: a previous integration agent already started this pass (its fixes are committed on master, see git log --oneline -15); continue from where it stopped — check what already boots and works before changing anything.`)
+  log(`integrate 1 (resumed): ${i1 ? i1.status : 'died'} — ${i1 ? i1.summary.slice(0, 200) : ''}`)
+}
 let built2 = []
 if (WAVE === 'all' || WAVE === 2 || WAVE === '2') {
   built2 = await runWave('Wave 2', wave2)
