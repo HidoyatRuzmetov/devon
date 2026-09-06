@@ -26,7 +26,7 @@ for (let i = 0; i < MAX; i++) {
   log(`ship: epic ${i + 1}/${MAX} → ${nxt.epic_id} ${nxt.title}`)
   await run(`node agentic/scripts/backlog.mjs set-status ${nxt.epic_id} in-progress --note "ship run ${TS}"`, tiny, `status:${nxt.epic_id}`)
   let r = null
-  try { r = await workflow('feature-cycle', { epic: nxt.epic_id, ts: TS, parallel: !!(args && args.parallel) }) }
+  try { r = await workflow({ scriptPath: 'C:/Users/rpwal/Documents/Work/eGov/WorkPortal/.claude/workflows/feature-cycle.js' }, { epic: nxt.epic_id, ts: TS, parallel: !!(args && args.parallel), mode: (args && args.mode) || 'velocity' }) }
   catch (e) { log(`ship: feature-cycle threw for ${nxt.epic_id}: ${String(e && e.message || e).slice(0, 300)}`); await run(`node agentic/scripts/backlog.mjs set-status ${nxt.epic_id} blocked --note "feature-cycle crashed: ${String(e && e.message || e).replace(/"/g, "'").slice(0, 200)}"`, tiny, `crash:${nxt.epic_id}`) }
   results.push({ epic: nxt.epic_id, verdict: r ? r.verdict : 'CRASHED', escalations: r ? r.escalations.length : 0, release: r && r.release && r.release.status })
   if (r && r.verdict !== 'PASS') log(`ship: ${nxt.epic_id} ended ${r.verdict} with ${r.escalations.length} escalation(s); continuing with the next runnable epic`)

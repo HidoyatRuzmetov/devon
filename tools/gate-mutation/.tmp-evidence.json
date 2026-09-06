@@ -1,0 +1,393 @@
+
+[gate-mutation] a11y: applying...
+
+=== a11y :: CONFOUNDED (targeted mode) ===
+defect: removes the aria-label from the desktop sidebar-collapse IconButton in apps/web/src/shell/app-shell.tsx (axe button-name, serious)
+gate result: fail (exit 1)
+--- tail ---
+$ playwright test --config test/e2e/playwright.config.ts --grep @a11y
+[WebServer] $ vite --config src/vite.config.ts
+Error: No tests found
+
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 test:a11y: `playwright test --config test/e2e/playwright.config.ts --grep @a11y`
+Exit status 1
+known gap: pnpm --filter @devon/web test:a11y matches zero @a11y-tagged specs at HEAD (verified: exits 1 with 'No tests found' even unmutated) -- the a11y gate cannot currently confirm causality for this defect. See this module's header comment.
+
+[gate-mutation] build: applying...
+
+=== build :: PASS (targeted mode) ===
+defect: points the global CSS import in apps/web/src/main.tsx at a nonexistent file (unresolved import)
+gate result: fail (exit 1)
+--- tail ---
+Scope: 7 of 8 workspace projects
+packages/config build$ echo built -- @devon/config ships plain JS/JSON presets, nothing to compile
+packages/config build: built -- @devon/config ships plain JS/JSON presets, nothing to compile
+packages/config build: Done
+packages/contracts build$ tsc -p tsconfig.json
+packages/db build$ tsc -p tsconfig.json
+packages/i18n build$ tsc -p tsconfig.json
+packages/contracts build: Done
+packages/i18n build: Done
+packages/db build: Done
+apps/api build$ tsc -p tsconfig.json
+packages/ui build$ tsc -p tsconfig.json
+apps/api build: Done
+packages/ui build: Done
+apps/web build$ vite build --config src/vite.config.ts
+apps/web build: [36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+apps/web build: transforming...
+apps/web build: ✓ 4 modules transformed.
+apps/web build: [31m✗[39m Build failed in 24ms
+apps/web build: [31merror during build:
+apps/web build: [31mBuild failed with 1 error:
+apps/web build: [31m[UNRESOLVED_IMPORT] [0mCould not resolve './styles.does-not-exist.css' in src/main.tsx
+apps/web build:    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/main.tsx:7:8 [38;5;246m][0m
+apps/web build:    [38;5;246m│[0m
+apps/web build:  [38;5;246m7 │[0m [38;5;249mi[0m[38;5;249mm[0m[38;5;249mp[0m[38;5;249mo[0m[38;5;249mr[0m[38;5;249mt[0m[38;5;249m [0m"./styles.does-not-exist.css"[38;5;249m;[0m
+apps/web build:  [38;5;240m  │[0m        ──────────────┬──────────────  
+apps/web build:  [38;5;240m  │[0m                      ╰──────────────── Module not found.
+apps/web build:  [38;5;240m  │[0m 
+apps/web build:  [38;5;240m  │[0m [38;5;115mHelp[0m: 'src/main.tsx' is imported by the following path:
+apps/web build:  [38;5;240m  │[0m         - src/main.tsx
+apps/web build:  [38;5;240m  │[0m         - src/index.html
+apps/web build: [38;5;246m───╯[0m
+apps/web build: [31m
+apps/web build:     at aggregateBindingErrorsIntoJsError (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/rolldown@1.2.7/node_modules/rolldown/dist/shared/error-BP8lJHle.mjs:48:18)
+apps/web build:     at unwrapBindingResult (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/rolldown@1.2.7/node_modules/rolldown/dist/shared/error-BP8lJHle.mjs:18:128)
+apps/web build:     at #build (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/rolldown@1.2.7/node_modules/rolldown/dist/shared/rolldown-DfXO5K1m.mjs:133:34)
+apps/web build:     at async buildEnvironment (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/vite@8.2.2_@types+node@22.2_92c95f3f07e300336cce313b27b806d1/node_modules/vite/dist/node/chunks/node.js:33821:66)
+apps/web build:     at async Object.build (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/vite@8.2.2_@types+node@22.2_92c95f3f07e300336cce313b27b806d1/node_modules/vite/dist/node/chunks/node.js:34242:19)
+apps/web build:     at async Object.buildApp (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/vite@8.2.2_@types+node@22.2_92c95f3f07e300336cce313b27b806d1/node_modules/vite/dist/node/chunks/node.js:34239:153)
+apps/web build:     at async CAC.<anonymous> (file:///C:/Users/rpwal/Documents/Work/eGov/WorkPortal/node_modules/.pnpm/vite@8.2.2_@types+node@22.2_92c95f3f07e300336cce313b27b806d1/node_modules/vite/dist/node/cli.js:776:3) {
+apps/web build:   errors: [Getter/Setter]
+apps/web build: }[39m
+apps/web build: Failed
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 build: `vite build --config src/vite.config.ts`
+Exit status 1
+
+[gate-mutation] bundle: applying...
+
+=== bundle :: PASS (targeted mode) ===
+defect: adds a ~600 kB high-entropy module (apps/web/src/lib/__gate-mutation-bloat.ts), imported (and referenced, so it is not tree-shaken) from apps/web/src/main.tsx
+gate result: fail (exit 1)
+--- tail ---
+[bundle] 836.5 kB gz  1595 kB raw  .\apps\web\dist\assets\index-D57e8wve.js
+[bundle] largest chunk 836.5 kB gz (budget 350 kB); total JS 837 kB gz
+
+[gate-mutation] e2e: applying...
+
+=== e2e :: CONFOUNDED (targeted mode) ===
+defect: changes the 'shell.locale.aria' value in packages/i18n/messages/uz-Latn.json so the locale trigger's accessible name no longer matches the e2e spec
+gate result: fail (exit 1)
+--- tail ---
+[WebServer]     1  |  // Terminology contract (design.md §1.4, AC-5). `terms.json` is the source of truth; `TERMS.md`
+[WebServer]        |                                                  ^
+[WebServer]     2  |  // (src/cli/terms-build.ts) is generated from it and committed. This module is the one place both
+[WebServer]     3  |  // the generator, the verifier and the unit tests read the shape from, so they can never drift.
+[WebServer] 
+  x  3 [chromium] › test\e2e\shell.smoke.spec.ts:6:1 › @smoke locale switch on /login is exactly 2 clicks and updates every visible shell string (retry #1) (5.5s)
+
+
+  1) [chromium] › test\e2e\shell.smoke.spec.ts:6:1 › @smoke locale switch on /login is exactly 2 clicks and updates every visible shell string 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'Tizimga kirish' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'Tizimga kirish' }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: 'Tizimga kirish' })
+
+
+       8 | }) => {
+       9 |   await page.goto('/login')
+    > 10 |   await expect(page.getByRole('heading', { name: 'Tizimga kirish' })).toBeVisible()
+         |                                                                       ^
+      11 |
+      12 |   // Click 1: open the locale menu.
+      13 |   await page.getByRole('button', { name: 'Interfeys tili' }).click()
+        at C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web\test\e2e\shell.smoke.spec.ts:10:71
+
+    Error Context: test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('heading', { name: 'Tizimga kirish' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('heading', { name: 'Tizimga kirish' }) with timeout 5000ms
+      - waiting for getByRole('heading', { name: 'Tizimga kirish' })
+
+
+       8 | }) => {
+       9 |   await page.goto('/login')
+    > 10 |   await expect(page.getByRole('heading', { name: 'Tizimga kirish' })).toBeVisible()
+         |                                                                       ^
+      11 |
+      12 |   // Click 1: open the locale menu.
+      13 |   await page.getByRole('button', { name: 'Interfeys tili' }).click()
+        at C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web\test\e2e\shell.smoke.spec.ts:10:71
+
+    Error Context: test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium-retry1\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium-retry1\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results\shell.smoke--smoke-locale--15c74--every-visible-shell-string-chromium-retry1\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › test\e2e\shell.smoke.spec.ts:6:1 › @smoke locale switch on /login is exactly 2 clicks and updates every visible shell string 
+  1 passed (17.5s)
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 test:e2e: `playwright test --config test/e2e/playwright.config.ts`
+Exit status 1
+known gap: pnpm --filter @devon/web test:e2e already fails on an unmutated tree in this environment (first assertion on /login times out before this mutation's click sequence runs) -- cannot currently confirm causality for this defect.
+
+[gate-mutation] i18n: applying...
+
+=== i18n :: PASS (targeted mode) ===
+defect: deletes the 'shell.locale.aria' key from packages/i18n/messages/ru.json (missing vs. the uz-Latn base locale)
+gate result: fail (exit 1)
+--- tail ---
+[i18n] ru: 1 keys missing vs uz-Latn: shell.locale.aria
+[i18n] locales=uz-Latn,uz-Cyrl,ru,en keys=98 used=59 errors=1
+
+[gate-mutation] lint: applying...
+
+=== lint :: PASS (targeted mode) ===
+defect: adds an unused local binding inside tashkentHour() in apps/web/src/lib/greeting.ts (no-unused-vars)
+gate result: fail (exit 1)
+--- tail ---
+packages/i18n lint:   41:21  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/i18n lint: ✖ 17 problems (0 errors, 17 warnings)
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\src\seed\cli-counts.ts
+packages/db lint:   28:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   35:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\src\seed\cli-demo.ts
+packages/db lint:   10:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\src\seed\cli-matrix.ts
+packages/db lint:   31:1  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   38:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   43:1  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\src\seed\cli-reset.ts
+packages/db lint:   16:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\test\checks\assert.ts
+packages/db lint:   24:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   26:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db\test\migrate-verify.ts
+packages/db lint:    27:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    31:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    35:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    55:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    67:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    74:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:    87:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   105:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint:   108:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+packages/db lint: ✖ 18 problems (0 errors, 18 warnings)
+packages/contracts lint: Checking formatting...
+packages/i18n lint: Checking formatting...
+packages/contracts lint: All matched files use Prettier code style!
+packages/contracts lint: Done
+packages/db lint: Checking formatting...
+packages/i18n lint: All matched files use Prettier code style!
+packages/i18n lint: Done
+packages/db lint: All matched files use Prettier code style!
+packages/db lint: Done
+apps/api lint$ eslint --config ../../packages/config/eslint/base.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown "src/**/*.ts" "test/**/*.ts" "*.json"
+packages/ui lint$ eslint --config src/lint/eslint.config.js . && prettier --check --config ../config/prettier.config.js --ignore-unknown "src/**/*.{ts,tsx,css}" "*.{ts,js,json}"
+apps/api lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\api\test\checks\admin-prove.ts
+apps/api lint:    38:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:    64:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:    72:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:    80:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   105:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   115:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\api\test\checks\http.ts
+apps/api lint:   19:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   28:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   33:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\api\test\checks\session-prove.ts
+apps/api lint:   10:3   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   35:33  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   46:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   59:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   64:5   warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\api\test\checks\setup-prove.ts
+apps/api lint:   11:3  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   17:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   35:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   51:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint:   70:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+apps/api lint: ✖ 19 problems (0 errors, 19 warnings)
+apps/api lint: Checking formatting...
+apps/api lint: All matched files use Prettier code style!
+apps/api lint: Done
+packages/ui lint: Checking formatting...
+packages/ui lint: All matched files use Prettier code style!
+packages/ui lint: Done
+apps/web lint$ eslint --config src/lint/eslint.config.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown "src/**/*.{ts,tsx,css,html}" "test/**/*.{ts,tsx}" "*.json"
+apps/web lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web\src\lib\greeting.ts
+apps/web lint:   7:9  error  'gateMutationLintUnused' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+apps/web lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web\src\routes\login.tsx
+apps/web lint:   70:13  warning  The autoFocus prop should not be used, as it can reduce usability and accessibility for users  jsx-a11y/no-autofocus
+apps/web lint: C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web\src\routes\setup.tsx
+apps/web lint:   142:13  warning  The autoFocus prop should not be used, as it can reduce usability and accessibility for users  jsx-a11y/no-autofocus
+apps/web lint: ✖ 3 problems (1 error, 2 warnings)
+apps/web lint: Failed
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 lint: `eslint --config src/lint/eslint.config.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown "src/**/*.{ts,tsx,css,html}" "test/**/*.{ts,tsx}" "*.json"`
+Exit status 1
+
+[gate-mutation] migrate: applying...
+
+=== migrate :: PASS (targeted mode) ===
+defect: removes the 'app.memberships' entry from the TENANCY registry in packages/db/src/tenancy.ts (unclassified table)
+gate result: fail (exit 1)
+--- tail ---
+  PASS  0004_departments.sql: no forbidden personal-data column names (I-2)
+  PASS  0004_departments.sql: no bare SET on the app.* GUC namespace outside set_config(..., true)
+  PASS  0004_departments.sql: any grant on an audit.* table is INSERT/SELECT only (I-5a)
+  PASS  0005_rls.sql: no DROP TABLE outside a *_contract.sql file with a CONTRACT header
+  PASS  0005_rls.sql: no DROP COLUMN outside a *_contract.sql file with a CONTRACT header
+  PASS  0005_rls.sql: no ALTER COLUMN ... TYPE outside a *_contract.sql file with a CONTRACT header
+  PASS  0005_rls.sql: no TRUNCATE outside a *_contract.sql file with a CONTRACT header
+  PASS  0005_rls.sql: no DELETE FROM outside a *_contract.sql file with a CONTRACT header
+  PASS  0005_rls.sql: no forbidden personal-data column names (I-2)
+  PASS  0005_rls.sql: no bare SET on the app.* GUC namespace outside set_config(..., true)
+  PASS  0005_rls.sql: any grant on an audit.* table is INSERT/SELECT only (I-5a)
+  PASS  0006_normalize_uz.sql: no DROP TABLE outside a *_contract.sql file with a CONTRACT header
+  PASS  0006_normalize_uz.sql: no DROP COLUMN outside a *_contract.sql file with a CONTRACT header
+  PASS  0006_normalize_uz.sql: no ALTER COLUMN ... TYPE outside a *_contract.sql file with a CONTRACT header
+  PASS  0006_normalize_uz.sql: no TRUNCATE outside a *_contract.sql file with a CONTRACT header
+  PASS  0006_normalize_uz.sql: no DELETE FROM outside a *_contract.sql file with a CONTRACT header
+  PASS  0006_normalize_uz.sql: no forbidden personal-data column names (I-2)
+  PASS  0006_normalize_uz.sql: no bare SET on the app.* GUC namespace outside set_config(..., true)
+  PASS  0006_normalize_uz.sql: any grant on an audit.* table is INSERT/SELECT only (I-5a)
+
+[idempotence] 1 checks:
+  PASS  applying every migration a second time exits cleanly
+
+[tenancy.registry] 28 checks:
+  FAIL  every base table in app/audit is classified in TENANCY (app.memberships)
+  PASS  every global-classified table has a GLOBAL_ALLOWLIST justification
+  PASS  app.departments is not owned by devon_app (devon_migrator)
+  PASS  app.departments has RLS enabled and forced
+  PASS  app.departments has a policy referencing id=current_department_id() or super_admin
+  PASS  app.users is not owned by devon_app (devon_migrator)
+  PASS  app.sessions is not owned by devon_app (devon_migrator)
+  PASS  app.setup_tokens is not owned by devon_app (devon_migrator)
+  PASS  app.instance_settings is not owned by devon_app (devon_migrator)
+  PASS  app.seed_runs is not owned by devon_app (devon_migrator)
+  PASS  app.idempotency_keys is not owned by devon_app (devon_migrator)
+  PASS  audit.events is not owned by devon_app (devon_migrator)
+  PASS  audit.events: devon_app grants are exactly INSERT, SELECT (INSERT,SELECT)
+  PASS  audit.private_reads is not owned by devon_app (devon_migrator)
+  PASS  audit.private_reads: devon_app grants are exactly INSERT, SELECT (INSERT,SELECT)
+  PASS  audit.anchors is not owned by devon_app (devon_migrator)
+  PASS  audit.anchors: devon_app grants are exactly INSERT, SELECT (INSERT,SELECT)
+  PASS  audit.events has trigger events_no_update
+  PASS  audit.events has trigger events_no_delete
+  PASS  audit.events has trigger events_no_truncate
+  PASS  audit.events has trigger events_chain
+  PASS  throwaway department_owned table has RLS enabled and forced
+  PASS  throwaway department_owned table has a policy referencing app.current_department_id()
+  PASS  throwaway department_owned table has an index leading with department_id
+  PASS  throwaway user_owned table has RLS enabled and forced
+  PASS  throwaway user_owned table has a policy referencing app.current_user_id()
+  PASS  throwaway user_owned table has no policy mentioning current_actor_role()
+  PASS  an unclassified table fails checkTenancyCoverage (the migrate gate would fail too)
+
+[rls.isolation] 6 checks:
+  PASS  Drizzle path: department A context sees only department A memberships (rows=1)
+  PASS  Drizzle path: department A context sees zero rows of department B (departments)
+  PASS  tx.raw() path: department A context sees zero rows of department B (memberships) (rows=1)
+  PASS  Drizzle path: department B context sees only department B memberships
+  PASS  tx.raw() path: department B context sees zero rows of department A (memberships)
+  PASS  unset department context returns zero rows, never all rows (default-deny) (rows=0)
+
+[rls.isolation.pgbouncer] 1 checks:
+  PASS  20 concurrent transactions through PgBouncer (pool_mode=transaction, default_pool_size=2) show zero cross-department rows
+
+[audit.immutability] 9 checks:
+  PASS  devon_app grants on audit.events are exactly INSERT, SELECT (INSERT,SELECT)
+  PASS  devon_app can INSERT into audit.events
+  PASS  devon_app can SELECT from audit.events
+  PASS  devon_app UPDATE on audit.events is denied
+  PASS  devon_app DELETE on audit.events is denied
+  PASS  devon_app TRUNCATE on audit.events is denied
+  PASS  500 concurrent inserts all succeed (advisory-lock-serialised chain) (inserted=500)
+  PASS  audit.verify_chain() reports ok after the concurrent build ({"ok":true,"firstBadSeq":null,"failure":null,"rowsChecked":501})
+  PASS  audit.verify_chain() reports exactly the tampered seq after an out-of-band UPDATE ({"ok":false,"firstBadSeq":2,"failure":"row_hash_mismatch","rowsChecked":1,"expectedSeq":2})
+
+[migrate:verify] 100/101 checks passed across 6 sections.
+[migrate:verify] FAIL
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\packages\db:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/db@0.0.0 migrate:verify: `tsx test/migrate-verify.ts`
+Exit status 1
+
+[gate-mutation] secrets: applying...
+
+=== secrets :: PASS (targeted mode) ===
+defect: adds an untracked scratch file (tools/gate-mutation/.tmp/secret-defect.txt) containing an AWS-access-key-shaped literal
+gate result: fail (exit 1)
+--- tail ---
+[secrets] AWS access key: tools/gate-mutation/.tmp/secret-defect.txt:2: aws_access_key_id = AKIA1938572604BQZK9X
+[secrets] hits=1
+
+[gate-mutation] security: applying...
+
+=== security :: SKIPPED (targeted mode) ===
+defect: adds an untracked scratch file (tools/gate-mutation/.tmp/security-defect.js): a request handler flowing req.query into eval() (OWASP A03 injection)
+gate result: skipped (exit n/a)
+--- tail ---
+SKIPPED: required tool not installed: trivy. A skipped gate is NOT a pass.
+
+[gate-mutation] typecheck: applying...
+
+=== typecheck :: PASS (targeted mode) ===
+defect: assigns a string literal to a number-typed exported const in apps/web/src/lib/constants.ts (TS2322)
+gate result: fail (exit 2)
+--- tail ---
+Scope: 7 of 8 workspace projects
+packages/config typecheck$ tsc --noEmit -p tsconfig.json
+packages/config typecheck: Done
+packages/i18n typecheck$ tsc --noEmit -p tsconfig.json
+packages/db typecheck$ tsc --noEmit -p tsconfig.json
+packages/contracts typecheck$ tsc --noEmit -p tsconfig.json
+packages/contracts typecheck: Done
+packages/i18n typecheck: Done
+packages/db typecheck: Done
+apps/api typecheck$ tsc --noEmit -p tsconfig.json
+packages/ui typecheck$ tsc --noEmit -p tsconfig.json
+apps/api typecheck: Done
+packages/ui typecheck: Done
+apps/web typecheck$ tsc --noEmit -p src/tsconfig.json
+apps/web typecheck: src/lib/constants.ts(15,14): error TS2322: Type 'string' is not assignable to type 'number'.
+apps/web typecheck: Failed
+C:\Users\rpwal\Documents\Work\eGov\WorkPortal\apps\web:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 typecheck: `tsc --noEmit -p src/tsconfig.json`
+Exit status 2
+
+[gate-mutation] unit: applying...

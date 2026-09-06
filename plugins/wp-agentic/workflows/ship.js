@@ -28,7 +28,7 @@ for (let i = 0; i < MAX; i++) {
   let r = null
   // Child workflow: by script path when the plugin root is known (most robust), else by namespaced name, else bare name.
   const child = (args && args.pluginRoot) ? { scriptPath: String(args.pluginRoot).split('\\').join('/') + '/workflows/feature-cycle.js' } : 'wp-agentic:feature-cycle'
-  const childArgs = { epic: nxt.epic_id, ts: TS, parallel: !!(args && args.parallel) }
+  const childArgs = { epic: nxt.epic_id, ts: TS, parallel: !!(args && args.parallel), mode: (args && args.mode) || 'velocity' }
   try {
     try { r = await workflow(child, childArgs) }
     catch (e1) { if (child === 'wp-agentic:feature-cycle') r = await workflow('feature-cycle', childArgs); else throw e1 }

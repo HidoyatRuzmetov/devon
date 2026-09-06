@@ -19,7 +19,12 @@ export const meta = {
 const EPIC = (args && args.epic) || null
 if (!EPIC) throw new Error('feature-cycle needs args.epic (e.g. {"epic":"EPIC-012"})')
 const RUN_TS = (args && args.ts) || 'unstamped'
-const MAX_FIX_ROUNDS = (args && args.maxFixRounds) || 3
+// MODE: 'velocity' (default) builds the product first — cheaper roles, fast gates per item, review only for
+// class C items, no a11y/i18n/scout passes (all of that is EPIC-014's job); 'full' runs every check.
+const MODE = (args && args.mode) || 'velocity'
+const V = MODE === 'velocity'
+const ITEM_PROFILE = V ? 'fast' : 'item'
+const MAX_FIX_ROUNDS = (args && args.maxFixRounds) || (V ? 2 : 3)
 const MAX_EPIC_ROUNDS = (args && args.maxEpicRounds) || 2
 const MAX_GATE_ATTEMPTS = (args && args.maxGateAttempts) || 2
 const CYCLE = `agentic/ledger/cycles/${EPIC}`
@@ -89,8 +94,8 @@ if (RESUME) {
   if (!ac) throw new Error(`resume: could not read ${CYCLE}/ac.md`)
   log(`${EPIC}: resuming from ${RESUME} with ${ac.criteria.length} frozen criteria${RUN_ITEMS.length ? `, building ${RUN_ITEMS.join(', ')} first` : ''}`)
 } else {
-  ac = await agent(`${PRE}\nJob 1 (SPEC). Read docs/03-plan/backlog.json → ${EPIC}, docs/03-plan/FEATURE-PLAN.md and docs/03-plan/TECH-SPEC.md (if present), and node agentic/scripts/ledger.mjs recent <area> 5. Produce the frozen acceptance criteria per agentic/templates/acceptance-criteria.md. Return class, has_ui, area, criteria with disproofs, and the full markdown.`,
-    { label: `pm-spec:${EPIC}`, phase: 'Spec', agentType: 'wp-agentic:wp-pm', schema: AC_SCHEMA, effort: 'high' })
+  ac = await agent(`${PRE}\nJob 1 (SPEC). Read docs/03-plan/backlog.json → ${EPIC}, docs/03-plan/FEATURE-PLAN.md and docs/03-plan/TECH-SPEC.md (if present), and node agentic/scripts/ledger.mjs recent <area> 5. Produce the frozen acceptance criteria per agentic/templates/acceptance-criteria.md. Return class, has_ui, area, criteria with disproofs, and the full markdown.${V ? '\nVELOCITY MODE: this epic must be a working, clickable increment. Keep to 6–10 criteria about user-visible behaviour (what a person can do), plus at most two non-negotiable safety criteria for class C (tenant isolation, auth). Do NOT include hardening, performance, accessibility, four-locale parity or documentation criteria — those belong to EPIC-014. Do not recommend splitting.' : ''}`,
+    { label: `pm-spec:${EPIC}`, phase: 'Spec', agentType: 'wp-agentic:wp-pm', schema: AC_SCHEMA, ...(V ? { model: 'sonnet', effort: 'medium' } : { effort: 'high' }) })
   if (!ac) throw new Error('wp-pm produced no acceptance criteria')
   await scribe(`${CYCLE}/ac.md`, ac.markdown, 'ac')
   log(`${EPIC}: ${ac.criteria.length} criteria frozen, class ${ac.class}, ui=${ac.has_ui}${ac.split_recommended ? ' (pm recommends splitting)' : ''}`)
@@ -100,10 +105,10 @@ const acText = ac.criteria.map(c => `${c.id}: ${c.text}\n   DISPROOF: ${c.dispro
 // ---------- Phase: Design ----------
 phase('Design')
 const designJobs = []
-if (!RESUME && ac.class !== 'A') designJobs.push(() => agent(`${PRE}\nProduce the design for this epic per your role. Frozen criteria:\n${acText}\nRead ${CYCLE}/ac.md, docs/03-plan/TECH-SPEC.md, docs/adr/*.md, agentic/INVARIANTS.md. Return markdown (design.md), summary, and adr_markdown if a decision needs an ADR.`,
-  { label: `architect:${EPIC}`, phase: 'Design', agentType: 'wp-agentic:wp-architect', schema: TEXT_SCHEMA, effort: 'high' }).then(async r => { if (r) { await scribe(`${CYCLE}/design.md`, r.markdown, 'design'); if (r.adr_markdown) await scribe(`docs/adr/${EPIC}-${RUN_TS.replace(/[^0-9]/g, '').slice(0, 8) || 'adr'}.md`, r.adr_markdown, 'adr') } return r }))
+if (!RESUME && (V ? ac.class === 'C' : ac.class !== 'A')) designJobs.push(() => agent(`${PRE}\nProduce the design for this epic per your role. Frozen criteria:\n${acText}\nRead ${CYCLE}/ac.md, docs/03-plan/TECH-SPEC.md, docs/adr/*.md, agentic/INVARIANTS.md. Return markdown (design.md), summary, and adr_markdown if a decision needs an ADR.`,
+  { label: `architect:${EPIC}`, phase: 'Design', agentType: 'wp-agentic:wp-architect', schema: TEXT_SCHEMA, effort: V ? 'medium' : 'high' }).then(async r => { if (r) { await scribe(`${CYCLE}/design.md`, r.markdown, 'design'); if (r.adr_markdown) await scribe(`docs/adr/${EPIC}-${RUN_TS.replace(/[^0-9]/g, '').slice(0, 8) || 'adr'}.md`, r.adr_markdown, 'adr') } return r }))
 if (!RESUME && ac.has_ui) designJobs.push(() => agent(`${PRE}\nProduce the visual/interaction spec for this epic per your role. Frozen criteria:\n${acText}\nRead ${CYCLE}/ac.md, DESIGN.md, docs/00-reference/reference-site-audit.md. Include the screenshot manifest (routes) and the uz/ru/en copy tables. Return markdown (spec.md), summary, routes.`,
-  { label: `designer:${EPIC}`, phase: 'Design', agentType: 'wp-agentic:wp-designer', schema: TEXT_SCHEMA, effort: 'high' }).then(async r => { if (r) await scribe(`${CYCLE}/spec.md`, r.markdown, 'spec'); return r }))
+  { label: `designer:${EPIC}`, phase: 'Design', agentType: 'wp-agentic:wp-designer', schema: TEXT_SCHEMA, ...(V ? { model: 'sonnet', effort: 'medium' } : { effort: 'high' }) }).then(async r => { if (r) await scribe(`${CYCLE}/spec.md`, r.markdown, 'spec'); return r }))
 const designs = designJobs.length ? (await parallel(designJobs)).filter(Boolean) : []
 const routes = RESUME ? (ac.routes || []) : designs.flatMap(d => d.routes || [])
 
@@ -118,7 +123,7 @@ if (RESUME) {
   plan.items = (plan.items || []).filter(it => RUN_ITEMS.includes(it.id)).map(it => ({ ...it, depends_on: [] }))
   log(`${EPIC}: resume plan has ${plan.items.length} item(s) to build`)
 } else {
-  plan = await agent(`${PRE}\nDecompose the epic per your role. Read ${CYCLE}/ac.md${ac.class !== 'A' ? `, ${CYCLE}/design.md` : ''}${ac.has_ui ? `, ${CYCLE}/spec.md` : ''}, docs/03-plan/TECH-SPEC.md. Frozen criteria:\n${acText}\nReturn items.json fields plus each item's markdown (agentic/templates/work-item.md).`,
+  plan = await agent(`${PRE}\nDecompose the epic per your role. Read ${CYCLE}/ac.md${ac.class !== 'A' ? `, ${CYCLE}/design.md` : ''}${ac.has_ui ? `, ${CYCLE}/spec.md` : ''}, docs/03-plan/TECH-SPEC.md. Frozen criteria:\n${acText}\nReturn items.json fields plus each item's markdown (agentic/templates/work-item.md).${V ? '\nVELOCITY MODE: at most 5 work items, each a vertical slice that a person can use when it lands (schema + API + UI + demo seed together where sensible), in dependency order. No tooling, harness, documentation, ADR or "verification" items — those are EPIC-014. Items may touch shared files (routes index, message catalogues, seed); list them in TOUCHES.' : ''}`,
     { label: `lead:${EPIC}`, phase: 'Decompose', agentType: 'wp-agentic:wp-lead', schema: ITEMS_SCHEMA, effort: 'high' })
   if (!plan || !plan.items.length) throw new Error('wp-lead produced no work items')
   await scribe(`${CYCLE}/items.json`, JSON.stringify(plan, null, 2), 'items')
@@ -144,15 +149,15 @@ async function buildItem(it) {
   if (!maker || maker.status === 'BLOCKED') { res.status = 'BLOCKED-ESCALATED'; await escalate(`${it.id}-blocked`, 'data-model-decision', `Item ${it.id} could not be completed within its TOUCHES: ${(maker && maker.blocked_reason) || 'maker died'}. Should the item's scope be widened as it proposes, or the design changed?`, 'Skipping this item; dependent items still run; epic will not PASS until resolved.', (maker && maker.notes) || '', it.id); return res }
   // gates: attempt 1 = the maker; attempt 2 = the maker again with the failure; attempt 3 = a repo-wide fixer
   // (the root cause of a red gate often lives outside the item's TOUCHES, e.g. a test written by another item).
-  let g = await gates('item', it.id); res.gate_attempts = 1
+  let g = await gates(ITEM_PROFILE,it.id); res.gate_attempts = 1
   if (g && !g.ok) {
     maker = await agent(`${itemPrompt}\n\nThe item gates are RED: failed=[${(g && g.failed.join(', ')) || '?'}] skipped=[${(g && g.skipped.join(', ')) || ''}]. Output tail:\n${(g && g.tail) || ''}\nFix the causes that are inside your TOUCHES (never the tests or gates) and re-run node agentic/scripts/gate.mjs --profile item. If the cause is outside your TOUCHES, say so in notes and return DONE; a repo-wide fixer runs next.`, { label: `${it.owner}:${it.id}:gates2`, phase: 'Build', agentType: 'wp-agentic:' + it.owner, schema: MAKER_SCHEMA, effort: 'high' })
-    g = await gates('item', `${it.id}-retry`); res.gate_attempts++
+    g = await gates(ITEM_PROFILE,`${it.id}-retry`); res.gate_attempts++
   }
   if (g && !g.ok) {
     await agent(`${PRE}\nRepo-wide gate repair after work item ${it.id} (${it.title}). The item-profile gates are RED: failed=[${(g && g.failed.join(', ')) || '?'}]. Output tail:\n${(g && g.tail) || ''}\nFind the root cause anywhere in the repository (it may be code from another item or a gate script misconfiguration in package scripts) and fix the CODE so the gates pass. Never edit tests, e2e specs, migrations, agentic/gates.json or agentic/scripts/*. If a test is genuinely wrong, report TEST-DISPUTED with the exact assertion and leave it. Then re-run node agentic/scripts/gate.mjs --profile item.`, { label: `fixer:${it.id}:repo-gates`, phase: 'Build', agentType: 'wp-agentic:wp-fixer', schema: FIX_SCHEMA, effort: 'high' })
     const fg = await guard(base, null, true, `${it.id}-repofix`); if (fg && !fg.ok) { await revert(base, null, true, `${it.id}-repofix`); log(`${it.id}: repo-wide fixer touched forbidden files, reverted: ${fg.violations.join('; ')}`) }
-    g = await gates('item', `${it.id}-repofix`); res.gate_attempts++
+    g = await gates(ITEM_PROFILE,`${it.id}-repofix`); res.gate_attempts++
   }
   if (!g || !g.ok) { res.status = 'BLOCKED-ESCALATED'; await escalate(`${it.id}-gates`, 'wrong-gate', `Item ${it.id} cannot make gates green after ${res.gate_attempts} attempts incl. a repo-wide fixer (failed: ${(g && g.failed.join(', ')) || '?'}). Is the gate wrong, or is the item mis-scoped?`, 'Reverting nothing; item parked; continuing with other items.', (g && g.tail) || '', it.id); return res }
   // scope guard
@@ -160,10 +165,11 @@ async function buildItem(it) {
   if (gd && !gd.ok) {
     await agent(`${itemPrompt}\n\nSCOPE VIOLATIONS (files outside TOUCHES): ${gd.violations.join('; ')}. Move the change inside TOUCHES or drop it. If a file outside TOUCHES is genuinely required, return BLOCKED with the reason.`, { label: `${it.owner}:${it.id}:scope`, phase: 'Build', agentType: 'wp-agentic:' + it.owner, schema: MAKER_SCHEMA, effort: 'medium' })
     gd = await guard(base, it.touches, false, it.id)
-    if (gd && !gd.ok) { await revert(base, it.touches, false, it.id); log(`${it.id}: reverted out-of-scope files: ${gd.violations.join('; ')}`); g = await gates('item', it.id); if (!g || !g.ok) { res.status = 'BLOCKED-ESCALATED'; await escalate(`${it.id}-scope`, 'data-model-decision', `Item ${it.id} only works by editing files outside its TOUCHES (${gd.violations.join('; ')}). Widen TOUCHES?`, 'Out-of-scope edits reverted; item parked.', '', it.id); return res } }
+    if (gd && !gd.ok) { await revert(base, it.touches, false, it.id); log(`${it.id}: reverted out-of-scope files: ${gd.violations.join('; ')}`); g = await gates(ITEM_PROFILE,it.id); if (!g || !g.ok) { res.status = 'BLOCKED-ESCALATED'; await escalate(`${it.id}-scope`, 'data-model-decision', `Item ${it.id} only works by editing files outside its TOUCHES (${gd.violations.join('; ')}). Widen TOUCHES?`, 'Out-of-scope edits reverted; item parked.', '', it.id); return res } }
   }
   await commit(`${it.id}: ${it.title}`, it.id)
-  // bounded review/fix loop (PROTOCOL §5)
+  // bounded review/fix loop (PROTOCOL §5); in velocity mode only class C items are reviewed per item
+  if (V && ac.class !== 'C' && it.class !== 'C') { res.status = 'VERIFIED'; log(`${it.id}: built, gates green (velocity mode: review deferred to epic verification)`); return res }
   let prevBlocking = []
   const closed = await closedFingerprints(it.id)
   while (true) {
@@ -185,8 +191,8 @@ async function buildItem(it) {
     const fix = await agent(`${PRE}\nFix ONLY these findings on work item ${it.id} (base ${base}):\n${blocking.map(f => `${f.fingerprint} | ${f.sev} | ${f.path} | ${f.summary}\n   REPRO: ${f.repro || '(none given: reproduce from evidence)'}\n   EVIDENCE: ${f.evidence || ''}`).join('\n')}\nThen run the fast gates and node agentic/scripts/diff-guard.mjs --since ${base} --forbid fixer. Return results per fingerprint.`, { label: `fixer:${it.id}:r${res.rounds}`, phase: 'Build', agentType: 'wp-agentic:wp-fixer', schema: FIX_SCHEMA, effort: 'high' })
     const fg = await guard(base, null, true, `${it.id}-fix`)
     if (fg && !fg.ok) { await revert(base, null, true, `${it.id}-fix`); log(`${it.id}: fixer touched forbidden files, reverted: ${fg.violations.join('; ')}`) }
-    let g2 = await gates('item', `${it.id}-fix${res.rounds}`); let attempts = 1
-    while ((!g2 || !g2.ok) && attempts < MAX_GATE_ATTEMPTS) { await agent(`${PRE}\nYour fix for ${it.id} left gates RED: failed=[${(g2 && g2.failed.join(', ')) || '?'}]. Tail:\n${(g2 && g2.tail) || ''}\nRepair without touching tests/gates.`, { label: `fixer:${it.id}:r${res.rounds}:gates`, phase: 'Build', agentType: 'wp-agentic:wp-fixer', schema: FIX_SCHEMA, effort: 'high' }); g2 = await gates('item', `${it.id}-fix${res.rounds}b`); attempts++ }
+    let g2 = await gates(ITEM_PROFILE,`${it.id}-fix${res.rounds}`); let attempts = 1
+    while ((!g2 || !g2.ok) && attempts < MAX_GATE_ATTEMPTS) { await agent(`${PRE}\nYour fix for ${it.id} left gates RED: failed=[${(g2 && g2.failed.join(', ')) || '?'}]. Tail:\n${(g2 && g2.tail) || ''}\nRepair without touching tests/gates.`, { label: `fixer:${it.id}:r${res.rounds}:gates`, phase: 'Build', agentType: 'wp-agentic:wp-fixer', schema: FIX_SCHEMA, effort: 'high' }); g2 = await gates(ITEM_PROFILE,`${it.id}-fix${res.rounds}b`); attempts++ }
     if (!g2 || !g2.ok) { res.status = 'BLOCKED-ESCALATED'; await escalate(`${it.id}-fixgates`, 'wrong-gate', `Fixing ${it.id} breaks gates (${(g2 && g2.failed.join(', ')) || '?'}) and the fixer cannot recover within ${MAX_GATE_ATTEMPTS} attempts.`, 'Item parked at last green commit.', (g2 && g2.tail) || '', it.id); return res }
     for (const r of (fix && fix.results) || []) if (r.status === 'FIXED') await runner(`node agentic/scripts/ledger.mjs close ${r.fingerprint} FIXED "${(r.detail || '').replace(/"/g, "'")}"`, { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] }, `close:${r.fingerprint}`, 'Build')
     await commit(`${it.id}: fix round ${res.rounds}`, `${it.id}-fix${res.rounds}`)
@@ -225,7 +231,7 @@ const runVerifiers = async (round) => {
   const jobs = [() => agent(`${PRE}\nFunctional QA for ${EPIC} (round ${round}). Read ${CYCLE}/ac.md and ${CYCLE}/items.json. Verified items: ${verifiedItems.join(', ') || 'none'}; parked: ${parkedItems.join(', ') || 'none'}. Execute every AC as its persona; try to break it; return findings + evidence_for_acs + markdown.`, { label: `qa:${EPIC}:r${round}`, phase: 'Verify', agentType: 'wp-agentic:wp-qa', schema: FINDINGS_SCHEMA, effort: 'high' })]
   if (ac.has_ui) {
     jobs.push(() => agent(`${PRE}\nVisual QA for ${EPIC} (round ${round}). Routes from the spec manifest: ${routes.join(', ') || '(read ' + CYCLE + '/spec.md)'}. Save screenshots and manifest.json under ${CYCLE}/qa-visual/ exactly as your role describes. Return findings + evidence_for_acs + markdown.`, { label: `qa-visual:${EPIC}:r${round}`, phase: 'Verify', agentType: 'wp-agentic:wp-qa-visual', schema: FINDINGS_SCHEMA, effort: 'high' }))
-    jobs.push(() => agent(`${PRE}\nAccessibility + localisation verification for ${EPIC} (round ${round}). Flows from ${CYCLE}/ac.md. Write ${CYCLE}/a11y-i18n.json as your role describes. Return findings + evidence_for_acs + markdown.`, { label: `a11y-i18n:${EPIC}:r${round}`, phase: 'Verify', agentType: 'wp-agentic:wp-a11y-i18n', schema: FINDINGS_SCHEMA, effort: 'medium' }))
+    if (!V) jobs.push(() => agent(`${PRE}\nAccessibility + localisation verification for ${EPIC} (round ${round}). Flows from ${CYCLE}/ac.md. Write ${CYCLE}/a11y-i18n.json as your role describes. Return findings + evidence_for_acs + markdown.`, { label: `a11y-i18n:${EPIC}:r${round}`, phase: 'Verify', agentType: 'wp-agentic:wp-a11y-i18n', schema: FINDINGS_SCHEMA, effort: 'medium' }))
   }
   if (ac.class === 'C') jobs.push(() => agent(`${PRE}\nEpic-level security review for ${EPIC} (round ${round}), class C: attack the integrated result (cross-tenant, escalation, restricted-field leakage, integrations). Return findings + markdown.`, { label: `security:${EPIC}:r${round}`, phase: 'Verify', agentType: 'wp-agentic:wp-security', schema: FINDINGS_SCHEMA, effort: 'high' }))
   const reps = (await parallel(jobs)).filter(Boolean)
@@ -240,7 +246,7 @@ while (true) {
   const blocking = verifyReports.flatMap(r => r.findings || []).filter(f => (f.sev === 'SEV1' || f.sev === 'SEV2') && !closed.has(f.fingerprint) && (f.repro || f.evidence))
   const evidence = verifyReports.flatMap(r => r.evidence_for_acs || [])
   phase('Adjudicate')
-  adjudication = await agent(`${PRE}\nJob 2 (ADJUDICATE) for ${EPIC}, round ${epicRound + 1}. Frozen criteria:\n${acText}\nVerifier reports: ${CYCLE}/verify/r${epicRound + 1}-*.md and item reviews in ${CYCLE}/reviews/. Evidence offered by verifiers:\n${evidence.map(e => `${e.ac}: ${e.evidence}`).join('\n') || '(none)'}\nOpen blocking findings: ${blocking.map(f => `${f.sev} ${f.fingerprint} ${f.path}: ${f.summary}`).join('; ') || 'none'}\nIntegration gates green: ${integrationGreen}. Parked items: ${parkedItems.join(', ') || 'none'}. Escalations so far: ${escalations.map(e => e.slug).join(', ') || 'none'}.\nReturn the verdict, rows, reopen_items, blocking_fingerprints, proposed_backlog, contract_change, demo_seed_updated, and the adjudication.json content.`, { label: `pm-adjudicate:${EPIC}:r${epicRound + 1}`, phase: 'Adjudicate', agentType: 'wp-agentic:wp-pm', schema: ADJ_SCHEMA, effort: 'high' })
+  adjudication = await agent(`${PRE}\nJob 2 (ADJUDICATE) for ${EPIC}, round ${epicRound + 1}. Frozen criteria:\n${acText}\nVerifier reports: ${CYCLE}/verify/r${epicRound + 1}-*.md and item reviews in ${CYCLE}/reviews/. Evidence offered by verifiers:\n${evidence.map(e => `${e.ac}: ${e.evidence}`).join('\n') || '(none)'}\nOpen blocking findings: ${blocking.map(f => `${f.sev} ${f.fingerprint} ${f.path}: ${f.summary}`).join('; ') || 'none'}\nIntegration gates green: ${integrationGreen}. Parked items: ${parkedItems.join(', ') || 'none'}. Escalations so far: ${escalations.map(e => e.slug).join(', ') || 'none'}.\nReturn the verdict, rows, reopen_items, blocking_fingerprints, proposed_backlog, contract_change, demo_seed_updated, and the adjudication.json content.`, { label: `pm-adjudicate:${EPIC}:r${epicRound + 1}`, phase: 'Adjudicate', agentType: 'wp-agentic:wp-pm', schema: ADJ_SCHEMA, ...(V ? { model: 'sonnet', effort: 'medium' } : { effort: 'high' }) })
   if (!adjudication) { adjudication = { verdict: 'BLOCKED', rows: [], json: '{}' }; break }
   await scribe(`${CYCLE}/adjudication.json`, adjudication.json, 'adjudication')
   if (adjudication.verdict !== 'FAIL' || !integrationGreen) break
@@ -276,7 +282,7 @@ log(`${EPIC}: ${finalVerdict} (release=${release.status}${release.version ? ' v'
 
 // ---------- Phase: Scout ----------
 phase('Scout')
-const scout = await agent(`${PRE}\n${EPIC} just finished with verdict ${finalVerdict}. Do your four-persona walk on the running app and return ranked proposals (max 15) + summary.`, { label: `scout:${EPIC}`, phase: 'Scout', agentType: 'wp-agentic:wp-scout', schema: SCOUT_SCHEMA, effort: 'medium' })
+const scout = V ? null : await agent(`${PRE}\n${EPIC} just finished with verdict ${finalVerdict}. Do your four-persona walk on the running app and return ranked proposals (max 15) + summary.`, { label: `scout:${EPIC}`, phase: 'Scout', agentType: 'wp-agentic:wp-scout', schema: SCOUT_SCHEMA, effort: 'medium' })
 if (scout && scout.proposals.length) {
   for (const p of scout.proposals.slice(0, 15)) await runner(`node agentic/scripts/backlog.mjs add '${JSON.stringify({ title: p.title, status: 'proposed', priority: 500, phase: 2, area: ac.area || '', depends_on: [EPIC], personas: [p.persona || 'specialist'], outcomes: [p.why], evidence: [p.evidence || `scout after ${EPIC}`], value: p.value || 'M', complexity: p.complexity || 'M' }).replace(/'/g, "'\\''")}'`, { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] }, `backlog-add`, 'Scout')
   log(`${EPIC}: scout filed ${Math.min(15, scout.proposals.length)} proposal(s)`)
