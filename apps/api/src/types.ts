@@ -32,6 +32,16 @@ export type SessionRecord = {
   revokedReason: string | null
 }
 
+/** One active membership, joined with the department's display name -- what `buildActor()` needs for
+ * `Actor.memberships` and what `GET /me` needs for its own `memberships` list (EPIC-004 note: EPIC-002
+ * has not shipped a department-switching endpoint yet, so `listActiveMembershipsForUser`'s first
+ * result is also `activeDepartmentId`'s source -- see `apps/api/src/lib/actor.ts`). */
+export type MembershipRecord = {
+  departmentId: string
+  departmentName: string
+  role: 'head' | 'member'
+}
+
 export type InstanceSettingsRecord = {
   isDemo: boolean
   registrationOpen: boolean

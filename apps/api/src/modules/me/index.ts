@@ -6,14 +6,26 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { CSRF_COOKIE_NAME } from '../../lib/cookies.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import { toPublicUser } from '../../lib/user-view.js'
-import type { UserRecord } from '../../types.js'
+import type { MembershipRecord, UserRecord } from '../../types.js'
 
-function toMe(user: UserRecord, isDemo: boolean, csrfToken: string) {
+function toMe(
+  user: UserRecord,
+  memberships: readonly MembershipRecord[],
+  isDemo: boolean,
+  csrfToken: string,
+) {
   return {
     user: toPublicUser(user),
-    memberships: [], // EPIC-002 populates this; no `app.memberships` rows can exist yet in this epic.
-    membershipCount: 0,
-    activeDepartmentId: null,
+    memberships: memberships.map((m) => ({
+      departmentId: m.departmentId,
+      name: m.departmentName,
+      role: m.role,
+    })),
+    membershipCount: memberships.length,
+    // No department-switcher endpoint yet (EPIC-002) -- the first membership (`joined_at` ascending,
+    // `listActiveMembershipsForUser`'s own order) is the stable default, same fallback the client's
+    // own `useDepartment()` already applies when this is `null`.
+    activeDepartmentId: memberships[0]?.departmentId ?? null,
     actingForUserId: null,
     instance: { isDemo, maintenance: false },
     csrfToken,
@@ -33,9 +45,12 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: meSchema } },
     },
     async (req, reply) => {
-      const settings = await app.devon.getInstanceSettings()
+      const [settings, memberships] = await Promise.all([
+        app.devon.getInstanceSettings(),
+        app.devon.listActiveMembershipsForUser(req.actorUser!.id),
+      ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(toMe(req.actorUser!, settings.isDemo, csrfToken))
+      reply.send(toMe(req.actorUser!, memberships, settings.isDemo, csrfToken))
     },
   )
 
@@ -61,9 +76,12 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         ip: requestIp(req),
         userAgent: requestUserAgent(req),
       })
-      const settings = await app.devon.getInstanceSettings()
+      const [settings, memberships] = await Promise.all([
+        app.devon.getInstanceSettings(),
+        app.devon.listActiveMembershipsForUser(updated.id),
+      ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(toMe(updated, settings.isDemo, csrfToken))
+      reply.send(toMe(updated, memberships, settings.isDemo, csrfToken))
     },
   )
 }

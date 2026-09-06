@@ -9,7 +9,7 @@ import type { Role } from '@devon/contracts'
 import { hashPassword } from '../lib/password.js'
 import { generateToken, sha256Hex } from '../lib/tokens.js'
 import type { Deps, CreatedSession, LoadedSession, ConsumeSetupTokenResult } from '../deps.js'
-import type { AuditCtx, InstanceSettingsRecord, UserRecord } from '../types.js'
+import type { AuditCtx, InstanceSettingsRecord, MembershipRecord, UserRecord } from '../types.js'
 
 const SESSION_ABSOLUTE_DAYS = 30
 const SETUP_TOKEN_TTL_HOURS = 24
@@ -121,6 +121,29 @@ export function createRepo(): Deps {
 
     async findUserById(id) {
       return withContext(anonymousCtx(), (tx) => selectUserById(tx, id))
+    },
+
+    async listActiveMembershipsForUser(userId): Promise<MembershipRecord[]> {
+      // Not RLS-scoped by design: this runs before any department context exists for the request
+      // (it is what *establishes* that context) -- the same reasoning `anonymousCtx()` already
+      // documents for `findUserByLogin`/`findSessionByToken` above.
+      return withContext(anonymousCtx(), async (tx) => {
+        const rows = await tx.raw<{ department_id: string; department_name: string; role: string }>(
+          sql`select m.department_id, d.name as department_name, m.role
+              from app.memberships m
+              join app.departments d on d.id = m.department_id
+              where m.user_id = ${userId}
+                and m.status = 'active'
+                and m.deleted_at is null
+                and d.deleted_at is null
+              order by m.joined_at asc, m.id asc`,
+        )
+        return rows.map((r) => ({
+          departmentId: r.department_id,
+          departmentName: r.department_name,
+          role: r.role as 'head' | 'member',
+        }))
+      })
     },
 
     async updateUserProfile(userId, patch, ctx) {

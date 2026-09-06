@@ -8,6 +8,7 @@ import type { ChainVerification } from '@devon/db'
 import type {
   AuditCtx,
   InstanceSettingsRecord,
+  MembershipRecord,
   SessionRecord,
   SetupInput,
   UserRecord,
@@ -36,6 +37,16 @@ export type Deps = {
 
   findUserByLogin(login: string): Promise<UserRecord | null>
   findUserById(id: string): Promise<UserRecord | null>
+
+  /** Every active (`memberships.status = 'active'`, department not soft-deleted) department
+   * membership for `userId`, department-name joined in. EPIC-002 has not shipped yet (no
+   * create/approve/join flow, no department switcher endpoint), so `plugins/session.ts` calls this on
+   * every request to build `Actor.memberships` -- previously hardcoded to `[]` (`lib/actor.ts`),
+   * which made every `{kind:'department_child'}` route 403 for every real request regardless of
+   * `app.memberships` rows actually existing (found building EPIC-004/005, whose People board and
+   * project pages are unusable without it). Ordered so the first row is a stable "default active
+   * department" until a real switcher lands (`joined_at` ascending, ties by id). */
+  listActiveMembershipsForUser(userId: string): Promise<MembershipRecord[]>
   updateUserProfile(
     userId: string,
     patch: { locale?: string | undefined; timezone?: string | undefined },

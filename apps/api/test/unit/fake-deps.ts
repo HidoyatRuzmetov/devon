@@ -14,6 +14,7 @@ import type {
 import type {
   AuditCtx,
   InstanceSettingsRecord,
+  MembershipRecord,
   SessionRecord,
   SetupInput,
   UserRecord,
@@ -32,10 +33,13 @@ export type AuditEvent = {
   after?: unknown
 }
 
+export type FakeMembership = MembershipRecord & { userId: string; status: 'active' | 'removed' }
+
 export type FakeState = {
   users: UserRecord[]
   sessions: (SessionRecord & { tokenHash: string; csrfHash: string })[]
   setupTokens: { id: string; tokenHash: string; expiresAt: Date; consumedAt: Date | null }[]
+  memberships: FakeMembership[]
   auditEvents: AuditEvent[]
   instanceSettings: InstanceSettingsRecord
   dbReady: boolean
@@ -51,6 +55,7 @@ export function createFakeState(overrides: Partial<FakeState> = {}): FakeState {
     users: [],
     sessions: [],
     setupTokens: [],
+    memberships: [],
     auditEvents: [],
     instanceSettings: {
       isDemo: false,
@@ -82,6 +87,16 @@ export function createFakeDeps(state: FakeState): Deps {
 
     async findUserById(id) {
       return state.users.find((u) => u.id === id) ?? null
+    },
+
+    async listActiveMembershipsForUser(userId) {
+      return state.memberships
+        .filter((m) => m.userId === userId && m.status === 'active')
+        .map((m) => ({
+          departmentId: m.departmentId,
+          departmentName: m.departmentName,
+          role: m.role,
+        }))
     },
 
     async updateUserProfile(userId, patch, ctx) {
