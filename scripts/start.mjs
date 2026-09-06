@@ -97,7 +97,13 @@ if (demo) {
 
 // --- 5. start api + web (turbo, persistent dev tasks) ----------------------
 log(`starting api + web${demo ? ' (demo tenant seeded -- look for the "Namoyish/Demo" chip in the header)' : ''} ...`)
-const turboArgs = ['exec', 'turbo', 'run', 'dev', '--filter=@devon/api', '--filter=@devon/web']
+// --env-mode=loose: turbo 2's default is `strict`, which filters every spawned task's environment
+// down to the `env`/`globalEnv` allowlist in turbo.json -- and this repo has no such allowlist (env
+// vars are centralised in `.env`, loaded above by `loadDotEnv()`, not hand-mirrored per task). Without
+// this flag apps/api boots with DATABASE_URL/CSRF_SECRET (and every other .env value) undefined,
+// because turbo silently strips them before the child process ever starts (found running `pnpm start`
+// end-to-end, 2026-09).
+const turboArgs = ['exec', 'turbo', 'run', 'dev', '--env-mode=loose', '--filter=@devon/api', '--filter=@devon/web']
 const [devCmd, devArgs] = spawnArgs('pnpm', turboArgs)
 const child = spawn(devCmd, devArgs, { stdio: 'inherit', shell: isWin, cwd: root, env: process.env })
 child.on('exit', (code) => process.exit(code ?? 0))
