@@ -10,3 +10,4 @@ agentic/ledger/last-gate.json
 agentic/.unlock
 tools/gate-mutation/.tmp/
 tools/gate-mutation/.tmp-evidence.*
+.claude/worktrees/
