@@ -26,7 +26,7 @@ const mk = (label, phase, prompt, extra) => agent(`${CTX}\n\n${prompt}`, { label
 
 // ---------- Phase: Skeleton ----------
 let skeleton = null
-if (WAVE === 'all' || WAVE === 1 || WAVE === '1') {
+if (!(args && args.skipSkeleton) && (WAVE === 'all' || WAVE === 1 || WAVE === '1')) {
   phase('Skeleton')
   skeleton = await mk('skeleton', 'Skeleton', `TASK: make the codebase safe for several agents to add whole modules IN PARALLEL without editing the same files. Implement and commit on the current branch (master):
 1) API module auto-discovery: apps/api/src/modules/<name>/index.ts exports a Fastify plugin; a loader in apps/api (fs.readdir at boot, deterministic order, dynamic import) registers every module under /api/v1 with its own prefix; each module owns its routes, services, repos, jobs and Zod schemas. Convert any existing hand-registered module to the loader.
@@ -55,17 +55,21 @@ const wave2 = [
   { key: 'admin', prompt: `MODULE admin (TECH-SPEC §10, §11, §3.7; TASKS.md EPIC-013). Deliver the super admin console: requests queue (approve/reject with reason — reuse or replace the minimal one from accounts-departments), departments list with view-as (read-only, audited, excludes personal workspaces), pause a department, archive/restore; accounts: search, lock/unlock, reset password (temporary + forced change), 2FA reset, delete/anonymise; global analytics with polished visualisations (departments, people, activity, AI spend); audit viewer with hash-chain verification and export; system health (queues, DB, storage, Telegram, AI endpoint latency, backups); registration open/closed toggle; PAUSE SWITCH: maintenance mode with a message in four locales → branded 503 page everywhere except super admin login/console, API 503, workers pause non-critical jobs, Telegram bot replies with the message; Caddy fallback page in infra; state in instance settings + cache for instant effect; WIPE SWITCH: infra/sentinel (a small host service, Node, systemd unit + Windows service script, listens on 127.0.0.1 only, accepts a command signed with HMAC using a key that lives only in the sentinel config and the encrypted admin settings), console flow: typed phrase, password re-entry, 2FA if enabled, 60-second countdown with cancel; the sentinel stops/removes the project's containers, images and volumes, deletes the project directory, backups and logs under the configured project root, and appends one line to /var/log/devon-wipe.log (or %ProgramData% on Windows); also a host CLI devon-wipe --confirm; everything audited before acting. Paths: apps/api/src/modules/admin, packages/db/src/schema/admin.ts, packages/db/migrations/0900_*.sql, apps/web/src/features/admin/**, infra/sentinel/**, infra/Caddyfile (maintenance fallback), message files.` },
 ]
 
+// Worktrees are created by the operator before the run: <ROOT>/.claude/worktrees/<key> on branch blitz/<key>
+// (the harness's own worktree isolation failed silently on this machine, so we do it by hand and tell the agent).
+const WT = (key) => `${ROOT}/.claude/worktrees/${key}`
 const runWave = async (name, mods) => {
   phase(name)
-  const results = await parallel(mods.map(m => () => mk(`module:${m.key}`, name, m.prompt, { isolation: 'worktree' }).then(r => ({ key: m.key, r }))))
+  const results = await parallel(mods.map(m => () => mk(`module:${m.key}`, name,
+    `YOUR WORKING COPY IS A GIT WORKTREE AT ${WT(m.key)} ON BRANCH blitz/${m.key}. Every Bash command must start with: cd "${WT(m.key)}" && … ; use absolute paths under ${WT(m.key)} for Read/Edit/Write; NEVER read or edit files under ${ROOT}/apps, ${ROOT}/packages or ${ROOT}/e2e directly (that is the main checkout other agents merge into). First run: cd "${WT(m.key)}" && pnpm install --prefer-offline. Commit on your branch as you go. Do not merge, rebase or switch branches. Do not start Docker-dependent servers on shared ports if another agent may be using them — use a random free port for any dev server you start.\n\n${m.prompt}`).then(r => ({ key: m.key, r: r ? { ...r, branch: `blitz/${m.key}` } : null }))))
   const out = results.filter(Boolean)
-  for (const { key, r } of out) log(`${name} ${key}: ${r ? r.status : 'died'}${r && r.branch ? ' on ' + r.branch : ''} — ${r ? r.summary.slice(0, 160) : ''}`)
+  for (const { key, r } of out) log(`${name} ${key}: ${r ? r.status : 'died'} — ${r ? r.summary.slice(0, 160) : ''}`)
   return out
 }
 const merge = async (name, built) => {
   phase(name)
-  const branches = built.filter(x => x.r && x.r.branch && x.r.branch !== 'master').map(x => `${x.key} → ${x.r.branch}`)
-  return mk(`merge:${name}`, name, `TASK: integrate the module branches into master in the main checkout ${ROOT}. Branches (module → branch): ${branches.join('; ') || '(none reported: run "git branch --list" and "git worktree list" to find the module branches created in this run)'}. For each, in the order given: git merge --no-ff <branch>; resolve conflicts faithfully (both sides are wanted: keep every module's routes, tables, seeds and messages; regenerate merged message catalogues with the i18n build), run "node agentic/scripts/gate.mjs --profile fast" and fix root causes until green, then commit "merge: <module>". After all merges: pnpm install, fast gates green, "pnpm --filter @devon/db migrate:verify" if Docker is available, commit. Return status and a summary of conflicts resolved. Report branch "master".`)
+  const branches = built.map(x => `${x.key} → blitz/${x.key} (worktree ${WT(x.key)})`)
+  return mk(`merge:${name}`, name, `TASK: integrate the module branches into master in the main checkout ${ROOT}. Branches (module → branch): ${branches.join('; ') || '(none reported: run "git branch --list" and "git worktree list" to find the module branches created in this run)'}. First, in each worktree, commit any uncommitted work the module agent left behind (cd into it, git add -A, git commit -m "<module>: wip"). Then in the main checkout, for each branch in the order given: git merge --no-ff <branch>; resolve conflicts faithfully (both sides are wanted: keep every module's routes, tables, seeds and messages; regenerate merged message catalogues with the i18n build), run "node agentic/scripts/gate.mjs --profile fast" and fix root causes until green, then commit "merge: <module>". After all merges: pnpm install, fast gates green, "pnpm --filter @devon/db migrate:verify" if Docker is available, commit, then remove the worktrees (git worktree remove --force <path>) but keep the branches. Return status and a summary of conflicts resolved. Report branch "master".`)
 }
 const integrate = async (name, expect) => {
   phase(name)
