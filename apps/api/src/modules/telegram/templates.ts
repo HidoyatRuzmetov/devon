@@ -54,6 +54,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'action.acknowledged': 'Qabul qilindi.',
     'action.snoozed': '1 kunga kechiktirildi.',
     'action.rsvp_recorded': 'Javobingiz qayd etildi: {choice}',
+    'security.code':
+      'Tasdiqlash kodingiz: {code}\nUshbu kodni hech kimga aytmang -- uni faqat siz kiritishingiz kerak. {minutes} daqiqa amal qiladi.',
     no_bot: 'Telegram bot hali sozlanmagan. Administratorga murojaat qiling.',
   },
   'uz-Cyrl': {
@@ -89,6 +91,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'action.acknowledged': 'Қабул қилинди.',
     'action.snoozed': '1 кунга кечиктирилди.',
     'action.rsvp_recorded': 'Жавобингиз қайд этилди: {choice}',
+    'security.code':
+      'Тасдиқлаш кодингиз: {code}\nУшбу кодни ҳеч кимга айтманг -- уни фақат сиз киритишингиз керак. {minutes} дақиқа амал қилади.',
     no_bot: 'Telegram бот ҳали созланмаган. Администраторга мурожаат қилинг.',
   },
   ru: {
@@ -125,6 +129,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'action.acknowledged': 'Принято.',
     'action.snoozed': 'Отложено на 1 день.',
     'action.rsvp_recorded': 'Ваш ответ записан: {choice}',
+    'security.code':
+      'Код подтверждения: {code}\nНикому не сообщайте этот код -- ввести его должны только вы. Действует {minutes} мин.',
     no_bot: 'Telegram-бот пока не настроен. Обратитесь к администратору.',
   },
   en: {
@@ -160,6 +166,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'action.acknowledged': 'Got it.',
     'action.snoozed': 'Snoozed for 1 day.',
     'action.rsvp_recorded': 'Your answer was recorded: {choice}',
+    'security.code':
+      'Your verification code: {code}\nNever share this code -- only you should enter it. Valid for {minutes} min.',
     no_bot: 'The Telegram bot is not configured yet. Contact your administrator.',
   },
 }

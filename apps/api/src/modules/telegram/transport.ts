@@ -11,7 +11,7 @@ import { Bot, InlineKeyboard } from 'grammy'
 import type { NotificationRow } from '../notifications/repo.js'
 import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
-import { getTelegramLinkLocale } from './repo.js'
+import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
 
 let cachedBot: Bot | null = null
 let cachedToken: string | null = null
@@ -142,6 +142,42 @@ function buildActionKeyboard(
     any = true
   }
   return any ? kb : null
+}
+
+/**
+ * Reset/2FA code delivery hook (this module's task). A future auth flow that needs to hand a
+ * short-lived numeric code to a user calls this directly (the same intra-package import pattern
+ * `notifications/jobs.ts` already uses for `getBot`/`listGroupsForKind`) -- it never goes through the
+ * domain-event bus, because a verification code is a synchronous "did this send?" operation the
+ * caller needs the `SendResult` for immediately, not a fire-and-forget notification.
+ *
+ * Bypasses `resolveTelegramChatId`'s mute check on purpose: muting silences routine notification
+ * noise, never a security code the user themselves just requested. Still "pointer not payload" in
+ * spirit -- the code is the one thing this message exists to carry, and nothing else about the user
+ * (no email, no phone, no IP) ever appears in it. Returns `{ ok: false, error: 'telegram_not_linked'
+ * }` when the account has no linked chat -- the caller falls back to its other delivery channel
+ * (email, SMS, whatever this instance configures) exactly as it would for `'telegram_not_configured'`.
+ */
+export async function sendVerificationCode(
+  userId: string,
+  code: string,
+  validForMinutes: number,
+): Promise<SendResult> {
+  const bot = getBot()
+  if (!bot) return { ok: false, error: 'telegram_not_configured' }
+
+  const status = await getLinkStatus(userId)
+  if (!status.linked || !status.chatId) return { ok: false, error: 'telegram_not_linked' }
+
+  const locale = await resolveLocale(userId)
+  const text = tb(locale, 'security.code', { code, minutes: validForMinutes })
+
+  try {
+    const sent = await withTimeout(bot.api.sendMessage(status.chatId, text), 8000)
+    return { ok: true, messageId: sent.message_id }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+  }
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
