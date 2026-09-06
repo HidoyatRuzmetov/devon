@@ -8,7 +8,17 @@ import { schema, withContext, type RequestContext, type Tx } from '@devon/db'
 import type { Role } from '@devon/contracts'
 import { hashPassword } from '../lib/password.js'
 import { generateToken, sha256Hex } from '../lib/tokens.js'
-import type { Deps, CreatedSession, LoadedSession, ConsumeSetupTokenResult } from '../deps.js'
+import {
+  createLoginChallenge as accountsCreateLoginChallenge,
+  getTwoFactorStatus as accountsGetTwoFactorStatus,
+} from '../modules/accounts/repo.js'
+import type {
+  Deps,
+  CreatedSession,
+  LoadedSession,
+  ConsumeSetupTokenResult,
+  MembershipView,
+} from '../deps.js'
 import type { AuditCtx, InstanceSettingsRecord, UserRecord } from '../types.js'
 
 const SESSION_ABSOLUTE_DAYS = 30
@@ -302,6 +312,50 @@ export function createRepo(): Deps {
       })
     },
 
+    async listMembershipsForUser(userId): Promise<MembershipView[]> {
+      // `app.user_id` GUC is set to the real `userId`, so `memberships_read_own`
+      // (migrations/0100_accounts_departments.sql) permits exactly "my own rows, any department" --
+      // never anyone else's. `app.actor_role` is set to `super_admin` only to satisfy `departments_read`
+      // (0005_rls.sql: `... or current_actor_role() = 'super_admin'`) for the join below, a query-local
+      // RLS-evaluation choice with no bearing on the actual request's `can()` authorization (which never
+      // reads these Postgres GUCs -- see `packages/contracts/src/permissions.ts`), scoped to exactly the
+      // department rows `memberships_read_own` already proved this user belongs to.
+      return withContext(
+        {
+          requestId: randomUUID(),
+          userId,
+          actorRole: 'super_admin',
+          departmentId: null,
+          actingForUserId: null,
+          viewAs: false,
+          ip: '',
+          userAgent: '',
+        },
+        async (tx) => {
+          const rows = await tx.drizzle
+            .select({
+              departmentId: schema.memberships.departmentId,
+              role: schema.memberships.role,
+              name: schema.departments.name,
+            })
+            .from(schema.memberships)
+            .innerJoin(
+              schema.departments,
+              eq(schema.departments.id, schema.memberships.departmentId),
+            )
+            .where(
+              and(
+                eq(schema.memberships.userId, userId),
+                eq(schema.memberships.status, 'active'),
+                isNull(schema.memberships.deletedAt),
+                isNull(schema.departments.deletedAt),
+              ),
+            )
+          return rows.map((r) => ({ departmentId: r.departmentId, name: r.name, role: r.role }))
+        },
+      )
+    },
+
     async recordAccessDenied(ctx, info) {
       await withContext(toDbContext(ctx), async (tx) => {
         tx.audit({
@@ -330,6 +384,14 @@ export function createRepo(): Deps {
           rowsChecked: Number(row.rows_checked),
         }
       })
+    },
+
+    async getTwoFactorStatus(userId) {
+      return accountsGetTwoFactorStatus(userId)
+    },
+
+    async createLoginChallenge(userId) {
+      return accountsCreateLoginChallenge(userId)
     },
 
     async checkDbReady() {

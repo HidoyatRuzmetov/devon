@@ -166,5 +166,246 @@
       "down": "Not running",
       "refresh": "Refresh"
     }
+  },
+  "accounts": {
+    "login2fa": {
+      "title": "Two-step verification",
+      "body": "Enter the 6-digit code from your authenticator app, or one of your recovery codes.",
+      "code": "Code",
+      "error": "That code is wrong or expired. Try again.",
+      "submit": "Verify",
+      "back": "Back"
+    },
+    "login": {
+      "registerPrompt": "Don't have an account?",
+      "registerLink": "Create one"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Set up an account to start using Devon.",
+      "login": "Login",
+      "loginHint": "Lowercase letters, digits, dot, dash",
+      "email": "Email (optional)",
+      "password": "Password",
+      "passwordHint": "At least 12 characters",
+      "givenName": "Given name",
+      "familyName": "Family name",
+      "patronymic": "Patronymic (optional)",
+      "jobTitle": "Title (optional)",
+      "locale": "Language",
+      "submit": "Create account",
+      "loginPrompt": "Already have an account?",
+      "loginLink": "Sign in",
+      "error": {
+        "conflict": "That login is already taken. Choose another.",
+        "generic": "Could not register. Check your details and try again."
+      }
+    },
+    "sessions": {
+      "title": "Devices and sessions",
+      "subtitle": "Every device currently signed in to your account.",
+      "empty": {
+        "title": "No active sessions"
+      },
+      "current": "This device",
+      "lastSeen": "Last active: {when}",
+      "revoke": "Sign out",
+      "revokeAll": "Sign out everywhere",
+      "revokeAllConfirm": "You'll be signed out on every device, including this one. Continue?",
+      "revokedToast": "Signed out",
+      "revokedAllToast": "Signed out everywhere"
+    },
+    "twoFactor": {
+      "title": "Two-factor authentication (2FA)",
+      "subtitle": "Add an authenticator app as a second layer of protection.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enroll": {
+        "step1": "Step 1: scan the QR or enter the key",
+        "secretLabel": "Key for manual entry",
+        "codeLabel": "6-digit code from your app",
+        "verify": "Verify and enable",
+        "error": "That code is wrong. Check your device's clock.",
+        "recoveryTitle": "Save your recovery codes",
+        "recoveryBody": "These are shown once. Use one to sign in if you lose access to your phone.",
+        "recoveryCopied": "Codes copied",
+        "done": "Done"
+      },
+      "disableDialog": {
+        "title": "Disable 2FA",
+        "passwordLabel": "Confirm your password",
+        "submit": "Disable",
+        "error": "Wrong password"
+      }
+    },
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Save",
+      "success": "Password updated",
+      "error": "Current password is wrong"
+    },
+    "delete": {
+      "title": "Delete account",
+      "warning": "Your account will be permanently deleted and your personal data anonymised after 30 days. You can cancel any time before then.",
+      "confirm": "Request deletion",
+      "confirmDialog": "Are you sure you want to delete your account?",
+      "cancel": "Cancel deletion",
+      "scheduled": "Your account will be deleted on {date}.",
+      "cancelled": "Deletion request cancelled"
+    },
+    "admin": {
+      "resetPassword": {
+        "title": "Reset password",
+        "button": "Issue temporary password",
+        "confirm": "Create a temporary password for this user and end all of their sessions?",
+        "success": "Temporary password created",
+        "tempPasswordLabel": "Temporary password (shown once)",
+        "copy": "Copy",
+        "copied": "Copied"
+      }
+    },
+    "settings": {
+      "title": "Account settings",
+      "profile": "Profile",
+      "security": "Security",
+      "dangerZone": "Danger zone"
+    }
+  },
+  "departments": {
+    "title": "Departments",
+    "landing": {
+      "title": "Create a department or join one",
+      "body": "You don't belong to a department yet. Create a new one or join an existing one.",
+      "createCta": "Create a department",
+      "joinCta": "Join a department"
+    },
+    "create": {
+      "title": "New department request",
+      "subtitle": "Your request goes to the super admin; the department is created once approved.",
+      "name": "Department name",
+      "description": "Description (optional)",
+      "unitsTitle": "Units (optional)",
+      "unitName": "Unit name",
+      "unitColour": "Colour",
+      "addUnit": "Add a unit",
+      "removeUnit": "Remove",
+      "locale": "Language",
+      "submit": "Send request",
+      "submitted": "Your request has been sent"
+    },
+    "pending": {
+      "title": "Your request is under review",
+      "body": "The super admin will review your request soon.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "reasonLabel": "Reason",
+      "createAnother": "Send another request"
+    },
+    "approvalQueue": {
+      "title": "Department requests",
+      "empty": {
+        "title": "No requests to review"
+      },
+      "requestedBy": "Requested by",
+      "unitsCount": "{count} unit(s)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectDialogTitle": "Reject request",
+      "rejectReasonLabel": "Reason",
+      "rejectSubmit": "Reject",
+      "approvedToast": "Department created",
+      "rejectedToast": "Request rejected",
+      "filterAll": "All",
+      "filterPending": "Pending"
+    },
+    "invite": {
+      "title": "Invite",
+      "link": "Link",
+      "copyLink": "Copy link",
+      "qrLabel": "QR code",
+      "keyLabel": "Key",
+      "passwordLabel": "Password",
+      "copyInvite": "Copy invitation",
+      "copiedInvite": "Invitation text copied",
+      "copiedLink": "Link copied",
+      "inviteText": "Join our department: {link}, password: {password}",
+      "rotateKey": "Rotate key",
+      "rotatePassword": "Rotate password",
+      "rotateKeyConfirm": "The old link will stop working. Rotate the key?",
+      "rotatePasswordConfirm": "The old password will stop working. Rotate the password?",
+      "setPassword": "Set my own password",
+      "setPasswordSubmit": "Save",
+      "approvalToggleLabel": "Require approval to join",
+      "approvalToggleBody": "When on, new members wait for the head's approval.",
+      "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
+      "saveNowWarning": "Save this now -- it won't be shown again."
+    },
+    "join": {
+      "title": "Join a department",
+      "byLink": {
+        "title": "You've been invited",
+        "body": "Enter the password to join {name}."
+      },
+      "byForm": {
+        "title": "Join with a key and password",
+        "keyLabel": "Invite key",
+        "passwordLabel": "Password"
+      },
+      "submit": "Join",
+      "success": "You've joined the department",
+      "pendingApproval": "Your request is waiting for the head's approval",
+      "invalidKeyOrPassword": "Invalid key or password",
+      "rateLimited": "Too many attempts. Try again in a moment."
+    },
+    "members": {
+      "title": "Members",
+      "empty": {
+        "title": "No members yet"
+      },
+      "roleHead": "Head",
+      "roleMember": "Member",
+      "statusPending": "Awaiting approval",
+      "joinedAt": "Joined: {date}",
+      "remove": "Remove",
+      "removeConfirm": "Remove {name} from the department?",
+      "removedToast": "Member removed",
+      "leave": "Leave department",
+      "leaveConfirm": "Are you sure you want to leave this department?",
+      "leaveBlockedHead": "Transfer headship to someone else first.",
+      "leftToast": "You left the department",
+      "transfer": "Transfer headship",
+      "transferConfirm": "Headship will be transferred to {name}. Continue?",
+      "transferredToast": "Headship transferred"
+    },
+    "settings": {
+      "title": "Department settings",
+      "general": "General",
+      "name": "Name",
+      "description": "Description",
+      "allowSelfAssign": "Members can assign themselves to units",
+      "allowStructureEdit": "Members can edit the structure",
+      "telegramGroupLabel": "Who can connect a Telegram group",
+      "telegramEveryone": "Everyone",
+      "telegramHeadOnly": "Head only",
+      "quietHoursLabel": "Quiet hours",
+      "quietHoursStart": "Starts",
+      "quietHoursEnd": "Ends",
+      "saved": "Settings saved",
+      "dangerZone": "Danger zone",
+      "requestDeletion": "Request department deletion",
+      "requestDeletionConfirm": "The super admin will review this request. Continue?",
+      "deletionRequested": "Deletion requested"
+    },
+    "switcher": {
+      "label": "Switch department",
+      "current": "Current department"
+    }
   }
 }

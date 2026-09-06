@@ -6,10 +6,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Eye, EyeOff } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { Button, IconButton, Input } from '@devon/ui'
-import { login as apiLogin } from '../lib/api-client.js'
+import { login as apiLogin, verifyTwoFactorLogin } from '../lib/api-client.js'
 import { useForcedState } from '../lib/forced-state.js'
 import { useOnline } from '../lib/use-online.js'
-import { navigate, useSearchParams } from '../lib/router.js'
+import { Link, navigate, useSearchParams } from '../lib/router.js'
 import { ForcedStateBlock } from '../shell/forced-state-block.js'
 
 export function LoginRoute() {
@@ -24,9 +24,27 @@ export function LoginRoute() {
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
+  // EPIC-001: set once the password step comes back `requires2fa: true` -- the form then swaps to a
+  // single code field, submitted against the same `challengeToken` until it succeeds.
+  const [challengeToken, setChallengeToken] = React.useState<string | null>(null)
+  const [code, setCode] = React.useState('')
 
   const mutation = useMutation({
     mutationFn: () => apiLogin({ login: identifier, password }),
+    onSuccess: async (result) => {
+      setFailed(false)
+      if (result.requires2fa) {
+        setChallengeToken(result.challengeToken)
+        return
+      }
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+      navigate('/')
+    },
+    onError: () => setFailed(true),
+  })
+
+  const twoFaMutation = useMutation({
+    mutationFn: () => verifyTwoFactorLogin({ challengeToken: challengeToken ?? '', code }),
     onSuccess: async () => {
       setFailed(false)
       await queryClient.invalidateQueries({ queryKey: ['me'] })
@@ -39,8 +57,65 @@ export function LoginRoute() {
 
   function handleSubmit(e: React.FormEvent): void {
     e.preventDefault()
-    if (!online || mutation.isPending) return
-    mutation.mutate()
+    if (!online) return
+    if (challengeToken) {
+      if (!twoFaMutation.isPending) twoFaMutation.mutate()
+      return
+    }
+    if (!mutation.isPending) mutation.mutate()
+  }
+
+  if (challengeToken) {
+    return (
+      <div className="flex flex-col gap-6 rounded-md border border-border bg-card p-8">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-h2 text-foreground">{t('accounts.login2fa.title')}</h1>
+          <p className="text-small text-muted-foreground">{t('accounts.login2fa.body')}</p>
+        </div>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <label className="flex flex-col gap-1.5">
+            <span data-shell-label className="text-small text-foreground">
+              {t('accounts.login2fa.code')}
+            </span>
+            <Input
+              name="code"
+              inputMode="text"
+              autoComplete="one-time-code"
+              autoFocus
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </label>
+          {failed ? (
+            <p role="alert" data-shell-label className="text-small text-destructive">
+              {t('accounts.login2fa.error')}
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={twoFaMutation.isPending}
+            disabled={!online}
+          >
+            {t('accounts.login2fa.submit')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setChallengeToken(null)
+              setCode('')
+              setFailed(false)
+            }}
+          >
+            {t('accounts.login2fa.back')}
+          </Button>
+        </form>
+      </div>
+    )
   }
 
   return (
@@ -120,6 +195,13 @@ export function LoginRoute() {
         >
           {t('login.submit')}
         </Button>
+
+        <p className="text-center text-small text-muted-foreground">
+          {t('accounts.login.registerPrompt')}{' '}
+          <Link to="/register" className="text-foreground underline underline-offset-2">
+            {t('accounts.login.registerLink')}
+          </Link>
+        </p>
       </form>
     </div>
   )

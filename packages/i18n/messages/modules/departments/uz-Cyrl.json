@@ -1,0 +1,135 @@
+{
+  "departments": {
+    "title": "Бўлимлар",
+    "landing": {
+      "title": "Бошлаш учун бўлим танланг",
+      "body": "Ҳозирча ҳеч қандай бўлимга аъзо эмассиз. Янги бўлим яратинг ёки мавжуд бўлимга қўшилинг.",
+      "createCta": "Бўлим яратиш",
+      "joinCta": "Бўлимга қўшилиш"
+    },
+    "create": {
+      "title": "Янги бўлим сўрови",
+      "subtitle": "Сўровингиз супер администраторга юборилади ва тасдиқлангач бўлим яратилади.",
+      "name": "Бўлим номи",
+      "description": "Тавсиф (ихтиёрий)",
+      "unitsTitle": "Бўлинмалар (ихтиёрий)",
+      "unitName": "Бўлинма номи",
+      "unitColour": "Ранг",
+      "addUnit": "Бўлинма қўшиш",
+      "removeUnit": "Ўчириш",
+      "locale": "Тил",
+      "submit": "Сўров юбориш",
+      "submitted": "Сўровингиз юборилди"
+    },
+    "pending": {
+      "title": "Сўровингиз кўриб чиқилмоқда",
+      "body": "Супер администратор сўровингизни тез орада кўриб чиқади.",
+      "status": {
+        "pending": "Кутилмоқда",
+        "approved": "Тасдиқланди",
+        "rejected": "Рад этилди"
+      },
+      "reasonLabel": "Сабаб",
+      "createAnother": "Янги сўров юбориш"
+    },
+    "approvalQueue": {
+      "title": "Бўлим сўровлари",
+      "empty": {
+        "title": "Кўриб чиқилмаган сўровлар ёъқ"
+      },
+      "requestedBy": "Сўров берувчи",
+      "unitsCount": "{count} та бўлинма",
+      "approve": "Тасдиқлаш",
+      "reject": "Рад этиш",
+      "rejectDialogTitle": "Сўровни рад этиш",
+      "rejectReasonLabel": "Сабаб",
+      "rejectSubmit": "Рад этиш",
+      "approvedToast": "Бўлим яратилди",
+      "rejectedToast": "Сўров рад этилди",
+      "filterAll": "Барчаси",
+      "filterPending": "Кутилмоқда"
+    },
+    "invite": {
+      "title": "Таклиф",
+      "link": "Ҳавола",
+      "copyLink": "Ҳаволани нусхалаш",
+      "qrLabel": "ҚР код",
+      "keyLabel": "Калит",
+      "passwordLabel": "Парол",
+      "copyInvite": "Таклифни нусхалаш",
+      "copiedInvite": "Таклиф матни нусхаланди",
+      "copiedLink": "Ҳавола нусхаланди",
+      "inviteText": "Бизнинг бўлимга қўшилинг: {link}, парол: {password}",
+      "rotateKey": "Калитни янгилаш",
+      "rotatePassword": "Паролни янгилаш",
+      "rotateKeyConfirm": "Эски ҳавола ишламай қолади. Калитни янгилайсизми?",
+      "rotatePasswordConfirm": "Эски парол ишламай қолади. Паролни янгилайсизми?",
+      "setPassword": "Паролни ўзим белгилайман",
+      "setPasswordSubmit": "Сақлаш",
+      "approvalToggleLabel": "Қўшилишни тасдиқлаш",
+      "approvalToggleBody": "Ёқилган бўлса, янги аъзолар бошлиқ тасдиқлашини кутади.",
+      "passwordHiddenNotice": "Хавфсизлик учун парол фақат яратилган/янгиланган пайтда кўрсатилади.",
+      "saveNowWarning": "Буни ҳозир сақлаб қўйинг — кейинроқ қайта кўрсатилмайди."
+    },
+    "join": {
+      "title": "Бўлимга қўшилиш",
+      "byLink": {
+        "title": "Сиз таклиф қилинйапсиз",
+        "body": "{name} бўлимига қўшилиш учун паролни киритинг."
+      },
+      "byForm": {
+        "title": "Калит ва парол орқали қўшилиш",
+        "keyLabel": "Таклиф калити",
+        "passwordLabel": "Парол"
+      },
+      "submit": "Қўшилиш",
+      "success": "Бўлимга қўшилдингиз",
+      "pendingApproval": "Сўровингиз бошлиқ томонидан тасдиқланиши керак",
+      "invalidKeyOrPassword": "Калит ёки парол нотўғри",
+      "rateLimited": "Жуда кўп уриниш. Бироздан сўнг қайта уриниб кўринг."
+    },
+    "members": {
+      "title": "Аъзолар",
+      "empty": {
+        "title": "Аъзолар ёъқ"
+      },
+      "roleHead": "Бошлиқ",
+      "roleMember": "Аъзо",
+      "statusPending": "Тасдиқланиши кутилмоқда",
+      "joinedAt": "Қўшилган сана: {date}",
+      "remove": "Ўчириш",
+      "removeConfirm": "{name}ни бўлимдан чиқарасизми?",
+      "removedToast": "Аъзо ўчирилди",
+      "leave": "Бўлимдан чиқиш",
+      "leaveConfirm": "Ростдан ҳам бўлимдан чиқмоқчимисиз?",
+      "leaveBlockedHead": "Бошлиқ сифатида аввал бошқа аъзога ваколатни топширинг.",
+      "leftToast": "Бўлимдан чиқдингиз",
+      "transfer": "Бошлиқликни топшириш",
+      "transferConfirm": "Бошлиқлик {name}га топширилади. Давом этасизми?",
+      "transferredToast": "Бошлиқлик топширилди"
+    },
+    "settings": {
+      "title": "Бўлим созламалари",
+      "general": "Умумий",
+      "name": "Номи",
+      "description": "Тавсиф",
+      "allowSelfAssign": "Аъзолар ўзини бўлинмага тайинлаши мумкин",
+      "allowStructureEdit": "Аъзолар тузилмани таҳрирлаши мумкин",
+      "telegramGroupLabel": "Телеграм гуруҳини ким улаши мумкин",
+      "telegramEveryone": "Барча аъзолар",
+      "telegramHeadOnly": "Фақат бошлиқ",
+      "quietHoursLabel": "Тинч соатлар",
+      "quietHoursStart": "Бошланиши",
+      "quietHoursEnd": "Тугаши",
+      "saved": "Созламалар сақланди",
+      "dangerZone": "Хавфли ҳудуд",
+      "requestDeletion": "Бўлимни ўчиришни сўраш",
+      "requestDeletionConfirm": "Супер администратор сўровни кўриб чиқади. Давом этасизми?",
+      "deletionRequested": "Ўчириш сўралди"
+    },
+    "switcher": {
+      "label": "Бўлимни алмаштириш",
+      "current": "Жорий бўлим"
+    }
+  }
+}

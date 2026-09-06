@@ -1,0 +1,108 @@
+{
+  "accounts": {
+    "login2fa": {
+      "title": "Ikki bosqichli tekshiruv",
+      "body": "Autentifikatsiya ilovasidagi 6 xonali kodni yoki tiklash kodlaringizdan birini kiriting.",
+      "code": "Kod",
+      "error": "Kod noto'g'ri yoki muddati o'tgan. Qayta urinib ko'ring.",
+      "submit": "Tasdiqlash",
+      "back": "Ortga qaytish"
+    },
+    "login": {
+      "registerPrompt": "Hisobingiz yo'qmi?",
+      "registerLink": "Ro'yxatdan o'tish"
+    },
+    "register": {
+      "title": "Ro'yxatdan o'tish",
+      "subtitle": "Devon'dan foydalanish uchun hisob yarating.",
+      "login": "Login",
+      "loginHint": "Kichik lotin harflar, raqamlar, nuqta, tire",
+      "email": "Elektron pochta (ixtiyoriy)",
+      "password": "Parol",
+      "passwordHint": "Kamida 12 ta belgi",
+      "givenName": "Ism",
+      "familyName": "Familiya",
+      "patronymic": "Sharif (ixtiyoriy)",
+      "jobTitle": "Lavozim (ixtiyoriy)",
+      "locale": "Til",
+      "submit": "Hisob yaratish",
+      "loginPrompt": "Hisobingiz bormi?",
+      "loginLink": "Kirish",
+      "error": {
+        "conflict": "Bu login band. Boshqasini tanlang.",
+        "generic": "Ro'yxatdan o'tib bo'lmadi. Ma'lumotlarni tekshirib, qayta urinib ko'ring."
+      }
+    },
+    "sessions": {
+      "title": "Qurilmalar va seanslar",
+      "subtitle": "Hisobingizga kirilgan barcha qurilmalar ro'yxati.",
+      "empty": { "title": "Faol seanslar yo'q" },
+      "current": "Joriy qurilma",
+      "lastSeen": "Oxirgi faollik: {when}",
+      "revoke": "Chiqish",
+      "revokeAll": "Barcha qurilmalardan chiqish",
+      "revokeAllConfirm": "Barcha qurilmalardan, jumladan joriy qurilmadan ham chiqasiz. Davom etasizmi?",
+      "revokedToast": "Qurilmadan chiqildi",
+      "revokedAllToast": "Barcha qurilmalardan chiqildi"
+    },
+    "twoFactor": {
+      "title": "Ikki bosqichli tekshiruv (2FA)",
+      "subtitle": "Autentifikatsiya ilovasi orqali hisobingizni qo'shimcha himoya qiling.",
+      "enabled": "Yoqilgan",
+      "disabled": "O'chirilgan",
+      "enable": "Yoqish",
+      "disable": "O'chirish",
+      "enroll": {
+        "step1": "1-qadam: QR yoki kodni skanerlang",
+        "secretLabel": "Qo'lda kiritish uchun kalit",
+        "codeLabel": "Ilovadagi 6 xonali kod",
+        "verify": "Tasdiqlash va yoqish",
+        "error": "Kod noto'g'ri. Ilovadagi vaqt to'g'riligini tekshiring.",
+        "recoveryTitle": "Zaxira kodlarni saqlab qo'ying",
+        "recoveryBody": "Bu kodlar faqat bir marta ko'rsatiladi. Telefoningiz yo'qolsa, ulardan foydalanib kirishingiz mumkin.",
+        "recoveryCopied": "Kodlar nusxalandi",
+        "done": "Tayyor"
+      },
+      "disableDialog": {
+        "title": "2FA'ni o'chirish",
+        "passwordLabel": "Parolingizni tasdiqlang",
+        "submit": "O'chirish",
+        "error": "Parol noto'g'ri"
+      }
+    },
+    "password": {
+      "title": "Parolni almashtirish",
+      "current": "Joriy parol",
+      "new": "Yangi parol",
+      "submit": "Saqlash",
+      "success": "Parol yangilandi",
+      "error": "Joriy parol noto'g'ri"
+    },
+    "delete": {
+      "title": "Hisobni o'chirish",
+      "warning": "Hisobingiz 30 kundan so'ng butunlay o'chiriladi va shaxsiy ma'lumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin.",
+      "confirm": "O'chirishni so'rash",
+      "confirmDialog": "Hisobingizni rostdan ham o'chirmoqchimisiz?",
+      "cancel": "Bekor qilish",
+      "scheduled": "Hisobingiz {date} sanasida o'chiriladi.",
+      "cancelled": "O'chirish so'rovi bekor qilindi"
+    },
+    "admin": {
+      "resetPassword": {
+        "title": "Parolni tiklash",
+        "button": "Vaqtinchalik parol berish",
+        "confirm": "Bu foydalanuvchi uchun vaqtinchalik parol yaratilsin va barcha seanslari yopilsinmi?",
+        "success": "Vaqtinchalik parol yaratildi",
+        "tempPasswordLabel": "Vaqtinchalik parol (faqat hozir ko'rinadi)",
+        "copy": "Nusxalash",
+        "copied": "Nusxalandi"
+      }
+    },
+    "settings": {
+      "title": "Hisob sozlamalari",
+      "profile": "Profil",
+      "security": "Xavfsizlik",
+      "dangerZone": "Xavfli hudud"
+    }
+  }
+}

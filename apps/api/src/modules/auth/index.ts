@@ -1,5 +1,8 @@
 // POST /api/v1/auth/login (public, rate-limited) and POST /api/v1/auth/logout (authenticated) --
-// design.md §1.7, AC-13.
+// design.md §1.7, AC-13. EPIC-001 adds the optional second factor: when the account has TOTP enabled
+// (`app.user_security`, `modules/accounts/repo.ts`), a verified password no longer starts a session by
+// itself -- it starts a short-lived challenge instead, completed at `POST
+// /accounts/2fa/login-verify` (`modules/accounts/index.ts`).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { loginBodySchema } from '../../schemas.js'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -43,6 +46,13 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
 
       if (!user || !passwordOk || user.status !== 'active') {
         sendProblem(reply, 'unauthenticated')
+        return
+      }
+
+      const twoFactor = await app.devon.getTwoFactorStatus(user.id)
+      if (twoFactor.enabled) {
+        const challengeToken = await app.devon.createLoginChallenge(user.id)
+        reply.code(200).send({ requires2fa: true, challengeToken })
         return
       }
 
