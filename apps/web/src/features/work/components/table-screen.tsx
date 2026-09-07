@@ -7,6 +7,7 @@
 // transform-based offset, which browsers do not reliably honour on a genuine table-row element.
 import * as React from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { AnimatePresence, motion } from 'motion/react'
 import {
   AlertCircle,
   ArrowDown,
@@ -30,9 +31,11 @@ import {
   Input,
   Select,
   Skeleton,
+  springSettle,
   StateView,
   cn,
   toastWithUndo,
+  useReducedMotion,
 } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
@@ -150,6 +153,7 @@ function SortHeader({
 
 export default function TableScreen() {
   const t = useT()
+  const reducedMotion = useReducedMotion()
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
@@ -361,18 +365,34 @@ export default function TableScreen() {
     <>
       <WorkShell filterLayout="table">
         <div className="flex h-full flex-col gap-2">
-          <div className="flex min-h-9 items-center gap-2">
-            {selected.size > 0 ? (
-              <BulkBar
-                count={selected.size}
-                members={members}
-                labels={labels}
-                onAssign={(id) => void bulkAssign(id)}
-                onAddLabel={(id) => void bulkAddLabel(id)}
-                onArchive={() => void bulkArchive()}
-                onClear={() => setSelected(new Set())}
-              />
-            ) : (
+          <div className="relative flex min-h-9 items-center gap-2">
+            {/* round2 SEV2: the bulk bar used to simply appear the instant a row was checked --
+                sliding up from the header's bottom edge (springSettle, the same spring the app's
+                sheets settle with) reads as "this appeared because you selected something" instead
+                of a layout flicker. */}
+            <AnimatePresence>
+              {selected.size > 0 ? (
+                <motion.div
+                  key="bulk-bar"
+                  className="absolute inset-x-0 top-0"
+                  initial={reducedMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={reducedMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
+                  transition={reducedMotion ? { duration: 0.15 } : springSettle}
+                >
+                  <BulkBar
+                    count={selected.size}
+                    members={members}
+                    labels={labels}
+                    onAssign={(id) => void bulkAssign(id)}
+                    onAddLabel={(id) => void bulkAddLabel(id)}
+                    onArchive={() => void bulkArchive()}
+                    onClear={() => setSelected(new Set())}
+                  />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+            {selected.size === 0 ? (
               <div
                 role="group"
                 aria-label={t('work.table.density.label')}
@@ -395,7 +415,7 @@ export default function TableScreen() {
                   </button>
                 ))}
               </div>
-            )}
+            ) : null}
           </div>
           <div className="min-h-0 flex-1">{body}</div>
         </div>
