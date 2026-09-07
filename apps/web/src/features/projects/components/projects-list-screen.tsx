@@ -3,7 +3,7 @@
 // with a way to start a new one.
 import type * as React from 'react'
 import { useT } from '@devon/i18n'
-import { PageHeader, Skeleton, StateView } from '@devon/ui'
+import { PageHeader, Skeleton, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { useProjectsQuery } from '../hooks.js'
 import { CreateProjectDialog } from './create-project-dialog.js'
 import { ProjectTile } from './project-tile.js'
@@ -34,11 +34,13 @@ export default function ProjectsListScreen() {
     body = <StateView kind="empty" titleKey="projects.emptyTitle" bodyKey="projects.emptyBody" />
   } else {
     body = (
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {projectsQuery.data!.map((project) => (
-          <ProjectTile key={project.id} project={project} />
+          <StaggerItem key={project.id}>
+            <ProjectTile project={project} />
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     )
   }
 

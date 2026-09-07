@@ -3,7 +3,17 @@
 // history. `?tab=onboarding` switches the list view to the onboarding checklist template editor.
 import * as React from 'react'
 import { useT, formatDate, useLocale } from '@devon/i18n'
-import { AnimatedCheck, Button, HoverLift, Input, PageHeader, StateView, toast } from '@devon/ui'
+import {
+  AnimatedCheck,
+  Button,
+  HoverLift,
+  Input,
+  PageHeader,
+  Stagger,
+  StaggerItem,
+  StateView,
+  toast,
+} from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
@@ -175,9 +185,9 @@ function PageList({
               {t(`pages.kind.${kind}`)}
               <span className="text-caption tabular-nums">({kindPages.length})</span>
             </h2>
-            <ul className="flex flex-col gap-1">
+            <Stagger as="ul" className="flex flex-col gap-1">
               {kindPages.map((page) => (
-                <li key={page.id}>
+                <StaggerItem as="li" key={page.id}>
                   <HoverLift>
                     <button
                       type="button"
@@ -196,9 +206,9 @@ function PageList({
                       </span>
                     </button>
                   </HoverLift>
-                </li>
+                </StaggerItem>
               ))}
-            </ul>
+            </Stagger>
           </section>
         )
       })}

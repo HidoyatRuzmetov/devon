@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import { AlertCircle, Clock3 } from 'lucide-react'
-import { Badge, Skeleton, StateView } from '@devon/ui'
+import { Badge, HoverLift, PressScale, Skeleton, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useCardsQuery } from '../hooks.js'
 import {
@@ -19,7 +19,17 @@ import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
 
-function Group({ titleKey, cards, locale }: { titleKey: string; cards: Card[]; locale: Locale }) {
+function Group({
+  titleKey,
+  cards,
+  locale,
+  animateKey,
+}: {
+  titleKey: string
+  cards: Card[]
+  locale: Locale
+  animateKey: string
+}) {
   const t = useT()
   if (cards.length === 0) return null
   return (
@@ -27,41 +37,48 @@ function Group({ titleKey, cards, locale }: { titleKey: string; cards: Card[]; l
       <h3 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
         {t(titleKey)} ({cards.length})
       </h3>
-      <div className="flex flex-col gap-1.5">
+      <Stagger className="flex flex-col gap-1.5" animateKey={animateKey}>
         {cards.map((card) => (
-          <button
-            key={card.id}
-            type="button"
-            onClick={() => openCardPeek(card.id)}
-            className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-3 text-left hover:border-ring/50"
-          >
-            <span className="min-w-0 flex-1 truncate text-small text-foreground">{card.title}</span>
-            <span className="flex shrink-0 items-center gap-2">
-              {card.priority !== 'none' ? (
-                <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
-                  {t(PRIORITY_LABEL_KEY[card.priority])}
-                </Badge>
-              ) : null}
-              {card.risk !== 'none'
-                ? (() => {
-                    const RiskIcon = RISK_ICON[RISK_ICON_NAME[card.risk]!]
-                    return (
-                      <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
-                        <RiskIcon className="size-3" aria-hidden="true" />
-                        {t(RISK_LABEL_KEY[card.risk])}
+          <StaggerItem key={card.id}>
+            <HoverLift className="rounded-md">
+              <PressScale>
+                <button
+                  type="button"
+                  onClick={() => openCardPeek(card.id)}
+                  className="flex w-full items-center justify-between gap-3 rounded-md border border-border bg-card p-3 text-left hover:border-ring/50"
+                >
+                  <span className="min-w-0 flex-1 truncate text-small text-foreground">
+                    {card.title}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {card.priority !== 'none' ? (
+                      <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
+                        {t(PRIORITY_LABEL_KEY[card.priority])}
                       </Badge>
-                    )
-                  })()
-                : null}
-              {card.dueAt ? (
-                <span className="text-caption text-muted-foreground">
-                  {formatDate(new Date(card.dueAt), locale)}
-                </span>
-              ) : null}
-            </span>
-          </button>
+                    ) : null}
+                    {card.risk !== 'none'
+                      ? (() => {
+                          const RiskIcon = RISK_ICON[RISK_ICON_NAME[card.risk]!]
+                          return (
+                            <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
+                              <RiskIcon className="size-3" aria-hidden="true" />
+                              {t(RISK_LABEL_KEY[card.risk])}
+                            </Badge>
+                          )
+                        })()
+                      : null}
+                    {card.dueAt ? (
+                      <span className="text-caption text-muted-foreground">
+                        {formatDate(new Date(card.dueAt), locale)}
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              </PressScale>
+            </HoverLift>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     </div>
   )
 }
@@ -104,9 +121,19 @@ export default function MineScreen() {
   } else {
     body = (
       <div className="flex flex-col gap-6">
-        <Group titleKey="work.mine.overdue" cards={overdue} locale={locale} />
-        <Group titleKey="work.mine.atRisk" cards={atRisk} locale={locale} />
-        <Group titleKey="work.mine.rest" cards={rest} locale={locale} />
+        <Group
+          titleKey="work.mine.overdue"
+          cards={overdue}
+          locale={locale}
+          animateKey={combinedQuery}
+        />
+        <Group
+          titleKey="work.mine.atRisk"
+          cards={atRisk}
+          locale={locale}
+          animateKey={combinedQuery}
+        />
+        <Group titleKey="work.mine.rest" cards={rest} locale={locale} animateKey={combinedQuery} />
       </div>
     )
   }

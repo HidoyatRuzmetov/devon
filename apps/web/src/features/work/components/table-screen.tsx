@@ -502,7 +502,15 @@ function TableRow({
           openCardPeek(card.id)
         }
       }}
-      className="grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      // UI-OVERHAUL.md §3 "Lists, grids, tiles": every row still enters with a fade + rise -- but
+      // this list is `useVirtualizer`-backed (rows mount and unmount continuously as the 200+-row
+      // table scrolls), so a JS `Stagger`/`StaggerItem` pair here would mean mounting a fresh
+      // framer-motion instance, with its own per-item stagger delay, on every scroll tick. A plain
+      // CSS keyframe (transform/opacity only, the same `devon-rise-in` the hover-card row uses, no
+      // per-item delay) gets the same "this just arrived" read at virtualization speed with zero JS
+      // animation cost per row, and the global reduced-motion backstop in `tokens.css` still
+      // collapses it to an instant appearance.
+      className="grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring animate-[devon-rise-in_160ms_var(--ease-out)]"
     >
       <Checkbox
         checked={checked}

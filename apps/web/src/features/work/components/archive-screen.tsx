@@ -4,7 +4,7 @@
 // server's `GET /api/v1/archive` has no special-case for "my own" vs "someone else's").
 import * as React from 'react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import { Badge, Button, Skeleton, StateView } from '@devon/ui'
+import { Badge, Button, Skeleton, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
 import { useArchiveQuery, useMembers, useRestoreCardMutation } from '../hooks.js'
 import { PRIORITY_BADGE_TONE, PRIORITY_LABEL_KEY } from '../lib/format.js'
@@ -46,9 +46,9 @@ export default function ArchiveScreen() {
     )
   } else {
     body = (
-      <div className="flex flex-col gap-2">
+      <Stagger className="flex flex-col gap-2" animateKey={userId ?? ''}>
         {archiveQuery.data!.items.map((card) => (
-          <div
+          <StaggerItem
             key={card.id}
             className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-3"
           >
@@ -74,9 +74,9 @@ export default function ArchiveScreen() {
             >
               {t('work.card.restore')}
             </Button>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     )
   }
 
