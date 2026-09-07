@@ -205,6 +205,10 @@
         "health": "Health",
         "settings": "Settings"
       },
+      "viewAsBanner": {
+        "message": "You are viewing a department as a read-only lens (view-as).",
+        "exit": "Exit view-as"
+      },
       "dashboard": {
         "userCount": "User count",
         "registration": "Registration",

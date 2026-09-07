@@ -13,7 +13,6 @@ import {
   restoreDepartment,
   resumeDepartment,
   startViewAs,
-  stopViewAs,
   type AdminDepartmentRow,
 } from './api.js'
 import { AdminScreen } from './admin-screen.js'
@@ -80,10 +79,6 @@ function DepartmentsBody() {
       navigate('/')
     },
   })
-  const stopViewing = useMutation({
-    mutationFn: () => stopViewAs(csrfToken),
-    onSuccess: () => toast(t('admin.console.departments.viewAsStoppedToast')),
-  })
 
   if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (listQuery.isError) {
@@ -106,16 +101,6 @@ function DepartmentsBody() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => stopViewing.mutate()}
-          loading={stopViewing.isPending}
-        >
-          {t('admin.console.departments.stopViewingAs')}
-        </Button>
-      </div>
       <div className="flex flex-wrap items-center gap-3">
         <Input
           value={query}

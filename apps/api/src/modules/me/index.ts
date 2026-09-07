@@ -17,6 +17,7 @@ function toMe(
   memberships: readonly MembershipRecord[],
   isDemo: boolean,
   csrfToken: string,
+  viewAsDepartmentId: string | null,
 ) {
   return {
     user: toPublicUser(user),
@@ -31,7 +32,17 @@ function toMe(
     // until one exists -- `useDepartment()`'s client-side override still wins in the browser for
     // anyone who has picked a different one (`activeDepartmentId` here only seeds that resolution
     // order's first candidate).
-    activeDepartmentId: memberships[0]?.departmentId ?? null,
+    //
+    // Blitz integration fix: a super admin's own `memberships` is always empty (I-8b: super_admin is
+    // an instance-wide role, never also a department membership), so without this the field was always
+    // `null` while "viewing as" a department -- `useDepartment()` (`apps/web/src/lib/session.ts`)
+    // resolves `serverActiveId ?? override ?? memberships[0] ?? null`, and with `memberships` empty its
+    // `override` branch can never match either (`memberships.some(...)` is vacuously false), so every
+    // screen that reads `useDepartment()` to know which department it is looking at saw `null` and had
+    // nothing to render, even once `plugins/session.ts`'s matching fix let the actual API calls
+    // through. `viewAsDepartmentId` (from `req.actor.viewAs`, set only for a super_admin who started
+    // view-as, TECH-SPEC §10/I-8a) takes the same precedence a real membership already gets.
+    activeDepartmentId: viewAsDepartmentId ?? memberships[0]?.departmentId ?? null,
     actingForUserId: null,
     instance: { isDemo, maintenance: false },
     csrfToken,
@@ -56,7 +67,15 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         app.devon.listActiveMembershipsForUser(req.actorUser!.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(toMe(req.actorUser!, memberships, settings.isDemo, csrfToken))
+      reply.send(
+        toMe(
+          req.actorUser!,
+          memberships,
+          settings.isDemo,
+          csrfToken,
+          req.actor?.viewAs?.departmentId ?? null,
+        ),
+      )
     },
   )
 
@@ -87,7 +106,15 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         app.devon.listActiveMembershipsForUser(updated.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(toMe(updated, memberships, settings.isDemo, csrfToken))
+      reply.send(
+        toMe(
+          updated,
+          memberships,
+          settings.isDemo,
+          csrfToken,
+          req.actor?.viewAs?.departmentId ?? null,
+        ),
+      )
     },
   )
 }

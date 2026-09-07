@@ -62,7 +62,22 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
         req.cookies[VIEW_AS_COOKIE_NAME],
         app.devonConfig.CSRF_SECRET,
       )
-      if (departmentId) req.actor = { ...req.actor, viewAs: { departmentId } }
+      // Blitz integration fix: every module's route-level permission subject is built from
+      // `req.actor.departmentId` (e.g. `modules/work/index.ts`'s `requireDepartmentId`,
+      // `modules/events/index.ts`'s equivalent) -- never from `req.actor.viewAs` directly. Setting
+      // `viewAs` alone here left `departmentId` at whatever `buildActor()` computed from the super
+      // admin's own (always empty) `memberships`, i.e. always `null`, so every department-scoped read
+      // route resolved an empty/`null` departmentId, `can()`'s `findMembership` missed, and the
+      // `viewAs` fallback branch below it never matched either (`actor.viewAs.departmentId` was the
+      // real id, but `subject.departmentId` was `''`) -- every screen a super admin opened while
+      // "viewing as" a department 403'd, making the whole read-only lens (I-8a, TECH-SPEC §10)
+      // non-functional end to end. `can()` itself never reads `actor.departmentId` for its decision
+      // (only `actor.memberships` and `actor.viewAs`, see `packages/contracts/src/permissions.ts`), so
+      // overriding it here only changes *which* department a route resolves to query -- it cannot
+      // widen what `can()` allows: a super_admin's `memberships` stays empty, so `findMembership` still
+      // misses, and P4's `read_only_view_as` denial for every non-read action still applies exactly as
+      // before, now correctly matching the real department id instead of an empty string.
+      if (departmentId) req.actor = { ...req.actor, departmentId, viewAs: { departmentId } }
     }
 
     // Sliding idle window (TECH-SPEC §2.1: 12h idle / 30d absolute). Fire-and-forget: a slightly stale

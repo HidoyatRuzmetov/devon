@@ -205,6 +205,10 @@
         "health": "Holat",
         "settings": "Sozlamalar"
       },
+      "viewAsBanner": {
+        "message": "Siz hozir bir bo'limni ko'rinish sifatida (faqat o'qish) ko'rmoqdasiz.",
+        "exit": "Ko'rinishni yopish"
+      },
       "dashboard": {
         "userCount": "Foydalanuvchilar soni",
         "registration": "Ro'yxatdan o'tish",
