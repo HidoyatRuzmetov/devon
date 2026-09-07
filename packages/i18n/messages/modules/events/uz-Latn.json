@@ -12,6 +12,7 @@
       "edit": "Tahrirlash",
       "save": "Saqlash",
       "cancelEvent": "Tadbirni bekor qilish",
+      "moreActions": "Qo'shimcha amallar",
       "close": "Yopish",
       "retry": "Qayta urinish",
       "back": "Orqaga"
@@ -126,7 +127,7 @@
     },
     "cancelDialog": {
       "title": "Tadbirni bekor qilish",
-      "body": "Roʻyxatdan oʻtgan barcha xodimlarga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi.",
+      "body": "\"{title}\" bekor qilinadi va roʻyxatdan oʻtgan {count} kishiga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi.",
       "reasonLabel": "Sabab",
       "reasonPlaceholder": "Xodimlarga tushuntiring",
       "confirm": "Ha, bekor qilish",

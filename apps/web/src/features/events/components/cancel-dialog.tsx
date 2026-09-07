@@ -10,11 +10,18 @@ export function CancelDialog({
   open,
   onOpenChange,
   eventId,
+  eventTitle,
+  notifyCount,
   onCancelled,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   eventId: string
+  /** Named in the confirmation body (DESIGN.md §9.5: a destructive dialog names what it acts on),
+   *  not just a generic "this event". */
+  eventTitle: string
+  /** Everyone who RSVPed (going + maybe + waitlist) -- exactly who `cancelEvent` notifies. */
+  notifyCount: number
   onCancelled: () => void
 }) {
   const t = useT()
@@ -41,7 +48,9 @@ export function CancelDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent title={t('events.cancelDialog.title')} className="max-w-110">
         <div className="mt-4 flex flex-col gap-4">
-          <p className="text-body text-muted-foreground">{t('events.cancelDialog.body')}</p>
+          <p className="text-body text-muted-foreground">
+            {t('events.cancelDialog.body', { title: eventTitle, count: notifyCount })}
+          </p>
           <Field label={t('events.cancelDialog.reasonLabel')} htmlFor="cancel-reason">
             <Textarea
               id="cancel-reason"

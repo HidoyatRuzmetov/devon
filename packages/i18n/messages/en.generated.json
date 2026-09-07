@@ -1136,6 +1136,7 @@
       "edit": "Edit",
       "save": "Save",
       "cancelEvent": "Cancel event",
+      "moreActions": "More actions",
       "close": "Close",
       "retry": "Retry",
       "back": "Back"
@@ -1250,7 +1251,7 @@
     },
     "cancelDialog": {
       "title": "Cancel event",
-      "body": "Everyone who RSVPed will be notified. This cannot be undone.",
+      "body": "\"{title}\" will be cancelled and {count} people who RSVPed will be notified. This cannot be undone.",
       "reasonLabel": "Reason",
       "reasonPlaceholder": "Let people know what happened",
       "confirm": "Yes, cancel",

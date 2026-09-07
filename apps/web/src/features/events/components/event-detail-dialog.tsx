@@ -10,6 +10,11 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  IconButton,
   Progress,
   Reveal,
   Sheet,
@@ -22,7 +27,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { ExternalLink, Pencil, Ban, Download, Users } from 'lucide-react'
+import { ExternalLink, Pencil, Ban, Download, MoreVertical, Users } from 'lucide-react'
 import { ApiError } from '../../../lib/api-client.js'
 import { fetchEventIcs } from '../api.js'
 import { useEventQuery, useRsvpsQuery, useUpdateEventMutation } from '../hooks.js'
@@ -247,10 +252,26 @@ function EventHeader({
                 <Pencil className="size-3.5" aria-hidden="true" />
                 {t('events.actions.edit')}
               </Button>
-              <Button variant="destructive" size="sm" onClick={onCancel}>
-                <Ban className="size-3.5" aria-hidden="true" />
-                {t('events.actions.cancelEvent')}
-              </Button>
+              {/* DESIGN.md §9.5: destructive actions sit behind an overflow, not in the primary
+                  action row a tab-stop from "Tahrirlash" -- the confirmation dialog it opens
+                  (cancel-dialog.tsx) is the real gate; this just keeps the button from being the
+                  easiest thing to hit by accident. */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <IconButton aria-label={t('events.actions.moreActions')}>
+                    <MoreVertical className="size-4" aria-hidden="true" />
+                  </IconButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onSelect={onCancel}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Ban className="size-3.5" aria-hidden="true" />
+                    {t('events.actions.cancelEvent')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : null}
         </div>
@@ -440,12 +461,18 @@ export function EventDetailDialog({
         />
       ) : null}
 
-      <CancelDialog
-        open={cancelling}
-        onOpenChange={setCancelling}
-        eventId={eventId}
-        onCancelled={() => setCancelling(false)}
-      />
+      {eventQuery.data ? (
+        <CancelDialog
+          open={cancelling}
+          onOpenChange={setCancelling}
+          eventId={eventId}
+          eventTitle={eventQuery.data.title}
+          notifyCount={
+            eventQuery.data.goingCount + eventQuery.data.maybeCount + eventQuery.data.waitlistCount
+          }
+          onCancelled={() => setCancelling(false)}
+        />
+      ) : null}
     </>
   )
 }
