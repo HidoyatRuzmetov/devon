@@ -46,7 +46,8 @@
       "addSubjectivePlaceholder": "Add a personal card"
     },
     "action": {
-      "archive": "Archive project"
+      "archive": "Archive project",
+      "archived": "\"{title}\" archived"
     },
     "ai": {
       "plan": "Suggest today's order",

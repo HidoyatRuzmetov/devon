@@ -46,7 +46,8 @@
       "addSubjectivePlaceholder": "Shaxsiy vazifa qoʻshish"
     },
     "action": {
-      "archive": "Loyihani arxivlash"
+      "archive": "Loyihani arxivlash",
+      "archived": "\"{title}\" arxivlandi"
     },
     "ai": {
       "plan": "Bugungi tartibni taklif qilish",

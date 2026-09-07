@@ -1,14 +1,23 @@
 // One People-board card (TECH-SPEC §5). Drag source AND drop target at once (a card is both
-// "the thing you pick up" and "the thing you drop next to") via `@atlaskit/pragmatic-drag-and-drop`
-// -- mouse only; `MoveToMenu` below is the keyboard-operable equivalent (TECH-SPEC "works with mouse
-// and keyboard"), reachable from the same card without a pointer, and both paths call the identical
-// `onMoved` prop so `useAnnounce()`'s live region reports the same sentence either way.
+// "the thing you pick up" and "the thing you drop next to"). Two drag adapters, chosen by input
+// type: mouse/pen keeps `@atlaskit/pragmatic-drag-and-drop`'s native HTML5 adapter (enhanced with a
+// custom drag-image preview -- the browser tracks it against the real pointer for free, so this is
+// a genuine pointer-following preview, not a fake one); a touch pointer never fires native HTML5
+// drag events at all, so it runs a second, hand-rolled pointer path (`lib/touch-drag.ts`) with a
+// long-press-to-lift gesture and its own floating preview (`touch-drag-preview.tsx`). `MoveToMenu`
+// below is the keyboard-operable equivalent of both (TECH-SPEC "works with mouse and keyboard"),
+// reachable from the same card without a pointer, and every path calls the identical `onDropped`/
+// `onMoveTo` props so `useAnnounce()`'s live region reports the same sentence regardless of input.
 import * as React from 'react'
+import { createRoot } from 'react-dom/client'
+import { motion } from 'motion/react'
 import {
   draggable,
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine'
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/utils/preserve-offset-on-source'
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/utils/set-custom-native-drag-preview'
 import {
   attachClosestEdge,
   extractClosestEdge,
@@ -42,6 +51,8 @@ import {
   IconButton,
   PressScale,
   initialsFromName,
+  springSettle,
+  useReducedMotion,
 } from '@devon/ui'
 import type { Card, Label, MemberSummary } from '../api.js'
 import type { Project } from '../../projects/api.js'
@@ -53,6 +64,15 @@ import {
   RISK_LABEL_KEY,
   fullName,
 } from '../lib/format.js'
+import { touchDrag } from '../lib/touch-drag.js'
+
+/** A touch drag lifts after this long a press -- long enough that a scroll gesture (which moves the
+ * finger within a few pixels almost immediately) never gets mistaken for a lift, short enough that
+ * a deliberate hold reads as immediate. */
+const TOUCH_LIFT_MS = 350
+/** A touch move before the lift timer fires this far cancels the lift -- the finger is scrolling the
+ * column, not picking up the card. */
+const TOUCH_MOVE_CANCEL_PX = 8
 
 const PRIORITY_ICON = { ChevronsUp, ChevronUp, Minus, ChevronDown } as const
 
@@ -92,9 +112,16 @@ export function CardTile({
   onMoveTo,
 }: CardTileProps) {
   const t = useT()
+  const reducedMotion = useReducedMotion()
   const ref = React.useRef<HTMLDivElement | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
   const [closestEdge, setClosestEdge] = React.useState<Edge | null>(null)
+  const touchLift = React.useRef<{
+    timer: number | null
+    startX: number
+    startY: number
+    active: boolean
+  }>({ timer: null, startX: 0, startY: 0, active: false })
 
   React.useEffect(() => {
     const el = ref.current
@@ -109,6 +136,30 @@ export function CardTile({
         }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
+        // The native drag *image* (what actually tracks the pointer -- the browser, not JS, moves
+        // it) is otherwise a raw screenshot of the source element, edge-clipped by the column's own
+        // `overflow-y-auto`. Rendering a standalone, correctly-sized copy at DESIGN.md's "ghost 0.9"
+        // opacity, offset from the *original* grab point (`preserveOffsetOnSource`), gives desktop
+        // mouse/pen drag the same pointer-following preview the touch path below builds by hand.
+        onGenerateDragPreview: ({ nativeSetDragImage, location }) => {
+          const rect = el.getBoundingClientRect()
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            getOffset: preserveOffsetOnSource({ element: el, input: location.current.input }),
+            render: ({ container }) => {
+              container.style.width = `${rect.width}px`
+              const root = createRoot(container)
+              root.render(
+                <div className="rounded-md border border-border bg-card p-3 text-left opacity-90 shadow-2">
+                  <p className="text-small font-medium leading-snug text-foreground">
+                    {card.title}
+                  </p>
+                </div>,
+              )
+              return () => root.unmount()
+            },
+          })
+        },
       }),
       dropTargetForElements({
         element: el,
@@ -138,6 +189,87 @@ export function CardTile({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [card.id, columnUserId])
 
+  // Touch-only pointer path (item 9): native HTML5 drag (`draggable()` above) never starts from a
+  // touchscreen, so a coarse pointer gets its own long-press-to-lift gesture instead, reusing the
+  // exact `onDropped` contract the mouse path uses -- the board never needs to know which one fired.
+  function findColumnAndCard(
+    x: number,
+    y: number,
+  ): { columnKey: string | null; cardEl: HTMLElement | null } {
+    const el = document.elementFromPoint(x, y)
+    const columnEl = el?.closest<HTMLElement>('[data-dnd-column]') ?? null
+    const cardEl = el?.closest<HTMLElement>('[data-dnd-card]') ?? null
+    return { columnKey: columnEl?.dataset['dndColumn'] ?? null, cardEl }
+  }
+
+  function onTouchPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== 'touch') return
+    // Pointer capture, taken immediately (not just once the lift fires): once the finger travels
+    // past this element's own bounds, an *uncaptured* pointer's move/up events start targeting
+    // whatever element is now underneath it instead -- this card's own handlers would simply stop
+    // firing. Capturing keeps every subsequent event for this `pointerId` routed here regardless of
+    // where the finger physically is, which is what lets `findColumnAndCard` do its own hit-testing
+    // by coordinates instead.
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const startX = e.clientX
+    const startY = e.clientY
+    const timer = window.setTimeout(() => {
+      touchLift.current.active = true
+      setIsDragging(true)
+      touchDrag.start({
+        cardId: card.id,
+        title: card.title,
+        fromUserId: columnUserId,
+        pointerX: startX,
+        pointerY: startY,
+        overColumnKey: null,
+      })
+    }, TOUCH_LIFT_MS)
+    touchLift.current = { timer, startX, startY, active: false }
+  }
+
+  function onTouchPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== 'touch') return
+    const lift = touchLift.current
+    if (!lift.active) {
+      if (
+        lift.timer !== null &&
+        (Math.abs(e.clientX - lift.startX) > TOUCH_MOVE_CANCEL_PX ||
+          Math.abs(e.clientY - lift.startY) > TOUCH_MOVE_CANCEL_PX)
+      ) {
+        window.clearTimeout(lift.timer)
+        lift.timer = null
+      }
+      return
+    }
+    e.preventDefault()
+    const { columnKey } = findColumnAndCard(e.clientX, e.clientY)
+    touchDrag.move({ pointerX: e.clientX, pointerY: e.clientY, overColumnKey: columnKey })
+  }
+
+  function onTouchPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType !== 'touch') return
+    const lift = touchLift.current
+    if (lift.timer !== null) window.clearTimeout(lift.timer)
+    if (lift.active) {
+      const { columnKey, cardEl } = findColumnAndCard(e.clientX, e.clientY)
+      if (columnKey !== null) {
+        const toUserId = columnKey === 'unassigned' ? null : columnKey
+        const targetCardId = cardEl?.dataset['dndCard']
+        if (targetCardId && targetCardId !== card.id) {
+          const rect = cardEl!.getBoundingClientRect()
+          const edge: Edge = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom'
+          onDropped(card.id, { kind: 'onCard', targetCardId, edge, toUserId })
+        } else {
+          onDropped(card.id, { kind: 'appendToColumn', toUserId })
+        }
+      }
+      touchDrag.end()
+      setIsDragging(false)
+    }
+    touchLift.current = { timer: null, startX: 0, startY: 0, active: false }
+  }
+
   const activeLabels = labels.filter((l) => card.labels.includes(l.id))
   const priorityKey = PRIORITY_LABEL_KEY[card.priority]
   const showPriority = card.priority !== 'none'
@@ -152,6 +284,7 @@ export function CardTile({
       role="button"
       tabIndex={0}
       data-dragging={isDragging || undefined}
+      data-dnd-card={card.id}
       onClick={() => onOpen(card.id)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -159,10 +292,14 @@ export function CardTile({
           onOpen(card.id)
         }
       }}
-      className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-left shadow-1
+      onPointerDown={onTouchPointerDown}
+      onPointerMove={onTouchPointerMove}
+      onPointerUp={onTouchPointerUp}
+      onPointerCancel={onTouchPointerUp}
+      className="group flex touch-pan-y flex-col gap-2 rounded-md border border-border bg-card p-3 text-left shadow-1
         transition-colors duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
         focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-        data-[dragging]:opacity-40"
+        data-[dragging]:touch-none data-[dragging]:opacity-40"
     >
       {activeLabels.length > 0 ? (
         <div className="flex flex-wrap gap-1">
@@ -267,7 +404,18 @@ export function CardTile({
   )
 
   return (
-    <div className="relative">
+    // `layoutId` (not just `layout`): dropping a card moves it into a *different* column's list, a
+    // different React parent, so a plain `layout` (which only tracks one mounted instance) would see
+    // an unmount-here/mount-there pair with no animation. A shared `layoutId` bridges the two mounts
+    // into one FLIP transition on `spring.settle` -- DESIGN.md's own "drop settle" token -- so the
+    // card visibly glides to its new slot instead of popping there. `layout="position"` only, so the
+    // card's own text never stretches mid-animation.
+    <motion.div
+      layout="position"
+      layoutId={`work-card-${card.id}`}
+      transition={reducedMotion ? { duration: 0 } : springSettle}
+      className="relative"
+    >
       {closestEdge === 'top' ? (
         <div
           className="absolute -top-1 inset-x-1 z-10 h-0.5 rounded-full bg-primary"
@@ -283,7 +431,7 @@ export function CardTile({
           aria-hidden="true"
         />
       ) : null}
-    </div>
+    </motion.div>
   )
 }
 

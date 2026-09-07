@@ -31,6 +31,7 @@ import {
   TabsTrigger,
   initialsFromName,
   toast,
+  toastWithUndo,
 } from '@devon/ui'
 import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
@@ -463,7 +464,15 @@ export default function ProjectPageScreen() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => patchProject.mutate({ status: 'archived' })}
+              onClick={() => {
+                const previousStatus = project.status
+                patchProject.mutate({ status: 'archived' })
+                toastWithUndo({
+                  message: t('projects.action.archived', { title: project.title }),
+                  undoLabel: t('action.undo'),
+                  onUndo: () => patchProject.mutate({ status: previousStatus }),
+                })
+              }}
             >
               {t('projects.action.archive')}
             </Button>

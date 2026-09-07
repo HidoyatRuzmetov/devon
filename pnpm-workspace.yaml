@@ -26,3 +26,7 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   ssh2: true
+
+minimumReleaseAgeExclude:
+  - '@tanstack/react-virtual@3.14.11'
+  - '@tanstack/virtual-core@3.17.9'
