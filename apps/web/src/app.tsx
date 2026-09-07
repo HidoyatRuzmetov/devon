@@ -8,6 +8,7 @@ import { useRouteName, useRoutePath } from './lib/router.js'
 import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
 import { AuthShell } from './shell/auth-shell.js'
+import { RouteErrorBoundary } from './shell/route-error-boundary.js'
 import { HomeRoute } from './routes/home.js'
 import { LoginRoute } from './routes/login.js'
 import { SetupRoute } from './routes/setup.js'
@@ -43,9 +44,11 @@ function RouteOutlet() {
     const FeatureComponent = featureRoute.component
     return (
       <AppShell>
-        <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
-          <FeatureComponent />
-        </React.Suspense>
+        <RouteErrorBoundary>
+          <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
+            <FeatureComponent />
+          </React.Suspense>
+        </RouteErrorBoundary>
       </AppShell>
     )
   }
@@ -54,32 +57,42 @@ function RouteOutlet() {
     case 'home':
       return (
         <AppShell>
-          <HomeRoute />
+          <RouteErrorBoundary>
+            <HomeRoute />
+          </RouteErrorBoundary>
         </AppShell>
       )
     case 'admin':
       return (
         <AppShell>
-          <AdminRoute />
+          <RouteErrorBoundary>
+            <AdminRoute />
+          </RouteErrorBoundary>
         </AppShell>
       )
     case 'login':
       return (
         <AuthShell>
-          <LoginRoute />
+          <RouteErrorBoundary>
+            <LoginRoute />
+          </RouteErrorBoundary>
         </AuthShell>
       )
     case 'setup':
       return (
         <AuthShell>
-          <SetupRoute />
+          <RouteErrorBoundary>
+            <SetupRoute />
+          </RouteErrorBoundary>
         </AuthShell>
       )
     case 'not-found':
     default:
       return (
         <AppShell>
-          <NotFoundRoute />
+          <RouteErrorBoundary>
+            <NotFoundRoute />
+          </RouteErrorBoundary>
         </AppShell>
       )
   }

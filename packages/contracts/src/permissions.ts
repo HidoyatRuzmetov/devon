@@ -42,6 +42,13 @@ export type Action = 'read' | 'create' | 'update' | 'archive' | 'delete' | 'admi
 
 export type Subject =
   | { kind: 'instance' } // /api/v1/admin/* -> super_admin only
+  // Blitz finding: `POST /api/v1/admin/view-as/stop` is the only way a super_admin ever clears
+  // `viewAs` again once set. `{kind:'instance'}`'s P1 rule (this file, below) requires
+  // `viewAs === null` for *every* instance action -- if the exit route used that same subject, a
+  // super_admin who had entered view-as could never leave it again through the API (the cookie would
+  // have to expire on its own). This kind is `super_admin`-only, exactly like `instance`, but is the
+  // one deliberate exception that does not also require `viewAs === null` -- see `can()` below.
+  | { kind: 'instance_exit_view_as' } // /api/v1/admin/view-as/stop only
   | { kind: 'department'; departmentId: string }
   | { kind: 'department_child'; departmentId: string } // memberships, and every future dept table
   | { kind: 'personal'; ownerUserId: string } // I-1: owner only, never head, never view-as
@@ -98,6 +105,14 @@ export function can(actor: Actor | null, action: Action, subject: Subject): Deci
     case 'instance': {
       if (actor.role !== 'super_admin') return deny('not_super_admin')
       if (actor.viewAs !== null) return deny('read_only_view_as')
+      return ALLOW
+    }
+
+    // Blitz finding: the escape hatch out of view-as. Same role check as `instance`, deliberately
+    // without its `viewAs === null` requirement -- otherwise this route could never be reached once
+    // `viewAs` was set, and view-as would be a one-way door for the rest of the cookie's lifetime.
+    case 'instance_exit_view_as': {
+      if (actor.role !== 'super_admin') return deny('not_super_admin')
       return ALLOW
     }
 

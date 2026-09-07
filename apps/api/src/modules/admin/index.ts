@@ -43,6 +43,9 @@ import {
 
 const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   const instanceSubject = () => ({ kind: 'instance' as const })
+  // Blitz finding: distinct from `instanceSubject` on purpose -- see `@devon/contracts`'s
+  // `instance_exit_view_as` case for why the exit route cannot reuse `{kind:'instance'}`.
+  const instanceExitViewAsSubject = () => ({ kind: 'instance_exit_view_as' as const })
 
   function auditCtx(req: FastifyRequest) {
     return {
@@ -223,7 +226,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/view-as/stop',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: { permission: { action: 'administer', subject: instanceExitViewAsSubject } },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return

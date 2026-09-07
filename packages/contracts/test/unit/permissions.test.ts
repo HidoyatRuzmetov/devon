@@ -57,6 +57,37 @@ describe('can() -- P1: instance is super_admin && !viewAs only', () => {
   })
 })
 
+// Blitz finding: without this escape hatch, `instance`'s `viewAs === null` requirement (P1 above)
+// made `POST /api/v1/admin/view-as/stop` unreachable once a super_admin had entered view-as -- that
+// route used `{kind:'instance'}` too, so it denied itself with `read_only_view_as` forever.
+describe('can() -- instance_exit_view_as: super_admin only, but never blocked by viewAs itself', () => {
+  it('allows a super_admin who is currently viewing-as a department to exit it', () => {
+    const a = actor({ role: 'super_admin', viewAs: { departmentId: 'd-1' } })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({ allowed: true })
+  })
+
+  it('allows a super_admin with no viewAs (idempotent stop)', () => {
+    const a = actor({ role: 'super_admin', viewAs: null })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({ allowed: true })
+  })
+
+  it('denies a head', () => {
+    const a = actor({ role: 'head' })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({
+      allowed: false,
+      reason: 'not_super_admin',
+    })
+  })
+
+  it('denies a member', () => {
+    const a = actor({ role: 'member' })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({
+      allowed: false,
+      reason: 'not_super_admin',
+    })
+  })
+})
+
 describe('can() -- P2: personal is owner-only, no exceptions ever', () => {
   it('allows the owner', () => {
     const a = actor({ userId: 'u-1' })
