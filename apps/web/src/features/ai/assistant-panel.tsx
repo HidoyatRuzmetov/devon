@@ -7,7 +7,7 @@
 // `useRunAiFeatureMutation` hook this panel already calls.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { Badge, Button, StateView, toast } from '@devon/ui'
+import { AiPreviewPanel, Badge, SparkleButton, StateView, toast } from '@devon/ui'
 import { Sparkles } from 'lucide-react'
 import { useDepartment } from '../../lib/session.js'
 import { ApiError } from '../../lib/api-client.js'
@@ -82,39 +82,19 @@ function apiErrorMessageKey(err: unknown): string {
   return 'toast.saveError'
 }
 
-function ResultPreview({ result }: { result: RunFeatureResponse }) {
+function ResultBody({ result }: { result: RunFeatureResponse }) {
   const t = useT()
-  const [copied, setCopied] = React.useState(false)
   const pretty = JSON.stringify(result.data, null, 2)
-
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/40 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-small font-medium text-foreground">{t('ai.result.title')}</h3>
-        <div className="flex items-center gap-2 text-caption text-muted-foreground">
-          <Badge tone={result.meta.retried ? 'warning' : 'neutral'}>
-            {t('ai.result.tokens', { count: result.meta.totalTokens })}
-          </Badge>
-          <span>{t('ai.result.latency', { ms: result.meta.latencyMs })}</span>
-        </div>
-      </div>
+    <div className="flex flex-col gap-2">
+      {result.meta.retried ? (
+        <Badge tone="warning" className="self-start">
+          {t('ai.result.retried')}
+        </Badge>
+      ) : null}
       <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-sm bg-card p-3 text-caption text-foreground">
         {pretty}
       </pre>
-      <div className="flex justify-end gap-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            void navigator.clipboard.writeText(pretty).then(() => {
-              setCopied(true)
-              toast(t('ai.result.copied'))
-            })
-          }}
-        >
-          {copied ? t('ai.result.copied') : t('ai.result.accept')}
-        </Button>
-      </div>
     </div>
   )
 }
@@ -222,12 +202,50 @@ export function AssistantPanel() {
         ))}
 
         <div className="flex justify-end">
-          <Button onClick={handlePreview} loading={runMutation.isPending} disabled={!department}>
-            {t('ai.assistant.preview')}
-          </Button>
+          <SparkleButton
+            aria-label={t('ai.assistant.preview')}
+            label={t('ai.assistant.preview')}
+            loading={runMutation.isPending}
+            disabled={!department}
+            onClick={handlePreview}
+          />
         </div>
 
-        {runMutation.data ? <ResultPreview result={runMutation.data} /> : null}
+        {runMutation.isPending || runMutation.isError || runMutation.data ? (
+          <AiPreviewPanel
+            title={t(spec.labelKey)}
+            status={runMutation.isPending ? 'pending' : runMutation.isError ? 'error' : 'ready'}
+            pendingLabel={t('ai.assistant.pending')}
+            {...(runMutation.error
+              ? { errorMessage: t(apiErrorMessageKey(runMutation.error)) }
+              : {})}
+            acceptLabel={t('ai.result.accept')}
+            editLabel={t('ai.result.edit')}
+            discardLabel={t('ai.result.discard')}
+            retryLabel={t('ai.result.retry')}
+            {...(runMutation.data
+              ? {
+                  costLine: t('ai.result.costLine', {
+                    tokens: runMutation.data.meta.totalTokens,
+                    ms: runMutation.data.meta.latencyMs,
+                  }),
+                }
+              : {})}
+            onRetry={handlePreview}
+            onAccept={() => {
+              if (!runMutation.data) return
+              const pretty = JSON.stringify(runMutation.data.data, null, 2)
+              void navigator.clipboard.writeText(pretty).then(() => {
+                toast(t('ai.result.copied'))
+                runMutation.reset()
+              })
+            }}
+            onEdit={() => runMutation.reset()}
+            onDiscard={() => runMutation.reset()}
+          >
+            {runMutation.data ? <ResultBody result={runMutation.data} /> : null}
+          </AiPreviewPanel>
+        ) : null}
       </>
     )
   }

@@ -1,6 +1,8 @@
 {
   "ai": {
     "title": "AI",
+    "eyebrow": "AI",
+    "description": "Ushbu boʻlimning AI yordamchilari uchun byudjet, funksiya sozlamalari va foydalanish.",
     "tabs": {
       "overview": "Umumiy",
       "usage": "Foydalanish",
@@ -50,12 +52,18 @@
       "tokens": "{count} token",
       "latency": "{ms} ms",
       "accept": "Natijani nusxalash",
-      "copied": "Almashish buferiga nusxalandi"
+      "copied": "Almashish buferiga nusxalandi",
+      "retried": "Qayta urinildi",
+      "edit": "Tahrirlash",
+      "discard": "Bekor qilish",
+      "retry": "Qayta urinish",
+      "costLine": "{tokens} token · {ms} ms"
     },
     "assistant": {
       "title": "AI yordamchi",
       "description": "AI funksiyasini sinab koʻring: maydonlarni toʻldiring, natijani koʻring, soʻng uni nusxalang yoki mos ekranda ishlating.",
       "preview": "Koʻrib chiqish",
+      "pending": "Javob tayyorlanmoqda…",
       "disabled": {
         "title": "Bu funksiya oʻchirilgan",
         "body": "Boʻlim boshligʻidan uni \"Umumiy\" boʻlimida yoqishni soʻrang."

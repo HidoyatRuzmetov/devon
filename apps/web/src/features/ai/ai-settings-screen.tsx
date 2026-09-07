@@ -4,11 +4,22 @@
 // then-accept panel).
 import * as React from 'react'
 import { useT, useLocale, formatDate, formatTime, formatUzs } from '@devon/i18n'
-import { Badge, Button, StateView, cn, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  PageHeader,
+  ProgressRing,
+  StateView,
+  Switch,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  toast,
+} from '@devon/ui'
 import { BarChart3, Gauge, Sparkles } from 'lucide-react'
 import { useDepartment, useSession } from '../../lib/session.js'
 import { AssistantPanel } from './assistant-panel.js'
-import { Checkbox } from './components/form-controls.js'
 import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
 import { AI_FEATURE_IDS, featureLabelKey, type AiFeatureId, type Trace } from './types.js'
 
@@ -24,6 +35,9 @@ const TABS: {
   { id: 'assistant', labelKey: 'ai.tabs.assistant', icon: Sparkles },
 ]
 
+/** DESIGN.md §3 "budget gauge ring": the department's monthly AI spend read as one number a head can
+ * glance at, not a bar buried among settings -- `ProgressRing` (the same primitive project-progress
+ * and the Pomodoro clock use) with the percentage spent inside it and the status tone on the arc. */
 function BudgetGauge({
   spentUzsThisMonth,
   budgetUzsPerMonth,
@@ -43,31 +57,38 @@ function BudgetGauge({
       : budgetStatus === 'soft_cap'
         ? 'warning'
         : 'success'
-  const barColor =
+  const ringClass =
     budgetStatus === 'hard_stop'
-      ? 'bg-destructive'
+      ? 'text-destructive'
       : budgetStatus === 'soft_cap'
-        ? 'bg-warning'
-        : 'bg-success'
+        ? 'text-warning'
+        : 'text-success'
 
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-small font-medium text-foreground">{t('ai.budget.title')}</h3>
-        <Badge tone={tone}>{t(`ai.budget.status.${budgetStatus}`)}</Badge>
+    <div className="flex flex-wrap items-center gap-5 rounded-md border border-border bg-card p-4">
+      <ProgressRing
+        value={usedPct}
+        size={72}
+        strokeWidth={6}
+        toneClassName={ringClass}
+        label={t('ai.budget.title')}
+      >
+        <span className="text-small font-medium tabular-nums text-foreground">
+          {Math.round(Math.min(100, usedPct))}%
+        </span>
+      </ProgressRing>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-small font-medium text-foreground">{t('ai.budget.title')}</h3>
+          <Badge tone={tone}>{t(`ai.budget.status.${budgetStatus}`)}</Badge>
+        </div>
+        <p className="text-small text-muted-foreground">
+          {t('ai.budget.spentOfCap', {
+            spent: formatUzs(spentUzsThisMonth, locale),
+            cap: formatUzs(budgetUzsPerMonth, locale),
+          })}
+        </p>
       </div>
-      <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className={cn('h-full rounded-full transition-[width]', barColor)}
-          style={{ width: `${Math.min(100, usedPct)}%` }}
-        />
-      </div>
-      <p className="text-small text-muted-foreground">
-        {t('ai.budget.spentOfCap', {
-          spent: formatUzs(spentUzsThisMonth, locale),
-          cap: formatUzs(budgetUzsPerMonth, locale),
-        })}
-      </p>
     </div>
   )
 }
@@ -146,27 +167,27 @@ function OverviewTab() {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
+      <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4">
         <h3 className="text-small font-medium text-foreground">{t('ai.flags.title')}</h3>
-        <p className="text-caption text-muted-foreground">{t('ai.flags.description')}</p>
-        <ul className="mt-2 flex flex-col gap-2">
+        <p className="mb-2 text-caption text-muted-foreground">{t('ai.flags.description')}</p>
+        <ul className="flex flex-col divide-y divide-border">
           {AI_FEATURE_IDS.map((feature) => (
-            <li key={feature} className="flex items-center gap-3">
-              <Checkbox
+            <li key={feature} className="flex items-center justify-between gap-3 py-2.5">
+              <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
+                {t(featureLabelKey(feature))}
+              </label>
+              <Switch
                 id={`flag-${feature}`}
                 checked={settings.flags[feature] === true}
                 onCheckedChange={(checked) => toggleFlag(feature, checked)}
                 disabled={!isHead}
                 aria-label={t(featureLabelKey(feature))}
               />
-              <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
-                {t(featureLabelKey(feature))}
-              </label>
             </li>
           ))}
         </ul>
         {!isHead ? (
-          <p className="text-caption text-muted-foreground">{t('ai.flags.headOnly')}</p>
+          <p className="pt-2 text-caption text-muted-foreground">{t('ai.flags.headOnly')}</p>
         ) : null}
       </div>
     </div>
@@ -254,41 +275,32 @@ export default function AiSettingsScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-h2 text-foreground">{t('ai.title')}</h1>
-      </div>
+    <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow={t('ai.eyebrow')}
+        title={t('ai.title')}
+        description={t('ai.description')}
+        tabs={
+          <TabsList>
+            {TABS.map(({ id, labelKey, icon: Icon }) => (
+              <TabsTrigger key={id} value={id}>
+                <Icon className="size-4" aria-hidden="true" />
+                {t(labelKey)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        }
+      />
 
-      <div
-        role="tablist"
-        aria-label={t('ai.title')}
-        className="flex flex-wrap gap-1 border-b border-border"
-      >
-        {TABS.map(({ id, labelKey, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={cn(
-              'flex items-center gap-1.5 rounded-t-sm px-3 py-2 text-small font-medium',
-              tab === id
-                ? 'border-b-2 border-primary text-foreground'
-                : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Icon className="size-4" aria-hidden="true" />
-            {t(labelKey)}
-          </button>
-        ))}
-      </div>
-
-      <div role="tabpanel">
-        {tab === 'overview' ? <OverviewTab /> : null}
-        {tab === 'usage' ? <UsageTab /> : null}
-        {tab === 'assistant' ? <AssistantPanel /> : null}
-      </div>
-    </div>
+      <TabsContent value="overview">
+        <OverviewTab />
+      </TabsContent>
+      <TabsContent value="usage">
+        <UsageTab />
+      </TabsContent>
+      <TabsContent value="assistant">
+        <AssistantPanel />
+      </TabsContent>
+    </Tabs>
   )
 }
