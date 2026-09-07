@@ -101,7 +101,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     {
       user: HEAD,
       key: 'head.overdue-department',
-      name: "Muddati o'tganlar",
+      name: "Muddati oʻtganlar",
       query: 'status:active due:<today',
       chartKey: 'openVsOverdue' as const,
       chartTitle: 'Ochiq va muddati oʻtgan topshiriqlar',

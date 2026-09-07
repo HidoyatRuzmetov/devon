@@ -124,7 +124,7 @@ export const WORK_DEMO_USERS: readonly WorkDemoUser[] = [
     login: 'ulugbek.ganiyev',
     givenName: 'Ulugʻbek',
     patronymic: 'Sobirovich',
-    familyName: "G'aniyev",
+    familyName: "Gʻaniyev",
     title: 'Devonxona mudiri',
   },
   {

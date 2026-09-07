@@ -77,7 +77,7 @@ const PAGE_FIXTURES: readonly PageFixture[] = [
     blocks: doc(
       heading(1, 'Biz qanday ishlaymiz'),
       paragraph(
-        "Bo'limimiz har hafta dushanba kuni rejalashtirish, juma kuni esa yakunlar bilan ishlaydi. Har bir topshiriq beruvchi va bajaruvchiga ega bo'lishi shart.",
+        "Boʻlimimiz har hafta dushanba kuni rejalashtirish, juma kuni esa yakunlar bilan ishlaydi. Har bir topshiriq beruvchi va bajaruvchiga ega boʻlishi shart.",
       ),
       heading(2, 'Kunlik tartib'),
       bulletList(
@@ -85,8 +85,8 @@ const PAGE_FIXTURES: readonly PageFixture[] = [
         'Kun davomida - boshqaruv taxtasi orqali muvofiqlashtirish',
         'Kechqurun 18:00 - kunlik xulosa',
       ),
-      heading(2, "Muddatlar bo'yicha qoida"),
-      callout("Muddati o'tgan topshiriqlar har juma kuni bo'lim yig'ilishida ko'rib chiqiladi."),
+      heading(2, "Muddatlar boʻyicha qoida"),
+      callout("Muddati oʻtgan topshiriqlar har juma kuni boʻlim yigʻilishida koʻrib chiqiladi."),
     ),
   },
   {
@@ -97,12 +97,12 @@ const PAGE_FIXTURES: readonly PageFixture[] = [
     blocks: doc(
       heading(1, 'Tahlil boʻyicha qisqacha maʼlumot'),
       paragraph(
-        "Analitika sahifasi orqali har bir xodim o'z ishini, bo'lim esa umumiy yukni kuzatib boradi.",
+        "Analitika sahifasi orqali har bir xodim oʻz ishini, boʻlim esa umumiy yukni kuzatib boradi.",
       ),
       bulletList(
         'Haftalik bajarilgan vazifalar soni',
-        "O'z vaqtida bajarilish darajasi",
-        "Har bir xodim va bo'lim boʻyicha yuklama",
+        "Oʻz vaqtida bajarilish darajasi",
+        "Har bir xodim va boʻlim boʻyicha yuklama",
       ),
     ),
   },
@@ -114,18 +114,18 @@ const PAGE_FIXTURES: readonly PageFixture[] = [
     blocks: doc(
       heading(1, 'Yangi xodimlarni moslashtirish rejasi'),
       paragraph(
-        "Har bir yangi xodim uchun birinchi hafta davomida moslashuv roʻyxati avtomatik ravishda uning shaxsiy vazifalariga qo'shiladi.",
+        "Har bir yangi xodim uchun birinchi hafta davomida moslashuv roʻyxati avtomatik ravishda uning shaxsiy vazifalariga qoʻshiladi.",
       ),
       taskList(
         { text: 'Ish oʻrnini tayyorlash', checked: true },
-        { text: "Bo'lim bilan tanishtirish", checked: false },
+        { text: "Boʻlim bilan tanishtirish", checked: false },
       ),
     ),
   },
   {
     key: 'note-meeting-2026-09-01',
     kind: 'note',
-    title: "01.09.2026 - Bo'lim yig'ilishi",
+    title: "01.09.2026 - Boʻlim yigʻilishi",
     authorUserId: HEAD.id,
     blocks: doc(
       heading(2, 'Muhokama qilingan mavzular'),
@@ -147,12 +147,12 @@ const PAGE_FIXTURES: readonly PageFixture[] = [
     kind: 'note',
     title: 'Foydali havolalar',
     authorUserId: MEMBER.id,
-    blocks: doc(bulletList('Ichki hujjatlar arxivi', "Bo'lim taqvimi", 'IT yordam xizmati')),
+    blocks: doc(bulletList('Ichki hujjatlar arxivi', "Boʻlim taqvimi", 'IT yordam xizmati')),
   },
 ]
 
 const ONBOARDING_ITEMS = [
-  { key: 'welcome', text: "Bo'lim rahbari bilan tanishuv suhbati", ownerRole: 'newcomer' as const },
+  { key: 'welcome', text: "Boʻlim rahbari bilan tanishuv suhbati", ownerRole: 'newcomer' as const },
   {
     key: 'accounts',
     text: 'Ish hisoblarini faollashtirish (pochta, tizimlar)',
