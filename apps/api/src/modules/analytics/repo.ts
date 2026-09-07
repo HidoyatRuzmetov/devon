@@ -797,6 +797,15 @@ export async function reorderPinnedCharts(
       where p.id = v.id and p.department_id = ${departmentId} and p.owner_user_id = ${ownerUserId}
       returning p.id
     `)
+    if (rows.length > 0) {
+      tx.audit({
+        action: 'analytics.chart.reordered',
+        subjectType: 'analytics_pinned_chart',
+        subjectId: null,
+        departmentId,
+        after: { count: rows.length },
+      })
+    }
     return rows.length
   })
 }
