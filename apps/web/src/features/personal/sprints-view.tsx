@@ -445,7 +445,12 @@ export function SprintsView() {
                       </ProgressRing>
                       <div className="flex min-w-0 flex-col gap-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
+                          {/* DESIGN.md §9.2: a tinted badge, not a solid one -- this repeats once
+                              per sprint row, and a solid fill on every row of a dense list reads as
+                              alarming/noisy rather than a plain category label. */}
+                          <Badge tone="neutral" className="bg-info/10 text-info">
+                            {t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}
+                          </Badge>
                           <span className="text-caption tabular-nums text-muted-foreground">
                             {ended
                               ? t('personal.sprints.ended')

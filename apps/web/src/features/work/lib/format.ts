@@ -36,6 +36,27 @@ export const RISK_BADGE_TONE: Record<CardRisk, 'destructive' | 'warning' | 'neut
   none: 'neutral',
 }
 
+/** DESIGN.md §9.2: a status badge is a tinted, low-chroma fill, not a solid one -- solid fill is
+ * reserved for a single "blocked" state. A dense list where most cards are overdue (the demo seed
+ * skews this way, but any real backlog eventually does) turns solid `Badge tone="destructive"` into
+ * a wall of saturated red, which reads as alarming rather than scannable. Passed as `Badge`'s own
+ * `className` (twMerge keeps it over the tone variant's solid bg/text) at exactly the two multi-row
+ * list call sites this matters for (table, mine) -- the single-card detail view keeps the plain tone,
+ * where one badge among many other controls is not the same "wall of red" problem. */
+export const RISK_BADGE_CLASSNAME: Record<CardRisk, string> = {
+  overdue: 'bg-destructive/10 text-destructive',
+  at_risk: 'bg-warning/10 text-warning',
+  none: '',
+}
+
+/** Icon name for `RISK_BADGE_CLASSNAME`'s leading glyph -- colour is never the only signal even
+ *  once it is a subtle tint rather than a solid fill. `null` for `none` (no badge renders at all). */
+export const RISK_ICON_NAME: Record<CardRisk, 'AlertCircle' | 'Clock3' | null> = {
+  overdue: 'AlertCircle',
+  at_risk: 'Clock3',
+  none: null,
+}
+
 /** The due chip's `Chip` tone (board card, table row): risk is the one thing a due date needs to say
  * at a glance, so the chip itself carries the colour rather than pairing a neutral chip with a
  * separate risk badge (DESIGN.md's "colour is never the only signal" is still satisfied -- the date

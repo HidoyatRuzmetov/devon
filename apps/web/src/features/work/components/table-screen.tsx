@@ -3,10 +3,18 @@
 // edit here and an edit there are optimistic the same way.
 import * as React from 'react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
+import { AlertCircle, Clock3 } from 'lucide-react'
 import { Badge, Skeleton, StateView, Input } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useCardsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
-import { PRIORITY_LABEL_KEY, RISK_BADGE_TONE, RISK_LABEL_KEY } from '../lib/format.js'
+import {
+  PRIORITY_LABEL_KEY,
+  RISK_BADGE_CLASSNAME,
+  RISK_ICON_NAME,
+  RISK_LABEL_KEY,
+} from '../lib/format.js'
+
+const RISK_ICON = { AlertCircle, Clock3 } as const
 import { MemberPicker } from './member-picker.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
@@ -67,9 +75,17 @@ function TableRow({ card, members }: { card: Card; members: readonly MemberSumma
           ) : (
             <span className="text-muted-foreground">—</span>
           )}
-          {card.risk !== 'none' ? (
-            <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
-          ) : null}
+          {card.risk !== 'none'
+            ? (() => {
+                const RiskIcon = RISK_ICON[RISK_ICON_NAME[card.risk]!]
+                return (
+                  <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
+                    <RiskIcon className="size-3" aria-hidden="true" />
+                    {t(RISK_LABEL_KEY[card.risk])}
+                  </Badge>
+                )
+              })()
+            : null}
         </div>
       </td>
       <td className="p-2">
