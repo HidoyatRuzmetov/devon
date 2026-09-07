@@ -693,8 +693,19 @@ export async function listAuditEvents(input: {
     if (input.to) conditions.push(sql`at <= ${input.to}::timestamptz`)
     if (input.cursor) conditions.push(sql`seq < ${input.cursor}`)
 
+    // Blitz integration fix: `audit.events.seq` is `bigint identity` (packages/db migrations,
+    // `audit.verify_chain()`'s own `seq bigint`) -- `node-postgres` returns every `bigint` column as a
+    // JS `string`, never `number`, specifically to avoid silently losing precision above
+    // `Number.MAX_SAFE_INTEGER` (pg's own documented default; there is no repo-wide bigint-parsing
+    // helper to reuse, this is the first route to expose one over HTTP). The raw query's declared
+    // generic type here was `number`, which TypeScript happily believed with no runtime check --
+    // verified end to end that `GET /api/v1/admin/audit/events` 500'd on every real row
+    // (`ResponseSerializationError`: `events[n].seq` "expected number, received string") because
+    // `schemas.ts`'s `seq: z.number().int()` then rejected the raw string that actually came back.
+    // `Number(...)` below is exact for any `seq` this instance's audit chain will ever reach long
+    // before `bigint` and `number` could disagree (2^53 audit events).
     const rows = await tx.raw<{
-      seq: number
+      seq: string
       id: string
       at: string
       actor_user_id: string | null
@@ -716,7 +727,7 @@ export async function listAuditEvents(input: {
     const last = page[page.length - 1]
     return {
       rows: page.map((r) => ({
-        seq: r.seq,
+        seq: Number(r.seq),
         id: r.id,
         at: new Date(r.at),
         actorUserId: r.actor_user_id,
@@ -726,7 +737,7 @@ export async function listAuditEvents(input: {
         subjectType: r.subject_type,
         subjectId: r.subject_id,
       })),
-      nextCursor: hasMore && last ? last.seq : null,
+      nextCursor: hasMore && last ? Number(last.seq) : null,
     }
   })
 }
