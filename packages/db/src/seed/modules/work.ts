@@ -7,6 +7,7 @@
 // module inserts, so the roster has to exist first (found the hard way, running this seed against a
 // real Postgres via Testcontainers: `projects_owner_user_id_fkey` violation when `projects.ts` ran
 // first with `work.ts`'s users not yet inserted).
+import { inArray } from 'drizzle-orm'
 import * as usersSchema from '../../schema/app.js'
 import * as workSchema from '../../schema/work.js'
 import { demoId } from '../ids.js'
@@ -37,6 +38,8 @@ type NewCard = typeof workSchema.cards.$inferInsert
 type NewChecklistItem = typeof workSchema.cardChecklistItems.$inferInsert
 type NewComment = typeof workSchema.cardComments.$inferInsert
 type NewActivity = typeof workSchema.cardActivity.$inferInsert
+
+const workMembershipId = (login: string): string => demoId(`work.membership.${login}`)
 
 /**
  * One standalone card for `assigneeIndex`'s column, deterministic in every field except wall-clock
@@ -172,6 +175,33 @@ function buildStandaloneCard(
   return { card, checklist, comments, activity }
 }
 
+type StandaloneRows = {
+  cards: NewCard[]
+  checklist: NewChecklistItem[]
+  comments: NewComment[]
+  activity: NewActivity[]
+}
+
+/** Every standalone card row this module writes, ~14 per person across all 16 members (12..17 cards
+ * each: ~230 standalone + ~40 project cards ≈ 250 total, TECH-SPEC §14). Deterministic, so `seed()`
+ * inserts exactly the ids `reset()` deletes. */
+function buildAllStandaloneRows(): StandaloneRows {
+  const all: StandaloneRows = { cards: [], checklist: [], comments: [], activity: [] }
+  for (let i = 0; i < ALL_WORK_MEMBER_IDS.length; i += 1) {
+    const cardCount = 12 + (i % 6)
+    for (let n = 0; n < cardCount; n += 1) {
+      const built = buildStandaloneCard(i, n)
+      all.cards.push(built.card)
+      all.checklist.push(...built.checklist)
+      all.comments.push(...built.comments)
+      all.activity.push(...built.activity)
+    }
+  }
+  return all
+}
+
+const idsOf = (rows: ReadonlyArray<{ id?: string | undefined }>): string[] => rows.map((r) => r.id!)
+
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let written = 0
@@ -201,7 +231,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .insert(usersSchema.memberships)
     .values(
       WORK_DEMO_USERS.map((u) => ({
-        id: demoId(`work.membership.${u.login}`),
+        id: workMembershipId(u.login),
         departmentId: DEPARTMENT_ID,
         userId: u.id,
         role: 'member' as const,
@@ -226,56 +256,111 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     .returning({ id: workSchema.labels.id })
   written += insertedLabels.length
 
-  // --- standalone cards, ~14 per person across all 16 members ----------------------------------
-  const allCards: NewCard[] = []
-  const allChecklist: NewChecklistItem[] = []
-  const allComments: NewComment[] = []
-  const allActivity: NewActivity[] = []
-
-  for (let i = 0; i < ALL_WORK_MEMBER_IDS.length; i += 1) {
-    const cardCount = 12 + (i % 6) // 12..17 cards per person (~230 standalone + ~40 project cards ≈ 250 total, TECH-SPEC §14)
-    for (let n = 0; n < cardCount; n += 1) {
-      const built = buildStandaloneCard(i, n)
-      allCards.push(built.card)
-      allChecklist.push(...built.checklist)
-      allComments.push(...built.comments)
-      allActivity.push(...built.activity)
-    }
-  }
+  // --- standalone cards ------------------------------------------------------------------------
+  const rows = buildAllStandaloneRows()
 
   const insertedCards = await tx.drizzle
     .insert(workSchema.cards)
-    .values(allCards)
+    .values(rows.cards)
     .onConflictDoNothing()
     .returning({ id: workSchema.cards.id })
   written += insertedCards.length
 
-  if (allChecklist.length > 0) {
+  if (rows.checklist.length > 0) {
     const insertedChecklist = await tx.drizzle
       .insert(workSchema.cardChecklistItems)
-      .values(allChecklist)
+      .values(rows.checklist)
       .onConflictDoNothing()
       .returning({ id: workSchema.cardChecklistItems.id })
     written += insertedChecklist.length
   }
 
-  if (allComments.length > 0) {
+  if (rows.comments.length > 0) {
     const insertedComments = await tx.drizzle
       .insert(workSchema.cardComments)
-      .values(allComments)
+      .values(rows.comments)
       .onConflictDoNothing()
       .returning({ id: workSchema.cardComments.id })
     written += insertedComments.length
   }
 
-  if (allActivity.length > 0) {
+  if (rows.activity.length > 0) {
     const insertedActivity = await tx.drizzle
       .insert(workSchema.cardActivity)
-      .values(allActivity)
+      .values(rows.activity)
       .onConflictDoNothing()
       .returning({ id: workSchema.cardActivity.id })
     written += insertedActivity.length
   }
 
   return written
+}
+
+/** Reverse of `seed()`: the cards' children, the cards, the labels, then the roster's memberships and
+ * users. `projects.ts` (order 100) has already removed the project cards by the time this runs, so
+ * nothing else points at these users any more. All department-scoped rows are in `DEMO_DEPARTMENT`,
+ * so the shared context's GUC already matches them. */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  const rows = buildAllStandaloneRows()
+  let deleted = 0
+
+  const deletedActivity = await tx.drizzle
+    .delete(workSchema.cardActivity)
+    .where(inArray(workSchema.cardActivity.id, idsOf(rows.activity)))
+    .returning({ id: workSchema.cardActivity.id })
+  deleted += deletedActivity.length
+
+  const deletedComments = await tx.drizzle
+    .delete(workSchema.cardComments)
+    .where(inArray(workSchema.cardComments.id, idsOf(rows.comments)))
+    .returning({ id: workSchema.cardComments.id })
+  deleted += deletedComments.length
+
+  const deletedChecklist = await tx.drizzle
+    .delete(workSchema.cardChecklistItems)
+    .where(inArray(workSchema.cardChecklistItems.id, idsOf(rows.checklist)))
+    .returning({ id: workSchema.cardChecklistItems.id })
+  deleted += deletedChecklist.length
+
+  const deletedCards = await tx.drizzle
+    .delete(workSchema.cards)
+    .where(inArray(workSchema.cards.id, idsOf(rows.cards)))
+    .returning({ id: workSchema.cards.id })
+  deleted += deletedCards.length
+
+  const deletedLabels = await tx.drizzle
+    .delete(workSchema.labels)
+    .where(
+      inArray(
+        workSchema.labels.id,
+        DEMO_LABELS.map((l) => labelId(l.key)),
+      ),
+    )
+    .returning({ id: workSchema.labels.id })
+  deleted += deletedLabels.length
+
+  const deletedMemberships = await tx.drizzle
+    .delete(usersSchema.memberships)
+    .where(
+      inArray(
+        usersSchema.memberships.id,
+        WORK_DEMO_USERS.map((u) => workMembershipId(u.login)),
+      ),
+    )
+    .returning({ id: usersSchema.memberships.id })
+  deleted += deletedMemberships.length
+
+  // Every demo account shares `DEMO_PASSWORD` and can be logged into -- sessions first, for the same
+  // `sessions_user_id_fkey` reason `demo.ts` gives for the core accounts.
+  const userIds = WORK_DEMO_USERS.map((u) => u.id)
+  await tx.drizzle.delete(usersSchema.sessions).where(inArray(usersSchema.sessions.userId, userIds))
+
+  const deletedUsers = await tx.drizzle
+    .delete(usersSchema.users)
+    .where(inArray(usersSchema.users.id, userIds))
+    .returning({ id: usersSchema.users.id })
+  deleted += deletedUsers.length
+
+  return deleted
 }

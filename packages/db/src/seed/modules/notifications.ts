@@ -2,11 +2,11 @@
 // after `core.ts` (order 0), which is the only module this one's fixtures point at (`DEMO_USERS`,
 // `DEMO_DEPARTMENT`). Deterministic ids (`demoId`) and `ON CONFLICT DO NOTHING` throughout, so a
 // second `seed:demo` run writes zero rows here too.
-import { sql } from 'drizzle-orm'
-import type { Tx } from '../../context.js'
+import { eq, inArray } from 'drizzle-orm'
 import * as schema from '../../schema/notifications.js'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
 import { demoId } from '../ids.js'
+import { asUser } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
 export const order = 100
@@ -209,26 +209,31 @@ const NOTIFICATIONS: DemoNotification[] = [
   },
 ]
 
-/**
- * `demo.ts`'s `runSeedDemo` opens the whole seed run inside one `withContext()` transaction with a
- * fixed `{ userId: null, actorRole: 'super_admin', departmentId: DEMO_DEPARTMENT.id }` context (the
- * shape every other seed module's department-scoped inserts already rely on). This module's tables
- * are `user_owned` (I-1: no actor_role bypass, ever -- `rls.ts`'s `userTableDDL` comment), so a plain
- * insert under that fixed context would fail `notifications_scope`'s `with check (user_id =
- * app.current_user_id())` for every row (there is no super-admin exception to write around). `SET
- * LOCAL` (what `withContext` uses for every GUC) can be re-issued as many times as needed within the
- * same still-open transaction, so this narrows `app.user_id` to the row's own owner for exactly the
- * statements that need it, then restores the seed's original (empty/null) value -- never leaking a
- * borrowed identity into whatever seed module runs next.
- */
-async function asUser<T>(tx: Tx, userId: string, fn: () => Promise<T>): Promise<T> {
-  await tx.raw(sql`select set_config('app.user_id', ${userId}, true)`)
-  try {
-    return await fn()
-  } finally {
-    await tx.raw(sql`select set_config('app.user_id', '', true)`)
-  }
-}
+// Sensible defaults: every reason on `inapp` (always on, matching the taste rule "no dead ends" --
+// the inbox itself is never optional), `due`/`digest` also on Telegram once linked, everything else
+// off Telegram by default until the person opts in from Settings.
+const TELEGRAM_DEFAULT_ON: ReadonlySet<(typeof schema.notificationReasonEnum.enumValues)[number]> =
+  new Set(['due', 'digest', 'system'])
+
+// The one place this module's per-user ids are named, so `seed()` and `reset()` cannot drift apart.
+const notificationId = (name: string): string => demoId(`notification.${name}`)
+
+const notificationIdsFor = (userId: string): string[] =>
+  NOTIFICATIONS.filter((n) => n.userId === userId).map((n) => notificationId(n.name))
+
+const prefIdsFor = (login: string): string[] =>
+  schema.notificationReasonEnum.enumValues.map((reason) =>
+    demoId(`notification-pref.${login}.${reason}.telegram`),
+  )
+
+// `demo.ts`'s `runSeedDemo` opens the whole seed run inside one `withContext()` transaction with a
+// fixed `{ userId: null, actorRole: 'super_admin', departmentId: DEMO_DEPARTMENT.id }` context (the
+// shape every other seed module's department-scoped inserts already rely on). This module's per-user
+// tables are `user_owned` (I-1: no actor_role bypass, ever -- `rls.ts`'s `userTableDDL` comment), so a
+// plain insert -- or delete -- under that fixed context would fail (or silently match zero rows for)
+// `notifications_scope`'s `user_id = app.current_user_id()` for every row: there is no super-admin
+// exception to write around. `scope.ts`'s `asUser` narrows `app.user_id` to the row's own owner for
+// exactly the statements that need it, then restores the seed's original (empty) value.
 
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
@@ -242,7 +247,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         .insert(schema.notifications)
         .values(
           rowsForUser.map((n) => ({
-            id: demoId(`notification.${n.name}`),
+            id: notificationId(n.name),
             userId: n.userId,
             type: n.type,
             reason: n.reason,
@@ -264,19 +269,14 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     })
   }
 
-  // Sensible defaults: every reason on `inapp` (always on, matching the taste rule "no dead ends" --
-  // the inbox itself is never optional), `due`/`digest` also on Telegram once linked, everything else
-  // off Telegram by default until the person opts in from Settings.
-  const TELEGRAM_DEFAULT_ON: ReadonlySet<
-    (typeof schema.notificationReasonEnum.enumValues)[number]
-  > = new Set(['due', 'digest', 'system'])
   for (const user of DEMO_USERS) {
+    const prefIds = prefIdsFor(user.login)
     written += await asUser(tx, user.id, async () => {
       const inserted = await tx.drizzle
         .insert(schema.notificationPrefs)
         .values(
-          schema.notificationReasonEnum.enumValues.map((reason) => ({
-            id: demoId(`notification-pref.${user.login}.${reason}.telegram`),
+          schema.notificationReasonEnum.enumValues.map((reason, i) => ({
+            id: prefIds[i]!,
             userId: user.id,
             reason,
             channel: 'telegram' as const,
@@ -330,4 +330,66 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   written += insertedLink.length
 
   return written
+}
+
+/** Reverse of `seed()`: the Telegram link and the department settings (global / department-scoped,
+ * both reachable under the shared context), then every owner-only row under its owner's `asUser`. */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let deleted = 0
+
+  const deletedLink = await tx.drizzle
+    .delete(schema.telegramLinks)
+    .where(eq(schema.telegramLinks.userId, MEMBER.id))
+    .returning({ userId: schema.telegramLinks.userId })
+  deleted += deletedLink.length
+
+  const deletedDeptSettings = await tx.drizzle
+    .delete(schema.notificationDepartmentSettings)
+    .where(eq(schema.notificationDepartmentSettings.departmentId, DEMO_DEPARTMENT.id))
+    .returning({ departmentId: schema.notificationDepartmentSettings.departmentId })
+  deleted += deletedDeptSettings.length
+
+  deleted += await asUser(tx, MEMBER.id, async () => {
+    const rows = await tx.drizzle
+      .delete(schema.notificationQuietHours)
+      .where(eq(schema.notificationQuietHours.userId, MEMBER.id))
+      .returning({ userId: schema.notificationQuietHours.userId })
+    return rows.length
+  })
+
+  for (const user of DEMO_USERS) {
+    deleted += await asUser(tx, user.id, async () => {
+      const rows = await tx.drizzle
+        .delete(schema.notificationPrefs)
+        .where(inArray(schema.notificationPrefs.id, prefIdsFor(user.login)))
+        .returning({ id: schema.notificationPrefs.id })
+      return rows.length
+    })
+  }
+
+  for (const user of [MEMBER, HEAD]) {
+    const ids = notificationIdsFor(user.id)
+    if (ids.length === 0) continue
+    deleted += await asUser(tx, user.id, async () => {
+      // A delivery row is written by the delivery worker (`apps/api/.../notifications/delivery.ts`),
+      // not by this module, but it holds `notification_deliveries.notification_id -> notifications.id`;
+      // resetting a demo that has actually delivered a seeded notification (the ordinary path -- the
+      // reset runs against a used demo, exactly the reason `demo.ts` sweeps sessions) would otherwise
+      // fail `notification_deliveries_notification_id_fkey`. The table is user-owned RLS, so this runs
+      // under the same `asUser` as the notifications delete, scoped to this user's demo notification
+      // ids only -- a delivery of some non-demo notification is never touched.
+      await tx.drizzle
+        .delete(schema.notificationDeliveries)
+        .where(inArray(schema.notificationDeliveries.notificationId, ids))
+
+      const rows = await tx.drizzle
+        .delete(schema.notifications)
+        .where(inArray(schema.notifications.id, ids))
+        .returning({ id: schema.notifications.id })
+      return rows.length
+    })
+  }
+
+  return deleted
 }

@@ -5,16 +5,21 @@
 // (I-1 -- see `migrations/0500_personal.sql`), but `runSeedDemo`'s outer transaction runs under a
 // fixed `demoContext()` (`app.user_id` GUC unset, `app.actor_role` = `super_admin`) so that a single
 // transaction can seed rows for the department/users/memberships every module's fixtures point at.
-// That context alone cannot write a row into any table in this file: `with check (user_id =
-// app.current_user_id())` would reject it. So this module briefly re-points the transaction-local
-// `app.user_id` GUC at each demo user in turn (`tx.raw()` is the documented raw-SQL escape hatch,
-// `context.ts`'s `assertContextEstablished` only ever checks `app.request_id`, never `app.user_id`,
-// so this is safe to change mid-transaction) before writing that user's rows, and restores it to
-// empty when done so a later seed module never inherits a stale value.
-import { sql } from 'drizzle-orm'
+// That context alone cannot write -- or delete -- a row in any table in this file: `user_id =
+// app.current_user_id()` would reject the write and match nothing on the delete. So this module
+// briefly re-points the transaction-local `app.user_id` GUC at each demo user in turn (`scope.ts`'s
+// `asUser`, over `tx.raw()`, the documented raw-SQL escape hatch; `context.ts`'s
+// `assertContextEstablished` only ever checks `app.request_id`, never `app.user_id`, so this is safe
+// to change mid-transaction) around that user's rows, restoring it when done so a later seed module
+// never inherits a stale value.
+//
+// Every id this module writes is named exactly once, in the `*Id(...)` helpers below, so `seed()` and
+// `reset()` cannot drift apart.
+import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/personal.js'
 import { DEMO_USERS } from '../fixtures.js'
 import { demoId } from '../ids.js'
+import { asUser } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
 import type { Tx } from '../../context.js'
 
@@ -28,10 +33,6 @@ const MEMBER = DEMO_USERS.find((u) => u.role === 'member')!
 // to demonstrate that the column round-trips an opaque uuid.
 const DEMO_LINKED_CARD_ID = demoId('work.card.quarterly-report')
 
-async function setSeedUser(tx: Tx, userId: string | null): Promise<void> {
-  await tx.raw(sql`select set_config('app.user_id', ${userId ?? ''}, true)`)
-}
-
 /** Every demo timestamp sits around 2026-09 (MODULE-GUIDE.md "Seeds"), Asia/Tashkent (+05:00) to
  * match `DEMO_DEPARTMENT.timezone`. `days` is a whole-day offset from 2026-09-01 (a Tuesday);
  * `hour`/`minute` are wall-clock Tashkent time. Drizzle's default `timestamp` column mode expects a
@@ -42,15 +43,52 @@ function demoDate(days: number, hour: number, minute = 0): Date {
 
 type UserFixture = { id: string; key: string; givenName: string }
 
+// --- ids ---------------------------------------------------------------------------------------
+const TASK_NAMES = [
+  'report-parent',
+  'report-child-1',
+  'report-child-2',
+  'linked-card',
+  'solo',
+  'done',
+  'rolled-over',
+] as const
+type TaskName = (typeof TASK_NAMES)[number]
+
+// Two working days of pomodoro history, three focus/break pairs each, plus one unfinished focus
+// session earlier "today".
+const HISTORY_DAYS = [-3, -2] as const
+const CYCLES_PER_DAY = 3
+
+const sprintId = (key: string, which: 'week-current' | 'day-last'): string =>
+  demoId(`personal.sprint.${key}.${which}`)
+const taskId = (key: string, name: TaskName): string => demoId(`personal.task.${key}.${name}`)
+const noteId = (key: string, which: 'ideas' | 'meeting'): string =>
+  demoId(`personal.note.${key}.${which}`)
+const canvasId = (key: string): string => demoId(`personal.canvas.${key}.planning`)
+const pomodoroId = (key: string, kind: 'focus' | 'break', day: number, cycle: number): string =>
+  demoId(`personal.pomodoro.${key}.${kind}.${day}.${cycle}`)
+const pomodoroTodayId = (key: string): string => demoId(`personal.pomodoro.${key}.focus.today`)
+
+function allPomodoroSessionIds(key: string): string[] {
+  const ids: string[] = []
+  for (const day of HISTORY_DAYS) {
+    for (let cycle = 0; cycle < CYCLES_PER_DAY; cycle += 1) {
+      ids.push(pomodoroId(key, 'focus', day, cycle), pomodoroId(key, 'break', day, cycle))
+    }
+  }
+  ids.push(pomodoroTodayId(key))
+  return ids
+}
+
 async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean }): Promise<number> {
-  await setSeedUser(tx, user.id)
   let rows = 0
 
   // -- Sprints: one active "week" sprint (this week) with a goal, one completed "day" sprint from
   // last week (rollover history) -- TECH-SPEC §3.3 "sprints (3h/day/week/custom) with a goal and
   // rollover".
-  const weekSprintId = demoId(`personal.sprint.${user.key}.week-current`)
-  const lastDaySprintId = demoId(`personal.sprint.${user.key}.day-last`)
+  const weekSprintId = sprintId(user.key, 'week-current')
+  const lastDaySprintId = sprintId(user.key, 'day-last')
 
   const insertedSprints = await tx.drizzle
     .insert(schema.personalSprints)
@@ -82,13 +120,8 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
 
   // -- Nested tasks (checkboxes + drag order via `sort`; one subtree, one linked to a department
   // card, one rolled over from the completed sprint into the active one).
-  const parentTaskId = demoId(`personal.task.${user.key}.report-parent`)
-  const childTask1Id = demoId(`personal.task.${user.key}.report-child-1`)
-  const childTask2Id = demoId(`personal.task.${user.key}.report-child-2`)
-  const linkedTaskId = demoId(`personal.task.${user.key}.linked-card`)
-  const soloTaskId = demoId(`personal.task.${user.key}.solo`)
-  const doneTaskId = demoId(`personal.task.${user.key}.done`)
-  const rolledOverTaskId = demoId(`personal.task.${user.key}.rolled-over`)
+  const parentTaskId = taskId(user.key, 'report-parent')
+  const soloTaskId = taskId(user.key, 'solo')
 
   const insertedTasks = await tx.drizzle
     .insert(schema.personalTasks)
@@ -102,7 +135,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         estimateMin: 180,
       },
       {
-        id: childTask1Id,
+        id: taskId(user.key, 'report-child-1'),
         userId: user.id,
         sprintId: weekSprintId,
         parentId: parentTaskId,
@@ -112,7 +145,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         estimateMin: 60,
       },
       {
-        id: childTask2Id,
+        id: taskId(user.key, 'report-child-2'),
         userId: user.id,
         sprintId: weekSprintId,
         parentId: parentTaskId,
@@ -121,7 +154,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         estimateMin: 90,
       },
       {
-        id: linkedTaskId,
+        id: taskId(user.key, 'linked-card'),
         userId: user.id,
         sprintId: weekSprintId,
         title: 'Kartochka boʻyicha shaxsiy eslatma',
@@ -139,7 +172,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         estimateMin: 20,
       },
       {
-        id: doneTaskId,
+        id: taskId(user.key, 'done'),
         userId: user.id,
         sprintId: weekSprintId,
         title: 'Haftalik rejani yozish',
@@ -148,7 +181,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         estimateMin: 15,
       },
       {
-        id: rolledOverTaskId,
+        id: taskId(user.key, 'rolled-over'),
         userId: user.id,
         sprintId: lastDaySprintId,
         title: 'Arxivlanmagan murojaatlarni koʻrib chiqish',
@@ -162,14 +195,11 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   rows += insertedTasks.length
 
   // -- Notes.
-  const noteIdeasId = demoId(`personal.note.${user.key}.ideas`)
-  const noteMeetingId = demoId(`personal.note.${user.key}.meeting`)
-
   const insertedNotes = await tx.drizzle
     .insert(schema.personalNotes)
     .values([
       {
-        id: noteIdeasId,
+        id: noteId(user.key, 'ideas'),
         userId: user.id,
         title: 'Gʻoyalar roʻyxati',
         body: {
@@ -178,7 +208,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         pinned: true,
       },
       {
-        id: noteMeetingId,
+        id: noteId(user.key, 'meeting'),
         userId: user.id,
         title: 'Yigʻilish qaydlari - 2026-09-02',
         body: {
@@ -192,12 +222,11 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   rows += insertedNotes.length
 
   // -- Canvas: a small scene (two rectangles + one arrow) plus a sticky-note overlay.
-  const canvasId = demoId(`personal.canvas.${user.key}.planning`)
   const insertedCanvases = await tx.drizzle
     .insert(schema.personalCanvases)
     .values([
       {
-        id: canvasId,
+        id: canvasId(user.key),
         userId: user.id,
         title: 'Reja doskasi',
         scene: {
@@ -293,14 +322,13 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   const focusMin = opts.headed ? 30 : 25
   const shortBreakMin = 5
   const sessionRows: (typeof schema.pomodoroSessions.$inferInsert)[] = []
-  // Two working days of history, three focus/break pairs each.
-  for (let day = -3; day <= -2; day += 1) {
-    for (let cycle = 0; cycle < 3; cycle += 1) {
+  for (const day of HISTORY_DAYS) {
+    for (let cycle = 0; cycle < CYCLES_PER_DAY; cycle += 1) {
       const hour = 9 + cycle
       const focusStart = demoDate(day, hour, 0)
       const focusEnd = demoDate(day, hour, focusMin)
       sessionRows.push({
-        id: demoId(`personal.pomodoro.${user.key}.focus.${day}.${cycle}`),
+        id: pomodoroId(user.key, 'focus', day, cycle),
         userId: user.id,
         taskId: cycle === 0 ? parentTaskId : null,
         kind: 'focus',
@@ -309,7 +337,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
         completed: true,
       })
       sessionRows.push({
-        id: demoId(`personal.pomodoro.${user.key}.break.${day}.${cycle}`),
+        id: pomodoroId(user.key, 'break', day, cycle),
         userId: user.id,
         taskId: null,
         kind: cycle === 2 ? 'long_break' : 'short_break',
@@ -321,7 +349,7 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   }
   // One in-progress-looking (uncompleted) focus session earlier today, for the stats/"today" view.
   sessionRows.push({
-    id: demoId(`personal.pomodoro.${user.key}.focus.today`),
+    id: pomodoroTodayId(user.key),
     userId: user.id,
     taskId: soloTaskId,
     kind: 'focus',
@@ -340,28 +368,78 @@ async function seedForUser(tx: Tx, user: UserFixture, opts: { headed: boolean })
   return rows
 }
 
+/** Reverse of `seedForUser`: pomodoro sessions, settings, canvas, notes, tasks, sprints. The seven
+ * tasks go in one statement -- `personal_tasks_parent_id_fkey` is a plain (non-deferrable, NO ACTION)
+ * constraint, checked at the end of the statement, when parent and children are all already gone. */
+async function resetForUser(tx: Tx, user: UserFixture): Promise<number> {
+  let rows = 0
+
+  const deletedSessions = await tx.drizzle
+    .delete(schema.pomodoroSessions)
+    .where(inArray(schema.pomodoroSessions.id, allPomodoroSessionIds(user.key)))
+    .returning({ id: schema.pomodoroSessions.id })
+  rows += deletedSessions.length
+
+  const deletedSettings = await tx.drizzle
+    .delete(schema.pomodoroSettings)
+    .where(inArray(schema.pomodoroSettings.userId, [user.id]))
+    .returning({ userId: schema.pomodoroSettings.userId })
+  rows += deletedSettings.length
+
+  const deletedCanvases = await tx.drizzle
+    .delete(schema.personalCanvases)
+    .where(inArray(schema.personalCanvases.id, [canvasId(user.key)]))
+    .returning({ id: schema.personalCanvases.id })
+  rows += deletedCanvases.length
+
+  const deletedNotes = await tx.drizzle
+    .delete(schema.personalNotes)
+    .where(
+      inArray(schema.personalNotes.id, [noteId(user.key, 'ideas'), noteId(user.key, 'meeting')]),
+    )
+    .returning({ id: schema.personalNotes.id })
+  rows += deletedNotes.length
+
+  const deletedTasks = await tx.drizzle
+    .delete(schema.personalTasks)
+    .where(
+      inArray(
+        schema.personalTasks.id,
+        TASK_NAMES.map((name) => taskId(user.key, name)),
+      ),
+    )
+    .returning({ id: schema.personalTasks.id })
+  rows += deletedTasks.length
+
+  const deletedSprints = await tx.drizzle
+    .delete(schema.personalSprints)
+    .where(
+      inArray(schema.personalSprints.id, [
+        sprintId(user.key, 'week-current'),
+        sprintId(user.key, 'day-last'),
+      ]),
+    )
+    .returning({ id: schema.personalSprints.id })
+  rows += deletedSprints.length
+
+  return rows
+}
+
+const HEAD_FIXTURE: UserFixture = { id: HEAD.id, key: 'head', givenName: HEAD.givenName }
+const MEMBER_FIXTURE: UserFixture = { id: MEMBER.id, key: 'member', givenName: MEMBER.givenName }
+
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let rows = 0
-  try {
-    rows += await seedForUser(
-      tx,
-      { id: HEAD.id, key: 'head', givenName: HEAD.givenName },
-      {
-        headed: true,
-      },
-    )
-    rows += await seedForUser(
-      tx,
-      { id: MEMBER.id, key: 'member', givenName: MEMBER.givenName },
-      {
-        headed: false,
-      },
-    )
-  } finally {
-    // Restore the transaction-local GUC so a later seed module (higher `order`) never inherits this
-    // module's last user_id instead of `demoContext()`'s own (unset) value.
-    await setSeedUser(tx, null)
-  }
+  rows += await asUser(tx, HEAD.id, () => seedForUser(tx, HEAD_FIXTURE, { headed: true }))
+  rows += await asUser(tx, MEMBER.id, () => seedForUser(tx, MEMBER_FIXTURE, { headed: false }))
+  return rows
+}
+
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let rows = 0
+  rows += await asUser(tx, MEMBER.id, () => resetForUser(tx, MEMBER_FIXTURE))
+  rows += await asUser(tx, HEAD.id, () => resetForUser(tx, HEAD_FIXTURE))
   return rows
 }

@@ -6,31 +6,27 @@
 // RLS on `app.departments`/`app.memberships` requires `department_id = current_setting('app.department_id')`
 // on every write (`migrations/0005_rls.sql`) -- the single `tx` this module receives is bound to the
 // *existing* demo department's id for the whole seed run (`demo.ts`'s `demoContext()`), so a second and
-// third department's rows need that GUC pointed at their own id instead while they're written.
+// third department's rows need that GUC pointed at their own id instead while they're written (and,
+// in `reset()`, deleted). That is `scope.ts`'s `asDepartment`: the one shared connection and
+// transaction -- so it always sees `accounts.ts`'s still-uncommitted users -- with only the
+// `app.department_id` GUC re-pointed for the duration of one department's statements, restored after.
 //
-// A real approved `POST /departments/requests/:id/approve` request gets this for free: it opens its
-// own fresh `withContext()` with the new department's id as the GUC from the start
-// (`apps/api/src/modules/departments/repo.ts`'s `approveDepartmentRequest`), because by the time that
-// request runs, the department's future head/members were already committed by their own, earlier,
-// already-finished requests (registration, join-by-link, ...). This seed run has no such luxury --
-// `demo.ts` wraps every module's `seed()` in one shared transaction on one connection specifically so
-// a later module can see an earlier module's still-uncommitted inserts (its own header comment: "a
-// later module's fixtures can depend on an earlier module having already inserted the row they
-// reference"). `accounts.ts` (order 10) inserts this module's head/member users into that same
-// uncommitted transaction, so a *second*, independently-opened `withContext()` here -- a different
-// pooled connection, hence a different Postgres session -- could never see them: MVCC visibility does
-// not cross sessions, committed or not, which is exactly the `memberships_user_id_fkey` violation this
-// used to throw. Fix: stay on the one shared `tx` (same connection, same transaction, so it always
-// sees the whole run's own prior writes) and flip only the `app.department_id` GUC around each new
-// department's writes via `tx.raw(set_config(..., true))`, restoring it before returning so the rest
-// of `seed()` (and every module after this one) still sees `DEMO_DEPARTMENT.id`, unchanged.
+// A second, independently-opened `withContext()` here would be a different pooled connection, hence a
+// different Postgres session, and could never see those users (MVCC visibility does not cross
+// sessions, committed or not) -- exactly the `memberships_user_id_fkey` violation this module used to
+// throw. A real approved `POST /departments/requests/:id/approve` request can afford a fresh
+// `withContext()` (`apps/api/src/modules/departments/repo.ts`'s `approveDepartmentRequest`) because by
+// then the department's future head/members were committed by their own, earlier, already-finished
+// requests; a seed run has no such luxury.
 import { randomBytes } from 'node:crypto'
-import { sql } from 'drizzle-orm'
+import { eq, inArray, sql } from 'drizzle-orm'
 import { hash } from '@node-rs/argon2'
 import type { Tx } from '../../context.js'
 import * as schema from '../../schema/index.js'
+import { departmentRequests } from '../../schema/departments.js'
 import { DEMO_DEPARTMENT } from '../fixtures.js'
 import { demoId } from '../ids.js'
+import { asDepartment } from '../scope.js'
 import { EXTRA_USERS, extraUserId } from './accounts.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
@@ -75,26 +71,27 @@ const NEW_DEPARTMENTS: NewDeptSpec[] = [
 
 const CORE_EXTRA_MEMBER_INDEXES = Array.from({ length: 10 }, (_, i) => i + 26) // 26..35
 const PENDING_REQUEST_USER_INDEX = 36
+const PENDING_REQUEST_ID = demoId('department_request.licensing')
 
-/**
- * Writes on the *shared* `tx` (same connection, same still-open transaction as every other seed
- * module -- see file header): `accounts.ts` (order 10) inserted this department's head/member users
- * into that same transaction, and MVCC visibility does not cross Postgres sessions, so a second,
- * independently-opened connection here could never see those still-uncommitted rows (the
- * `memberships_user_id_fkey` violation this used to throw). Instead we flip the `app.department_id`
- * GUC to this department's id for the duration of these writes -- `SET LOCAL` semantics
- * (`set_config(..., true)`), same transaction, so it does not leak past commit -- and restore it to
- * `DEMO_DEPARTMENT.id` before returning so the rest of `seed()` (and every module after this one)
- * still sees the original department in scope.
- */
+// The one place the ids this module writes are named, so `seed()` and `reset()` cannot drift apart.
+function membershipIdsFor(spec: NewDeptSpec): { headId: string; memberIds: string[] } {
+  return {
+    headId: demoId(`membership.${spec.key}.head`),
+    memberIds: spec.memberIndexes.map((idx) => demoId(`membership.${spec.key}.member.${idx}`)),
+  }
+}
+
+const coreExtraMembershipIds = (): string[] =>
+  CORE_EXTRA_MEMBER_INDEXES.map((idx) => demoId(`membership.core.member.${idx}`))
+
 async function createDepartmentWithHead(tx: Tx, spec: NewDeptSpec): Promise<number> {
   const departmentId = demoId(spec.key)
   const headUserId = extraUserId(EXTRA_USERS[spec.headIndex]!)
   const joinKey = generateJoinKey()
   const joinPasswordHash = await hash(generateJoinPassword())
+  const { headId, memberIds } = membershipIdsFor(spec)
 
-  await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
-  try {
+  return asDepartment(tx, departmentId, async () => {
     let rows = 0
 
     const insertedDept = await tx.drizzle
@@ -113,9 +110,9 @@ async function createDepartmentWithHead(tx: Tx, spec: NewDeptSpec): Promise<numb
     }
 
     const membershipRows = [
-      { id: demoId(`membership.${spec.key}.head`), userId: headUserId, role: 'head' as const },
-      ...spec.memberIndexes.map((idx) => ({
-        id: demoId(`membership.${spec.key}.member.${idx}`),
+      { id: headId, userId: headUserId, role: 'head' as const },
+      ...spec.memberIndexes.map((idx, i) => ({
+        id: memberIds[i]!,
         userId: extraUserId(EXTRA_USERS[idx]!),
         role: 'member' as const,
       })),
@@ -136,17 +133,37 @@ async function createDepartmentWithHead(tx: Tx, spec: NewDeptSpec): Promise<numb
     })
 
     return rows
-  } finally {
-    await tx.raw(sql`select set_config('app.department_id', ${DEMO_DEPARTMENT.id}, true)`)
-  }
+  })
+}
+
+/** The mirror of `createDepartmentWithHead`: memberships, then the department itself, under that
+ * department's own GUC (`departments_write`'s `using` clause needs `id = current_department_id()`;
+ * `memberships_write` the same on `department_id` -- neither has a super-admin carve-out). */
+async function resetDepartment(tx: Tx, spec: NewDeptSpec): Promise<number> {
+  const departmentId = demoId(spec.key)
+  const { headId, memberIds } = membershipIdsFor(spec)
+
+  return asDepartment(tx, departmentId, async () => {
+    const deletedMemberships = await tx.drizzle
+      .delete(schema.memberships)
+      .where(inArray(schema.memberships.id, [headId, ...memberIds]))
+      .returning({ id: schema.memberships.id })
+
+    const deletedDepartments = await tx.drizzle
+      .delete(schema.departments)
+      .where(eq(schema.departments.id, departmentId))
+      .returning({ id: schema.departments.id })
+
+    return deletedMemberships.length + deletedDepartments.length
+  })
 }
 
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let rows = 0
 
-  // The two new departments each need their own transaction (see file header) -- sequential, not
-  // Promise.all, so a duplicate-slug race between them can never happen even though their ids differ.
+  // Sequential, not Promise.all: both departments' statements go down the one shared connection, and
+  // the order in which they are written is part of what makes a seed run deterministic.
   for (const spec of NEW_DEPARTMENTS) {
     rows += await createDepartmentWithHead(tx, spec)
   }
@@ -164,8 +181,9 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   rows += updatedCore.length
 
   // Ten more members join the existing demo department.
-  const coreMemberships = CORE_EXTRA_MEMBER_INDEXES.map((idx) => ({
-    id: demoId(`membership.core.member.${idx}`),
+  const coreMembershipIds = coreExtraMembershipIds()
+  const coreMemberships = CORE_EXTRA_MEMBER_INDEXES.map((idx, i) => ({
+    id: coreMembershipIds[i]!,
     departmentId: DEMO_DEPARTMENT.id,
     userId: extraUserId(EXTRA_USERS[idx]!),
     role: 'member' as const,
@@ -182,7 +200,6 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   // queue demo shows.
   const requester = EXTRA_USERS[PENDING_REQUEST_USER_INDEX]!
   const requesterUserId = extraUserId(requester)
-  const requestId = demoId('department_request.licensing')
   const units = JSON.stringify([
     { name: 'Litsenziya nazorati', colour: '#2563eb' },
     { name: "Ruxsatnomalar bo'limi", colour: '#16a34a' },
@@ -191,7 +208,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     sql`insert into app.department_requests
           (id, requester_user_id, name, description, units, locale, status)
         values (
-          ${requestId},
+          ${PENDING_REQUEST_ID},
           ${requesterUserId},
           'Litsenziyalash boshqarmasi',
           ${"Litsenziyalar va ruxsatnomalar bilan ishlash bo'yicha boshqarma."},
@@ -203,6 +220,36 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         returning id`,
   )
   rows += insertedRequest.length
+
+  return rows
+}
+
+/** Reverse of `seed()`. The core department's own invite fields are not "un-set" here: that
+ * department is deleted outright by `runResetDemo` (`DEMO_DELETE_ORDER`) right after every module's
+ * `reset()` has run. */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let rows = 0
+
+  // The pending request references its requester (`accounts.ts`, order 10, whose `reset()` runs after
+  // this one). `app.department_requests` is a global table (no RLS) -- a plain delete by id.
+  const deletedRequest = await tx.drizzle
+    .delete(departmentRequests)
+    .where(eq(departmentRequests.id, PENDING_REQUEST_ID))
+    .returning({ id: departmentRequests.id })
+  rows += deletedRequest.length
+
+  // The ten extra memberships in the core department -- the GUC already matches it.
+  const deletedCoreMemberships = await tx.drizzle
+    .delete(schema.memberships)
+    .where(inArray(schema.memberships.id, coreExtraMembershipIds()))
+    .returning({ id: schema.memberships.id })
+  rows += deletedCoreMemberships.length
+
+  // The two departments this module created, in reverse creation order.
+  for (const spec of [...NEW_DEPARTMENTS].reverse()) {
+    rows += await resetDepartment(tx, spec)
+  }
 
   return rows
 }

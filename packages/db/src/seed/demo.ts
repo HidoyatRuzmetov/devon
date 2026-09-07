@@ -139,6 +139,12 @@ export async function runSeedDemo(
  * demo UUIDv5 namespace and whose `seed_runs.name` matches, then deletes the `seed_runs` row and turns
  * the demo chip back off. Never touches `audit.*` -- `audit.events` has no delete path, by design
  * (I-3/I-5a). Refuses under the same production guard as `seed:demo`.
+ *
+ * Every seed module's `reset()` runs first, in *descending* `order` -- the exact reverse of
+ * `runSeedDemo`'s ascending `seed()` loop, so a module's rows are gone before the rows they point at
+ * (an earlier module's users/departments) are deleted -- and only then the foundation rows from
+ * `core.ts` (`DEMO_DELETE_ORDER`) go, in the same shared transaction: either everything is reset or
+ * nothing is.
  */
 export async function runResetDemo(
   env: SeedEnv & { DATABASE_URL?: string } = process.env,
@@ -159,12 +165,26 @@ export async function runResetDemo(
         }
       }
 
+      // Every module's own rows first, highest `order` first (the reverse of `runSeedDemo`): a later
+      // module's rows reference an earlier module's (a card its assignee, a unit its department), so
+      // the dependants have to go before what they depend on. Sequential for the same reason
+      // `runSeedDemo` is. A module without `reset()` (`core.ts`) contributes nothing here -- its rows
+      // are `DEMO_DELETE_ORDER`, deleted below.
+      const seedModules = await loadSeedModules()
+      let moduleRowsDeleted = 0
+      for (let i = seedModules.length - 1; i >= 0; i -= 1) {
+        const reset = seedModules[i]!.reset
+        if (reset) moduleRowsDeleted += await reset({ tx })
+      }
+
       // Sessions aren't part of `DEMO_DELETE_ORDER` (they're not "demo data" -- a session row is
       // created by a real login against a demo account, not by any seed module), but they still hold
       // an `app.sessions.user_id` FK straight at `app.users`. Logging into a demo account and then
       // running `seed:reset --demo` is the ordinary path (it is exactly how a demo gets reset between
       // presentations), so this must not depend on every such session already having expired --
-      // without this delete, `deletedUsers` below fails with `sessions_user_id_fkey`.
+      // without this delete, `deletedUsers` below fails with `sessions_user_id_fkey`. (Modules that
+      // seed users of their own -- `accounts.ts`, `work.ts`, `structure.ts` -- do the same for theirs
+      // inside their `reset()`, since every demo account shares `DEMO_PASSWORD` and can be logged into.)
       await tx.drizzle
         .delete(schema.sessions)
         .where(inArray(schema.sessions.userId, [...DEMO_DELETE_ORDER[2].ids]))
@@ -196,7 +216,10 @@ export async function runResetDemo(
       )
 
       const rowsDeleted =
-        deletedMemberships.length + deletedDepartments.length + deletedUsers.length
+        moduleRowsDeleted +
+        deletedMemberships.length +
+        deletedDepartments.length +
+        deletedUsers.length
 
       tx.audit({
         action: 'seed.demo_reset',
