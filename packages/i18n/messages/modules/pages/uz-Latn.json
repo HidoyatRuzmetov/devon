@@ -12,12 +12,12 @@
       "note": "Qayd"
     },
     "empty": {
-      "title": "Hali sahifalar yo'q",
-      "body": "Bo'limingiz uchun birinchi sahifani yarating — masalan, \"Biz qanday ishlaymiz\"."
+      "title": "Hali sahifalar yoʻq",
+      "body": "Boʻlimingiz uchun birinchi sahifani yarating — masalan, \"Biz qanday ishlaymiz\"."
     },
-    "backToList": "Sahifalar ro'yxatiga qaytish",
-    "delete": "Sahifani o'chirish",
-    "deleted": "Sahifa o'chirildi",
+    "backToList": "Sahifalar roʻyxatiga qaytish",
+    "delete": "Sahifani oʻchirish",
+    "deleted": "Sahifa oʻchirildi",
     "editor": {
       "titlePlaceholder": "Sarlavha",
       "save": "Saqlash",
@@ -28,9 +28,9 @@
         "italic": "Qiya",
         "heading1": "Sarlavha 1",
         "heading2": "Sarlavha 2",
-        "bulletList": "Belgili ro'yxat",
-        "orderedList": "Raqamli ro'yxat",
-        "taskList": "Ro'yxat (belgilash mumkin)",
+        "bulletList": "Belgili roʻyxat",
+        "orderedList": "Raqamli roʻyxat",
+        "taskList": "Roʻyxat (belgilash mumkin)",
         "callout": "Eslatma bloki",
         "mention": "Kishini eslatish",
         "blockquote": "Iqtibos",
@@ -55,41 +55,41 @@
     },
     "versions": {
       "title": "Versiyalar tarixi",
-      "empty": "Hali versiyalar yo'q",
+      "empty": "Hali versiyalar yoʻq",
       "restore": "Ushbu versiyani tiklash",
       "restored": "Versiya tiklandi",
-      "viewDiff": "Farqni ko'rish",
+      "viewDiff": "Farqni koʻrish",
       "current": "Joriy",
       "by": "Muallif: {name}"
     },
     "diff": {
-      "added": "Qo'shilgan",
-      "removed": "O'chirilgan",
-      "noChanges": "Bu versiyalar orasida farq yo'q"
+      "added": "Qoʻshilgan",
+      "removed": "Oʻchirilgan",
+      "noChanges": "Bu versiyalar orasida farq yoʻq"
     },
     "conflict": {
       "title": "Sahifa allaqachon yangilangan",
-      "body": "Boshqa birov shu orada o'zgartirish kiritdi. Sahifani qayta yuklab, o'zgarishlaringizni qayta kiriting."
+      "body": "Boshqa birov shu orada oʻzgartirish kiritdi. Sahifani qayta yuklab, oʻzgarishlaringizni qayta kiriting."
     },
     "onboarding": {
-      "title": "Moslashuv ro'yxati",
-      "subtitle": "Yangi xodim bo'limga qo'shilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar ro'yxatiga qo'shiladi.",
+      "title": "Moslashuv roʻyxati",
+      "subtitle": "Yangi xodim boʻlimga qoʻshilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar roʻyxatiga qoʻshiladi.",
       "enable": "Yoqish",
       "enabled": "Yoqilgan",
-      "disabled": "O'chirilgan",
-      "newTemplate": "Yangi ro'yxat",
-      "namePlaceholder": "Ro'yxat nomi",
-      "addItem": "Band qo'shish",
+      "disabled": "Oʻchirilgan",
+      "newTemplate": "Yangi roʻyxat",
+      "namePlaceholder": "Roʻyxat nomi",
+      "addItem": "Band qoʻshish",
       "itemPlaceholder": "Nima qilish kerak?",
       "ownerRole": {
         "newcomer": "Yangi xodim",
-        "head": "Bo'lim rahbari",
+        "head": "Boʻlim rahbari",
         "buddy": "Yordamchi hamkasb"
       },
-      "empty": "Hali moslashuv ro'yxati yo'q",
+      "empty": "Hali moslashuv roʻyxati yoʻq",
       "save": "Saqlash",
       "saved": "Saqlandi",
-      "removeItem": "Bandni o'chirish"
+      "removeItem": "Bandni oʻchirish"
     }
   }
 }

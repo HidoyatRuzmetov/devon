@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatTime, formatNumber, formatUzs } from '../../src/format.js'
+import { formatDate, formatTime, formatNumber, formatUzs, formatRelativeTime } from '../../src/format.js'
 import type { Locale } from '../../src/locale.js'
 
 const LOCALES: Locale[] = ['uz-Latn', 'uz-Cyrl', 'ru', 'en']
@@ -45,6 +45,14 @@ describe('formatNumber (space thousands, comma decimal in uz/ru; standard en)', 
   it('uses the standard comma-thousands, dot-decimal form for en', () => {
     expect(formatNumber(1234567.5, 'en')).toBe('1,234,567.5')
   })
+
+  // round2 SEV1: a real embedded-Chromium build resolves 'uz-Latn' to the 'uz' macrolanguage and
+  // groups with an ASCII comma ("500,000") regardless of what Node's own ICU does -- so this is
+  // asserted directly against the exact input from that report rather than only through the
+  // parametrised 1234567.5 case above.
+  it('never uses an ASCII comma as the uz-Latn group separator, regardless of runtime ICU', () => {
+    expect(formatNumber(500000, 'uz-Latn')).toBe(`500${NBSP}000`)
+  })
 })
 
 describe('formatUzs (maximumFractionDigits: 0, everyday word rather than the ISO code)', () => {
@@ -57,5 +65,35 @@ describe('formatUzs (maximumFractionDigits: 0, everyday word rather than the ISO
 
   it('drops fractional som', () => {
     expect(formatUzs(999.9, 'en')).toBe('UZS 1,000')
+  })
+})
+
+// round2 SEV1: a real embedded-Chromium build resolves 'uz-Latn' to the bare 'uz' macrolanguage tag,
+// which has no CLDR relative-time data and silently falls back to English text ("now", "-12 min").
+// Node's own ICU does not reproduce this, so the guard has to be a direct never-contains-English
+// assertion rather than a snapshot of one call.
+describe('formatRelativeTime (uz-Latn must never fall back to English CLDR text)', () => {
+  const now = new Date('2026-09-06T13:30:00Z')
+  const ENGLISH_LEAK = /\b(min|h|now)\b/i
+
+  it('renders Uzbek words for uz-Latn at every magnitude', () => {
+    expect(formatRelativeTime(now, 'uz-Latn', now)).toBe('hozir')
+    expect(
+      formatRelativeTime(new Date(now.getTime() - 12 * 60 * 1000), 'uz-Latn', now),
+    ).toBe('12 daqiqa oldin')
+    expect(
+      formatRelativeTime(new Date(now.getTime() - 3 * 60 * 60 * 1000), 'uz-Latn', now),
+    ).toBe('3 soat oldin')
+    expect(
+      formatRelativeTime(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), 'uz-Latn', now),
+    ).toBe('2 kun oldin')
+  })
+
+  it('never contains English relative-time fragments for uz-Latn', () => {
+    for (const deltaMs of [0, -30_000, -12 * 60_000, -3 * 3_600_000, -2 * 86_400_000]) {
+      expect(formatRelativeTime(new Date(now.getTime() + deltaMs), 'uz-Latn', now)).not.toMatch(
+        ENGLISH_LEAK,
+      )
+    }
   })
 })

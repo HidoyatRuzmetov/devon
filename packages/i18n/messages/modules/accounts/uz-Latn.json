@@ -4,16 +4,16 @@
       "title": "Ikki bosqichli tekshiruv",
       "body": "Autentifikatsiya ilovasidagi 6 xonali kodni yoki tiklash kodlaringizdan birini kiriting.",
       "code": "Kod",
-      "error": "Kod noto'g'ri yoki muddati o'tgan. Qayta urinib ko'ring.",
+      "error": "Kod notoʻgʻri yoki muddati oʻtgan. Qayta urinib koʻring.",
       "submit": "Tasdiqlash",
       "back": "Ortga qaytish"
     },
     "login": {
-      "registerPrompt": "Hisobingiz yo'qmi?",
-      "registerLink": "Ro'yxatdan o'tish"
+      "registerPrompt": "Hisobingiz yoʻqmi?",
+      "registerLink": "Roʻyxatdan oʻtish"
     },
     "register": {
-      "title": "Ro'yxatdan o'tish",
+      "title": "Roʻyxatdan oʻtish",
       "subtitle": "Devon'dan foydalanish uchun hisob yarating.",
       "login": "Login",
       "loginHint": "Kichik lotin harflar, raqamlar, nuqta, tire",
@@ -37,19 +37,19 @@
       "loginLink": "Kirish",
       "error": {
         "conflict": "Bu login band. Boshqasini tanlang.",
-        "generic": "Ro'yxatdan o'tib bo'lmadi. Ma'lumotlarni tekshirib, qayta urinib ko'ring."
+        "generic": "Roʻyxatdan oʻtib boʻlmadi. Ma'lumotlarni tekshirib, qayta urinib koʻring."
       }
     },
     "sessions": {
       "title": "Qurilmalar va seanslar",
-      "subtitle": "Hisobingizga kirilgan barcha qurilmalar ro'yxati.",
+      "subtitle": "Hisobingizga kirilgan barcha qurilmalar roʻyxati.",
       "empty": {
-        "title": "Faol seanslar yo'q"
+        "title": "Faol seanslar yoʻq"
       },
       "current": "Joriy qurilma",
       "unknownDevice": "Noma'lum qurilma",
       "lastSeen": "Oxirgi faollik: {when}",
-      "showAll": "Yana {count} tasini ko'rsatish",
+      "showAll": "Yana {count} tasini koʻrsatish",
       "revoke": "Chiqish",
       "revokeAll": "Barcha qurilmalardan chiqish",
       "revokeAllConfirm": "Barcha qurilmalardan, jumladan joriy qurilmadan ham chiqasiz. Davom etasizmi?",
@@ -58,27 +58,27 @@
     },
     "twoFactor": {
       "title": "Ikki bosqichli tekshiruv (2FA)",
-      "subtitle": "Autentifikatsiya ilovasi orqali hisobingizni qo'shimcha himoya qiling.",
+      "subtitle": "Autentifikatsiya ilovasi orqali hisobingizni qoʻshimcha himoya qiling.",
       "enabled": "Yoqilgan",
-      "disabled": "O'chirilgan",
+      "disabled": "Oʻchirilgan",
       "enable": "Yoqish",
-      "disable": "O'chirish",
+      "disable": "Oʻchirish",
       "enroll": {
         "step1": "1-qadam: QR yoki kodni skanerlang",
-        "secretLabel": "Qo'lda kiritish uchun kalit",
+        "secretLabel": "Qoʻlda kiritish uchun kalit",
         "codeLabel": "Ilovadagi 6 xonali kod",
         "verify": "Tasdiqlash va yoqish",
-        "error": "Kod noto'g'ri. Ilovadagi vaqt to'g'riligini tekshiring.",
-        "recoveryTitle": "Zaxira kodlarni saqlab qo'ying",
-        "recoveryBody": "Bu kodlar faqat bir marta ko'rsatiladi. Telefoningiz yo'qolsa, ulardan foydalanib kirishingiz mumkin.",
+        "error": "Kod notoʻgʻri. Ilovadagi vaqt toʻgʻriligini tekshiring.",
+        "recoveryTitle": "Zaxira kodlarni saqlab qoʻying",
+        "recoveryBody": "Bu kodlar faqat bir marta koʻrsatiladi. Telefoningiz yoʻqolsa, ulardan foydalanib kirishingiz mumkin.",
         "recoveryCopied": "Kodlar nusxalandi",
         "done": "Tayyor"
       },
       "disableDialog": {
-        "title": "2FA'ni o'chirish",
+        "title": "2FA'ni oʻchirish",
         "passwordLabel": "Parolingizni tasdiqlang",
-        "submit": "O'chirish",
-        "error": "Parol noto'g'ri"
+        "submit": "Oʻchirish",
+        "error": "Parol notoʻgʻri"
       }
     },
     "password": {
@@ -87,16 +87,16 @@
       "new": "Yangi parol",
       "submit": "Saqlash",
       "success": "Parol yangilandi",
-      "error": "Joriy parol noto'g'ri"
+      "error": "Joriy parol notoʻgʻri"
     },
     "delete": {
-      "title": "Hisobni o'chirish",
-      "warning": "Hisobingiz 30 kundan so'ng butunlay o'chiriladi va shaxsiy ma'lumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin.",
-      "confirm": "O'chirishni so'rash",
-      "confirmDialog": "Hisobingizni rostdan ham o'chirmoqchimisiz?",
+      "title": "Hisobni oʻchirish",
+      "warning": "Hisobingiz 30 kundan soʻng butunlay oʻchiriladi va shaxsiy ma'lumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin.",
+      "confirm": "Oʻchirishni soʻrash",
+      "confirmDialog": "Hisobingizni rostdan ham oʻchirmoqchimisiz?",
       "cancel": "Bekor qilish",
-      "scheduled": "Hisobingiz {date} sanasida o'chiriladi.",
-      "cancelled": "O'chirish so'rovi bekor qilindi",
+      "scheduled": "Hisobingiz {date} sanasida oʻchiriladi.",
+      "cancelled": "Oʻchirish soʻrovi bekor qilindi",
       "dialog": {
         "loginLabel": "Tasdiqlash uchun loginingizni kiriting: {login}"
       }
@@ -107,7 +107,7 @@
         "button": "Vaqtinchalik parol berish",
         "confirm": "Bu foydalanuvchi uchun vaqtinchalik parol yaratilsin va barcha seanslari yopilsinmi?",
         "success": "Vaqtinchalik parol yaratildi",
-        "tempPasswordLabel": "Vaqtinchalik parol (faqat hozir ko'rinadi)",
+        "tempPasswordLabel": "Vaqtinchalik parol (faqat hozir koʻrinadi)",
         "copy": "Nusxalash",
         "copied": "Nusxalandi"
       }
@@ -122,25 +122,25 @@
     },
     "photo": {
       "title": "Profil surati",
-      "subtitle": "Devon'da ismingiz yonida ko'rsatiladi.",
-      "hint": "JPEG, PNG yoki WebP, 5 MB gacha. Surat ko'rsatilishidan oldin zararli dasturlarga tekshiriladi va o'lchami moslanadi.",
+      "subtitle": "Devon'da ismingiz yonida koʻrsatiladi.",
+      "hint": "JPEG, PNG yoki WebP, 5 MB gacha. Surat koʻrsatilishidan oldin zararli dasturlarga tekshiriladi va oʻlchami moslanadi.",
       "choose": "Surat tanlash",
-      "change": "Suratni o'zgartirish",
-      "remove": "Suratni o'chirish",
+      "change": "Suratni oʻzgartirish",
+      "remove": "Suratni oʻchirish",
       "optional": "Surat (ixtiyoriy)",
       "uploading": "Yuklanmoqda…",
       "scanning": "Fayl tekshirilmoqda…",
       "savedToast": "Surat yangilandi",
-      "removedToast": "Surat o'chirildi",
-      "registerFailedToast": "Hisobingiz yaratildi, lekin suratni yuklab bo'lmadi. Uni Hisob sozlamalarida qo'shishingiz mumkin.",
+      "removedToast": "Surat oʻchirildi",
+      "registerFailedToast": "Hisobingiz yaratildi, lekin suratni yuklab boʻlmadi. Uni Hisob sozlamalarida qoʻshishingiz mumkin.",
       "alt": "Profil suratingiz",
       "error": {
         "type": "JPEG, PNG yoki WebP formatidagi rasm tanlang.",
         "tooLarge": "Fayl hajmi 5 MB dan katta.",
         "invalidImage": "Bu fayl yaroqli rasm emas.",
-        "infected": "Bu fayl zararli dastur tekshiruvidan o'tmadi va saqlanmadi.",
-        "unavailable": "Surat yuklash hozircha ishlamayapti. Bir necha daqiqadan so'ng qayta urinib ko'ring.",
-        "generic": "Suratni yuklab bo'lmadi. Qayta urinib ko'ring."
+        "infected": "Bu fayl zararli dastur tekshiruvidan oʻtmadi va saqlanmadi.",
+        "unavailable": "Surat yuklash hozircha ishlamayapti. Bir necha daqiqadan soʻng qayta urinib koʻring.",
+        "generic": "Suratni yuklab boʻlmadi. Qayta urinib koʻring."
       }
     }
   }

@@ -452,6 +452,16 @@
           "degraded": "Замедлен",
           "down": "Не работает",
           "not_configured": "Не настроено"
+        },
+        "detail": {
+          "error.raw": "{message}",
+          "queue.pending": "Ожидающих событий: {count}",
+          "queue.pendingOldest": "Ожидающих событий: {count}, самое старое {seconds} с назад",
+          "queue.unreadable": "Не удалось прочитать очередь",
+          "storage.free": "Свободно {gb} ГБ",
+          "telegram.connected": "Подключено групп: {count}",
+          "backups.none": "Резервные копии не найдены",
+          "backups.latest": "Последняя резервная копия {hours} ч назад"
         }
       },
       "settings": {

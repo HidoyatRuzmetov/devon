@@ -1,5 +1,6 @@
 import * as React from 'react'
 import NumberFlow from '@number-flow/react'
+import { numberFlowLocale, type Locale } from '@devon/i18n'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
 
 export interface StatNumberProps {
@@ -30,7 +31,7 @@ export function StatNumber({
       value={value}
       animated={!reduced}
       className={className}
-      {...(locale ? { locales: locale } : {})}
+      {...(locale ? { locales: numberFlowLocale(locale as Locale) } : {})}
       {...(prefix ? { prefix } : {})}
       {...(suffix ? { suffix } : {})}
     />

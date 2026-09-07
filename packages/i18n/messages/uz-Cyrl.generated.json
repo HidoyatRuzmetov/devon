@@ -452,6 +452,16 @@
           "degraded": "Секинлашган",
           "down": "Ишламаяпти",
           "not_configured": "Созланмаган"
+        },
+        "detail": {
+          "error.raw": "{message}",
+          "queue.pending": "Кутилаётган ҳодисалар: {count}",
+          "queue.pendingOldest": "Кутилаётган ҳодисалар: {count}, энг эскиси {seconds} сония олдин",
+          "queue.unreadable": "Навбатни ўқиб бўлмади",
+          "storage.free": "{gb} ГБ бўш жой",
+          "telegram.connected": "Уланган гуруҳлар: {count}",
+          "backups.none": "Захира нусха топилмади",
+          "backups.latest": "Охирги захира {hours} соат олдин"
         }
       },
       "settings": {

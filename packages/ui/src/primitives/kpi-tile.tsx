@@ -1,6 +1,7 @@
 import * as React from 'react'
 import NumberFlow from '@number-flow/react'
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from 'lucide-react'
+import { numberFlowLocale, type Locale } from '@devon/i18n'
 import { cn } from '../lib/cn.js'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
 
@@ -74,7 +75,15 @@ export function KpiTile({
           <NumberFlow
             value={value}
             animated={!reduced}
-            {...(locale ? { locales: locale } : {})}
+            {...(locale
+              ? {
+                  // NumberFlow has no formatToParts hook of its own, so uz-Latn is handed uz-Cyrl's
+                  // locale tag instead (see `numberFlowLocale`'s doc comment) -- same digits, correct
+                  // (space) grouping, rather than the comma grouping a real browser's reduced uz CLDR
+                  // data gives it.
+                  locales: numberFlowLocale(locale as Locale),
+                }
+              : {})}
             {...(prefix ? { prefix } : {})}
             {...(suffix ? { suffix } : {})}
           />

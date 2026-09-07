@@ -31,7 +31,7 @@
     },
     "filterBar": {
       "placeholder": "assignee:@me status:active due:<today",
-      "apply": "Qo'llash",
+      "apply": "Qoʻllash",
       "clear": "Tozalash",
       "since": "Boshlanishi",
       "until": "Tugashi",
@@ -45,9 +45,9 @@
       "new": "Filtrni saqlash",
       "namePlaceholder": "Filtr nomi",
       "save": "Saqlash",
-      "delete": "O'chirish",
-      "shared": "Bo'lim bilan bo'lishilgan",
-      "empty": "Hali saqlangan filtr yo'q"
+      "delete": "Oʻchirish",
+      "shared": "Boʻlim bilan boʻlishilgan",
+      "empty": "Hali saqlangan filtr yoʻq"
     },
     "actions": {
       "export": "Eksport",
@@ -55,84 +55,84 @@
       "exportPng": "Rasm sifatida yuklab olish",
       "pin": "Bosh sahifaga mahkamlash",
       "unpin": "Mahkamlashni bekor qilish",
-      "viewAsTable": "Jadval ko'rinishida ko'rish",
-      "viewAsChart": "Diagramma ko'rinishida ko'rish"
+      "viewAsTable": "Jadval koʻrinishida koʻrish",
+      "viewAsChart": "Diagramma koʻrinishida koʻrish"
     },
     "legend": {
       "open": "Ochiq",
-      "overdue": "Muddati o'tgan",
+      "overdue": "Muddati oʻtgan",
       "done": "Bajarilgan",
       "yes": "Kelaman",
       "no": "Kelmayman",
       "maybe": "Balki",
-      "waitlist": "Kutish ro'yxatida",
-      "unassigned": "Bo'limsiz"
+      "waitlist": "Kutish roʻyxatida",
+      "unassigned": "Boʻlimsiz"
     },
     "sections": {
       "throughput": {
         "title": "Haftalik bajarilgan topshiriqlar",
         "question": "Har hafta nechta topshiriq yakunlandi?",
-        "empty": "Hali yakunlangan topshiriqlar yo'q"
+        "empty": "Hali yakunlangan topshiriqlar yoʻq"
       },
       "onTimeRate": {
-        "title": "O'z vaqtida bajarilish darajasi",
+        "title": "Oʻz vaqtida bajarilish darajasi",
         "question": "Topshiriqlar muddatida bajarilyaptimi?",
         "overall": "Umumiy: {percent}%",
-        "empty": "Baholash uchun yetarli ma'lumot yo'q"
+        "empty": "Baholash uchun yetarli ma'lumot yoʻq"
       },
       "openVsOverdue": {
-        "title": "Ochiq va muddati o'tgan topshiriqlar",
+        "title": "Ochiq va muddati oʻtgan topshiriqlar",
         "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?",
-        "empty": "Hozircha ochiq topshiriqlar yo'q"
+        "empty": "Hozircha ochiq topshiriqlar yoʻq"
       },
       "loadPerPerson": {
-        "title": "Xodimlar bo'yicha yuklama",
+        "title": "Xodimlar boʻyicha yuklama",
         "question": "Hozir kimning ustida qancha ish bor?",
         "empty": "Hozircha hech kimga topshiriq biriktirilmagan"
       },
       "loadPerUnit": {
-        "title": "Bo'limlar bo'yicha yuklama",
-        "question": "Qaysi bo'lim eng band?",
-        "empty": "Hozircha bo'limlar bo'yicha ma'lumot yo'q"
+        "title": "Boʻlimlar boʻyicha yuklama",
+        "question": "Qaysi boʻlim eng band?",
+        "empty": "Hozircha boʻlimlar boʻyicha ma'lumot yoʻq"
       },
       "projectProgress": {
-        "title": "Loyihalar bo'yicha jarayon",
+        "title": "Loyihalar boʻyicha jarayon",
         "question": "Har bir loyiha qay darajada bajarilgan?",
-        "empty": "Hali loyihalar yo'q"
+        "empty": "Hali loyihalar yoʻq"
       },
       "eventsParticipation": {
         "title": "Tadbirlarda ishtirok",
         "question": "Tadbirlarga qanday javob berishmoqda?",
-        "empty": "Bu davrda tadbirlar yo'q"
+        "empty": "Bu davrda tadbirlar yoʻq"
       },
       "pollTurnout": {
-        "title": "So'rovnomalarda qatnashish",
-        "question": "So'rovnomalarga qancha kishi ovoz berdi?",
-        "empty": "Hali so'rovnomalar yo'q"
+        "title": "Soʻrovnomalarda qatnashish",
+        "question": "Soʻrovnomalarga qancha kishi ovoz berdi?",
+        "empty": "Hali soʻrovnomalar yoʻq"
       },
       "personal": {
-        "title": "Shaxsiy ko'rsatkichlarim",
+        "title": "Shaxsiy koʻrsatkichlarim",
         "question": "Mening ishlarim qanday ketyapti?",
-        "empty": "Hozircha shaxsiy ko'rsatkichlar yo'q"
+        "empty": "Hozircha shaxsiy koʻrsatkichlar yoʻq"
       }
     },
     "personal": {
       "open": "Ochiq",
-      "overdue": "Muddati o'tgan",
+      "overdue": "Muddati oʻtgan",
       "doneThisWeek": "Shu hafta bajarilgan",
-      "onTimeRate": "O'z vaqtida bajarilish",
+      "onTimeRate": "Oʻz vaqtida bajarilish",
       "focusMinutes": "Fokus daqiqalari",
       "upcomingEvents": "Yaqinlashib kelayotgan tadbirlar"
     },
     "empty": {
-      "title": "Hali tahlil qiladigan narsa yo'q",
-      "body": "Topshiriqlar va tadbirlar paydo bo'lgach, bu yerda hisobotlar ko'rinadi."
+      "title": "Hali tahlil qiladigan narsa yoʻq",
+      "body": "Topshiriqlar va tadbirlar paydo boʻlgach, bu yerda hisobotlar koʻrinadi."
     },
     "pinDialog": {
       "title": "Bosh sahifaga mahkamlash",
       "titlePlaceholder": "Diagramma nomi",
       "confirm": "Mahkamlash"
     },
-    "chartEmpty": "Hozircha ma'lumot yo'q"
+    "chartEmpty": "Hozircha ma'lumot yoʻq"
   }
 }

@@ -79,5 +79,53 @@ for (const f of files.filter(f => f.endsWith('.tsx') || f.endsWith('.jsx'))) {
 }
 if (hard.length) { errors += hard.length; console.log(`[i18n] ${hard.length} hard-coded UI strings (wrap in t() or add to allow_hardcoded):`); for (const h of hard.slice(0, 25)) console.log(`   "${h.txt}"  ${h.f}`) }
 
+// round2 SEV2 #17: uz-Latn copy mixed an ASCII apostrophe with the correct U+02BB modifier letter for
+// the same oʻ/gʻ sound (327 vs 369 sequences, counted by hand) -- normalised by a scripted replace,
+// this keeps a new offender from creeping back in. Only the [ogOG]' shape is checked (a real
+// quotation mark after any other letter is not this bug).
+const apostropheRe = /[ogOG]'/
+const uzLatnFiles = [join(root, cfg.messages, 'uz-Latn.json'), ...listModuleNames().map(n => join(root, cfg.modules, n, 'uz-Latn.json'))].filter(existsSync)
+let apostropheHits = 0
+for (const p of uzLatnFiles) {
+  const tree = JSON.parse(readFileSync(p, 'utf8'))
+  for (const [k, v] of Object.entries(flatten(tree))) {
+    if (typeof v === 'string' && apostropheRe.test(v)) { apostropheHits++; if (apostropheHits <= 20) console.log(`[i18n] uz-Latn ASCII apostrophe (use U+02BB ʻ) in "${k}" (${p.replace(root, '.')}): "${v}"`) }
+  }
+}
+if (apostropheHits) errors += apostropheHits
+
+// round2 SEV2 #8: DESIGN.md §2.1 keeps green (Badge tone="success") for success/approved/on-track
+// only -- "active", "configured", "current" and "head" all leaked onto it. New `tone="success"` call
+// sites must be added to this allowlist deliberately rather than silently reintroducing the bug.
+const successToneAllowlist = new Set([
+  'apps/web/src/features/accounts/account-settings-screen.tsx',
+  'apps/web/src/features/accounts/password-strength.tsx',
+  'apps/web/src/features/admin/audit-screen.tsx',
+  'apps/web/src/features/ai/ai-settings-screen.tsx',
+  'apps/web/src/features/departments/approval-queue-screen.tsx',
+  'apps/web/src/features/departments/components/pending-request-view.tsx',
+  'apps/web/src/features/departments/create-request-screen.tsx',
+  'apps/web/src/features/events/components/carpool-panel.tsx',
+  'apps/web/src/features/inbox/reason-icon.tsx',
+  'apps/web/src/features/inbox/telegram-screen.tsx',
+  'apps/web/src/features/personal/sprints-view.tsx',
+])
+// Matches both a literal `tone="success"`/`tone={... 'success' ...}` on a JSX tag and a `'success'`
+// entry in a `STATUS_TONE`-style lookup map later spread onto `tone={...}` -- the exact shape the
+// original admin "Faol" bug took (`active: 'success'` in a status->tone `Record`, not a literal on
+// the tag itself). Scoped to files that import `Badge` or `Chip` at all, so this stays a tone lint
+// rather than flagging the unrelated `'success'` string states (`useState<'success' | 'error'>`,
+// password-confirmation toasts) that plenty of screens with no Badge/Chip also use.
+const successToneRe = /['"]success['"]/
+let successToneHits = 0
+for (const f of files.filter(f => f.endsWith('.tsx'))) {
+  const rel = f.replace(root, '.').replace(/^\.[\\/]/, '').replace(/\\/g, '/')
+  if (successToneAllowlist.has(rel)) continue
+  const s = readFileSync(f, 'utf8')
+  if (!/\b(Badge|Chip)\b/.test(s)) continue
+  if (successToneRe.test(s)) { successToneHits++; console.log(`[i18n] new tone="success" call site not in the allowlist (DESIGN.md §2.1: green is success/approved/on-track only) -- ${rel}`) }
+}
+if (successToneHits) errors += successToneHits
+
 console.log(`[i18n] locales=${cfg.locales.join(',')} keys=${Object.keys(dict[base]).length} used=${used.size} errors=${errors}`)
 process.exit(errors ? 1 : 0)

@@ -33,6 +33,7 @@ export {
   formatRelativeTime,
   formatMonthYear,
   formatMonthShort,
+  numberFlowLocale,
 } from './format.js'
 export { normalizeUz } from './normalize-uz.js'
 export { latinToCyrillic } from './transliterate.js'

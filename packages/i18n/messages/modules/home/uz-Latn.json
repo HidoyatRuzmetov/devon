@@ -3,18 +3,18 @@
     "dashboard": {
       "dueFromMe": {
         "title": "Mendan kutilmoqda",
-        "body": "{open} ta ochiq, {overdue} tasi muddatidan o'tgan",
-        "cta": "Ishlarimni ko'rish"
+        "body": "{open} ta ochiq, {overdue} tasi muddatidan oʻtgan",
+        "cta": "Ishlarimni koʻrish"
       },
       "needsMyDecision": {
         "title": "Mening qarorim kerak",
-        "body": "Men topshirgan {count} ta ish muddatidan o'tib ketgan",
-        "empty": "Hozircha qaror kerak bo'lgan narsa yo'q"
+        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
+        "empty": "Hozircha qaror kerak boʻlgan narsa yoʻq"
       },
       "aroundMe": {
         "title": "Atrofimda",
         "body": "{count} ta tadbirga qatnashishni tasdiqlagansiz",
-        "cta": "Tadbirlarni ko'rish"
+        "cta": "Tadbirlarni koʻrish"
       },
       "pinned": {
         "title": "Mahkamlangan diagrammalar",
@@ -22,7 +22,7 @@
         "cta": "Tahlil sahifasini ochish"
       },
       "personal": {
-        "onTimeRate": "O'z vaqtida bajarilish",
+        "onTimeRate": "Oʻz vaqtida bajarilish",
         "focusMinutes": "Bu hafta fokus daqiqalari"
       },
       "onboarding": {

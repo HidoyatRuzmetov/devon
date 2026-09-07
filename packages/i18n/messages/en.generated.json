@@ -452,6 +452,16 @@
           "degraded": "Degraded",
           "down": "Down",
           "not_configured": "Not configured"
+        },
+        "detail": {
+          "error.raw": "{message}",
+          "queue.pending": "{count} pending event(s)",
+          "queue.pendingOldest": "{count} pending event(s), oldest {seconds}s",
+          "queue.unreadable": "Could not read the outbox queue",
+          "storage.free": "{gb} GB free",
+          "telegram.connected": "{count} group(s) connected",
+          "backups.none": "No backups found",
+          "backups.latest": "Latest backup {hours}h ago"
         }
       },
       "settings": {
