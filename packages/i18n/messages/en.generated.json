@@ -1886,7 +1886,12 @@
     "noIdBody": "This link is missing a project id.",
     "tile": {
       "progress": "{percent}% done",
-      "progressAria": "{percent}% done"
+      "progressAria": "{percent}% done",
+      "owner": "Owner: {name}",
+      "nextMilestone": "Next: {title} — {date}",
+      "noMilestone": "No upcoming milestone",
+      "noDueDate": "no date",
+      "tasks": "{done}/{total} tasks"
     },
     "field": {
       "title": "Title",

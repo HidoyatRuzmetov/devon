@@ -9,7 +9,12 @@
     "noIdBody": "Ҳаволада лойиҳа идентификатори йўқ.",
     "tile": {
       "progress": "{percent}% бажарилди",
-      "progressAria": "{percent}% бажарилди"
+      "progressAria": "{percent}% бажарилди",
+      "owner": "Масъул: {name}",
+      "nextMilestone": "Кейинги босқич: {title} — {date}",
+      "noMilestone": "Режалаштирилган босқич йўқ",
+      "noDueDate": "муддатсиз",
+      "tasks": "{done}/{total} вазифа"
     },
     "field": {
       "title": "Номи",

@@ -1886,7 +1886,12 @@
     "noIdBody": "В ссылке отсутствует идентификатор проекта.",
     "tile": {
       "progress": "выполнено {percent}%",
-      "progressAria": "выполнено {percent}%"
+      "progressAria": "выполнено {percent}%",
+      "owner": "Ответственный: {name}",
+      "nextMilestone": "Далее: {title} — {date}",
+      "noMilestone": "Нет предстоящих этапов",
+      "noDueDate": "без срока",
+      "tasks": "{done}/{total} задач"
     },
     "field": {
       "title": "Название",

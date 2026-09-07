@@ -9,7 +9,12 @@
     "noIdBody": "Havolada loyiha identifikatori yoʻq.",
     "tile": {
       "progress": "{percent}% bajarildi",
-      "progressAria": "{percent}% bajarildi"
+      "progressAria": "{percent}% bajarildi",
+      "owner": "Mas'ul: {name}",
+      "nextMilestone": "Keyingi bosqich: {title} — {date}",
+      "noMilestone": "Rejalashtirilgan bosqich yoʻq",
+      "noDueDate": "muddatsiz",
+      "tasks": "{done}/{total} vazifa"
     },
     "field": {
       "title": "Nomi",

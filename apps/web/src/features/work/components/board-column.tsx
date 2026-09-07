@@ -216,7 +216,7 @@ export function BoardColumn({
       >
         <div className="flex min-h-24 flex-col gap-2">
           {projects.map((p) => (
-            <ProjectTile key={p.id} project={p} />
+            <ProjectTile key={p.id} project={p} compact />
           ))}
           <Stagger
             className="flex flex-col gap-2"
