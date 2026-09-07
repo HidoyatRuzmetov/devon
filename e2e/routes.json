@@ -35,6 +35,174 @@
       "heading": "admin.title"
     },
     {
+      "path": "/inbox",
+      "name": "inbox",
+      "slug": "inbox",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "inbox.title"
+    },
+    {
+      "path": "/work",
+      "name": "work",
+      "slug": "work",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.title"
+    },
+    {
+      "path": "/work/table",
+      "name": "work",
+      "slug": "worktable",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.view.table"
+    },
+    {
+      "path": "/work/calendar",
+      "name": "work",
+      "slug": "workcalendar",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.view.calendar"
+    },
+    {
+      "path": "/work/timeline",
+      "name": "work",
+      "slug": "worktimeline",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.view.timeline"
+    },
+    {
+      "path": "/work/mine",
+      "name": "work",
+      "slug": "workmine",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.view.mine"
+    },
+    {
+      "path": "/projects",
+      "name": "projects",
+      "slug": "projects",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "projects.title"
+    },
+    {
+      "path": "/personal",
+      "name": "personal",
+      "slug": "personal",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "personal.title"
+    },
+    {
+      "path": "/events",
+      "name": "events",
+      "slug": "events",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "events.title"
+    },
+    {
+      "path": "/people",
+      "name": "people",
+      "slug": "people",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "structure.people.title"
+    },
+    {
+      "path": "/structure",
+      "name": "structure",
+      "slug": "structure",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "structure.units.title"
+    },
+    {
+      "path": "/pages",
+      "name": "pages",
+      "slug": "pages",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "pages.title"
+    },
+    {
+      "path": "/analytics",
+      "name": "analytics",
+      "slug": "analytics",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "analytics.title"
+    },
+    {
+      "path": "/ai",
+      "name": "ai",
+      "slug": "ai",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "ai.title"
+    },
+    {
+      "path": "/departments",
+      "name": "departments",
+      "slug": "departments",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "departments.title"
+    },
+    {
+      "path": "/account",
+      "name": "account",
+      "slug": "account",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "accounts.settings.title"
+    },
+    {
+      "path": "/admin/departments",
+      "name": "admin",
+      "slug": "admindepartments",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.console.tabs.departments"
+    },
+    {
+      "path": "/admin/accounts",
+      "name": "admin",
+      "slug": "adminaccounts",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.console.tabs.accounts"
+    },
+    {
+      "path": "/admin/audit",
+      "name": "admin",
+      "slug": "adminaudit",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.console.tabs.audit"
+    },
+    {
+      "path": "/admin/health",
+      "name": "admin",
+      "slug": "adminhealth",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.console.tabs.health"
+    },
+    {
+      "path": "/admin/settings",
+      "name": "admin",
+      "slug": "adminsettings",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "admin.console.tabs.settings"
+    },
+    {
       "path": "/404",
       "name": "not-found",
       "slug": "404",
