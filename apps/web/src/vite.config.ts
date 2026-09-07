@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -14,8 +14,26 @@ import tailwindcss from '@tailwindcss/vite'
 // root, i.e. `apps/web`, not `apps/web/src`), not against the config file's own directory as its docs
 // suggest. An absolute path sidesteps the ambiguity entirely.
 const srcDir = fileURLToPath(new URL('.', import.meta.url))
+// Repo root, three levels up from `apps/web/src` -- same target as the `envDir` returned below, kept
+// as its own absolute path here because `loadEnv()` needs it before the config object exists.
+const repoRoot = fileURLToPath(new URL('../../..', import.meta.url))
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
+  // `scripts/start.mjs` loads `.env` into `process.env` for every task it spawns (fill-gap: a value
+  // already present in the shell wins over the file) before turbo ever starts this process. Vite
+  // *also* loads `.env` itself for `import.meta.env`/client code, on its own schedule relative to this
+  // callback -- reading `process.env['API_PORT']` directly here raced the two loaders and could see
+  // either the shell's value or the file's, inconsistently with what `apps/api`'s `config.ts` (which
+  // only ever sees the shell-inherited `process.env`, never touches the file itself) resolved -- the
+  // dev proxy then dialled a port nothing was listening on (found running `pnpm start`, 2026-09).
+  // Calling `loadEnv()` ourselves, with the same fill-gap precedence as `start.mjs`, makes this
+  // callback's view of `.env` deterministic and identical to the API's, regardless of Vite's own
+  // internal timing.
+  const fileEnv = loadEnv(mode, repoRoot, '')
+  for (const [key, value] of Object.entries(fileEnv)) {
+    if (process.env[key] === undefined) process.env[key] = value
+  }
+
   const apiPort = process.env['API_PORT'] ?? '3000'
   const webPort = Number(process.env['WEB_PORT'] ?? 5173)
 
