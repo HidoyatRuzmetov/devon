@@ -640,6 +640,7 @@
       }
     },
     "settings": {
+      "eyebrow": "Hisob",
       "title": "Hisob sozlamalari",
       "subtitle": "Profil, seanslar, ikki bosqichli tekshiruv va parol shu yerda boshqariladi.",
       "subnavAria": "Sozlamalar boʻlimlari",

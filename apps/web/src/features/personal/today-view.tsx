@@ -153,12 +153,11 @@ function SprintHero({ sprint, taskCount }: { sprint: Sprint; taskCount: number }
         </div>
         {sprint.goal ? (
           // DESIGN.md §5: nothing in the shell is ever ellipsized -- at 390 this used to `truncate`
-          // to one line ("Bo'lim hisobo…"). It now wraps to up to two lines instead, at a smaller
-          // display size so two lines of the goal still fit comfortably above the phone's fold; the
-          // full `text-h3` size returns once there is room for it (`sm:` breakpoint, 640px+).
-          <p className="line-clamp-2 font-display text-lead text-foreground sm:text-h3">
-            {sprint.goal}
-          </p>
+          // to one line ("Bo'lim hisobo…"), and round1's `line-clamp-2` fix still cut a longer goal
+          // after two lines ("Boʻlim hisobotlarini yakunlash va jam…", round2 SEV2). It now wraps in
+          // full, at a smaller display size so it stays readable on a phone; the full `text-h3` size
+          // returns once there is room for it (`sm:` breakpoint, 640px+).
+          <p className="font-display text-lead text-foreground sm:text-h3">{sprint.goal}</p>
         ) : (
           <p className="text-body text-muted-foreground">{t('personal.today.period.noGoal')}</p>
         )}
@@ -358,45 +357,54 @@ export function TodayView({
                 const justDone = justDoneIds.has(task.id)
                 return (
                   <StaggerItem key={task.id} as="li" exit="hidden" layout>
-                    <div className="flex items-center gap-2 px-3 py-2 transition-colors duration-(--dur-micro) hover:bg-accent/40">
-                      <Checkbox
-                        celebrate
-                        checked={task.doneAt !== null || justDone}
-                        onCheckedChange={() => toggleTaskDone(task)}
-                        aria-label={t('personal.tasks.toggleDone')}
-                        size="sm"
-                        className="relative shrink-0"
-                      />
-                      <span
-                        className={cn(
-                          'min-w-0 flex-1 truncate text-body text-foreground',
-                          justDone && 'text-muted-foreground line-through',
-                        )}
-                      >
-                        {task.title}
-                      </span>
-                      {task.sprintId === null && (
-                        <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
-                      )}
-                      {task.sprintId !== null && sourceSprint && (
-                        <Badge tone="neutral" className="bg-info/10 text-info">
-                          {t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}
-                        </Badge>
-                      )}
-                      {task.estimateMin ? (
-                        <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-                          {task.estimateMin}′
+                    {/* round2 SEV2: below 768 the title used to lose to the chips (`truncate` on a
+                        flex item that also had to share the row with "Hafta"/estimate/Fokus) -- the
+                        title is the content in a task list, so DESIGN.md §5 forbids ellipsizing it.
+                        The row stacks (title, then its chips on their own line) below `md`, and stays
+                        the single row it always was at `md` and up. */}
+                    <div className="flex flex-col gap-1.5 px-3 py-2 transition-colors duration-(--dur-micro) hover:bg-accent/40 md:flex-row md:items-center md:gap-2">
+                      <div className="flex items-start gap-2 md:min-w-0 md:flex-1 md:items-center">
+                        <Checkbox
+                          celebrate
+                          checked={task.doneAt !== null || justDone}
+                          onCheckedChange={() => toggleTaskDone(task)}
+                          aria-label={t('personal.tasks.toggleDone')}
+                          size="sm"
+                          className="relative mt-0.5 shrink-0 md:mt-0"
+                        />
+                        <span
+                          className={cn(
+                            'min-w-0 flex-1 line-clamp-2 text-body text-foreground md:truncate md:line-clamp-none',
+                            justDone && 'text-muted-foreground line-through',
+                          )}
+                        >
+                          {task.title}
                         </span>
-                      ) : null}
-                      <Button
-                        size="sm"
-                        variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
-                        disabled={justDone}
-                        onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
-                      >
-                        <Play className="size-3.5" aria-hidden="true" />
-                        {t('personal.today.focus')}
-                      </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 pl-7 md:shrink-0 md:pl-0">
+                        {task.sprintId === null && (
+                          <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
+                        )}
+                        {task.sprintId !== null && sourceSprint && (
+                          <Badge tone="neutral" className="bg-info/10 text-info">
+                            {t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}
+                          </Badge>
+                        )}
+                        {task.estimateMin ? (
+                          <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+                            {task.estimateMin}′
+                          </span>
+                        ) : null}
+                        <Button
+                          size="sm"
+                          variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
+                          disabled={justDone}
+                          onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
+                        >
+                          <Play className="size-3.5" aria-hidden="true" />
+                          {t('personal.today.focus')}
+                        </Button>
+                      </div>
                     </div>
                   </StaggerItem>
                 )

@@ -673,9 +673,16 @@ const SUB_NAV_LINK_CLASS =
 
 export default function AccountSettingsScreen() {
   const t = useT()
+  // round2 SEV2: this screen's own `mx-auto` re-centred a narrower box *inside* the shell's already-
+  // centred `PageContainer` (app-shell.tsx wraps every route at the shared 1280px width) -- two nested
+  // centering contexts of different widths is exactly what shifted this screen's heading 110px right
+  // of where every other screen's starts, and dropped the eyebrow line other `PageHeader` call sites
+  // all carry. Capping the width without re-centering keeps the left edge pinned to the same shared
+  // gutter `PageContainer` already gives every other screen.
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+    <div className="flex max-w-4xl flex-col gap-6">
       <PageHeader
+        eyebrow={t('accounts.settings.eyebrow')}
         title={t('accounts.settings.title')}
         description={t('accounts.settings.subtitle')}
       />
