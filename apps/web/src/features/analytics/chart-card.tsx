@@ -171,25 +171,31 @@ export function ChartCard({
       {/* Always-present accessible fallback for a screen reader over the SVG chart above (DESIGN.md
           §6): visually hidden whenever the visible table toggle is already showing the same data. */}
       {!showTable ? (
-        <table className="sr-only">
-          <caption>{t(titleKey)}</caption>
-          <thead>
-            <tr>
-              {table.headers.map((h) => (
-                <th key={h}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {table.rows.map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => (
-                  <td key={j}>{cell}</td>
+        // The wrapper, not the table, carries `sr-only`: a table's used width is at least its
+        // min-content width, so `width:1px` on the table itself is ignored by layout and it still
+        // occupies its natural box at its static position -- on /analytics that pushed
+        // document.scrollWidth past the 390px viewport. Clipping happens one level up instead.
+        <div className="sr-only">
+          <table>
+            <caption>{t(titleKey)}</caption>
+            <thead>
+              <tr>
+                {table.headers.map((h) => (
+                  <th key={h}>{h}</th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {table.rows.map((row, i) => (
+                <tr key={i}>
+                  {row.map((cell, j) => (
+                    <td key={j}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : null}
     </section>
   )
