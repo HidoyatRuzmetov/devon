@@ -19,6 +19,10 @@ import authorizePlugin from './plugins/authorize.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
 import { loadApiModules } from './module-loader.js'
+// EPIC-013 (admin module, TECH-SPEC §11 "pause switch" + §10 "pause a department"): the only other
+// line this module needs outside its own folder, same precedent as `PUBLIC_ROUTES` in
+// `plugins/authorize.ts` -- see `modules/admin/availability-gate.ts`'s header for the full reasoning.
+import { registerAvailabilityGate } from './modules/admin/availability-gate.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -93,6 +97,11 @@ export async function buildApp(deps: Deps, config: Config): Promise<FastifyInsta
   })
 
   await app.register(sessionPlugin)
+  // Between session (so `req.actor` exists) and authorize (so a maintenance/paused-department deny
+  // short-circuits before `can()` ever runs, rather than racing it): `registerAvailabilityGate` calls
+  // `app.addHook` directly on this exact instance, not `app.register(...)`, so it needs no plugin
+  // encapsulation of its own.
+  registerAvailabilityGate(app)
   await app.register(authorizePlugin)
 
   await app.register(healthRoutes)
