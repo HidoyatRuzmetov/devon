@@ -115,7 +115,15 @@ function CreatePageForm({ onCreated }: { onCreated: (id: string) => void }) {
   )
 }
 
-function PageList({ onOpen }: { onOpen: (id: string) => void }) {
+function PageList({
+  onOpen,
+  onCreateEmpty,
+}: {
+  onOpen: (id: string) => void
+  /** Fired by the empty state's one action (DESIGN.md §9.6: exactly one action) -- creates a
+   *  ready-to-rename page directly rather than duplicating the header's kind-picker form here. */
+  onCreateEmpty: () => void
+}) {
   const t = useT()
   const pagesQuery = usePagesQuery()
   const locale = useLocale()
@@ -133,7 +141,18 @@ function PageList({ onOpen }: { onOpen: (id: string) => void }) {
   }
   const pages = pagesQuery.data
   if (pages.length === 0) {
-    return <StateView kind="empty" titleKey="pages.empty.title" bodyKey="pages.empty.body" />
+    return (
+      // Centred in the content area, not left sitting near the top with the rest of the column
+      // empty below it.
+      <div className="flex min-h-[50vh] flex-col items-center justify-center">
+        <StateView
+          kind="empty"
+          titleKey="pages.empty.title"
+          bodyKey="pages.empty.body"
+          action={{ labelKey: 'pages.create', onAction: onCreateEmpty }}
+        />
+      </div>
+    )
   }
 
   // A page tree grouped by kind (UI-OVERHAUL.md §2 "Pages ... page tree sidebar"): the department's
@@ -333,6 +352,22 @@ export default function PagesScreen() {
   const search = useSearchParams()
   const pageId = search.get('page')
   const tab = search.get('tab')
+  const createPage = useCreatePageMutation()
+
+  function openPage(id: string) {
+    const url = new URL(window.location.href)
+    url.searchParams.set('page', id)
+    navigate(`${url.pathname}${url.search}`)
+  }
+
+  /** The empty state's one action (DESIGN.md §9.6): creates a ready-to-rename page straight away
+   *  instead of asking someone to first pick a kind and type a title in the header's tiny form. */
+  function createBlankPage() {
+    createPage.mutate(
+      { kind: 'note', title: t('pages.untitled') },
+      { onSuccess: (page) => openPage(page.id) },
+    )
+  }
 
   if (meQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (!meQuery.data) {
@@ -371,15 +406,7 @@ export default function PagesScreen() {
             >
               {t('pages.onboarding.title')}
             </Button>
-            {tab !== 'onboarding' ? (
-              <CreatePageForm
-                onCreated={(id) => {
-                  const url = new URL(window.location.href)
-                  url.searchParams.set('page', id)
-                  navigate(`${url.pathname}${url.search}`)
-                }}
-              />
-            ) : null}
+            {tab !== 'onboarding' ? <CreatePageForm onCreated={openPage} /> : null}
           </>
         }
       />
@@ -387,13 +414,7 @@ export default function PagesScreen() {
       {tab === 'onboarding' ? (
         <OnboardingTemplatesPanel />
       ) : (
-        <PageList
-          onOpen={(id) => {
-            const url = new URL(window.location.href)
-            url.searchParams.set('page', id)
-            navigate(`${url.pathname}${url.search}`)
-          }}
-        />
+        <PageList onOpen={openPage} onCreateEmpty={createBlankPage} />
       )}
     </div>
   )

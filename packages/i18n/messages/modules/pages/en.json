@@ -3,6 +3,7 @@
     "title": "Pages",
     "eyebrow": "Knowledge",
     "create": "New page",
+    "untitled": "Untitled page",
     "newTitlePlaceholder": "Page title",
     "kind": {
       "how_we_work": "How we work",
@@ -12,7 +13,7 @@
     },
     "empty": {
       "title": "No pages yet",
-      "body": "Create your department's first page -- for example, \"How we work\"."
+      "body": "Create your department's first page — for example, \"How we work\"."
     },
     "backToList": "Back to pages",
     "delete": "Delete page",
