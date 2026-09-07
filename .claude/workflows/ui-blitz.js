@@ -18,6 +18,9 @@ export const meta = {
     { title: 'Integrate 2', detail: 'boot, click through as all three roles, screenshot matrix' },
     { title: 'Critique 2', detail: 'design lead re-verifies round 1, judges round 2, scores motion density per screen' },
     { title: 'Fix 2', detail: 'top issues fixed, re-captured, report' },
+    { title: 'Punch list', detail: 'round-2 report leftovers: table badges, seed apostrophes, four SEV2/3 items' },
+    { title: 'Motion gaps', detail: 'every screen below 4.5 gets its missing motion; Gantt zoom and table FLIP' },
+    { title: 'Recapture 3', detail: 'screenshot matrix, live verification, ship recommendation' },
   ],
 }
 
@@ -160,4 +163,22 @@ if (run('round2')) {
   }
 }
 
-return { stage: STAGE, research: refs.map(r => r && r.status), foundation: foundation && foundation.status, wave: built.map(x => ({ key: x.key, status: x.r && x.r.status })), round2: built2.map(x => ({ key: x.key, status: x.r && x.r.status })) }
+// ---------- Round 3: the round-2 punch list and the last motion gaps, sequential on master ----------
+let round3 = null
+if (run('round3')) {
+  const L2 = `${LEDGER}/round2`
+  const L3 = `${LEDGER}/round3`
+  phase('Punch list')
+  const p3 = await mk('punch-list', 'Punch list', `TASK on master in ${ROOT} (nobody else is editing): close the round-2 verification report's punch list. Read ${L2}/report.md ("Summary for the CTO", the SEV3 tally, every "partial" and "not fixed" verdict) and ${L2}/critique.md for the exact expectations. Do, each as its own commit "ui: <what>": (1) the work table's status badge and overdue badge printing on top of each other on every overdue row; (2) the demo seed content sweep — every event title, place, card title, comment, page and note in packages/db/src/seed that still uses the wrong apostrophe (' or ʼ) for Uzbek oʻ/gʻ gets the modifier letter U+02BB, and add a seed unit test that fails if a wrong apostrophe returns; (3) report items #13 (audit-log sentences for non-login events read as prose for people), #25 (admin quick links styled as the DataList recipe), #26 (registration-closed switch colour semantics), #29 (duplicate role text), the density toggle hidden below 768 px, Gantt bars that start off-screen get a fade/chevron; (4) anything else the report marks partial. Boot pnpm start --demo and check each fix live (demo logins in MODULE-GUIDE.md). Fast gates green, build within budget. Report branch "master".`)
+  log(`punch list: ${p3 ? p3.status : 'died'} — ${p3 ? p3.summary.slice(0, 200) : ''}`)
+
+  phase('Motion gaps')
+  const m3 = await mk('motion-gaps', 'Motion gaps', `TASK on master in ${ROOT} (nobody else is editing): bring every screen to 4.5+ on the design lead's motion-density scale. Read the per-screen table at the end of ${L2}/critique.md ("Motion density — per screen") and ${L2}/motion-audit.md; for EVERY screen scored below 4.5 implement exactly its "What is missing" column, plus the two items the round-2 fixer deferred: the Gantt zoom (Kun/Hafta/Oy) as a scale transition instead of a hard re-layout, and a FLIP animation on table re-sort. Named gaps include: auth card rises in and shakes on error; Home greeting reveals; sprint and project progress rings sweep from 0 on mount; card detail property edits acknowledge with a micro flash and comments animate in; event cover hover scale and month-head reveal; inbox archive exit animation, detail crossfade on selection, unread dot; org-chart nodes appear staggered and connectors draw; people grid re-staggers on search/filter and cards lift; pages open with a shared-layout transition and creating a page animates the new row; AI budget ring draws in and flag toggles acknowledge the row; admin health screen breathes on each poll and counters tick; departments invite copy shows an inline check morph and the QR reveals; Mine list celebrates completion and collapses groups; analytics re-draws on date-range change; milestone completion celebrates; tab changes crossfade. Keep repeated actions at --dur-micro; every addition has a reduced-motion replacement; transform/opacity only; no layout thrash on the board, table or Gantt with 200+ rows. Verify each in the browser. Update ${L2}/motion-audit.md with a "round 3" column. Commit in groups "ui: motion — <screens>". Fast gates green, bundle within budget. Report branch "master".`)
+  log(`motion gaps: ${m3 ? m3.status : 'died'} — ${m3 ? m3.summary.slice(0, 200) : ''}`)
+
+  phase('Recapture 3')
+  round3 = await mk('recapture3', 'Recapture 3', `TASK in ${ROOT}: boot pnpm start --demo, run e2e/scripts/ui-blitz-shots.mjs into ${ROOT}/${L3}/final/ and e2e/scripts/ui-round2-interactions.mjs (if present) into ${ROOT}/${L3}/interactions/, then verify live, as the head and the super admin, every punch-list item and every motion gap from ${L2}/critique.md's per-screen table, and write ${ROOT}/${L3}/report.md: per item fixed / partially / not fixed with screenshot paths, the per-screen motion scores as you judge them now, any regression, and a plain-language summary for the CTO with a ship / do-not-ship recommendation. Do not edit product code. Return DONE with the report path in notes.`, { effort: 'medium' })
+  log(`recapture 3: ${round3 ? round3.status : 'died'}`)
+}
+
+return { stage: STAGE, research: refs.map(r => r && r.status), foundation: foundation && foundation.status, wave: built.map(x => ({ key: x.key, status: x.r && x.r.status })), round2: built2.map(x => ({ key: x.key, status: x.r && x.r.status })), round3: round3 && round3.status }
