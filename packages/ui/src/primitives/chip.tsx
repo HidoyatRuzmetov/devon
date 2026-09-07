@@ -30,16 +30,24 @@ export interface ChipProps
   /** A leading dot in a unit/label colour -- the "colour is never the only signal" rule means the
    * text is always there too, so the dot is decoration that helps scanning, not the message. */
   dotClassName?: string
+  /** A leading icon (or any other node) rendered before the label, outside the truncating span so
+   * it never overlaps the text. Sits beside `dotClassName`'s dot if both are given. */
+  leading?: React.ReactNode
   /** Renders a remove button. `onRemove` is what makes a chip a chip rather than a badge. */
   onRemove?: () => void
   removeLabel?: string
 }
 
 export const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
-  ({ className, tone, dotClassName, onRemove, removeLabel, children, ...props }, ref) => (
+  ({ className, tone, dotClassName, leading, onRemove, removeLabel, children, ...props }, ref) => (
     <span ref={ref} className={cn(chipVariants({ tone }), className)} {...props}>
       {dotClassName ? (
         <span aria-hidden="true" className={cn('size-2 shrink-0 rounded-full', dotClassName)} />
+      ) : null}
+      {leading ? (
+        <span aria-hidden="true" className="inline-flex shrink-0 items-center">
+          {leading}
+        </span>
       ) : null}
       <span className="min-w-0 truncate">{children}</span>
       {onRemove ? (

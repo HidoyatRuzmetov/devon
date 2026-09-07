@@ -40,6 +40,7 @@ function quickActionLabelKey(reason: NotificationDto['reason']): string {
 export function NotificationRow({
   notification,
   selected = false,
+  showReasonChip = true,
   onOpen,
   onQuickAction,
   onArchive,
@@ -48,6 +49,9 @@ export function NotificationRow({
   notification: NotificationDto
   /** Highlighted by keyboard (j/k) navigation, Linear-style -- not the same as "unread". */
   selected?: boolean
+  /** The grouped list's section head already states the reason (UI-OVERHAUL.md §8) -- repeating it
+   * on every row in the group is noise, so `GroupedInboxList` passes `false` here. */
+  showReasonChip?: boolean
   onOpen: () => void
   /** Jumps straight to `deepLink` without opening the detail panel first. */
   onQuickAction: () => void
@@ -66,11 +70,20 @@ export function NotificationRow({
     // The list-item semantics belong to that one wrapper; this row is a plain div.
     <div
       className={cn(
-        'group flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
+        'group relative flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
         unread && 'bg-accent/40',
         selected && 'ring-1 ring-inset ring-primary',
       )}
     >
+      {/* Unread signal on the row rail (UI-OVERHAUL.md §8) -- the inline dot beside the title is easy
+          to miss once the title itself wraps to two lines, so the rail carries the same signal at a
+          glance down the whole list. */}
+      {unread ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-0.5 bg-primary"
+        />
+      ) : null}
       <button
         type="button"
         onClick={onOpen}
@@ -92,16 +105,16 @@ export function NotificationRow({
           <ReasonIcon reason={notification.reason} className="size-4" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-2">
+          <span className="flex items-start gap-2">
             {unread ? (
               <span
-                className="size-2 shrink-0 rounded-full bg-primary"
+                className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
                 aria-label={t('inbox.row.unread')}
               />
             ) : null}
             <span
               className={cn(
-                'truncate text-body',
+                'line-clamp-2 text-body',
                 unread ? 'font-medium text-foreground' : 'text-foreground',
               )}
             >
@@ -114,9 +127,11 @@ export function NotificationRow({
             </span>
           ) : null}
           <span className="mt-1 flex items-center gap-2 text-caption text-muted-foreground">
-            <Chip tone={REASON_TONE[notification.reason]}>
-              {t(`inbox.reason.${notification.reason}`)}
-            </Chip>
+            {showReasonChip ? (
+              <Chip tone={REASON_TONE[notification.reason]}>
+                {t(`inbox.reason.${notification.reason}`)}
+              </Chip>
+            ) : null}
             <span>
               {formatDate(created, locale)} {formatTime(created, locale)}
             </span>

@@ -194,8 +194,10 @@ function GroupedInboxList({
         return (
           <section key={reason} className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <Chip tone={REASON_TONE[reason]}>
-                <ReasonIcon reason={reason} className="size-3" />
+              <Chip
+                tone={REASON_TONE[reason]}
+                leading={<ReasonIcon reason={reason} className="size-3" />}
+              >
                 {t(`inbox.reason.${reason}`)}
               </Chip>
               <span className="text-caption text-muted-foreground">{group.length}</span>
@@ -206,6 +208,7 @@ function GroupedInboxList({
                   <NotificationRow
                     notification={notification}
                     selected={indexOf.get(notification.id) === selectedIndex}
+                    showReasonChip={false}
                     onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
                     onQuickAction={() => onQuickAction(notification)}
                     onArchive={() => onArchive(notification.id)}
@@ -461,7 +464,7 @@ export default function InboxScreen() {
       {/* `minmax(0,440px)`: the list was ~420px of a 1,144px content column with the detail pane
           only an 80px bordered box below it (item handoff) -- widening the list a little and letting
           the detail pane take the rest evens that out. */}
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
         <InboxBody
           query={notificationsQuery}
           status={status}
@@ -478,7 +481,7 @@ export default function InboxScreen() {
             (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so
             the two never both claim the same open notification at once. */}
         {isDesktop ? (
-          <div className="sticky top-4 min-h-100 rounded-md border border-border bg-card p-6">
+          <div className="sticky top-4 h-full min-h-100 self-stretch rounded-md border border-border bg-card p-6">
             {openNotification ? (
               <NotificationDetail notification={openNotification} onArchive={handleArchiveNow} />
             ) : (
