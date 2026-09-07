@@ -13,6 +13,7 @@ import {
   Card,
   Celebrate,
   cn,
+  EmptyChartsIllustration,
   HubAmbientWash,
   KpiTile,
   Progress,
@@ -256,8 +257,12 @@ function PinnedCharts() {
   const pins = pinnedQuery.data ?? []
   if (pinnedQuery.isPending || summaryQuery.isPending) return null
   if (pins.length === 0 || !summaryQuery.data) {
+    // round2 SEV3 #27: this used to be a left-aligned paragraph plus a text link -- DESIGN.md §9.6's
+    // empty-state shape (illustration, one line, exactly one action), sized to sit inside a dashed
+    // card among the other tiles rather than the full-page `EmptyState` shell.
     return (
-      <Card dashed elevation="flat" className="flex flex-col gap-2">
+      <Card dashed elevation="flat" className="flex flex-col items-center gap-2 text-center">
+        <EmptyChartsIllustration className="w-24 text-illustration-ink" />
         <h3 className="text-lead font-medium text-foreground">
           {t('home.dashboard.pinned.title')}
         </h3>
@@ -265,7 +270,7 @@ function PinnedCharts() {
         <button
           type="button"
           onClick={() => navigate('/analytics')}
-          className="inline-flex items-center gap-1 self-start text-small font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1 text-small font-medium text-primary hover:underline"
         >
           {t('home.dashboard.pinned.cta')}
           <ArrowRight className="size-3.5" aria-hidden="true" />

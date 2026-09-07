@@ -419,6 +419,22 @@ export function VacantRoleIllustration({ className }: IllustrationProps): React.
   )
 }
 
+/** No pinned charts yet -- Home's own empty state (round2 SEV3 #27: this block used to be a bare
+ * paragraph plus a text link with no illustration at all). A small bar chart on a card, one bar
+ * accented, echoing `/analytics`'s own chart cards without drawing a specific one. */
+export function EmptyChartsIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <rect x="40" y="26" width="120" height="88" rx="8" fill={FILL} />
+      <rect x="56" y="82" width="16" height="20" rx="3" fill={MUTED} />
+      <rect x="80" y="66" width="16" height="36" rx="3" fill={MUTED} />
+      <rect x="104" y="50" width="16" height="52" rx="3" fill={ACCENT} />
+      <rect x="128" y="72" width="16" height="30" rx="3" fill={MUTED} />
+      <path d="M52 46 h60" stroke={INK} strokeWidth="3" strokeLinecap="round" opacity="0.3" />
+    </Frame>
+  )
+}
+
 /** Name → component, so a screen can pick one from data (an event category, a state kind) without a
  * switch statement of its own. */
 export const ILLUSTRATIONS = {
@@ -439,6 +455,7 @@ export const ILLUSTRATIONS = {
   pendingReview: PendingReviewIllustration,
   emptyStructure: EmptyStructureIllustration,
   vacantRole: VacantRoleIllustration,
+  emptyCharts: EmptyChartsIllustration,
 } as const
 
 export type IllustrationName = keyof typeof ILLUSTRATIONS
