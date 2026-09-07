@@ -145,22 +145,150 @@ export function UnitTree({ roots, actions }: { roots: TreeNode[]; actions: TreeA
   )
 }
 
+/** True whenever the signed-in viewer could self-assign a role that isn't already theirs -- shared
+ * by `RoleChips`' own inline "Qoʻshilish" button (org chart panel) and `UnitRow`'s overflow menu
+ * (tree view, round2 SEV2), so the two contexts never disagree about who can join. */
+export function canJoinUnit(unit: Unit, actions: TreeActions): boolean {
+  const roles = actions.rolesByUnit.get(unit.id) ?? []
+  const myAssignment = roles.find((r) => r.userId === actions.currentUserId)
+  return !myAssignment && (actions.isHead || actions.canSelfAssign)
+}
+
 export function RoleChips({
   unit,
   actions,
   indent = true,
+  variant = 'chips',
+  showActions = true,
 }: {
   unit: Unit
   actions: TreeActions
   /** The tree view indents chips under the row's icon column; a standalone context (the org chart's
    * side panel) wants them flush left instead. */
   indent?: boolean
+  /** `chips` (org chart panel): a bordered chip per person, name and role spelled out. `avatars`
+   * (tree row, round2 SEV2): a plain overlapping `AvatarStack` -- the row is a read-only list, not a
+   * form, so a member no longer renders as a form-control chip with its own `×`; full name, role and
+   * (if permitted) removal all move into the existing hover card. */
+  variant?: 'chips' | 'avatars'
+  /** The tree row moves "Qoʻshilish"/"Tayinlash" into its own overflow menu instead of repeating
+   * them as inline text actions on every row (round2 SEV2); the org chart panel keeps them inline. */
+  showActions?: boolean
 }) {
   const t = useT()
   const roles = actions.rolesByUnit.get(unit.id) ?? []
-  const myAssignment = roles.find((r) => r.userId === actions.currentUserId)
-  const canJoin = !myAssignment && (actions.isHead || actions.canSelfAssign)
+  const canJoin = canJoinUnit(unit, actions)
   const canAssignOthers = actions.isHead
+
+  if (variant === 'avatars') {
+    return (
+      <div className={cn('flex flex-wrap items-center gap-1.5', indent && 'pl-9')}>
+        {roles.length === 0 ? (
+          <span className="text-caption text-muted-foreground">
+            {t('structure.units.chart.noHead')}
+          </span>
+        ) : (
+          <div className="flex items-center -space-x-1.5">
+            {roles.map((r) => {
+              const member = actions.membersById.get(r.userId)
+              const canRemove = r.userId === actions.currentUserId || actions.isHead
+              return (
+                <HoverCard key={r.id}>
+                  <HoverCardTrigger asChild>
+                    <span className="rounded-full ring-2 ring-card">
+                      <Avatar
+                        size="sm"
+                        alt={member ? fullName(member) : r.userId}
+                        initials={
+                          member ? initialsFromName(member.givenName, member.familyName) : '?'
+                        }
+                        hueSeed={unit.id}
+                      />
+                    </span>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-64">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        size="lg"
+                        alt={member ? fullName(member) : r.userId}
+                        initials={
+                          member ? initialsFromName(member.givenName, member.familyName) : '?'
+                        }
+                        hueSeed={unit.id}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-body font-medium text-foreground">
+                          {member ? fullName(member) : r.userId}
+                        </p>
+                        {member?.title ? (
+                          <p className="truncate text-small text-muted-foreground">
+                            {member.title}
+                          </p>
+                        ) : null}
+                        <Badge tone={r.role === 'head' ? 'info' : 'neutral'} className="mt-1">
+                          {t(
+                            r.role === 'head'
+                              ? 'structure.roles.roleLabel.head'
+                              : r.role === 'deputy'
+                                ? 'structure.roles.roleLabel.deputy'
+                                : 'structure.roles.roleLabel.member',
+                          )}
+                        </Badge>
+                      </div>
+                    </div>
+                    {canRemove ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 w-full justify-start text-destructive hover:text-destructive"
+                        onClick={() => actions.onUnassign(r.id)}
+                      >
+                        <X className="size-3.5" aria-hidden="true" />
+                        {t('structure.roles.removeConfirm.confirm')}
+                      </Button>
+                    ) : null}
+                  </HoverCardContent>
+                </HoverCard>
+              )
+            })}
+          </div>
+        )}
+        {showActions && canJoin ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-caption">
+                <Plus className="size-3" aria-hidden="true" />
+                {t('structure.roles.join')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-1">
+              {(['head', 'deputy', 'member'] as const).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  className="flex w-full min-w-40 items-center rounded-sm px-2 py-2 text-left text-small hover:bg-accent"
+                  onClick={() => actions.onSelfAssign(unit.id, role)}
+                >
+                  {t(`structure.roles.roleLabel.${role}`)}
+                </button>
+              ))}
+            </PopoverContent>
+          </Popover>
+        ) : null}
+        {showActions && canAssignOthers ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-caption"
+            onClick={() => actions.onOpenAssign(unit.id)}
+          >
+            <UserPlus className="size-3" aria-hidden="true" />
+            {t('structure.roles.assign')}
+          </Button>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div className={cn('flex flex-wrap items-center gap-1.5', indent && 'pl-9')}>
@@ -227,7 +355,7 @@ export function RoleChips({
           </HoverCard>
         )
       })}
-      {canJoin ? (
+      {showActions && canJoin ? (
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="sm" className="h-6 px-2 text-caption">
@@ -249,7 +377,7 @@ export function RoleChips({
           </PopoverContent>
         </Popover>
       ) : null}
-      {canAssignOthers ? (
+      {showActions && canAssignOthers ? (
         <Button
           variant="ghost"
           size="sm"
@@ -484,6 +612,22 @@ function UnitRow({
                       <Plus className="size-4" aria-hidden="true" />
                       {t('structure.units.addSubUnit')}
                     </DropdownMenuItem>
+                    {/* round2 SEV2: "+ Ushbu boʻlimga qoʻshish"-style self-join and "Tayinlash" used
+                        to sit as their own inline text actions on every row even though this overflow
+                        menu already existed -- they move here instead of repeating a control the row
+                        already has one of. */}
+                    {canJoinUnit(node, actions) ? (
+                      <DropdownMenuItem onSelect={() => actions.onSelfAssign(node.id, 'member')}>
+                        <UserPlus className="size-4" aria-hidden="true" />
+                        {t('structure.roles.join')}
+                      </DropdownMenuItem>
+                    ) : null}
+                    {actions.isHead ? (
+                      <DropdownMenuItem onSelect={() => actions.onOpenAssign(node.id)}>
+                        <UserPlus className="size-4" aria-hidden="true" />
+                        {t('structure.roles.assign')}
+                      </DropdownMenuItem>
+                    ) : null}
                     <DropdownMenuItem onSelect={() => actions.onDelete(node)}>
                       <Trash2 className="size-4" aria-hidden="true" />
                       {t('structure.units.delete')}
@@ -494,31 +638,37 @@ function UnitRow({
             </>
           }
         >
-          {editing ? (
-            <Input
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onBlur={commitRename}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') commitRename()
-                if (e.key === 'Escape') {
-                  setDraft(node.name)
-                  setEditing(false)
-                }
-              }}
-              className="h-8 max-w-80"
-            />
-          ) : (
-            <button
-              type="button"
-              className="truncate rounded-sm px-1 text-body font-medium text-foreground hover:bg-accent disabled:cursor-default"
-              disabled={!actions.canEditStructure}
-              onClick={() => actions.canEditStructure && setEditing(true)}
-            >
-              {node.name}
-            </button>
-          )}
+          {/* One grid, top to bottom: rail | avatar | content -- the name and its meta line both
+              live in this same content column now (round2 SEV2), so the meta line's left edge lines
+              up under the name's instead of starting further left under the row's icon column. */}
+          <div className="flex min-w-0 flex-col gap-0.5">
+            {editing ? (
+              <Input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={commitRename}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitRename()
+                  if (e.key === 'Escape') {
+                    setDraft(node.name)
+                    setEditing(false)
+                  }
+                }}
+                className="h-8 max-w-80"
+              />
+            ) : (
+              <button
+                type="button"
+                className="min-w-0 truncate rounded-sm px-1 text-left text-body font-medium text-foreground hover:bg-accent disabled:cursor-default"
+                disabled={!actions.canEditStructure}
+                onClick={() => actions.canEditStructure && setEditing(true)}
+              >
+                {node.name}
+              </button>
+            )}
+            <RoleChips unit={node} actions={actions} indent={false} variant="avatars" showActions={false} />
+          </div>
         </DataRow>
         {dropHint === 'after' ? (
           <div
@@ -528,8 +678,6 @@ function UnitRow({
           />
         ) : null}
       </div>
-
-      <RoleChips unit={node} actions={actions} />
 
       {hasChildren ? (
         <Collapsible open={!isCollapsed} id={`unit-children-${node.id}`}>
