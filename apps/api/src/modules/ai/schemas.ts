@@ -66,7 +66,13 @@ export type AiSettingsDto = z.infer<typeof aiSettingsSchema>
 export const patchAiSettingsBodySchema = z.object({
   budgetUzsPerMonth: z.number().int().min(0).max(1_000_000_000).optional(),
   softCapPct: z.number().int().min(1).max(100).optional(),
-  flags: z.record(aiFeatureSchema, z.boolean()).optional(),
+  // A partial update (typically one flag at a time from the settings screen) -- plain string keys,
+  // not `aiFeatureSchema`-keyed, because `z.record(enumSchema, ...)` infers a *complete* record
+  // requiring every enum member present, which a one-flag PATCH body never is. `service.ts` merges
+  // whatever keys are given into the existing flags object; an unrecognised key is simply inert
+  // (never read by `@devon/ai`'s feature registry), not rejected -- the same forward-compatible
+  // posture `flags` already has on the GET response above.
+  flags: z.record(z.string(), z.boolean()).optional(),
 })
 
 export const traceDtoSchema = z.object({
