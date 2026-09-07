@@ -9,6 +9,12 @@ import {
   Badge,
   Button,
   Collapsible,
+  DataList,
+  DataRow,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
@@ -23,14 +29,30 @@ import {
   initialsFromName,
   unitHueClass,
 } from '@devon/ui'
-import { Check, ChevronRight, GripVertical, Pencil, Plus, Trash2, UserPlus, X } from 'lucide-react'
-import type { MembersById, RolesByUnit, Unit } from './api.js'
+import {
+  Check,
+  ChevronRight,
+  GripVertical,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  UserPlus,
+  X,
+} from 'lucide-react'
+import type { Member, MembersById, RolesByUnit, Unit } from './api.js'
 import { fullName } from './member-card.js'
 
 const COLOUR_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
 function unitColourClass(unit: Unit): string {
   return unit.colour ? `bg-unit-${unit.colour}` : unitHueClass(unit.id)
+}
+
+/** The letter a unit's small round "avatar" shows -- first letter of its name, upper-cased, the same
+ * convention `initialsFromName` uses for people. */
+function unitInitial(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || '?'
 }
 
 export type TreeNode = Unit & { children: TreeNode[] }
@@ -60,6 +82,9 @@ export type TreeActions = {
   currentUserId: string
   rolesByUnit: RolesByUnit
   membersById: MembersById
+  /** How many people belong to each unit (distinct from `rolesByUnit`, which is who holds a
+   * head/deputy/member *role* there) -- the row's "N kishi" figure (§25). */
+  memberCountByUnit: Map<string, number>
   onRename(unitId: string, name: string): void
   onColourChange(unitId: string, colour: number | null): void
   onAddChild(parentUnitId: string | null): void
@@ -84,9 +109,14 @@ export function UnitTree({ roots, actions }: { roots: TreeNode[]; actions: TreeA
       return next
     })
 
+  const t = useT()
   return (
-    <div
-      className="flex flex-col gap-1 rounded-md border border-dashed border-transparent p-1 transition-colors duration-(--dur-micro)"
+    // §25 of the departments-people-events UI pass: the tree is a `DataList` of `DataRow`s -- the
+    // same dense-list rhythm (border, rail, hover, row height) as every other list in the product --
+    // rather than a hand-rolled bordered `<div>`. Nesting still reads as a tree: each child level adds
+    // `paddingInlineStart` inside its own `DataRow`, exactly as before.
+    <DataList
+      label={t('structure.units.title')}
       onDragOver={(e) => draggingId && e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault()
@@ -95,9 +125,9 @@ export function UnitTree({ roots, actions }: { roots: TreeNode[]; actions: TreeA
         setDraggingId(null)
       }}
     >
-      <Stagger className="flex flex-col gap-1" as="ul">
+      <Stagger className="flex flex-col">
         {roots.map((node) => (
-          <StaggerItem key={node.id} as="li">
+          <StaggerItem key={node.id}>
             <UnitRow
               node={node}
               depth={0}
@@ -111,7 +141,7 @@ export function UnitTree({ roots, actions }: { roots: TreeNode[]; actions: TreeA
           </StaggerItem>
         ))}
       </Stagger>
-    </div>
+    </DataList>
   )
 }
 
@@ -280,6 +310,53 @@ function UnitRow({
     }
   }
 
+  const headRole = (actions.rolesByUnit.get(node.id) ?? []).find((r) => r.role === 'head')
+  const headMember: Member | undefined = headRole
+    ? actions.membersById.get(headRole.userId)
+    : undefined
+  const memberCount = actions.memberCountByUnit.get(node.id) ?? 0
+
+  const colourSwatch = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={t('structure.units.colourLabel')}
+          className={cn(
+            'flex size-6 shrink-0 items-center justify-center rounded-full text-caption font-semibold text-white',
+            unitColourClass(node),
+          )}
+        >
+          {unitInitial(node.name)}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2">
+        <div className="flex items-center gap-1.5">
+          {COLOUR_OPTIONS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              aria-label={`${c}`}
+              className={cn('flex size-6 items-center justify-center rounded-full bg-unit-' + c)}
+              onClick={() => actions.onColourChange(node.id, c)}
+            >
+              {node.colour === c ? (
+                <Check className="size-3.5 text-white" aria-hidden="true" />
+              ) : null}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="ml-1 rounded-sm border border-border px-2 py-1 text-caption text-foreground hover:bg-accent"
+            onClick={() => actions.onColourChange(node.id, null)}
+          >
+            {t('structure.units.colourAuto')}
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+
   return (
     <div>
       <div className="relative">
@@ -290,13 +367,13 @@ function UnitRow({
             aria-hidden="true"
           />
         ) : null}
-        <div
+        <DataRow
           className={cn(
-            'group flex items-center gap-2 rounded-md border border-transparent px-2 py-1.5',
-            'transition-[opacity,background-color,border-color] duration-(--dur-micro) ease-out',
-            'hover:border-border hover:bg-accent/50 data-[dragging]:opacity-40',
-            dropHint === 'into' && 'border-ring bg-accent',
+            'group transition-colors duration-(--dur-micro) ease-out hover:bg-accent/50',
+            'data-[dragging]:opacity-40',
+            dropHint === 'into' && 'bg-accent',
           )}
+          railClassName={unitColourClass(node)}
           style={{ paddingInlineStart: `${depth * 24 + 8}px` }}
           draggable={actions.canEditStructure}
           data-dragging={draggingId === node.id || undefined}
@@ -323,77 +400,100 @@ function UnitRow({
             setDropHint('none')
             setDraggingId(null)
           }}
-        >
-          {hasChildren ? (
-            <button
-              type="button"
-              aria-label={
-                isCollapsed
-                  ? t('structure.units.expandBranch')
-                  : t('structure.units.collapseBranch')
-              }
-              aria-expanded={!isCollapsed}
-              onClick={() => toggleCollapsed(node.id)}
-              className="flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-            >
-              <ChevronRight
-                className={cn(
-                  'size-4 transition-transform duration-(--dur-micro) ease-out',
-                  !isCollapsed && 'rotate-90',
-                )}
-                aria-hidden="true"
-              />
-            </button>
-          ) : (
-            <span className="size-4 shrink-0" />
-          )}
-          {actions.canEditStructure ? (
-            <GripVertical
-              className="size-4 shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
-              aria-hidden="true"
-            />
-          ) : null}
-
-          {actions.canEditStructure ? (
-            <Popover>
-              <PopoverTrigger asChild>
+          leading={
+            <div className="flex items-center gap-1.5">
+              {hasChildren ? (
                 <button
                   type="button"
-                  aria-label={t('structure.units.colourLabel')}
-                  className={cn('size-4 shrink-0 rounded-full', unitColourClass(node))}
+                  aria-label={
+                    isCollapsed
+                      ? t('structure.units.expandBranch')
+                      : t('structure.units.collapseBranch')
+                  }
+                  aria-expanded={!isCollapsed}
+                  onClick={() => toggleCollapsed(node.id)}
+                  className="flex size-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <ChevronRight
+                    className={cn(
+                      'size-4 transition-transform duration-(--dur-micro) ease-out',
+                      !isCollapsed && 'rotate-90',
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+              ) : (
+                <span className="size-4 shrink-0" />
+              )}
+              {actions.canEditStructure ? (
+                <GripVertical
+                  className="size-4 shrink-0 cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
+                  aria-hidden="true"
                 />
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-2">
-                <div className="flex items-center gap-1.5">
-                  {COLOUR_OPTIONS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      aria-label={`${c}`}
-                      className={cn(
-                        'flex size-6 items-center justify-center rounded-full bg-unit-' + c,
-                      )}
-                      onClick={() => actions.onColourChange(node.id, c)}
-                    >
-                      {node.colour === c ? (
-                        <Check className="size-3.5 text-white" aria-hidden="true" />
-                      ) : null}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="ml-1 rounded-sm border border-border px-2 py-1 text-caption text-foreground hover:bg-accent"
-                    onClick={() => actions.onColourChange(node.id, null)}
-                  >
-                    {t('structure.units.colourAuto')}
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <span className={cn('size-4 shrink-0 rounded-full', unitColourClass(node))} />
-          )}
-
+              ) : null}
+              {/* The unit's small round "avatar" (§25): its colour, and its initial -- doubles as the
+                  colour-picker trigger for anyone who can edit the structure. */}
+              {actions.canEditStructure ? (
+                colourSwatch
+              ) : (
+                <span
+                  className={cn(
+                    'flex size-6 shrink-0 items-center justify-center rounded-full text-caption font-semibold text-white',
+                    unitColourClass(node),
+                  )}
+                >
+                  {unitInitial(node.name)}
+                </span>
+              )}
+            </div>
+          }
+          trailing={
+            <>
+              {headMember ? (
+                <span
+                  className="hidden items-center gap-1.5 sm:inline-flex"
+                  title={t('structure.units.chart.headBadge')}
+                >
+                  <Avatar
+                    size="sm"
+                    alt={fullName(headMember)}
+                    initials={initialsFromName(headMember.givenName, headMember.familyName)}
+                    hueSeed={node.id}
+                  />
+                  <span className="max-w-32 truncate text-caption text-muted-foreground">
+                    {fullName(headMember)}
+                  </span>
+                </span>
+              ) : null}
+              <span className="hidden text-caption text-muted-foreground sm:inline">
+                {t('structure.units.chart.memberCount', { count: memberCount })}
+              </span>
+              {actions.canEditStructure ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <IconButton aria-label={t('structure.units.rowActions')}>
+                      <MoreVertical className="size-4" aria-hidden="true" />
+                    </IconButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setEditing(true)}>
+                      <Pencil className="size-4" aria-hidden="true" />
+                      {t('structure.units.rename')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => actions.onAddChild(node.id)}>
+                      <Plus className="size-4" aria-hidden="true" />
+                      {t('structure.units.addSubUnit')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => actions.onDelete(node)}>
+                      <Trash2 className="size-4" aria-hidden="true" />
+                      {t('structure.units.delete')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
+            </>
+          }
+        >
           {editing ? (
             <Input
               autoFocus
@@ -419,27 +519,7 @@ function UnitRow({
               {node.name}
             </button>
           )}
-
-          {actions.canEditStructure ? (
-            <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity duration-(--dur-micro) group-hover:opacity-100">
-              <IconButton aria-label={t('structure.units.rename')} onClick={() => setEditing(true)}>
-                <Pencil className="size-4" aria-hidden="true" />
-              </IconButton>
-              <IconButton
-                aria-label={t('structure.units.addSubUnit')}
-                onClick={() => actions.onAddChild(node.id)}
-              >
-                <Plus className="size-4" aria-hidden="true" />
-              </IconButton>
-              <IconButton
-                aria-label={t('structure.units.delete')}
-                onClick={() => actions.onDelete(node)}
-              >
-                <Trash2 className="size-4" aria-hidden="true" />
-              </IconButton>
-            </div>
-          ) : null}
-        </div>
+        </DataRow>
         {dropHint === 'after' ? (
           <div
             className="absolute -bottom-1 z-10 h-0.5 rounded-full bg-primary"

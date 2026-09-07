@@ -180,8 +180,11 @@ export default function PeopleScreen() {
       <div className="flex flex-col gap-8">
         {groups.map((group) => (
           <section key={group.unit?.id ?? 'unassigned'} className="flex flex-col gap-3">
-            <h2 className="text-h4 text-foreground">
+            <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
               {group.unit ? group.label : t('structure.people.unassignedGroup')}
+              <span className="ml-1.5 normal-case tracking-normal text-muted-foreground/70">
+                ({group.members.length})
+              </span>
             </h2>
             <Stagger
               className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"

@@ -14,6 +14,7 @@
       "rename": "Rename",
       "renameLabel": "Unit name",
       "delete": "Delete",
+      "rowActions": "Unit actions",
       "deleteConfirm": {
         "title": "Delete “{name}”?",
         "body": "Members become unassigned. You can undo this for a short while.",
@@ -94,7 +95,8 @@
       },
       "hoverCard": {
         "membership": "Membership",
-        "unit": "Unit"
+        "unit": "Unit",
+        "openBoardColumn": "Open board column"
       }
     },
     "common": { "head": "Head", "member": "Member" }

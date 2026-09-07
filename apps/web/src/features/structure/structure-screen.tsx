@@ -210,6 +210,13 @@ export default function StructureScreen() {
   const rolesByUnit = new Map<string, typeof roles>()
   for (const r of roles) rolesByUnit.set(r.unitId, [...(rolesByUnit.get(r.unitId) ?? []), r])
   const membersById = new Map<string, Member>(members.map((m) => [m.userId, m]))
+  // How many people belong to each unit (§25 of the departments-people-events UI pass: the tree row
+  // shows a real member count, not the count of role *assignments*, which can be zero for a unit
+  // everyone still belongs to).
+  const memberCountByUnit = new Map<string, number>()
+  for (const m of members) {
+    if (m.unitId) memberCountByUnit.set(m.unitId, (memberCountByUnit.get(m.unitId) ?? 0) + 1)
+  }
   const roots = buildTree(units)
   const isHead = myRole === 'head'
 
@@ -220,6 +227,7 @@ export default function StructureScreen() {
     currentUserId,
     rolesByUnit,
     membersById,
+    memberCountByUnit,
     onRename: (unitId, name) => renameMutation.mutate({ unitId, name }),
     onColourChange: (unitId, colour) => colourMutation.mutate({ unitId, colour }),
     onAddChild: (parentUnitId) => setAddParentId(parentUnitId),
