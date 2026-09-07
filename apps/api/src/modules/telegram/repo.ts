@@ -2,6 +2,11 @@
 // `apps/api/src/modules/notifications/repo.ts`: every query goes through `Tx.raw()`, parameterized,
 // never a direct import of `packages/db/src/schema/notifications.ts` (a different package's private
 // schema file -- see that file's own header comment for why).
+//
+// Timestamp columns read through `Tx.raw()` (`expires_at`, `linked_at`, `muted_until`, `connected_at`)
+// arrive as real `Date`s: `packages/db/src/context.ts`'s `reviveTimestamps` converts every column whose
+// `pg` field metadata says timestamp/timestamptz, so the `Date`-typed raw rows below are honest and
+// need no per-call-site coercion (`test/checks/telegram-prove.ts` asserts this against a real Postgres).
 import { randomBytes, randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
