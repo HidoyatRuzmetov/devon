@@ -342,9 +342,6 @@
         "sentinelNotConfigured": "Sozlanmagan",
         "sentinelRotate": "Kalitni yangilash",
         "sentinelGenerate": "Kalit yaratish",
-        "sentinelKeyDialogTitle": "Yangi sentinel kaliti",
-        "sentinelKeyDialogBody": "Ushbu kalitni faqat bir marta ko'rasiz. Uni xost mashinadagi infra/sentinel/sentinel.config.json fayliga nusxalang.",
-        "sentinelKeyDialogClose": "Yopish",
         "wipeTitle": "O'chirish tugmasi",
         "wipeBody": "Ushbu tugma butun tizimni serverdan butunlay o'chiradi. Amalni ortga qaytarib bo'lmaydi.",
         "wipeStartCta": "O'chirishni boshlash",
@@ -359,7 +356,9 @@
         "wipeCancel": "Bekor qilish",
         "wipeCancelledToast": "O'chirish bekor qilindi",
         "wipeExecuting": "O'chirish buyrug'i yuborilmoqda...",
-        "wipeFailed": "Muvaffaqiyatsiz"
+        "wipeFailed": "Muvaffaqiyatsiz",
+        "sentinelPublicKeyLabel": "Ochiq kalit",
+        "sentinelPublicKeyHint": "Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=... sifatida joylashtiring. Bu maxfiy emas, istalgan vaqtda shu yerda ko'rsatilishi mumkin."
       }
     }
   },

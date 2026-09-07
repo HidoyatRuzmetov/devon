@@ -17,6 +17,7 @@ import { decryptSecret as decryptAccountSecret } from '../accounts/crypto.js'
 import type { AuditCtx } from '../../types.js'
 import type { Locale } from '../../schemas.js'
 import { encryptSecret, decryptSecret } from './crypto.js'
+import { generateSentinelKeypair } from './sentinel-protocol.js'
 import { sendWipeCommand } from './sentinel-client.js'
 import { invalidateDepartmentStatusCache, invalidateMaintenanceCache } from './availability-gate.js'
 
@@ -952,42 +953,59 @@ export async function setRegistrationOpen(open: boolean, ctx: AuditCtx): Promise
 
 export async function getSentinelStatus(): Promise<{
   hasActiveKey: boolean
+  publicKeyB64: string | null
   createdAt: Date | null
 }> {
   return withContext(anonymousAdminCtx(), async (tx) => {
-    const rows = await tx.raw<{ created_at: string }>(
-      sql`select created_at from app.sentinel_keys where active = true order by created_at desc limit 1`,
+    const rows = await tx.raw<{ public_key_b64: string; created_at: string }>(
+      sql`select public_key_b64, created_at from app.sentinel_keys where active = true order by created_at desc limit 1`,
     )
     return {
       hasActiveKey: rows.length > 0,
+      publicKeyB64: rows[0]?.public_key_b64 ?? null,
       createdAt: rows[0] ? new Date(rows[0].created_at) : null,
     }
   })
 }
 
-/** Returns the raw hex key exactly once (the response body); only `key_enc` is ever persisted. */
+/** ADR-014: generates a fresh ed25519 keypair (same call `infra/sentinel/scripts/keygen.mjs` makes
+ * for manual use) and returns the *public* half for the operator to paste into `sentinel.conf` --
+ * plainly, not a "shown once" secret, since a public key is not one. Only the encrypted private half
+ * is ever persisted. */
 export async function rotateSentinelKey(csrfSecret: string, ctx: AuditCtx): Promise<string> {
-  const rawKey = randomBytes(32).toString('hex')
-  const keyEnc = encryptSecret(rawKey, csrfSecret)
+  const { publicKeyB64, privateKeyB64 } = generateSentinelKeypair()
+  const privateKeyEnc = encryptSecret(privateKeyB64, csrfSecret)
   await withContext(adminCtx(ctx), async (tx) => {
     await tx.raw(
       sql`update app.sentinel_keys set active = false, deactivated_at = now() where active = true`,
     )
     await tx.raw(
-      sql`insert into app.sentinel_keys (key_enc, active, created_by_user_id) values (${keyEnc}, true, ${ctx.userId})`,
+      sql`insert into app.sentinel_keys (public_key_b64, private_key_enc, active, created_by_user_id)
+          values (${publicKeyB64}, ${privateKeyEnc}, true, ${ctx.userId})`,
     )
-    tx.audit({ action: 'admin.sentinel.key_rotated', subjectType: 'sentinel_key', subjectId: null })
+    tx.audit({
+      action: 'admin.sentinel.key_rotated',
+      subjectType: 'sentinel_key',
+      subjectId: null,
+      after: { publicKeyB64 },
+    })
   })
-  return rawKey
+  return publicKeyB64
 }
 
-async function getActiveSentinelKey(csrfSecret: string): Promise<string | null> {
+async function getActiveSentinelKeypair(
+  csrfSecret: string,
+): Promise<{ publicKeyB64: string; privateKeyB64: string } | null> {
   return withContext(anonymousAdminCtx(), async (tx) => {
-    const rows = await tx.raw<{ key_enc: string }>(
-      sql`select key_enc from app.sentinel_keys where active = true order by created_at desc limit 1`,
+    const rows = await tx.raw<{ public_key_b64: string; private_key_enc: string }>(
+      sql`select public_key_b64, private_key_enc from app.sentinel_keys where active = true order by created_at desc limit 1`,
     )
-    if (!rows[0]) return null
-    return decryptSecret(rows[0].key_enc, csrfSecret)
+    const row = rows[0]
+    if (!row) return null
+    return {
+      publicKeyB64: row.public_key_b64,
+      privateKeyB64: decryptSecret(row.private_key_enc, csrfSecret),
+    }
   })
 }
 
@@ -1130,15 +1148,23 @@ export async function executeWipe(csrfSecret: string, ctx: AuditCtx): Promise<Wi
   if (pending.countdownEndsAt.getTime() > Date.now())
     return { ok: false, reason: 'countdown_not_elapsed' }
 
-  const key = await getActiveSentinelKey(csrfSecret)
-  if (!key) return { ok: false, reason: 'no_sentinel_key' }
+  const keypair = await getActiveSentinelKeypair(csrfSecret)
+  if (!keypair) return { ok: false, reason: 'no_sentinel_key' }
 
-  await withContext(adminCtx(ctx), async (tx) => {
+  const actorLogin = await withContext(adminCtx(ctx), async (tx) => {
     await tx.raw(sql`update app.wipe_requests set status = 'executing' where id = ${pending.id}`)
     tx.audit({ action: 'admin.wipe.executing', subjectType: 'wipe_request', subjectId: pending.id })
+    const rows = await tx.drizzle
+      .select({ login: schema.users.login })
+      .from(schema.users)
+      .where(eq(schema.users.id, ctx.userId!))
+      .limit(1)
+    return rows[0]?.login ?? 'unknown'
   })
 
-  const result = await sendWipeCommand(key, pending.id)
+  // `actor` rides along unsigned (ADR-014, `sentinel-client.ts`'s header comment): informational log
+  // attribution only -- the sentinel never consults it for the authorization decision.
+  const result = await sendWipeCommand(keypair.publicKeyB64, keypair.privateKeyB64, actorLogin)
 
   await withContext(adminCtx(ctx), async (tx) => {
     await tx.raw(sql`

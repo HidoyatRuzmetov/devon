@@ -40,18 +40,20 @@ export const wipeRequests = appSchema.table('wipe_requests', {
 })
 
 /**
- * Singleton-per-row keyring for the host sentinel's shared HMAC secret (TECH-SPEC §11: "a key that
- * exists only in the sentinel's config and the super admin's password-protected console"). The raw key
- * is shown to the operator exactly once, at generation time, to paste into `infra/sentinel/
- * sentinel.config.json` on the host -- only `key_enc` (AES-256-GCM, `modules/admin/crypto.ts`, derived
- * from the existing `CSRF_SECRET` so this needs no new `.env` entry) is ever persisted. `active`
- * ensures exactly one key is ever used to sign an outgoing command; rotating creates a new row and
- * deactivates the previous one rather than overwriting it, so a mid-rotation race can never sign with a
- * half-written key.
+ * Singleton-per-row keyring for the sentinel's ed25519 keypair (TECH-SPEC §11 + ADR-014: the sentinel
+ * holds only the *public* key, in `/etc/devon/sentinel.conf`; the private key signs the command this
+ * console sends and never leaves this database, let alone the browser). `publicKeyB64` is plain text
+ * -- a public key is not a secret, and is shown to the operator persistently (`GET /admin/sentinel/
+ * status`), not behind a "shown once" ceremony -- while `privateKeyEnc` (AES-256-GCM, `modules/admin/
+ * crypto.ts`, derived from the existing `CSRF_SECRET` so this needs no new `.env` entry) is the only
+ * sensitive column here. `active` ensures exactly one keypair is ever used to sign an outgoing
+ * command; rotating creates a new row and deactivates the previous one rather than overwriting it, so
+ * a mid-rotation race can never sign with a half-written key.
  */
 export const sentinelKeys = appSchema.table('sentinel_keys', {
   id: uuid('id').primaryKey().defaultRandom(),
-  keyEnc: text('key_enc').notNull(),
+  publicKeyB64: text('public_key_b64').notNull(),
+  privateKeyEnc: text('private_key_enc').notNull(),
   active: boolean('active').notNull().default(true),
   createdByUserId: uuid('created_by_user_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -342,9 +342,6 @@
         "sentinelNotConfigured": "Not configured",
         "sentinelRotate": "Rotate key",
         "sentinelGenerate": "Generate key",
-        "sentinelKeyDialogTitle": "New sentinel key",
-        "sentinelKeyDialogBody": "You will see this key only once. Copy it into infra/sentinel/sentinel.config.json on the host machine.",
-        "sentinelKeyDialogClose": "Close",
         "wipeTitle": "Wipe switch",
         "wipeBody": "This button permanently removes the whole system from the server. It cannot be undone.",
         "wipeStartCta": "Start wipe",
@@ -359,7 +356,9 @@
         "wipeCancel": "Cancel",
         "wipeCancelledToast": "Wipe cancelled",
         "wipeExecuting": "Sending the wipe command...",
-        "wipeFailed": "Failed"
+        "wipeFailed": "Failed",
+        "sentinelPublicKeyLabel": "Public key",
+        "sentinelPublicKeyHint": "Paste this into infra/sentinel/sentinel.conf on the host as public_key=... . It is not secret and can be shown here at any time."
       }
     }
   },

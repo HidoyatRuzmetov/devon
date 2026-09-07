@@ -1,4 +1,4 @@
--- EPIC-013 (super admin console): the wipe-switch confirmation ledger and the sentinel HMAC keyring
+-- EPIC-013 (super admin console): the wipe-switch confirmation ledger and the sentinel ed25519 keyring
 -- (TECH-SPEC §11 "decision 16"). Expand-only (I-15), idempotent per MODULE-GUIDE.md "DB: migrations".
 -- Neither table carries a department_id: both are instance-wide admin bookkeeping, classified 'global'
 -- in tenancy.ts with a reason, same shape as app.setup_tokens / app.department_requests. Neither needs
@@ -33,9 +33,13 @@ create table if not exists app.wipe_requests (
 
 create index if not exists wipe_requests_status_idx on app.wipe_requests (status);
 
+-- ADR-014: the sentinel's ed25519 keypair. `public_key_b64` is plain text (a public key is not a
+-- secret -- the console shows it persistently, never behind a "shown once" ceremony);
+-- `private_key_enc` (AES-256-GCM, `modules/admin/crypto.ts`) is the only sensitive column.
 create table if not exists app.sentinel_keys (
   id uuid primary key default gen_random_uuid(),
-  key_enc text not null,
+  public_key_b64 text not null,
+  private_key_enc text not null,
   active boolean not null default true,
   created_by_user_id uuid not null references app.users (id),
   created_at timestamptz not null default now(),

@@ -342,9 +342,6 @@
         "sentinelNotConfigured": "Не настроен",
         "sentinelRotate": "Обновить ключ",
         "sentinelGenerate": "Создать ключ",
-        "sentinelKeyDialogTitle": "Новый ключ sentinel",
-        "sentinelKeyDialogBody": "Вы увидите этот ключ только один раз. Скопируйте его в файл infra/sentinel/sentinel.config.json на хост-машине.",
-        "sentinelKeyDialogClose": "Закрыть",
         "wipeTitle": "Кнопка полного удаления",
         "wipeBody": "Эта кнопка полностью удаляет систему с сервера. Действие необратимо.",
         "wipeStartCta": "Начать удаление",
@@ -359,7 +356,9 @@
         "wipeCancel": "Отменить",
         "wipeCancelledToast": "Удаление отменено",
         "wipeExecuting": "Отправка команды удаления...",
-        "wipeFailed": "Не удалось"
+        "wipeFailed": "Не удалось",
+        "sentinelPublicKeyLabel": "Публичный ключ",
+        "sentinelPublicKeyHint": "Вставьте это значение в infra/sentinel/sentinel.conf на хосте как public_key=... . Это не секрет, его можно показывать здесь в любое время."
       }
     }
   },

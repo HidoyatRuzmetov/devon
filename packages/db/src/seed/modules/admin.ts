@@ -9,6 +9,7 @@
 // for the instant of the write, then restored to `DEMO_DEPARTMENT.id` so every module after this one
 // (there are none, at order 900, but the pattern is load-bearing regardless) sees the original scope.
 import { sql } from 'drizzle-orm'
+import type { Tx } from '../../context.js'
 import * as schema from '../../schema/index.js'
 import { DEMO_DEPARTMENT } from '../fixtures.js'
 import { demoId } from '../ids.js'
@@ -42,41 +43,52 @@ const SHOWCASE_DEPARTMENTS: ShowcaseDept[] = [
   },
 ]
 
+/**
+ * Writes on the *shared* `tx` (same connection/transaction as every other seed module -- file
+ * header), flipping the `app.department_id` GUC to this new department's own id for the instant of
+ * the write and restoring it before returning, exactly like `departments.ts`'s `createDepartmentWithHead`
+ * (order 20) does for the identical reason. Sequential in the caller (never `Promise.all`), one
+ * `await` per department, so two inserts can never interleave their GUC flips against each other.
+ */
+async function seedShowcaseDepartment(tx: Tx, spec: ShowcaseDept): Promise<number> {
+  const departmentId = demoId(spec.key)
+  await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
+  try {
+    const inserted = await tx.drizzle
+      .insert(schema.departments)
+      .values({
+        id: departmentId,
+        name: spec.name,
+        slug: spec.slug,
+        description: spec.description,
+        localeDefault: 'uz-Latn',
+        status: spec.status,
+      })
+      .onConflictDoNothing()
+      .returning({ id: schema.departments.id })
+
+    if (inserted.length > 0) {
+      tx.audit({
+        action:
+          spec.status === 'archived' ? 'admin.department.archived' : 'admin.department.paused',
+        subjectType: 'department',
+        subjectId: departmentId,
+        departmentId,
+        after: { status: spec.status, reason: 'demo_seed' },
+      })
+    }
+    return inserted.length
+  } finally {
+    await tx.raw(sql`select set_config('app.department_id', ${DEMO_DEPARTMENT.id}, true)`)
+  }
+}
+
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let rows = 0
 
   for (const spec of SHOWCASE_DEPARTMENTS) {
-    const departmentId = demoId(spec.key)
-    await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
-    try {
-      const inserted = await tx.drizzle
-        .insert(schema.departments)
-        .values({
-          id: departmentId,
-          name: spec.name,
-          slug: spec.slug,
-          description: spec.description,
-          localeDefault: 'uz-Latn',
-          status: spec.status,
-        })
-        .onConflictDoNothing()
-        .returning({ id: schema.departments.id })
-      rows += inserted.length
-
-      if (inserted.length > 0) {
-        tx.audit({
-          action:
-            spec.status === 'archived' ? 'admin.department.archived' : 'admin.department.paused',
-          subjectType: 'department',
-          subjectId: departmentId,
-          departmentId,
-          after: { status: spec.status, reason: 'demo_seed' },
-        })
-      }
-    } finally {
-      await tx.raw(sql`select set_config('app.department_id', ${DEMO_DEPARTMENT.id}, true)`)
-    }
+    rows += await seedShowcaseDepartment(tx, spec)
   }
 
   return rows

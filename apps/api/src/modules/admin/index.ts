@@ -469,6 +469,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
       const status = await repo.getSentinelStatus()
       return {
         hasActiveKey: status.hasActiveKey,
+        publicKeyB64: status.publicKeyB64,
         createdAt: status.createdAt?.toISOString() ?? null,
       }
     },
@@ -482,8 +483,8 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const key = await repo.rotateSentinelKey(app.devonConfig.CSRF_SECRET, auditCtx(req))
-      reply.send({ key })
+      const publicKeyB64 = await repo.rotateSentinelKey(app.devonConfig.CSRF_SECRET, auditCtx(req))
+      reply.send({ publicKeyB64 })
     },
   )
 

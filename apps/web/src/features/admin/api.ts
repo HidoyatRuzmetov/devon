@@ -279,13 +279,14 @@ export function fetchAdminInstanceDetail() {
 
 const sentinelStatusSchema = z.object({
   hasActiveKey: z.boolean(),
+  publicKeyB64: z.string().nullable(),
   createdAt: z.string().nullable(),
 })
 export type SentinelStatus = z.infer<typeof sentinelStatusSchema>
 export function fetchSentinelStatus() {
   return apiClient.get('/api/v1/admin/sentinel/status', sentinelStatusSchema)
 }
-const sentinelKeyResultSchema = z.object({ key: z.string() })
+const sentinelKeyResultSchema = z.object({ publicKeyB64: z.string() })
 export function rotateSentinelKey(csrfToken: string) {
   return apiClient.post('/api/v1/admin/sentinel/rotate-key', {}, sentinelKeyResultSchema, csrfToken)
 }

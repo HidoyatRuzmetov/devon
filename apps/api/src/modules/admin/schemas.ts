@@ -195,9 +195,10 @@ export const patchRegistrationBodySchema = z.object({ open: z.boolean() }).stric
 
 export const sentinelStatusSchema = z.object({
   hasActiveKey: z.boolean(),
+  publicKeyB64: z.string().nullable(),
   createdAt: z.string().nullable(),
 })
-export const sentinelKeyResultSchema = z.object({ key: z.string() })
+export const sentinelKeyResultSchema = z.object({ publicKeyB64: z.string() })
 
 export const startWipeBodySchema = z
   .object({

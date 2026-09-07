@@ -1,5 +1,6 @@
-// AES-256-GCM at-rest encryption for `app.sentinel_keys.key_enc` (TECH-SPEC §11: the sentinel's HMAC
-// secret "lives only in the sentinel's config and the encrypted admin settings"). Same shape as
+// AES-256-GCM at-rest encryption for `app.sentinel_keys.private_key_enc` (TECH-SPEC §11 + ADR-014: the
+// sentinel's ed25519 private key never leaves this database, let alone the browser -- only the public
+// half is shown to the operator, plainly, since it is not a secret). Same shape as
 // `modules/accounts/crypto.ts` (HKDF-SHA256 over the existing `CSRF_SECRET`, a fixed purpose-specific
 // `info` string) so this module needs no new `.env` key either -- deliberately not importing that
 // file's `deriveKey`, which is unexported on purpose (accounts owns its own derivation, admin owns

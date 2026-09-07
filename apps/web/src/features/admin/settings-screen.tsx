@@ -140,12 +140,10 @@ function SentinelCard() {
     queryKey: ['admin', 'sentinel', 'status'],
     queryFn: fetchSentinelStatus,
   })
-  const [revealedKey, setRevealedKey] = React.useState<string | null>(null)
 
   const rotate = useMutation({
     mutationFn: () => rotateSentinelKey(meQuery.data?.csrfToken ?? ''),
-    onSuccess: (result) => {
-      setRevealedKey(result.key)
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'sentinel', 'status'] })
     },
   })
@@ -159,44 +157,43 @@ function SentinelCard() {
       {query.isPending ? (
         <StateView kind="loading" titleKey="state.loading" />
       ) : (
-        <div className="flex items-center gap-3">
-          <Badge tone={query.data?.hasActiveKey ? 'success' : 'warning'}>
-            {t(
-              query.data?.hasActiveKey
-                ? 'admin.console.settings.sentinelConfigured'
-                : 'admin.console.settings.sentinelNotConfigured',
-            )}
-          </Badge>
-          <Button
-            size="sm"
-            variant="secondary"
-            loading={rotate.isPending}
-            onClick={() => rotate.mutate()}
-          >
-            {t(
-              query.data?.hasActiveKey
-                ? 'admin.console.settings.sentinelRotate'
-                : 'admin.console.settings.sentinelGenerate',
-            )}
-          </Button>
-        </div>
-      )}
-
-      <Dialog open={revealedKey !== null} onOpenChange={(open) => !open && setRevealedKey(null)}>
-        <DialogContent title={t('admin.console.settings.sentinelKeyDialogTitle')}>
-          <div className="flex flex-col gap-3 pt-4">
-            <p className="text-body text-muted-foreground">
-              {t('admin.console.settings.sentinelKeyDialogBody')}
-            </p>
-            <code className="select-all break-all rounded-sm border border-border bg-muted p-3 text-small">
-              {revealedKey}
-            </code>
-            <Button onClick={() => setRevealedKey(null)}>
-              {t('admin.console.settings.sentinelKeyDialogClose')}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Badge tone={query.data?.hasActiveKey ? 'success' : 'warning'}>
+              {t(
+                query.data?.hasActiveKey
+                  ? 'admin.console.settings.sentinelConfigured'
+                  : 'admin.console.settings.sentinelNotConfigured',
+              )}
+            </Badge>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={rotate.isPending}
+              onClick={() => rotate.mutate()}
+            >
+              {t(
+                query.data?.hasActiveKey
+                  ? 'admin.console.settings.sentinelRotate'
+                  : 'admin.console.settings.sentinelGenerate',
+              )}
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
+          {query.data?.publicKeyB64 ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">
+                {t('admin.console.settings.sentinelPublicKeyLabel')}
+              </span>
+              <code className="select-all break-all rounded-sm border border-border bg-muted p-3 text-small">
+                {query.data.publicKeyB64}
+              </code>
+              <p className="text-caption text-muted-foreground">
+                {t('admin.console.settings.sentinelPublicKeyHint')}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      )}
     </section>
   )
 }

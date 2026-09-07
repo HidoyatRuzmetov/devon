@@ -121,7 +121,7 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'one department) -- reachable only behind {kind:"instance"} (super_admin-only, I-8b), same ' +
     'bootstrap-shaped reasoning as app.setup_tokens.',
   'app.sentinel_keys':
-    'EPIC-013: the sentinel HMAC keyring signs a host-level command that also removes the whole ' +
+    'EPIC-013: the sentinel ed25519 keypair signs a host-level command that also removes the whole ' +
     'deployment, not one department -- reachable only behind {kind:"instance"}, same reasoning as ' +
     'app.wipe_requests immediately above.',
 })
