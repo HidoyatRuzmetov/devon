@@ -259,23 +259,27 @@ function PinnedCharts() {
   if (pins.length === 0 || !summaryQuery.data) {
     // round2 SEV3 #27: this used to be a left-aligned paragraph plus a text link -- DESIGN.md §9.6's
     // empty-state shape (illustration, one line, exactly one action), sized to sit inside a dashed
-    // card among the other tiles rather than the full-page `EmptyState` shell.
+    // card among the other tiles rather than the full-page `EmptyState` shell. round3: the block
+    // (like the rest of Home) still had no entrance of its own -- wrapped the same way the
+    // onboarding card above it already is.
     return (
-      <Card dashed elevation="flat" className="flex flex-col items-center gap-2 text-center">
-        <EmptyChartsIllustration className="w-24 text-illustration-ink" />
-        <h3 className="text-lead font-medium text-foreground">
-          {t('home.dashboard.pinned.title')}
-        </h3>
-        <p className="text-small text-muted-foreground">{t('home.dashboard.pinned.empty')}</p>
-        <button
-          type="button"
-          onClick={() => navigate('/analytics')}
-          className="inline-flex items-center gap-1 text-small font-medium text-primary hover:underline"
-        >
-          {t('home.dashboard.pinned.cta')}
-          <ArrowRight className="size-3.5" aria-hidden="true" />
-        </button>
-      </Card>
+      <Reveal>
+        <Card dashed elevation="flat" className="flex flex-col items-center gap-2 text-center">
+          <EmptyChartsIllustration className="w-24 text-illustration-ink" />
+          <h3 className="text-lead font-medium text-foreground">
+            {t('home.dashboard.pinned.title')}
+          </h3>
+          <p className="text-small text-muted-foreground">{t('home.dashboard.pinned.empty')}</p>
+          <button
+            type="button"
+            onClick={() => navigate('/analytics')}
+            className="inline-flex items-center gap-1 text-small font-medium text-primary hover:underline"
+          >
+            {t('home.dashboard.pinned.cta')}
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </button>
+        </Card>
+      </Reveal>
     )
   }
 
@@ -292,7 +296,7 @@ function PinnedCharts() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <Reveal className="flex flex-col gap-4">
       <h3 className="text-lead font-medium text-foreground">{t('home.dashboard.pinned.title')}</h3>
       <Stagger className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {pins.map((pin) => {
@@ -304,7 +308,7 @@ function PinnedCharts() {
           )
         })}
       </Stagger>
-    </div>
+    </Reveal>
   )
 }
 

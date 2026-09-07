@@ -10,6 +10,7 @@
 // `SparkleButton` next to the field it enhances, an `AiPreviewPanel` with Accept/Edit/Discard, and no
 // path that writes a generated result into the card without that Accept.
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, Link2, Plus, Trash2, X } from 'lucide-react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import {
@@ -34,6 +35,8 @@ import {
   toast,
   toastWithUndo,
   useCelebrate,
+  useReducedMotion,
+  RISE_PX,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
@@ -103,6 +106,12 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const toggleWatcher = useToggleWatcherMutation()
   const createLabel = useCreateLabelMutation()
   const unfurl = useUnfurlMutation()
+
+  const assigneeFlash = useFieldFlash()
+  const giverFlash = useFieldFlash()
+  const priorityFlash = useFieldFlash()
+  const dueFlash = useFieldFlash()
+  const startFlash = useFieldFlash()
 
   const [titleDraft, setTitleDraft] = React.useState('')
   const [descDraft, setDescDraft] = React.useState('')
@@ -389,59 +398,69 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               })()}
             </Field>
           ) : null}
-          <Field label={t('work.field.assignee')}>
+          <Field label={t('work.field.assignee')} flashedAt={assigneeFlash.flashedAt}>
             <MemberPicker
               members={members}
               value={card.assigneeUserId}
               onChange={(userId) =>
-                void patchCard.mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                void patchCard
+                  .mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                  .then(assigneeFlash.flash)
               }
               placeholderKey="work.field.unassigned"
             />
           </Field>
-          <Field label={t('work.field.giver')}>
+          <Field label={t('work.field.giver')} flashedAt={giverFlash.flashedAt}>
             <MemberPicker
               members={members}
               value={card.giverUserId}
               onChange={(userId) =>
-                void patchCard.mutateAsync({ id: card.id, patch: { giverUserId: userId } })
+                void patchCard
+                  .mutateAsync({ id: card.id, patch: { giverUserId: userId } })
+                  .then(giverFlash.flash)
               }
               placeholderKey="work.field.noGiver"
             />
           </Field>
-          <Field label={t('work.field.priority')}>
+          <Field label={t('work.field.priority')} flashedAt={priorityFlash.flashedAt}>
             <Select
               aria-label={t('work.field.priority')}
               value={card.priority}
               onChange={(e) =>
-                void patchCard.mutateAsync({
-                  id: card.id,
-                  patch: { priority: e.target.value as CardPriority },
-                })
+                void patchCard
+                  .mutateAsync({
+                    id: card.id,
+                    patch: { priority: e.target.value as CardPriority },
+                  })
+                  .then(priorityFlash.flash)
               }
               options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
             />
           </Field>
-          <Field label={t('work.field.due')}>
+          <Field label={t('work.field.due')} flashedAt={dueFlash.flashedAt}>
             <DatePicker
               locale={locale}
               label={t('work.field.due')}
               placeholder={t('work.field.due')}
               selected={toDateInputValue(card.dueAt)}
               onSelect={(date) =>
-                void patchCard.mutateAsync({ id: card.id, patch: { dueAt: dateToIso(date) } })
+                void patchCard
+                  .mutateAsync({ id: card.id, patch: { dueAt: dateToIso(date) } })
+                  .then(dueFlash.flash)
               }
               triggerClassName="w-full justify-start"
             />
           </Field>
-          <Field label={t('work.field.start')}>
+          <Field label={t('work.field.start')} flashedAt={startFlash.flashedAt}>
             <DatePicker
               locale={locale}
               label={t('work.field.start')}
               placeholder={t('work.field.start')}
               selected={toDateInputValue(card.startAt)}
               onSelect={(date) =>
-                void patchCard.mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
+                void patchCard
+                  .mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
+                  .then(startFlash.flash)
               }
               triggerClassName="w-full justify-start"
             />
@@ -588,23 +607,52 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   )
 }
 
+/** Bumps to a fresh (truthy) value every time the field it's attached to should flash -- `Field`
+ * below only cares that the value *changed*, not what it is, so `Date.now()` is a fine "this just
+ * happened again" token even for two flashes in the same millisecond-resolution tick being merged
+ * (a flash replaying because a second edit landed within the animation's own 700ms is still exactly
+ * the "this saved" acknowledgement UI-OVERHAUL.md asks for). */
+function useFieldFlash(): { flashedAt: number; flash: () => void } {
+  const [flashedAt, setFlashedAt] = React.useState(0)
+  return { flashedAt, flash: React.useCallback(() => setFlashedAt(Date.now()), []) }
+}
+
 function Field({
   label,
   action,
   children,
+  flashedAt,
 }: {
   label: string
   action?: React.ReactNode
   children: React.ReactNode
+  /** round2 SEV2 "property edits commit with no feedback": a token from `useFieldFlash` -- each new
+   * value plays one soft success-tinted sweep behind the field, transform/opacity only, then removes
+   * itself. Reduced motion still gets the sweep (it is a colour fade, not a translate/scale), just at
+   * `--dur-micro` instead of the fuller `--dur-standard`. */
+  flashedAt?: number
 }) {
+  const reduced = useReducedMotion()
   return (
-    <label className="flex flex-col gap-1.5 text-small">
+    <label className="relative flex flex-col gap-1.5 text-small">
       <span className="flex items-center gap-2">
         <span className="text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {label}
         </span>
         {action ? <span className="ml-auto">{action}</span> : null}
       </span>
+      <AnimatePresence>
+        {flashedAt ? (
+          <motion.span
+            key={flashedAt}
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 -mx-2 -my-1 rounded-sm bg-success/20"
+            initial={{ opacity: 0.9 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: reduced ? 0.15 : 0.7, ease: 'easeOut' }}
+          />
+        ) : null}
+      </AnimatePresence>
       {children}
     </label>
   )
@@ -842,6 +890,7 @@ function Comments({
 }) {
   const t = useT()
   const locale = useLocale()
+  const commentsReduced = useReducedMotion()
   const [text, setText] = React.useState('')
   const addComment = useAddCommentMutation(cardId)
 
@@ -918,31 +967,42 @@ function Comments({
       }
     >
       <div className="flex flex-col gap-3">
-        {comments.map((c) => {
-          const author = members.find((m) => m.userId === c.authorUserId)
-          return (
-            <div key={c.id} className="flex gap-2">
-              <Avatar
-                size="sm"
-                src={null}
-                alt={author ? fullName(author) : ''}
-                initials={author ? initialsFromName(author.givenName, author.familyName) : '?'}
-                hueSeed={c.authorUserId}
-              />
-              <div className="flex-1 rounded-sm bg-muted p-2">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-small font-medium text-foreground">
-                    {author ? fullName(author) : ''}
-                  </span>
-                  <span className="text-caption text-muted-foreground">
-                    {formatDate(new Date(c.createdAt), locale)}
-                  </span>
+        {/* round2 SEV2 "the comment list does not animate a new comment in": each row still only
+            plays this once, at its own mount -- an already-loaded comment does not replay it when a
+            sibling is added below it. */}
+        <AnimatePresence initial={false}>
+          {comments.map((c) => {
+            const author = members.find((m) => m.userId === c.authorUserId)
+            return (
+              <motion.div
+                key={c.id}
+                className="flex gap-2"
+                initial={commentsReduced ? { opacity: 0 } : { opacity: 0, y: RISE_PX }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={commentsReduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
+              >
+                <Avatar
+                  size="sm"
+                  src={null}
+                  alt={author ? fullName(author) : ''}
+                  initials={author ? initialsFromName(author.givenName, author.familyName) : '?'}
+                  hueSeed={c.authorUserId}
+                />
+                <div className="flex-1 rounded-sm bg-muted p-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-small font-medium text-foreground">
+                      {author ? fullName(author) : ''}
+                    </span>
+                    <span className="text-caption text-muted-foreground">
+                      {formatDate(new Date(c.createdAt), locale)}
+                    </span>
+                  </div>
+                  <p className="whitespace-pre-wrap text-small text-foreground">{c.body.text}</p>
                 </div>
-                <p className="whitespace-pre-wrap text-small text-foreground">{c.body.text}</p>
-              </div>
-            </div>
-          )
-        })}
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
 
         {summarizeAi.isPending || summary || summarizeAi.isError ? (
           <AiPreviewPanel

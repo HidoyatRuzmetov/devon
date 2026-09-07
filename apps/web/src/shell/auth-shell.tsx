@@ -12,6 +12,7 @@ import {
   AmbientGradient,
   BlurFade,
   LocaleMenu,
+  Reveal,
   ThemeToggle,
   Toaster,
   TopBar,
@@ -57,7 +58,9 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           </span>
         }
         trailing={
-          <>
+          // round2 SEV2 "the locale/theme controls are static": a small delayed reveal so they
+          // settle in a beat after the wordmark rather than being simply present on first paint.
+          <Reveal delay={0.08} className="flex items-center gap-2">
             <ThemeToggle
               value={theme as ThemeToggleValue}
               onChange={(next) => setThemePreference(next)}
@@ -70,7 +73,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
               value={locale}
               onChange={handleLocaleChange}
             />
-          </>
+          </Reveal>
         }
       />
 
