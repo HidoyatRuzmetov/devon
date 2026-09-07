@@ -63,6 +63,15 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.event_photos': 'department_owned',
   'app.event_feedback': 'department_owned',
   'app.event_reminder_jobs': 'global',
+
+  // EPIC-010/011 analytics + pages/onboarding-lite (MODULE-GUIDE.md "DB: schema").
+  'app.analytics_daily': 'department_owned',
+  'app.analytics_saved_filters': 'department_owned',
+  'app.analytics_pinned_charts': 'department_owned',
+  'app.pages': 'department_owned',
+  'app.page_versions': 'department_owned',
+  'app.onboarding_templates': 'department_owned',
+  'app.onboarding_runs': 'department_owned',
 })
 
 /**
