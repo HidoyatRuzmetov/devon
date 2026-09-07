@@ -122,11 +122,12 @@ describe('seed:demo / seed:reset idempotence (design §2.7 step 6, Testcontainer
   const previousEnv = { NODE_ENV: process.env['NODE_ENV'], DEVON_DEMO: process.env['DEVON_DEMO'] }
 
   // The whole dataset, every module included (`src/seed/modules/*.ts`):
-  //   users        core 2 + accounts 38 + work 14 + structure 6
+  //   users        core 2 + DEMO_SUPER_ADMIN 1 (package demo-super-admin, core.ts) + accounts 38 +
+  //     work 14 + structure 6
   //   departments  core 1 + departments 2 + structure 1 + admin 2 (showcase: one paused, one
   //     archived, both member-less -- EPIC-013's admin.ts, added after this constant was first
   //     written; blitz integration fix bumped it from 4 to 6 to match)
-  const EXPECTED_USERS = 60
+  const EXPECTED_USERS = 61
   const EXPECTED_DEPARTMENTS = 6
 
   // One table per module that only that module writes -- proof each module's `seed()` ran, so a

@@ -3,8 +3,7 @@
 // declares in `e2e/routes.json` (this item's own handoff contract, `routes.schema.json` -- now every
 // sidebar destination, not just the five foundation routes: work's four views, projects, personal,
 // events, people, structure, pages, analytics, ai, departments, account and every `/admin/*` tab),
-// captured as the seeded demo head (`packages/db/src/seed/fixtures.ts`'s `demo.boshliq`, documented in
-// MODULE-GUIDE.md "Running the app"), at 1440x900 and 390x844, light and dark, uz-Latn and ru.
+// captured at 1440x900 and 390x844, light and dark, uz-Latn and ru.
 //
 // Deliberately a standalone script, not a Playwright spec, for the exact reason
 // `e2e/scripts/ui-foundation-shots.mjs` already documents: it drives a *running* `pnpm start --demo`
@@ -18,13 +17,16 @@
 //     --base http://127.0.0.1:5173 \
 //     --out agentic/ledger/ui-blitz/<timestamp>/final
 //
-// Every route x width x theme x locale combination is captured full-page. A route that requires a
-// session (`routes.json`'s `auth: "session"`) is shot signed in as the demo head; `auth: "public"` /
-// `auth: "super_admin"` routes are shot in that same signed-in browser too (a `super_admin`-only route
-// like `/admin` then correctly renders its designed no-permission state for a department head, and
-// `/login` correctly renders its form regardless of session -- both real, intended product behaviour,
-// not a gap in this script). Missing routes are reported, never silently skipped -- a screenshot set
-// with a hole in it is worse than no set.
+// Every route x width x theme x locale combination is captured full-page. Role-aware login (package
+// `demo-super-admin`): a route whose `routes.json` entry has `auth: "super_admin"` (every `/admin/*`
+// tab) is captured signed in as the seeded super admin (`packages/db/src/seed/fixtures.ts`'s
+// `DEMO_SUPER_ADMIN`, login `admin.super` -- MODULE-GUIDE.md "Running the app"); every other route
+// (`auth: "session"` or `"public"`) is captured signed in as the demo head (`demo.boshliq`), exactly
+// as before. Before `DEMO_SUPER_ADMIN` existed, no seeded account held the `super_admin` role at all,
+// so every `/admin*` capture was necessarily the route's own no-permission state
+// (`agentic/ledger/ui-blitz/2026-09-07T11-25-00-05-00/report.md`'s "One gap up front") -- this script
+// now exercises the console itself. Missing routes are reported, never silently skipped -- a
+// screenshot set with a hole in it is worse than no set.
 //
 // The locale axis is driven through the real `LocaleMenu` (see `switchLocale` below), never through a
 // `devon_locale` localStorage seed -- `critique.md`'s "Locale note" found the previous version of this
@@ -48,13 +50,15 @@ const argOf = (name, fallback) => {
 
 const BASE = argOf('base', 'http://127.0.0.1:5173').replace(/\/$/, '')
 const OUT = argOf('out', join('agentic', 'ledger', 'ui-blitz', 'latest', 'after'))
-// The one demo password every seeded account shares (`packages/db/src/seed/fixtures.ts`'s
-// `DEMO_PASSWORD`, documented in MODULE-GUIDE.md "Running the app") -- not read from that package
-// directly (this directory manages its own `node_modules` outside the pnpm workspace, `package.json`'s
-// own header comment) so the two defaults are repeated, not imported; both are overridable by flag if
-// the seed ever changes.
+// The one demo password every seeded account shares, head and super admin alike
+// (`packages/db/src/seed/fixtures.ts`'s `DEMO_PASSWORD`, documented in MODULE-GUIDE.md "Running the
+// app") -- not read from that package directly (this directory manages its own `node_modules` outside
+// the pnpm workspace, `package.json`'s own header comment) so the defaults are repeated, not imported;
+// all four are overridable by flag if the seed ever changes.
 const LOGIN = argOf('login', 'demo.boshliq')
 const PASSWORD = argOf('password', 'Ishonchli#2026')
+const SUPER_LOGIN = argOf('superLogin', 'admin.super')
+const SUPER_PASSWORD = argOf('superPassword', 'Ishonchli#2026')
 
 const SIZES = [
   { name: '1440', width: 1440, height: 900 },
@@ -90,90 +94,127 @@ async function loadRoutes() {
   return JSON.parse(raw).routes
 }
 
+/**
+ * Signs into one fresh browser context as `credentials`, switches locale if needed, captures every
+ * route in `routesForSession` at `size`/`theme`, restores the account's locale, and closes the
+ * context. Factored out of `main()` so a session can be run once per credential (head, super admin)
+ * per size/theme/locale cell without duplicating the sign-in/locale/capture/restore choreography.
+ */
+async function captureSession(browser, { credentials, routesForSession, size, theme, locale, failures }) {
+  if (routesForSession.length === 0) return
+
+  const context = await browser.newContext({
+    viewport: { width: size.width, height: size.height },
+    colorScheme: theme,
+    deviceScaleFactor: 1,
+  })
+  // `apps/web/src/lib/theme.ts`'s `bootTheme()` reads this key before first paint when it is set
+  // ("light"/"dark" pin the theme outright; leaving it unset would let `bootTheme()` fall through
+  // to `system`, which already matches `colorScheme` above -- set explicitly anyway so a shot never
+  // depends on that fallback continuing to agree with the context option).
+  await context.addInitScript((t) => {
+    try {
+      window.localStorage.setItem('devon_theme', t)
+    } catch {
+      /* storage disabled -- the shot still renders the OS-matched theme via colorScheme */
+    }
+  }, theme)
+
+  const page = await context.newPage()
+  const label = `${size.name}/${theme}/${locale}/${credentials.login}`
+
+  try {
+    await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
+    await page.fill('input[name="identifier"]', credentials.login)
+    await page.fill('input[name="password"]', credentials.password)
+    await page.click('button[type="submit"]')
+    await page.waitForURL(`${BASE}/`, { timeout: 15_000 })
+  } catch (error) {
+    failures.push(`sign-in failed (${label}): ${String(error)}`)
+    await context.close()
+    return
+  }
+
+  if (locale !== 'uz-Latn') {
+    try {
+      // Real UI switch (design.md §4.3/AC-4), never the `devon_locale` localStorage seed the
+      // previous version of this script wrote -- `LocaleReconciler` (app.tsx) lets the
+      // signed-in user's own record win over that seed, which is exactly why the byte-identical
+      // uz/ru captures `critique.md` flagged were a harness artefact, not a product bug.
+      await switchLocale(page, 'uz-Latn', locale)
+    } catch (error) {
+      failures.push(`locale switch to ${locale} failed (${label}): ${String(error)}`)
+      await context.close()
+      return
+    }
+  }
+
+  for (const route of routesForSession) {
+    try {
+      await page.goto(`${BASE}${route.path}`, { waitUntil: 'networkidle' })
+      // Let entrance animations/staggers settle so a shot is of the screen, not of frame 3
+      // (`ui-foundation-shots.mjs` verified 900ms is enough for this catalogue's longest stagger).
+      await page.waitForTimeout(900)
+      const file = join(OUT, `${route.slug}__${size.name}__${theme}__${locale}.png`)
+      await page.screenshot({ path: file, fullPage: true })
+      console.log(`[ui-blitz-shots] ${file}`)
+    } catch (error) {
+      failures.push(`${route.slug} ${label}: ${String(error)}`)
+    }
+  }
+
+  if (locale !== 'uz-Latn') {
+    // Leave the shared demo account the way this script found it, so a later run (or another
+    // suite) never inherits a locale this script switched for its own purposes.
+    try {
+      await switchLocale(page, locale, 'uz-Latn')
+    } catch (error) {
+      failures.push(`locale reset to uz-Latn failed (${label}): ${String(error)}`)
+    }
+  }
+
+  await context.close()
+}
+
 async function main() {
   const routes = await loadRoutes()
+  // Role-aware split (package `demo-super-admin`): `routes.json`'s `auth` field is the single source
+  // of truth for which credential a route needs -- `super_admin` routes go to `DEMO_SUPER_ADMIN`,
+  // everything else (`session`/`public`) goes to the demo head, exactly as `auth.ts`/the app's own
+  // route guard already decides at runtime.
+  const headRoutes = routes.filter((r) => r.auth !== 'super_admin')
+  const superAdminRoutes = routes.filter((r) => r.auth === 'super_admin')
   await mkdir(OUT, { recursive: true })
   const browser = await chromium.launch()
   const failures = []
 
-  // A route x width x theme x locale grid. Locale is the outer-most axis of the three so each signed-in
-  // context only ever needs to switch the menu once (uz-Latn is the seeded demo department's own
-  // default locale, `DEMO_DEPARTMENT.localeDefault` -- `packages/db/src/seed/fixtures.ts` -- so every
-  // fresh session already renders it and needs no switch there).
+  // A route x width x theme x locale grid, locale outermost (each signed-in context only ever needs
+  // to switch the menu once -- uz-Latn is the seeded demo department's own default locale,
+  // `DEMO_DEPARTMENT.localeDefault`, so a fresh head session already renders it and needs no switch
+  // there; `DEMO_SUPER_ADMIN` is seeded with the same default for the identical reason). Within each
+  // cell, two short-lived sessions run in turn -- head first (covers every non-`super_admin` route,
+  // matching this script's original coverage exactly), then the super admin (covers only the
+  // `/admin/*` tabs) -- rather than one long-lived session per cell, so neither account's own locale
+  // setting or session cookie ever leaks into the other's capture.
   for (const locale of LOCALES) {
     for (const size of SIZES) {
       for (const theme of THEMES) {
-        const context = await browser.newContext({
-          viewport: { width: size.width, height: size.height },
-          colorScheme: theme,
-          deviceScaleFactor: 1,
+        await captureSession(browser, {
+          credentials: { login: LOGIN, password: PASSWORD },
+          routesForSession: headRoutes,
+          size,
+          theme,
+          locale,
+          failures,
         })
-        // `apps/web/src/lib/theme.ts`'s `bootTheme()` reads this key before first paint when it is set
-        // ("light"/"dark" pin the theme outright; leaving it unset would let `bootTheme()` fall through
-        // to `system`, which already matches `colorScheme` above -- set explicitly anyway so a shot never
-        // depends on that fallback continuing to agree with the context option).
-        await context.addInitScript((t) => {
-          try {
-            window.localStorage.setItem('devon_theme', t)
-          } catch {
-            /* storage disabled -- the shot still renders the OS-matched theme via colorScheme */
-          }
-        }, theme)
-
-        const page = await context.newPage()
-        const label = `${size.name}/${theme}/${locale}`
-
-        try {
-          await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
-          await page.fill('input[name="identifier"]', LOGIN)
-          await page.fill('input[name="password"]', PASSWORD)
-          await page.click('button[type="submit"]')
-          await page.waitForURL(`${BASE}/`, { timeout: 15_000 })
-        } catch (error) {
-          failures.push(`sign-in failed (${label}): ${String(error)}`)
-          await context.close()
-          continue
-        }
-
-        if (locale !== 'uz-Latn') {
-          try {
-            // Real UI switch (design.md §4.3/AC-4), never the `devon_locale` localStorage seed the
-            // previous version of this script wrote -- `LocaleReconciler` (app.tsx) lets the
-            // signed-in user's own record win over that seed, which is exactly why the byte-identical
-            // uz/ru captures `critique.md` flagged were a harness artefact, not a product bug.
-            await switchLocale(page, 'uz-Latn', locale)
-          } catch (error) {
-            failures.push(`locale switch to ${locale} failed (${label}): ${String(error)}`)
-            await context.close()
-            continue
-          }
-        }
-
-        for (const route of routes) {
-          try {
-            await page.goto(`${BASE}${route.path}`, { waitUntil: 'networkidle' })
-            // Let entrance animations/staggers settle so a shot is of the screen, not of frame 3
-            // (`ui-foundation-shots.mjs` verified 900ms is enough for this catalogue's longest stagger).
-            await page.waitForTimeout(900)
-            const file = join(OUT, `${route.slug}__${size.name}__${theme}__${locale}.png`)
-            await page.screenshot({ path: file, fullPage: true })
-            console.log(`[ui-blitz-shots] ${file}`)
-          } catch (error) {
-            failures.push(`${route.slug} ${label}: ${String(error)}`)
-          }
-        }
-
-        if (locale !== 'uz-Latn') {
-          // Leave the shared demo account the way this script found it, so a later run (or another
-          // suite) never inherits a locale this script switched for its own purposes.
-          try {
-            await switchLocale(page, locale, 'uz-Latn')
-          } catch (error) {
-            failures.push(`locale reset to uz-Latn failed (${label}): ${String(error)}`)
-          }
-        }
-
-        await context.close()
+        await captureSession(browser, {
+          credentials: { login: SUPER_LOGIN, password: SUPER_PASSWORD },
+          routesForSession: superAdminRoutes,
+          size,
+          theme,
+          locale,
+          failures,
+        })
       }
     }
   }

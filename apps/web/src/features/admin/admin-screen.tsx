@@ -3,16 +3,15 @@
 // `app.tsx`'s route outlet checks a feature manifest's exact-path route before its own five-route
 // switch, MODULE-GUIDE.md "Web features") already established, plus the console's tab nav.
 import * as React from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Button, PageHeader, StateView, toast } from '@devon/ui'
+import { PageHeader, StateView } from '@devon/ui'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { AdminTabs, type AdminTabId } from './tabs.js'
-import { stopViewAs } from './api.js'
+import { useIsViewingAs, ViewAsBanner } from './view-as-banner.js'
 
 export function useIsSuperAdmin(): boolean {
   const meQuery = useMeQuery()
@@ -30,23 +29,9 @@ export function AdminScreen({
   const forced = useForcedState()
   const online = useOnline()
   const meQuery = useMeQuery()
-  const queryClient = useQueryClient()
   const settled = !meQuery.isPending
   const isSuperAdmin = meQuery.data?.user.role === 'super_admin'
-  // I-8b: `super_admin` is an instance-wide role that never also holds a real department membership,
-  // so `activeDepartmentId` (`/me`, `modules/me/index.ts`) is non-null for a super_admin iff view-as
-  // is currently active (it is seeded from `req.actor.viewAs`, exactly like a real membership would
-  // seed it for anyone else) -- no separate flag needed to tell the two apart.
-  const isViewingAs = isSuperAdmin && meQuery.data?.activeDepartmentId != null
-  const csrfToken = meQuery.data?.csrfToken ?? ''
-  const stopViewing = useMutation({
-    mutationFn: () => stopViewAs(csrfToken),
-    onSuccess: () => {
-      toast(t('admin.console.departments.viewAsStoppedToast'))
-      void meQuery.refetch()
-      void queryClient.invalidateQueries({ queryKey: ['admin'] })
-    },
-  })
+  const isViewingAs = useIsViewingAs()
 
   React.useEffect(() => {
     if (forced) return
@@ -94,18 +79,10 @@ export function AdminScreen({
         // started view-as had no reachable way back to admin console short of the cookie expiring on
         // its own. Hoisted here, in the chrome every `/admin/*` tab shares and that itself never reads
         // an `instance` subject, so it renders (and stays clickable) no matter which tab's own data
-        // load is denied underneath it.
-        <div className="flex items-center justify-between gap-4 rounded-md border border-warning bg-warning/10 px-4 py-3">
-          <p className="text-small text-foreground">{t('admin.console.viewAsBanner.message')}</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => stopViewing.mutate()}
-            loading={stopViewing.isPending}
-          >
-            {t('admin.console.viewAsBanner.exit')}
-          </Button>
-        </div>
+        // load is denied underneath it. `AppShell` renders the identical `ViewAsBanner` on every other
+        // route (round 2 of this same fix -- see that component's own header comment), so the two
+        // together cover the whole app, never just the console.
+        <ViewAsBanner />
       ) : null}
       {children}
     </div>

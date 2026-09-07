@@ -266,13 +266,22 @@ pnpm start --demo          # Postgres + Valkey (Docker), migrate:apply, seed:dem
 ```
 
 Demo accounts (`packages/db/src/seed/fixtures.ts`): `demo.boshliq` (head) and `demo.xodim` (member),
-department "Raqamli xizmatlar boshqarmasi", both signing in at `/login` with the password
-`Ishonchli#2026` (`DEMO_PASSWORD`, exported from `@devon/db`'s seed barrel — a real argon2id hash, not
-a placeholder). Verified end to end while building this system: `POST /api/v1/auth/login` with
-`demo.boshliq` / `Ishonchli#2026` returns `204` with a session cookie, `GET /api/v1/me` with that
-cookie returns Anvar Aliyev, and `GET /api/v1/admin/instance` with the same (`head`, not
-`super_admin`) session returns `403`. Use `/setup` instead to create a super-admin account against a
-fresh instance.
+department "Raqamli xizmatlar boshqarmasi", plus `admin.super` (`DEMO_SUPER_ADMIN`, package
+`demo-super-admin`) — a global `super_admin` account with no department membership, seeded so
+`/admin/*` can actually be signed into and screenshotted against `pnpm start --demo` (before this
+fixture existed, every `/admin*` route in a demo-only environment could only ever render its
+no-permission state — `agentic/ledger/ui-blitz/2026-09-07T11-25-00-05-00/report.md`'s "One gap up
+front"). All three sign in at `/login` with the same password, `Ishonchli#2026` (`DEMO_PASSWORD`,
+exported from `@devon/db`'s seed barrel — a real argon2id hash, not a placeholder), and `admin.super`
+gets an `app.user_security` row with 2FA off, exactly like a real account created through `/setup`
+(`apps/api/src/db/repo.ts`'s `consumeSetupToken` — `core.ts`'s seed module mirrors that insert).
+Verified end to end while building this system: `POST /api/v1/auth/login` with `demo.boshliq` /
+`Ishonchli#2026` returns `204` with a session cookie, `GET /api/v1/me` with that cookie returns Anvar
+Aliyev, and `GET /api/v1/admin/instance` with the same (`head`, not `super_admin`) session returns
+`403`; the identical login with `admin.super` / `Ishonchli#2026` returns `204` and that session's
+`GET /api/v1/admin/instance` succeeds. `/setup` still exists to create a super-admin account against a
+fresh, non-demo instance — `admin.super` is demo-only (`guard.ts`'s `assertSeedAllowed` refuses this
+seed outside a non-production environment) and must never be seeded in production.
 
 **Two environment bugs found and fixed while proving `pnpm start --demo` boots** (both outside any one
 module, both blocked a cold boot on every machine, every time):

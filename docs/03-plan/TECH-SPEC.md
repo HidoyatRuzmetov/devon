@@ -444,8 +444,20 @@ columns with givers, links, checklists and comment timelines, 6 group projects w
 subjective tasks, archives, 5 events (one with carpools and a date poll, one cancelled, one done with
 photos and feedback), polls, pages and an onboarding template, personal workspaces for the demo
 accounts (sprints, nested tasks, a canvas, Pomodoro history), notifications, Telegram links (mock),
-AI traces, 2026 holidays, and an audit chain. Demo accounts: `superadmin`, `head.sr`, `head.flat`,
-`member.db`, `newcomer`, `pending.creator` (passwords printed by the seed; demo chip in the header).
+AI traces, 2026 holidays, and an audit chain. Demo accounts (target dataset): `superadmin`, `head.sr`,
+`head.flat`, `member.db`, `newcomer`, `pending.creator` (passwords printed by the seed; demo chip in
+the header).
+
+**Current implementation (package `demo-super-admin`).** Today's `--demo` seed
+(`packages/db/src/seed/fixtures.ts`) ships three logins, all sharing `DEMO_PASSWORD`
+(`Ishonchli#2026`): `demo.boshliq` (head of "Raqamli xizmatlar boshqarmasi"), `demo.xodim` (member of
+the same department), and `admin.super` (`DEMO_SUPER_ADMIN`) — a global `super_admin` account with no
+department membership and an `app.user_security` row (2FA off), seeded the same way `/setup` creates
+a real first super admin. `admin.super` exists so the super admin console (§10) can be signed into
+and demoed/screenshotted at all; before it existed, every `/admin/*` route rendered only its
+no-permission state in a demo environment, since no seeded account held the `super_admin` role. This
+account is demo-only and refused outside a non-production environment by the same seed guard as every
+other demo row (§12); it is not the full §14 target roster above, which lands with EPIC-013/EPIC-014.
 
 ---
 

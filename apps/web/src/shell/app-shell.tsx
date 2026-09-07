@@ -44,6 +44,7 @@ import {
   useMeQuery,
 } from '../lib/session.js'
 import { useOnline } from '../lib/use-online.js'
+import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.js'
 import { useMediaQuery } from '../lib/use-media-query.js'
 import { useThemePreference, setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { navigate, RouterLink, useRoutePath } from '../lib/router.js'
@@ -118,6 +119,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const maintenanceBlocksThisRoute =
     Boolean(maintenance?.enabled) && role !== 'super_admin' && !route.startsWith('/admin')
   const maintenanceMessage = maintenance?.message ?? null
+
+  // Package `demo-super-admin`, live-verified: starting view-as (`features/admin/departments-
+  // screen.tsx`) navigates to `/` -- the department's own screens are the whole point of "view as" --
+  // but the only exit control lived inside `AdminScreen`'s chrome (`/admin/*` only), so a super admin
+  // who started view-as and landed on Home had no visible sign they were in view-as mode and no
+  // reachable way back except typing `/admin` from memory. Same shape of bug, same fix, as the
+  // maintenance notice below (rendered by the one shell every non-admin route passes through);
+  // `/admin/*` keeps rendering its own copy (`AdminScreen`) so the two never double up on one page.
+  const isViewingAs = useIsViewingAs()
+  const showViewAsBanner = isViewingAs && !route.startsWith('/admin')
 
   function toggleCollapsed(): void {
     setCollapsed((prev) => {
@@ -357,6 +368,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             hasCachedContent={Boolean(user)}
             onRetry={() => window.location.reload()}
           />
+        ) : null}
+
+        {showViewAsBanner ? (
+          <div className="px-4 pt-4 sm:px-6 md:px-8">
+            <ViewAsBanner />
+          </div>
         ) : null}
 
         <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8">
