@@ -13,5 +13,13 @@ const manifest: FeatureManifest = {
     { path: '/projects/view', component: ProjectPageScreen, titleKey: 'projects.title' },
   ],
   sidebar: [{ id: 'projects', labelKey: 'projects.title', icon: FolderKanban, route: '/projects' }],
+  quickAdd: [
+    {
+      id: 'projects.newProject',
+      labelKey: 'projects.create.button',
+      path: '/projects?new=1',
+      icon: FolderKanban,
+    },
+  ],
 }
 export default manifest

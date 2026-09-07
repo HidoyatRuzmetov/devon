@@ -51,6 +51,18 @@ export const NAV_GROUPS: readonly NavGroup[] = [
  * as a sheet. Order matters: it is the order of a working day. */
 export const MOBILE_TAB_IDS: readonly string[] = ['home', 'work', 'personal', 'events', 'inbox']
 
+/** Shorter labels for those five tabs. A tab is about 78 px wide at 390 px, and "Bildirishnomalar"
+ * is not 78 px of anything -- but the shell may not ellipsize (DESIGN.md §3.5), and that rule's own
+ * prescription is "a shorter i18n key". These are those keys. The full name stays the tab's
+ * accessible name. */
+export const MOBILE_TAB_SHORT_LABEL_KEYS: Readonly<Record<string, string>> = {
+  home: 'shell.nav.short.home',
+  work: 'shell.nav.short.work',
+  personal: 'shell.nav.short.personal',
+  events: 'shell.nav.short.events',
+  inbox: 'shell.nav.short.inbox',
+}
+
 export function mobileTabEntries(visible: readonly NavEntry[]): NavEntry[] {
   return MOBILE_TAB_IDS.map((id) => visible.find((entry) => entry.id === id)).filter(
     (entry): entry is NavEntry => Boolean(entry),

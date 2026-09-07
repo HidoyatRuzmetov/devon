@@ -135,6 +135,9 @@
       "save": "Save",
       "delete": "Delete",
       "send": "Send"
+    },
+    "actions": {
+      "create": "New task"
     }
   }
 }

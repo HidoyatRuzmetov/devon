@@ -11,6 +11,14 @@ const manifest: FeatureManifest = {
   routes: [{ path: '/events', component: EventsScreen, titleKey: 'events.title' }],
   sidebar: [{ id: 'events', labelKey: 'events.title', icon: CalendarDays, route: '/events' }],
   commands: [{ id: 'events.create', labelKey: 'events.actions.create', path: '/events?new=1' }],
+  quickAdd: [
+    {
+      id: 'events.newEvent',
+      labelKey: 'events.actions.create',
+      path: '/events?new=1',
+      icon: CalendarDays,
+    },
+  ],
 }
 
 export default manifest

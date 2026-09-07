@@ -29,19 +29,19 @@ export function AmbientGradient({
     >
       <span
         className={cn(
-          'absolute block rounded-full blur-3xl',
+          'absolute block rounded-full',
           variant === 'auth'
-            ? '-left-30 -top-40 size-140 bg-primary/12'
-            : '-left-40 -top-50 h-100 w-200 bg-primary/10',
+            ? '-left-40 -top-50 size-160 bg-primary/10 blur-[90px]'
+            : '-left-1/4 -top-100 h-160 w-[150%] bg-primary/6 blur-[110px]',
           !reduced && 'devon-ambient-drift',
         )}
       />
       <span
         className={cn(
-          'absolute block rounded-full blur-3xl',
+          'absolute block rounded-full',
           variant === 'auth'
-            ? '-bottom-45 -right-25 size-120 bg-attention/12'
-            : '-bottom-40 -right-40 h-90 w-180 bg-attention/10',
+            ? '-bottom-50 -right-35 size-140 bg-attention/10 blur-[90px]'
+            : '-right-1/4 -top-80 h-140 w-[120%] bg-attention/6 blur-[110px]',
           !reduced && 'devon-ambient-drift devon-ambient-drift-slow',
         )}
       />

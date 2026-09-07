@@ -27,14 +27,19 @@ export function SearchTrigger({ label, compact = false, onClick, className }: Se
       type="button"
       onClick={onClick}
       className={cn(
-        'flex h-9 w-full max-w-105 items-center gap-2 rounded-sm bg-muted px-3 text-small text-muted-foreground',
+        'flex h-9 w-full min-w-0 max-w-105 items-center gap-2 rounded-sm border border-border bg-muted/60 px-3',
+        'text-small text-muted-foreground',
         'transition-colors duration-(--dur-micro) ease-out hover:bg-accent',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         className,
       )}
     >
       <Search className="size-4 shrink-0" aria-hidden="true" />
-      <span data-shell-label className="min-w-0 flex-1 text-left">
+      {/* One line, always: the trigger sits in a 56px bar between the quick-add and the bell, and a
+          wrapped label would push both out of the row. It is not truncated (the shell forbids
+          that) -- the whole button shrinks instead, and below 640px the caller passes `compact` and
+          gets the icon-only form. */}
+      <span data-shell-label className="min-w-0 flex-1 whitespace-nowrap text-left">
         {label}
       </span>
       <ModKbd letter="K" className="shrink-0" />

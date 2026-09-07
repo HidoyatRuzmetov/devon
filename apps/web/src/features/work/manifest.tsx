@@ -29,5 +29,11 @@ const manifest: FeatureManifest = {
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },
   ],
+  // The shell's top-bar quick-add (MODULE-GUIDE.md "Web features": `quickAdd`). The board's own
+  // quick-add bar is where a card is actually typed; this entry is the always-available way to get
+  // there from any screen in the product.
+  quickAdd: [
+    { id: 'work.newCard', labelKey: 'work.actions.create', path: '/work', icon: KanbanSquare },
+  ],
 }
 export default manifest

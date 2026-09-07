@@ -2,7 +2,22 @@
   "shell": {
     "nav": {
       "home": "Bosh sahifa",
-      "admin": "Boshqaruv"
+      "admin": "Boshqaruv",
+      "group": {
+        "work": "Ish",
+        "team": "Jamoa",
+        "knowledge": "Bilim",
+        "manage": "Boshqaruv"
+      },
+      "aria": "Asosiy boʻlimlar",
+      "primary": "Asosiy menyu",
+      "short": {
+        "home": "Asosiy",
+        "work": "Vazifalar",
+        "personal": "Shaxsiy",
+        "events": "Tadbirlar",
+        "inbox": "Xabarlar"
+      }
     },
     "skip": "Asosiy qismga oʻtish",
     "credit": "Raqamli texnologiyalar vazirligi tizimi",
@@ -15,7 +30,8 @@
     },
     "search": {
       "trigger": "Qidirish yoki amal",
-      "aria": "Qidirish va amallar"
+      "aria": "Qidirish va amallar",
+      "openHint": "ochish"
     },
     "locale": {
       "aria": "Interfeys tili",
@@ -31,13 +47,26 @@
       "label": "Mavzu",
       "light": "Yorugʻ",
       "dark": "Qorongʻi",
-      "system": "Tizim boʻyicha"
+      "system": "Tizim boʻyicha",
+      "toggle": "Mavzuni almashtirish"
     },
     "shortcuts": {
-      "title": "Klaviatura yorliqlari"
+      "title": "Klaviatura yorliqlari",
+      "group": {
+        "general": "Umumiy",
+        "goto": "Oʻtish"
+      },
+      "search": "Qidirish va amallar",
+      "help": "Yorliqlar roʻyxati",
+      "home": "Bosh sahifaga oʻtish",
+      "inbox": "Xabarlarga oʻtish",
+      "sidebar": "Yon panelni yigʻish yoki yoyish",
+      "close": "Yopish"
     },
     "account": {
-      "signout": "Chiqish"
+      "signout": "Chiqish",
+      "aria": "Hisob menyusi",
+      "settings": "Hisob sozlamalari"
     },
     "demo": {
       "chip": {
@@ -45,6 +74,29 @@
         "short": "Demo"
       },
       "popover": "Namoyish rejimi. Bu tizimdagi barcha maʼlumotlar sinov uchun yaratilgan."
+    },
+    "department": {
+      "aria": "Boʻlimni almashtirish",
+      "heading": "Boʻlimlaringiz",
+      "empty": "Boʻlim tanlanmagan",
+      "add": "Boʻlim yaratish yoki qoʻshilish",
+      "role": {
+        "head": "Boshliq",
+        "member": "Xodim"
+      }
+    },
+    "quickAdd": {
+      "aria": "Yangi yaratish",
+      "label": "Yangi"
+    },
+    "inbox": {
+      "aria": "Xabarlar"
+    },
+    "breadcrumb": {
+      "aria": "Sahifa yoʻli"
+    },
+    "loading": {
+      "route": "Sahifa yuklanmoqda"
     }
   },
   "cmd": {
@@ -52,7 +104,9 @@
     "group": {
       "goto": "Oʻtish",
       "settings": "Sozlamalar",
-      "account": "Hisob"
+      "account": "Hisob",
+      "recent": "Yaqinda",
+      "actions": "Amallar"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",
@@ -115,7 +169,22 @@
       "personal": {
         "onTimeRate": "O'z vaqtida bajarilish",
         "focusMinutes": "Bu hafta fokus daqiqalari"
-      }
+      },
+      "onboarding": {
+        "title": "Boshlash",
+        "body": "{done}/{total} bajarildi",
+        "photo": "Suratingizni qoʻshing",
+        "department": "Boʻlimga qoʻshiling",
+        "work": "Birinchi ishingizni oching",
+        "event": "Tadbirga yoziling",
+        "focus": "Fokus seansini oʻtkazing",
+        "done": "Hammasi bajarildi"
+      },
+      "kpi": {
+        "onTimeQuestion": "Muddatlarga qanchalik amal qilinmoqda?",
+        "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
+      },
+      "sectionTiles": "Bugungi holat"
     }
   },
   "state": {
@@ -394,6 +463,11 @@
         "title": "Xizmat vaqtincha to'xtatilgan"
       }
     }
+  },
+  "auth": {
+    "tagline": "Boʻlimingiz ishini bir joyda olib boring",
+    "credit": "Raqamli texnologiyalar vazirligi tizimi",
+    "backToLogin": "Kirish sahifasiga qaytish"
   },
   "accounts": {
     "login2fa": {
@@ -1822,6 +1896,9 @@
       "save": "Saqlash",
       "delete": "Oʻchirish",
       "send": "Yuborish"
+    },
+    "actions": {
+      "create": "Yangi vazifa"
     }
   }
 }

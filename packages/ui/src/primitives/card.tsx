@@ -50,7 +50,9 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {children}
       </div>
     )
-    return interactive ? <HoverLift className="rounded-md">{card}</HoverLift> : card
+    // `h-full` so a lifting card in a grid row still stretches to the tallest sibling -- without
+    // it the wrapper collapses to its content and the row looks ragged.
+    return interactive ? <HoverLift className="h-full rounded-md">{card}</HoverLift> : card
   },
 )
 Card.displayName = 'Card'

@@ -135,6 +135,9 @@
       "save": "Saqlash",
       "delete": "Oʻchirish",
       "send": "Yuborish"
+    },
+    "actions": {
+      "create": "Yangi vazifa"
     }
   }
 }

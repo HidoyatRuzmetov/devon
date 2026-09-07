@@ -10,7 +10,14 @@
         "manage": "Manage"
       },
       "aria": "Main areas",
-      "primary": "Main menu"
+      "primary": "Main menu",
+      "short": {
+        "home": "Home",
+        "work": "Tasks",
+        "personal": "Personal",
+        "events": "Events",
+        "inbox": "Inbox"
+      }
     },
     "skip": "Skip to main content",
     "credit": "A Ministry of Digital Technologies system",
@@ -98,7 +105,8 @@
       "goto": "Go to",
       "settings": "Settings",
       "account": "Account",
-      "recent": "Recent"
+      "recent": "Recent",
+      "actions": "Actions"
     },
     "item": {
       "home": "Go to Home",

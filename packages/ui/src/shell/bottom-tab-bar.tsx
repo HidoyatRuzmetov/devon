@@ -14,6 +14,11 @@ export interface BottomTabBarProps {
   activeRoute: string
   linkAs?: React.ElementType
   counts?: Readonly<Record<string, number | null | undefined>>
+  /** Shorter, already-translated labels by entry id. A tab is ~78 px wide at 390 px and several
+   * Uzbek area names ("Bildirishnomalar") do not fit -- and the shell may not ellipsize (DESIGN.md
+   * §3.5). The rule's own prescription is "a shorter i18n key", which is exactly what this is: the
+   * caller passes one, and the full label stays the tab's accessible name. */
+  labelOverrides?: Readonly<Record<string, string>>
   /** Accessible name for the landmark, e.g. `t('shell.nav.aria')`. */
   label: string
   className?: string
@@ -29,6 +34,7 @@ export function BottomTabBar({
   activeRoute,
   linkAs: Link = 'a',
   counts,
+  labelOverrides,
   label,
   className,
 }: BottomTabBarProps) {
@@ -85,9 +91,18 @@ export function BottomTabBar({
                 />
               ) : null}
             </span>
-            <span data-shell-label className="min-w-0 text-center text-caption leading-tight">
-              {t(entry.labelKey)}
+            <span
+              data-shell-label
+              className="min-w-0 text-center text-[11px] leading-3.5"
+              // The full name stays the link's accessible name even when the visible label is the
+              // short one.
+              aria-hidden={labelOverrides?.[entry.id] ? true : undefined}
+            >
+              {labelOverrides?.[entry.id] ?? t(entry.labelKey)}
             </span>
+            {labelOverrides?.[entry.id] ? (
+              <span className="sr-only">{t(entry.labelKey)}</span>
+            ) : null}
           </Link>
         )
       })}

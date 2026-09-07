@@ -10,7 +10,14 @@
         "manage": "Boshqaruv"
       },
       "aria": "Asosiy boʻlimlar",
-      "primary": "Asosiy menyu"
+      "primary": "Asosiy menyu",
+      "short": {
+        "home": "Asosiy",
+        "work": "Vazifalar",
+        "personal": "Shaxsiy",
+        "events": "Tadbirlar",
+        "inbox": "Xabarlar"
+      }
     },
     "skip": "Asosiy qismga oʻtish",
     "credit": "Raqamli texnologiyalar vazirligi tizimi",
@@ -98,7 +105,8 @@
       "goto": "Oʻtish",
       "settings": "Sozlamalar",
       "account": "Hisob",
-      "recent": "Yaqinda"
+      "recent": "Yaqinda",
+      "actions": "Amallar"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",

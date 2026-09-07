@@ -49,7 +49,7 @@ import { useThemePreference, setThemePreference, type ThemePreference } from '..
 import { navigate, RouterLink, useRoutePath } from '../lib/router.js'
 import { WORDMARK, SIDEBAR_COLLAPSED_STORAGE_KEY } from '../lib/constants.js'
 import { getFeatureQuickAddEntries, useFeatureSidebarCounts } from '../features/registry.js'
-import { NAV_ENTRIES, NAV_GROUPS, mobileTabEntries } from './nav.js'
+import { MOBILE_TAB_SHORT_LABEL_KEYS, NAV_ENTRIES, NAV_GROUPS, mobileTabEntries } from './nav.js'
 import { CommandPaletteController } from './command-palette-controller.js'
 import { PaletteProvider } from './palette-context.js'
 import { useShellShortcuts } from './use-shell-shortcuts.js'
@@ -385,6 +385,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           activeRoute={route}
           linkAs={RouterLink}
           counts={counts}
+          labelOverrides={Object.fromEntries(
+            Object.entries(MOBILE_TAB_SHORT_LABEL_KEYS).map(([id, key]) => [id, t(key)]),
+          )}
           label={t('shell.nav.aria')}
         />
       ) : null}
