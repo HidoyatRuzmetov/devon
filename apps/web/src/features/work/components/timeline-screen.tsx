@@ -7,9 +7,18 @@
 // charting library): dragging a bar edge with the pointer needs a real element per handle, and this
 // is the one shape simple enough that a dependency would cost more than it saves.
 import * as React from 'react'
+import { motion } from 'motion/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useT, useLocale, formatDate, formatMonthYear, formatMonthShort } from '@devon/i18n'
-import { Button, Skeleton, StateView, cn, toastWithUndo, unitHueClass } from '@devon/ui'
+import {
+  Button,
+  Skeleton,
+  StateView,
+  cn,
+  toastWithUndo,
+  unitHueClass,
+  useReducedMotion,
+} from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
@@ -103,13 +112,17 @@ function GanttBar({
   rangeStart,
   rangeEnd,
   pxPerDay,
+  rowIndex,
 }: {
   card: Card
   rangeStart: Date
   rangeEnd: Date
   pxPerDay: number
+  /** Staggers this bar's draw-in against its siblings (round2 SEV2: "per-row stagger"). */
+  rowIndex: number
 }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const patchCard = usePatchCardMutation()
   const [dragPreview, setDragPreview] = React.useState<{ start: Date; due: Date } | null>(null)
   const dragRef = React.useRef<{
@@ -192,7 +205,7 @@ function GanttBar({
   }
 
   return (
-    <div
+    <motion.div
       role="button"
       tabIndex={0}
       onClick={() => openCardPeek(card.id)}
@@ -208,7 +221,17 @@ function GanttBar({
         RISK_FILL[card.risk],
         dragPreview && 'opacity-90',
       )}
-      style={{ left: x1, width: x2 - x1 }}
+      style={{ left: x1, width: x2 - x1, transformOrigin: 'left' }}
+      // round2 SEV2: the bar draws in from its own start edge on mount instead of simply appearing --
+      // `scaleX` (a transform), never `width`, so a 200-card chart stays cheap (no layout per frame).
+      initial={reduced ? { opacity: 0 } : { scaleX: 0, opacity: 0.6 }}
+      animate={{ scaleX: 1, opacity: 1 }}
+      transition={{
+        duration: reduced ? 0.15 : 0.28,
+        ease: 'easeOut',
+        delay: reduced ? 0 : Math.min(rowIndex, 40) * 0.012,
+      }}
+      {...(reduced ? {} : { whileHover: { y: -1 } })}
     >
       {clippedAtStart ? (
         <span
@@ -235,13 +258,14 @@ function GanttBar({
         onPointerUp={onHandlePointerUp}
         className="absolute inset-y-0 right-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
       />
-    </div>
+    </motion.div>
   )
 }
 
 export default function TimelineScreen() {
   const t = useT()
   const locale = useLocale()
+  const reducedTimeline = useReducedMotion()
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
@@ -449,9 +473,14 @@ export default function TimelineScreen() {
                   style={{ left: tick.x }}
                 />
               ))}
-              <div
+              {/* round2 SEV2: the today line now sweeps down from the top on arrival instead of
+                  simply being present -- `scaleY` (a transform), not `height`. */}
+              <motion.div
                 className="absolute top-0 bottom-0 w-px bg-primary"
-                style={{ left: todayX }}
+                style={{ left: todayX, transformOrigin: 'top' }}
+                initial={reducedTimeline ? { opacity: 0 } : { scaleY: 0, opacity: 0 }}
+                animate={{ scaleY: 1, opacity: 1 }}
+                transition={{ duration: reducedTimeline ? 0.15 : 0.4, ease: 'easeOut' }}
                 aria-hidden="true"
               />
             </div>
@@ -471,7 +500,7 @@ export default function TimelineScreen() {
                     {group.cards.length}
                   </span>
                 </div>
-                {group.cards.map((card) => (
+                {group.cards.map((card, rowIndex) => (
                   <div
                     key={card.id}
                     className="relative border-b border-border/40"
@@ -482,6 +511,7 @@ export default function TimelineScreen() {
                       rangeStart={rangeStart}
                       rangeEnd={rangeEnd}
                       pxPerDay={pxPerDay}
+                      rowIndex={rowIndex}
                     />
                   </div>
                 ))}
