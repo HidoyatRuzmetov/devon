@@ -68,7 +68,16 @@ type SortField = 'title' | 'assignee' | 'priority' | 'due' | 'status'
 type SortState = { field: SortField; dir: 'asc' | 'desc' }
 type Density = 'compact' | 'comfortable'
 
-const GRID_COLUMNS = '40px minmax(220px,1fr) 200px 160px 170px 130px'
+// The 5th (due date) column has to hold the `DatePicker` trigger *and*, when a card is at risk, a
+// `Badge` reading e.g. "Muddati oʻtgan" (RISK_LABEL_KEY) side by side -- at the old 170px both never
+// fit together (the date alone runs ~110px, the risk badge another ~130px), so the badge silently
+// overflowed its grid cell and painted underneath the next column's status Badge, which read as one
+// mangled chip ("Mud" + "Faol" + "gan" overlapping, found reviewing `worktable` screenshots at 1440).
+// Grid items don't clip their own overflow, so no column boundary is a text-overflow guard on its
+// own -- the fix is giving this column enough real width for its two fixed-size (`shrink-0`)
+// children, taken from the title column's own flexible `1fr` slack rather than any other fixed
+// column, since the title track already renders with hundreds of spare pixels at 1440/390.
+const GRID_COLUMNS = '40px minmax(220px,1fr) 200px 160px 260px 140px'
 
 function useLocalStorageDensity(): [Density, (d: Density) => void] {
   const key = 'devon.work.table.density'
@@ -276,7 +285,7 @@ export default function TableScreen() {
         className="overflow-auto rounded-md border border-border"
         style={{ height: scrollerHeight }}
       >
-        <div style={{ minWidth: 920 }}>
+        <div style={{ minWidth: 1020 }}>
           <div
             className="sticky top-0 z-10 grid items-center gap-2 border-b border-border bg-card px-2"
             style={{ gridTemplateColumns: GRID_COLUMNS, height: 40 }}
