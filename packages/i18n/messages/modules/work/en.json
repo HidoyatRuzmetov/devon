@@ -21,7 +21,9 @@
       "addCard": "+ Add card",
       "expandColumn": "Expand column",
       "collapseColumn": "Collapse column",
-      "loadCount": "{count} card(s) in this column"
+      "loadCount": "{count} card(s) in this column",
+      "columnsShowing": "Showing {shown} of {total} columns",
+      "expandAllColumns": "Expand all"
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
@@ -42,7 +44,33 @@
       "saved": "View saved",
       "saveError": "Could not save the view",
       "savedViews": "Saved views",
-      "noSavedViews": "No saved views yet"
+      "noSavedViews": "No saved views yet",
+      "me": "Me",
+      "addFilter": "+ Filter",
+      "fieldStep": "Search fields",
+      "valueStep": "Search values",
+      "noOptions": "Nothing found",
+      "removeChip": "Remove the \"{chip}\" filter",
+      "showAdvanced": "Advanced",
+      "hideAdvanced": "Hide advanced",
+      "op": {
+        "lte": "≤",
+        "gte": "≥",
+        "lt": "<",
+        "gt": ">",
+        "eq": "="
+      },
+      "dueWord": {
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "monday": "monday",
+        "tuesday": "tuesday",
+        "wednesday": "wednesday",
+        "thursday": "thursday",
+        "friday": "friday",
+        "saturday": "saturday",
+        "sunday": "sunday"
+      }
     },
     "field": {
       "title": "Title",
@@ -61,7 +89,8 @@
       "comments": "Comments",
       "activity": "Activity",
       "project": "Project",
-      "labels": "Labels"
+      "labels": "Labels",
+      "unit": "Unit"
     },
     "card": {
       "peekTitle": "Card details",

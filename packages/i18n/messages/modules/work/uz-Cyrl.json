@@ -21,7 +21,9 @@
       "addCard": "+ Карта қўшиш",
       "expandColumn": "Устунни ёйиш",
       "collapseColumn": "Устунни йиғиш",
-      "loadCount": "Устунда {count} та карта"
+      "loadCount": "Устунда {count} та карта",
+      "columnsShowing": "{shown} / {total} устун кўрсатилмоқда",
+      "expandAllColumns": "Барчасини ёйиш"
     },
     "quickAdd": {
       "placeholder": "Тез қўшиш: \"Нодира: ЭГДИ пакети, жума\"",
@@ -42,7 +44,33 @@
       "saved": "Кўриниш сақланди",
       "saveError": "Кўринишни сақлаб бўлмади",
       "savedViews": "Сақланган кўринишлар",
-      "noSavedViews": "Сақланган кўринишлар йўқ"
+      "noSavedViews": "Сақланган кўринишлар йўқ",
+      "me": "Мен",
+      "addFilter": "+ Филтр",
+      "fieldStep": "Майдонни қидириш",
+      "valueStep": "Қийматни қидириш",
+      "noOptions": "Ҳеч нарса топилмади",
+      "removeChip": "\"{chip}\" филтрини олиб ташлаш",
+      "showAdvanced": "Кенгайтирилган",
+      "hideAdvanced": "Кенгайтирилганни яшириш",
+      "op": {
+        "lte": "≤",
+        "gte": "≥",
+        "lt": "<",
+        "gt": ">",
+        "eq": "="
+      },
+      "dueWord": {
+        "today": "бугун",
+        "tomorrow": "эртага",
+        "monday": "душанба",
+        "tuesday": "сешанба",
+        "wednesday": "чоршанба",
+        "thursday": "пайшанба",
+        "friday": "жума",
+        "saturday": "шанба",
+        "sunday": "якшанба"
+      }
     },
     "field": {
       "title": "Сарлавҳа",
@@ -61,7 +89,8 @@
       "comments": "Изоҳлар",
       "activity": "Тарих",
       "project": "Лойиҳа",
-      "labels": "Ёрлиқлар"
+      "labels": "Ёрлиқлар",
+      "unit": "Бўлим"
     },
     "card": {
       "peekTitle": "Вазифа тафсилотлари",

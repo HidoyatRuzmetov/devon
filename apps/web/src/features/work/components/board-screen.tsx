@@ -14,6 +14,7 @@ import { useT } from '@devon/i18n'
 import { Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
+import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import type { Card } from '../api.js'
 import { keyBetween } from '../lib/fractional.js'
@@ -39,6 +40,39 @@ function BoardScreenInner() {
   const t = useT()
   const { department, departmentId } = useDepartment()
   const { user } = useSession()
+  // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
+  // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
+  // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
+  const [scrollerRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
+  const [showRightFade, setShowRightFade] = React.useState(false)
+  const updateEdgeFade = React.useCallback(
+    (e: React.UIEvent<HTMLDivElement> | undefined) => {
+      const el = e ? e.currentTarget : scrollerRef.current
+      if (!el) return
+      setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+    },
+    [scrollerRef],
+  )
+  const setScrollerRefs = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      scrollerRef.current = el
+      // Re-check once the columns have actually rendered/resized (member count, filter results),
+      // not just on scroll -- a department that grows past the visible width should show the fade
+      // immediately, before anyone has touched the scrollbar.
+      if (el) requestAnimationFrame(() => updateEdgeFade(undefined))
+    },
+    [scrollerRef, updateEdgeFade],
+  )
+  // "showing N of M" (UI-OVERHAUL.md's column-collapse affordance): each column owns its own
+  // collapsed flag in `localStorage` (a per-viewer convenience, not shared state), so the board only
+  // *observes* the aggregate via a callback rather than lifting that state out of BoardColumn.
+  const [collapsedByColumn, setCollapsedByColumn] = React.useState<Record<string, boolean>>({})
+  const [expandAllNonce, setExpandAllNonce] = React.useState(0)
+  const handleCollapsedChange = React.useCallback((columnKey: string, collapsed: boolean) => {
+    setCollapsedByColumn((prev) =>
+      prev[columnKey] === collapsed ? prev : { ...prev, [columnKey]: collapsed },
+    )
+  }, [])
   const boardQuery = useBoardQuery()
   const projectsQuery = useProjectsQuery()
   const moveCard = useMoveCardMutation()
@@ -48,6 +82,10 @@ function BoardScreenInner() {
 
   const board = boardQuery.data
   const projects = React.useMemo(() => projectsQuery.data ?? [], [projectsQuery.data])
+
+  React.useEffect(() => {
+    updateEdgeFade(undefined)
+  }, [board?.columns.length, updateEdgeFade])
 
   const filterQuery = React.useMemo(() => (q.trim() ? parseFilterQuery(q) : null), [q])
 
@@ -151,6 +189,9 @@ function BoardScreenInner() {
     )
   }
 
+  const columnKeys = [...board.columns.map((c) => c.member.userId), 'unassigned']
+  const collapsedCount = columnKeys.filter((k) => collapsedByColumn[k]).length
+
   return (
     <div className="flex h-full flex-col gap-4">
       <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
@@ -162,11 +203,53 @@ function BoardScreenInner() {
           <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
             {department?.name ?? t('work.board.department')}
           </h2>
+          {collapsedCount > 0 ? (
+            <span className="ml-auto flex items-center gap-2 text-caption text-muted-foreground">
+              {t('work.board.columnsShowing', {
+                shown: columnKeys.length - collapsedCount,
+                total: columnKeys.length,
+              })}
+              <button
+                type="button"
+                className="rounded-sm px-1.5 py-0.5 font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => {
+                  for (const key of columnKeys) {
+                    try {
+                      window.localStorage.removeItem(`devon.work.columnCollapsed.${key}`)
+                    } catch {
+                      // Best-effort -- the remount below still expands the columns for this render.
+                    }
+                  }
+                  setCollapsedByColumn({})
+                  setExpandAllNonce((n) => n + 1)
+                }}
+              >
+                {t('work.board.expandAllColumns')}
+              </button>
+            </span>
+          ) : null}
         </div>
-        <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden pb-2">
+        <div
+          ref={setScrollerRefs}
+          onScroll={updateEdgeFade}
+          className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden pb-2"
+          style={{
+            ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
+            // A five-person department already overflows the board horizontally with no scrollbar
+            // affordance visible until you try -- a right-edge fade signals "more columns" the same
+            // way the filter bar and command palette already fade their own overflow, and disappears
+            // once you've scrolled to the last column so it never looks like clipped content.
+            maskImage: showRightFade
+              ? 'linear-gradient(to right, black calc(100% - 40px), transparent)'
+              : undefined,
+            WebkitMaskImage: showRightFade
+              ? 'linear-gradient(to right, black calc(100% - 40px), transparent)'
+              : undefined,
+          }}
+        >
           {board.columns.map((col) => (
             <BoardColumn
-              key={col.member.userId}
+              key={`${col.member.userId}:${expandAllNonce}`}
               member={col.member}
               cards={col.cards.filter(filterCard)}
               projects={projects.filter((p) => p.members.includes(col.member.userId))}
@@ -177,9 +260,11 @@ function BoardScreenInner() {
               onOpenCard={openCardPeek}
               onDropped={handleDropped}
               onMoveTo={handleMoveTo}
+              onCollapsedChange={handleCollapsedChange}
             />
           ))}
           <BoardColumn
+            key={`unassigned:${expandAllNonce}`}
             member={null}
             cards={board.unassigned.filter(filterCard)}
             projects={[]}
@@ -190,6 +275,7 @@ function BoardScreenInner() {
             onOpenCard={openCardPeek}
             onDropped={handleDropped}
             onMoveTo={handleMoveTo}
+            onCollapsedChange={handleCollapsedChange}
           />
         </div>
       </section>

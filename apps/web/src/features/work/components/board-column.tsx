@@ -41,6 +41,9 @@ export interface BoardColumnProps {
   onOpenCard: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
   onMoveTo: (cardId: string, toUserId: string | null) => void
+  /** Lets the board report a "showing N of M" affordance for its collapse toggles without lifting
+   * the (per-viewer, `localStorage`-backed) collapsed state itself out of each column. */
+  onCollapsedChange?: (columnKey: string, collapsed: boolean) => void
 }
 
 /** Column collapse is a per-viewer convenience, not shared state -- `localStorage` (guarded: private
@@ -80,12 +83,18 @@ export function BoardColumn({
   onOpenCard,
   onDropped,
   onMoveTo,
+  onCollapsedChange,
 }: BoardColumnProps) {
   const t = useT()
   const listRef = React.useRef<HTMLDivElement | null>(null)
   const [isDropTarget, setIsDropTarget] = React.useState(false)
   const userId = member?.userId ?? null
-  const [collapsed, setCollapsed] = useColumnCollapsed(userId ?? 'unassigned')
+  const columnKey = userId ?? 'unassigned'
+  const [collapsed, setCollapsed] = useColumnCollapsed(columnKey)
+
+  React.useEffect(() => {
+    onCollapsedChange?.(columnKey, collapsed)
+  }, [columnKey, collapsed, onCollapsedChange])
 
   React.useEffect(() => {
     const el = listRef.current
@@ -140,7 +149,7 @@ export function BoardColumn({
   }
 
   return (
-    <div className="flex w-72 shrink-0 flex-col gap-2">
+    <div className="flex min-h-0 w-72 shrink-0 flex-col gap-2">
       <div
         className={cn(
           'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 py-2 shadow-1',
@@ -191,41 +200,48 @@ export function BoardColumn({
           <ChevronsRightLeft className="size-4" />
         </IconButton>
       </div>
+      {/* `min-h-0` + `overflow-y-auto`: this list, not the column or the board row, is the thing
+          that scrolls -- without it the column grows to its content height and the scroller row
+          above (which now has a real, viewport-bounded height) either clips it or lets the document
+          grow instead, exactly the "board is not a board" defect this fixes. */}
       <div
         ref={listRef}
         data-drop-target={isDropTarget || undefined}
-        className="flex min-h-24 flex-1 flex-col gap-2 rounded-md p-1 outline-2 outline-offset-2
+        className="min-h-0 flex-1 overflow-y-auto rounded-md p-1 outline-2 outline-offset-2
           outline-transparent transition-colors duration-(--dur-micro)
           data-[drop-target]:bg-accent/40 data-[drop-target]:outline-primary/40"
       >
-        {projects.map((p) => (
-          <ProjectTile key={p.id} project={p} />
-        ))}
-        <Stagger
-          className="flex flex-col gap-2"
-          {...(filterKey !== undefined ? { animateKey: filterKey } : {})}
-        >
-          {cards.map((card) => (
-            <StaggerItem key={card.id}>
-              <CardTile
-                card={card}
-                columnUserId={userId}
-                members={members}
-                labels={labels}
-                projects={allProjects}
-                onOpen={onOpenCard}
-                onDropped={onDropped}
-                onMoveTo={onMoveTo}
-              />
-            </StaggerItem>
+        <div className="flex min-h-24 flex-col gap-2">
+          {projects.map((p) => (
+            <ProjectTile key={p.id} project={p} />
           ))}
-        </Stagger>
-        {cards.length === 0 && projects.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border p-4 text-center text-caption text-muted-foreground">
-            {t('work.board.columnEmpty')}
-          </p>
-        ) : null}
+          <Stagger
+            className="flex flex-col gap-2"
+            {...(filterKey !== undefined ? { animateKey: filterKey } : {})}
+          >
+            {cards.map((card) => (
+              <StaggerItem key={card.id}>
+                <CardTile
+                  card={card}
+                  columnUserId={userId}
+                  members={members}
+                  labels={labels}
+                  projects={allProjects}
+                  onOpen={onOpenCard}
+                  onDropped={onDropped}
+                  onMoveTo={onMoveTo}
+                />
+              </StaggerItem>
+            ))}
+          </Stagger>
+          {cards.length === 0 && projects.length === 0 ? (
+            <p className="rounded-md border border-dashed border-border p-4 text-center text-caption text-muted-foreground">
+              {t('work.board.columnEmpty')}
+            </p>
+          ) : null}
+        </div>
       </div>
+      {/* The add-card row as the column's footer: outside the scrolling list, always in view. */}
       <div className="px-1">
         <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
       </div>

@@ -564,7 +564,9 @@
         "title": "Faol seanslar yo'q"
       },
       "current": "Joriy qurilma",
+      "unknownDevice": "Noma'lum qurilma",
       "lastSeen": "Oxirgi faollik: {when}",
+      "showAll": "Yana {count} tasini ko'rsatish",
       "revoke": "Chiqish",
       "revokeAll": "Barcha qurilmalardan chiqish",
       "revokeAllConfirm": "Barcha qurilmalardan, jumladan joriy qurilmadan ham chiqasiz. Davom etasizmi?",
@@ -2079,7 +2081,9 @@
       "addCard": "+ Karta qoʻshish",
       "expandColumn": "Ustunni yoyish",
       "collapseColumn": "Ustunni yigʻish",
-      "loadCount": "Ustunda {count} ta karta"
+      "loadCount": "Ustunda {count} ta karta",
+      "columnsShowing": "{shown} / {total} ustun koʻrsatilmoqda",
+      "expandAllColumns": "Barchasini yoyish"
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",
@@ -2100,7 +2104,33 @@
       "saved": "Koʻrinish saqlandi",
       "saveError": "Koʻrinishni saqlab boʻlmadi",
       "savedViews": "Saqlangan koʻrinishlar",
-      "noSavedViews": "Saqlangan koʻrinishlar yoʻq"
+      "noSavedViews": "Saqlangan koʻrinishlar yoʻq",
+      "me": "Men",
+      "addFilter": "+ Filtr",
+      "fieldStep": "Maydonni qidirish",
+      "valueStep": "Qiymatni qidirish",
+      "noOptions": "Hech narsa topilmadi",
+      "removeChip": "\"{chip}\" filtrini olib tashlash",
+      "showAdvanced": "Kengaytirilgan",
+      "hideAdvanced": "Kengaytirilganni yashirish",
+      "op": {
+        "lte": "≤",
+        "gte": "≥",
+        "lt": "<",
+        "gt": ">",
+        "eq": "="
+      },
+      "dueWord": {
+        "today": "bugun",
+        "tomorrow": "ertaga",
+        "monday": "dushanba",
+        "tuesday": "seshanba",
+        "wednesday": "chorshanba",
+        "thursday": "payshanba",
+        "friday": "juma",
+        "saturday": "shanba",
+        "sunday": "yakshanba"
+      }
     },
     "field": {
       "title": "Sarlavha",
@@ -2119,7 +2149,8 @@
       "comments": "Izohlar",
       "activity": "Tarix",
       "project": "Loyiha",
-      "labels": "Yorliqlar"
+      "labels": "Yorliqlar",
+      "unit": "Boʻlim"
     },
     "card": {
       "peekTitle": "Vazifa tafsilotlari",

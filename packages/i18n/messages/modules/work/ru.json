@@ -21,7 +21,9 @@
       "addCard": "+ Добавить карточку",
       "expandColumn": "Развернуть колонку",
       "collapseColumn": "Свернуть колонку",
-      "loadCount": "Карточек в колонке: {count}"
+      "loadCount": "Карточек в колонке: {count}",
+      "columnsShowing": "Показано {shown} из {total} колонок",
+      "expandAllColumns": "Развернуть все"
     },
     "quickAdd": {
       "placeholder": "Быстро добавить: «Нодира: пакет ЕГДИ, пятница»",
@@ -42,7 +44,33 @@
       "saved": "Вид сохранён",
       "saveError": "Не удалось сохранить вид",
       "savedViews": "Сохранённые виды",
-      "noSavedViews": "Сохранённых видов пока нет"
+      "noSavedViews": "Сохранённых видов пока нет",
+      "me": "Я",
+      "addFilter": "+ Фильтр",
+      "fieldStep": "Поиск поля",
+      "valueStep": "Поиск значения",
+      "noOptions": "Ничего не найдено",
+      "removeChip": "Убрать фильтр «{chip}»",
+      "showAdvanced": "Расширенный режим",
+      "hideAdvanced": "Скрыть расширенный режим",
+      "op": {
+        "lte": "≤",
+        "gte": "≥",
+        "lt": "<",
+        "gt": ">",
+        "eq": "="
+      },
+      "dueWord": {
+        "today": "сегодня",
+        "tomorrow": "завтра",
+        "monday": "понедельник",
+        "tuesday": "вторник",
+        "wednesday": "среда",
+        "thursday": "четверг",
+        "friday": "пятница",
+        "saturday": "суббота",
+        "sunday": "воскресенье"
+      }
     },
     "field": {
       "title": "Заголовок",
@@ -61,7 +89,8 @@
       "comments": "Комментарии",
       "activity": "История",
       "project": "Проект",
-      "labels": "Метки"
+      "labels": "Метки",
+      "unit": "Отдел"
     },
     "card": {
       "peekTitle": "Детали задачи",
