@@ -63,6 +63,10 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.event_photos': 'department_owned',
   'app.event_feedback': 'department_owned',
   'app.event_reminder_jobs': 'global',
+
+  // EPIC-012 ai (MODULE-GUIDE.md "DB: schema").
+  'app.ai_department_settings': 'department_owned',
+  'app.ai_traces': 'department_owned',
 })
 
 /**
