@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { StateView, TooltipProvider } from '@devon/ui'
+import { MotionProvider, RouteSkeleton, TooltipProvider } from '@devon/ui'
+import { useT } from '@devon/i18n'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import { useMeQuery } from './lib/session.js'
@@ -27,17 +28,29 @@ function LocaleReconciler() {
   return null
 }
 
-/** design.md §6: originally five core routes, two chrome families -- `AppShell` (`/`, `/admin`,
- * `/404`) and the lighter `AuthShell` (`/login`, `/setup`). See `src/lib/router.tsx` for why this is
- * a small dependency-free switch rather than `@tanstack/react-router` in this item.
+/** Routes a signed-out visitor reaches, which therefore render in the light `AuthShell` rather than
+ * the full product chrome (UI-OVERHAUL.md §2 row 3: "Auth (login, register, setup, join)"). Two of
+ * them are *feature* routes (`/register` from `features/accounts`, `/join` from
+ * `features/departments`) -- before the overhaul they rendered inside `AppShell`, which put a
+ * sidebar full of destinations around a person who has no session yet. Kept as a path list here,
+ * next to the switch that uses it, rather than as a manifest flag: "does this screen have a session"
+ * is a fact about the shell, not about the feature. */
+const AUTH_ROUTES = new Set(['/login', '/setup', '/register', '/join'])
+
+/** Every lazy route renders a page-shaped skeleton while its chunk downloads, never a spinner and
+ * never a blank frame (DESIGN.md §4). */
+function RouteFallback() {
+  const t = useT()
+  return <RouteSkeleton label={t('shell.loading.route')} />
+}
+
+/** design.md §6: five core routes and two chrome families -- `AppShell` for the product, the lighter
+ * `AuthShell` for the signed-out screens. See `src/lib/router.tsx` for why this is a small
+ * dependency-free switch rather than `@tanstack/react-router` in this item.
  *
  * A `src/features/<name>/manifest.ts(x)` route (MODULE-GUIDE.md "Web features") is checked first, by
  * exact pathname, before falling through to the core routes below -- the switch itself is never
- * edited to add one. `/admin` is now one of those feature routes (`features/admin/manifest.ts`,
- * EPIC-013's full super admin console), which is why this switch below has no `'admin'` case any
- * more: it never reached the foundation's placeholder `AdminRoute` once that manifest shipped, so
- * that dead branch (and `routes/admin.tsx`/`test/unit/admin-route.test.tsx`) was removed rather than
- * left as unreachable code (blitz integration pass). */
+ * edited to add one. */
 function RouteOutlet() {
   const path = useRoutePath()
   const name = useRouteName()
@@ -45,14 +58,15 @@ function RouteOutlet() {
   const featureRoute = matchFeatureRoute(path)
   if (featureRoute) {
     const FeatureComponent = featureRoute.component
+    const Shell = AUTH_ROUTES.has(path) ? AuthShell : AppShell
     return (
-      <AppShell>
+      <Shell>
         <RouteErrorBoundary>
-          <React.Suspense fallback={<StateView kind="loading" titleKey="state.loading" />}>
+          <React.Suspense fallback={<RouteFallback />}>
             <FeatureComponent />
           </React.Suspense>
         </RouteErrorBoundary>
-      </AppShell>
+      </Shell>
     )
   }
 
@@ -96,10 +110,18 @@ function RouteOutlet() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <LocaleReconciler />
-        <RouteOutlet />
-      </TooltipProvider>
+      {/* `reducedMotion="user"` at the root: every `motion` component below drops its transforms
+          when the OS asks, and each catalogue piece additionally substitutes a designed replacement
+          (DESIGN.md §2.5 -- replace, never delete). */}
+      <MotionProvider>
+        <TooltipProvider delayDuration={200}>
+          <LocaleReconciler />
+          <RouteOutlet />
+        </TooltipProvider>
+      </MotionProvider>
     </QueryClientProvider>
   )
 }
+
+// Exported for the shell tests, which assert the auth-route list without mounting a whole route.
+export { AUTH_ROUTES }

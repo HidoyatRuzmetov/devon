@@ -4,6 +4,7 @@
 import * as React from 'react'
 import { Inbox, Send, SlidersHorizontal } from 'lucide-react'
 import type { FeatureManifest } from '../types.js'
+import { useNotificationsQuery } from './hooks.js'
 
 const InboxScreen = React.lazy(() => import('./inbox-screen.js'))
 const PreferencesScreen = React.lazy(() => import('./preferences-screen.js'))
@@ -21,6 +22,14 @@ const manifest: FeatureManifest = {
     { path: '/inbox/telegram', component: TelegramScreen, titleKey: 'telegram.title' },
   ],
   sidebar: [{ id: 'inbox', labelKey: 'inbox.title', icon: Inbox, route: '/inbox' }],
+  // The shell's sidebar count and top-bar bell both read this (MODULE-GUIDE.md "Web features":
+  // `useSidebarCounts`). It reuses the inbox list query this feature already polls -- no extra
+  // request exists just to draw a badge, and a session that never opens the inbox still gets the
+  // count from the same cached response the inbox screen will use.
+  useSidebarCounts: () => {
+    const query = useNotificationsQuery('unread')
+    return { inbox: query.data?.unreadCount ?? 0 }
+  },
   commands: [
     {
       id: 'inbox.preferences',

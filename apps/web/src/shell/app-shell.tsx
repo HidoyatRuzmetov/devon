@@ -1,31 +1,43 @@
-// The full shell for `/`, `/admin` and `/404` (design.md §3, spec.md §3-§5): sidebar + top bar +
-// main region + toast layer + offline banner, assembled from `@devon/ui`'s shell parts. `/login` and
-// `/setup` use the lighter `AuthShell` instead (design.md §6.2/§6.3: "minimal top bar (wordmark +
-// language button only)").
+// The full shell for every signed-in route (design.md §3, spec.md §3-§5), rebuilt to
+// UI-OVERHAUL.md §2 row 1: a Linear/Huly-style full-height sidebar with grouped entries, counts, a
+// department switcher on top and a user block at the foot; a top bar over the content column
+// carrying quick-add, search/⌘K, the inbox bell, the theme toggle, the locale switcher and the
+// avatar menu; a bottom tab bar instead of the sidebar at 390 px. `/login`, `/register`, `/setup`
+// and `/join` use the lighter `AuthShell` instead.
 import * as React from 'react'
-import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Menu, PanelLeftClose, PanelLeftOpen, Settings, UserCog } from 'lucide-react'
 import { useT, useLocale, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { avatarUrl } from '../lib/avatar.js'
 import {
   Avatar,
   AvatarMenu,
+  BottomTabBar,
   DemoChip,
+  DepartmentSwitcher,
   IconButton,
+  InboxBell,
   LocaleMenu,
   OfflineBanner,
+  PageContainer,
+  PageTransition,
+  QuickAdd,
   SearchTrigger,
   Sheet,
   SheetContent,
   ShortcutOverlay,
   Sidebar,
+  SidebarUserBlock,
   StateView,
+  ThemeToggle,
   TopBar,
   Toaster,
   initialsFromName,
   resolveNavEntries,
   toast,
+  type ThemeToggleValue,
 } from '@devon/ui'
 import {
+  useDepartment,
   useInstanceQuery,
   useLocaleMutation,
   useLogoutMutation,
@@ -36,7 +48,8 @@ import { useMediaQuery } from '../lib/use-media-query.js'
 import { useThemePreference, setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { navigate, RouterLink, useRoutePath } from '../lib/router.js'
 import { WORDMARK, SIDEBAR_COLLAPSED_STORAGE_KEY } from '../lib/constants.js'
-import { NAV_ENTRIES } from './nav.js'
+import { getFeatureQuickAddEntries, useFeatureSidebarCounts } from '../features/registry.js'
+import { NAV_ENTRIES, NAV_GROUPS, mobileTabEntries } from './nav.js'
 import { CommandPaletteController } from './command-palette-controller.js'
 import { PaletteProvider } from './palette-context.js'
 import { useShellShortcuts } from './use-shell-shortcuts.js'
@@ -63,6 +76,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const instanceQuery = useInstanceQuery()
   const localeMutation = useLocaleMutation()
   const logoutMutation = useLogoutMutation()
+  const { department, memberships, setDepartmentId } = useDepartment()
+  const counts = useFeatureSidebarCounts()
 
   const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(readCollapsed)
@@ -72,11 +87,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useShellShortcuts({
     onOpenPalette: () => setPaletteOpen(true),
     onOpenShortcuts: () => setShortcutsOpen(true),
+    onToggleSidebar: () => toggleCollapsed(),
   })
+
+  // The drawer is a 390px affordance; leaving it mounted-open across a resize would trap focus in a
+  // sheet nobody can see.
+  React.useEffect(() => {
+    if (isDesktop) setDrawerOpen(false)
+  }, [isDesktop])
+
+  // Navigating from inside the drawer closes it -- the sheet is the menu, not a second window.
+  React.useEffect(() => {
+    setDrawerOpen(false)
+  }, [route])
 
   const user = meQuery.data?.user ?? null
   const role = user?.role ?? 'member'
   const isDemo = instanceQuery.data?.isDemo ?? false
+  const navCtx = { role, isDemo }
+  const visibleEntries = resolveNavEntries(NAV_ENTRIES, navCtx)
+  const inboxCount = counts['inbox'] ?? 0
 
   // TECH-SPEC §11 "pause switch": every page renders the maintenance message except the super
   // admin's own console (`/admin*`) and login/setup, which never reach `AppShell` at all
@@ -115,30 +145,132 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const localeOptions = LOCALES.map((value) => ({ value, autonym: LOCALE_LABEL[value] }))
+  const themeOptions = THEME_ORDER.map((value) => ({
+    value,
+    label: t(
+      value === 'light'
+        ? 'shell.theme.light'
+        : value === 'dark'
+          ? 'shell.theme.dark'
+          : 'shell.theme.system',
+    ),
+  }))
+
+  const userAvatar = user ? (
+    <Avatar
+      src={avatarUrl(user.avatarKey, 64)}
+      alt={`${user.givenName} ${user.familyName}`}
+      initials={initialsFromName(user.givenName, user.familyName)}
+      hueSeed={user.id}
+      size="sm"
+    />
+  ) : null
 
   const sidebarNode = (
     <Sidebar
-      entries={resolveNavEntries(NAV_ENTRIES, { role, isDemo })}
-      ctx={{ role, isDemo }}
+      entries={NAV_ENTRIES}
+      ctx={navCtx}
+      groups={NAV_GROUPS}
+      counts={counts}
       activeRoute={route}
       linkAs={RouterLink}
       wordmark={WORDMARK}
       creditText={t('shell.credit')}
       collapsed={isDesktop ? collapsed : false}
+      header={
+        memberships.length > 0 ? (
+          <DepartmentSwitcher
+            departments={memberships.map((m) => ({
+              id: m.departmentId,
+              name: m.name,
+              roleLabel: t(
+                m.role === 'head' ? 'shell.department.role.head' : 'shell.department.role.member',
+              ),
+            }))}
+            activeId={department?.departmentId ?? null}
+            onSelect={(id) => setDepartmentId(id)}
+            label={t('shell.department.aria')}
+            heading={t('shell.department.heading')}
+            emptyLabel={t('shell.department.empty')}
+            addLabel={t('shell.department.add')}
+            onAdd={() => navigate('/departments')}
+            collapsed={isDesktop ? collapsed : false}
+          />
+        ) : null
+      }
+      footer={
+        user && userAvatar ? (
+          <SidebarUserBlock
+            avatar={userAvatar}
+            name={`${user.givenName} ${user.familyName}`}
+            secondary={user.login}
+            label={t('shell.account.aria')}
+            collapsed={isDesktop ? collapsed : false}
+            actions={[
+              {
+                id: 'account',
+                label: t('shell.account.settings'),
+                icon: UserCog,
+                onSelect: () => navigate('/account'),
+              },
+              {
+                id: 'shortcuts',
+                label: t('shell.shortcuts.title'),
+                icon: Settings,
+                onSelect: () => setShortcutsOpen(true),
+              },
+              {
+                id: 'signout',
+                label: t('shell.account.signout'),
+                onSelect: handleSignOut,
+                danger: true,
+              },
+            ]}
+          />
+        ) : null
+      }
     />
   )
+
+  const quickAddActions = getFeatureQuickAddEntries().map((entry) => ({
+    id: entry.id,
+    label: t(entry.labelKey),
+    ...(entry.icon ? { icon: entry.icon } : {}),
+    ...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
+    onSelect: () => navigate(entry.path),
+  }))
 
   const trailing = (
     <>
       {isDemo ? (
         <DemoChip
           // Full label at >=768; the short one below that (spec.md §3.5: "using the short label
-          // ('Demo'), never a truncated long label") -- the long label wrapped to two lines inside
-          // the chip's fixed 24px height at 390px, visibly overlapping the rest of the top bar.
+          // ('Demo'), never a truncated long label").
           label={isDesktop ? t('shell.demo.chip.label') : t('shell.demo.chip.short')}
           popoverText={t('shell.demo.popover')}
         />
       ) : null}
+      {user ? (
+        <QuickAdd
+          actions={quickAddActions}
+          label={t('shell.quickAdd.aria')}
+          shortLabel={t('shell.quickAdd.label')}
+          compact={!isDesktop}
+        />
+      ) : null}
+      {user ? (
+        <InboxBell
+          count={inboxCount}
+          label={t('shell.inbox.aria')}
+          active={route.startsWith('/inbox')}
+          onClick={() => navigate('/inbox')}
+        />
+      ) : null}
+      <ThemeToggle
+        value={theme as ThemeToggleValue}
+        onChange={(next) => setThemePreference(next)}
+        label={t('shell.theme.toggle')}
+      />
       <LocaleMenu
         triggerLabel={t('shell.locale.aria')}
         chip={t('shell.locale.code')}
@@ -146,29 +278,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         value={locale}
         onChange={handleLocaleChange}
       />
-      {user ? (
+      {user && userAvatar ? (
         <AvatarMenu
           avatarLabel={`${user.givenName} ${user.familyName}`}
-          avatar={
-            <Avatar
-              src={avatarUrl(user.avatarKey, 64)}
-              alt={`${user.givenName} ${user.familyName}`}
-              initials={initialsFromName(user.givenName, user.familyName)}
-              hueSeed={user.id}
-              size="sm"
-            />
-          }
+          avatar={userAvatar}
           themeLabel={t('shell.theme.label')}
-          themeOptions={THEME_ORDER.map((value) => ({
-            value,
-            label: t(
-              value === 'light'
-                ? 'shell.theme.light'
-                : value === 'dark'
-                  ? 'shell.theme.dark'
-                  : 'shell.theme.system',
-            ),
-          }))}
+          themeOptions={themeOptions}
           themeValue={theme}
           onThemeChange={(value) => setThemePreference(value as ThemePreference)}
           shortcutsLabel={t('shell.shortcuts.title')}
@@ -181,7 +296,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full bg-background">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-card focus:px-4 focus:py-2 focus:text-body focus:shadow-2"
@@ -189,88 +304,90 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {t('shell.skip')}
       </a>
 
-      <TopBar
-        leading={
-          isDesktop ? (
-            <IconButton
-              aria-label={t(collapsed ? 'shell.sidebar.expand' : 'shell.sidebar.toggle')}
-              onClick={toggleCollapsed}
-            >
-              {collapsed ? (
-                <PanelLeftOpen aria-hidden="true" />
-              ) : (
-                <PanelLeftClose aria-hidden="true" />
-              )}
-            </IconButton>
-          ) : (
-            <IconButton
-              aria-label={t('shell.menu.open')}
-              size="touch"
-              onClick={() => setDrawerOpen(true)}
-            >
-              <Menu aria-hidden="true" />
-            </IconButton>
-          )
-        }
-        title={
-          isDesktop ? (
-            <span data-shell-label className="text-lead text-foreground">
-              {WORDMARK}
-            </span>
-          ) : (
-            // spec.md §3.5: "wordmark (mark only, no wordtext below 420 px)" -- the five 44px top-bar
-            // targets (☰ · wordmark · search · language · avatar) only fit a 358px content width at
-            // their full size each; the full "WorkPortal" wordtext at any size left too little room
-            // for the rest of the row and forced other targets to wrap/overlap (found end-to-end at
-            // 390px, 2026-09). A single-letter mark is the smallest faithful reading of "mark only"
-            // without inventing a graphical logo asset nothing in this repo defines yet.
-            <span
-              data-shell-label
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-sidebar-accent font-display text-body text-sidebar-foreground"
-            >
-              {WORDMARK.charAt(0)}
-            </span>
-          )
-        }
-        search={
-          <SearchTrigger
-            label={t('shell.search.trigger')}
-            compact={!isDesktop}
-            onClick={() => setPaletteOpen(true)}
+      {isDesktop ? (
+        <aside className="sticky top-0 hidden h-dvh shrink-0 md:block">{sidebarNode}</aside>
+      ) : (
+        <Sheet direction="left" open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <SheetContent
+            title={t('shell.menu.open')}
+            side="left"
+            className="w-(--width-sidebar) p-0"
+          >
+            {sidebarNode}
+          </SheetContent>
+        </Sheet>
+      )}
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar
+          leading={
+            isDesktop ? (
+              <IconButton
+                aria-label={t(collapsed ? 'shell.sidebar.expand' : 'shell.sidebar.toggle')}
+                onClick={toggleCollapsed}
+              >
+                {collapsed ? (
+                  <PanelLeftOpen aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose aria-hidden="true" />
+                )}
+              </IconButton>
+            ) : (
+              <IconButton
+                aria-label={t('shell.menu.open')}
+                size="touch"
+                onClick={() => setDrawerOpen(true)}
+              >
+                <Menu aria-hidden="true" />
+              </IconButton>
+            )
+          }
+          search={
+            <SearchTrigger
+              label={t('shell.search.trigger')}
+              compact={!isDesktop}
+              onClick={() => setPaletteOpen(true)}
+            />
+          }
+          trailing={trailing}
+        />
+
+        {!online ? (
+          <OfflineBanner
+            hasCachedContent={Boolean(user)}
+            onRetry={() => window.location.reload()}
           />
-        }
-        trailing={trailing}
-      />
+        ) : null}
 
-      {!online ? (
-        <OfflineBanner hasCachedContent={Boolean(user)} onRetry={() => window.location.reload()} />
-      ) : null}
-
-      <div className="flex flex-1">
-        {isDesktop ? (
-          <aside className="hidden shrink-0 md:block">{sidebarNode}</aside>
-        ) : (
-          <Sheet direction="left" open={drawerOpen} onOpenChange={setDrawerOpen}>
-            <SheetContent title={t('shell.menu.open')} side="left" className="p-0">
-              {sidebarNode}
-            </SheetContent>
-          </Sheet>
-        )}
-
-        <main id="main" className="min-w-0 flex-1 px-4 py-8 sm:px-6 md:px-8">
+        <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8">
           <PaletteProvider onOpen={() => setPaletteOpen(true)}>
-            {renderMainContent({
-              meQueryIsError: meQuery.isError,
-              onRetry: () => meQuery.refetch(),
-              maintenanceBlocksThisRoute,
-              maintenanceMessage,
-              locale,
-              children,
-            })}
+            <PageContainer>
+              {/* UI-OVERHAUL.md §3 row 1: the route swap is a crossfade + 8 px slide -- View
+                  Transitions where the browser has them, an AnimatePresence fallback otherwise. */}
+              <PageTransition routeKey={route}>
+                {renderMainContent({
+                  meQueryIsError: meQuery.isError,
+                  onRetry: () => meQuery.refetch(),
+                  maintenanceBlocksThisRoute,
+                  maintenanceMessage,
+                  locale,
+                  children,
+                })}
+              </PageTransition>
+            </PageContainer>
           </PaletteProvider>
         </main>
       </div>
+
+      {!isDesktop && user ? (
+        <BottomTabBar
+          entries={mobileTabEntries(visibleEntries)}
+          activeRoute={route}
+          linkAs={RouterLink}
+          counts={counts}
+          label={t('shell.nav.aria')}
+        />
+      ) : null}
 
       <CommandPaletteController
         open={paletteOpen}
@@ -287,11 +404,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         open={shortcutsOpen}
         onOpenChange={setShortcutsOpen}
         shortcuts={[
-          { keys: ['Ctrl/⌘', 'K'], description: t('shell.search.aria') },
-          { keys: ['/'], description: t('shell.search.aria') },
-          { keys: ['?'], description: t('shell.shortcuts.title') },
-          { keys: ['g', 'h'], description: t('cmd.item.home') },
-          { keys: ['Esc'], description: t('cmd.hint') },
+          {
+            keys: ['Ctrl/⌘', 'K'],
+            description: t('shell.shortcuts.search'),
+            group: t('shell.shortcuts.group.general'),
+          },
+          {
+            keys: ['/'],
+            description: t('shell.shortcuts.search'),
+            group: t('shell.shortcuts.group.general'),
+          },
+          {
+            keys: ['?'],
+            description: t('shell.shortcuts.help'),
+            group: t('shell.shortcuts.group.general'),
+          },
+          {
+            keys: ['Ctrl/⌘', 'B'],
+            description: t('shell.shortcuts.sidebar'),
+            group: t('shell.shortcuts.group.general'),
+          },
+          {
+            keys: ['Esc'],
+            description: t('shell.shortcuts.close'),
+            group: t('shell.shortcuts.group.general'),
+          },
+          {
+            keys: ['g', 'h'],
+            description: t('shell.shortcuts.home'),
+            group: t('shell.shortcuts.group.goto'),
+          },
+          {
+            keys: ['g', 'i'],
+            description: t('shell.shortcuts.inbox'),
+            group: t('shell.shortcuts.group.goto'),
+          },
         ]}
       />
 

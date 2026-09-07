@@ -24,6 +24,19 @@ export type FeatureCommandEntry = {
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }
 
+/** A "create this" entry for the shell's quick-add button (UI-OVERHAUL.md §2 row 1). Declarative on
+ * purpose: a manifest names a path, the shell navigates there -- a feature never hands the shell a
+ * callback that closes over its own screen state. */
+export type FeatureQuickAddEntry = {
+  id: string
+  labelKey: string
+  /** Where "create" lives, e.g. `/events?new=1`. */
+  path: string
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  /** Keycap shown in the menu, e.g. `C`. Display only -- the shell does not bind it. */
+  shortcut?: string
+}
+
 export type FeatureManifest = {
   /** Must equal the directory name (`src/features/<name>/`) -- asserted by `registry.ts` so a typo
    * here fails loudly instead of silently mis-attributing an error message. */
@@ -36,4 +49,16 @@ export type FeatureManifest = {
    * action). Most features need none -- the sidebar entries already appear in the palette's
    * "Go to" group for free (see `registry.ts`). */
   commands?: readonly FeatureCommandEntry[]
+  /** Entries for the top bar's quick-add menu. Omit for a feature with nothing to create. */
+  quickAdd?: readonly FeatureQuickAddEntry[]
+  /** A *hook* returning live counts for this feature's own sidebar entries, keyed by entry id --
+   * the mechanism behind "grouped items and counts" in UI-OVERHAUL.md §2 row 1.
+   *
+   * It is called unconditionally, once per manifest, from the shell: the manifest list comes from an
+   * eager `import.meta.glob` and never changes at runtime, so the hook order is stable (the Rules of
+   * Hooks are satisfied by that invariant, not by luck). Keep it cheap -- a `useQuery` over data the
+   * feature already fetches, never a request that exists only to draw a badge. A count is a fact
+   * about the user's work; it is never a "soon" badge (`nav-registry.ts` still refuses those).
+   */
+  useSidebarCounts?: () => Readonly<Record<string, number>>
 }

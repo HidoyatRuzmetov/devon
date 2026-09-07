@@ -2,7 +2,15 @@
   "shell": {
     "nav": {
       "home": "Home",
-      "admin": "Administration"
+      "admin": "Administration",
+      "group": {
+        "work": "Work",
+        "team": "Team",
+        "knowledge": "Knowledge",
+        "manage": "Manage"
+      },
+      "aria": "Main areas",
+      "primary": "Main menu"
     },
     "skip": "Skip to main content",
     "credit": "A Ministry of Digital Technologies system",
@@ -15,7 +23,8 @@
     },
     "search": {
       "trigger": "Search or action",
-      "aria": "Search and actions"
+      "aria": "Search and actions",
+      "openHint": "open"
     },
     "locale": {
       "aria": "Interface language",
@@ -31,13 +40,26 @@
       "label": "Theme",
       "light": "Light",
       "dark": "Dark",
-      "system": "Match system"
+      "system": "Match system",
+      "toggle": "Switch theme"
     },
     "shortcuts": {
-      "title": "Keyboard shortcuts"
+      "title": "Keyboard shortcuts",
+      "group": {
+        "general": "General",
+        "goto": "Go to"
+      },
+      "search": "Search and actions",
+      "help": "Keyboard shortcuts",
+      "home": "Go to home",
+      "inbox": "Go to notifications",
+      "sidebar": "Collapse or expand the sidebar",
+      "close": "Close"
     },
     "account": {
-      "signout": "Sign out"
+      "signout": "Sign out",
+      "aria": "Account menu",
+      "settings": "Account settings"
     },
     "demo": {
       "chip": {
@@ -45,6 +67,29 @@
         "short": "Demo"
       },
       "popover": "Demonstration mode. All data in this system was created for testing."
+    },
+    "department": {
+      "aria": "Switch department",
+      "heading": "Your departments",
+      "empty": "No department selected",
+      "add": "Create or join a department",
+      "role": {
+        "head": "Head",
+        "member": "Member"
+      }
+    },
+    "quickAdd": {
+      "aria": "Create new",
+      "label": "New"
+    },
+    "inbox": {
+      "aria": "Notifications"
+    },
+    "breadcrumb": {
+      "aria": "Breadcrumb"
+    },
+    "loading": {
+      "route": "Loading page"
     }
   },
   "cmd": {
@@ -52,7 +97,8 @@
     "group": {
       "goto": "Go to",
       "settings": "Settings",
-      "account": "Account"
+      "account": "Account",
+      "recent": "Recent"
     },
     "item": {
       "home": "Go to Home",
@@ -166,5 +212,10 @@
       "down": "Not running",
       "refresh": "Refresh"
     }
+  },
+  "auth": {
+    "tagline": "Run your department in one place",
+    "credit": "Ministry of Digital Technologies system",
+    "backToLogin": "Back to sign in"
   }
 }

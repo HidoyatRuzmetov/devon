@@ -6,7 +6,12 @@
 // `eager: true` only loads the *manifest* modules up front (cheap: a manifest is metadata plus a
 // `React.lazy(...)` wrapper, never the screen component itself) -- the actual screen code a manifest
 // points at is still code-split exactly as `React.lazy` promises, fetched only when its route renders.
-import type { FeatureCommandEntry, FeatureManifest, FeatureRoute } from './types.js'
+import type {
+  FeatureCommandEntry,
+  FeatureManifest,
+  FeatureQuickAddEntry,
+  FeatureRoute,
+} from './types.js'
 
 const manifestModules = import.meta.glob<{ default: FeatureManifest }>(
   ['./*/manifest.ts', './*/manifest.tsx'],
@@ -54,4 +59,22 @@ export function getFeatureSidebarEntries(): NonNullable<FeatureManifest['sidebar
 
 export function getFeatureCommandEntries(): FeatureCommandEntry[] {
   return allManifests().flatMap((m) => m.commands ?? [])
+}
+
+/** Everything the top bar's quick-add menu offers, in manifest order. */
+export function getFeatureQuickAddEntries(): FeatureQuickAddEntry[] {
+  return allManifests().flatMap((m) => m.quickAdd ?? [])
+}
+
+/** Calls every manifest's `useSidebarCounts` hook and merges the results into one map keyed by
+ * sidebar-entry id. Safe as a hook despite the loop: `allManifests()` is derived from an eager
+ * `import.meta.glob` sorted by path, so both the list and its order are fixed for the life of the
+ * bundle -- the call order can never change between renders. */
+export function useFeatureSidebarCounts(): Readonly<Record<string, number>> {
+  const counts: Record<string, number> = {}
+  for (const manifest of allManifests()) {
+    if (!manifest.useSidebarCounts) continue
+    Object.assign(counts, manifest.useSidebarCounts())
+  }
+  return counts
 }

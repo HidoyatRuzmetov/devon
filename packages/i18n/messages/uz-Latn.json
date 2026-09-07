@@ -2,7 +2,15 @@
   "shell": {
     "nav": {
       "home": "Bosh sahifa",
-      "admin": "Boshqaruv"
+      "admin": "Boshqaruv",
+      "group": {
+        "work": "Ish",
+        "team": "Jamoa",
+        "knowledge": "Bilim",
+        "manage": "Boshqaruv"
+      },
+      "aria": "Asosiy boʻlimlar",
+      "primary": "Asosiy menyu"
     },
     "skip": "Asosiy qismga oʻtish",
     "credit": "Raqamli texnologiyalar vazirligi tizimi",
@@ -15,7 +23,8 @@
     },
     "search": {
       "trigger": "Qidirish yoki amal",
-      "aria": "Qidirish va amallar"
+      "aria": "Qidirish va amallar",
+      "openHint": "ochish"
     },
     "locale": {
       "aria": "Interfeys tili",
@@ -31,13 +40,26 @@
       "label": "Mavzu",
       "light": "Yorugʻ",
       "dark": "Qorongʻi",
-      "system": "Tizim boʻyicha"
+      "system": "Tizim boʻyicha",
+      "toggle": "Mavzuni almashtirish"
     },
     "shortcuts": {
-      "title": "Klaviatura yorliqlari"
+      "title": "Klaviatura yorliqlari",
+      "group": {
+        "general": "Umumiy",
+        "goto": "Oʻtish"
+      },
+      "search": "Qidirish va amallar",
+      "help": "Yorliqlar roʻyxati",
+      "home": "Bosh sahifaga oʻtish",
+      "inbox": "Xabarlarga oʻtish",
+      "sidebar": "Yon panelni yigʻish yoki yoyish",
+      "close": "Yopish"
     },
     "account": {
-      "signout": "Chiqish"
+      "signout": "Chiqish",
+      "aria": "Hisob menyusi",
+      "settings": "Hisob sozlamalari"
     },
     "demo": {
       "chip": {
@@ -45,6 +67,29 @@
         "short": "Demo"
       },
       "popover": "Namoyish rejimi. Bu tizimdagi barcha maʼlumotlar sinov uchun yaratilgan."
+    },
+    "department": {
+      "aria": "Boʻlimni almashtirish",
+      "heading": "Boʻlimlaringiz",
+      "empty": "Boʻlim tanlanmagan",
+      "add": "Boʻlim yaratish yoki qoʻshilish",
+      "role": {
+        "head": "Boshliq",
+        "member": "Xodim"
+      }
+    },
+    "quickAdd": {
+      "aria": "Yangi yaratish",
+      "label": "Yangi"
+    },
+    "inbox": {
+      "aria": "Xabarlar"
+    },
+    "breadcrumb": {
+      "aria": "Sahifa yoʻli"
+    },
+    "loading": {
+      "route": "Sahifa yuklanmoqda"
     }
   },
   "cmd": {
@@ -52,7 +97,8 @@
     "group": {
       "goto": "Oʻtish",
       "settings": "Sozlamalar",
-      "account": "Hisob"
+      "account": "Hisob",
+      "recent": "Yaqinda"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",
@@ -166,5 +212,10 @@
       "down": "Ishlamayapti",
       "refresh": "Yangilash"
     }
+  },
+  "auth": {
+    "tagline": "Boʻlimingiz ishini bir joyda olib boring",
+    "credit": "Raqamli texnologiyalar vazirligi tizimi",
+    "backToLogin": "Kirish sahifasiga qaytish"
   }
 }
