@@ -15,15 +15,19 @@ import {
 } from 'lucide-react'
 import { useT, useLocale, formatRelativeTime } from '@devon/i18n'
 import {
+  AnimatePresence,
   Badge,
   Button,
   cn,
+  Collapsible,
   Dialog,
   DialogContent,
   initialsFromName,
   Input,
   PageHeader,
   SectionCard,
+  Stagger,
+  StaggerItem,
   StateView,
   toast,
 } from '@devon/ui'
@@ -178,66 +182,100 @@ function SessionsSection() {
       if (a.isCurrent !== b.isCurrent) return a.isCurrent ? -1 : 1
       return new Date(b.lastSeenAt).getTime() - new Date(a.lastSeenAt).getTime()
     })
-    const visible = showAll ? sorted : sorted.slice(0, SESSIONS_COLLAPSED_COUNT)
-    const hiddenCount = sorted.length - visible.length
+    const base = sorted.slice(0, SESSIONS_COLLAPSED_COUNT)
+    const overflow = sorted.slice(SESSIONS_COLLAPSED_COUNT)
+
+    const renderRow = (s: SessionView) => {
+      const DeviceIcon = deviceIcon(s.userAgent)
+      const device = describeUserAgent(s.userAgent)
+      return (
+        <StaggerItem
+          key={s.id}
+          as="li"
+          exit="hidden"
+          layout
+          className={cn(
+            'flex items-center justify-between gap-3 p-4',
+            s.isCurrent && 'bg-accent/40',
+          )}
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+              <DeviceIcon className="size-4.5" aria-hidden="true" />
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex items-center gap-2 text-body text-foreground">
+                <span className="truncate">
+                  {device.label || t('accounts.sessions.unknownDevice')}
+                </span>
+                {s.isCurrent ? (
+                  // A fact about this row, not a status (round2 SEV2 "Joriy qurilma") -- the
+                  // brand-tone outline chip, not a status tone.
+                  <Badge tone="primary" variant="outline">
+                    {t('accounts.sessions.current')}
+                  </Badge>
+                ) : null}
+              </span>
+              <span className="truncate text-small text-muted-foreground">
+                {s.ip ?? '—'} ·{' '}
+                {t('accounts.sessions.lastSeen', {
+                  when: formatRelativeTime(new Date(s.lastSeenAt), locale),
+                })}
+              </span>
+            </div>
+          </div>
+          {!s.isCurrent ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              loading={revokeOne.isPending}
+              onClick={() => revokeOne.mutate(s.id)}
+            >
+              {t('accounts.sessions.revoke')}
+            </Button>
+          ) : null}
+        </StaggerItem>
+      )
+    }
 
     body = (
       <div className="flex flex-col gap-3">
-        <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-          {visible.map((s: SessionView) => {
-            const DeviceIcon = deviceIcon(s.userAgent)
-            const device = describeUserAgent(s.userAgent)
-            return (
-              <li
-                key={s.id}
-                className={cn(
-                  'flex items-center justify-between gap-3 p-4',
-                  s.isCurrent && 'bg-accent/40',
-                )}
-              >
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
-                    <DeviceIcon className="size-4.5" aria-hidden="true" />
-                  </span>
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <span className="flex items-center gap-2 text-body text-foreground">
-                      <span className="truncate">
-                        {device.label || t('accounts.sessions.unknownDevice')}
-                      </span>
-                      {s.isCurrent ? (
-                        // A fact about this row, not a status (round2 SEV2 "Joriy qurilma") -- the
-                        // brand-tone outline chip, not a status tone.
-                        <Badge tone="primary" variant="outline">
-                          {t('accounts.sessions.current')}
-                        </Badge>
-                      ) : null}
-                    </span>
-                    <span className="truncate text-small text-muted-foreground">
-                      {s.ip ?? '—'} ·{' '}
-                      {t('accounts.sessions.lastSeen', {
-                        when: formatRelativeTime(new Date(s.lastSeenAt), locale),
-                      })}
-                    </span>
-                  </div>
-                </div>
-                {!s.isCurrent ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="shrink-0"
-                    loading={revokeOne.isPending}
-                    onClick={() => revokeOne.mutate(s.id)}
-                  >
-                    {t('accounts.sessions.revoke')}
-                  </Button>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-        {hiddenCount > 0 ? (
-          <Button variant="secondary" size="sm" onClick={() => setShowAll(true)}>
-            {t('accounts.sessions.showAll', { count: hiddenCount })}
+        {/* UI-OVERHAUL.md §3 "Lists ... 24ms stagger" and "AnimatePresence for exit" -- round2 SEV2
+            found zero motion primitives on this screen despite it being the one every user visits.
+            `AnimatePresence` wraps each `Stagger` so a revoked row (removed once the query refetches)
+            animates out instead of vanishing; `StaggerItem`'s own `exit="hidden"` reverses its
+            entrance variant for that. The overflow beyond `SESSIONS_COLLAPSED_COUNT` sits in its own
+            `Collapsible` so "Yana N tasini koʻrsatish" expands with a real height animation instead
+            of the extra rows simply appearing. */}
+        <div className="overflow-hidden rounded-md border border-border">
+          <AnimatePresence initial={false}>
+            <Stagger as="ul" className="flex flex-col divide-y divide-border">
+              {base.map(renderRow)}
+            </Stagger>
+          </AnimatePresence>
+          {overflow.length > 0 ? (
+            <Collapsible open={showAll} id="sessions-overflow">
+              <AnimatePresence initial={false}>
+                <Stagger
+                  as="ul"
+                  className="flex flex-col divide-y divide-border border-t border-border"
+                >
+                  {overflow.map(renderRow)}
+                </Stagger>
+              </AnimatePresence>
+            </Collapsible>
+          ) : null}
+        </div>
+        {overflow.length > 0 && !showAll ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-expanded={showAll}
+            aria-controls="sessions-overflow"
+            onClick={() => setShowAll(true)}
+          >
+            {t('accounts.sessions.showAll', { count: overflow.length })}
           </Button>
         ) : null}
       </div>
@@ -291,10 +329,20 @@ function TwoFactorSection() {
   const [disableOpen, setDisableOpen] = React.useState(false)
   const [disablePassword, setDisablePassword] = React.useState('')
   const [disableError, setDisableError] = React.useState(false)
+  // UI-OVERHAUL.md §3 "Buttons: ... success check morph" -- the "Yoqish" button gets a beat of its
+  // own drawn check before the screen advances to the QR step, instead of the QR code simply
+  // appearing the instant the request resolves (round2 SEV2: "no success morph" on this exact button).
+  const [justEnrolled, setJustEnrolled] = React.useState(false)
 
   const enroll = useMutation({
     mutationFn: () => enrollTotp(csrfToken),
-    onSuccess: (result) => setEnrolling(result),
+    onSuccess: (result) => {
+      setJustEnrolled(true)
+      window.setTimeout(() => {
+        setJustEnrolled(false)
+        setEnrolling(result)
+      }, 500)
+    },
   })
   const verify = useMutation({
     mutationFn: () => verifyTotpEnroll(code, csrfToken),
@@ -392,6 +440,7 @@ function TwoFactorSection() {
         size="sm"
         className="w-fit"
         loading={enroll.isPending}
+        success={justEnrolled}
         onClick={() => enroll.mutate()}
       >
         {t('accounts.twoFactor.enable')}
