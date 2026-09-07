@@ -70,3 +70,32 @@ export function formatUzs(n: number, locale: Locale): string {
   const rounded = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n)
   return locale === 'en' ? `${UZS_SUFFIX[locale]} ${rounded}` : `${rounded} ${UZS_SUFFIX[locale]}`
 }
+
+const RELATIVE_DIVISIONS: ReadonlyArray<{ amount: number; unit: Intl.RelativeTimeFormatUnit }> = [
+  { amount: 60, unit: 'second' },
+  { amount: 60, unit: 'minute' },
+  { amount: 24, unit: 'hour' },
+  { amount: 7, unit: 'day' },
+  { amount: 4.34524, unit: 'week' },
+  { amount: 12, unit: 'month' },
+  { amount: Number.POSITIVE_INFINITY, unit: 'year' },
+]
+
+/** "5 daqiqa oldin" / "2 kun oldin" -- a session list or activity feed reads at a glance in relative
+ * time; `Intl.RelativeTimeFormat` covers all four shipped locale tags natively (verified against the
+ * bundled Node ICU: `uz-Latn`/`uz-Cyrl` need no extra data, same as `formatNumber` above). Anything
+ * under a minute collapses to "just now" via the `second` unit's own `-0` -> `numeric: 'auto'` text
+ * rather than a separate branch. */
+export function formatRelativeTime(d: Date, locale: Locale, now: Date = new Date()): string {
+  let deltaSeconds = (d.getTime() - now.getTime()) / 1000
+  let unit: Intl.RelativeTimeFormatUnit = 'second'
+  for (const division of RELATIVE_DIVISIONS) {
+    if (Math.abs(deltaSeconds) < division.amount) {
+      unit = division.unit
+      break
+    }
+    deltaSeconds /= division.amount
+    unit = division.unit
+  }
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(Math.round(deltaSeconds), unit)
+}

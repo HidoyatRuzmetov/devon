@@ -25,7 +25,7 @@ export { t, translate, type TParams } from './t.js'
 export { useT, useLocale } from './react.js'
 export { getLocale, setLocale, subscribeLocale } from './store.js'
 
-export { formatDate, formatTime, formatNumber, formatUzs } from './format.js'
+export { formatDate, formatTime, formatNumber, formatUzs, formatRelativeTime } from './format.js'
 export { normalizeUz } from './normalize-uz.js'
 export { latinToCyrillic } from './transliterate.js'
 

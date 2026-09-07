@@ -13,10 +13,11 @@ import {
   Tablet,
   Trash2,
 } from 'lucide-react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatRelativeTime } from '@devon/i18n'
 import {
   Badge,
   Button,
+  cn,
   Dialog,
   DialogContent,
   initialsFromName,
@@ -47,6 +48,12 @@ import {
   type SessionView,
 } from './api.js'
 import { AvatarPicker } from './avatar-picker.js'
+import { describeUserAgent } from './device-label.js'
+
+/** Every user eventually opens this list (item handoff), and a real department can rack up dozens
+ * of stale sessions -- five is enough to answer "is this me right now?" without turning the account
+ * page into the tallest screen in the product; everything else sits behind one disclosure. */
+const SESSIONS_COLLAPSED_COUNT = 5
 
 function useCsrfToken(): string {
   const meQuery = useMeQuery()
@@ -135,10 +142,12 @@ function deviceIcon(userAgent: string | null): React.ComponentType<React.SVGProp
 
 function SessionsSection() {
   const t = useT()
+  const locale = useLocale()
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['accounts', 'sessions'], queryFn: fetchSessions })
   const [revokeAllOpen, setRevokeAllOpen] = React.useState(false)
+  const [showAll, setShowAll] = React.useState(false)
 
   const revokeOne = useMutation({
     mutationFn: (id: string) => revokeSession(id, csrfToken),
@@ -163,43 +172,71 @@ function SessionsSection() {
   } else if (query.data.sessions.length === 0) {
     body = <StateView kind="empty" titleKey="accounts.sessions.empty.title" />
   } else {
+    // Current session first, then most-recently-active -- "is this me right now?" is the first
+    // question this list answers, so it should never be scrolled past the fold.
+    const sorted = [...query.data.sessions].sort((a, b) => {
+      if (a.isCurrent !== b.isCurrent) return a.isCurrent ? -1 : 1
+      return new Date(b.lastSeenAt).getTime() - new Date(a.lastSeenAt).getTime()
+    })
+    const visible = showAll ? sorted : sorted.slice(0, SESSIONS_COLLAPSED_COUNT)
+    const hiddenCount = sorted.length - visible.length
+
     body = (
-      <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-        {query.data.sessions.map((s: SessionView) => {
-          const DeviceIcon = deviceIcon(s.userAgent)
-          return (
-            <li key={s.id} className="flex items-center justify-between gap-3 p-4">
-              <div className="flex items-start gap-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
-                  <DeviceIcon className="size-4.5" aria-hidden="true" />
-                </span>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-body text-foreground">
-                    {s.userAgent ?? '—'}{' '}
-                    {s.isCurrent ? <Badge>{t('accounts.sessions.current')}</Badge> : null}
+      <div className="flex flex-col gap-3">
+        <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
+          {visible.map((s: SessionView) => {
+            const DeviceIcon = deviceIcon(s.userAgent)
+            const device = describeUserAgent(s.userAgent)
+            return (
+              <li
+                key={s.id}
+                className={cn(
+                  'flex items-center justify-between gap-3 p-4',
+                  s.isCurrent && 'bg-accent/40',
+                )}
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+                    <DeviceIcon className="size-4.5" aria-hidden="true" />
                   </span>
-                  <span className="text-small text-muted-foreground">
-                    {s.ip ?? '—'} ·{' '}
-                    {t('accounts.sessions.lastSeen', {
-                      when: new Date(s.lastSeenAt).toLocaleString(),
-                    })}
-                  </span>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <span className="flex items-center gap-2 text-body text-foreground">
+                      <span className="truncate">
+                        {device.label || t('accounts.sessions.unknownDevice')}
+                      </span>
+                      {s.isCurrent ? (
+                        <Badge tone="info">{t('accounts.sessions.current')}</Badge>
+                      ) : null}
+                    </span>
+                    <span className="truncate text-small text-muted-foreground">
+                      {s.ip ?? '—'} ·{' '}
+                      {t('accounts.sessions.lastSeen', {
+                        when: formatRelativeTime(new Date(s.lastSeenAt), locale),
+                      })}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              {!s.isCurrent ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  loading={revokeOne.isPending}
-                  onClick={() => revokeOne.mutate(s.id)}
-                >
-                  {t('accounts.sessions.revoke')}
-                </Button>
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
+                {!s.isCurrent ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    loading={revokeOne.isPending}
+                    onClick={() => revokeOne.mutate(s.id)}
+                  >
+                    {t('accounts.sessions.revoke')}
+                  </Button>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+        {hiddenCount > 0 ? (
+          <Button variant="secondary" size="sm" onClick={() => setShowAll(true)}>
+            {t('accounts.sessions.showAll', { count: hiddenCount })}
+          </Button>
+        ) : null}
+      </div>
     )
   }
 

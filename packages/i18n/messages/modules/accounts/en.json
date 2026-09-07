@@ -47,7 +47,9 @@
         "title": "No active sessions"
       },
       "current": "This device",
+      "unknownDevice": "Unknown device",
       "lastSeen": "Last active: {when}",
+      "showAll": "Show {count} more",
       "revoke": "Sign out",
       "revokeAll": "Sign out everywhere",
       "revokeAllConfirm": "You'll be signed out on every device, including this one. Continue?",
