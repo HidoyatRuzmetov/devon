@@ -261,6 +261,12 @@ export function createRepo(): Deps {
           })
           .returning()
         const user = toUserRecord(userRows[0]!)
+        // Same transaction as the user insert: every account owns exactly one `app.user_security`
+        // row (2FA secret, lockout counters -- `modules/accounts/repo.ts`'s `registerUser` creates it
+        // for self-registered users). Without it the super admin could enrol TOTP (the UPDATE simply
+        // matched zero rows) but never verify or be locked out (found live: `selectUserSecurity`
+        // returned null, so `POST /accounts/2fa/totp/verify` always answered validation_failed).
+        await tx.raw(sql`insert into app.user_security (user_id) values (${user.id})`)
 
         // Race-safe consumption (design.md §4(d)): zero rows updated means another concurrent request
         // won the race between our SELECT above and this UPDATE -- roll back and report 410. Both the
