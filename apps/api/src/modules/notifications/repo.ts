@@ -674,6 +674,27 @@ export async function listAllDepartmentIds(): Promise<string[]> {
 }
 
 /**
+ * Blitz integration fix (TECH-SPEC §11, pause/wipe): instance-wide maintenance mode blocks every
+ * ordinary request (`apps/web`'s app-wide maintenance screen, `apps/api`'s 503 for everyone but the
+ * super admin console), but nothing stopped a pg-boss job from still running underneath it -- a
+ * digest/reminder cron firing mid-maintenance would deliver Telegram messages while the product itself
+ * tells everyone it is down, and a paused department is already excluded from `listAllDepartmentIds`
+ * above (its own `status = 'active'` filter) but the instance-wide switch was never checked at all.
+ * Same query shape `apps/api/src/db/repo.ts`'s `getInstanceSettings` uses, duplicated here rather than
+ * imported -- MODULE-GUIDE.md: a module's repo code goes through `@devon/db`'s `withContext()`
+ * directly, never through another module's `Deps`. `app.instance_settings` is a single-row,
+ * non-tenant, non-RLS table (no `department_id`), so the same `departmentAuditCtx()` background
+ * context every other query on this page already uses reads it fine. */
+export async function isMaintenanceActive(): Promise<boolean> {
+  return withContext(toRequestContext(departmentAuditCtx()), async (tx) => {
+    const rows = await tx.raw<{ maintenance: { enabled?: boolean } | null }>(
+      sql`select maintenance from app.instance_settings where id = 1`,
+    )
+    return rows[0]?.maintenance?.enabled === true
+  })
+}
+
+/**
  * Emitted for a Telegram inline-button action this module cannot itself fulfil (RSVP, poll vote --
  * TECH-SPEC §7's "inline buttons for RSVP, poll vote, mark done, snooze") because the subject row
  * belongs to a module this one has no schema access to (MODULE-GUIDE.md: "there is no shared

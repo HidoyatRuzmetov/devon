@@ -21,6 +21,7 @@ function fill(template: string, params?: Params): string {
 
 const STRINGS: Record<BotLocale, Record<string, string>> = {
   'uz-Latn': {
+    maintenance: 'Tizim hozir texnik xizmat rejimida. Birozdan so‘ng qaytadan urinib ko‘ring.',
     'link.prompt_needed':
       'Ushbu buyruq faqat hisobingiz ulangandan keyin ishlaydi. Ilovadagi Sozlamalar bo’limidan ulang.',
     'link.success':
@@ -59,6 +60,7 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     no_bot: 'Telegram bot hali sozlanmagan. Administratorga murojaat qiling.',
   },
   'uz-Cyrl': {
+    maintenance: 'Тизим ҳозир техник хизмат режимида. Бироздан сўнг қайтадан уриниб кўринг.',
     'link.prompt_needed':
       'Ушбу буйруқ фақат ҳисобингиз уланганидан кейин ишлайди. Иловадаги Созламалар бўлимидан уланг.',
     'link.success':
@@ -96,6 +98,7 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     no_bot: 'Telegram бот ҳали созланмаган. Администраторга мурожаат қилинг.',
   },
   ru: {
+    maintenance: 'Система сейчас находится в режиме техобслуживания. Попробуйте снова чуть позже.',
     'link.prompt_needed':
       'Эта команда доступна только после привязки аккаунта. Привяжите его в Настройках приложения.',
     'link.success':
@@ -134,6 +137,7 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     no_bot: 'Telegram-бот пока не настроен. Обратитесь к администратору.',
   },
   en: {
+    maintenance: 'The system is currently in maintenance mode. Please try again shortly.',
     'link.prompt_needed':
       'This command only works after your account is linked. Link it from Settings in the app.',
     'link.success': 'Welcome, {name}! Your Telegram is linked. Reminders will now arrive here.',

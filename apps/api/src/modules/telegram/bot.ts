@@ -8,6 +8,7 @@ import {
   archiveNotifications,
   emitActionRequested,
   getNotificationById,
+  isMaintenanceActive,
   listNotifications,
   markRead,
   snoozeNotification,
@@ -56,7 +57,38 @@ function renderTitleList(items: { title: Record<string, string> }[], locale: Bot
   return items.map((n, i) => `${i + 1}. ${n.title[locale] ?? n.title['uz-Latn']}`).join('\n')
 }
 
+/** Same resolution `requireLinkedUser` uses (the account's own saved locale for a linked chat, the
+ * client's Telegram language otherwise) -- duplicated rather than shared because that function also
+ * sends its own "link your account" reply on a miss, which the maintenance message below must never
+ * trigger (a maintenance reply is the one response every chat gets, linked or not). */
+async function resolveLocale(ctx: Context): Promise<BotLocale> {
+  const chatId = chatIdOf(ctx)
+  const resolved = chatId ? await resolveUserByChatId(chatId) : null
+  if (resolved && isBotLocale(resolved.locale)) return resolved.locale
+  return localeFromTelegram(ctx)
+}
+
 export function registerBotHandlers(bot: Bot): void {
+  // TECH-SPEC §11 (pause/wipe): the app-wide maintenance screen and the API's 503 already stop every
+  // ordinary request; the bot is the one surface that would otherwise keep answering as if nothing
+  // were wrong. Runs before every command/callback handler below, in the user's own locale, and never
+  // falls through to them while maintenance is active.
+  bot.use(async (ctx, next) => {
+    const isCommand = typeof ctx.message?.text === 'string' && ctx.message.text.startsWith('/')
+    if (!isCommand && !ctx.callbackQuery) return next()
+    if (!(await isMaintenanceActive())) return next()
+
+    const locale = await resolveLocale(ctx)
+    const message = tb(locale, 'maintenance')
+    if (ctx.callbackQuery) {
+      // A toast on the button itself, not a new chat message -- same convention the real
+      // `callback_query:data` handler below uses to close the "loading" spinner on a button tap.
+      await ctx.answerCallbackQuery({ text: message, show_alert: true })
+    } else {
+      await ctx.reply(message)
+    }
+  })
+
   bot.command('start', async (ctx) => {
     const code = ctx.match?.toString().trim()
     const chatId = chatIdOf(ctx)

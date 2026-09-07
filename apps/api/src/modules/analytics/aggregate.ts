@@ -117,6 +117,21 @@ async function listActiveDepartmentIds(): Promise<string[]> {
   })
 }
 
+/** Blitz integration fix (TECH-SPEC §11, pause/wipe): a paused department is already excluded above
+ * (its own `status = 'active'` filter), but nothing stopped the nightly recompute from still running
+ * during *instance-wide* maintenance mode -- see `notifications/repo.ts`'s `isMaintenanceActive`
+ * (same query, duplicated per MODULE-GUIDE.md's "a module's repo code goes through `@devon/db`
+ * directly, never through another module's `Deps`/repo" -- this module already keeps its own
+ * `systemContext`/`listActiveDepartmentIds` rather than importing notifications'). */
+async function isMaintenanceActive(): Promise<boolean> {
+  return withContext(systemContext(null), async (tx) => {
+    const rows = await tx.raw<{ maintenance: { enabled?: boolean } | null }>(
+      sql`select maintenance from app.instance_settings where id = 1`,
+    )
+    return rows[0]?.maintenance?.enabled === true
+  })
+}
+
 // -- On-write patch: recompute *today* for the one department a card event just touched -------------
 
 function isDeptEvent(
@@ -152,6 +167,13 @@ const QUEUE_RECOMPUTE_NIGHTLY = 'analytics.recompute.nightly'
 export type RecomputeWorkerHandle = { stop(): Promise<void> }
 
 async function runNightlyRecompute(log: FastifyBaseLogger): Promise<void> {
+  if (await isMaintenanceActive()) {
+    log.info(
+      { job: QUEUE_RECOMPUTE_NIGHTLY },
+      'analytics: skipping nightly recompute -- maintenance mode is active',
+    )
+    return
+  }
   const yesterday = addDaysToDateString(tashkentDateString(), -1)
   const departmentIds = await listActiveDepartmentIds()
   // Plain indexed `for`, never `for-of` (I-16's "no await in a loop" convention -- see

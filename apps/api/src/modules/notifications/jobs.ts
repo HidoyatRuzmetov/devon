@@ -11,6 +11,7 @@ import { notifyUser } from './notify.js'
 import {
   countsByReasonSince,
   getPrefs,
+  isMaintenanceActive,
   listActiveMemberUserIds,
   listAllDepartmentIds,
   listDueNotificationsNeedingTelegram,
@@ -61,7 +62,19 @@ function localizedDigestTitle(count: number): LocalizedText {
 // `events-worker.ts` gives: a scheduled, department-scale batch job is easier to reason about and to
 // rate-limit against Telegram's own API than an unbounded `Promise.all` fan-out would be.
 
+/** TECH-SPEC §11 (pause/wipe): instance-wide maintenance mode must stop every non-critical background
+ * job, not only ordinary HTTP requests -- see `isMaintenanceActive`'s own header for the full story.
+ * Called once at the top of each cron handler below, before any Telegram send or query. */
+async function skipIfMaintenance(log: FastifyBaseLogger, jobName: string): Promise<boolean> {
+  if (await isMaintenanceActive()) {
+    log.info({ job: jobName }, 'notifications: skipping job -- maintenance mode is active')
+    return true
+  }
+  return false
+}
+
 async function runReminderDue(log: FastifyBaseLogger): Promise<void> {
+  if (await skipIfMaintenance(log, QUEUE_REMINDER_DUE)) return
   const departmentIds = await listAllDepartmentIds()
   for (let d = 0; d < departmentIds.length; d += 1) {
     const memberIds = await listActiveMemberUserIds(departmentIds[d]!)
@@ -76,6 +89,7 @@ async function runReminderDue(log: FastifyBaseLogger): Promise<void> {
 }
 
 async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
+  if (await skipIfMaintenance(log, QUEUE_DIGEST_PERSONAL)) return
   const departmentIds = await listAllDepartmentIds()
   for (let d = 0; d < departmentIds.length; d += 1) {
     const departmentId = departmentIds[d]!
@@ -109,6 +123,7 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
 }
 
 async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
+  if (await skipIfMaintenance(log, QUEUE_DIGEST_DEPARTMENT)) return
   const groups = await listGroupsForKind('weekly_summary')
   if (groups.length === 0) return
   const bot = getBot()
