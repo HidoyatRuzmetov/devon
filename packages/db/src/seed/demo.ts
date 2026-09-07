@@ -189,6 +189,21 @@ export async function runResetDemo(
         .delete(schema.sessions)
         .where(inArray(schema.sessions.userId, [...DEMO_DELETE_ORDER[2].ids]))
 
+      // Same reasoning, same FK shape, for `app.user_security`: `DEMO_SUPER_ADMIN` (package
+      // `demo-super-admin`) gets one such row from `core.ts`'s `seed()` (mirroring the real
+      // `consumeSetupToken` path), and `user_security.user_id` has no `on delete cascade` back to
+      // `app.users` -- deleting the user first would fail `user_security_pkey`'s own FK. `demo.boshliq`/
+      // `demo.xodim` never get a row here (no seed module writes one for them), so this is a no-op for
+      // those two ids; raw SQL because `user_security` is intentionally not in the typed `schema`
+      // barrel (`packages/db/src/schema/accounts.ts`'s own header comment). `in`, not
+      // `= any($1::uuid[])`: `notifications/repo.ts`'s `markRead` already documents why the latter
+      // fails here (drizzle's `sql` template expands an interpolated array into a parenthesized value
+      // list, not a single array-typed bind parameter -- `any()` then tries to cast that `record` to
+      // `uuid[]` and errors).
+      await tx.raw(
+        sql`delete from app.user_security where user_id in ${[...DEMO_DELETE_ORDER[2].ids]}`,
+      )
+
       // Delete order mirrors `DEMO_DELETE_ORDER` (children before parents, FK-safe): memberships,
       // then departments, then users. That constant is the single source of truth for *which* ids are
       // "demo" ids; the queries below just walk it in order.

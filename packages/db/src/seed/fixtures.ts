@@ -32,6 +32,31 @@ export type DemoMembershipFixture = {
   role: DemoRole
 }
 
+/**
+ * The one seeded `super_admin` account (package `demo-super-admin`): a department head/member alone
+ * cannot reach `/admin/*` (`GET /api/v1/admin/instance` answers `403` for them, per MODULE-GUIDE.md
+ * "Running the app"), so without this fixture nobody could sign in and demo -- or screenshot -- the
+ * super admin console against `pnpm start --demo`. Deliberately has no `app.memberships` row: a
+ * super admin is global, not scoped to `DEMO_DEPARTMENT` (TECH-SPEC §2.1). Demo only -- `guard.ts`'s
+ * `assertSeedAllowed` already refuses every seed module outside a non-production environment, the
+ * same gate this fixture relies on to never reach a real deployment.
+ */
+export type DemoSuperAdminFixture = {
+  id: string
+  login: string
+  givenName: string
+  familyName: string
+  title: string
+}
+
+export const DEMO_SUPER_ADMIN: DemoSuperAdminFixture = {
+  id: demoId('user.super_admin'),
+  login: 'admin.super',
+  givenName: 'Sanjar',
+  familyName: "Ne'matov",
+  title: 'Super administrator',
+}
+
 export const DEMO_DEPARTMENT: DemoDepartmentFixture = {
   id: demoId('department.digital-services'),
   name: 'Raqamli xizmatlar boshqarmasi',
@@ -66,9 +91,10 @@ export const DEMO_MEMBERSHIPS: readonly DemoMembershipFixture[] = DEMO_USERS.map
 }))
 
 /**
- * The one password every demo account shares -- documented here, in `MODULE-GUIDE.md` ("Running the
- * app") and nowhere else. A real argon2id hash (via `verifyPassword`, `apps/api/src/lib/password.ts`)
- * so `POST /api/v1/auth/login` actually accepts it -- every module needs a working demo session to be
+ * The one password every demo account shares -- `demo.boshliq`, `demo.xodim` and `DEMO_SUPER_ADMIN`
+ * (`admin.super`) alike -- documented here, in `MODULE-GUIDE.md` ("Running the app") and nowhere
+ * else. A real argon2id hash (via `verifyPassword`, `apps/api/src/lib/password.ts`) so `POST
+ * /api/v1/auth/login` actually accepts it -- every module needs a working demo session to be
  * testable end to end. `hash()` salts randomly per call, so two demo users get two different hash
  * strings for the same password; that has no effect on `ON CONFLICT DO NOTHING` idempotence, which is
  * keyed by each user's deterministic id, never by this value.
@@ -89,6 +115,7 @@ export function computeDemoChecksum(): string {
     department: DEMO_DEPARTMENT,
     users: DEMO_USERS,
     memberships: DEMO_MEMBERSHIPS,
+    superAdmin: DEMO_SUPER_ADMIN,
   })
   return createHash('sha256').update(payload).digest('hex').slice(0, 16)
 }
@@ -101,5 +128,9 @@ export function computeDemoChecksum(): string {
 export const DEMO_DELETE_ORDER = [
   { table: 'app.memberships', ids: DEMO_MEMBERSHIPS.map((m) => m.id) },
   { table: 'app.departments', ids: [DEMO_DEPARTMENT.id] },
-  { table: 'app.users', ids: DEMO_USERS.map((u) => u.id) },
+  // `DEMO_SUPER_ADMIN` has no membership row (it is global, per the fixture's own doc comment above),
+  // so it only ever needs to appear in this last, users-only entry -- `demo.ts`'s `runResetDemo`
+  // indexes this array positionally (`DEMO_DELETE_ORDER[2].ids`) for both the session pre-delete and
+  // the user delete itself, so appending here is enough for the super admin to be cleaned up by both.
+  { table: 'app.users', ids: [...DEMO_USERS.map((u) => u.id), DEMO_SUPER_ADMIN.id] },
 ] as const

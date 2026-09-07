@@ -8,6 +8,7 @@ export {
   DEMO_DEPARTMENT,
   DEMO_USERS,
   DEMO_MEMBERSHIPS,
+  DEMO_SUPER_ADMIN,
   DEMO_DELETE_ORDER,
   DEMO_PASSWORD,
   computeDemoChecksum,
@@ -16,6 +17,7 @@ export {
   type DemoUserFixture,
   type DemoDepartmentFixture,
   type DemoMembershipFixture,
+  type DemoSuperAdminFixture,
 } from './fixtures.js'
 export {
   SEED_NAME,
