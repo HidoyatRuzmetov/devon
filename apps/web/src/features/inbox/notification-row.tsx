@@ -1,6 +1,7 @@
 // One row in the inbox list (design.md components: a list row is a button, never a nested-clickable
 // mess -- the whole row opens the detail sheet; per-row actions are separate controls after it, not
 // inside the same hit target).
+import { AnimatePresence, motion } from 'motion/react'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import { Archive, Clock3 } from 'lucide-react'
 import {
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
   IconButton,
   cn,
+  useReducedMotion,
 } from '@devon/ui'
 import { pickLocalized, type NotificationDto } from './api.js'
 import { REASON_TONE, ReasonIcon } from './reason-icon.js'
@@ -60,6 +62,7 @@ export function NotificationRow({
 }) {
   const t = useT()
   const locale = useLocale()
+  const reduced = useReducedMotion()
   const unread = notification.readAt === null
   const created = new Date(notification.createdAt)
 
@@ -77,10 +80,20 @@ export function NotificationRow({
     >
       {/* Unread signal on the row rail (UI-OVERHAUL.md §8) -- the inline dot beside the title is easy
           to miss once the title itself wraps to two lines, so the rail carries the same signal at a
-          glance down the whole list. */}
-      {unread ? (
-        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-0.5 bg-primary" />
-      ) : null}
+          glance down the whole list. round3: marking-read used to just drop both signals instantly --
+          they now fade out in place instead. */}
+      <AnimatePresence>
+        {unread ? (
+          <motion.span
+            aria-hidden="true"
+            className="absolute inset-y-0 left-0 w-0.5 bg-primary"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduced ? 0.1 : 0.18 }}
+          />
+        ) : null}
+      </AnimatePresence>
       <button
         type="button"
         onClick={onOpen}
@@ -103,12 +116,18 @@ export function NotificationRow({
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-start gap-2">
-            {unread ? (
-              <span
-                className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
-                aria-label={t('inbox.row.unread')}
-              />
-            ) : null}
+            <AnimatePresence>
+              {unread ? (
+                <motion.span
+                  className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
+                  aria-label={t('inbox.row.unread')}
+                  initial={{ opacity: 0, scale: reduced ? 1 : 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: reduced ? 1 : 0.5 }}
+                  transition={{ duration: reduced ? 0.1 : 0.18 }}
+                />
+              ) : null}
+            </AnimatePresence>
             <span
               className={cn(
                 'line-clamp-2 text-body',

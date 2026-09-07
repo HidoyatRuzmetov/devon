@@ -101,12 +101,15 @@ export function EventCard({
         className="group flex h-full w-full flex-col overflow-hidden rounded-md border border-border bg-card text-left shadow-1 transition-shadow duration-(--dur-standard) ease-out hover:shadow-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <div className="relative aspect-video w-full overflow-hidden">
+          {/* round2 SEV2 "Cover has no hover scale (Luma's signature)": the cover alone zooms a
+              touch on hover, inside its own clipped frame, independent of the card's `HoverLift`
+              (which moves the whole card) -- transform only, so it costs nothing to lay out. */}
           <EventIllustration
             illustrationKey={event.illustrationKey}
             category={event.category}
             eventId={event.id}
             illustrationKeyOverride={illustrationKeyOverride}
-            className="size-full object-cover"
+            className="size-full object-cover transition-transform duration-(--dur-standard) ease-(--ease-standard) motion-safe:group-hover:scale-110"
           />
           {/* A soft top scrim, not the illustration's own colour: the date block and status pill
               need to stay readable regardless of which of the four look variants (illustrations/

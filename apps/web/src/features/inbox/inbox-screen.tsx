@@ -10,6 +10,7 @@
 // open, `e` to archive (Gmail's own keys); grouped by reason; an empty inbox that actually celebrates
 // zero instead of showing the same blank illustration as every other empty list.
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
 import {
   AllDoneIllustration,
@@ -30,6 +31,7 @@ import {
   toast,
   toastWithUndo,
   useCelebrate,
+  useReducedMotion,
 } from '@devon/ui'
 import { CalendarDays, Check, CheckCheck, SlidersHorizontal, View } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
@@ -152,20 +154,25 @@ function InboxList({
   onSnooze: (id: string, minutes: number) => void
 }) {
   return (
-    <Stagger as="ul" className="rounded-md border border-border bg-card">
-      {items.map((notification, index) => (
-        <StaggerItem key={notification.id} as="li">
-          <NotificationRow
-            notification={notification}
-            selected={index === selectedIndex}
-            onOpen={() => onOpen(notification, index)}
-            onQuickAction={() => onQuickAction(notification)}
-            onArchive={() => onArchive(notification.id)}
-            onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-          />
-        </StaggerItem>
-      ))}
-    </Stagger>
+    // round2 SEV2 "archiving a row removes it instantly": `StaggerItem`'s own `exit="hidden"`
+    // reverses its entrance variant, `layout` slides the remaining rows up to close the gap --
+    // `AnimatePresence` is what lets it play at all before the row actually leaves the DOM.
+    <AnimatePresence initial={false}>
+      <Stagger as="ul" className="rounded-md border border-border bg-card">
+        {items.map((notification, index) => (
+          <StaggerItem key={notification.id} as="li" exit="hidden" layout>
+            <NotificationRow
+              notification={notification}
+              selected={index === selectedIndex}
+              onOpen={() => onOpen(notification, index)}
+              onQuickAction={() => onQuickAction(notification)}
+              onArchive={() => onArchive(notification.id)}
+              onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+            />
+          </StaggerItem>
+        ))}
+      </Stagger>
+    </AnimatePresence>
   )
 }
 
@@ -202,21 +209,23 @@ function GroupedInboxList({
               </Chip>
               <span className="text-caption text-muted-foreground">{group.length}</span>
             </div>
-            <Stagger as="ul" className="rounded-md border border-border bg-card">
-              {group.map((notification) => (
-                <StaggerItem key={notification.id} as="li">
-                  <NotificationRow
-                    notification={notification}
-                    selected={indexOf.get(notification.id) === selectedIndex}
-                    showReasonChip={false}
-                    onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
-                    onQuickAction={() => onQuickAction(notification)}
-                    onArchive={() => onArchive(notification.id)}
-                    onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-                  />
-                </StaggerItem>
-              ))}
-            </Stagger>
+            <AnimatePresence initial={false}>
+              <Stagger as="ul" className="rounded-md border border-border bg-card">
+                {group.map((notification) => (
+                  <StaggerItem key={notification.id} as="li" exit="hidden" layout>
+                    <NotificationRow
+                      notification={notification}
+                      selected={indexOf.get(notification.id) === selectedIndex}
+                      showReasonChip={false}
+                      onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
+                      onQuickAction={() => onQuickAction(notification)}
+                      onArchive={() => onArchive(notification.id)}
+                      onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+                    />
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </AnimatePresence>
           </section>
         )
       })}
@@ -291,6 +300,7 @@ export default function InboxScreen() {
   const t = useT()
   const forced = useForcedState()
   const online = useOnline()
+  const detailCrossfadeReduced = useReducedMotion()
   const meQuery = useMeQuery()
   const [status, setStatus] = React.useState<InboxStatus>('inbox')
   const [openId, setOpenId] = React.useState<string | null>(null)
@@ -481,19 +491,37 @@ export default function InboxScreen() {
             (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so
             the two never both claim the same open notification at once. */}
         {isDesktop ? (
-          <div className="sticky top-4 h-full min-h-100 self-stretch rounded-md border border-border bg-card p-6">
-            {openNotification ? (
-              <NotificationDetail notification={openNotification} onArchive={handleArchiveNow} />
-            ) : (
-              // Centred, illustrated "nothing selected" instead of one sentence in an otherwise
-              // empty box (item handoff: "~600px of nothing below it").
-              <div className="flex h-full min-h-88 flex-col items-center justify-center gap-3 text-center">
-                <EmptyInboxIllustration className="w-32" />
-                <p className="max-w-72 text-body text-muted-foreground">
-                  {t('inbox.detail.emptySelection')}
-                </p>
-              </div>
-            )}
+          <div className="sticky top-4 h-full min-h-100 self-stretch overflow-hidden rounded-md border border-border bg-card p-6">
+            {/* round2 SEV2 "switching selection swaps the detail pane with no crossfade": keyed on
+                the open notification's id (or the empty-selection state) so picking a different row
+                fades the old content out and the new one in, instead of the swap reading as a
+                flicker. */}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={openNotification?.id ?? 'empty'}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: detailCrossfadeReduced ? 0.1 : 0.16 }}
+                className="h-full"
+              >
+                {openNotification ? (
+                  <NotificationDetail
+                    notification={openNotification}
+                    onArchive={handleArchiveNow}
+                  />
+                ) : (
+                  // Centred, illustrated "nothing selected" instead of one sentence in an otherwise
+                  // empty box (item handoff: "~600px of nothing below it").
+                  <div className="flex h-full min-h-88 flex-col items-center justify-center gap-3 text-center">
+                    <EmptyInboxIllustration className="w-32" />
+                    <p className="max-w-72 text-body text-muted-foreground">
+                      {t('inbox.detail.emptySelection')}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         ) : null}
       </div>

@@ -344,14 +344,8 @@ export default function TableScreen() {
                   members={members}
                   checked={selected.has(card.id)}
                   onCheckedChange={(v) => toggleRow(card.id, v)}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: vRow.size,
-                    transform: `translateY(${vRow.start}px)`,
-                  }}
+                  top={vRow.start}
+                  height={vRow.size}
                 />
               )
             })}
@@ -505,16 +499,19 @@ function TableRow({
   members,
   checked,
   onCheckedChange,
-  style,
+  top,
+  height,
 }: {
   card: Card
   members: MemberSummary[]
   checked: boolean
   onCheckedChange: (checked: boolean) => void
-  style: React.CSSProperties
+  top: number
+  height: number
 }) {
   const t = useT()
   const locale = useLocale()
+  const reduced = useReducedMotion()
   const patchCard = usePatchCardMutation()
   const [title, setTitle] = React.useState(card.title)
   React.useEffect(() => setTitle(card.title), [card.title])
@@ -544,10 +541,31 @@ function TableRow({
   }
 
   return (
-    <div
+    <motion.div
       role="row"
       tabIndex={0}
-      style={{ ...style, gridTemplateColumns: GRID_COLUMNS }}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height,
+        gridTemplateColumns: GRID_COLUMNS,
+      }}
+      // UI-OVERHAUL.md §3 "Lists, grids, tiles" + the round-3 table FLIP: this list is
+      // `useVirtualizer`-backed (rows mount and unmount continuously as the 200+-row table
+      // scrolls), so a JS `Stagger`/`StaggerItem` pair here would mean mounting a fresh
+      // framer-motion instance, with its own per-item stagger delay, on every scroll tick -- still
+      // avoided. But `top` (from `vRow.start`) only ever changes for an already-mounted row when
+      // the *sort order* (or the density row height) moves that same card to a different index --
+      // never on plain scrolling, since the virtualizer keeps each mounted row's own start fixed
+      // and only mounts/unmounts rows at the scroll edges. Driving `y` through `animate` (transform
+      // only, never `top`/layout) means a re-sort reads as the row *travelling* to its new place
+      // (Linear's own re-sort tell) while a first mount still gets the plain fade + 4px rise; both
+      // share one `transition` so neither needs its own bookkeeping.
+      initial={reduced ? { opacity: 1, y: top } : { opacity: 0, y: top + 4 }}
+      animate={{ opacity: 1, y: top }}
+      transition={reduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
       onClick={onRowClick}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
@@ -555,15 +573,7 @@ function TableRow({
           openCardPeek(card.id)
         }
       }}
-      // UI-OVERHAUL.md §3 "Lists, grids, tiles": every row still enters with a fade + rise -- but
-      // this list is `useVirtualizer`-backed (rows mount and unmount continuously as the 200+-row
-      // table scrolls), so a JS `Stagger`/`StaggerItem` pair here would mean mounting a fresh
-      // framer-motion instance, with its own per-item stagger delay, on every scroll tick. A plain
-      // CSS keyframe (transform/opacity only, the same `devon-rise-in` the hover-card row uses, no
-      // per-item delay) gets the same "this just arrived" read at virtualization speed with zero JS
-      // animation cost per row, and the global reduced-motion backstop in `tokens.css` still
-      // collapses it to an instant appearance.
-      className="relative grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring animate-[devon-rise-in_160ms_var(--ease-out)]"
+      className="relative grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       {/* DESIGN.md §9.2's own overdue signal, on a row -- the rail, not (only) a solid-tinted date
           chip, since the row already carries a per-cell risk badge for the "colour is never the
@@ -657,6 +667,6 @@ function TableRow({
           {t(`work.status.${card.status}`)}
         </Badge>
       </span>
-    </div>
+    </motion.div>
   )
 }

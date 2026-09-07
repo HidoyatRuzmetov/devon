@@ -8,13 +8,15 @@
 // is the one shape simple enough that a dependency would cost more than it saves.
 import * as React from 'react'
 import { motion } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useT, useLocale, formatDate, formatMonthYear, formatMonthShort } from '@devon/i18n'
 import {
   Button,
+  Collapsible,
   Skeleton,
   StateView,
   cn,
+  tweenStandard,
   toastWithUndo,
   unitHueClass,
   useReducedMotion,
@@ -281,6 +283,15 @@ export default function TimelineScreen() {
   const [groupBy, setGroupBy] = useLocalStorageString('devon.work.timeline.groupBy', 'person')
   const zoomKey: Zoom = zoom === 'week' || zoom === 'month' ? zoom : 'day'
   const groupByKey: GroupBy = groupBy === 'project' ? 'project' : 'person'
+  // round2's deferred item: Kun/Hafta/Oy used to be a hard re-layout -- every bar's `left`/`width`
+  // simply jumped to its new pixels-per-day the instant the button was clicked. `pxPerDay` still
+  // drives the real (instant, correct) layout every render, but the *outer* content div is wrapped
+  // in a `scaleX` that starts at the ratio between the previous zoom's pixel density and the new one
+  // and eases to `1` -- a transform, so 200+ bars cost nothing extra to lay out, and it reads as a
+  // camera zoom (Figma/Linear's own timeline convention) rather than a jump cut. The ref updates in
+  // an effect (after paint), so the render that just changed `zoomKey` still sees the *previous*
+  // density when computing `scaleFrom`.
+  const [collapsedGroups, setCollapsedGroups] = React.useState<ReadonlySet<string>>(new Set())
 
   const today = startOfDay(new Date())
   const { pxPerDay, daysBefore, daysAfter } = ZOOM_CONFIG[zoomKey]
@@ -288,6 +299,21 @@ export default function TimelineScreen() {
   const rangeEnd = addDays(today, daysAfter)
   const totalDays = daysBefore + daysAfter
   const totalWidth = totalDays * pxPerDay
+
+  const prevPxPerDayRef = React.useRef(pxPerDay)
+  const zoomScaleFrom = prevPxPerDayRef.current / pxPerDay
+  React.useEffect(() => {
+    prevPxPerDayRef.current = pxPerDay
+  }, [pxPerDay])
+
+  function toggleGroupCollapsed(key: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
 
   const cards = (cardsQuery.data ?? []).filter((c) => c.dueAt && c.status === 'active')
 
@@ -382,7 +408,8 @@ export default function TimelineScreen() {
 
   const todayX = dayIndex(today, rangeStart) * pxPerDay
   const rowsHeight = groups.reduce(
-    (sum, g) => sum + GROUP_HEADER_HEIGHT + g.cards.length * ROW_HEIGHT,
+    (sum, g) =>
+      sum + GROUP_HEADER_HEIGHT + (collapsedGroups.has(g.key) ? 0 : g.cards.length * ROW_HEIGHT),
     0,
   )
 
@@ -421,7 +448,16 @@ export default function TimelineScreen() {
         className="overflow-auto rounded-md border border-border"
         style={{ height: scrollerHeight }}
       >
-        <div className="relative" style={{ width: Math.max(totalWidth, 1) }}>
+        <motion.div
+          key={zoomKey}
+          className="relative"
+          style={{ width: Math.max(totalWidth, 1), transformOrigin: 'top left' }}
+          initial={
+            reducedTimeline ? { opacity: 1 } : { scaleX: zoomScaleFrom || 1, opacity: 0.85 }
+          }
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={reducedTimeline ? { duration: 0 } : tweenStandard}
+        >
           <div className="sticky top-0 z-20 bg-card">
             {/* round2 SEV1: "Bugun" used to sit inside the day-number row and print on top of
                 whatever date shared its x ("Bugun8") -- its own band above the day scale (Linear/
@@ -484,41 +520,58 @@ export default function TimelineScreen() {
                 aria-hidden="true"
               />
             </div>
-            {groups.map((group) => (
-              <div key={group.key}>
-                <div
-                  className="flex items-center gap-2 border-b border-border bg-surface-2 px-2 text-caption font-medium text-foreground"
-                  style={{ height: GROUP_HEADER_HEIGHT }}
-                >
-                  <span
-                    className={cn('size-2 shrink-0 rounded-full', group.dotClassName)}
-                    style={group.dotColour ? { backgroundColor: group.dotColour } : undefined}
-                    aria-hidden="true"
-                  />
-                  {group.label}
-                  <span className="rounded-full bg-muted px-1.5 py-0.5 text-caption tabular-nums text-muted-foreground">
-                    {group.cards.length}
-                  </span>
-                </div>
-                {group.cards.map((card, rowIndex) => (
-                  <div
-                    key={card.id}
-                    className="relative border-b border-border/40"
-                    style={{ height: ROW_HEIGHT }}
+            {groups.map((group) => {
+              const collapsed = collapsedGroups.has(group.key)
+              return (
+                <div key={group.key}>
+                  <button
+                    type="button"
+                    aria-expanded={!collapsed}
+                    onClick={() => toggleGroupCollapsed(group.key)}
+                    className="flex w-full items-center gap-2 border-b border-border bg-surface-2 px-2 text-caption font-medium text-foreground hover:bg-accent/40"
+                    style={{ height: GROUP_HEADER_HEIGHT }}
                   >
-                    <GanttBar
-                      card={card}
-                      rangeStart={rangeStart}
-                      rangeEnd={rangeEnd}
-                      pxPerDay={pxPerDay}
-                      rowIndex={rowIndex}
+                    <ChevronDown
+                      className={cn(
+                        'size-3.5 shrink-0 text-muted-foreground transition-transform duration-(--dur-micro)',
+                        collapsed && '-rotate-90',
+                      )}
+                      aria-hidden="true"
                     />
-                  </div>
-                ))}
-              </div>
-            ))}
+                    <span
+                      className={cn('size-2 shrink-0 rounded-full', group.dotClassName)}
+                      style={group.dotColour ? { backgroundColor: group.dotColour } : undefined}
+                      aria-hidden="true"
+                    />
+                    {group.label}
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-caption tabular-nums text-muted-foreground">
+                      {group.cards.length}
+                    </span>
+                  </button>
+                  {/* round2 SEV2: group heads did not collapse -- `Collapsible` gives "Yopish" a real
+                      height animation instead of the rows simply vanishing. */}
+                  <Collapsible open={!collapsed}>
+                    {group.cards.map((card, rowIndex) => (
+                      <div
+                        key={card.id}
+                        className="relative border-b border-border/40"
+                        style={{ height: ROW_HEIGHT }}
+                      >
+                        <GanttBar
+                          card={card}
+                          rangeStart={rangeStart}
+                          rangeEnd={rangeEnd}
+                          pxPerDay={pxPerDay}
+                          rowIndex={rowIndex}
+                        />
+                      </div>
+                    ))}
+                  </Collapsible>
+                </div>
+              )
+            })}
           </div>
-        </div>
+        </motion.div>
       </div>
     )
   }

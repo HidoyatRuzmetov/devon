@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as ProgressPrimitive from '@radix-ui/react-progress'
 import { cn } from '../lib/cn.js'
+import { useReducedMotion } from '../lib/use-reduced-motion.js'
 
 export interface ProgressProps extends Omit<
   React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root>,
@@ -35,6 +36,21 @@ export const Progress = React.forwardRef<
   ProgressProps
 >(({ className, value, label, tone = 'primary', size = 'md', ...props }, ref) => {
   const clamped = Math.max(0, Math.min(100, value))
+  const reduced = useReducedMotion()
+  // round3 (events capacity bar named as the example): a bare CSS `transition-transform` only ever
+  // fires on a *later* value change -- the very first paint has nothing to transition from, so the
+  // bar simply appeared already full. One `requestAnimationFrame` after mount (the same trick
+  // `admin/charts.tsx`'s bar/donut draw-in already uses) gives the browser a 0%-wide frame to
+  // transition away from, so the fill still draws in on arrival; reduced motion skips straight to
+  // the final width.
+  const [grown, setGrown] = React.useState(reduced)
+  React.useEffect(() => {
+    if (reduced) return
+    const id = requestAnimationFrame(() => setGrown(true))
+    return () => cancelAnimationFrame(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot mount animation, not a value sync
+  }, [])
+  const shown = grown ? clamped : 0
   return (
     <ProgressPrimitive.Root
       ref={ref}
@@ -52,7 +68,7 @@ export const Progress = React.forwardRef<
           'size-full transition-transform duration-(--dur-standard) ease-(--ease-standard)',
           TONE_CLASS[tone],
         )}
-        style={{ transform: `translateX(-${100 - clamped}%)` }}
+        style={{ transform: `translateX(-${100 - shown}%)` }}
       />
     </ProgressPrimitive.Root>
   )

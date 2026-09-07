@@ -4,7 +4,7 @@
 // tradeoff (MODULE-GUIDE.md "Web features") -- both are shareable/bookmarkable links this way too.
 import * as React from 'react'
 import { useT, useLocale, formatMonthYear, type Locale } from '@devon/i18n'
-import { Button, PageHeader, Stagger, StaggerItem, StateView } from '@devon/ui'
+import { Button, PageHeader, Reveal, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { CalendarDays, List, Plus } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
@@ -136,9 +136,14 @@ export default function EventsScreen() {
             const illustrationKeys = pickGroupIllustrationKeys(group.items.map((e) => e.id))
             return (
               <section key={group.label} className="flex flex-col gap-3">
-                <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                  {group.label}
-                </h2>
+                {/* round2 SEV2: month group heads did not reveal -- each one fades + rises in once,
+                    the plainest entrance in the catalogue, on view rather than replaying every time
+                    the list re-renders. */}
+                <Reveal onView>
+                  <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                    {group.label}
+                  </h2>
+                </Reveal>
                 <Stagger
                   as="div"
                   animateKey={group.label}

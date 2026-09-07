@@ -22,7 +22,10 @@ export interface ProgressRingProps {
 
 /** UI-OVERHAUL.md §3: project progress rings, the Pomodoro ring, sprint completion. The arc animates
  * its own length whenever `value` changes -- under reduced motion it snaps and crossfades instead
- * (the number in the middle is the feedback that survives). */
+ * (the number in the middle is the feedback that survives). round3: the very first mount now sweeps
+ * in from empty (`initial` only ever applies once, at mount, never on a later value change) instead
+ * of simply appearing already full -- the sprint/project rings this was named for get it for free
+ * since they all render through this one primitive. */
 export function ProgressRing({
   value,
   size = 44,
@@ -68,7 +71,11 @@ export function ProgressRing({
           className={toneClassName}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
           strokeDasharray={circumference}
-          initial={false}
+          initial={
+            reduced
+              ? { strokeDashoffset: circumference * (1 - clamped / 100) }
+              : { strokeDashoffset: circumference }
+          }
           animate={{ strokeDashoffset: circumference * (1 - clamped / 100) }}
           transition={reduced ? crossfade : tweenStandard}
         />
