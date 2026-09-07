@@ -3,7 +3,7 @@
 // variables from `packages/ui`'s tokens (`var(--color-*)`), never a raw hex -- Recharts accepts any
 // valid CSS colour string for `stroke`/`fill`.
 import * as React from 'react'
-import { useT, useLocale, formatDate } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
 import { KpiTile } from '@devon/ui'
 import {
   Bar,
@@ -87,6 +87,7 @@ function onTimePercent(p: OnTimePoint | undefined): number | null {
  * themselves. */
 export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
   const t = useT()
+  const locale = useLocale()
   const tp = summary.throughput
   const throughputLast = tp.length > 0 ? tp[tp.length - 1]!.count : 0
   const throughputDelta =
@@ -109,12 +110,14 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
       <KpiTile
         label={t('analytics.kpi.throughput')}
         value={throughputLast}
+        locale={locale}
         delta={throughputDelta}
         question={t('analytics.kpi.throughputQuestion')}
       />
       <KpiTile
         label={t('analytics.kpi.open')}
         value={openLast}
+        locale={locale}
         delta={openDelta}
         deltaGoodWhen="down"
         question={t('analytics.kpi.openQuestion')}
@@ -122,6 +125,7 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
       <KpiTile
         label={t('analytics.kpi.overdue')}
         value={overdueLast}
+        locale={locale}
         delta={overdueDelta}
         deltaGoodWhen="down"
         question={t('analytics.kpi.overdueQuestion')}
@@ -129,6 +133,7 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
       <KpiTile
         label={t('analytics.kpi.onTimeRate')}
         value={rateLast}
+        locale={locale}
         suffix="%"
         delta={rateDelta}
         question={t('analytics.kpi.onTimeRateQuestion')}
@@ -145,6 +150,7 @@ export function ThroughputSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const animate = useChartAnimation()
   const weekLabel = useWeekLabel()
   const data = summary.throughput.map((p: WeekPoint) => ({ ...p, label: weekLabel(p.weekStart) }))
@@ -171,6 +177,7 @@ export function ThroughputSection({
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR_MUTED }} tickLine={false} />
           <YAxis
             allowDecimals={false}
+            tickFormatter={(v: number) => formatNumber(v, locale)}
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
@@ -178,6 +185,7 @@ export function ThroughputSection({
             contentStyle={tooltipStyle}
             cursor={barCursor}
             labelStyle={{ color: 'var(--color-foreground)' }}
+            formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}
           />
           <Bar
             dataKey="count"
@@ -266,6 +274,7 @@ export function OpenVsOverdueSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const animate = useChartAnimation()
   const weekLabel = useWeekLabel()
   const data = summary.openVsOverdue.map((p: OpenOverduePoint) => ({
@@ -299,10 +308,15 @@ export function OpenVsOverdueSection({
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR_MUTED }} tickLine={false} />
           <YAxis
             allowDecimals={false}
+            tickFormatter={(v: number) => formatNumber(v, locale)}
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} cursor={lineCursor} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={lineCursor}
+            formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}
+          />
           <Line
             type="monotone"
             dataKey="openCount"
@@ -335,6 +349,7 @@ export function LoadPerPersonSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const animate = useChartAnimation()
   const data = [...summary.loadPerPerson]
     .sort((a: PersonLoad, b: PersonLoad) => b.openCount - a.openCount)
@@ -366,6 +381,7 @@ export function LoadPerPersonSection({
           <XAxis
             type="number"
             allowDecimals={false}
+            tickFormatter={(v: number) => formatNumber(v, locale)}
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
@@ -376,7 +392,11 @@ export function LoadPerPersonSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={barCursor}
+            formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}
+          />
           <Bar
             dataKey="openCount"
             name={t('analytics.legend.open')}
@@ -405,6 +425,7 @@ export function LoadPerUnitSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const animate = useChartAnimation()
   const data = summary.loadPerUnit.map((u: UnitLoad) => ({
     ...u,
@@ -433,6 +454,7 @@ export function LoadPerUnitSection({
           <XAxis
             type="number"
             allowDecimals={false}
+            tickFormatter={(v: number) => formatNumber(v, locale)}
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
@@ -443,7 +465,11 @@ export function LoadPerUnitSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={barCursor}
+            formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}
+          />
           <Bar
             dataKey="openCount"
             name={t('analytics.legend.open')}
@@ -534,6 +560,7 @@ export function EventsParticipationSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const animate = useChartAnimation()
   const data = summary.eventsParticipation
 
@@ -567,6 +594,7 @@ export function EventsParticipationSection({
           <XAxis
             type="number"
             allowDecimals={false}
+            tickFormatter={(v: number) => formatNumber(v, locale)}
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
@@ -577,7 +605,11 @@ export function EventsParticipationSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={barCursor}
+            formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}
+          />
           <Bar
             // DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an RSVP
             // headcount is a category in a stacked breakdown, not an accomplishment, so it uses the
@@ -684,6 +716,7 @@ export function PersonalStatsSection({
   pinBusy,
 }: SectionProps) {
   const t = useT()
+  const locale = useLocale()
   const p = summary.personal
   const onTimePercent = p.onTimeRate === null ? null : Math.round(p.onTimeRate * 100)
 
@@ -718,6 +751,7 @@ export function PersonalStatsSection({
             key={tile.labelKey}
             label={t(tile.labelKey)}
             value={tile.value}
+            locale={locale}
             {...(tile.suffix ? { suffix: tile.suffix } : {})}
             className="border-none bg-transparent p-0 shadow-none"
           />

@@ -6,7 +6,7 @@
 // noted in this item's report) would replace "copy" with "apply to this card" using the exact same
 // `useRunAiFeatureMutation` hook this panel already calls.
 import * as React from 'react'
-import { useT, useLocale } from '@devon/i18n'
+import { useT, useLocale, formatNumber } from '@devon/i18n'
 import {
   AiPreviewPanel,
   Badge,
@@ -234,8 +234,8 @@ export function AssistantPanel() {
             {...(runMutation.data
               ? {
                   costLine: t('ai.result.costLine', {
-                    tokens: runMutation.data.meta.totalTokens,
-                    ms: runMutation.data.meta.latencyMs,
+                    tokens: formatNumber(runMutation.data.meta.totalTokens, locale),
+                    ms: formatNumber(runMutation.data.meta.latencyMs, locale),
                   }),
                 }
               : {})}

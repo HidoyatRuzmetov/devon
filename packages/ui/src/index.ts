@@ -115,6 +115,7 @@ export {
   type SectionCardProps,
 } from './primitives/card.js'
 export { KpiTile, type KpiTileProps } from './primitives/kpi-tile.js'
+export { StatNumber, type StatNumberProps } from './primitives/stat-number.js'
 export {
   AvatarStack,
   type AvatarStackPerson,
