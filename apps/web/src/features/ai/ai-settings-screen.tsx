@@ -10,7 +10,7 @@ import { useDepartment, useSession } from '../../lib/session.js'
 import { AssistantPanel } from './assistant-panel.js'
 import { Checkbox } from './components/form-controls.js'
 import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
-import { AI_FEATURE_IDS, type AiFeatureId, type Trace } from './types.js'
+import { AI_FEATURE_IDS, featureLabelKey, type AiFeatureId, type Trace } from './types.js'
 
 type TabId = 'overview' | 'usage' | 'assistant'
 
@@ -157,10 +157,10 @@ function OverviewTab() {
                 checked={settings.flags[feature] === true}
                 onCheckedChange={(checked) => toggleFlag(feature, checked)}
                 disabled={!isHead}
-                aria-label={t(`ai.features.${feature}.label`)}
+                aria-label={t(featureLabelKey(feature))}
               />
               <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
-                {t(`ai.features.${feature}.label`)}
+                {t(featureLabelKey(feature))}
               </label>
             </li>
           ))}
@@ -223,9 +223,7 @@ function UsageTab() {
                 <td className="px-3 py-2 text-foreground">
                   {formatDate(date, locale)} {formatTime(date, locale)}
                 </td>
-                <td className="px-3 py-2 text-foreground">
-                  {t(`ai.features.${trace.feature}.label`)}
-                </td>
+                <td className="px-3 py-2 text-foreground">{t(featureLabelKey(trace.feature))}</td>
                 <td className="px-3 py-2">
                   <Badge tone={STATUS_TONE[trace.status]}>
                     {t(`ai.usage.status.${trace.status}`)}

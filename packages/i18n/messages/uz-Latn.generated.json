@@ -347,35 +347,35 @@
       "runFailed": "AI hozircha javob bera olmadi"
     },
     "features": {
-      "quick_add_parse": {
+      "quickAddParse": {
         "label": "Tezkor qoʻshish tahlili",
         "description": "Erkin yozilgan gapni kartochka nomi, mas'ul, muddat va muhimlik darajasiga aylantiradi, toʻrtta tildan istalganida."
       },
-      "subtask_breakdown": {
+      "subtaskBreakdown": {
         "label": "Quyi vazifalarga boʻlish",
         "description": "Bitta kartochkani aniq, bajarilishi mumkin boʻlgan quyi vazifalar roʻyxatiga boʻladi."
       },
-      "plan_sprint": {
+      "planSprint": {
         "label": "Davrni rejalashtirish",
         "description": "Shaxsiy ochiq vazifalaringiz uchun tartib va qaysi biridan boshlashni tavsiya qiladi."
       },
-      "deadline_risk": {
+      "deadlineRisk": {
         "label": "Muddat xavfi",
         "description": "Kartochka muddatini oʻtkazib yuborish xavfi bor-yoʻqligini va nima qilish kerakligini tushuntiradi."
       },
-      "weekly_summary": {
+      "weeklySummary": {
         "label": "Haftalik xulosa",
         "description": "Bitta xodim yoki boʻlim uchun bajarilgan/muddati oʻtgan/yangi kartochkalar asosida qisqa xulosa tayyorlaydi."
       },
-      "draft_event": {
+      "draftEvent": {
         "label": "Tadbir loyihasi",
         "description": "Bir qatorli gʻoyani tavsif, roʻyxat, soʻrovnoma variantlari va yoʻl-yoʻriq rejasiga aylantiradi."
       },
-      "summarize_thread": {
+      "summarizeThread": {
         "label": "Muhokamani xulosalash",
         "description": "Uzoq izohlar muhokamasini, ular asosidagi izohlarni koʻrsatgan holda xulosalaydi."
       },
-      "nl_analytics": {
+      "nlAnalytics": {
         "label": "Tahlildan soʻrash",
         "description": "Oddiy tildagi savolni filtr va diagramma turiga aylantiradi."
       },
@@ -383,7 +383,7 @@
         "label": "Tarjima qilish",
         "description": "Matnni toʻrtta tildan istalganiga tarjima qiladi."
       },
-      "what_did_i_miss": {
+      "whatDidIMiss": {
         "label": "Nimani oʻtkazib yubordim",
         "description": "Oxirgi marta boʻlmagan vaqtingizdagi yangi kartochkalar, izohlar va tadbirlar bilan tanishtiradi."
       }

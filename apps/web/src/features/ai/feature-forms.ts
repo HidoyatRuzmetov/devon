@@ -95,8 +95,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'quick_add_parse',
-    labelKey: 'ai.features.quick_add_parse.label',
-    descriptionKey: 'ai.features.quick_add_parse.description',
+    labelKey: 'ai.features.quickAddParse.label',
+    descriptionKey: 'ai.features.quickAddParse.description',
     fields: [
       { key: 'text', labelKey: 'ai.fields.text', kind: 'text', sampleKey: 'ai.samples.quickAdd' },
       {
@@ -110,8 +110,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'subtask_breakdown',
-    labelKey: 'ai.features.subtask_breakdown.label',
-    descriptionKey: 'ai.features.subtask_breakdown.description',
+    labelKey: 'ai.features.subtaskBreakdown.label',
+    descriptionKey: 'ai.features.subtaskBreakdown.description',
     fields: [
       { key: 'cardTitle', labelKey: 'ai.fields.cardTitle', kind: 'text' },
       {
@@ -124,16 +124,16 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'draft_event',
-    labelKey: 'ai.features.draft_event.label',
-    descriptionKey: 'ai.features.draft_event.description',
+    labelKey: 'ai.features.draftEvent.label',
+    descriptionKey: 'ai.features.draftEvent.description',
     fields: [
       { key: 'idea', labelKey: 'ai.fields.idea', kind: 'text', sampleKey: 'ai.samples.event' },
     ],
   },
   {
     feature: 'nl_analytics',
-    labelKey: 'ai.features.nl_analytics.label',
-    descriptionKey: 'ai.features.nl_analytics.description',
+    labelKey: 'ai.features.nlAnalytics.label',
+    descriptionKey: 'ai.features.nlAnalytics.description',
     fields: [
       {
         key: 'query',
@@ -146,8 +146,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'deadline_risk',
-    labelKey: 'ai.features.deadline_risk.label',
-    descriptionKey: 'ai.features.deadline_risk.description',
+    labelKey: 'ai.features.deadlineRisk.label',
+    descriptionKey: 'ai.features.deadlineRisk.description',
     fields: [
       { key: 'cardTitle', labelKey: 'ai.fields.cardTitle', kind: 'text' },
       {
@@ -164,8 +164,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'summarize_thread',
-    labelKey: 'ai.features.summarize_thread.label',
-    descriptionKey: 'ai.features.summarize_thread.description',
+    labelKey: 'ai.features.summarizeThread.label',
+    descriptionKey: 'ai.features.summarizeThread.description',
     fields: [
       { key: 'cardTitle', labelKey: 'ai.fields.cardTitle', kind: 'text' },
       {
@@ -178,8 +178,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'weekly_summary',
-    labelKey: 'ai.features.weekly_summary.label',
-    descriptionKey: 'ai.features.weekly_summary.description',
+    labelKey: 'ai.features.weeklySummary.label',
+    descriptionKey: 'ai.features.weeklySummary.description',
     fields: [
       { key: 'subjectName', labelKey: 'ai.fields.subjectName', kind: 'text' },
       {
@@ -213,8 +213,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'what_did_i_miss',
-    labelKey: 'ai.features.what_did_i_miss.label',
-    descriptionKey: 'ai.features.what_did_i_miss.description',
+    labelKey: 'ai.features.whatDidIMiss.label',
+    descriptionKey: 'ai.features.whatDidIMiss.description',
     fields: [
       {
         key: 'sinceLabel',
@@ -247,8 +247,8 @@ export const FEATURE_FORMS: readonly FeatureFormSpec[] = [
   },
   {
     feature: 'plan_sprint',
-    labelKey: 'ai.features.plan_sprint.label',
-    descriptionKey: 'ai.features.plan_sprint.description',
+    labelKey: 'ai.features.planSprint.label',
+    descriptionKey: 'ai.features.planSprint.description',
     fields: [
       { key: 'goal', labelKey: 'ai.fields.goal', kind: 'text', optional: true },
       {

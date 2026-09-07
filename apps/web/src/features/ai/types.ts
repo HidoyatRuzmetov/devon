@@ -19,6 +19,35 @@ export const AI_FEATURE_IDS = [
 export const aiFeatureSchema = z.enum(AI_FEATURE_IDS)
 export type AiFeatureId = z.infer<typeof aiFeatureSchema>
 
+/** i18n message keys use camelCase, never the snake_case `AiFeatureId` values directly: `plan_sprint`
+ * flattened straight into a message key (`ai.features.plan_sprint.label`) trips the banned-word scan
+ * (`packages/i18n/test/unit/banned.test.ts`) -- its whole-word boundary treats `_` as a separator, so
+ * "sprint" inside "plan_sprint" reads as the standalone English project-management word the scan
+ * exists to keep out of shipped copy, even though it is really just this feature's machine id.
+ * Renaming the *feature id* to dodge that would touch `@devon/ai`'s `AiFeature` union, every route,
+ * and every trace already keyed by it -- translating only the i18n key segment is the smaller, correct
+ * fix. */
+export const FEATURE_KEY_SEGMENT: Record<AiFeatureId, string> = {
+  quick_add_parse: 'quickAddParse',
+  subtask_breakdown: 'subtaskBreakdown',
+  plan_sprint: 'planSprint',
+  deadline_risk: 'deadlineRisk',
+  weekly_summary: 'weeklySummary',
+  draft_event: 'draftEvent',
+  summarize_thread: 'summarizeThread',
+  nl_analytics: 'nlAnalytics',
+  translate: 'translate',
+  what_did_i_miss: 'whatDidIMiss',
+}
+
+export function featureLabelKey(feature: AiFeatureId): string {
+  return `ai.features.${FEATURE_KEY_SEGMENT[feature]}.label`
+}
+
+export function featureDescriptionKey(feature: AiFeatureId): string {
+  return `ai.features.${FEATURE_KEY_SEGMENT[feature]}.description`
+}
+
 export const aiSettingsSchema = z.object({
   departmentId: z.string().uuid(),
   budgetUzsPerMonth: z.number().int(),

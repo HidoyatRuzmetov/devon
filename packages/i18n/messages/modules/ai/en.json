@@ -71,35 +71,35 @@
       "runFailed": "The AI could not produce an answer this time"
     },
     "features": {
-      "quick_add_parse": {
+      "quickAddParse": {
         "label": "Quick-add parsing",
         "description": "Turn a free-typed sentence into a card title, assignee, due date and priority, in any of the four locales."
       },
-      "subtask_breakdown": {
+      "subtaskBreakdown": {
         "label": "Break into subtasks",
         "description": "Split one card into a checklist of concrete, actionable subtasks."
       },
-      "plan_sprint": {
-        "label": "Plan my sprint",
+      "planSprint": {
+        "label": "Plan my period",
         "description": "Suggest an order for your open personal to-dos and what to focus on first."
       },
-      "deadline_risk": {
+      "deadlineRisk": {
         "label": "Deadline risk",
         "description": "Explain whether a card is at risk of missing its deadline, and what to do about it."
       },
-      "weekly_summary": {
+      "weeklySummary": {
         "label": "Weekly summary",
         "description": "Draft a short digest for one person or one department, from done/overdue/new cards."
       },
-      "draft_event": {
+      "draftEvent": {
         "label": "Draft an event",
         "description": "Turn a one-line idea into a description, checklist, poll options and a carpool plan."
       },
-      "summarize_thread": {
+      "summarizeThread": {
         "label": "Summarise a thread",
         "description": "Summarise a long card comment thread, citing the comments it is based on."
       },
-      "nl_analytics": {
+      "nlAnalytics": {
         "label": "Ask analytics",
         "description": "Turn a plain-language question into a filter and a chart type."
       },
@@ -107,7 +107,7 @@
         "label": "Translate",
         "description": "Translate text into any of the four locales."
       },
-      "what_did_i_miss": {
+      "whatDidIMiss": {
         "label": "What did I miss",
         "description": "Catch up on new cards, comments and events since you were last here."
       }
