@@ -81,7 +81,10 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         </BlurFade>
       </main>
 
-      <p data-shell-label className="relative px-4 pb-6 text-center text-caption text-official">
+      <p
+        data-shell-label
+        className="relative px-4 pb-6 text-center text-caption text-official-foreground"
+      >
         {t('shell.credit')}
       </p>
       <Toaster position={isDesktop ? 'bottom-right' : 'bottom-center'} />

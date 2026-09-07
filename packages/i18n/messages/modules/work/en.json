@@ -137,7 +137,7 @@
       "send": "Send"
     },
     "actions": {
-      "create": "New task"
+      "create": "New card"
     }
   }
 }

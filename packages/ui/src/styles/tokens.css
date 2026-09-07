@@ -62,6 +62,11 @@
   /* Ministry navy, verbatim. Exactly two touchpoints (DESIGN.md §2.1): header hairline + credit
      line. Never used as chrome, never used for a third purpose. */
   --color-official: oklch(38% 0.143 258.6);
+  /* The same navy *as text*. Identical to `--color-official` in the light theme; the dark theme
+     lifts its lightness (keeping the hue and chroma) because 38% navy on an 18% ground fails WCAG
+     outright -- and AA is a gate, not a preference (DESIGN.md §6). The hue is the identity; the
+     lightness is contrast. The hairline keeps `--color-official` verbatim in both themes. */
+  --color-official-foreground: oklch(38% 0.143 258.6);
 
   /* -- Surface / elevation scale (DESIGN.md v2 §2.4) -------------------------------------------
      Light mode expresses elevation with shadow; dark mode cannot (a shadow on a dark ground is
@@ -192,6 +197,7 @@
   --color-sidebar-accent: oklch(22% 0.04 252);
   --color-sidebar-border: oklch(24% 0.03 252);
   --color-sidebar-muted: oklch(66% 0.02 250);
+  --color-official-foreground: oklch(74% 0.11 258.6);
   /* Elevation as lightness tint (DESIGN.md v2 §2.4) -- the dark theme's real elevation mechanism.
      Each step is ~4% lighter than the one below it, which is the smallest difference that still
      reads as "in front of" on an OLED panel at office brightness. */
