@@ -25,10 +25,12 @@ import {
   Skeleton,
   StateView,
   initialsFromName,
+  labelChipColors,
   toast,
   toastWithUndo,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
+import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
 import type { AiFeatureId } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
@@ -89,6 +91,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const labels = useLabelsQuery().data ?? []
   const projects = useProjectsQuery().data ?? []
   const { user } = useSession()
+  const isDark = useIsDarkTheme()
   const patchCard = usePatchCardMutation()
   const restoreCard = useRestoreCardMutation()
   const toggleWatcher = useToggleWatcherMutation()
@@ -501,6 +504,11 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             <div className="flex flex-wrap gap-1.5">
               {labels.map((label) => {
                 const active = card.labels.includes(label.id)
+                // A pastel label colour with hardcoded white text was illegible the moment someone
+                // picked a light hue ("Hisobot"/"Tashqi" in the item handoff) -- labelChipColors
+                // derives a background/foreground pair from that one colour, guaranteed >= 4.5:1
+                // contrast, so any colour a member picks stays readable in both themes.
+                const { background, foreground } = labelChipColors(label.colour, isDark)
                 return (
                   <button
                     key={label.id}
@@ -508,8 +516,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                     onClick={() => toggleLabel(label.id)}
                     className="rounded-sm px-2 py-0.5 text-caption font-medium transition-opacity"
                     style={{
-                      backgroundColor: label.colour,
-                      color: 'white',
+                      backgroundColor: background,
+                      color: foreground,
                       opacity: active ? 1 : 0.35,
                     }}
                     aria-pressed={active}

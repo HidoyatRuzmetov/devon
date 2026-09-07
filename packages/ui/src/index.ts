@@ -6,6 +6,7 @@ export { cn } from './lib/cn.js'
 export { isMacPlatform, modKeyLabel } from './lib/platform.js'
 export { useReducedMotion } from './lib/use-reduced-motion.js'
 export { useFontsLoaded } from './lib/use-fonts-loaded.js'
+export { labelChipColors, type LabelChipColors } from './lib/label-color.js'
 // The motion catalogue (UI-OVERHAUL.md §3): tokens, provider, and one reusable piece per row.
 // Re-exports the duration/ease/spring constants from `lib/motion-tokens.ts` too, so a consumer that
 // mixes CSS transitions and `motion` animations still has exactly one import.

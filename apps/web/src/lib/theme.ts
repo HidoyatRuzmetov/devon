@@ -63,3 +63,23 @@ function subscribe(callback: () => void): () => void {
 export function useThemePreference(): ThemePreference {
   return useSyncExternalStore(subscribe, getThemePreference, () => 'system')
 }
+
+/** The *resolved* theme (`'system'` collapsed to whichever of light/dark it currently means) -- for
+ * anything that computes an actual colour value at render time (a label chip's contrast-guaranteed
+ * foreground/background pair) rather than just applying a CSS class. Reactive to both an explicit
+ * preference change and the OS-level `prefers-color-scheme` flipping while `current === 'system'`. */
+export function useIsDarkTheme(): boolean {
+  return useSyncExternalStore(
+    (callback) => {
+      const unsubPreference = subscribe(callback)
+      const mql = window.matchMedia?.('(prefers-color-scheme: dark)')
+      mql?.addEventListener('change', callback)
+      return () => {
+        unsubPreference()
+        mql?.removeEventListener('change', callback)
+      }
+    },
+    () => (current === 'system' ? systemPrefersDark() : current === 'dark'),
+    () => false,
+  )
+}
