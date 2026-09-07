@@ -140,13 +140,25 @@ function SprintHero({ sprint, taskCount }: { sprint: Sprint; taskCount: number }
       </ProgressRing>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
+          {/* DESIGN.md §9.2: a tinted badge, not a solid one -- same treatment as the identical
+              per-sprint chip in sprints-view.tsx and the "Hafta"/"Inbox" chips further down this
+              same screen; a solid `info` fill on the one chip that repeats on every visit read as
+              alarmingly loud next to everything else here. */}
+          <Badge tone="neutral" className="bg-info/10 text-info">
+            {t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}
+          </Badge>
           <span className="text-caption tabular-nums text-muted-foreground">
             {t('personal.today.period.timeLeft', { value: formatTimeLeft(t, remainingMs) })}
           </span>
         </div>
         {sprint.goal ? (
-          <p className="truncate font-display text-h3 text-foreground">{sprint.goal}</p>
+          // DESIGN.md §5: nothing in the shell is ever ellipsized -- at 390 this used to `truncate`
+          // to one line ("Bo'lim hisobo…"). It now wraps to up to two lines instead, at a smaller
+          // display size so two lines of the goal still fit comfortably above the phone's fold; the
+          // full `text-h3` size returns once there is room for it (`sm:` breakpoint, 640px+).
+          <p className="line-clamp-2 font-display text-lead text-foreground sm:text-h3">
+            {sprint.goal}
+          </p>
         ) : (
           <p className="text-body text-muted-foreground">{t('personal.today.period.noGoal')}</p>
         )}
