@@ -14,27 +14,31 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
 })
 
-describe('routeNameForPath (design.md §6: /, /login, /setup, /admin, /404)', () => {
-  it('maps every shipped path to its route name', () => {
+describe('routeNameForPath (design.md §6: /, /login, /setup, /404; /admin is a feature route)', () => {
+  it('maps every core path to its route name', () => {
     expect(routeNameForPath('/')).toBe('home')
     expect(routeNameForPath('/login')).toBe('login')
     expect(routeNameForPath('/setup')).toBe('setup')
-    expect(routeNameForPath('/admin')).toBe('admin')
   })
 
-  it('maps any unmatched path to not-found (design.md §6.5)', () => {
-    expect(routeNameForPath('/404')).toBe('not-found')
-    expect(routeNameForPath('/nonexistent')).toBe('not-found')
-  })
+  it(
+    "maps any unmatched path to not-found (design.md §6.5), including /admin -- app.tsx's " +
+      'matchFeatureRoute intercepts /admin before this name is ever consulted (features/admin/manifest.ts)',
+    () => {
+      expect(routeNameForPath('/404')).toBe('not-found')
+      expect(routeNameForPath('/nonexistent')).toBe('not-found')
+      expect(routeNameForPath('/admin')).toBe('not-found')
+    },
+  )
 })
 
 describe('navigate()', () => {
   it('pushes a new history entry and updates useRouteName()', () => {
     const { result } = renderHook(() => useRouteName())
     expect(result.current).toBe('home')
-    act(() => navigate('/admin'))
-    expect(result.current).toBe('admin')
-    expect(window.location.pathname).toBe('/admin')
+    act(() => navigate('/setup'))
+    expect(result.current).toBe('setup')
+    expect(window.location.pathname).toBe('/setup')
   })
 
   it('is a no-op when already at the target path+search', () => {

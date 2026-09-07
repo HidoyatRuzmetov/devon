@@ -7,7 +7,10 @@
 // silently committing the product to a different router.
 import * as React from 'react'
 
-export type RouteName = 'home' | 'login' | 'setup' | 'admin' | 'not-found'
+// 'admin' was removed from this union (blitz integration pass): `/admin` is now a feature route
+// (`features/admin/manifest.ts`) matched by `app.tsx`'s `matchFeatureRoute` before this name is ever
+// consulted, so `routeNameForPath('/admin')` falling through to `'not-found'` below is never observed.
+export type RouteName = 'home' | 'login' | 'setup' | 'not-found'
 
 const listeners = new Set<() => void>()
 
@@ -51,8 +54,6 @@ export function routeNameForPath(pathname: string): RouteName {
       return 'login'
     case '/setup':
       return 'setup'
-    case '/admin':
-      return 'admin'
     default:
       return 'not-found'
   }

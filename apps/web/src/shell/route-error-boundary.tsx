@@ -30,8 +30,9 @@ export class RouteErrorBoundary extends React.Component<
   }
 
   override componentDidCatch(error: Error, info: React.ErrorInfo): void {
-    // eslint-disable-next-line no-console -- last-resort diagnostic; no client error-reporting sink
-    // exists in this app (ADR scope), so the browser console is the only place this can surface.
+    // Last-resort diagnostic; no client error-reporting sink exists in this app (ADR scope), so the
+    // browser console is the only place this can surface. `no-console` is not an enabled lint rule
+    // here (see other `console.*` call sites across `apps/web/src`), so no disable comment is needed.
     console.error('[RouteErrorBoundary]', error, info.componentStack)
   }
 

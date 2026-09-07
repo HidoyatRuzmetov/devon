@@ -12,7 +12,6 @@ import { RouteErrorBoundary } from './shell/route-error-boundary.js'
 import { HomeRoute } from './routes/home.js'
 import { LoginRoute } from './routes/login.js'
 import { SetupRoute } from './routes/setup.js'
-import { AdminRoute } from './routes/admin.js'
 import { NotFoundRoute } from './routes/not-found.js'
 
 /** design.md §4.3/§8: once the signed-in user's own record resolves, its `locale` wins over whatever
@@ -28,13 +27,17 @@ function LocaleReconciler() {
   return null
 }
 
-/** design.md §6: five core routes, two chrome families -- `AppShell` (`/`, `/admin`, `/404`) and the
- * lighter `AuthShell` (`/login`, `/setup`). See `src/lib/router.tsx` for why this is a small
- * dependency-free switch rather than `@tanstack/react-router` in this item.
+/** design.md §6: originally five core routes, two chrome families -- `AppShell` (`/`, `/admin`,
+ * `/404`) and the lighter `AuthShell` (`/login`, `/setup`). See `src/lib/router.tsx` for why this is
+ * a small dependency-free switch rather than `@tanstack/react-router` in this item.
  *
  * A `src/features/<name>/manifest.ts(x)` route (MODULE-GUIDE.md "Web features") is checked first, by
- * exact pathname, before falling through to the five core routes below -- the switch itself is never
- * edited to add one. */
+ * exact pathname, before falling through to the core routes below -- the switch itself is never
+ * edited to add one. `/admin` is now one of those feature routes (`features/admin/manifest.ts`,
+ * EPIC-013's full super admin console), which is why this switch below has no `'admin'` case any
+ * more: it never reached the foundation's placeholder `AdminRoute` once that manifest shipped, so
+ * that dead branch (and `routes/admin.tsx`/`test/unit/admin-route.test.tsx`) was removed rather than
+ * left as unreachable code (blitz integration pass). */
 function RouteOutlet() {
   const path = useRoutePath()
   const name = useRouteName()
@@ -59,14 +62,6 @@ function RouteOutlet() {
         <AppShell>
           <RouteErrorBoundary>
             <HomeRoute />
-          </RouteErrorBoundary>
-        </AppShell>
-      )
-    case 'admin':
-      return (
-        <AppShell>
-          <RouteErrorBoundary>
-            <AdminRoute />
           </RouteErrorBoundary>
         </AppShell>
       )
