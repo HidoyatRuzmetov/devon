@@ -1,6 +1,8 @@
 {
   "events": {
     "title": "Events",
+    "eyebrow": "EVENTS",
+    "description": "Plan, RSVP and organise everything the department does together.",
     "view": {
       "list": "List",
       "calendar": "Calendar"
@@ -59,9 +61,31 @@
       "deadline": "RSVP by {date}",
       "cancelledBanner": "This event was cancelled",
       "cancelledReason": "Reason: {reason}",
-      "doneBanner": "This event is done"
+      "doneBanner": "This event is done",
+      "viewMap": "View map"
+    },
+    "calendar": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "today": "Today"
     },
     "form": {
+      "stepBasics": "Basics",
+      "stepSchedule": "Schedule & place",
+      "stepCapacity": "Capacity & reminders",
+      "stepBack": "Back",
+      "stepNext": "Next",
+      "aiIdeaLabel": "One-line idea",
+      "aiIdeaPlaceholder": "E.g. a team picnic in the park next month",
+      "aiDraftButton": "Draft with AI",
+      "aiDraftPending": "Drafting…",
+      "aiDraftFailed": "Could not draft this event",
+      "aiDraftAccept": "Use this draft",
+      "aiDraftEdit": "Use and edit",
+      "aiDraftDiscard": "Discard",
+      "aiDraftChecklist": "Suggested checklist",
+      "aiDraftPoll": "Suggested poll options: {options}",
+      "aiDraftFollowUp": "Add the checklist, poll and carpool plan from the event page after you create it.",
       "titleLabel": "Event title",
       "titlePlaceholder": "E.g. autumn team picnic",
       "descriptionLabel": "Description",
@@ -131,6 +155,7 @@
     "attendees": {
       "title": "Attendees",
       "titleCount": "Attendees ({count})",
+      "whosComing": "Who's coming",
       "empty": "No one has answered yet",
       "guestsSuffix": "+{count} guests"
     },
@@ -140,7 +165,13 @@
       "placeholder": "Write a comment",
       "submit": "Post",
       "delete": "Delete",
-      "deleteConfirm": "Delete this comment?"
+      "deleteConfirm": "Delete this comment?",
+      "summarize": "Summarize discussion",
+      "summaryPending": "Summarizing…",
+      "summaryFailed": "Could not summarize this discussion",
+      "summaryAccept": "Insert into comment",
+      "summaryEdit": "Insert to edit",
+      "summaryDiscard": "Discard"
     },
     "carpool": {
       "title": "Carpooling",

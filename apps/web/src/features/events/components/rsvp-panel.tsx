@@ -3,7 +3,17 @@
 // coming, and where do I stand".
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Avatar, Button, Skeleton, StateView, cn, initialsFromName, toast } from '@devon/ui'
+import {
+  Avatar,
+  Button,
+  Celebrate,
+  Skeleton,
+  StateView,
+  cn,
+  initialsFromName,
+  toast,
+  useCelebrate,
+} from '@devon/ui'
 import type { EventDto, RsvpDto, RsvpStatus } from '../schemas.js'
 import { useRsvpMutation, useRsvpsQuery } from '../hooks.js'
 import { Field, Textarea } from './form-controls.js'
@@ -38,6 +48,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
   const t = useT()
   const rsvpQuery = useRsvpsQuery(eventId, true)
   const mutation = useRsvpMutation(eventId)
+  const celebrate = useCelebrate()
 
   const [status, setStatus] = React.useState<RsvpStatus>(event.myRsvp?.status ?? 'yes')
   const [guests, setGuests] = React.useState(event.myRsvp?.guests ?? 0)
@@ -68,6 +79,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
             : 'events.rsvp.confirmedToast',
         ),
       )
+      if (updated.myRsvp?.status === 'yes') celebrate.fire()
     } catch {
       toast(t('events.error.title'))
     }
@@ -127,7 +139,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
                 disabled={s !== 'no' && !canChangeToGoing}
                 onClick={() => setStatus(s)}
                 className={cn(
-                  'rounded-full border px-4 py-2 text-small font-medium transition-colors',
+                  'relative rounded-full border px-4 py-2 text-small font-medium transition-colors',
                   'duration-(--dur-micro) ease-out disabled:cursor-not-allowed disabled:opacity-40',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   status === s
@@ -136,6 +148,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
                 )}
               >
                 {t(`events.rsvp.status.${s}`)}
+                {s === 'yes' ? <Celebrate play={celebrate.play} onDone={celebrate.onDone} /> : null}
               </button>
             ))}
           </div>

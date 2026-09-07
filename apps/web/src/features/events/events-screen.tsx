@@ -3,8 +3,8 @@
 // `?event=<id>`) rather than nested routes, matching `router.tsx`'s "exact-path only, no :params yet"
 // tradeoff (MODULE-GUIDE.md "Web features") -- both are shareable/bookmarkable links this way too.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
-import { Button, StateView } from '@devon/ui'
+import { useT, useLocale } from '@devon/i18n'
+import { Button, PageHeader, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { CalendarDays, List, Plus } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
@@ -17,11 +17,45 @@ import { downloadIcs } from './lib/ics-download.js'
 import { eventFormValuesToCreateInput } from './lib/event-form-mapping.js'
 import { fetchMyIcs } from './api.js'
 import { useCreateEventMutation, useEventsQuery } from './hooks.js'
+import type { EventDto } from './schemas.js'
+
+const MONTH_LABEL_LOCALE: Record<string, string> = {
+  'uz-Latn': 'uz-Latn',
+  'uz-Cyrl': 'uz-Cyrl',
+  ru: 'ru-RU',
+  en: 'en-US',
+}
+
+/** Luma-style month grouping for the list view: events fall into a sticky-headed month bucket,
+ * chronologically, each bucket's cards staggering in as their own group (UI-OVERHAUL.md's "month
+ * grouping with stagger"). */
+function groupByMonth(events: EventDto[], locale: string): { label: string; items: EventDto[] }[] {
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+  )
+  const fmt = new Intl.DateTimeFormat(MONTH_LABEL_LOCALE[locale] ?? 'en-US', {
+    month: 'long',
+    year: 'numeric',
+  })
+  const groups: { key: string; label: string; items: EventDto[] }[] = []
+  for (const event of sorted) {
+    const d = new Date(event.startsAt)
+    const key = `${d.getFullYear()}-${d.getMonth()}`
+    let group = groups.find((g) => g.key === key)
+    if (!group) {
+      group = { key, label: fmt.format(d), items: [] }
+      groups.push(group)
+    }
+    group.items.push(event)
+  }
+  return groups
+}
 
 type View = 'list' | 'calendar'
 
 export default function EventsScreen() {
   const t = useT()
+  const locale = useLocale()
   const online = useOnline()
   const params = useSearchParams()
   const [view, setView] = React.useState<View>('list')
@@ -99,14 +133,26 @@ export default function EventsScreen() {
       )
     }
     if (view === 'list') {
+      const groups = groupByMonth(events, locale)
       return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onOpen={() => navigate(`/events?event=${event.id}`)}
-            />
+        <div className="flex flex-col gap-8">
+          {groups.map((group) => (
+            <section key={group.label} className="flex flex-col gap-3">
+              <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                {group.label}
+              </h2>
+              <Stagger
+                as="div"
+                animateKey={group.label}
+                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+              >
+                {group.items.map((event) => (
+                  <StaggerItem key={event.id}>
+                    <EventCard event={event} onOpen={() => navigate(`/events?event=${event.id}`)} />
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </section>
           ))}
         </div>
       )
@@ -123,43 +169,47 @@ export default function EventsScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-h2 text-foreground">{t('events.title')}</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-md border border-border p-0.5">
+      <PageHeader
+        eyebrow={t('events.eyebrow')}
+        title={t('events.title')}
+        description={t('events.description')}
+        actions={
+          <>
+            <div className="flex rounded-md border border-border p-0.5">
+              <Button
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setView('list')}
+                aria-pressed={view === 'list'}
+              >
+                <List className="size-4" aria-hidden="true" />
+                {t('events.view.list')}
+              </Button>
+              <Button
+                variant={view === 'calendar' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setView('calendar')}
+                aria-pressed={view === 'calendar'}
+              >
+                <CalendarDays className="size-4" aria-hidden="true" />
+                {t('events.view.calendar')}
+              </Button>
+            </div>
             <Button
-              variant={view === 'list' ? 'secondary' : 'ghost'}
+              variant="secondary"
               size="sm"
-              onClick={() => setView('list')}
-              aria-pressed={view === 'list'}
+              loading={downloadingMine}
+              onClick={handleDownloadMine}
             >
-              <List className="size-4" aria-hidden="true" />
-              {t('events.view.list')}
+              {t('events.ics.exportMine')}
             </Button>
-            <Button
-              variant={view === 'calendar' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setView('calendar')}
-              aria-pressed={view === 'calendar'}
-            >
-              <CalendarDays className="size-4" aria-hidden="true" />
-              {t('events.view.calendar')}
+            <Button size="sm" onClick={() => navigate('/events?new=1')}>
+              <Plus className="size-4" aria-hidden="true" />
+              {t('events.actions.create')}
             </Button>
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={downloadingMine}
-            onClick={handleDownloadMine}
-          >
-            {t('events.ics.exportMine')}
-          </Button>
-          <Button size="sm" onClick={() => navigate('/events?new=1')}>
-            <Plus className="size-4" aria-hidden="true" />
-            {t('events.actions.create')}
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {renderEventsBody()}
 

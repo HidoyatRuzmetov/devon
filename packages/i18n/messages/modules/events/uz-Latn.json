@@ -1,6 +1,8 @@
 {
   "events": {
     "title": "Tadbirlar",
+    "eyebrow": "TADBIRLAR",
+    "description": "Boʻlim birgalikda qiladigan har bir ishni rejalashtiring, ishtirokni belgilang.",
     "view": {
       "list": "Roʻyxat",
       "calendar": "Taqvim"
@@ -59,9 +61,31 @@
       "deadline": "Roʻyxatdan oʻtish: {date}",
       "cancelledBanner": "Bu tadbir bekor qilindi",
       "cancelledReason": "Sabab: {reason}",
-      "doneBanner": "Bu tadbir yakunlandi"
+      "doneBanner": "Bu tadbir yakunlandi",
+      "viewMap": "Xaritada koʻrish"
+    },
+    "calendar": {
+      "previousMonth": "Oldingi oy",
+      "nextMonth": "Keyingi oy",
+      "today": "Bugun"
     },
     "form": {
+      "stepBasics": "Asosiy maʼlumot",
+      "stepSchedule": "Vaqt va manzil",
+      "stepCapacity": "Joylar va eslatmalar",
+      "stepBack": "Orqaga",
+      "stepNext": "Keyingisi",
+      "aiIdeaLabel": "Bir qatorli ideya",
+      "aiIdeaPlaceholder": "Masalan, keyingi oyda bogʻda jamoaviy piknik",
+      "aiDraftButton": "AI bilan qoralama tuzish",
+      "aiDraftPending": "Qoralama tuzilmoqda…",
+      "aiDraftFailed": "Tadbir qoralamasini tuzib boʻlmadi",
+      "aiDraftAccept": "Shu qoralamadan foydalanish",
+      "aiDraftEdit": "Foydalanib, tahrirlash",
+      "aiDraftDiscard": "Rad etish",
+      "aiDraftChecklist": "Taklif qilingan roʻyxat",
+      "aiDraftPoll": "Taklif qilingan soʻrovnoma variantlari: {options}",
+      "aiDraftFollowUp": "Roʻyxat, soʻrovnoma va birga borish rejasini tadbirni yaratgandan keyin uning sahifasida qoʻshing.",
       "titleLabel": "Tadbir nomi",
       "titlePlaceholder": "Masalan, kuzgi jamoaviy piknik",
       "descriptionLabel": "Tavsif",
@@ -131,6 +155,7 @@
     "attendees": {
       "title": "Ishtirokchilar",
       "titleCount": "Ishtirokchilar ({count})",
+      "whosComing": "Kimlar boradi",
       "empty": "Hozircha hech kim javob bermadi",
       "guestsSuffix": "+{count} mehmon"
     },
@@ -140,7 +165,13 @@
       "placeholder": "Izoh yozing",
       "submit": "Yuborish",
       "delete": "Oʻchirish",
-      "deleteConfirm": "Izohni oʻchirmoqchimisiz?"
+      "deleteConfirm": "Izohni oʻchirmoqchimisiz?",
+      "summarize": "Muhokamani qisqacha ifodalash",
+      "summaryPending": "Qisqacha bayon tuzilmoqda…",
+      "summaryFailed": "Muhokamani qisqacha bayon qilib boʻlmadi",
+      "summaryAccept": "Izohga qoʻshish",
+      "summaryEdit": "Qoʻshib, tahrirlash",
+      "summaryDiscard": "Rad etish"
     },
     "carpool": {
       "title": "Birga borish",
