@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { formatDate, formatTime, formatNumber, formatUzs, formatRelativeTime } from '../../src/format.js'
+import {
+  formatDate,
+  formatTime,
+  formatNumber,
+  formatUzs,
+  formatRelativeTime,
+} from '../../src/format.js'
 import type { Locale } from '../../src/locale.js'
 
 const LOCALES: Locale[] = ['uz-Latn', 'uz-Cyrl', 'ru', 'en']
@@ -78,12 +84,12 @@ describe('formatRelativeTime (uz-Latn must never fall back to English CLDR text)
 
   it('renders Uzbek words for uz-Latn at every magnitude', () => {
     expect(formatRelativeTime(now, 'uz-Latn', now)).toBe('hozir')
-    expect(
-      formatRelativeTime(new Date(now.getTime() - 12 * 60 * 1000), 'uz-Latn', now),
-    ).toBe('12 daqiqa oldin')
-    expect(
-      formatRelativeTime(new Date(now.getTime() - 3 * 60 * 60 * 1000), 'uz-Latn', now),
-    ).toBe('3 soat oldin')
+    expect(formatRelativeTime(new Date(now.getTime() - 12 * 60 * 1000), 'uz-Latn', now)).toBe(
+      '12 daqiqa oldin',
+    )
+    expect(formatRelativeTime(new Date(now.getTime() - 3 * 60 * 60 * 1000), 'uz-Latn', now)).toBe(
+      '3 soat oldin',
+    )
     expect(
       formatRelativeTime(new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), 'uz-Latn', now),
     ).toBe('2 kun oldin')

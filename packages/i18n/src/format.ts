@@ -52,14 +52,6 @@ export function formatTime(d: Date, _locale: Locale, tz: string = DEFAULT_TZ): s
   return `${normalisedHour}:${minute}`
 }
 
-/** DESIGN.md §5 wants a space thousands separator in every uz/ru locale. `Intl` gets this right for
- *  `uz-Cyrl` and `ru` on every runtime we ship on, but a real embedded-Chromium build resolves
- *  `uz-Latn` to plain `uz` and uses that macrolanguage's CLDR data, which groups with an ASCII comma
- *  -- `new Intl.NumberFormat('uz-Latn').format(500000)` comes back `"500,000"` there (verified live;
- *  Node's bundled ICU does not reproduce it, which is why this needs an explicit part-level fix
- *  rather than trusting a unit test run under Node to catch it). So `uz-Latn` alone is built from
- *  `formatToParts` with the `group` part forced to U+00A0 regardless of what the runtime's ICU
- *  chose; `uz-Cyrl`/`ru`/`en` are left to `Intl`, which already agrees with DESIGN.md for them. */
 /** NumberFlow (the KpiTile/StatNumber ticker) formats internally with its own `Intl.NumberFormat`
  * call and offers no part-level hook to fix up afterwards, so `formatNumber`'s formatToParts trick
  * cannot reach it. `uz-Cyrl`'s CLDR numbering data groups correctly (space, not comma) and is
@@ -70,7 +62,19 @@ export function numberFlowLocale(locale: Locale): Locale | 'uz-Cyrl' {
   return locale === 'uz-Latn' ? 'uz-Cyrl' : locale
 }
 
-export function formatNumber(n: number, locale: Locale, options?: Intl.NumberFormatOptions): string {
+/** DESIGN.md §5 wants a space thousands separator in every uz/ru locale. `Intl` gets this right for
+ *  `uz-Cyrl` and `ru` on every runtime we ship on, but a real embedded-Chromium build resolves
+ *  `uz-Latn` to plain `uz` and uses that macrolanguage's CLDR data, which groups with an ASCII comma
+ *  -- `new Intl.NumberFormat('uz-Latn').format(500000)` comes back `"500,000"` there (verified live;
+ *  Node's bundled ICU does not reproduce it, which is why this needs an explicit part-level fix
+ *  rather than trusting a unit test run under Node to catch it). So `uz-Latn` alone is built from
+ *  `formatToParts` with the `group` part forced to U+00A0 regardless of what the runtime's ICU
+ *  chose; `uz-Cyrl`/`ru`/`en` are left to `Intl`, which already agrees with DESIGN.md for them. */
+export function formatNumber(
+  n: number,
+  locale: Locale,
+  options?: Intl.NumberFormatOptions,
+): string {
   if (locale === 'uz-Latn') {
     return new Intl.NumberFormat(locale, options)
       .formatToParts(n)
