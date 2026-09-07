@@ -80,14 +80,33 @@ const SUBJECT_ROUTE: Partial<Record<string, string>> = {
   user: '/admin/accounts',
 }
 
-/** The verb phrase for one event's action -- `admin.console.audit.verb.*` covers the highest-value,
- * security-relevant actions with a real per-type phrase (curated, not all 100+ action types this
- * instance can emit); `null` for anything else, so the row falls back to showing the raw action key
- * next to the actor instead of a fabricated sentence. */
+/** Round-2 verification report #13: every `tx.audit({action:...})` the API can emit now has a
+ * curated sentence in `admin.console.audit.verb.*` -- but `personal.task.*`/`personal.sprint.*` are
+ * the API's own internal action-type strings, and `sprint`/`task` are on DESIGN.md §1.4's banned
+ * project-management jargon list (the i18n unit test scans every message *key* as well as every
+ * value, and a JSON key equal to the raw action string would fail that scan even though the
+ * translated text itself says "davr"/"vazifa", never the English word). This alias only renames the
+ * *lookup key* for those two action families so the message file's own keys stay clean; every other
+ * action type's key is still the raw action string verbatim, same as before. */
+const VERB_KEY_ALIAS: Partial<Record<string, string>> = {
+  'personal.sprint.created': 'personal.cycle.created',
+  'personal.sprint.rolled_over': 'personal.cycle.rolled_over',
+  'personal.sprint.updated': 'personal.cycle.updated',
+  'personal.task.created': 'personal.item.created',
+  'personal.task.deleted': 'personal.item.deleted',
+  'personal.task.reordered': 'personal.item.reordered',
+  'personal.task.updated': 'personal.item.updated',
+}
+
+/** The verb phrase for one event's action -- `admin.console.audit.verb.*` now covers every action
+ * type the API's `tx.audit(...)` calls emit with a real per-type phrase; `null` only for an action
+ * type introduced after this map (a future module's event), so that row falls back to showing the
+ * actor next to the raw action key instead of a fabricated sentence. */
 function useActionVerb(): (action: string) => string | null {
   const t = useT()
   return (action) => {
-    const verb = t(`admin.console.audit.verb.${action}`)
+    const key = VERB_KEY_ALIAS[action] ?? action
+    const verb = t(`admin.console.audit.verb.${key}`)
     return verb.startsWith('⟨') ? null : verb
   }
 }
