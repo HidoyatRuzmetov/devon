@@ -61,10 +61,10 @@ describe('Button', () => {
     (size) => {
       render(
         <Button variant="destructive" size={size}>
-          O'chirish
+          Bekor qilish
         </Button>,
       )
-      const button = screen.getByRole('button', { name: "O'chirish" })
+      const button = screen.getByRole('button', { name: 'Bekor qilish' })
       expect(button.className.split(/\s+/)).toContain('text-destructive-foreground')
     },
   )
