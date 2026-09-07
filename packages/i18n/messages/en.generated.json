@@ -1676,7 +1676,8 @@
         "toast": "Moved {count} unfinished to-dos to a new period"
       },
       "complete": {
-        "action": "Mark complete"
+        "action": "Mark complete",
+        "toast": "Period completed"
       },
       "ended": "Time's up",
       "kind": {
@@ -2193,6 +2194,8 @@
       "markDone": "Mark done",
       "archive": "Archive",
       "archived": "Card archived",
+      "done": "Card done",
+      "checklistComplete": "Checklist complete",
       "restore": "Restore",
       "watch": "Watch",
       "watching": "Watching",

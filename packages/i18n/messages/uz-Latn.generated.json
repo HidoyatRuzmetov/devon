@@ -1676,7 +1676,8 @@
         "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
       },
       "complete": {
-        "action": "Yakunlangan deb belgilash"
+        "action": "Yakunlangan deb belgilash",
+        "toast": "Davr yakunlandi"
       },
       "ended": "Vaqt tugadi",
       "kind": {
@@ -2193,6 +2194,8 @@
       "markDone": "Bajarildi deb belgilash",
       "archive": "Arxivlash",
       "archived": "Vazifa arxivlandi",
+      "done": "Vazifa bajarildi",
+      "checklistComplete": "Roʻyxat toʻliq bajarildi",
       "restore": "Tiklash",
       "watch": "Kuzatish",
       "watching": "Kuzatilmoqda",

@@ -60,7 +60,7 @@
         "action": "Roll over",
         "toast": "Moved {count} unfinished to-dos to a new period"
       },
-      "complete": { "action": "Mark complete" },
+      "complete": { "action": "Mark complete", "toast": "Period completed" },
       "ended": "Time's up",
       "kind": { "threeHour": "3 hours", "day": "Day", "week": "Week", "custom": "Custom" },
       "status": { "active": "Active", "completed": "Completed", "archived": "Archived" }

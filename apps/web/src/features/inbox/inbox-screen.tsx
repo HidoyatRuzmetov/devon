@@ -15,6 +15,7 @@ import {
   AllDoneIllustration,
   Badge,
   Button,
+  Celebrate,
   Chip,
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ import {
   cn,
   toast,
   toastWithUndo,
+  useCelebrate,
 } from '@devon/ui'
 import { CalendarDays, Check, CheckCheck, SlidersHorizontal, View } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
@@ -228,6 +230,7 @@ function InboxBody({
   onArchive,
   onQuickAction,
   onSnooze,
+  zeroCelebrate,
 }: {
   query: ReturnType<typeof useNotificationsQuery>
   status: InboxStatus
@@ -237,6 +240,10 @@ function InboxBody({
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
+  /** UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": inbox zero gets the same one-shot
+   * burst, fired only on the *transition* into empty (never on every visit to an already-empty
+   * inbox) -- `inbox-screen.tsx` owns that transition detection. */
+  zeroCelebrate?: { play: boolean; onDone: () => void }
 }) {
   if (query.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
@@ -258,7 +265,18 @@ function InboxBody({
         kind="empty"
         titleKey={`inbox.empty.${status}.title`}
         bodyKey={`inbox.empty.${status}.body`}
-        illustration={status === 'inbox' ? <AllDoneIllustration /> : <EmptyInboxIllustration />}
+        illustration={
+          status === 'inbox' ? (
+            <span className="relative inline-flex">
+              <AllDoneIllustration />
+              {zeroCelebrate ? (
+                <Celebrate play={zeroCelebrate.play} onDone={zeroCelebrate.onDone} radius={40} />
+              ) : null}
+            </span>
+          ) : (
+            <EmptyInboxIllustration />
+          )
+        }
       />
     )
   }
@@ -298,6 +316,22 @@ export default function InboxScreen() {
   const items = notificationsQuery.data?.items ?? []
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0
   const openNotification = items.find((n) => n.id === openId) ?? null
+
+  // Inbox zero fires once, on the transition into empty -- the `inbox` tab having *always* been
+  // empty (a brand-new account, a hard refresh) is not a moment to celebrate, only clearing it out
+  // is. `undefined` (query still pending) never counts as "was non-empty".
+  const zeroCelebrate = useCelebrate()
+  const previousInboxCount = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => {
+    if (status !== 'inbox' || notificationsQuery.data === undefined) return
+    const count = items.length
+    if (previousInboxCount.current !== undefined && previousInboxCount.current > 0 && count === 0) {
+      zeroCelebrate.fire()
+    }
+    previousInboxCount.current = count
+    // `zeroCelebrate.fire` is stable (`useCelebrate`'s own `useCallback`) -- the object itself is
+    // not, and including it would re-run this on every render instead of only on a real transition.
+  }, [status, notificationsQuery.data, items.length, zeroCelebrate.fire]) // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     setSelectedIndex(0)
@@ -437,6 +471,7 @@ export default function InboxScreen() {
           onArchive={handleArchive}
           onQuickAction={handleQuickAction}
           onSnooze={handleSnooze}
+          zeroCelebrate={zeroCelebrate}
         />
 
         {/* The right pane of the split at >=768; a bottom sheet carries the same content below that

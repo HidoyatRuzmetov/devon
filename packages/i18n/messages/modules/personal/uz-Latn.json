@@ -60,7 +60,7 @@
         "action": "Koʻchirish",
         "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
       },
-      "complete": { "action": "Yakunlangan deb belgilash" },
+      "complete": { "action": "Yakunlangan deb belgilash", "toast": "Davr yakunlandi" },
       "ended": "Vaqt tugadi",
       "kind": { "threeHour": "3 soat", "day": "Kun", "week": "Hafta", "custom": "Ixtiyoriy" },
       "status": { "active": "Faol", "completed": "Yakunlangan", "archived": "Arxivlangan" }

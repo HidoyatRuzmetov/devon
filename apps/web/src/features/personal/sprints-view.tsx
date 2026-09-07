@@ -13,6 +13,7 @@ import {
   Badge,
   Button,
   Card,
+  Celebrate,
   Dialog,
   DialogContent,
   DialogTrigger,
@@ -150,6 +151,9 @@ export function SprintsView() {
   const [planDraft, setPlanDraft] = React.useState('')
   const [weeklyAi, setWeeklyAi] = React.useState<WeeklyAiState | null>(null)
   const [weeklyDraft, setWeeklyDraft] = React.useState('')
+  // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": one celebration burst, anchored to
+  // whichever period's own "Complete" button fired it -- at most one plays at a time.
+  const [celebratingSprintId, setCelebratingSprintId] = React.useState<string | null>(null)
 
   if (sprintsQuery.isPending || tasksQuery.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
@@ -486,18 +490,32 @@ export function SprintsView() {
                       <RotateCcw className="size-4" aria-hidden="true" />
                       {t('personal.sprints.rollover.action')}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        patchSprint.mutate({
-                          id: sprint.id,
-                          input: { status: 'completed', version: sprint.version },
-                        })
-                      }
-                    >
-                      {t('personal.sprints.complete.action')}
-                    </Button>
+                    <span className="relative inline-flex">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          patchSprint.mutate(
+                            {
+                              id: sprint.id,
+                              input: { status: 'completed', version: sprint.version },
+                            },
+                            {
+                              onSuccess: () => {
+                                setCelebratingSprintId(sprint.id)
+                                toast(t('personal.sprints.complete.toast'))
+                              },
+                            },
+                          )
+                        }
+                      >
+                        {t('personal.sprints.complete.action')}
+                      </Button>
+                      <Celebrate
+                        play={celebratingSprintId === sprint.id}
+                        onDone={() => setCelebratingSprintId(null)}
+                      />
+                    </span>
                   </div>
 
                   {planAi?.sprintId === sprint.id ? (

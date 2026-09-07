@@ -15,6 +15,7 @@ import {
   AvatarStack,
   Badge,
   Button,
+  Celebrate,
   Checkbox,
   Chip,
   Collapsible,
@@ -28,6 +29,7 @@ import {
   labelChipColors,
   toast,
   toastWithUndo,
+  useCelebrate,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
@@ -103,6 +105,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const [linkInput, setLinkInput] = React.useState('')
   const [newLabelName, setNewLabelName] = React.useState('')
   const [activityOpen, setActivityOpen] = React.useState(false)
+  const doneCelebrate = useCelebrate()
 
   const card = query.data
   React.useEffect(() => {
@@ -170,6 +173,12 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
         onUndo: () => void restoreCard.mutateAsync(card!.id),
       })
       onClose?.()
+    } else {
+      // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": a celebration moment, not a
+      // plain status change -- a project-scoped card stays `done` (not archived, see
+      // `nextDoneStatus`), so this is the one path that actually deserves the burst.
+      doneCelebrate.fire()
+      toast(t('work.card.done'))
     }
   }
 
@@ -271,9 +280,12 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           ) : null}
           <div className="ml-auto flex flex-wrap gap-2">
             {card.status === 'active' ? (
-              <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
-                {t('work.card.markDone')}
-              </Button>
+              <span className="relative inline-flex">
+                <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
+                  {t('work.card.markDone')}
+                </Button>
+                <Celebrate play={doneCelebrate.play} onDone={doneCelebrate.onDone} />
+              </span>
             ) : null}
             {card.status !== 'archived' ? (
               <Button size="sm" variant="secondary" onClick={() => void archiveNow()}>
@@ -620,6 +632,21 @@ function Checklist({
   const childrenOf = (id: string) => card.checklist.filter((i) => i.parentItemId === id)
   const done = card.checklist.filter((i) => i.doneAt !== null).length
 
+  // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": the checklist itself gets a
+  // celebration too, the moment its *last* item lands -- not on every render of an already-full
+  // checklist (a card reopened later, or a sibling item added after completion resets `done` below
+  // `card.checklist.length` and un-arms this until it fills again).
+  const checklistCelebrate = useCelebrate()
+  const wasChecklistComplete = React.useRef(false)
+  const checklistComplete = card.checklist.length > 0 && done === card.checklist.length
+  React.useEffect(() => {
+    if (checklistComplete && !wasChecklistComplete.current) {
+      checklistCelebrate.fire()
+      toast(t('work.card.checklistComplete'))
+    }
+    wasChecklistComplete.current = checklistComplete
+  }, [checklistComplete]) // eslint-disable-line react-hooks/exhaustive-deps -- fire on transition only
+
   const subtasksEnabled = useAiFeatureEnabled('subtask_breakdown')
   const subtaskAi = useRunAiFeatureMutation('subtask_breakdown')
   const [suggested, setSuggested] = React.useState<{
@@ -682,7 +709,8 @@ function Checklist({
         ) : undefined
       }
     >
-      <div className="flex flex-col gap-1">
+      <div className="relative flex flex-col gap-1">
+        <Celebrate play={checklistCelebrate.play} onDone={checklistCelebrate.onDone} radius={30} />
         {topLevel.map((item) => (
           <div key={item.id} className="flex flex-col gap-1">
             <ChecklistRow

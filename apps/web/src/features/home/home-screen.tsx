@@ -11,6 +11,7 @@ import * as React from 'react'
 import { useT, useLocale, formatNumber } from '@devon/i18n'
 import {
   Card,
+  Celebrate,
   cn,
   HubAmbientWash,
   KpiTile,
@@ -20,6 +21,8 @@ import {
   StaggerItem,
   StatNumber,
   StateView,
+  toast,
+  useCelebrate,
   WelcomeIllustration,
 } from '@devon/ui'
 import { ArrowRight, CalendarDays, Check, Gavel, ListTodo } from 'lucide-react'
@@ -135,14 +138,50 @@ interface ChecklistItem {
   onGo: () => void
 }
 
+const ONBOARDING_CELEBRATED_KEY = 'devon.home.onboardingCelebrated'
+
 /** UI-OVERHAUL.md §2 "Onboarding" (Notion, Slack): a checklist card on Home with progress, each item
  * one click away. Every item is derived from data Home already has -- nothing here is a stored
  * "tour step", so it can never disagree with reality, and the whole card disappears for good once
- * the last item is true. */
+ * the last item is true.
+ *
+ * UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete ... onboarding complete": the *first* time
+ * the last item lands, the card holds for one beat fully checked with a burst + toast, instead of
+ * silently vanishing -- a `localStorage` flag (best-effort; a private window just skips straight to
+ * vanishing) makes sure that only ever happens once per browser, not on every later visit to an
+ * already-finished checklist. */
 function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
   const t = useT()
   const done = items.filter((item) => item.done).length
-  if (done === items.length) return null
+  const complete = done === items.length
+  const celebrate = useCelebrate()
+  const [dismissed, setDismissed] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!complete) return
+    const alreadyCelebrated = (() => {
+      try {
+        return window.localStorage.getItem(ONBOARDING_CELEBRATED_KEY) === '1'
+      } catch {
+        return true // Storage disabled -- skip straight to vanishing, never repeat.
+      }
+    })()
+    if (alreadyCelebrated) {
+      setDismissed(true)
+      return
+    }
+    celebrate.fire()
+    toast(t('home.dashboard.onboarding.done'))
+    try {
+      window.localStorage.setItem(ONBOARDING_CELEBRATED_KEY, '1')
+    } catch {
+      // Best-effort only -- the celebration still played this once either way.
+    }
+    const timer = window.setTimeout(() => setDismissed(true), 2400)
+    return () => window.clearTimeout(timer)
+  }, [complete]) // eslint-disable-line react-hooks/exhaustive-deps -- fire once per completion only
+
+  if (complete && dismissed) return null
 
   return (
     <Reveal>
@@ -155,8 +194,11 @@ function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
           <WelcomeIllustration className="hidden w-28 shrink-0 sm:block" />
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <div className="flex flex-col gap-2">
-              <h3 className="text-lead font-medium text-foreground">
+              <h3 className="relative inline-flex w-fit text-lead font-medium text-foreground">
                 {t('home.dashboard.onboarding.title')}
+                {complete ? (
+                  <Celebrate play={celebrate.play} onDone={celebrate.onDone} radius={36} />
+                ) : null}
               </h3>
               <p className="text-small tabular-nums text-muted-foreground">
                 {t('home.dashboard.onboarding.body', { done, total: items.length })}
