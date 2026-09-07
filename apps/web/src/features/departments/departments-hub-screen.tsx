@@ -260,7 +260,7 @@ function CurrentDepartmentCard({
     <SectionCard
       title={`${department.emoji ? `${department.emoji} ` : ''}${department.name}`}
       headerAside={
-        <Badge tone={isHead ? 'info' : 'neutral'}>
+        <Badge tone={isHead ? 'primary' : 'neutral'} variant={isHead ? 'outline' : 'subtle'}>
           {t(isHead ? 'departments.members.roleHead' : 'departments.members.roleMember')}
         </Badge>
       }
@@ -447,7 +447,7 @@ export default function DepartmentsHubScreen() {
                           {d.name}
                         </span>
                       </span>
-                      <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
+                      <Badge tone={d.myRole === 'head' ? 'primary' : 'neutral'} variant={d.myRole === 'head' ? 'outline' : 'subtle'}>
                         {t(
                           d.myRole === 'head'
                             ? 'departments.members.roleHead'

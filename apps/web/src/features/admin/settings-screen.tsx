@@ -207,7 +207,8 @@ function SentinelCard() {
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <Badge tone={query.data?.hasActiveKey ? 'success' : 'warning'}>
+            {/* DESIGN.md §2.1: green is success/approved/on-track only (round2 SEV2 "Sozlangan"). */}
+            <Badge tone={query.data?.hasActiveKey ? 'info' : 'warning'}>
               {t(
                 query.data?.hasActiveKey
                   ? 'admin.console.settings.sentinelConfigured'

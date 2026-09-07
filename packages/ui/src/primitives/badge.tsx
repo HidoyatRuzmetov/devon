@@ -26,9 +26,48 @@ export const badgeVariants = cva(
         warning: 'bg-warning text-warning-foreground',
         destructive: 'bg-destructive text-destructive-foreground',
         info: 'bg-info text-info-foreground',
+        // Brand tone, not a status -- "current device", "head of department": a fact about *this
+        // item*, not a state it is in, so it never competes with the real status tones above.
+        primary: 'bg-primary/12 text-primary',
+      },
+      // round2 SEV2: every tone was a solid saturated fill, so status was carried by "the brightest
+      // block on the screen" everywhere at once -- 25 solid green "Faol" pills on one admin list, a
+      // whole board of solid-fill priority badges. `subtle` (a tint of the tone over the current
+      // surface, at 12% alpha so it composites correctly in both themes) is the default; `solid` is
+      // kept for the one state that should still shout (a blocked/critical badge); `outline` is the
+      // brand-tone chip ("Joriy qurilma", "Boshliq") that names a fact rather than a status.
+      variant: {
+        subtle: '',
+        solid: '',
+        outline: '',
       },
     },
-    defaultVariants: { tone: 'neutral' },
+    compoundVariants: [
+      { tone: 'neutral', variant: 'subtle', className: 'bg-muted text-muted-foreground' },
+      { tone: 'attention', variant: 'subtle', className: 'bg-attention/12 text-attention' },
+      { tone: 'success', variant: 'subtle', className: 'bg-success/12 text-success' },
+      { tone: 'warning', variant: 'subtle', className: 'bg-warning/12 text-warning' },
+      { tone: 'destructive', variant: 'subtle', className: 'bg-destructive/12 text-destructive' },
+      { tone: 'info', variant: 'subtle', className: 'bg-info/12 text-info' },
+      { tone: 'primary', variant: 'subtle', className: 'bg-primary/12 text-primary' },
+      { tone: 'neutral', variant: 'solid', className: 'bg-muted text-muted-foreground' },
+      { tone: 'attention', variant: 'solid', className: 'bg-attention text-attention-foreground' },
+      { tone: 'success', variant: 'solid', className: 'bg-success text-success-foreground' },
+      { tone: 'warning', variant: 'solid', className: 'bg-warning text-warning-foreground' },
+      {
+        tone: 'destructive',
+        variant: 'solid',
+        className: 'bg-destructive text-destructive-foreground',
+      },
+      { tone: 'info', variant: 'solid', className: 'bg-info text-info-foreground' },
+      { tone: 'primary', variant: 'solid', className: 'bg-primary text-primary-foreground' },
+      {
+        tone: 'primary',
+        variant: 'outline',
+        className: 'border border-primary bg-transparent text-primary',
+      },
+    ],
+    defaultVariants: { tone: 'neutral', variant: 'subtle' },
   },
 )
 
@@ -36,8 +75,8 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ className, tone, ...props }, ref) => (
-    <span ref={ref} className={cn(badgeVariants({ tone }), className)} {...props} />
+  ({ className, tone, variant, ...props }, ref) => (
+    <span ref={ref} className={cn(badgeVariants({ tone, variant }), className)} {...props} />
   ),
 )
 Badge.displayName = 'Badge'

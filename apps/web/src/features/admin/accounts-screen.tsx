@@ -35,8 +35,10 @@ import {
 } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
-const STATUS_TONE: Record<AdminUserRow['status'], 'success' | 'destructive' | 'neutral'> = {
-  active: 'success',
+// DESIGN.md §2.1: green stays reserved for success/approved/on-track -- "active" is a state, not an
+// achievement, so it gets the neutral-ish `info` tone (round2 SEV2 "Faol").
+const STATUS_TONE: Record<AdminUserRow['status'], 'info' | 'destructive' | 'neutral'> = {
+  active: 'info',
   locked: 'destructive',
   deleted: 'neutral',
 }

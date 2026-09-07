@@ -33,8 +33,9 @@ import {
 } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
-const STATUS_TONE: Record<AdminDepartmentRow['status'], 'success' | 'warning' | 'neutral'> = {
-  active: 'success',
+// DESIGN.md §2.1: green stays reserved for success/approved/on-track (round2 SEV2 "Faol").
+const STATUS_TONE: Record<AdminDepartmentRow['status'], 'info' | 'warning' | 'neutral'> = {
+  active: 'info',
   paused_by_admin: 'warning',
   deletion_requested: 'warning',
   archived: 'neutral',

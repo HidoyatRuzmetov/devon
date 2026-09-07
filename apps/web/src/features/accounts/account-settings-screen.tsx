@@ -205,7 +205,11 @@ function SessionsSection() {
                         {device.label || t('accounts.sessions.unknownDevice')}
                       </span>
                       {s.isCurrent ? (
-                        <Badge tone="info">{t('accounts.sessions.current')}</Badge>
+                        // A fact about this row, not a status (round2 SEV2 "Joriy qurilma") -- the
+                        // brand-tone outline chip, not a status tone.
+                        <Badge tone="primary" variant="outline">
+                          {t('accounts.sessions.current')}
+                        </Badge>
                       ) : null}
                     </span>
                     <span className="truncate text-small text-muted-foreground">
