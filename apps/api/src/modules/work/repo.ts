@@ -394,7 +394,8 @@ export async function patchCard(
     // "cannot cast type record to uuid[]" / empty-array syntax error bug.
     if (patch.labels !== undefined) sets.push(sql`labels = ${sql.param(patch.labels)}::uuid[]`)
     if (patch.links !== undefined) sets.push(sql`links = ${JSON.stringify(patch.links)}::jsonb`)
-    if (patch.watchers !== undefined) sets.push(sql`watchers = ${sql.param(patch.watchers)}::uuid[]`)
+    if (patch.watchers !== undefined)
+      sets.push(sql`watchers = ${sql.param(patch.watchers)}::uuid[]`)
     if (patch.orderKey !== undefined) sets.push(sql`order_key = ${patch.orderKey}`)
     if (patch.status !== undefined) {
       sets.push(sql`status = ${patch.status}`)
