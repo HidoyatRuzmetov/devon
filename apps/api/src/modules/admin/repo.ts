@@ -669,6 +669,10 @@ export type AuditEventRow = {
   at: Date
   actorUserId: string | null
   actorRole: string | null
+  /** Joined from `app.users` for the console's own "who did this" sentence (round2 SEV2: the log
+   * used to identify the actor only by role, e.g. "super_admin"). Null for a system-initiated event
+   * (no `actor_user_id`) or a since-deleted/anonymised user. */
+  actorName: string | null
   departmentId: string | null
   action: string
   subjectType: string
@@ -677,6 +681,10 @@ export type AuditEventRow = {
 
 export async function listAuditEvents(input: {
   action?: string | undefined
+  /** One of `AUDIT_CATEGORIES` (the action's leading dot-segment, e.g. `'session'` for
+   * `'session.created'`) or `OTHER_CATEGORY` for "none of the named ones" -- round2 SEV2's chip
+   * filter, replacing the raw-grammar text box. */
+  category?: string | undefined
   actorUserId?: string | undefined
   departmentId?: string | undefined
   from?: string | undefined
@@ -687,6 +695,13 @@ export async function listAuditEvents(input: {
   return withContext(anonymousAdminCtx(), async (tx) => {
     const conditions = [sql`1 = 1`]
     if (input.action) conditions.push(sql`action = ${input.action}`)
+    if (input.category === '__other__') {
+      conditions.push(
+        sql`action not like 'session.%' and action not like 'accounts.%' and action not like 'admin.%' and action not like 'departments.%'`,
+      )
+    } else if (input.category) {
+      conditions.push(sql`action like ${input.category + '.%'}`)
+    }
     if (input.actorUserId) conditions.push(sql`actor_user_id = ${input.actorUserId}::uuid`)
     if (input.departmentId) conditions.push(sql`department_id = ${input.departmentId}::uuid`)
     if (input.from) conditions.push(sql`at >= ${input.from}::timestamptz`)
@@ -710,15 +725,20 @@ export async function listAuditEvents(input: {
       at: string
       actor_user_id: string | null
       actor_role: string | null
+      actor_given_name: string | null
+      actor_family_name: string | null
       department_id: string | null
       action: string
       subject_type: string
       subject_id: string | null
     }>(sql`
-      select seq, id, at, actor_user_id, actor_role, department_id, action, subject_type, subject_id
-      from audit.events
+      select e.seq, e.id, e.at, e.actor_user_id, e.actor_role, e.department_id, e.action,
+        e.subject_type, e.subject_id,
+        u.given_name as actor_given_name, u.family_name as actor_family_name
+      from audit.events e
+      left join app.users u on u.id = e.actor_user_id
       where ${sql.join(conditions, sql` and `)}
-      order by seq desc
+      order by e.seq desc
       limit ${input.limit + 1}
     `)
 
@@ -732,6 +752,10 @@ export async function listAuditEvents(input: {
         at: new Date(r.at),
         actorUserId: r.actor_user_id,
         actorRole: r.actor_role,
+        actorName:
+          r.actor_given_name || r.actor_family_name
+            ? `${r.actor_given_name ?? ''} ${r.actor_family_name ?? ''}`.trim()
+            : null,
         departmentId: r.department_id,
         action: r.action,
         subjectType: r.subject_type,

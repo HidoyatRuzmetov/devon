@@ -382,13 +382,15 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const { rows } = await repo.listAuditEvents({ ...req.query, limit: 1000 })
-      const header = 'seq,at,actor_user_id,actor_role,department_id,action,subject_type,subject_id'
+      const header =
+        'seq,at,actor_user_id,actor_name,actor_role,department_id,action,subject_type,subject_id'
       const csvEscape = (v: string) => `"${v.replace(/"/g, '""')}"`
       const lines = rows.map((e) =>
         [
           e.seq,
           e.at.toISOString(),
           e.actorUserId ?? '',
+          e.actorName ?? '',
           e.actorRole ?? '',
           e.departmentId ?? '',
           e.action,

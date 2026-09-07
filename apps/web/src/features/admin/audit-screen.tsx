@@ -1,19 +1,33 @@
 // `/admin/audit` -- paginated audit log, hash-chain verification, CSV export.
+//
+// round2 SEV2: this was developer output -- 50 rows of `session.created`, `session · f8dda908`, in
+// monospace, untranslated, with no day grouping and no actor identity, and a free-text filter that
+// taught the same query grammar (`admin.user.locked`) the work/analytics filters were rejected for
+// teaching. The action is now a sentence per event type (`admin.console.audit.verb.*`, a curated top
+// set -- everything else still shows the actor next to the raw action key, which at least resolves
+// who did it),
+// the actor is an avatar + name with role as a chip, the subject id is a chip (linked, for the
+// subject types the super admin console can actually navigate to), rows group by day under a date
+// sub-head, and the text filter is the same `FilterChip` row every other screen uses.
 import * as React from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import {
   AnimatedCheck,
+  Avatar,
   Badge,
   Button,
-  Input,
+  Chip,
+  FilterChip,
   Stagger,
   StaggerItem,
   StateView,
+  initialsFromName,
   toast,
 } from '@devon/ui'
 import { AlertTriangle } from 'lucide-react'
-import { auditExportUrl, fetchAuditEvents, fetchAuditVerify } from './api.js'
+import { RouterLink } from '../../lib/router.js'
+import { auditExportUrl, fetchAuditEvents, fetchAuditVerify, type AuditEventRow } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
 /** UI-OVERHAUL.md §2 "Admin console ... audit viewer with chain-verify badge animation": the check
@@ -43,16 +57,131 @@ function ChainVerifyBadge({ ok }: { ok: boolean }) {
   )
 }
 
+const CATEGORIES = ['session', 'accounts', 'admin', 'departments', '__other__'] as const
+const CATEGORY_LABEL_KEY: Record<(typeof CATEGORIES)[number], string> = {
+  session: 'admin.console.audit.filter.session',
+  accounts: 'admin.console.audit.filter.accounts',
+  admin: 'admin.console.audit.filter.admin',
+  departments: 'admin.console.audit.filter.departments',
+  __other__: 'admin.console.audit.filter.other',
+}
+
+const ROLE_LABEL_KEY: Record<string, string> = {
+  super_admin: 'admin.console.accounts.role.superAdmin',
+  head: 'admin.console.accounts.role.head',
+  member: 'admin.console.accounts.role.member',
+}
+
+/** Where a subject chip can actually navigate to -- the super admin console has no view into most
+ * department-scoped objects (a card, a project, a page) at all, so those stay a plain, unlinked chip
+ * rather than a link to nowhere. */
+const SUBJECT_ROUTE: Partial<Record<string, string>> = {
+  department: '/admin/departments',
+  user: '/admin/accounts',
+}
+
+/** The verb phrase for one event's action -- `admin.console.audit.verb.*` covers the highest-value,
+ * security-relevant actions with a real per-type phrase (curated, not all 100+ action types this
+ * instance can emit); `null` for anything else, so the row falls back to showing the raw action key
+ * next to the actor instead of a fabricated sentence. */
+function useActionVerb(): (action: string) => string | null {
+  const t = useT()
+  return (action) => {
+    const verb = t(`admin.console.audit.verb.${action}`)
+    return verb.startsWith('⟨') ? null : verb
+  }
+}
+
+function subjectLabel(t: ReturnType<typeof useT>, subjectType: string): string {
+  const key = `admin.console.audit.subjectType.${subjectType}`
+  const label = t(key)
+  return label.startsWith('⟨') ? subjectType : label
+}
+
+function actorInitials(actorName: string | null): string {
+  if (!actorName) return '?'
+  const [given, ...rest] = actorName.split(' ')
+  return initialsFromName(given ?? '', rest.join(' '))
+}
+
+function AuditRow({ event }: { event: AuditEventRow }) {
+  const t = useT()
+  const locale = useLocale()
+  const verbOf = useActionVerb()
+  const actorLabel = event.actorName ?? t('admin.console.audit.actorSystem')
+  const roleKey = event.actorRole ? ROLE_LABEL_KEY[event.actorRole] : undefined
+  const verb = verbOf(event.action)
+  const subjectRoute = SUBJECT_ROUTE[event.subjectType]
+  const subjectChip = (
+    <Chip tone="outline" className="shrink-0">
+      {subjectLabel(t, event.subjectType)}
+      {event.subjectId ? ` · ${event.subjectId.slice(0, 8)}` : ''}
+    </Chip>
+  )
+
+  return (
+    <div className="flex items-center gap-3 border-b border-border/60 px-3 py-2.5 last:border-b-0">
+      <span className="w-14 shrink-0 text-caption tabular-nums text-muted-foreground">
+        {formatTime(new Date(event.at), locale)}
+      </span>
+      <Avatar
+        size="sm"
+        src={null}
+        alt={actorLabel}
+        initials={actorInitials(event.actorName)}
+        hueSeed={event.actorUserId ?? 'system'}
+      />
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+        <span className="font-medium text-foreground">{actorLabel}</span>
+        {roleKey ? (
+          <Badge tone="neutral" className="h-5 px-1.5">
+            {t(roleKey)}
+          </Badge>
+        ) : null}
+        <span className="text-small text-muted-foreground">{verb ?? `: ${event.action}`}</span>
+      </div>
+      {subjectRoute ? (
+        <RouterLink href={subjectRoute} className="shrink-0">
+          {subjectChip}
+        </RouterLink>
+      ) : (
+        subjectChip
+      )}
+    </div>
+  )
+}
+
+/** `at` grouped by calendar day (device-local, same as every other date in this console), each
+ * group under its own date sub-head -- round2 SEV2 asked for day grouping instead of 50 undifferentiated
+ * rows. */
+function groupByDay(
+  events: readonly AuditEventRow[],
+  locale: ReturnType<typeof useLocale>,
+): { label: string; items: AuditEventRow[] }[] {
+  const groups: { key: string; label: string; items: AuditEventRow[] }[] = []
+  for (const event of events) {
+    const d = new Date(event.at)
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+    let group = groups.find((g) => g.key === key)
+    if (!group) {
+      group = { key, label: formatDate(d, locale), items: [] }
+      groups.push(group)
+    }
+    group.items.push(event)
+  }
+  return groups
+}
+
 function AuditBody() {
   const t = useT()
   const locale = useLocale()
-  const [action, setAction] = React.useState('')
+  const [category, setCategory] = React.useState<string | null>(null)
   const [cursors, setCursors] = React.useState<number[]>([])
   const cursor = cursors[cursors.length - 1]
 
   const listQuery = useQuery({
-    queryKey: ['admin', 'audit', 'events', action, cursor],
-    queryFn: () => fetchAuditEvents({ action: action || undefined, cursor }),
+    queryKey: ['admin', 'audit', 'events', category, cursor],
+    queryFn: () => fetchAuditEvents({ category: category ?? undefined, cursor }),
   })
 
   const verify = useMutation({
@@ -79,26 +208,34 @@ function AuditBody() {
   }
 
   const events = listQuery.data.events
+  const groups = groupByDay(events, locale)
+
+  function selectCategory(next: string | null) {
+    setCategory(next)
+    setCursors([])
+  }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Input
-          value={action}
-          onChange={(e) => {
-            setAction(e.target.value)
-            setCursors([])
-          }}
-          placeholder={t('admin.console.audit.actionFilterPlaceholder')}
-          aria-label={t('admin.console.audit.actionFilterPlaceholder')}
-          className="max-w-80"
-        />
-        <Button variant="secondary" onClick={() => verify.mutate()} loading={verify.isPending}>
-          {t('admin.console.audit.verifyChain')}
-        </Button>
-        <a href={auditExportUrl(action || undefined)}>
-          <Button variant="secondary">{t('admin.console.audit.export')}</Button>
-        </a>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <FilterChip active={category === null} onClick={() => selectCategory(null)}>
+            {t('admin.console.audit.filter.all')}
+          </FilterChip>
+          {CATEGORIES.map((c) => (
+            <FilterChip key={c} active={category === c} onClick={() => selectCategory(c)}>
+              {t(CATEGORY_LABEL_KEY[c])}
+            </FilterChip>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="secondary" onClick={() => verify.mutate()} loading={verify.isPending}>
+            {t('admin.console.audit.verifyChain')}
+          </Button>
+          <a href={auditExportUrl(category ?? undefined)}>
+            <Button variant="secondary">{t('admin.console.audit.export')}</Button>
+          </a>
+        </div>
       </div>
 
       {verify.data ? (
@@ -111,36 +248,24 @@ function AuditBody() {
       {events.length === 0 ? (
         <StateView kind="empty" titleKey="admin.console.audit.empty.title" />
       ) : (
-        <div className="overflow-x-auto rounded-md border border-border">
-          <table className="w-full text-small">
-            <thead className="border-b border-border bg-muted text-left text-caption text-muted-foreground">
-              <tr>
-                <th className="p-2">{t('admin.console.audit.columnAt')}</th>
-                <th className="p-2">{t('admin.console.audit.columnAction')}</th>
-                <th className="p-2">{t('admin.console.audit.columnActor')}</th>
-                <th className="p-2">{t('admin.console.audit.columnSubject')}</th>
-              </tr>
-            </thead>
-            <Stagger
-              as="tbody"
-              className="divide-y divide-border"
-              animateKey={`${action}:${cursor ?? 0}`}
+        <div className="flex flex-col gap-4">
+          {groups.map((group) => (
+            <section
+              key={group.label}
+              className="overflow-hidden rounded-md border border-border bg-card"
             >
-              {events.map((e) => (
-                <StaggerItem as="tr" key={e.seq}>
-                  <td className="p-2 text-foreground">
-                    {formatDate(new Date(e.at), locale)} {formatTime(new Date(e.at), locale)}
-                  </td>
-                  <td className="p-2 font-mono text-foreground">{e.action}</td>
-                  <td className="p-2 text-muted-foreground">{e.actorRole ?? '—'}</td>
-                  <td className="p-2 text-muted-foreground">
-                    {e.subjectType}
-                    {e.subjectId ? ` · ${e.subjectId.slice(0, 8)}` : ''}
-                  </td>
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </table>
+              <h3 className="border-b border-border bg-surface-2 px-3 py-1.5 text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                {group.label}
+              </h3>
+              <Stagger animateKey={`${category}:${cursor ?? 0}`}>
+                {group.items.map((e) => (
+                  <StaggerItem key={e.seq}>
+                    <AuditRow event={e} />
+                  </StaggerItem>
+                ))}
+              </Stagger>
+            </section>
+          ))}
         </div>
       )}
 

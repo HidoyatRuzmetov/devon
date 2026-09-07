@@ -191,6 +191,7 @@ export const auditEventRowSchema = z.object({
   at: z.string(),
   actorUserId: z.string().uuid().nullable(),
   actorRole: z.string().nullable(),
+  actorName: z.string().nullable(),
   departmentId: z.string().uuid().nullable(),
   action: z.string(),
   subjectType: z.string(),
@@ -201,19 +202,21 @@ const auditEventListSchema = z.object({
   events: z.array(auditEventRowSchema),
   nextCursor: z.number().int().nullable(),
 })
+/** `category` is one of `AUDIT_CATEGORIES` (`apps/api/.../schemas.ts`) or `'__other__'` -- the chip
+ * filter that replaced the raw action-grammar text box (round2 SEV2). */
 export function fetchAuditEvents(params: {
-  action?: string | undefined
+  category?: string | undefined
   cursor?: number | undefined
 }) {
   const qs = new URLSearchParams()
-  if (params.action) qs.set('action', params.action)
+  if (params.category) qs.set('category', params.category)
   if (params.cursor) qs.set('cursor', String(params.cursor))
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return apiClient.get(`/api/v1/admin/audit/events${suffix}`, auditEventListSchema)
 }
-export function auditExportUrl(action?: string): string {
-  return action
-    ? `/api/v1/admin/audit/export?action=${encodeURIComponent(action)}`
+export function auditExportUrl(category?: string): string {
+  return category
+    ? `/api/v1/admin/audit/export?category=${encodeURIComponent(category)}`
     : '/api/v1/admin/audit/export'
 }
 

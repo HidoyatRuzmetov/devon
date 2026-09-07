@@ -132,9 +132,17 @@ export const adminAnalyticsSchema = z.object({
   }),
 })
 
+// round2 SEV2: the audit filter used to teach the same free-text query grammar §8 already rejected
+// for the work/analytics filters ("masalan: admin.user.locked"). `category` replaces it with the
+// same chip-filter shape the rest of the app uses -- one of the known module prefixes, or the
+// `OTHER_CATEGORY` sentinel for "everything not in the named categories".
+export const AUDIT_CATEGORIES = ['session', 'accounts', 'admin', 'departments'] as const
+export const OTHER_CATEGORY = '__other__'
+
 export const auditEventQuerySchema = z
   .object({
     action: z.string().trim().max(100).optional(),
+    category: z.enum([...AUDIT_CATEGORIES, OTHER_CATEGORY]).optional(),
     actorUserId: z.string().uuid().optional(),
     departmentId: z.string().uuid().optional(),
     from: z.string().optional(),
@@ -150,6 +158,7 @@ export const auditEventRowSchema = z.object({
   at: z.string(),
   actorUserId: z.string().uuid().nullable(),
   actorRole: z.string().nullable(),
+  actorName: z.string().nullable(),
   departmentId: z.string().uuid().nullable(),
   action: z.string(),
   subjectType: z.string(),
