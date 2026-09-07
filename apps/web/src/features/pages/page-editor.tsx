@@ -70,6 +70,13 @@ export function PageEditor({
   const t = useT()
   const candidatesRef = React.useRef(mentionCandidates)
   candidatesRef.current = mentionCandidates
+  // Tiptap fires one or more `onUpdate` transactions while extensions attach and normalise the
+  // initial `content` document on mount (schema-conformance fixups), before any real keystroke --
+  // found live: opening a page with zero edits still PATCHed it and wrote an identical extra version
+  // every time. A single "skip the first update" flag was not enough (mount can fire more than one),
+  // so this instead ignores every update until a macrotask after creation has actually elapsed --
+  // synchronous mount-time churn always finishes well within that tick; a real keystroke never can.
+  const readyRef = React.useRef(false)
 
   const editor = useEditor({
     editable,
@@ -85,7 +92,15 @@ export function PageEditor({
       }),
     ],
     content: content as JSONContent,
-    onUpdate: ({ editor: e }) => onChange(e.getJSON() as TiptapNode),
+    onCreate: () => {
+      setTimeout(() => {
+        readyRef.current = true
+      }, 0)
+    },
+    onUpdate: ({ editor: e }) => {
+      if (!readyRef.current) return
+      onChange(e.getJSON() as TiptapNode)
+    },
   })
 
   React.useEffect(() => {
