@@ -10,7 +10,7 @@
 // tick) -- this panel only ever reacts to explicit clicks (start/pause/resume/skip/stop), exactly
 // like the widget's own buttons do.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
 import {
   Flame,
   ListChecks,
@@ -24,6 +24,7 @@ import {
   VolumeX,
 } from 'lucide-react'
 import {
+  Badge,
   Button,
   IconButton,
   KpiTile,
@@ -58,7 +59,8 @@ import {
   usePomodoroSettingsQuery,
   usePomodoroStatsQuery,
 } from './use-personal.js'
-import type { PomodoroSettings } from './types.js'
+import { groupSessionsByDay, relativeDayLabelKey, sessionDurationMin } from './lib/pomodoro-log.js'
+import type { PomodoroKind, PomodoroSession, PomodoroSettings } from './types.js'
 
 const SOUNDS: PomodoroSettings['sound'][] = ['chime', 'bell', 'digital', 'none']
 
@@ -185,6 +187,7 @@ function SettingsSheet({ settings }: { settings: PomodoroSettings }) {
 
 export function PomodoroPanel() {
   const t = useT()
+  const locale = useLocale()
   const settingsQuery = usePomodoroSettingsQuery()
   const sessionsQuery = usePomodoroSessionsQuery()
   const statsQuery = usePomodoroStatsQuery()
@@ -343,78 +346,175 @@ export function PomodoroPanel() {
           <KpiTile
             label={t('personal.pomodoro.stats.todayFocus')}
             value={stats.today.focusMinutes}
+            locale={locale}
             suffix={` ${t('personal.pomodoro.stats.minutesShort')}`}
           />
           <KpiTile
             label={t('personal.pomodoro.stats.todaySessions')}
             value={stats.today.focusSessions}
+            locale={locale}
           />
           <KpiTile
             label={t('personal.pomodoro.stats.weekFocus')}
             value={stats.week.focusMinutes}
+            locale={locale}
             suffix={` ${t('personal.pomodoro.stats.minutesShort')}`}
           />
           <KpiTile
             label={t('personal.pomodoro.stats.weekSessions')}
             value={stats.week.focusSessions}
+            locale={locale}
           />
         </div>
       ) : null}
 
       <Separator />
 
+      <SessionLog
+        sessions={sessionsQuery.data}
+        isPending={sessionsQuery.isPending}
+        locale={locale}
+      />
+    </div>
+  )
+}
+
+const PHASE_KIND_LABEL_KEY: Record<PomodoroKind, string> = {
+  focus: 'personal.pomodoro.phase.focus',
+  short_break: 'personal.pomodoro.phase.shortBreak',
+  long_break: 'personal.pomodoro.phase.longBreak',
+}
+
+const DAY_GROUPS_COLLAPSED = 3
+
+/** Package report item 40: the flat 13-row list read as the same handful of clock times repeating
+ * with no day separator ("09:00 - 09:30" on Monday looks identical to "09:00 - 09:30" on Tuesday).
+ * Grouped by calendar day with a relative heading (Bugun/Kecha/date) instead, each row keeping its
+ * focus-vs-break label and clock range but adding the session's actual duration, and the
+ * completed/skipped indicator now a tinted pill (item 14) rather than plain coloured text. Only the
+ * most recent `DAY_GROUPS_COLLAPSED` days show by default, consistent with the critique's own
+ * "show only the last three days with a 'show more'". */
+function SessionLog({
+  sessions,
+  isPending,
+  locale,
+}: {
+  sessions: readonly PomodoroSession[] | undefined
+  isPending: boolean
+  locale: ReturnType<typeof useLocale>
+}) {
+  const t = useT()
+  const [expanded, setExpanded] = React.useState(false)
+
+  if (isPending) {
+    return (
       <section className="flex flex-col gap-3">
         <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
-        {sessionsQuery.isPending ? (
-          <StateView kind="loading" titleKey="state.loading" />
-        ) : sessionsQuery.data && sessionsQuery.data.length > 0 ? (
-          <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-            {sessionsQuery.data.slice(0, 30).map((session) => (
-              <li
-                key={session.id}
-                className="flex items-center justify-between gap-3 px-3 py-2 text-small"
-              >
-                <span className="flex items-center gap-2 text-foreground">
-                  {session.kind === 'focus' ? (
-                    <Flame className="size-3.5 text-primary" aria-hidden="true" />
-                  ) : (
-                    <Timer className="size-3.5 text-info" aria-hidden="true" />
-                  )}
-                  {t(
-                    `personal.pomodoro.phase.${session.kind === 'focus' ? 'focus' : session.kind === 'short_break' ? 'shortBreak' : 'longBreak'}`,
-                  )}
-                </span>
-                <span className="text-muted-foreground">
-                  {formatClock(session.startedAt)}
-                  {session.endedAt ? ` – ${formatClock(session.endedAt)}` : ''}
-                </span>
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1',
-                    session.completed ? 'text-success' : 'text-muted-foreground',
-                  )}
-                >
-                  {session.completed ? (
-                    <ListChecks className="size-3.5" aria-hidden="true" />
-                  ) : null}
-                  {t(
-                    session.completed
-                      ? 'personal.pomodoro.log.completed'
-                      : 'personal.pomodoro.log.skipped',
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <StateView
-            kind="empty"
-            titleKey="personal.pomodoro.log.empty.title"
-            bodyKey="personal.pomodoro.log.empty.body"
-          />
-        )}
+        <StateView kind="loading" titleKey="state.loading" />
       </section>
-    </div>
+    )
+  }
+
+  if (!sessions || sessions.length === 0) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
+        <StateView
+          kind="empty"
+          titleKey="personal.pomodoro.log.empty.title"
+          bodyKey="personal.pomodoro.log.empty.body"
+        />
+      </section>
+    )
+  }
+
+  const groups = groupSessionsByDay(sessions.slice(0, 60))
+  const visibleGroups = expanded ? groups : groups.slice(0, DAY_GROUPS_COLLAPSED)
+  const hiddenCount = groups.length - visibleGroups.length
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="text-h3 text-foreground">{t('personal.pomodoro.log.title')}</h3>
+      <div className="flex flex-col gap-4">
+        {visibleGroups.map((group) => {
+          const relKey = relativeDayLabelKey(group.date)
+          const heading =
+            relKey === 'today'
+              ? t('personal.pomodoro.log.today')
+              : relKey === 'yesterday'
+                ? t('personal.pomodoro.log.yesterday')
+                : formatDate(group.date, locale)
+          return (
+            <div key={group.key} className="flex flex-col gap-1.5">
+              <h4 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                {heading}
+              </h4>
+              <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
+                {group.sessions.map((session) => {
+                  const durationMin = sessionDurationMin(session)
+                  return (
+                    <li
+                      key={session.id}
+                      className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2 text-small"
+                    >
+                      <span className="flex min-w-0 items-center gap-2 text-foreground">
+                        {session.kind === 'focus' ? (
+                          <Flame className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+                        ) : (
+                          <Timer className="size-3.5 shrink-0 text-info" aria-hidden="true" />
+                        )}
+                        <span className="truncate">{t(PHASE_KIND_LABEL_KEY[session.kind])}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 tabular-nums text-muted-foreground">
+                        <span>
+                          {formatClock(session.startedAt)}
+                          {session.endedAt ? ` – ${formatClock(session.endedAt)}` : ''}
+                        </span>
+                        {durationMin !== null ? (
+                          <span>
+                            {formatNumber(durationMin, locale)}{' '}
+                            {t('personal.pomodoro.stats.minutesShort')}
+                          </span>
+                        ) : null}
+                        {/* DESIGN.md §9.2: a tinted badge, not the solid fill Badge's own `success`
+                            tone would give -- a dense day-by-day log repeats this on every row. */}
+                        <Badge
+                          tone="neutral"
+                          className={cn(
+                            'gap-1',
+                            session.completed ? 'bg-success/10 text-success' : undefined,
+                          )}
+                        >
+                          {session.completed ? (
+                            <ListChecks className="size-3" aria-hidden="true" />
+                          ) : null}
+                          {t(
+                            session.completed
+                              ? 'personal.pomodoro.log.completed'
+                              : 'personal.pomodoro.log.skipped',
+                          )}
+                        </Badge>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )
+        })}
+      </div>
+      {hiddenCount > 0 ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          onClick={() => setExpanded(true)}
+        >
+          {t('personal.pomodoro.log.showMore', { count: hiddenCount })}
+        </Button>
+      ) : null}
+    </section>
   )
 }
 
