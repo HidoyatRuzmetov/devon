@@ -3,10 +3,34 @@ import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { motion, LayoutGroup } from 'motion/react'
 import { cn } from '../lib/cn.js'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
-import { springSettle } from '../motion/tokens.js'
+import { springSettle, tweenOut, crossfade } from '../motion/tokens.js'
 
 export const Tabs = TabsPrimitive.Root
-export const TabsContent = TabsPrimitive.Content
+
+/** UI-OVERHAUL.md §3 "Sidebar active item, tabs": the underline morphing between triggers was the
+ * only motion a tab change carried -- the panel itself (Radix unmounts the inactive one by default,
+ * so this only ever mounts when it becomes the active tab) just appeared. A plain fade + rise, the
+ * same shape `Reveal` uses elsewhere, gives every `Tabs` consumer in the app (the project page,
+ * the admin console, ...) a crossfade for free. */
+export const TabsContent = React.forwardRef<
+  React.ComponentRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ children, className, ...props }, ref) => {
+  const reduced = useReducedMotion()
+  return (
+    <TabsPrimitive.Content ref={ref} {...props} asChild>
+      <motion.div
+        className={className}
+        initial={reduced ? { opacity: 0 } : { opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduced ? crossfade : tweenOut}
+      >
+        {children}
+      </motion.div>
+    </TabsPrimitive.Content>
+  )
+})
+TabsContent.displayName = 'TabsContent'
 
 const TabsIdContext = React.createContext('devon-tabs')
 

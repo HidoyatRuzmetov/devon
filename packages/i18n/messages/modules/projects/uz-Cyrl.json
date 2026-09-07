@@ -44,7 +44,8 @@
       "error": "Лойиҳани яратиб бўлмади"
     },
     "milestone": {
-      "addPlaceholder": "Босқич номини киритинг"
+      "addPlaceholder": "Босқич номини киритинг",
+      "completedToast": "Босқич якунланди: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Умумий вазифа қўшиш",

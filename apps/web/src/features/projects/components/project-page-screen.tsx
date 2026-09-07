@@ -267,12 +267,17 @@ export default function ProjectPageScreen() {
                     />
                     <Checkbox
                       checked={m.doneAt !== null}
-                      onCheckedChange={(v) =>
+                      onCheckedChange={(v) => {
                         patchMilestone.mutate({
                           milestoneId: m.id,
                           patch: { done: v === true },
                         })
-                      }
+                        // round2 SEV2 "milestone completion has no celebration": the checkbox's own
+                        // `celebrate` already bursts on check -- this toast is the same "named
+                        // moment" acknowledgement `personal.sprints.complete.toast` gives a
+                        // completed sprint, so a milestone reads as just as real a finish line.
+                        if (v === true) toast(t('projects.milestone.completedToast', { title: m.title }))
+                      }}
                       celebrate
                       size="sm"
                       aria-label={m.title}

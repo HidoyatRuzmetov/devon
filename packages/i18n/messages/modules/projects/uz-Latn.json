@@ -44,7 +44,8 @@
       "error": "Loyihani yaratib boʻlmadi"
     },
     "milestone": {
-      "addPlaceholder": "Bosqich nomini kiriting"
+      "addPlaceholder": "Bosqich nomini kiriting",
+      "completedToast": "Bosqich yakunlandi: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Umumiy vazifa qoʻshish",

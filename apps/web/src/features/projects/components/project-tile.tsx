@@ -17,6 +17,7 @@ import {
   AvatarStack,
   Badge,
   HoverLift,
+  PressScale,
   ProgressRing,
   cn,
   initialsFromName,
@@ -100,15 +101,17 @@ export function ProjectTile({
   if (compact) {
     return (
       <HoverLift>
-        <RouterLink
-          href={`/projects/view?id=${encodeURIComponent(project.id)}`}
-          className="flex items-center gap-3 rounded-md border border-border bg-card p-3 text-left shadow-1
-            transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
-            focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          {ring}
-          {titleRow}
-        </RouterLink>
+        <PressScale>
+          <RouterLink
+            href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+            className="flex items-center gap-3 rounded-md border border-border bg-card p-3 text-left shadow-1
+              transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
+              focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            {ring}
+            {titleRow}
+          </RouterLink>
+        </PressScale>
       </HoverLift>
     )
   }
@@ -129,60 +132,62 @@ export function ProjectTile({
 
   return (
     <HoverLift className="h-full">
-      <RouterLink
-        href={`/projects/view?id=${encodeURIComponent(project.id)}`}
-        className="flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 text-left shadow-1
-          transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
-          focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        <div className="flex items-start gap-3">
-          {ring}
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            {titleRow}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge tone={STATUS_TONE[project.status]}>
-                {t(`projects.status.${project.status}`)}
-              </Badge>
-              {owner ? (
-                <span className="truncate text-caption text-muted-foreground">
-                  {t('projects.tile.owner', { name: fullName(owner) })}
-                </span>
-              ) : null}
+      <PressScale className="h-full">
+        <RouterLink
+          href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+          className="flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 text-left shadow-1
+            transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
+            focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <div className="flex items-start gap-3">
+            {ring}
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              {titleRow}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Badge tone={STATUS_TONE[project.status]}>
+                  {t(`projects.status.${project.status}`)}
+                </Badge>
+                {owner ? (
+                  <span className="truncate text-caption text-muted-foreground">
+                    {t('projects.tile.owner', { name: fullName(owner) })}
+                  </span>
+                ) : null}
+              </div>
             </div>
           </div>
-        </div>
 
-        {objectiveText ? (
-          <p className="line-clamp-1 text-small text-muted-foreground">{objectiveText}</p>
-        ) : null}
+          {objectiveText ? (
+            <p className="line-clamp-1 text-small text-muted-foreground">{objectiveText}</p>
+          ) : null}
 
-        <p className="text-caption text-muted-foreground">
-          {milestone
-            ? t('projects.tile.nextMilestone', {
-                title: milestone.title,
-                date: milestone.dueOn
-                  ? formatDate(new Date(milestone.dueOn), locale)
-                  : t('projects.tile.noDueDate'),
-              })
-            : t('projects.tile.noMilestone')}
-        </p>
+          <p className="text-caption text-muted-foreground">
+            {milestone
+              ? t('projects.tile.nextMilestone', {
+                  title: milestone.title,
+                  date: milestone.dueOn
+                    ? formatDate(new Date(milestone.dueOn), locale)
+                    : t('projects.tile.noDueDate'),
+                })
+              : t('projects.tile.noMilestone')}
+          </p>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          {memberPeople.length > 0 ? (
-            <AvatarStack people={memberPeople} max={4} label={t('projects.field.members')} />
-          ) : (
-            <span aria-hidden="true" />
-          )}
-          <span
-            className={cn(
-              'shrink-0 text-caption tabular-nums text-muted-foreground',
-              taskTotal === 0 && 'invisible',
+          <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+            {memberPeople.length > 0 ? (
+              <AvatarStack people={memberPeople} max={4} label={t('projects.field.members')} />
+            ) : (
+              <span aria-hidden="true" />
             )}
-          >
-            {t('projects.tile.tasks', { done: taskDone, total: taskTotal })}
-          </span>
-        </div>
-      </RouterLink>
+            <span
+              className={cn(
+                'shrink-0 text-caption tabular-nums text-muted-foreground',
+                taskTotal === 0 && 'invisible',
+              )}
+            >
+              {t('projects.tile.tasks', { done: taskDone, total: taskTotal })}
+            </span>
+          </div>
+        </RouterLink>
+      </PressScale>
     </HoverLift>
   )
 }

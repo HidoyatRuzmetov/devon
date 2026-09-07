@@ -44,7 +44,8 @@
       "error": "Не удалось создать проект"
     },
     "milestone": {
-      "addPlaceholder": "Введите название этапа"
+      "addPlaceholder": "Введите название этапа",
+      "completedToast": "Этап завершён: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Добавить общую задачу",
