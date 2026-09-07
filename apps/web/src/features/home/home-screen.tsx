@@ -12,7 +12,7 @@ import { useT, useLocale } from '@devon/i18n'
 import {
   AmbientGradient,
   Card,
-  Checkbox,
+  cn,
   KpiTile,
   Progress,
   Reveal,
@@ -21,7 +21,7 @@ import {
   StateView,
   WelcomeIllustration,
 } from '@devon/ui'
-import { ArrowRight, CalendarDays, Gavel, ListTodo } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, Gavel, ListTodo } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useDepartment, useInstanceQuery, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
@@ -152,7 +152,21 @@ function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
                 onClick={item.onGo}
                 className="flex min-h-11 w-full items-center gap-3 rounded-sm px-2 text-left text-body text-foreground transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Checkbox checked={item.done} disabled aria-hidden="true" tabIndex={-1} />
+                {/* A real Checkbox renders Radix's own button element with role=checkbox -- nesting
+                    that inside this row's own button is invalid HTML (a button inside a button) and
+                    threw a React hydration warning (found clicking through Home, 2026-09). This row's
+                    checkmark is purely a status glyph (the click target and the "done" state both live
+                    on the outer button), so it renders as a plain decorative span with the same visual
+                    language as Checkbox, not the interactive primitive. */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'inline-flex size-5 shrink-0 items-center justify-center rounded-sm border border-border bg-card text-primary-foreground',
+                    item.done && 'border-primary bg-primary',
+                  )}
+                >
+                  {item.done ? <Check className="size-3.5" aria-hidden="true" /> : null}
+                </span>
                 <span className={item.done ? 'text-muted-foreground line-through' : undefined}>
                   {t(item.labelKey)}
                 </span>

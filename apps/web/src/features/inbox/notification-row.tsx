@@ -60,7 +60,11 @@ export function NotificationRow({
   const created = new Date(notification.createdAt)
 
   return (
-    <li
+    // Both call sites (InboxList, GroupedInboxList in inbox-screen.tsx) already wrap this row in a
+    // StaggerItem rendered as a list item -- a second list item here nested a list item inside a list
+    // item, invalid HTML that threw a React hydration warning (found clicking through Inbox, 2026-09).
+    // The list-item semantics belong to that one wrapper; this row is a plain div.
+    <div
       className={cn(
         'group flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
         unread && 'bg-accent/40',
@@ -143,6 +147,6 @@ export function NotificationRow({
           <Archive className="size-4" aria-hidden="true" />
         </IconButton>
       </span>
-    </li>
+    </div>
   )
 }
