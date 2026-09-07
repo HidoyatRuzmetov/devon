@@ -1,15 +1,26 @@
 import * as React from 'react'
 import { Command } from 'cmdk'
+import { CornerDownLeft, Search } from 'lucide-react'
 import { Dialog, DialogContent } from '../primitives/dialog.js'
 import { Sheet, SheetContent } from '../primitives/sheet.js'
 import { Skeleton } from '../primitives/skeleton.js'
 import { Button } from '../primitives/button.js'
+import { Kbd } from '../primitives/kbd.js'
+import { comboboxScore } from '../primitives/combobox.js'
 import { cn } from '../lib/cn.js'
 
 export interface CommandPaletteItem {
   id: string
   label: string
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  /** Right-aligned context under Raycast's convention: the section a result belongs to, a person's
+   * unit, a card's column. Never a second line -- palette rows stay one line tall. */
+  hint?: string
+  /** Keycap shown at the right edge, e.g. `G H`. */
+  shortcut?: string
+  /** Extra words this item should match on that are not in its label (a login, a card number, an
+   * English synonym for an Uzbek label). */
+  keywords?: readonly string[]
   onSelect: () => void
 }
 
@@ -31,17 +42,19 @@ export interface CommandPaletteProps {
   /** "↑↓ tanlash · ↵ ochish · Esc yopish" (spec.md §5, §9.2 `cmd.hint`). */
   hint: string
   groups: readonly CommandPaletteGroup[]
-  /** spec.md §5: "Loading (nested async pages, later epics): three 40px skeleton rows, never a
-   * spinner." Nothing in this epic is async yet -- the flag exists so the shell is ready. */
+  /** spec.md §5: "Loading (nested async pages): three 40px skeleton rows, never a spinner." */
   loading?: boolean
-  /** >=1024 centred dialog vs. 390 bottom sheet (spec.md §5). The breakpoint decision belongs to
-   * the caller (`apps/web`) -- this package does not sniff viewport width. */
+  /** >=768 centred dialog vs. 390 bottom sheet (spec.md §5). The breakpoint decision belongs to the
+   * caller (`apps/web`) -- this package does not sniff viewport width. */
   variant?: 'dialog' | 'sheet'
+  /** Label for the "Enter to open" affordance in the footer. */
+  openHintLabel?: string
 }
 
 const GROUP_HEADING_CLASS =
-  '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-eyebrow ' +
-  '[&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-(--text-eyebrow--letter-spacing) ' +
+  '[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 ' +
+  '[&_[cmdk-group-heading]]:text-eyebrow [&_[cmdk-group-heading]]:uppercase ' +
+  '[&_[cmdk-group-heading]]:tracking-(--text-eyebrow--letter-spacing) ' +
   '[&_[cmdk-group-heading]]:text-muted-foreground'
 
 function CommandPaletteBody({
@@ -52,17 +65,25 @@ function CommandPaletteBody({
   hint,
   groups,
   loading,
+  openHintLabel,
 }: Omit<CommandPaletteProps, 'open' | 'onOpenChange' | 'title' | 'variant'>) {
   return (
-    <Command shouldFilter loop className="flex h-full flex-col">
-      <Command.Input
-        placeholder={placeholder}
-        className={cn(
-          'h-12 w-full border-0 border-b border-border bg-transparent px-4 text-body text-foreground',
-          'outline-none placeholder:text-muted-foreground',
-        )}
-      />
-      <Command.List className="flex-1 overflow-y-auto p-1">
+    <Command
+      shouldFilter
+      // The same Uzbek-apostrophe- and Cyrillic-aware scorer the Combobox uses, so "o'tish" finds
+      // "Oʻtish" here exactly as it does in a person picker.
+      filter={comboboxScore}
+      loop
+      className="flex h-full flex-col"
+    >
+      <div className="flex items-center gap-2 border-b border-border px-3">
+        <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <Command.Input
+          placeholder={placeholder}
+          className="h-13 w-full border-0 bg-transparent text-lead text-foreground outline-none placeholder:text-muted-foreground"
+        />
+      </div>
+      <Command.List className="flex-1 overflow-y-auto p-1.5">
         {loading ? (
           <div className="flex flex-col gap-1 p-2" aria-hidden="true">
             <Skeleton className="h-10 w-full" />
@@ -71,7 +92,7 @@ function CommandPaletteBody({
           </div>
         ) : (
           <>
-            <Command.Empty className="flex flex-col items-center gap-3 p-8 text-center">
+            <Command.Empty className="flex flex-col items-center gap-3 p-10 text-center">
               <span data-shell-label className="text-body text-muted-foreground">
                 {emptyMessage}
               </span>
@@ -88,14 +109,36 @@ function CommandPaletteBody({
                 {group.items.map((item) => (
                   <Command.Item
                     key={item.id}
+                    value={[item.label, ...(item.keywords ?? [])].join(' ')}
                     onSelect={item.onSelect}
                     className={cn(
-                      'flex h-10 cursor-pointer items-center gap-2 rounded-sm px-2 text-body text-foreground',
-                      'data-[selected=true]:bg-accent',
+                      'group flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 text-body text-foreground',
+                      'transition-colors duration-(--dur-micro) data-[selected=true]:bg-accent',
                     )}
                   >
-                    {item.icon ? <item.icon className="size-4" aria-hidden="true" /> : null}
-                    <span data-shell-label>{item.label}</span>
+                    {item.icon ? (
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground group-data-[selected=true]:bg-card group-data-[selected=true]:text-foreground">
+                        <item.icon className="size-4" aria-hidden="true" />
+                      </span>
+                    ) : null}
+                    <span data-shell-label className="min-w-0 flex-1">
+                      {item.label}
+                    </span>
+                    {item.hint ? (
+                      <span
+                        data-shell-label
+                        className="shrink-0 text-caption text-muted-foreground"
+                      >
+                        {item.hint}
+                      </span>
+                    ) : null}
+                    {item.shortcut ? <Kbd className="shrink-0">{item.shortcut}</Kbd> : null}
+                    {openHintLabel ? (
+                      <span className="hidden shrink-0 items-center gap-1 text-caption text-muted-foreground group-data-[selected=true]:flex">
+                        <span data-shell-label>{openHintLabel}</span>
+                        <CornerDownLeft className="size-3" aria-hidden="true" />
+                      </span>
+                    ) : null}
                   </Command.Item>
                 ))}
               </Command.Group>
@@ -105,7 +148,7 @@ function CommandPaletteBody({
       </Command.List>
       <div
         data-shell-label
-        className="border-t border-border px-4 py-2 text-caption text-muted-foreground"
+        className="flex items-center justify-between gap-3 border-t border-border bg-muted/40 px-4 py-2 text-caption text-muted-foreground"
       >
         {hint}
       </div>
@@ -113,10 +156,12 @@ function CommandPaletteBody({
   )
 }
 
-/** design.md §3 CommandPalette shell / spec.md §5. "Shell" per the item handoff: structure, states
- * and keyboard/`role` semantics (delegated to `cmdk`) are real; the *sources* it filters over are
- * wired by `apps/web` (EPIC-000.7) via the `groups` prop -- this package ships no navigation, no
- * routing and no fetch. */
+/** design.md §3 CommandPalette / spec.md §5, restyled to UI-OVERHAUL.md §2 row 2 (Raycast, Linear):
+ * sections with small-caps headings, an icon tile per row, right-aligned hints and keycaps, and an
+ * "↵" affordance on the highlighted row.
+ *
+ * The *sources* it filters over are still wired by `apps/web` via the `groups` prop -- this package
+ * ships no navigation, no routing and no fetch. */
 export function CommandPalette({
   open,
   onOpenChange,
@@ -127,7 +172,7 @@ export function CommandPalette({
   if (variant === 'sheet') {
     return (
       <Sheet direction="bottom" open={open} onOpenChange={onOpenChange}>
-        <SheetContent title={title} side="bottom" className="flex h-[60vh] flex-col p-0">
+        <SheetContent title={title} side="bottom" className="flex h-[70vh] flex-col p-0">
           <CommandPaletteBody {...body} />
         </SheetContent>
       </Sheet>
@@ -139,7 +184,7 @@ export function CommandPalette({
         title={title}
         titleHidden
         showClose={false}
-        className="top-[15vh] flex h-100 max-w-160 -translate-y-0 flex-col p-0"
+        className="top-[12vh] flex h-125 max-h-[76vh] max-w-160 -translate-y-0 flex-col overflow-hidden p-0"
       >
         <CommandPaletteBody {...body} />
       </DialogContent>

@@ -142,7 +142,27 @@ export { OfflineBanner, type OfflineBannerProps } from './states/offline-banner.
 export * from './illustrations/index.js'
 
 export { resolveNavEntries, type NavContext, type NavEntry } from './shell/nav-registry.js'
-export { Sidebar, type SidebarProps } from './shell/sidebar.js'
+export { Sidebar, type NavGroup, type SidebarProps } from './shell/sidebar.js'
+export {
+  DepartmentSwitcher,
+  type DepartmentOption,
+  type DepartmentSwitcherProps,
+} from './shell/department-switcher.js'
+export {
+  SidebarUserBlock,
+  type UserBlockAction,
+  type SidebarUserBlockProps,
+} from './shell/sidebar-user-block.js'
+export { ThemeToggle, type ThemeToggleValue, type ThemeToggleProps } from './shell/theme-toggle.js'
+export { InboxBell, type InboxBellProps } from './shell/inbox-bell.js'
+export { QuickAdd, type QuickAddAction, type QuickAddProps } from './shell/quick-add.js'
+export { BottomTabBar, type BottomTabBarProps } from './shell/bottom-tab-bar.js'
+export {
+  PageContainer,
+  RouteSkeleton,
+  type PageContainerProps,
+  type RouteSkeletonProps,
+} from './shell/page-container.js'
 export { TopBar, type TopBarProps } from './shell/top-bar.js'
 export { SearchTrigger, type SearchTriggerProps } from './shell/search-trigger.js'
 export { DemoChip, type DemoChipProps } from './shell/demo-chip.js'
