@@ -1615,7 +1615,8 @@
     "today": {
       "tasks": {
         "title": "Today's to-dos",
-        "remaining": "{count} left"
+        "remaining": "{count} left",
+        "completedToast": "Marked done"
       },
       "empty": {
         "title": "Nothing planned for today",

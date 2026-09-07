@@ -21,7 +21,11 @@
       "minutesShort": "daq"
     },
     "today": {
-      "tasks": { "title": "Bugungi vazifalar", "remaining": "{count} qoldi" },
+      "tasks": {
+        "title": "Bugungi vazifalar",
+        "remaining": "{count} qoldi",
+        "completedToast": "Bajarildi deb belgilandi"
+      },
       "empty": {
         "title": "Bugun uchun hech narsa rejalashtirilmagan",
         "body": "Bu yerda koʻrish uchun vazifa qoʻshing yoki davr boshlang."

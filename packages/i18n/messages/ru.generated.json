@@ -1615,7 +1615,8 @@
     "today": {
       "tasks": {
         "title": "Задачи на сегодня",
-        "remaining": "Осталось: {count}"
+        "remaining": "Осталось: {count}",
+        "completedToast": "Отмечено как выполненное"
       },
       "empty": {
         "title": "На сегодня ничего не запланировано",

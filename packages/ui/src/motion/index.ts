@@ -5,6 +5,11 @@
 
 export * from './tokens.js'
 export { MotionProvider, type MotionProviderProps } from './motion-provider.js'
+// `AnimatePresence` itself, unlike everything else here, has no Devon-specific wrapper -- a caller
+// that needs an *exit* animation on a list whose members come and go (a to-do that lingers,
+// strikes through, then leaves once completed, rather than being yanked out of the DOM the instant
+// it is removed from the array) reaches for this directly around `Stagger`/`StaggerItem`.
+export { AnimatePresence } from 'motion/react'
 export {
   startViewTransition,
   supportsViewTransitions,

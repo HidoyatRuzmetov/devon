@@ -1615,7 +1615,8 @@
     "today": {
       "tasks": {
         "title": "Bugungi vazifalar",
-        "remaining": "{count} qoldi"
+        "remaining": "{count} qoldi",
+        "completedToast": "Bajarildi deb belgilandi"
       },
       "empty": {
         "title": "Bugun uchun hech narsa rejalashtirilmagan",

@@ -8,10 +8,12 @@ import { Lock, Play, Plus, RotateCcw, Target, X } from 'lucide-react'
 import {
   AiPreviewPanel,
   AllDoneIllustration,
+  AnimatePresence,
   Badge,
   Button,
   Card,
   Checkbox,
+  cn,
   EmptyPersonalIllustration,
   IconButton,
   Input,
@@ -22,6 +24,8 @@ import {
   StaggerItem,
   StateView,
   toast,
+  toastWithUndo,
+  useReducedMotion,
 } from '@devon/ui'
 import { useQuickAddAi } from './lib/use-quick-add-ai.js'
 import {
@@ -33,6 +37,7 @@ import {
 } from './lib/sprint-labels.js'
 import {
   useCreateTaskMutation,
+  useDelayedDelete,
   usePatchTaskMutation,
   useRolloverSprintMutation,
   useSprintsQuery,
@@ -167,6 +172,58 @@ export function TodayView({
   const patchTask = usePatchTaskMutation()
   const createTask = useCreateTaskMutation()
   const quickAddAi = useQuickAddAi(t, locale)
+  const reduced = useReducedMotion()
+
+  // Completing a to-do used to remove its row on the very same tick the checkbox's own `celebrate`
+  // animation (the check draw-in, the 12-particle burst) started -- verified live, the count went
+  // 4 -> 3 and the row simply vanished, so the one designed moment of delight in this workspace was
+  // never actually reachable, and the completion itself was irreversible. `justDoneIds` holds a task
+  // checked but not yet removed, for exactly --dur-celebration (480ms, 0 under reduced motion) with
+  // the strike-through applied; once that beat is up the row moves to `hiddenIds` (removed from view,
+  // AnimatePresence animates it out) and the real mutation is *scheduled*, not sent -- `cancel()` from
+  // the undo toast means the task was never actually touched, not un-done after the fact.
+  const [justDoneIds, setJustDoneIds] = React.useState<ReadonlySet<string>>(new Set())
+  const [hiddenIds, setHiddenIds] = React.useState<ReadonlySet<string>>(new Set())
+  const tasksRef = React.useRef<readonly Task[]>([])
+  const { schedule: scheduleCompletion, cancel: cancelCompletion } = useDelayedDelete(
+    async (id) => {
+      const task = tasksRef.current.find((tk) => tk.id === id)
+      if (task) await patchTask.mutateAsync({ id, input: { done: true, version: task.version } })
+    },
+  )
+
+  function toggleTaskDone(task: Task) {
+    if (task.doneAt !== null) {
+      // Un-checking an already-done task -- immediate, nothing to celebrate or undo here.
+      patchTask.mutate({ id: task.id, input: { done: false, version: task.version } })
+      return
+    }
+    setJustDoneIds((prev) => new Set(prev).add(task.id))
+    window.setTimeout(
+      () => {
+        setJustDoneIds((prev) => {
+          const next = new Set(prev)
+          next.delete(task.id)
+          return next
+        })
+        setHiddenIds((prev) => new Set(prev).add(task.id))
+        scheduleCompletion(task.id)
+        toastWithUndo({
+          message: t('personal.today.tasks.completedToast'),
+          undoLabel: t('action.undo'),
+          onUndo: () => {
+            cancelCompletion(task.id)
+            setHiddenIds((prev) => {
+              const next = new Set(prev)
+              next.delete(task.id)
+              return next
+            })
+          },
+        })
+      },
+      reduced ? 0 : 480,
+    )
+  }
 
   const [quickAddText, setQuickAddText] = React.useState('')
   const quickAddInputRef = React.useRef<HTMLInputElement>(null)
@@ -196,10 +253,11 @@ export function TodayView({
   const endedSprints = activeSprints.filter((s) => sprintHasEnded(s))
   const activeSprintIds = new Set(activeSprints.map((s) => s.id))
   const allTasks = tasksQuery.data
+  tasksRef.current = allTasks
   const inScope = (task: Task) => task.sprintId === null || activeSprintIds.has(task.sprintId)
   const totalTasksInScope = allTasks.filter(inScope)
   const todaysTasks = totalTasksInScope
-    .filter((task) => task.doneAt === null)
+    .filter((task) => (task.doneAt === null && !hiddenIds.has(task.id)) || justDoneIds.has(task.id))
     .sort((a, b) => a.sort - b.sort)
   const targetSprintId = ongoingSprints[0]?.id ?? null
 
@@ -278,50 +336,60 @@ export function TodayView({
             as="ul"
             className="flex flex-col divide-y divide-border rounded-md border border-border"
           >
-            {todaysTasks.map((task) => {
-              const sourceSprint = activeSprints.find((s) => s.id === task.sprintId)
-              return (
-                <StaggerItem key={task.id} as="li">
-                  <div className="flex items-center gap-2 px-3 py-2 transition-colors duration-(--dur-micro) hover:bg-accent/40">
-                    <Checkbox
-                      celebrate
-                      checked={task.doneAt !== null}
-                      onCheckedChange={() =>
-                        patchTask.mutate({
-                          id: task.id,
-                          input: { done: task.doneAt === null, version: task.version },
-                        })
-                      }
-                      aria-label={t('personal.tasks.toggleDone')}
-                      size="sm"
-                      className="relative shrink-0"
-                    />
-                    <span className="min-w-0 flex-1 truncate text-body text-foreground">
-                      {task.title}
-                    </span>
-                    {task.sprintId === null && (
-                      <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
-                    )}
-                    {task.sprintId !== null && sourceSprint && (
-                      <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}</Badge>
-                    )}
-                    {task.estimateMin ? (
-                      <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-                        {task.estimateMin}′
+            {/* AnimatePresence, nested inside Stagger's own entrance orchestration: a completed row
+                needs to hold, strike through, then animate *out* when it leaves this array -- without
+                this, React just yanks it from the DOM the instant `todaysTasks` no longer includes
+                it, which is exactly why the checkbox's own celebrate burst was never reachable. */}
+            <AnimatePresence initial={false}>
+              {todaysTasks.map((task) => {
+                const sourceSprint = activeSprints.find((s) => s.id === task.sprintId)
+                const justDone = justDoneIds.has(task.id)
+                return (
+                  <StaggerItem key={task.id} as="li" exit="hidden" layout>
+                    <div className="flex items-center gap-2 px-3 py-2 transition-colors duration-(--dur-micro) hover:bg-accent/40">
+                      <Checkbox
+                        celebrate
+                        checked={task.doneAt !== null || justDone}
+                        onCheckedChange={() => toggleTaskDone(task)}
+                        aria-label={t('personal.tasks.toggleDone')}
+                        size="sm"
+                        className="relative shrink-0"
+                      />
+                      <span
+                        className={cn(
+                          'min-w-0 flex-1 truncate text-body text-foreground',
+                          justDone && 'text-muted-foreground line-through',
+                        )}
+                      >
+                        {task.title}
                       </span>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
-                      onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
-                    >
-                      <Play className="size-3.5" aria-hidden="true" />
-                      {t('personal.today.focus')}
-                    </Button>
-                  </div>
-                </StaggerItem>
-              )
-            })}
+                      {task.sprintId === null && (
+                        <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
+                      )}
+                      {task.sprintId !== null && sourceSprint && (
+                        <Badge tone="neutral" className="bg-info/10 text-info">
+                          {t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}
+                        </Badge>
+                      )}
+                      {task.estimateMin ? (
+                        <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+                          {task.estimateMin}′
+                        </span>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
+                        disabled={justDone}
+                        onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
+                      >
+                        <Play className="size-3.5" aria-hidden="true" />
+                        {t('personal.today.focus')}
+                      </Button>
+                    </div>
+                  </StaggerItem>
+                )
+              })}
+            </AnimatePresence>
           </Stagger>
         )}
 

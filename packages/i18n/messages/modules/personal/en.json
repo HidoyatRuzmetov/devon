@@ -21,7 +21,11 @@
       "minutesShort": "m"
     },
     "today": {
-      "tasks": { "title": "Today's to-dos", "remaining": "{count} left" },
+      "tasks": {
+        "title": "Today's to-dos",
+        "remaining": "{count} left",
+        "completedToast": "Marked done"
+      },
       "empty": {
         "title": "Nothing planned for today",
         "body": "Add a to-do or start a period to see it here."

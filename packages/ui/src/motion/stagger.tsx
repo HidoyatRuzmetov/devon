@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { motion, type Variants } from 'motion/react'
+import { motion, type TargetAndTransition, type Variants, type VariantLabels } from 'motion/react'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
 import { RISE_PX, STAGGER_STEP, tweenOut, crossfade } from './tokens.js'
 
@@ -18,6 +18,14 @@ export interface StaggerItemProps {
   children: React.ReactNode
   className?: string
   as?: 'div' | 'li' | 'article'
+  /** Opt-in only -- omit for the ordinary case (a parent that just adds/removes children with no
+   * animated exit). Pass `"hidden"` (the same variant this item already enters from) to reverse it
+   * on the way out instead, when the immediate parent is wrapped in framer-motion's own
+   * `AnimatePresence` (e.g. a to-do list row that should hold, strike through, then animate away
+   * once completed, rather than being yanked out of the DOM the instant it is removed from the
+   * array). Layout-shifts the remaining siblings into place at the same time. */
+  exit?: TargetAndTransition | VariantLabels
+  layout?: boolean
 }
 
 function containerVariants(reduced: boolean, delay: number): Variants {
@@ -77,11 +85,18 @@ export function StaggerItem({
   children,
   className,
   as = 'div',
+  exit,
+  layout,
 }: StaggerItemProps): React.JSX.Element {
   const reduced = React.useContext(StaggerReducedContext)
   const Comp = motion[as]
   return (
-    <Comp className={className} variants={reduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS}>
+    <Comp
+      className={className}
+      variants={reduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS}
+      {...(exit !== undefined ? { exit } : {})}
+      {...(layout !== undefined ? { layout } : {})}
+    >
       {children}
     </Comp>
   )
