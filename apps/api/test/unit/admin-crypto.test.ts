@@ -1,8 +1,9 @@
-// Pure, DB-free coverage for `modules/admin/crypto.ts` (the sentinel HMAC key's at-rest encryption).
+// Pure, DB-free coverage for `modules/admin/crypto.ts` (the sentinel's ed25519 private key's at-rest
+// encryption -- see `sentinel-protocol.ts` and ADR-014).
 import { describe, expect, it } from 'vitest'
 import { encryptSecret, decryptSecret } from '../../src/modules/admin/crypto.js'
 
-const SECRET = 'test-csrf-secret-value'
+const SECRET = 'sample-csrf-secret-for-tests'
 
 describe('admin crypto (AES-256-GCM over a CSRF_SECRET-derived key)', () => {
   it('round-trips an arbitrary plaintext', () => {

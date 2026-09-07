@@ -7,7 +7,7 @@ import {
   VIEW_AS_MAX_MINUTES,
 } from '../../src/modules/admin/view-as.js'
 
-const SECRET = 'test-csrf-secret-value'
+const SECRET = 'sample-csrf-secret-for-tests'
 const DEPARTMENT_ID = '11111111-1111-1111-1111-111111111111'
 
 describe('signViewAsCookie / verifyViewAsCookie', () => {
