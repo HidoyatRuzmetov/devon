@@ -3,6 +3,7 @@
     "title": "Bildirishnomalar",
     "eyebrow": "XABARLAR",
     "markAllRead": "Barchasini oʻqilgan deb belgilash",
+    "groupByReason": "Sababi boʻyicha guruhlash",
     "calendarLink": "Taqvim havolasi",
     "tabs": {
       "inbox": "Barchasi",
@@ -49,16 +50,21 @@
         "hour": "1 soatga",
         "tomorrow": "Ertaga ertalab",
         "nextWeek": "Keyingi haftaga"
-      }
+      },
+      "approve": "Tasdiqlash",
+      "rsvp": "Ishtirok",
+      "open": "Ochish"
     },
     "detail": {
       "title": "Bildirishnoma",
       "close": "Yopish",
-      "openLink": "Ochish"
+      "openLink": "Ochish",
+      "emptySelection": "Oʻqish uchun bildirishnomani tanlang."
     },
     "preferences": {
       "title": "Bildirishnoma sozlamalari",
       "body": "Qanday bildirishnomalar va qayerga kelishini tanlang.",
+      "matrixTitle": "Turi va kanali boʻyicha",
       "reasonColumn": "Bildirishnoma turi",
       "toggleAria": "{reason} — {channel} orqali",
       "digestFrequency": "Xulosa chastotasi",

@@ -1,6 +1,11 @@
 {
   "telegram": {
     "title": "Telegram",
+    "phoneMock": {
+      "online": "онлайн",
+      "replyMessage": "Уланди! Энди Devon билдиришномалари шу ерга келади.",
+      "connectedMessage": "Сиз уландингиз -- Devon билдиришномалари шу чатга келади."
+    },
     "notConfigured": {
       "title": "Telegram ҳали уланмаган",
       "body": "Ушбу тизим учун Telegram ботини созлашни администратордан сўранг."

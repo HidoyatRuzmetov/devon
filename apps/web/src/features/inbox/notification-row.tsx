@@ -4,6 +4,7 @@
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import { Archive, Clock3 } from 'lucide-react'
 import {
+  Chip,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -12,7 +13,7 @@ import {
   cn,
 } from '@devon/ui'
 import { pickLocalized, type NotificationDto } from './api.js'
-import { ReasonIcon } from './reason-icon.js'
+import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 
 /** Minutes for each preset snooze option (TECH-SPEC §7 "inline buttons for ... snooze"): 1 hour,
  * tomorrow morning (09:00 local, approximated as +18h from a mid-day interaction), next week
@@ -25,14 +26,31 @@ export const SNOOZE_PRESETS = [
   { key: 'nextWeek', minutes: 7 * 24 * 60 },
 ] as const
 
+/** The reason decides which inline action reads right next to the row (UI-OVERHAUL.md "inline
+ * actions (approve, RSVP, open)") -- a decision waiting on someone gets "Approve", an event RSVP
+ * gets "RSVP", everything else with a target gets the generic "Open". All three are the same jump to
+ * `deepLink`; the label is what tells the reader what pressing it *means* without opening the row
+ * first (Gmail/Linear inbox convention). */
+function quickActionLabelKey(reason: NotificationDto['reason']): string {
+  if (reason === 'decision') return 'inbox.row.approve'
+  if (reason === 'rsvp') return 'inbox.row.rsvp'
+  return 'inbox.row.open'
+}
+
 export function NotificationRow({
   notification,
+  selected = false,
   onOpen,
+  onQuickAction,
   onArchive,
   onSnooze,
 }: {
   notification: NotificationDto
+  /** Highlighted by keyboard (j/k) navigation, Linear-style -- not the same as "unread". */
+  selected?: boolean
   onOpen: () => void
+  /** Jumps straight to `deepLink` without opening the detail panel first. */
+  onQuickAction: () => void
   onArchive: () => void
   onSnooze: (minutes: number) => void
 }) {
@@ -46,6 +64,7 @@ export function NotificationRow({
       className={cn(
         'group flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
         unread && 'bg-accent/40',
+        selected && 'ring-1 ring-inset ring-primary',
       )}
     >
       <button
@@ -86,12 +105,26 @@ export function NotificationRow({
               {pickLocalized(notification.body, locale)}
             </span>
           ) : null}
-          <span className="mt-1 block text-caption text-muted-foreground">
-            {formatDate(created, locale)} {formatTime(created, locale)}
+          <span className="mt-1 flex items-center gap-2 text-caption text-muted-foreground">
+            <Chip tone={REASON_TONE[notification.reason]}>
+              {t(`inbox.reason.${notification.reason}`)}
+            </Chip>
+            <span>
+              {formatDate(created, locale)} {formatTime(created, locale)}
+            </span>
           </span>
         </span>
       </button>
       <span className="flex shrink-0 items-center gap-1">
+        {notification.deepLink ? (
+          <button
+            type="button"
+            onClick={onQuickAction}
+            className="hidden whitespace-nowrap rounded-sm px-2 py-1 text-caption font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:inline-flex"
+          >
+            {t(quickActionLabelKey(notification.reason))}
+          </button>
+        ) : null}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <IconButton aria-label={t('inbox.row.snooze')}>

@@ -1,6 +1,11 @@
 {
   "telegram": {
     "title": "Telegram",
+    "phoneMock": {
+      "online": "в сети",
+      "replyMessage": "Подключено! Теперь уведомления Devon будут приходить сюда.",
+      "connectedMessage": "Вы подключены -- уведомления Devon приходят в этот чат."
+    },
     "notConfigured": {
       "title": "Telegram ещё не подключён",
       "body": "Обратитесь к администратору, чтобы настроить Telegram-бота для этой системы."

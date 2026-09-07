@@ -3,16 +3,36 @@
 // -in user's own notifications (`{ kind: 'personal', ownerUserId }`, `apps/api/src/modules/
 // notifications/index.ts`), so the only gate this screen needs is "is anyone signed in at all",
 // exactly like `HomeRoute`.
+//
+// UI-OVERHAUL.md "Inbox to Linear quality": list + detail split at >=768 (the list stays mounted and
+// keeps its scroll position while the right pane swaps -- Linear/Gmail's own shape), stacking to a
+// bottom sheet at 390; unread dot and coloured reason chips; j/k to move the selection, Enter to
+// open, `e` to archive (Gmail's own keys); grouped by reason; an empty inbox that actually celebrates
+// zero instead of showing the same blank illustration as every other empty list.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Badge, Button, StateView, cn, toast, toastWithUndo } from '@devon/ui'
-import { CalendarDays, CheckCheck, SlidersHorizontal } from 'lucide-react'
+import {
+  AllDoneIllustration,
+  Badge,
+  Button,
+  Chip,
+  EmptyInboxIllustration,
+  PageHeader,
+  Stagger,
+  StaggerItem,
+  StateView,
+  cn,
+  toast,
+  toastWithUndo,
+} from '@devon/ui'
+import { CalendarDays, CheckCheck, LayoutList, SlidersHorizontal, Ungroup } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
+import { useMediaQuery } from '../../lib/use-media-query.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { fetchIcsUrl, type InboxStatus, type NotificationDto } from './api.js'
+import { fetchIcsUrl, REASONS, type InboxStatus, type NotificationDto } from './api.js'
 import {
   useArchiveMutation,
   useMarkAllReadMutation,
@@ -21,8 +41,10 @@ import {
   useSnoozeMutation,
   useUndoableArchive,
 } from './hooks.js'
+import { NotificationDetail } from './notification-sheet.js'
 import { NotificationRow } from './notification-row.js'
 import { NotificationSheet } from './notification-sheet.js'
+import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 
 const TABS: readonly InboxStatus[] = ['inbox', 'unread', 'archived']
 
@@ -60,17 +82,156 @@ function InboxTabs({
   )
 }
 
+/** j/k/Enter/e -- Gmail and Linear's own inbox keys. Disabled while focus sits in a text field (the
+ * quiet-hours time inputs on the preferences screen, a comment box elsewhere) so a stray "j" never
+ * eats a keystroke a person meant to type. */
+function useListKeyboardNav({
+  items,
+  selectedIndex,
+  setSelectedIndex,
+  onOpen,
+  onArchive,
+}: {
+  items: readonly NotificationDto[]
+  selectedIndex: number
+  setSelectedIndex: (i: number) => void
+  onOpen: (notification: NotificationDto) => void
+  onArchive: (id: string) => void
+}) {
+  React.useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null
+      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return
+      if (target?.isContentEditable) return
+      if (items.length === 0) return
+
+      if (e.key === 'j') {
+        e.preventDefault()
+        setSelectedIndex(Math.min(items.length - 1, selectedIndex + 1))
+      } else if (e.key === 'k') {
+        e.preventDefault()
+        setSelectedIndex(Math.max(0, selectedIndex - 1))
+      } else if (e.key === 'Enter') {
+        const current = items[selectedIndex]
+        if (current) {
+          e.preventDefault()
+          onOpen(current)
+        }
+      } else if (e.key === 'e') {
+        const current = items[selectedIndex]
+        if (current) {
+          e.preventDefault()
+          onArchive(current.id)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [items, selectedIndex, setSelectedIndex, onOpen, onArchive])
+}
+
+function InboxList({
+  items,
+  selectedIndex,
+  onOpen,
+  onArchive,
+  onQuickAction,
+  onSnooze,
+}: {
+  items: readonly NotificationDto[]
+  selectedIndex: number
+  onOpen: (notification: NotificationDto, index: number) => void
+  onArchive: (id: string) => void
+  onQuickAction: (notification: NotificationDto) => void
+  onSnooze: (id: string, minutes: number) => void
+}) {
+  return (
+    <Stagger as="ul" className="rounded-md border border-border bg-card">
+      {items.map((notification, index) => (
+        <StaggerItem key={notification.id} as="li">
+          <NotificationRow
+            notification={notification}
+            selected={index === selectedIndex}
+            onOpen={() => onOpen(notification, index)}
+            onQuickAction={() => onQuickAction(notification)}
+            onArchive={() => onArchive(notification.id)}
+            onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+          />
+        </StaggerItem>
+      ))}
+    </Stagger>
+  )
+}
+
+function GroupedInboxList({
+  items,
+  selectedIndex,
+  onOpen,
+  onArchive,
+  onQuickAction,
+  onSnooze,
+}: {
+  items: readonly NotificationDto[]
+  selectedIndex: number
+  onOpen: (notification: NotificationDto, index: number) => void
+  onArchive: (id: string) => void
+  onQuickAction: (notification: NotificationDto) => void
+  onSnooze: (id: string, minutes: number) => void
+}) {
+  const t = useT()
+  const indexOf = new Map(items.map((n, i) => [n.id, i]))
+  return (
+    <div className="flex flex-col gap-6">
+      {REASONS.map((reason) => {
+        const group = items.filter((n) => n.reason === reason)
+        if (group.length === 0) return null
+        return (
+          <section key={reason} className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Chip tone={REASON_TONE[reason]}>
+                <ReasonIcon reason={reason} className="size-3" />
+                {t(`inbox.reason.${reason}`)}
+              </Chip>
+              <span className="text-caption text-muted-foreground">{group.length}</span>
+            </div>
+            <Stagger as="ul" className="rounded-md border border-border bg-card">
+              {group.map((notification) => (
+                <StaggerItem key={notification.id} as="li">
+                  <NotificationRow
+                    notification={notification}
+                    selected={indexOf.get(notification.id) === selectedIndex}
+                    onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
+                    onQuickAction={() => onQuickAction(notification)}
+                    onArchive={() => onArchive(notification.id)}
+                    onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+                  />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
 function InboxBody({
   query,
   status,
+  grouped,
+  selectedIndex,
   onOpen,
   onArchive,
+  onQuickAction,
   onSnooze,
 }: {
   query: ReturnType<typeof useNotificationsQuery>
   status: InboxStatus
-  onOpen: (notification: NotificationDto) => void
+  grouped: boolean
+  selectedIndex: number
+  onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
+  onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
 }) {
   if (query.isPending) {
@@ -93,22 +254,12 @@ function InboxBody({
         kind="empty"
         titleKey={`inbox.empty.${status}.title`}
         bodyKey={`inbox.empty.${status}.body`}
+        illustration={status === 'inbox' ? <AllDoneIllustration /> : <EmptyInboxIllustration />}
       />
     )
   }
-  return (
-    <ul className="rounded-md border border-border bg-card">
-      {items.map((notification) => (
-        <NotificationRow
-          key={notification.id}
-          notification={notification}
-          onOpen={() => onOpen(notification)}
-          onArchive={() => onArchive(notification.id)}
-          onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-        />
-      ))}
-    </ul>
-  )
+  const props = { items, selectedIndex, onOpen, onArchive, onQuickAction, onSnooze }
+  return grouped ? <GroupedInboxList {...props} /> : <InboxList {...props} />
 }
 
 export default function InboxScreen() {
@@ -118,6 +269,11 @@ export default function InboxScreen() {
   const meQuery = useMeQuery()
   const [status, setStatus] = React.useState<InboxStatus>('inbox')
   const [openId, setOpenId] = React.useState<string | null>(null)
+  const [selectedIndex, setSelectedIndex] = React.useState(0)
+  const [grouped, setGrouped] = React.useState(false)
+  // The split becomes a stack below this width (UI-OVERHAUL.md "stack at 390") -- Tailwind's own
+  // `md` breakpoint, so this hook's threshold and the `md:` classes below never drift apart.
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const settled = !meQuery.isPending
 
@@ -137,12 +293,24 @@ export default function InboxScreen() {
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0
   const openNotification = items.find((n) => n.id === openId) ?? null
 
-  function handleOpen(notification: NotificationDto) {
+  React.useEffect(() => {
+    setSelectedIndex(0)
+    setOpenId(null)
+  }, [status])
+
+  function handleOpen(notification: NotificationDto, index: number) {
     setOpenId(notification.id)
+    setSelectedIndex(index)
     if (notification.readAt === null) markRead.mutate([notification.id])
   }
 
+  function handleQuickAction(notification: NotificationDto) {
+    if (notification.readAt === null) markRead.mutate([notification.id])
+    if (notification.deepLink) navigate(notification.deepLink)
+  }
+
   function handleArchive(id: string) {
+    if (openId === id) setOpenId(null)
     const { cancel } = archiveUndoable([id])
     toastWithUndo({
       message: t('inbox.row.archived'),
@@ -170,6 +338,22 @@ export default function InboxScreen() {
     }
   }
 
+  useListKeyboardNav({
+    items,
+    selectedIndex,
+    setSelectedIndex: (i) => {
+      setSelectedIndex(i)
+      const n = items[i]
+      if (n) setOpenId(n.id)
+    },
+    onOpen: (n) =>
+      handleOpen(
+        n,
+        items.findIndex((x) => x.id === n.id),
+      ),
+    onArchive: handleArchive,
+  })
+
   if (forced) {
     return <ForcedStateBlock kind={forced} />
   }
@@ -190,44 +374,72 @@ export default function InboxScreen() {
   }
 
   return (
-    <div className="mx-auto flex max-w-200 flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-            {t('inbox.eyebrow')}
-          </p>
-          <h1 className="font-display text-h1 text-foreground">{t('inbox.title')}</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {unreadCount > 0 ? (
-            <Button variant="secondary" size="sm" onClick={() => markAllRead.mutate()}>
-              <CheckCheck className="size-4" aria-hidden="true" />
-              {t('inbox.markAllRead')}
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow={t('inbox.eyebrow')}
+        title={t('inbox.title')}
+        actions={
+          <>
+            {unreadCount > 0 ? (
+              <Button variant="secondary" size="sm" onClick={() => markAllRead.mutate()}>
+                <CheckCheck className="size-4" aria-hidden="true" />
+                {t('inbox.markAllRead')}
+              </Button>
+            ) : null}
+            <Button
+              variant={grouped ? 'secondary' : 'ghost'}
+              size="sm"
+              aria-pressed={grouped}
+              onClick={() => setGrouped((v) => !v)}
+            >
+              {grouped ? (
+                <Ungroup className="size-4" aria-hidden="true" />
+              ) : (
+                <LayoutList className="size-4" aria-hidden="true" />
+              )}
+              {t('inbox.groupByReason')}
             </Button>
-          ) : null}
-          <Button variant="ghost" size="sm" onClick={handleCopyCalendar}>
-            <CalendarDays className="size-4" aria-hidden="true" />
-            {t('inbox.calendarLink')}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/inbox/preferences')}>
-            <SlidersHorizontal className="size-4" aria-hidden="true" />
-            {t('inbox.preferences.title')}
-          </Button>
-        </div>
-      </div>
-
-      <InboxTabs status={status} onChange={setStatus} unreadCount={unreadCount} />
-
-      <InboxBody
-        query={notificationsQuery}
-        status={status}
-        onOpen={handleOpen}
-        onArchive={handleArchive}
-        onSnooze={handleSnooze}
+            <Button variant="ghost" size="sm" onClick={handleCopyCalendar}>
+              <CalendarDays className="size-4" aria-hidden="true" />
+              {t('inbox.calendarLink')}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/inbox/preferences')}>
+              <SlidersHorizontal className="size-4" aria-hidden="true" />
+              {t('inbox.preferences.title')}
+            </Button>
+          </>
+        }
+        tabs={<InboxTabs status={status} onChange={setStatus} unreadCount={unreadCount} />}
       />
 
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,420px)_1fr]">
+        <InboxBody
+          query={notificationsQuery}
+          status={status}
+          grouped={grouped}
+          selectedIndex={selectedIndex}
+          onOpen={handleOpen}
+          onArchive={handleArchive}
+          onQuickAction={handleQuickAction}
+          onSnooze={handleSnooze}
+        />
+
+        {/* The right pane of the split at >=768; a bottom sheet carries the same content below that
+            (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so
+            the two never both claim the same open notification at once. */}
+        {isDesktop ? (
+          <div className="sticky top-4 rounded-md border border-border bg-card p-6">
+            {openNotification ? (
+              <NotificationDetail notification={openNotification} onArchive={handleArchiveNow} />
+            ) : (
+              <p className="text-body text-muted-foreground">{t('inbox.detail.emptySelection')}</p>
+            )}
+          </div>
+        ) : null}
+      </div>
+
       <NotificationSheet
-        notification={openNotification}
+        notification={isDesktop ? null : openNotification}
         onOpenChange={(open) => {
           if (!open) setOpenId(null)
         }}

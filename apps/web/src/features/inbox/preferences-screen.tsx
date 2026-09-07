@@ -5,8 +5,7 @@
 // yet a valid preference to persist.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Input, StateView, toast } from '@devon/ui'
-import { Check } from 'lucide-react'
+import { Button, Chip, Input, PageHeader, SectionCard, StateView, Switch, toast } from '@devon/ui'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useDepartment } from '../../lib/session.js'
@@ -21,9 +20,13 @@ import {
   useQuietHoursQuery,
 } from './hooks.js'
 import { minutesToTimeInput, timeInputToMinutes, formatMinuteRange } from './time.js'
-import { ReasonIcon } from './reason-icon.js'
+import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 import { fetchIcsUrl } from './api.js'
 
+/** The type x channel matrix (UI-OVERHAUL.md "preferences as the settings recipe: a matrix of type x
+ * channel with Switches"). One `SectionCard` per DESIGN.md §9.5's settings recipe -- every toggle
+ * here saves itself the instant it flips (CLAUDE.md "undo over confirm" generalised to "no confirm
+ * step for a reversible flip"), so the card carries no save button of its own. */
 function PrefsMatrix({ items }: { items: PrefRow[] }) {
   const t = useT()
   const putPrefs = usePutPrefsMutation()
@@ -44,64 +47,59 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
   const digestRowEmail = byKey.get('digest:email')
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="overflow-x-auto rounded-md border border-border bg-card">
-        <table className="w-full border-collapse text-body">
-          <thead>
-            <tr className="border-b border-border text-small text-muted-foreground">
-              <th className="px-4 py-3 text-left font-medium">
-                {t('inbox.preferences.reasonColumn')}
-              </th>
-              {CHANNELS.map((channel) => (
-                <th key={channel} className="px-4 py-3 text-center font-medium">
-                  {t(`inbox.channel.${channel}`)}
+    <>
+      <SectionCard title={t('inbox.preferences.matrixTitle')} className="overflow-hidden">
+        <div className="-mx-5 -my-4 overflow-x-auto">
+          <table className="w-full min-w-140 border-collapse text-body">
+            <thead>
+              <tr className="border-b border-border text-small text-muted-foreground">
+                <th className="px-5 py-3 text-left font-medium">
+                  {t('inbox.preferences.reasonColumn')}
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {REASONS.map((reason) => (
-              <tr key={reason} className="border-b border-border last:border-b-0">
-                <td className="flex items-center gap-2 px-4 py-3">
-                  <ReasonIcon reason={reason} className="size-4 text-muted-foreground" />
-                  <span>{t(`inbox.reason.${reason}`)}</span>
-                </td>
-                {CHANNELS.map((channel) => {
-                  const row = byKey.get(`${reason}:${channel}`)
-                  if (!row) {
-                    return <td key={channel} />
-                  }
-                  return (
-                    <td key={channel} className="px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={row.enabled}
-                        aria-label={t('inbox.preferences.toggleAria', {
-                          reason: t(`inbox.reason.${reason}`),
-                          channel: t(`inbox.channel.${channel}`),
-                        })}
-                        onClick={() => toggle(row)}
-                        className={`mx-auto flex size-6 items-center justify-center rounded-sm border transition-colors duration-(--dur-micro) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                          row.enabled
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border bg-card'
-                        }`}
-                      >
-                        {row.enabled ? <Check className="size-4" aria-hidden="true" /> : null}
-                      </button>
-                    </td>
-                  )
-                })}
+                {CHANNELS.map((channel) => (
+                  <th key={channel} className="px-4 py-3 text-center font-medium">
+                    {t(`inbox.channel.${channel}`)}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {REASONS.map((reason) => (
+                <tr key={reason} className="border-b border-border last:border-b-0">
+                  <td className="px-5 py-3">
+                    <Chip tone={REASON_TONE[reason]}>
+                      <ReasonIcon reason={reason} className="size-3" />
+                      {t(`inbox.reason.${reason}`)}
+                    </Chip>
+                  </td>
+                  {CHANNELS.map((channel) => {
+                    const row = byKey.get(`${reason}:${channel}`)
+                    if (!row) {
+                      return <td key={channel} />
+                    }
+                    return (
+                      <td key={channel} className="px-4 py-3 text-center">
+                        <Switch
+                          checked={row.enabled}
+                          onCheckedChange={() => toggle(row)}
+                          aria-label={t('inbox.preferences.toggleAria', {
+                            reason: t(`inbox.reason.${reason}`),
+                            channel: t(`inbox.channel.${channel}`),
+                          })}
+                          className="mx-auto"
+                        />
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionCard>
 
       {digestRowTelegram || digestRowEmail ? (
-        <div className="rounded-md border border-border bg-card p-4">
-          <h3 className="mb-3 text-h4 text-foreground">{t('inbox.preferences.digestFrequency')}</h3>
+        <SectionCard title={t('inbox.preferences.digestFrequency')}>
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
             {digestRowTelegram ? (
               <label className="flex flex-1 flex-col gap-1">
@@ -142,9 +140,9 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
               </label>
             ) : null}
           </div>
-        </div>
+        </SectionCard>
       ) : null}
-    </div>
+    </>
   )
 }
 
@@ -206,17 +204,30 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
   }
 
   return (
-    <div className="rounded-md border border-border bg-card p-4">
-      <h3 className="text-h4 text-foreground">{t('inbox.preferences.quietHours.title')}</h3>
-      <p className="mt-1 text-small text-muted-foreground">
-        {t(
-          data.effective.source === 'department_default'
-            ? 'inbox.preferences.quietHours.usingDepartmentDefault'
-            : 'inbox.preferences.quietHours.usingPersonal',
-          { range: formatMinuteRange(data.effective.startMinute, data.effective.endMinute) },
-        )}
-      </p>
-      <div className="mt-4 flex flex-wrap items-end gap-4">
+    <SectionCard
+      title={t('inbox.preferences.quietHours.title')}
+      description={t(
+        data.effective.source === 'department_default'
+          ? 'inbox.preferences.quietHours.usingDepartmentDefault'
+          : 'inbox.preferences.quietHours.usingPersonal',
+        { range: formatMinuteRange(data.effective.startMinute, data.effective.endMinute) },
+      )}
+      actions={
+        <>
+          {usingOverride ? (
+            <Button size="sm" variant="ghost" onClick={handleUseDefault}>
+              {t('inbox.preferences.quietHours.useDefault')}
+            </Button>
+          ) : null}
+          <Button size="sm" onClick={handleSave} loading={putQuietHours.isPending}>
+            {t('inbox.preferences.save')}
+          </Button>
+        </>
+      }
+    >
+      {/* The time-range picker (UI-OVERHAUL.md): two linked time fields read as one range, joined by
+          a dash the way a calendar app's own range control reads. */}
+      <div className="flex flex-wrap items-end gap-4">
         <label className="flex flex-col gap-1">
           <span className="text-small text-muted-foreground">
             {t('inbox.preferences.quietHours.start')}
@@ -231,6 +242,9 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
             className="w-32"
           />
         </label>
+        <span aria-hidden="true" className="pb-2.5 text-muted-foreground">
+          –
+        </span>
         <label className="flex flex-col gap-1">
           <span className="text-small text-muted-foreground">
             {t('inbox.preferences.quietHours.end')}
@@ -245,15 +259,13 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
             className="w-32"
           />
         </label>
-        <label className="flex items-center gap-2 pb-2.5">
-          <input
-            type="checkbox"
+        <label className="flex items-center gap-2 pb-1.5">
+          <Switch
             checked={weekends}
-            onChange={(e) => {
+            onCheckedChange={(v) => {
               setTouched(true)
-              setWeekends(e.target.checked)
+              setWeekends(v)
             }}
-            className="size-4 rounded-sm border-border"
           />
           <span className="text-body text-foreground">
             {t('inbox.preferences.quietHours.weekends')}
@@ -265,17 +277,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
           {t('inbox.preferences.quietHours.tooLoud')}
         </p>
       ) : null}
-      <div className="mt-4 flex gap-2">
-        <Button size="sm" onClick={handleSave} loading={putQuietHours.isPending}>
-          {t('inbox.preferences.save')}
-        </Button>
-        {usingOverride ? (
-          <Button size="sm" variant="ghost" onClick={handleUseDefault}>
-            {t('inbox.preferences.quietHours.useDefault')}
-          </Button>
-        ) : null}
-      </div>
-    </div>
+    </SectionCard>
   )
 }
 
@@ -299,13 +301,12 @@ function CalendarFeedCard() {
   }
 
   return (
-    <div className="rounded-md border border-border bg-card p-4">
-      <h3 className="text-h4 text-foreground">{t('inbox.preferences.calendar.title')}</h3>
-      <p className="mt-1 text-small text-muted-foreground">
-        {t('inbox.preferences.calendar.body')}
-      </p>
+    <SectionCard
+      title={t('inbox.preferences.calendar.title')}
+      description={t('inbox.preferences.calendar.body')}
+    >
       {url ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <code className="max-w-full truncate rounded-sm bg-muted px-2 py-1 text-caption">
             {url}
           </code>
@@ -314,11 +315,11 @@ function CalendarFeedCard() {
           </Button>
         </div>
       ) : (
-        <Button size="sm" variant="secondary" className="mt-3" onClick={handleReveal}>
+        <Button size="sm" variant="secondary" onClick={handleReveal}>
           {t('inbox.preferences.calendar.reveal')}
         </Button>
       )}
-    </div>
+    </SectionCard>
   )
 }
 
@@ -375,13 +376,11 @@ export default function PreferencesScreen() {
 
   return (
     <div className="mx-auto flex max-w-200 flex-col gap-6">
-      <div>
-        <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-          {t('inbox.eyebrow')}
-        </p>
-        <h1 className="font-display text-h1 text-foreground">{t('inbox.preferences.title')}</h1>
-        <p className="mt-1 text-body text-muted-foreground">{t('inbox.preferences.body')}</p>
-      </div>
+      <PageHeader
+        eyebrow={t('inbox.eyebrow')}
+        title={t('inbox.preferences.title')}
+        description={t('inbox.preferences.body')}
+      />
 
       <PrefsMatrixBody query={prefsQuery} />
 
