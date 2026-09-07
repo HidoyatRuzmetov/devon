@@ -26,8 +26,13 @@ export function CardPeekDialog() {
         <DialogContent
           title={t('work.card.peekTitle')}
           titleHidden
-          className="inset-y-0 right-0 top-0 left-auto h-full w-full max-w-160 translate-x-0 translate-y-0
-            overflow-y-auto rounded-none rounded-l-lg border-l"
+          // DESIGN.md §9.4: a routed right-hand Sheet at `--width-detail-panel`, full height, over
+          // the board -- `DialogOverlay` is already `fixed inset-0` in a Radix Portal (viewport-
+          // relative, not sized to any ancestor), so once the board itself stops overflowing the
+          // document (its own internal scroller, not the page, per the board-viewport fix) the scrim
+          // covers the whole board rather than only the first screenful of a page taller than 100vh.
+          className="inset-y-0 right-0 top-0 left-auto h-full w-full max-w-(--width-detail-panel)
+            translate-x-0 translate-y-0 overflow-y-auto rounded-none rounded-l-lg border-l"
         >
           <CardDetailContent cardId={cardId} onClose={close} />
         </DialogContent>
