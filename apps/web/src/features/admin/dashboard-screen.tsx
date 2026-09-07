@@ -3,13 +3,61 @@
 // first (MODULE-GUIDE.md "Web features"), so this component now renders at `/admin` and the old
 // `AdminRoute`/`routes/admin.tsx` file is unreachable dead code left for a follow-up cleanup pass
 // (outside this module's own paths -- see this item's report).
+import type * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { StateView } from '@devon/ui'
+import { KpiTile, StateView } from '@devon/ui'
 import { Link } from '../../lib/router.js'
-import { fetchAdminInstanceDetail, fetchMaintenance } from './api.js'
+import { fetchAdminHealth, fetchAdminInstanceDetail, fetchMaintenance } from './api.js'
 import { AdminScreen } from './admin-screen.js'
-import { StatTile } from './charts.js'
+import { StatTile, StatusDot } from './charts.js'
+
+const HEALTH_ROWS = [
+  { key: 'db', labelKey: 'admin.console.health.db' },
+  { key: 'queue', labelKey: 'admin.console.health.queue' },
+  { key: 'storage', labelKey: 'admin.console.health.storage' },
+  { key: 'telegram', labelKey: 'admin.console.health.telegram' },
+  { key: 'ai', labelKey: 'admin.console.health.ai' },
+  { key: 'backups', labelKey: 'admin.console.health.backups' },
+] as const
+
+function HealthSnapshot() {
+  const t = useT()
+  const query = useQuery({ queryKey: ['admin', 'health'], queryFn: fetchAdminHealth })
+
+  return (
+    <section className="rounded-md border border-border bg-card p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-h3 text-foreground">{t('admin.console.dashboard.healthTitle')}</h2>
+        <Link to="/admin/health" className="text-small text-primary hover:underline">
+          {t('admin.console.dashboard.healthSeeAll')}
+        </Link>
+      </div>
+      {renderBody()}
+    </section>
+  )
+
+  function renderBody(): React.ReactNode {
+    if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
+    if (query.isError) {
+      return (
+        <p className="text-small text-muted-foreground">
+          {t('admin.console.dashboard.healthUnavailable')}
+        </p>
+      )
+    }
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {HEALTH_ROWS.map((row) => (
+          <div key={row.key} className="flex items-center gap-2">
+            <StatusDot status={query.data[row.key].status} />
+            <span className="truncate text-small text-foreground">{t(row.labelKey)}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
+}
 
 function DashboardBody() {
   const t = useT()
@@ -45,7 +93,7 @@ function DashboardBody() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatTile label={t('admin.console.dashboard.userCount')} value={instance.userCount} />
+        <KpiTile label={t('admin.console.dashboard.userCount')} value={instance.userCount} />
         <StatTile
           label={t('admin.console.dashboard.registration')}
           value={t(
@@ -61,6 +109,8 @@ function DashboardBody() {
           )}
         />
       </div>
+
+      <HealthSnapshot />
 
       <section className="rounded-md border border-border bg-card p-6">
         <h2 className="mb-3 text-h3 text-foreground">{t('admin.console.dashboard.quickLinks')}</h2>

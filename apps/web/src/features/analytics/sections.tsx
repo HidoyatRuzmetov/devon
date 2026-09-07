@@ -4,7 +4,7 @@
 // valid CSS colour string for `stroke`/`fill`.
 import * as React from 'react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import NumberFlow from '@number-flow/react'
+import { KpiTile } from '@devon/ui'
 import {
   Bar,
   BarChart,
@@ -62,6 +62,81 @@ const tooltipStyle: React.CSSProperties = {
   color: 'var(--color-foreground)',
 }
 
+// DESIGN.md's "chart cards ... hover crosshair tooltips": a dashed guide the eye can follow (a line
+// on a time series) or a soft highlight on the hovered row/column (a bar), instead of Recharts'
+// default flat grey rectangle -- both drawn from tokens so they hold up in both themes.
+const lineCursor = { stroke: COLOR_PRIMARY, strokeWidth: 1, strokeDasharray: '4 4' }
+const barCursor = { fill: 'var(--color-accent)' }
+
+/** Week-over-week percent change, from real points already in the summary payload -- never a made-up
+ * comparison. `null` (not `0`) when there is no previous week to compare against, so `KpiTile` shows
+ * no arrow rather than a misleading flat one. */
+function weekOverWeekPct(curr: number, prev: number): number | null {
+  if (prev === 0) return curr === 0 ? 0 : null
+  return Math.round(((curr - prev) / prev) * 100)
+}
+
+function onTimePercent(p: OnTimePoint | undefined): number | null {
+  if (!p || p.dueCount === 0) return null
+  return Math.round((p.onTimeCount / p.dueCount) * 100)
+}
+
+/** UI-OVERHAUL.md §2 "Analytics ... KPI tiles with NumberFlow and delta arrows": the department-wide
+ * headline row above every chart section, each tile answering one question and showing the same
+ * week-over-week trend a head would otherwise have to read off the throughput/open-vs-overdue charts
+ * themselves. */
+export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
+  const t = useT()
+  const tp = summary.throughput
+  const throughputLast = tp.length > 0 ? tp[tp.length - 1]!.count : 0
+  const throughputDelta =
+    tp.length > 1 ? weekOverWeekPct(throughputLast, tp[tp.length - 2]!.count) : null
+
+  const ov = summary.openVsOverdue
+  const openLast = ov.length > 0 ? ov[ov.length - 1]!.openCount : 0
+  const openDelta = ov.length > 1 ? weekOverWeekPct(openLast, ov[ov.length - 2]!.openCount) : null
+  const overdueLast = ov.length > 0 ? ov[ov.length - 1]!.overdueCount : 0
+  const overdueDelta =
+    ov.length > 1 ? weekOverWeekPct(overdueLast, ov[ov.length - 2]!.overdueCount) : null
+
+  const rateSeries = summary.onTimeRate.series
+  const rateLast = onTimePercent(rateSeries[rateSeries.length - 1])
+  const ratePrev = onTimePercent(rateSeries[rateSeries.length - 2])
+  const rateDelta = rateLast !== null && ratePrev !== null ? rateLast - ratePrev : null
+
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <KpiTile
+        label={t('analytics.kpi.throughput')}
+        value={throughputLast}
+        delta={throughputDelta}
+        question={t('analytics.kpi.throughputQuestion')}
+      />
+      <KpiTile
+        label={t('analytics.kpi.open')}
+        value={openLast}
+        delta={openDelta}
+        deltaGoodWhen="down"
+        question={t('analytics.kpi.openQuestion')}
+      />
+      <KpiTile
+        label={t('analytics.kpi.overdue')}
+        value={overdueLast}
+        delta={overdueDelta}
+        deltaGoodWhen="down"
+        question={t('analytics.kpi.overdueQuestion')}
+      />
+      <KpiTile
+        label={t('analytics.kpi.onTimeRate')}
+        value={rateLast}
+        suffix="%"
+        delta={rateDelta}
+        question={t('analytics.kpi.onTimeRateQuestion')}
+      />
+    </div>
+  )
+}
+
 export function ThroughputSection({
   summary,
   query,
@@ -97,7 +172,11 @@ export function ThroughputSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} labelStyle={{ color: 'var(--color-foreground)' }} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={barCursor}
+            labelStyle={{ color: 'var(--color-foreground)' }}
+          />
           <Bar
             dataKey="count"
             name={t('analytics.legend.done')}
@@ -158,7 +237,7 @@ export function OnTimeRateSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
+          <Tooltip contentStyle={tooltipStyle} cursor={lineCursor} formatter={(v) => `${v}%`} />
           <Line
             type="monotone"
             dataKey="rate"
@@ -217,7 +296,7 @@ export function OpenVsOverdueSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip contentStyle={tooltipStyle} cursor={lineCursor} />
           <Line
             type="monotone"
             dataKey="openCount"
@@ -289,7 +368,7 @@ export function LoadPerPersonSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
           <Bar
             dataKey="openCount"
             name={t('analytics.legend.open')}
@@ -354,7 +433,7 @@ export function LoadPerUnitSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
           <Bar
             dataKey="openCount"
             name={t('analytics.legend.open')}
@@ -443,7 +522,7 @@ export function ProjectProgressSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
+          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} formatter={(v) => `${v}%`} />
           <Bar
             dataKey="percent"
             fill={COLOR_INFO}
@@ -526,7 +605,7 @@ export function EventsParticipationSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} />
+          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
           <Bar
             dataKey="yes"
             name={t('analytics.legend.yes')}
@@ -626,7 +705,7 @@ export function PollTurnoutSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} formatter={(v) => `${v}%`} />
+          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} formatter={(v) => `${v}%`} />
           <Bar
             dataKey="percent"
             fill={COLOR_INFO}
@@ -677,15 +756,13 @@ export function PersonalStatsSection({
     >
       <div className="grid grid-cols-2 gap-4 py-2 sm:grid-cols-3">
         {tiles.map((tile) => (
-          <div key={tile.labelKey} className="flex flex-col gap-1">
-            <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-              {t(tile.labelKey)}
-            </span>
-            <span className="font-display text-h2 tabular-nums text-foreground">
-              <NumberFlow value={tile.value} />
-              {tile.suffix ?? ''}
-            </span>
-          </div>
+          <KpiTile
+            key={tile.labelKey}
+            label={t(tile.labelKey)}
+            value={tile.value}
+            {...(tile.suffix ? { suffix: tile.suffix } : {})}
+            className="border-none bg-transparent p-0 shadow-none"
+          />
         ))}
       </div>
     </ChartCard>

@@ -1,8 +1,25 @@
-// `/admin/accounts` -- search, lock/unlock, reset password, force 2FA reset, anonymise/delete.
+// `/admin/accounts` -- table with an actions menu (UI-OVERHAUL.md §2 "Admin console ... accounts
+// table with actions menu"), instead of four buttons per row: search, lock/unlock, reset password,
+// force 2FA reset, anonymise/delete.
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Badge, Button, Dialog, DialogContent, Input, StateView, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  IconButton,
+  Input,
+  StateView,
+  toast,
+} from '@devon/ui'
+import { KeyRound, Lock, MoreHorizontal, ShieldOff, Trash2, Unlock } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
 import { ApiError } from '../../lib/api-client.js'
 import {
@@ -20,6 +37,66 @@ const STATUS_TONE: Record<AdminUserRow['status'], 'success' | 'destructive' | 'n
   active: 'success',
   locked: 'destructive',
   deleted: 'neutral',
+}
+
+function AccountActionsMenu({
+  user,
+  onLock,
+  onUnlock,
+  onResetPassword,
+  onForceTwoFactorReset,
+  onAnonymize,
+  busy,
+}: {
+  user: AdminUserRow
+  onLock: () => void
+  onUnlock: () => void
+  onResetPassword: () => void
+  onForceTwoFactorReset: () => void
+  onAnonymize: () => void
+  busy: boolean
+}) {
+  const t = useT()
+  if (user.status === 'deleted' || user.role === 'super_admin') return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IconButton aria-label={t('admin.console.accounts.actionsMenu')} disabled={busy}>
+          <MoreHorizontal className="size-4" aria-hidden="true" />
+        </IconButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {user.status === 'active' ? (
+          <DropdownMenuItem onSelect={onLock}>
+            <Lock className="size-3.5" aria-hidden="true" />
+            {t('admin.console.accounts.lock')}
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onSelect={onUnlock}>
+            <Unlock className="size-3.5" aria-hidden="true" />
+            {t('admin.console.accounts.unlock')}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onSelect={onResetPassword}>
+          <KeyRound className="size-3.5" aria-hidden="true" />
+          {t('admin.console.accounts.resetPassword')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={onForceTwoFactorReset}>
+          <ShieldOff className="size-3.5" aria-hidden="true" />
+          {t('admin.console.accounts.forceTwoFactorReset')}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onSelect={onAnonymize}
+          className="text-destructive focus:text-destructive"
+        >
+          <Trash2 className="size-3.5" aria-hidden="true" />
+          {t('admin.console.accounts.anonymize')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
 }
 
 function AccountsBody() {
@@ -123,62 +200,65 @@ function AccountsBody() {
       {users.length === 0 ? (
         <StateView kind="empty" titleKey="admin.console.accounts.empty.title" />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-          {users.map((u) => (
-            <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-body font-medium text-foreground">
-                    {u.givenName} {u.familyName}
-                  </p>
-                  <Badge tone={STATUS_TONE[u.status]}>
-                    {t(`admin.console.accounts.status.${u.status}`)}
-                  </Badge>
-                  {u.role === 'super_admin' ? (
-                    <Badge tone="info">{t('admin.console.accounts.role.superAdmin')}</Badge>
-                  ) : null}
-                </div>
-                <p className="text-small text-muted-foreground">@{u.login}</p>
-              </div>
-              {u.status !== 'deleted' && u.role !== 'super_admin' ? (
-                <div className="flex flex-wrap gap-2">
-                  {u.status === 'active' ? (
-                    <Button size="sm" variant="secondary" onClick={() => setLockTarget(u)}>
-                      {t('admin.console.accounts.lock')}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={() => unlock.mutate(u.id)}
-                      loading={unlock.isPending && unlock.variables === u.id}
-                    >
-                      {t('admin.console.accounts.unlock')}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => resetPassword.mutate(u.id)}
-                    loading={resetPassword.isPending && resetPassword.variables === u.id}
-                  >
-                    {t('admin.console.accounts.resetPassword')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => forceReset2fa.mutate(u.id)}
-                    loading={forceReset2fa.isPending && forceReset2fa.variables === u.id}
-                  >
-                    {t('admin.console.accounts.forceTwoFactorReset')}
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => setAnonymizeTarget(u)}>
-                    {t('admin.console.accounts.anonymize')}
-                  </Button>
-                </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-x-auto rounded-md border border-border">
+          <table className="w-full text-left text-small">
+            <thead className="border-b border-border bg-muted/40 text-caption text-muted-foreground">
+              <tr>
+                <th className="px-3 py-2">{t('admin.console.accounts.columnName')}</th>
+                <th className="px-3 py-2">{t('admin.console.accounts.columnLogin')}</th>
+                <th className="px-3 py-2">{t('admin.console.accounts.columnStatus')}</th>
+                <th className="px-3 py-2">{t('admin.console.accounts.columnRole')}</th>
+                <th className="w-10 px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {users.map((u) => {
+                const rowBusy =
+                  (lock.isPending && lockTarget?.id === u.id) ||
+                  (unlock.isPending && unlock.variables === u.id) ||
+                  (resetPassword.isPending && resetPassword.variables === u.id) ||
+                  (forceReset2fa.isPending && forceReset2fa.variables === u.id)
+                return (
+                  <tr key={u.id} className="bg-card">
+                    <td className="px-3 py-2.5 font-medium text-foreground">
+                      {u.givenName} {u.familyName}
+                    </td>
+                    <td className="px-3 py-2.5 font-mono text-muted-foreground">@{u.login}</td>
+                    <td className="px-3 py-2.5">
+                      <Badge tone={STATUS_TONE[u.status]}>
+                        {t(`admin.console.accounts.status.${u.status}`)}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {u.role === 'super_admin' ? (
+                        <Badge tone="info">{t('admin.console.accounts.role.superAdmin')}</Badge>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {t(
+                            u.role === 'head'
+                              ? 'admin.console.accounts.role.head'
+                              : 'admin.console.accounts.role.member',
+                          )}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <AccountActionsMenu
+                        user={u}
+                        busy={rowBusy}
+                        onLock={() => setLockTarget(u)}
+                        onUnlock={() => unlock.mutate(u.id)}
+                        onResetPassword={() => resetPassword.mutate(u.id)}
+                        onForceTwoFactorReset={() => forceReset2fa.mutate(u.id)}
+                        onAnonymize={() => setAnonymizeTarget(u)}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <Dialog open={lockTarget !== null} onOpenChange={(open) => !open && setLockTarget(null)}>

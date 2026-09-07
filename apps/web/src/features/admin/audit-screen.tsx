@@ -1,13 +1,42 @@
 // `/admin/audit` -- paginated audit log, hash-chain verification, CSV export.
 import * as React from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useT } from '@devon/i18n'
-import { Badge, Button, Input, StateView, toast } from '@devon/ui'
+import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
+import { AnimatedCheck, Badge, Button, Input, StateView, toast } from '@devon/ui'
+import { AlertTriangle } from 'lucide-react'
 import { auditExportUrl, fetchAuditEvents, fetchAuditVerify } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
+/** UI-OVERHAUL.md §2 "Admin console ... audit viewer with chain-verify badge animation": the check
+ * draws in the moment a chain verification comes back clean, instead of a badge that is simply
+ * already there -- "verified" is an event, not a static label. Starts unchecked and flips true one
+ * frame after mount (the same trick every "draw in on arrival" spot in this app uses, since
+ * `AnimatedCheck`'s own `initial={false}` means a check born already-`true` never animates). A broken
+ * chain gets a plain (still) warning icon: alarm, never celebration. */
+function ChainVerifyBadge({ ok }: { ok: boolean }) {
+  const t = useT()
+  const [checked, setChecked] = React.useState(false)
+  React.useEffect(() => {
+    if (!ok) return
+    const id = requestAnimationFrame(() => setChecked(true))
+    return () => cancelAnimationFrame(id)
+  }, [ok])
+
+  return (
+    <Badge tone={ok ? 'success' : 'destructive'} className="gap-1">
+      {ok ? (
+        <AnimatedCheck checked={checked} className="size-3.5" />
+      ) : (
+        <AlertTriangle className="size-3.5" aria-hidden="true" />
+      )}
+      {t(ok ? 'admin.console.audit.chainOk' : 'admin.console.audit.chainBroken')}
+    </Badge>
+  )
+}
+
 function AuditBody() {
   const t = useT()
+  const locale = useLocale()
   const [action, setAction] = React.useState('')
   const [cursors, setCursors] = React.useState<number[]>([])
   const cursor = cursors[cursors.length - 1]
@@ -64,10 +93,8 @@ function AuditBody() {
       </div>
 
       {verify.data ? (
-        <div className="rounded-md border border-border bg-card p-4 text-small text-foreground">
-          <Badge tone={verify.data.ok ? 'success' : 'destructive'}>
-            {t(verify.data.ok ? 'admin.console.audit.chainOk' : 'admin.console.audit.chainBroken')}
-          </Badge>{' '}
+        <div className="flex items-center gap-2 rounded-md border border-border bg-card p-4 text-small text-foreground">
+          <ChainVerifyBadge ok={verify.data.ok} />
           {t('admin.console.audit.chainRowsChecked', { count: verify.data.rows })}
         </div>
       ) : null}
@@ -88,7 +115,9 @@ function AuditBody() {
             <tbody className="divide-y divide-border">
               {events.map((e) => (
                 <tr key={e.seq}>
-                  <td className="p-2 text-foreground">{new Date(e.at).toLocaleString()}</td>
+                  <td className="p-2 text-foreground">
+                    {formatDate(new Date(e.at), locale)} {formatTime(new Date(e.at), locale)}
+                  </td>
                   <td className="p-2 font-mono text-foreground">{e.action}</td>
                   <td className="p-2 text-muted-foreground">{e.actorRole ?? '—'}</td>
                   <td className="p-2 text-muted-foreground">

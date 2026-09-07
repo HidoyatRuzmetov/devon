@@ -5,7 +5,7 @@
 import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Button, StateView, toast } from '@devon/ui'
+import { Button, PageHeader, StateView, toast } from '@devon/ui'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
@@ -80,12 +80,11 @@ export function AdminScreen({
 
   return (
     <div className="mx-auto flex max-w-260 flex-col gap-6">
-      <div>
-        <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-          {t('admin.console.eyebrow')}
-        </p>
-        <h1 className="font-display text-h1 text-foreground">{t('admin.console.title')}</h1>
-      </div>
+      <PageHeader
+        eyebrow={t('admin.console.eyebrow')}
+        title={t(`admin.console.tabs.${active}`)}
+        tabs={<AdminTabs active={active} />}
+      />
       {isViewingAs ? (
         // Blitz integration fix: this used to be the *only* exit control for view-as, and it lived
         // inside `departments-screen.tsx`'s own list -- but every `{kind:'instance'}` read (P1,
@@ -108,7 +107,6 @@ export function AdminScreen({
           </Button>
         </div>
       ) : null}
-      <AdminTabs active={active} />
       {children}
     </div>
   )

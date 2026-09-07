@@ -1,12 +1,44 @@
 {
   "analytics": {
     "title": "Tahlil",
+    "eyebrow": "Hisobotlar",
+    "kpi": {
+      "throughput": "Oʻtgan hafta bajarilgan kartochkalar",
+      "throughputQuestion": "oldingi haftaga nisbatan",
+      "open": "Ochiq kartochkalar",
+      "openQuestion": "oldingi haftaga nisbatan",
+      "overdue": "Muddati oʻtgan kartochkalar",
+      "overdueQuestion": "oldingi haftaga nisbatan",
+      "onTimeRate": "Oʻz vaqtida bajarish darajasi",
+      "onTimeRateQuestion": "oldingi haftaga nisbatan foiz punkti"
+    },
+    "ask": {
+      "title": "Tahlildan soʻrash",
+      "placeholder": "Savol bering, masalan \"bu oy muddati oʻtgan kartochkalar\"",
+      "action": "Soʻrash",
+      "pending": "Savol oʻqilmoqda…",
+      "apply": "Filtrni qoʻllash",
+      "edit": "Tahrirlash",
+      "discard": "Bekor qilish",
+      "retry": "Qayta urinish",
+      "resultWithFilter": "Filtr: {filter}",
+      "resultNoFilter": "Buni filtrga aylantirib boʻlmadi — boshqacha soʻrab koʻring.",
+      "errors": {
+        "invalid": "Savolni tekshirib, qayta urinib koʻring",
+        "forbidden": "Bu funksiya oʻchirilgan yoki AI byudjeti tugagan",
+        "failed": "AI bu safar javob bera olmadi"
+      }
+    },
     "filterBar": {
       "placeholder": "assignee:@me status:active due:<today",
       "apply": "Qo'llash",
       "clear": "Tozalash",
       "since": "Boshlanishi",
-      "until": "Tugashi"
+      "until": "Tugashi",
+      "activeTerms": "Filtrlar:",
+      "removeTerm": "\"{term}\" filtrini olib tashlash",
+      "dateRange": "Davr:",
+      "presetDays": "Oxirgi {count} kun"
     },
     "savedFilters": {
       "title": "Saqlangan filtrlar",
@@ -18,6 +50,7 @@
       "empty": "Hali saqlangan filtr yo'q"
     },
     "actions": {
+      "export": "Eksport",
       "exportCsv": "CSV formatida yuklab olish",
       "exportPng": "Rasm sifatida yuklab olish",
       "pin": "Bosh sahifaga mahkamlash",

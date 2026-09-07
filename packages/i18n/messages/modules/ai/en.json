@@ -1,6 +1,8 @@
 {
   "ai": {
     "title": "AI",
+    "eyebrow": "AI",
+    "description": "Budget, feature flags and usage for this department's AI helpers.",
     "tabs": {
       "overview": "Overview",
       "usage": "Usage",
@@ -50,12 +52,18 @@
       "tokens": "{count} tokens",
       "latency": "{ms} ms",
       "accept": "Copy result",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "retried": "Retried once",
+      "edit": "Edit",
+      "discard": "Discard",
+      "retry": "Retry",
+      "costLine": "{tokens} tokens · {ms} ms"
     },
     "assistant": {
       "title": "AI assistant",
       "description": "Try an AI feature: fill in the fields, preview the result, then copy it or use it in the matching screen.",
       "preview": "Preview",
+      "pending": "Preparing the answer…",
       "disabled": {
         "title": "This feature is off",
         "body": "Ask a department head to turn it on in the Overview tab."

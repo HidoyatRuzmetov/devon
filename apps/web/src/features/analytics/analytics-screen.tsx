@@ -3,11 +3,12 @@
 // so a link to a specific view is shareable and survives a reload.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { StateView } from '@devon/ui'
+import { PageHeader, StateView } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import {
   EventsParticipationSection,
+  KpiOverviewRow,
   LoadPerPersonSection,
   LoadPerUnitSection,
   OnTimeRateSection,
@@ -17,6 +18,7 @@ import {
   ProjectProgressSection,
   ThroughputSection,
 } from './sections.js'
+import { AskAnalytics } from './ask-analytics.js'
 import { FilterBar, type FilterBarValue } from './filter-bar.js'
 import {
   usePinChartMutation,
@@ -105,23 +107,27 @@ export default function AnalyticsScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-h2 text-foreground">{t('analytics.title')}</h1>
+      <PageHeader eyebrow={t('analytics.eyebrow')} title={t('analytics.title')} />
       <FilterBar value={value} onChange={setValue} />
+      <AskAnalytics summary={summary} onApplyFilter={(filter) => setValue({ ...value, filter })} />
 
       {isEmpty ? (
         <StateView kind="empty" titleKey="analytics.empty.title" bodyKey="analytics.empty.body" />
       ) : (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-          <ThroughputSection {...sectionProps} />
-          <OnTimeRateSection {...sectionProps} />
-          <OpenVsOverdueSection {...sectionProps} />
-          <LoadPerPersonSection {...sectionProps} />
-          <LoadPerUnitSection {...sectionProps} />
-          <ProjectProgressSection {...sectionProps} />
-          <EventsParticipationSection {...sectionProps} />
-          <PollTurnoutSection {...sectionProps} />
-          <PersonalStatsSection {...sectionProps} />
-        </div>
+        <>
+          <KpiOverviewRow summary={summary} />
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <ThroughputSection {...sectionProps} />
+            <OnTimeRateSection {...sectionProps} />
+            <OpenVsOverdueSection {...sectionProps} />
+            <LoadPerPersonSection {...sectionProps} />
+            <LoadPerUnitSection {...sectionProps} />
+            <ProjectProgressSection {...sectionProps} />
+            <EventsParticipationSection {...sectionProps} />
+            <PollTurnoutSection {...sectionProps} />
+            <PersonalStatsSection {...sectionProps} />
+          </div>
+        </>
       )}
     </div>
   )

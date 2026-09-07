@@ -4,7 +4,7 @@
 // a joining member's own personal tasks automatically -- this panel only ever edits the template.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Input, StateView, toast } from '@devon/ui'
+import { Button, Input, StateView, Switch, toast } from '@devon/ui'
 import { Plus, Trash2 } from 'lucide-react'
 import {
   useCreateOnboardingTemplateMutation,
@@ -44,11 +44,12 @@ function TemplateCard({ template }: { template: OnboardingTemplate }) {
         <h3 className="text-h3 text-foreground">{template.name}</h3>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 text-small text-foreground">
-            <input
-              type="checkbox"
+            <Switch
               checked={template.enabled}
-              onChange={(e) => save({ enabled: e.target.checked })}
-              className="size-4 rounded-sm border-border"
+              onCheckedChange={(checked) => save({ enabled: checked })}
+              aria-label={t(
+                template.enabled ? 'pages.onboarding.enabled' : 'pages.onboarding.disabled',
+              )}
             />
             {t(template.enabled ? 'pages.onboarding.enabled' : 'pages.onboarding.disabled')}
           </label>
