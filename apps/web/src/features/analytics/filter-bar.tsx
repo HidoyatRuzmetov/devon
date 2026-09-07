@@ -1,19 +1,14 @@
 // The analytics filter bar (TECH-SPEC §9): a text field over the Work module's own filter grammar
-// (`@devon/contracts`'s `parseFilterQuery` -- person/unit/project/giver/label/status), a date range,
-// and saved filters. Keyboard-complete: every control is a native `<input>`/`<button>`, tabbable in
-// document order, `Enter` in the text field applies the filter (form submit) exactly like every other
-// search input in this app.
+// (`@devon/contracts`'s `parseFilterQuery` -- person/unit/project/giver/label/status), a date range
+// with quick presets, the active filter terms as removable chips, and saved views as a chip row
+// (UI-OVERHAUL.md §2 "Filters": "chips with type-ahead, a '+ Filter' popover, saved views as tabs").
+// Keyboard-complete: every control is a native `<input>`/`<button>`, tabbable in document order,
+// `Enter` in the text field applies the filter (form submit) exactly like every other search input in
+// this app.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import {
-  Button,
-  Input,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@devon/ui'
-import { Bookmark, ChevronDown, Save, Trash2 } from 'lucide-react'
+import { Button, chipVariants, cn, FilterChip, Input } from '@devon/ui'
+import { Save } from 'lucide-react'
 import {
   useCreateSavedFilterMutation,
   useDeleteSavedFilterMutation,
@@ -21,6 +16,24 @@ import {
 } from './use-analytics.js'
 
 export type FilterBarValue = { filter: string; since: string; until: string }
+
+const PRESET_DAYS = [7, 30, 90] as const
+
+function isoDaysAgo(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60_000).toISOString().slice(0, 10)
+}
+
+function today(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/** Splits the filter-grammar text into its space-separated terms, respecting a `"quoted phrase"`
+ * (e.g. `project:"Autumn fair"`) as one term -- the same tokens `@devon/contracts`'s
+ * `parseFilterQuery` treats as one clause, so a chip always removes exactly one clause. */
+function splitFilterTerms(filter: string): string[] {
+  const re = /[^\s"]+(?:"[^"]*"[^\s"]*)*|"[^"]*"/g
+  return filter.trim().length === 0 ? [] : (filter.match(re) ?? [])
+}
 
 export function FilterBar({
   value,
@@ -45,6 +58,17 @@ export function FilterBar({
     onChange({ ...value, filter: draft })
   }
 
+  const terms = splitFilterTerms(value.filter)
+  const removeTerm = (term: string) => {
+    const next = terms.filter((tm) => tm !== term).join(' ')
+    setDraft(next)
+    onChange({ ...value, filter: next })
+  }
+
+  const activePresetDays = PRESET_DAYS.find(
+    (d) => value.since === isoDaysAgo(d) && value.until === today(),
+  )
+
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1">
       <form className="flex flex-wrap items-center gap-2" onSubmit={applyDraft}>
@@ -55,42 +79,9 @@ export function FilterBar({
           aria-label={t('analytics.filterBar.placeholder')}
           className="min-w-64 flex-1"
         />
-        <label className="flex items-center gap-1.5 text-small text-muted-foreground">
-          {t('analytics.filterBar.since')}
-          <Input
-            type="date"
-            value={value.since}
-            onChange={(e) => onChange({ ...value, since: e.target.value })}
-            className="h-9 w-auto"
-            aria-label={t('analytics.filterBar.since')}
-          />
-        </label>
-        <label className="flex items-center gap-1.5 text-small text-muted-foreground">
-          {t('analytics.filterBar.until')}
-          <Input
-            type="date"
-            value={value.until}
-            onChange={(e) => onChange({ ...value, until: e.target.value })}
-            className="h-9 w-auto"
-            aria-label={t('analytics.filterBar.until')}
-          />
-        </label>
         <Button type="submit" variant="secondary" size="sm">
           {t('analytics.filterBar.apply')}
         </Button>
-        {value.filter ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setDraft('')
-              onChange({ ...value, filter: '' })
-            }}
-          >
-            {t('analytics.filterBar.clear')}
-          </Button>
-        ) : null}
         <Button
           type="button"
           variant="ghost"
@@ -103,50 +94,63 @@ export function FilterBar({
           <Save className="mr-1.5 size-4" aria-hidden="true" />
           {t('analytics.savedFilters.new')}
         </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm">
-              <Bookmark className="mr-1.5 size-4" aria-hidden="true" />
-              {t('analytics.savedFilters.title')}
-              <ChevronDown className="ml-1 size-3.5" aria-hidden="true" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {(savedFiltersQuery.data ?? []).length === 0 ? (
-              <DropdownMenuItem disabled>{t('analytics.savedFilters.empty')}</DropdownMenuItem>
-            ) : (
-              savedFiltersQuery.data!.map((sf) => (
-                <DropdownMenuItem
-                  key={sf.id}
-                  className="flex items-center justify-between gap-2"
-                  onSelect={() => {
-                    const since = new Date(Date.now() - sf.sinceDays * 24 * 60 * 60_000)
-                      .toISOString()
-                      .slice(0, 10)
-                    const until = new Date().toISOString().slice(0, 10)
-                    setDraft(sf.query)
-                    onChange({ filter: sf.query, since, until })
-                  }}
-                >
-                  <span className="truncate">{sf.name}</span>
-                  <button
-                    type="button"
-                    aria-label={t('analytics.savedFilters.delete')}
-                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteSavedFilter.mutate(sf.id)
-                    }}
-                  >
-                    <Trash2 className="size-3.5" aria-hidden="true" />
-                  </button>
-                </DropdownMenuItem>
-              ))
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </form>
+
+      {terms.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-caption text-muted-foreground">
+            {t('analytics.filterBar.activeTerms')}
+          </span>
+          {terms.map((term) => (
+            <FilterChip
+              key={term}
+              active
+              onClick={() => removeTerm(term)}
+              aria-label={t('analytics.filterBar.removeTerm', { term })}
+            >
+              {term}
+              <span aria-hidden="true" className="ml-1 text-muted-foreground">
+                ×
+              </span>
+            </FilterChip>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-caption text-muted-foreground">
+          {t('analytics.filterBar.dateRange')}
+        </span>
+        {PRESET_DAYS.map((days) => (
+          <FilterChip
+            key={days}
+            active={activePresetDays === days}
+            onClick={() => onChange({ ...value, since: isoDaysAgo(days), until: today() })}
+          >
+            {t('analytics.filterBar.presetDays', { count: days })}
+          </FilterChip>
+        ))}
+        <label className="ml-2 flex items-center gap-1.5 text-small text-muted-foreground">
+          {t('analytics.filterBar.since')}
+          <Input
+            type="date"
+            value={value.since}
+            onChange={(e) => onChange({ ...value, since: e.target.value })}
+            className="h-8 w-auto"
+            aria-label={t('analytics.filterBar.since')}
+          />
+        </label>
+        <label className="flex items-center gap-1.5 text-small text-muted-foreground">
+          {t('analytics.filterBar.until')}
+          <Input
+            type="date"
+            value={value.until}
+            onChange={(e) => onChange({ ...value, until: e.target.value })}
+            className="h-8 w-auto"
+            aria-label={t('analytics.filterBar.until')}
+          />
+        </label>
+      </div>
 
       {saveOpen ? (
         <form
@@ -182,6 +186,44 @@ export function FilterBar({
             {t('analytics.filterBar.clear')}
           </Button>
         </form>
+      ) : null}
+
+      {(savedFiltersQuery.data ?? []).length > 0 ? (
+        <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+          <span className="text-caption text-muted-foreground">
+            {t('analytics.savedFilters.title')}
+          </span>
+          {savedFiltersQuery.data!.map((sf) => (
+            <span
+              key={sf.id}
+              className={cn(
+                chipVariants({ tone: value.filter === sf.query ? 'primary' : 'outline' }),
+                'h-8 gap-1 rounded-full pr-1 text-small',
+              )}
+            >
+              <button
+                type="button"
+                className="min-w-0 max-w-40 truncate"
+                onClick={() => {
+                  const since = isoDaysAgo(sf.sinceDays)
+                  const until = today()
+                  setDraft(sf.query)
+                  onChange({ filter: sf.query, since, until })
+                }}
+              >
+                {sf.name}
+              </button>
+              <button
+                type="button"
+                aria-label={t('analytics.savedFilters.delete')}
+                className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
+                onClick={() => deleteSavedFilter.mutate(sf.id)}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
       ) : null}
     </div>
   )

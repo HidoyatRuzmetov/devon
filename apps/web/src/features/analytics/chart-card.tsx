@@ -11,8 +11,16 @@
 // un-hides it visibly for anyone who wants the numbers instead of the shape.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { IconButton, cn, useReducedMotion } from '@devon/ui'
-import { Download, ImageDown, Pin, PinOff, Table2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  IconButton,
+  cn,
+  useReducedMotion,
+} from '@devon/ui'
+import { Download, MoreHorizontal, Pin, PinOff, Table2 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 
 export type ChartCardProps = {
@@ -93,20 +101,27 @@ export function ChartCard({
           >
             <Table2 className="size-4" aria-hidden="true" />
           </IconButton>
-          <IconButton
-            aria-label={t('analytics.actions.exportCsv')}
-            onClick={() => downloadCsv(csvHref)}
-          >
-            <Download className="size-4" aria-hidden="true" />
-          </IconButton>
-          <IconButton
-            aria-label={t('analytics.actions.exportPng')}
-            onClick={() => {
-              if (bodyRef.current) void downloadPng(bodyRef.current, `${chartKey}.png`)
-            }}
-          >
-            <ImageDown className="size-4" aria-hidden="true" />
-          </IconButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton aria-label={t('analytics.actions.export')}>
+                <MoreHorizontal className="size-4" aria-hidden="true" />
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => downloadCsv(csvHref)}>
+                <Download className="size-3.5" aria-hidden="true" />
+                {t('analytics.actions.exportCsv')}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  if (bodyRef.current) void downloadPng(bodyRef.current, `${chartKey}.png`)
+                }}
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                {t('analytics.actions.exportPng')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <IconButton
             aria-label={t(pinned ? 'analytics.actions.unpin' : 'analytics.actions.pin')}
             aria-pressed={pinned}
