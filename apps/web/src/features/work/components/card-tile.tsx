@@ -15,34 +15,46 @@ import {
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import {
+  CalendarClock,
   ChevronDown,
+  ChevronsUp,
+  ChevronUp,
+  Eye,
   GripVertical,
   Link2,
   ListChecks,
   MessageSquare,
+  Minus,
   MoveRight,
 } from 'lucide-react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Avatar,
   Badge,
+  Chip,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  HoverLift,
   IconButton,
+  PressScale,
   initialsFromName,
 } from '@devon/ui'
 import type { Card, Label, MemberSummary } from '../api.js'
+import type { Project } from '../../projects/api.js'
 import {
+  DUE_CHIP_TONE,
   PRIORITY_BADGE_TONE,
+  PRIORITY_ICON_NAME,
   PRIORITY_LABEL_KEY,
-  RISK_BADGE_TONE,
   RISK_LABEL_KEY,
   fullName,
 } from '../lib/format.js'
+
+const PRIORITY_ICON = { ChevronsUp, ChevronUp, Minus, ChevronDown } as const
 
 export const CARD_DRAG_TYPE = 'devon-work-card'
 
@@ -57,6 +69,9 @@ export interface CardTileProps {
   columnUserId: string | null
   members: readonly MemberSummary[]
   labels: readonly Label[]
+  /** Looked up by `card.projectId` for the small project chip (Trello/Plane show which project a
+   * card belongs to right on the tile, not only inside the detail panel). */
+  projects?: readonly Project[]
   onOpen: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
   onMoveTo: (cardId: string, toUserId: string | null) => void
@@ -71,6 +86,7 @@ export function CardTile({
   columnUserId,
   members,
   labels,
+  projects = [],
   onOpen,
   onDropped,
   onMoveTo,
@@ -125,111 +141,145 @@ export function CardTile({
   const activeLabels = labels.filter((l) => card.labels.includes(l.id))
   const priorityKey = PRIORITY_LABEL_KEY[card.priority]
   const showPriority = card.priority !== 'none'
-  const showRisk = card.risk !== 'none'
+  const priorityIconName = PRIORITY_ICON_NAME[card.priority]
+  const PriorityIcon = priorityIconName ? PRIORITY_ICON[priorityIconName] : null
+  const project = card.projectId ? projects.find((p) => p.id === card.projectId) : undefined
+  const locale = useLocale()
+
+  const cardBody = (
+    <div
+      ref={ref}
+      role="button"
+      tabIndex={0}
+      data-dragging={isDragging || undefined}
+      onClick={() => onOpen(card.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen(card.id)
+        }
+      }}
+      className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-left shadow-1
+        transition-colors duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
+        focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+        data-[dragging]:opacity-40"
+    >
+      {activeLabels.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {activeLabels.map((l) => (
+            <span
+              key={l.id}
+              className="h-1.5 w-8 rounded-full"
+              style={{ backgroundColor: l.colour }}
+              title={l.name}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-small font-medium leading-snug text-foreground">{card.title}</p>
+        <div className="flex shrink-0 items-center gap-1">
+          <span
+            className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
+            aria-hidden="true"
+          >
+            <GripVertical className="size-4" />
+          </span>
+          <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} />
+        </div>
+      </div>
+
+      {project ? (
+        <Chip tone="outline">
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: project.colour }}
+            aria-hidden="true"
+          />
+          {project.title}
+        </Chip>
+      ) : null}
+
+      <div className="flex flex-wrap items-center gap-1.5">
+        {showPriority ? (
+          <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
+            {PriorityIcon ? <PriorityIcon className="size-3" aria-hidden="true" /> : null}
+            {t(priorityKey)}
+          </Badge>
+        ) : null}
+        {card.dueAt ? (
+          <Chip
+            tone={DUE_CHIP_TONE[card.risk]}
+            title={card.risk !== 'none' ? t(RISK_LABEL_KEY[card.risk]) : undefined}
+          >
+            <CalendarClock className="size-3" aria-hidden="true" />
+            {formatDate(new Date(card.dueAt), locale)}
+          </Chip>
+        ) : null}
+      </div>
+
+      <div className="flex items-center justify-between text-caption text-muted-foreground">
+        <div className="flex items-center gap-2.5">
+          {card.checklistTotal > 0 ? (
+            <span className="flex items-center gap-1">
+              <ListChecks className="size-3.5" aria-hidden="true" />
+              {card.checklistDone}/{card.checklistTotal}
+            </span>
+          ) : null}
+          {card.commentCount > 0 ? (
+            <span className="flex items-center gap-1">
+              <MessageSquare className="size-3.5" aria-hidden="true" />
+              {card.commentCount}
+            </span>
+          ) : null}
+          {card.links.length > 0 ? (
+            <span className="flex items-center gap-1">
+              <Link2 className="size-3.5" aria-hidden="true" />
+              {card.links.length}
+            </span>
+          ) : null}
+          {card.watchers.length > 0 ? (
+            <span className="flex items-center gap-1" title={t('work.field.watchers')}>
+              <Eye className="size-3.5" aria-hidden="true" />
+              {card.watchers.length}
+            </span>
+          ) : null}
+        </div>
+        {card.giverUserId ? (
+          <span title={t('work.field.giver')}>
+            {(() => {
+              const giver = members.find((m) => m.userId === card.giverUserId)
+              return giver ? (
+                <Avatar
+                  size="sm"
+                  src={null}
+                  alt={fullName(giver)}
+                  initials={initialsFromName(giver.givenName, giver.familyName)}
+                  hueSeed={giver.userId}
+                />
+              ) : null
+            })()}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  )
 
   return (
     <div className="relative">
       {closestEdge === 'top' ? (
         <div
-          className="absolute -top-1 inset-x-1 h-0.5 rounded-full bg-primary"
+          className="absolute -top-1 inset-x-1 z-10 h-0.5 rounded-full bg-primary"
           aria-hidden="true"
         />
       ) : null}
-      <div
-        ref={ref}
-        role="button"
-        tabIndex={0}
-        data-dragging={isDragging || undefined}
-        onClick={() => onOpen(card.id)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onOpen(card.id)
-          }
-        }}
-        className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 text-left shadow-1
-          transition-opacity duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
-          focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-          data-[dragging]:opacity-40"
-      >
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-small font-medium leading-snug text-foreground">{card.title}</p>
-          <div className="flex shrink-0 items-center gap-1">
-            <span
-              className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
-              aria-hidden="true"
-            >
-              <GripVertical className="size-4" />
-            </span>
-            <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} />
-          </div>
-        </div>
-
-        {activeLabels.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {activeLabels.map((l) => (
-              <span
-                key={l.id}
-                className="rounded-sm px-1.5 py-0.5 text-caption font-medium text-white"
-                style={{ backgroundColor: l.colour }}
-              >
-                {l.name}
-              </span>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {showPriority ? (
-            <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>{t(priorityKey)}</Badge>
-          ) : null}
-          {showRisk ? (
-            <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
-          ) : null}
-        </div>
-
-        <div className="flex items-center justify-between text-caption text-muted-foreground">
-          <div className="flex items-center gap-2.5">
-            {card.checklistTotal > 0 ? (
-              <span className="flex items-center gap-1">
-                <ListChecks className="size-3.5" aria-hidden="true" />
-                {card.checklistDone}/{card.checklistTotal}
-              </span>
-            ) : null}
-            {card.commentCount > 0 ? (
-              <span className="flex items-center gap-1">
-                <MessageSquare className="size-3.5" aria-hidden="true" />
-                {card.commentCount}
-              </span>
-            ) : null}
-            {card.links.length > 0 ? (
-              <span className="flex items-center gap-1">
-                <Link2 className="size-3.5" aria-hidden="true" />
-                {card.links.length}
-              </span>
-            ) : null}
-          </div>
-          {card.giverUserId ? (
-            <span title={t('work.field.giver')}>
-              {(() => {
-                const giver = members.find((m) => m.userId === card.giverUserId)
-                return giver ? (
-                  <Avatar
-                    size="sm"
-                    src={null}
-                    alt={fullName(giver)}
-                    initials={initialsFromName(giver.givenName, giver.familyName)}
-                    hueSeed={giver.userId}
-                  />
-                ) : null
-              })()}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      <PressScale disabled={isDragging}>
+        <HoverLift disabled={isDragging}>{cardBody}</HoverLift>
+      </PressScale>
       {closestEdge === 'bottom' ? (
         <div
-          className="absolute -bottom-1 inset-x-1 h-0.5 rounded-full bg-primary"
+          className="absolute -bottom-1 inset-x-1 z-10 h-0.5 rounded-full bg-primary"
           aria-hidden="true"
         />
       ) : null}

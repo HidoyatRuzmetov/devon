@@ -5,7 +5,7 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
-import { cn } from '@devon/ui'
+import { PageHeader, cn } from '@devon/ui'
 import { useBoardQuery } from '../hooks.js'
 import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'
@@ -39,26 +39,30 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-h2 text-foreground">{t('work.title')}</h1>
-        <nav className="flex flex-wrap gap-1" aria-label={t('work.title')}>
-          {TABS.map((tab) => (
-            <RouterLink
-              key={tab.path}
-              href={`${tab.path}${tab.layout === 'archive' ? '' : searchSuffix}`}
-              className={cn(
-                'rounded-sm px-3 py-1.5 text-small font-medium transition-colors duration-(--dur-micro)',
-                path === tab.path
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-foreground',
-              )}
-              aria-current={path === tab.path ? 'page' : undefined}
-            >
-              {t(tab.labelKey)}
-            </RouterLink>
-          ))}
-        </nav>
-      </div>
+      <PageHeader
+        eyebrow={t('work.eyebrow')}
+        title={t('work.title')}
+        description={t('work.description')}
+        tabs={
+          <nav className="flex flex-wrap gap-1 border-b border-border" aria-label={t('work.title')}>
+            {TABS.map((tab) => (
+              <RouterLink
+                key={tab.path}
+                href={`${tab.path}${tab.layout === 'archive' ? '' : searchSuffix}`}
+                className={cn(
+                  'relative -mb-px inline-flex min-h-11 items-center whitespace-nowrap px-3 text-body font-medium transition-colors duration-(--dur-micro)',
+                  path === tab.path
+                    ? 'border-b-2 border-primary text-foreground'
+                    : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground',
+                )}
+                aria-current={path === tab.path ? 'page' : undefined}
+              >
+                {t(tab.labelKey)}
+              </RouterLink>
+            ))}
+          </nav>
+        }
+      />
       {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
       {filterLayout ? <FilterBar layout={filterLayout} /> : null}
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>

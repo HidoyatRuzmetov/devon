@@ -1594,7 +1594,8 @@
     "noIdTitle": "No project selected",
     "noIdBody": "This link is missing a project id.",
     "tile": {
-      "progress": "{percent}% done"
+      "progress": "{percent}% done",
+      "progressAria": "{percent}% done"
     },
     "field": {
       "title": "Title",
@@ -1632,6 +1633,13 @@
     },
     "action": {
       "archive": "Archive project"
+    },
+    "ai": {
+      "plan": "Suggest today's order",
+      "planPreviewTitle": "AI plan preview",
+      "applyFocus": "Apply focus card",
+      "focus": "Start with: {title}",
+      "planApplied": "Focus card updated"
     }
   },
   "structure": {
@@ -1784,7 +1792,9 @@
     }
   },
   "work": {
+    "eyebrow": "WORK",
     "title": "Cards",
+    "description": "The People board: one column per department member.",
     "view": {
       "board": "Board",
       "table": "Table",
@@ -1799,13 +1809,21 @@
       "columnEmpty": "No cards",
       "emptyTitle": "No department members found",
       "emptyBody": "Add people to the department to see the board.",
-      "moved": "\"{title}\" moved to {target}'s column"
+      "moved": "\"{title}\" moved to {target}'s column",
+      "addCard": "+ Add card",
+      "expandColumn": "Expand column",
+      "collapseColumn": "Collapse column",
+      "loadCount": "{count} card(s) in this column"
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
       "created": "\"{title}\" created",
       "error": "Could not create the card",
-      "unknownAssignee": "No member matches \"{name}\""
+      "unknownAssignee": "No member matches \"{name}\"",
+      "aiParse": "Parse with AI",
+      "aiPreviewTitle": "AI-parsed card",
+      "aiError": "Could not parse that text",
+      "aiMeta": "{tokens} tokens · {ms} ms"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -1833,7 +1851,9 @@
       "links": "Links",
       "checklist": "Checklist",
       "comments": "Comments",
-      "activity": "Activity"
+      "activity": "Activity",
+      "project": "Project",
+      "labels": "Labels"
     },
     "card": {
       "peekTitle": "Card details",
@@ -1919,6 +1939,21 @@
       "save": "Save",
       "delete": "Delete",
       "send": "Send"
+    },
+    "ai": {
+      "accept": "Accept",
+      "edit": "Edit",
+      "discard": "Discard",
+      "retry": "Retry",
+      "translate": "Translate with AI",
+      "translatePreviewTitle": "AI translation",
+      "subtasks": "Suggest checklist items",
+      "subtasksPreviewTitle": "AI checklist suggestions",
+      "subtasksAdded": "{count} item(s) added",
+      "summarize": "Summarise with AI",
+      "summarizePreviewTitle": "AI summary",
+      "summarizeCitations": "Based on {count} comment(s)",
+      "postSummary": "Post as a comment"
     },
     "actions": {
       "create": "New card"

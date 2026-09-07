@@ -1,6 +1,8 @@
 {
   "work": {
+    "eyebrow": "РАБОТА",
     "title": "Задачи",
+    "description": "Доска сотрудников: по одной колонке на каждого работника отдела.",
     "view": {
       "board": "Доска",
       "table": "Таблица",
@@ -15,13 +17,21 @@
       "columnEmpty": "Нет карточек",
       "emptyTitle": "Сотрудники отдела не найдены",
       "emptyBody": "Чтобы увидеть доску, сначала добавьте сотрудников в отдел.",
-      "moved": "«{title}» перемещена в колонку «{target}»"
+      "moved": "«{title}» перемещена в колонку «{target}»",
+      "addCard": "+ Добавить карточку",
+      "expandColumn": "Развернуть колонку",
+      "collapseColumn": "Свернуть колонку",
+      "loadCount": "Карточек в колонке: {count}"
     },
     "quickAdd": {
       "placeholder": "Быстро добавить: «Нодира: пакет ЕГДИ, пятница»",
       "created": "«{title}» создана",
       "error": "Не удалось создать задачу",
-      "unknownAssignee": "Сотрудник «{name}» не найден"
+      "unknownAssignee": "Сотрудник «{name}» не найден",
+      "aiParse": "Распознать через ИИ",
+      "aiPreviewTitle": "Карточка, распознанная ИИ",
+      "aiError": "Не удалось распознать текст",
+      "aiMeta": "{tokens} токенов · {ms} мс"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -49,7 +59,9 @@
       "links": "Ссылки",
       "checklist": "Чек-лист",
       "comments": "Комментарии",
-      "activity": "История"
+      "activity": "История",
+      "project": "Проект",
+      "labels": "Метки"
     },
     "card": {
       "peekTitle": "Детали задачи",
@@ -135,6 +147,21 @@
       "save": "Сохранить",
       "delete": "Удалить",
       "send": "Отправить"
+    },
+    "ai": {
+      "accept": "Принять",
+      "edit": "Изменить",
+      "discard": "Отклонить",
+      "retry": "Повторить",
+      "translate": "Перевести с ИИ",
+      "translatePreviewTitle": "Перевод ИИ",
+      "subtasks": "Предложить пункты чек-листа",
+      "subtasksPreviewTitle": "Предложения ИИ для чек-листа",
+      "subtasksAdded": "Добавлено пунктов: {count}",
+      "summarize": "Подвести итог через ИИ",
+      "summarizePreviewTitle": "Итог от ИИ",
+      "summarizeCitations": "На основе {count} комментариев",
+      "postSummary": "Опубликовать как комментарий"
     },
     "actions": {
       "create": "Новая задача"

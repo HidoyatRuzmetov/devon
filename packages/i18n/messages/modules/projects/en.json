@@ -6,7 +6,8 @@
     "noIdTitle": "No project selected",
     "noIdBody": "This link is missing a project id.",
     "tile": {
-      "progress": "{percent}% done"
+      "progress": "{percent}% done",
+      "progressAria": "{percent}% done"
     },
     "field": {
       "title": "Title",
@@ -44,6 +45,13 @@
     },
     "action": {
       "archive": "Archive project"
+    },
+    "ai": {
+      "plan": "Suggest today's order",
+      "planPreviewTitle": "AI plan preview",
+      "applyFocus": "Apply focus card",
+      "focus": "Start with: {title}",
+      "planApplied": "Focus card updated"
     }
   }
 }

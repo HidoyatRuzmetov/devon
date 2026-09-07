@@ -36,6 +36,31 @@ export const RISK_BADGE_TONE: Record<CardRisk, 'destructive' | 'warning' | 'neut
   none: 'neutral',
 }
 
+/** The due chip's `Chip` tone (board card, table row): risk is the one thing a due date needs to say
+ * at a glance, so the chip itself carries the colour rather than pairing a neutral chip with a
+ * separate risk badge (DESIGN.md's "colour is never the only signal" is still satisfied -- the date
+ * text and, on the card, the risk word in a tooltip are always there too). */
+export const DUE_CHIP_TONE: Record<CardRisk, 'destructive' | 'attention' | 'neutral'> = {
+  overdue: 'destructive',
+  at_risk: 'attention',
+  none: 'neutral',
+}
+
+/** Priority glyph (DESIGN.md "cards with ... priority glyph"): one small shape per level so priority
+ * reads before the label does, the way Linear's priority icon does. Kept as a lookup of icon *names*
+ * (not JSX) so this file -- shared by every card-rendering surface -- never imports `lucide-react`
+ * just to describe which icon a level gets; each component maps the name to its own icon import. */
+export const PRIORITY_ICON_NAME: Record<
+  CardPriority,
+  'ChevronsUp' | 'ChevronUp' | 'Minus' | 'ChevronDown' | null
+> = {
+  urgent: 'ChevronsUp',
+  high: 'ChevronUp',
+  medium: 'Minus',
+  low: 'ChevronDown',
+  none: null,
+}
+
 export const STATUS_LABEL_KEY: Record<CardStatus, string> = {
   active: 'work.status.active',
   done: 'work.status.done',

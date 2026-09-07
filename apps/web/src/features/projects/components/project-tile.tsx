@@ -7,33 +7,61 @@
 // deliberate cross-feature import in this build, because EPIC-005 explicitly builds "one project card
 // in every member's column" on top of EPIC-004's board, not the other way around.
 import { useT } from '@devon/i18n'
+import { HoverLift, ProgressRing, cn, useReducedMotion } from '@devon/ui'
 import { RouterLink } from '../../../lib/router.js'
 import type { Project } from '../api.js'
 
+/** DESIGN.md's Jakob map ("Projects": "project cards with a progress ring and pulse"): a live project
+ * gets a soft breathing halo behind its ring so it reads as "in motion" at a glance among a member's
+ * cards -- done/archived projects sit still, and reduced motion always drops the pulse (the ring
+ * itself, and the percentage inside it, are the feedback that survives). */
 export function ProjectTile({ project }: { project: Project }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const percent = Math.round(project.progress * 100)
+  const pulsing = project.status === 'active' && !reduced
+
   return (
-    <RouterLink
-      href={`/projects/view?id=${encodeURIComponent(project.id)}`}
-      className="flex flex-col gap-1.5 rounded-md border border-border bg-card p-3 text-left shadow-1
-        transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
-        focus-visible:ring-ring focus-visible:ring-offset-2"
-    >
-      <div className="flex items-center gap-2">
-        <span
-          className="size-2.5 shrink-0 rounded-full"
-          style={{ backgroundColor: project.colour }}
-          aria-hidden="true"
-        />
-        <span className="truncate text-small font-semibold text-foreground">{project.title}</span>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
-      </div>
-      <span className="text-caption text-muted-foreground">
-        {t('projects.tile.progress', { percent })}
-      </span>
-    </RouterLink>
+    <HoverLift>
+      <RouterLink
+        href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+        className="flex items-center gap-3 rounded-md border border-border bg-card p-3 text-left shadow-1
+          transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
+          focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <span className="relative inline-flex shrink-0 items-center justify-center">
+          {pulsing ? (
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 animate-ping rounded-full bg-primary/20"
+            />
+          ) : null}
+          <ProgressRing
+            value={percent}
+            size={40}
+            strokeWidth={3.5}
+            label={t('projects.tile.progressAria', { percent })}
+            toneClassName={project.status === 'done' ? 'text-success' : 'text-primary'}
+          >
+            {percent}
+          </ProgressRing>
+        </span>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={cn('size-2 shrink-0 rounded-full')}
+              style={{ backgroundColor: project.colour }}
+              aria-hidden="true"
+            />
+            <span className="truncate text-small font-semibold text-foreground">
+              {project.title}
+            </span>
+          </div>
+          <span className="text-caption text-muted-foreground">
+            {t('projects.tile.progress', { percent })}
+          </span>
+        </div>
+      </RouterLink>
+    </HoverLift>
   )
 }

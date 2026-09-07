@@ -6,7 +6,8 @@
     "noIdTitle": "Лойиҳа кўрсатилмаган",
     "noIdBody": "Ҳаволада лойиҳа идентификатори йўқ.",
     "tile": {
-      "progress": "{percent}% бажарилди"
+      "progress": "{percent}% бажарилди",
+      "progressAria": "{percent}% бажарилди"
     },
     "field": {
       "title": "Номи",
@@ -44,6 +45,13 @@
     },
     "action": {
       "archive": "Лойиҳани архивлаш"
+    },
+    "ai": {
+      "plan": "Бугунги тартибни таклиф қилиш",
+      "planPreviewTitle": "AI режа кўриниши",
+      "applyFocus": "Асосий картани қўллаш",
+      "focus": "Шундан бошланг: {title}",
+      "planApplied": "Асосий карта янгиланди"
     }
   }
 }

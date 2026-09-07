@@ -1594,7 +1594,8 @@
     "noIdTitle": "Loyiha koʻrsatilmagan",
     "noIdBody": "Havolada loyiha identifikatori yoʻq.",
     "tile": {
-      "progress": "{percent}% bajarildi"
+      "progress": "{percent}% bajarildi",
+      "progressAria": "{percent}% bajarildi"
     },
     "field": {
       "title": "Nomi",
@@ -1632,6 +1633,13 @@
     },
     "action": {
       "archive": "Loyihani arxivlash"
+    },
+    "ai": {
+      "plan": "Bugungi tartibni taklif qilish",
+      "planPreviewTitle": "AI reja koʻrinishi",
+      "applyFocus": "Asosiy kartani qoʻllash",
+      "focus": "Shundan boshlang: {title}",
+      "planApplied": "Asosiy karta yangilandi"
     }
   },
   "structure": {
@@ -1784,7 +1792,9 @@
     }
   },
   "work": {
+    "eyebrow": "ISH",
     "title": "Vazifalar",
+    "description": "Xodimlar doskasi: boshqarma aʼzosiga bitta ustundan.",
     "view": {
       "board": "Doska",
       "table": "Jadval",
@@ -1799,13 +1809,21 @@
       "columnEmpty": "Vazifalar yoʻq",
       "emptyTitle": "Boshqarma aʼzolari topilmadi",
       "emptyBody": "Doska koʻrinishi uchun avval boshqarmaga aʼzolar qoʻshilishi kerak.",
-      "moved": "\"{title}\" {target} ustuniga koʻchirildi"
+      "moved": "\"{title}\" {target} ustuniga koʻchirildi",
+      "addCard": "+ Karta qoʻshish",
+      "expandColumn": "Ustunni yoyish",
+      "collapseColumn": "Ustunni yigʻish",
+      "loadCount": "Ustunda {count} ta karta"
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",
       "created": "\"{title}\" yaratildi",
       "error": "Vazifani yaratib boʻlmadi",
-      "unknownAssignee": "\"{name}\" nomli xodim topilmadi"
+      "unknownAssignee": "\"{name}\" nomli xodim topilmadi",
+      "aiParse": "AI bilan aniqlash",
+      "aiPreviewTitle": "AI aniqlagan karta",
+      "aiError": "Matnni aniqlab boʻlmadi",
+      "aiMeta": "{tokens} token · {ms} ms"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -1833,7 +1851,9 @@
       "links": "Havolalar",
       "checklist": "Bajarish roʻyxati",
       "comments": "Izohlar",
-      "activity": "Tarix"
+      "activity": "Tarix",
+      "project": "Loyiha",
+      "labels": "Yorliqlar"
     },
     "card": {
       "peekTitle": "Vazifa tafsilotlari",
@@ -1919,6 +1939,21 @@
       "save": "Saqlash",
       "delete": "Oʻchirish",
       "send": "Yuborish"
+    },
+    "ai": {
+      "accept": "Qabul qilish",
+      "edit": "Tahrirlash",
+      "discard": "Bekor qilish",
+      "retry": "Qayta urinish",
+      "translate": "AI bilan tarjima qilish",
+      "translatePreviewTitle": "AI tarjimasi",
+      "subtasks": "Roʻyxat bandlarini taklif qilish",
+      "subtasksPreviewTitle": "AI roʻyxat takliflari",
+      "subtasksAdded": "{count} ta band qoʻshildi",
+      "summarize": "AI bilan xulosalash",
+      "summarizePreviewTitle": "AI xulosasi",
+      "summarizeCitations": "{count} ta izoh asosida",
+      "postSummary": "Izoh sifatida joylash"
     },
     "actions": {
       "create": "Yangi vazifa"
