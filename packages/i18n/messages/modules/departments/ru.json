@@ -2,7 +2,9 @@
   "departments": {
     "title": "Отделы",
     "subtitle": "Ваши отделы и способы к ним присоединиться",
-    "common": { "cancel": "Отмена" },
+    "common": {
+      "cancel": "Отмена"
+    },
     "landing": {
       "eyebrow": "Отделы",
       "title": "Выберите, с чего начать",
@@ -169,7 +171,6 @@
     "hub": {
       "statHead": "Руководитель",
       "statMembers": "Участники",
-      "statRole": "Ваша роль",
       "noHead": "Пока не назначен",
       "otherMemberships": "Другие ваши отделы",
       "manageLink": "Открыть настройки"

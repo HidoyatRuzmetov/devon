@@ -82,6 +82,13 @@ export const departmentListSchema = z.object({ departments: z.array(departmentDe
 
 export const inviteViewSchema = z.object({
   joinKey: z.string().nullable(),
+  // round2 critique #29: the client used to build this from `window.location.origin`, which is
+  // correct behaviour on the demo box but the first thing a reviewer notices as "wrong" -- the
+  // server already knows its own configured public origin (`DEVON_PUBLIC_URL`, the same value
+  // `print-setup-url.ts`'s setup link and the Telegram deep links use), so it builds the join URL
+  // once, here, and the client never guesses at it again. `null` exactly when `joinKey` is `null`
+  // (no active invite to link to).
+  joinUrl: z.string().nullable(),
   joinRequiresApproval: z.boolean(),
   hasPassword: z.boolean(),
 })

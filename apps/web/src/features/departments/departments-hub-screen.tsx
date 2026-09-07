@@ -9,7 +9,7 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { ArrowRight, Building2, ChevronRight, Plus, RefreshCw, Users } from 'lucide-react'
+import { ArrowRight, Building2, ChevronRight, Copy, Plus, RefreshCw, Users } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
   Avatar,
@@ -18,6 +18,7 @@ import {
   CreateDepartmentIllustration,
   HoverLift,
   HubAmbientWash,
+  IconButton,
   Input,
   JoinDepartmentIllustration,
   PageHeader,
@@ -126,9 +127,11 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
       </div>
     )
   }
-  if (inviteQuery.isError || !inviteQuery.data.joinKey) return null
+  if (inviteQuery.isError || !inviteQuery.data.joinKey || !inviteQuery.data.joinUrl) return null
 
-  const link = `${window.location.origin}/join?key=${inviteQuery.data.joinKey}`
+  // round2 critique #29: the server's own configured public origin (`DEVON_PUBLIC_URL`), not this
+  // tab's `window.location.origin` -- see `inviteViewSchema`'s own comment.
+  const link = inviteQuery.data.joinUrl
 
   function copyInvitation() {
     const text = revealedPassword
@@ -150,10 +153,15 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
       </span>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <div className="flex flex-1 flex-col gap-2">
-          <Input readOnly value={link} className="font-mono text-small" />
-          <Button size="sm" className="w-fit" onClick={copyInvitation}>
-            {t('departments.invite.copyInvite')}
-          </Button>
+          {/* round2 SEV3 #29: the copy action used to be a full-width button sitting below the
+              field -- now an inline icon button next to it, the same recipe the sentinel key field
+              uses. */}
+          <div className="flex items-center gap-2">
+            <Input readOnly value={link} className="min-w-0 flex-1 font-mono text-small" />
+            <IconButton aria-label={t('departments.invite.copyInvite')} onClick={copyInvitation}>
+              <Copy className="size-4" aria-hidden="true" />
+            </IconButton>
+          </div>
         </div>
         {/* Fixed black-on-white, never theme tokens: a QR scanner needs the highest contrast the
             camera can find, not the current colour scheme. */}
@@ -266,16 +274,16 @@ function CurrentDepartmentCard({
       }
     >
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* round2 SEV3 #29: the role used to appear twice -- once as the header badge, once as its
+            own "SIZNING ROLINGIZ" stat here. The badge already says it; this grid only needs the
+            two facts it doesn't carry. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Stat label={t('departments.hub.statHead')}>{headStat}</Stat>
           <Stat label={t('departments.hub.statMembers')}>
             <span className="flex items-center gap-1.5">
               <Users className="size-4 text-muted-foreground" aria-hidden="true" />
               {department.memberCount}
             </span>
-          </Stat>
-          <Stat label={t('departments.hub.statRole')}>
-            {t(isHead ? 'departments.members.roleHead' : 'departments.members.roleMember')}
           </Stat>
         </div>
 

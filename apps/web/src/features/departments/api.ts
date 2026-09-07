@@ -121,6 +121,9 @@ export function requestDepartmentDeletion(id: string, csrfToken: string) {
 
 const inviteViewSchema = z.object({
   joinKey: z.string().nullable(),
+  // The server's own configured public origin (round2 critique #29) -- never built from
+  // `window.location.origin` on this side.
+  joinUrl: z.string().nullable(),
   joinRequiresApproval: z.boolean(),
   hasPassword: z.boolean(),
 })

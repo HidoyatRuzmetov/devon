@@ -2,7 +2,9 @@
   "departments": {
     "title": "Boʻlimlar",
     "subtitle": "Sizning boʻlimlaringiz va ularga qoʻshilish yoʻllari",
-    "common": { "cancel": "Bekor qilish" },
+    "common": {
+      "cancel": "Bekor qilish"
+    },
     "landing": {
       "eyebrow": "Boʻlimlar",
       "title": "Boshlash uchun boʻlim tanlang",
@@ -169,7 +171,6 @@
     "hub": {
       "statHead": "Boshliq",
       "statMembers": "A'zolar",
-      "statRole": "Sizning rolingiz",
       "noHead": "Hali tayinlanmagan",
       "otherMemberships": "Boshqa a'zoliklaringiz",
       "manageLink": "Sozlamalarni ochish"

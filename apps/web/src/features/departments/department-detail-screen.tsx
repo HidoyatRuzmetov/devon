@@ -33,7 +33,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { MoreVertical, RefreshCw } from 'lucide-react'
+import { Copy, MoreVertical, RefreshCw } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
@@ -221,7 +221,9 @@ function InviteTab({ id }: { id: string }) {
   }
 
   const invite = inviteQuery.data
-  const link = invite.joinKey ? `${window.location.origin}/join?key=${invite.joinKey}` : null
+  // round2 critique #29: the server's own configured public origin, not this tab's
+  // `window.location.origin` -- see `inviteViewSchema`'s own comment.
+  const link = invite.joinKey ? invite.joinUrl : null
 
   function copyInviteText() {
     if (!link || !revealedPassword) return
@@ -245,18 +247,17 @@ function InviteTab({ id }: { id: string }) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex flex-1 flex-col gap-2">
               <div className="flex items-center gap-2">
-                <Input readOnly value={link} className="font-mono text-small" />
-                <Button
-                  size="sm"
-                  variant="secondary"
+                <Input readOnly value={link} className="min-w-0 flex-1 font-mono text-small" />
+                <IconButton
+                  aria-label={t('departments.invite.copyLink')}
                   onClick={() => {
                     void navigator.clipboard
                       .writeText(link)
                       .then(() => toast(t('departments.invite.copiedLink')))
                   }}
                 >
-                  {t('departments.invite.copyLink')}
-                </Button>
+                  <Copy className="size-4" aria-hidden="true" />
+                </IconButton>
               </div>
               <label className="flex items-center justify-between gap-4 pt-1">
                 <span className="text-small text-foreground">

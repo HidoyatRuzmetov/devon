@@ -267,7 +267,13 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send(invite)
+      reply.send({
+        ...invite,
+        // round2 critique #29: the configured public origin, not the client's own guess at it.
+        joinUrl: invite.joinKey
+          ? `${app.devonConfig.DEVON_PUBLIC_URL}/join?key=${invite.joinKey}`
+          : null,
+      })
     },
   )
 

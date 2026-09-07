@@ -2,7 +2,9 @@
   "departments": {
     "title": "Departments",
     "subtitle": "Your departments, and ways to join more",
-    "common": { "cancel": "Cancel" },
+    "common": {
+      "cancel": "Cancel"
+    },
     "landing": {
       "eyebrow": "Departments",
       "title": "Create a department or join one",
@@ -169,7 +171,6 @@
     "hub": {
       "statHead": "Head",
       "statMembers": "Members",
-      "statRole": "Your role",
       "noHead": "Not yet assigned",
       "otherMemberships": "Your other memberships",
       "manageLink": "Open settings"
