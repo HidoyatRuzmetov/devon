@@ -15,7 +15,6 @@ import {
   type FilterClause,
 } from '@devon/contracts'
 import {
-  Button,
   cn,
   comboboxScore,
   FilterChip,
