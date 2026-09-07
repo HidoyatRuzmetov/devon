@@ -227,7 +227,8 @@ function EventHeader({
       <EventIllustration
         illustrationKey={event.illustrationKey}
         category={event.category}
-        className="h-36 w-full rounded-md object-cover"
+        eventId={event.id}
+        className="aspect-video w-full rounded-md object-cover"
       />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">

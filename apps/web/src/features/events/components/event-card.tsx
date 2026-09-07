@@ -92,11 +92,19 @@ export function EventCard({ event, onOpen }: { event: EventDto; onOpen: () => vo
         onClick={onOpen}
         className="group flex h-full w-full flex-col overflow-hidden rounded-md border border-border bg-card text-left shadow-1 transition-shadow duration-(--dur-standard) ease-out hover:shadow-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <div className="relative">
+        <div className="relative aspect-video w-full overflow-hidden">
           <EventIllustration
             illustrationKey={event.illustrationKey}
             category={event.category}
-            className="h-28 w-full object-cover"
+            eventId={event.id}
+            className="size-full object-cover"
+          />
+          {/* A soft top scrim, not the illustration's own colour: the date block and status pill
+              need to stay readable regardless of which of the four look variants (illustrations/
+              index.tsx) or which illustration this event landed on. */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-foreground/40 to-transparent"
           />
           <div className="absolute left-3 top-3">
             <DateBlock date={starts} locale={locale} />
