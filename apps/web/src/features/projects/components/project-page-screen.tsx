@@ -9,7 +9,7 @@
 // SVG for six milestones per project at this build's scale.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarClock, CheckCircle2 } from 'lucide-react'
+import { CalendarClock, CheckCircle2, ChevronLeft } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   AiPreviewPanel,
@@ -32,7 +32,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { useSearchParams } from '../../../lib/router.js'
+import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { fetchCards } from '../../work/api.js'
 import type { Card } from '../../work/api.js'
@@ -190,6 +190,17 @@ export default function ProjectPageScreen() {
   return (
     <>
       <div className="mx-auto flex max-w-220 flex-col gap-6 pb-12">
+        {/* DESIGN.md §9.1: PageContainer -> PageHeader is the only way a screen starts; this screen's
+            header is too specialised (progress ring, colour dot, member stack) to fit PageHeader's
+            title/description/actions shape, but it was still missing the one PageHeader gives every
+            other screen for free -- a breadcrumb back to the list. */}
+        <RouterLink
+          href="/projects"
+          className="inline-flex w-fit items-center gap-1 text-small text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          {t('projects.title')}
+        </RouterLink>
         <header className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <ProgressRing

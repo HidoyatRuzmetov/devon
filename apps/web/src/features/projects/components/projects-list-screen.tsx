@@ -3,7 +3,7 @@
 // with a way to start a new one.
 import type * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Skeleton, StateView } from '@devon/ui'
+import { PageHeader, Skeleton, StateView } from '@devon/ui'
 import { useProjectsQuery } from '../hooks.js'
 import { CreateProjectDialog } from './create-project-dialog.js'
 import { ProjectTile } from './project-tile.js'
@@ -44,10 +44,12 @@ export default function ProjectsListScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-h2 text-foreground">{t('projects.title')}</h1>
-        <CreateProjectDialog />
-      </div>
+      <PageHeader
+        eyebrow={t('projects.eyebrow')}
+        title={t('projects.title')}
+        description={t('projects.description')}
+        actions={<CreateProjectDialog />}
+      />
       {body}
     </div>
   )

@@ -1,6 +1,8 @@
 {
   "projects": {
+    "eyebrow": "PROJECTS",
     "title": "Group projects",
+    "description": "Every group project the department is running, and its progress.",
     "emptyTitle": "No projects yet",
     "emptyBody": "Start the first group project -- from a template or from scratch.",
     "noIdTitle": "No project selected",

@@ -1833,7 +1833,9 @@
     }
   },
   "projects": {
+    "eyebrow": "LOYIHALAR",
     "title": "Guruh loyihalari",
+    "description": "Boʻlim yuritayotgan barcha guruh loyihalari, taraqqiyoti bilan.",
     "emptyTitle": "Hali loyihalar yoʻq",
     "emptyBody": "Birinchi guruh loyihasini yarating -- shablondan yoki boshidan.",
     "noIdTitle": "Loyiha koʻrsatilmagan",
