@@ -33,6 +33,7 @@
     "vitest": "4.1.11"
   },
   "dependencies": {
+    "@devon/ai": "workspace:*",
     "@devon/contracts": "workspace:*",
     "@devon/db": "workspace:*",
     "@fastify/cookie": "11.1.2",

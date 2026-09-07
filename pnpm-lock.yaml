@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@devon/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@devon/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
