@@ -6,8 +6,8 @@
 // `Enter` in the text field applies the filter (form submit) exactly like every other search input in
 // this app.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
-import { Button, chipVariants, cn, FilterChip, Input } from '@devon/ui'
+import { useT, useLocale } from '@devon/i18n'
+import { Button, chipVariants, cn, DatePicker, FilterChip, Input } from '@devon/ui'
 import { Save } from 'lucide-react'
 import {
   useCreateSavedFilterMutation,
@@ -27,6 +27,21 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** `value.since`/`value.until` are plain `YYYY-MM-DD` (the API's own query param shape) -- parsed as
+ *  local midnight, not `new Date(iso)` (which reads a bare date as UTC midnight and can display a day
+ *  off in a timezone west of UTC, which Tashkent, UTC+5, never is, but the component should not rely
+ *  on that). */
+function parseIsoDate(iso: string): Date | undefined {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  if (!m) return undefined
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+}
+
+function toIsoDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 /** Splits the filter-grammar text into its space-separated terms, respecting a `"quoted phrase"`
  * (e.g. `project:"Autumn fair"`) as one term -- the same tokens `@devon/contracts`'s
  * `parseFilterQuery` treats as one clause, so a chip always removes exactly one clause. */
@@ -43,6 +58,7 @@ export function FilterBar({
   onChange: (next: FilterBarValue) => void
 }) {
   const t = useT()
+  const locale = useLocale()
   const [draft, setDraft] = React.useState(value.filter)
   const [saveOpen, setSaveOpen] = React.useState(false)
   const [saveName, setSaveName] = React.useState('')
@@ -130,26 +146,32 @@ export function FilterBar({
             {t('analytics.filterBar.presetDays', { count: days })}
           </FilterChip>
         ))}
-        <label className="ml-2 flex items-center gap-1.5 text-small text-muted-foreground">
+        {/* DESIGN.md §5: DD.MM.YYYY, never the browser's own locale format -- a native
+            <input type="date"> renders US M/D/Y regardless of app locale and carries its own
+            un-tokenised chrome (calendar icon, popup, focus ring). The shared DatePicker
+            (react-day-picker, Monday-start, Intl month names) replaces both fields. */}
+        <span className="ml-2 flex items-center gap-1.5 text-small text-muted-foreground">
           {t('analytics.filterBar.since')}
-          <Input
-            type="date"
-            value={value.since}
-            onChange={(e) => onChange({ ...value, since: e.target.value })}
-            className="h-8 w-auto"
-            aria-label={t('analytics.filterBar.since')}
+          <DatePicker
+            locale={locale}
+            label={t('analytics.filterBar.since')}
+            placeholder={t('analytics.filterBar.since')}
+            selected={parseIsoDate(value.since)}
+            onSelect={(date) => date && onChange({ ...value, since: toIsoDate(date) })}
+            triggerClassName="h-8 w-auto min-w-0 py-0"
           />
-        </label>
-        <label className="flex items-center gap-1.5 text-small text-muted-foreground">
+        </span>
+        <span className="flex items-center gap-1.5 text-small text-muted-foreground">
           {t('analytics.filterBar.until')}
-          <Input
-            type="date"
-            value={value.until}
-            onChange={(e) => onChange({ ...value, until: e.target.value })}
-            className="h-8 w-auto"
-            aria-label={t('analytics.filterBar.until')}
+          <DatePicker
+            locale={locale}
+            label={t('analytics.filterBar.until')}
+            placeholder={t('analytics.filterBar.until')}
+            selected={parseIsoDate(value.until)}
+            onSelect={(date) => date && onChange({ ...value, until: toIsoDate(date) })}
+            triggerClassName="h-8 w-auto min-w-0 py-0"
           />
-        </label>
+        </span>
       </div>
 
       {saveOpen ? (
