@@ -202,7 +202,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   const requesterUserId = extraUserId(requester)
   const units = JSON.stringify([
     { name: 'Litsenziya nazorati', colour: '#2563eb' },
-    { name: "Ruxsatnomalar boʻlimi", colour: '#16a34a' },
+    { name: 'Ruxsatnomalar boʻlimi', colour: '#16a34a' },
   ])
   const insertedRequest = await tx.raw<{ id: string }>(
     sql`insert into app.department_requests
@@ -211,7 +211,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
           ${PENDING_REQUEST_ID},
           ${requesterUserId},
           'Litsenziyalash boshqarmasi',
-          ${"Litsenziyalar va ruxsatnomalar bilan ishlash boʻyicha boshqarma."},
+          ${'Litsenziyalar va ruxsatnomalar bilan ishlash boʻyicha boshqarma.'},
           ${units}::jsonb,
           'uz-Latn',
           'pending'

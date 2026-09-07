@@ -43,8 +43,7 @@ function findWrongApostrophes(source: string): string[] {
   while ((stringMatch = DOUBLE_QUOTED_STRING.exec(source))) {
     const literal = stringMatch[0]
     WRONG_UZBEK_APOSTROPHE.lastIndex = 0
-    let apostropheMatch: RegExpExecArray | null
-    while ((apostropheMatch = WRONG_UZBEK_APOSTROPHE.exec(literal))) {
+    if (WRONG_UZBEK_APOSTROPHE.test(literal)) {
       hits.push(literal)
     }
   }

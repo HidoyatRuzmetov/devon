@@ -33,7 +33,7 @@ const SHOWCASE_DEPARTMENTS: ShowcaseDept[] = [
     slug: 'arxiv-boshqarmasi',
     status: 'paused_by_admin',
     description:
-      "Qayta tashkil etilishi kutilmoqda -- super administrator tomonidan vaqtincha toʻxtatilgan.",
+      'Qayta tashkil etilishi kutilmoqda -- super administrator tomonidan vaqtincha toʻxtatilgan.',
   },
   {
     key: 'department.licensing_old',

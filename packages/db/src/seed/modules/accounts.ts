@@ -104,7 +104,7 @@ const TITLES = [
   'Kichik mutaxassis',
   'Dasturchi',
   'Tahlilchi',
-  "Boʻlim boshligʻi oʻrinbosari",
+  'Boʻlim boshligʻi oʻrinbosari',
 ]
 
 function buildExtraUsers(): ExtraUser[] {
