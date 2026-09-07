@@ -31,7 +31,7 @@ function Group({ titleKey, cards, locale }: { titleKey: string; cards: Card[]; l
             onClick={() => openCardPeek(card.id)}
             className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-3 text-left hover:border-ring/50"
           >
-            <span className="truncate text-small text-foreground">{card.title}</span>
+            <span className="min-w-0 flex-1 truncate text-small text-foreground">{card.title}</span>
             <span className="flex shrink-0 items-center gap-2">
               {card.priority !== 'none' ? (
                 <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>

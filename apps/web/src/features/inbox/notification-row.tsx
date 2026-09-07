@@ -75,7 +75,11 @@ export function NotificationRow({
         type="button"
         onClick={onOpen}
         className={cn(
-          'flex flex-1 items-start gap-3 rounded-sm text-left',
+          // `min-w-0`: a flex item's default `min-width: auto` refuses to shrink below its content's
+          // natural width, so without it this button (and the `truncate` title inside it) never
+          // actually shrinks -- it pushes the `shrink-0` action cluster past the row's own box instead
+          // of truncating, leaving the clock/archive buttons floating in the gutter next to the row.
+          'flex min-w-0 flex-1 items-start gap-3 rounded-sm text-left',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         )}
       >
