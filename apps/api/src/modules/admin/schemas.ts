@@ -167,9 +167,20 @@ export const chainVerificationDetailSchema = z.object({
   failure: z.enum(['row_hash_mismatch', 'prev_hash_mismatch']).nullable(),
 })
 
+// Structured rather than a pre-built English sentence (round2 SEV1: "0 pending event(s)" rendered
+// verbatim in the uz/ru console, "(s)" plural and all) -- the web layer looks `code` up as
+// `admin.console.health.detail.<code>` and interpolates `params` itself, so every locale controls its
+// own wording (and its own pluralisation) instead of inheriting whatever the server happened to build.
+const healthDetailSchema = z
+  .object({
+    code: z.string(),
+    params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  })
+  .nullable()
+
 const healthCheckSchema = z.object({
   status: z.enum(['ok', 'degraded', 'down', 'not_configured']),
-  detail: z.string().nullable(),
+  detail: healthDetailSchema,
   latencyMs: z.number().int().nullable(),
 })
 export const adminHealthSchema = z.object({

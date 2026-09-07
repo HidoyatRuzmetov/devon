@@ -1,16 +1,34 @@
 // `/admin/health` -- queues, DB, storage, Telegram, AI endpoint latency, backups.
 import { useQuery } from '@tanstack/react-query'
-import { useT, useLocale, formatTime } from '@devon/i18n'
+import { useT, useLocale, formatTime, formatNumber } from '@devon/i18n'
 import { Badge, Button, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { fetchAdminHealth, type HealthCheck } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 import { StatusDot } from './charts.js'
 
+/** Formats a `HealthCheck.detail` (`{ code, params }`) into the sentence for the current locale --
+ * `code` is looked up as `admin.console.health.detail.<code>`, and any numeric params are run through
+ * `formatNumber` first (DESIGN.md §5's space grouping/uz-Latn fix) rather than interpolated raw, so a
+ * pending-event count reads the same way every other number on the screen does. */
+function useHealthDetailText(): (detail: HealthCheck['detail']) => string | null {
+  const t = useT()
+  const locale = useLocale()
+  return (detail) => {
+    if (!detail) return null
+    const params: Record<string, string> = {}
+    for (const [key, value] of Object.entries(detail.params ?? {})) {
+      params[key] = typeof value === 'number' ? formatNumber(value, locale) : value
+    }
+    return t(`admin.console.health.detail.${detail.code}`, params)
+  }
+}
+
+// DESIGN.md §2.1: green stays reserved for success/approved/on-track (round2 SEV2 "Ishlayapti").
 const STATUS_TONE: Record<
   HealthCheck['status'],
-  'success' | 'warning' | 'destructive' | 'neutral'
+  'info' | 'warning' | 'destructive' | 'neutral'
 > = {
-  ok: 'success',
+  ok: 'info',
   degraded: 'warning',
   down: 'destructive',
   not_configured: 'neutral',
@@ -18,18 +36,22 @@ const STATUS_TONE: Record<
 
 function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }) {
   const t = useT()
+  const locale = useLocale()
+  const detailText = useHealthDetailText()(check.detail)
   return (
     <StaggerItem as="li" className="flex items-center justify-between gap-4 py-3">
       <div className="flex items-center gap-3">
         <StatusDot status={check.status} />
         <div>
           <p className="text-body text-foreground">{t(labelKey)}</p>
-          {check.detail ? <p className="text-small text-muted-foreground">{check.detail}</p> : null}
+          {detailText ? <p className="text-small text-muted-foreground">{detailText}</p> : null}
         </div>
       </div>
       <div className="flex items-center gap-2">
         {check.latencyMs !== null ? (
-          <span className="text-small tabular-nums text-muted-foreground">{check.latencyMs}ms</span>
+          <span className="text-small tabular-nums text-muted-foreground">
+            {formatNumber(check.latencyMs, locale)}{' '}ms
+          </span>
         ) : null}
         <Badge tone={STATUS_TONE[check.status]}>
           {t(`admin.console.health.status.${check.status}`)}

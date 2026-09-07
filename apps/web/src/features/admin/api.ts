@@ -228,9 +228,18 @@ export function fetchAuditVerify() {
   return apiClient.get('/api/v1/admin/audit/verify', chainVerificationSchema)
 }
 
+// Structured -- see the matching comment in apps/api/src/modules/admin/schemas.ts. `code` is looked
+// up as `admin.console.health.detail.<code>` and `params` interpolated by the caller (health-screen.tsx).
+const healthDetailSchema = z
+  .object({
+    code: z.string(),
+    params: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  })
+  .nullable()
+
 const healthCheckSchema = z.object({
   status: z.enum(['ok', 'degraded', 'down', 'not_configured']),
-  detail: z.string().nullable(),
+  detail: healthDetailSchema,
   latencyMs: z.number().int().nullable(),
 })
 export const adminHealthSchema = z.object({

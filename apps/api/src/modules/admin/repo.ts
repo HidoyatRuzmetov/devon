@@ -754,9 +754,15 @@ export async function recordAuditExport(ctx: AuditCtx): Promise<void> {
 // ---------------------------------------------------------------------------------------------
 // System health
 
+/** `detail.code` is looked up by the web layer as `admin.console.health.detail.<code>` and
+ * `detail.params` interpolated there -- round2 SEV1 found raw English sentences ("0 pending
+ * event(s)", "0 group(s) connected") rendering verbatim in the Uzbek/Russian console because no
+ * web-layer i18n can reach a string built server-side. A raw `message` param (an underlying DB/fetch
+ * error) is left untranslated on purpose -- it is a technical detail for whoever reads the console
+ * next, not user-facing copy. */
 export type HealthCheck = {
   status: 'ok' | 'degraded' | 'down' | 'not_configured'
-  detail: string | null
+  detail: { code: string; params?: Record<string, string | number> } | null
   latencyMs: number | null
 }
 
@@ -764,6 +770,13 @@ async function timed<T>(fn: () => Promise<T>): Promise<{ result: T; ms: number }
   const start = Date.now()
   const result = await fn()
   return { result, ms: Date.now() - start }
+}
+
+/** The underlying error text for an `error.raw` detail -- deliberately left untranslated (see
+ * `HealthCheck`'s doc comment): it is whatever Postgres/Node/fetch actually said, for whoever reads
+ * the console next, not user-facing copy. */
+function rawErrorMessage(err: unknown, fallback = 'unknown error'): string {
+  return err instanceof Error ? err.message.slice(0, 200) : fallback
 }
 
 export async function getSystemHealth(): Promise<{
@@ -784,7 +797,7 @@ export async function getSystemHealth(): Promise<{
     } catch (err) {
       return {
         status: 'down',
-        detail: err instanceof Error ? err.message.slice(0, 200) : 'unknown error',
+        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
         latencyMs: null,
       }
     }
@@ -804,13 +817,16 @@ export async function getSystemHealth(): Promise<{
       const degraded = oldest !== null && oldest > 300
       return {
         status: degraded ? 'degraded' : 'ok',
-        detail: `${pending} pending event(s)${oldest ? `, oldest ${oldest}s` : ''}`,
+        detail:
+          oldest > 0
+            ? { code: 'queue.pendingOldest', params: { count: pending, seconds: oldest } }
+            : { code: 'queue.pending', params: { count: pending } },
         latencyMs: null,
       }
     } catch {
       // `processed_at` is `events-worker.ts`'s own bookkeeping column; if a checkout's outbox schema
       // differs, report degraded rather than crashing the whole health page over one card.
-      return { status: 'degraded', detail: 'could not read the outbox queue', latencyMs: null }
+      return { status: 'degraded', detail: { code: 'queue.unreadable' }, latencyMs: null }
     }
   })()
 
@@ -824,13 +840,13 @@ export async function getSystemHealth(): Promise<{
       const freeGb = Math.round((freeBytes / 1024 ** 3) * 10) / 10
       return {
         status: freeGb < 2 ? 'degraded' : 'ok',
-        detail: `${freeGb} GB free`,
+        detail: { code: 'storage.free', params: { gb: freeGb } },
         latencyMs: null,
       }
     } catch (err) {
       return {
         status: 'down',
-        detail: err instanceof Error ? err.message.slice(0, 200) : 'unknown error',
+        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
         latencyMs: null,
       }
     }
@@ -846,7 +862,11 @@ export async function getSystemHealth(): Promise<{
         `),
       )
       if (!rows[0]?.present) return { status: 'not_configured', detail: null, latencyMs: null }
-      return { status: 'ok', detail: `${rows[0].groups} group(s) connected`, latencyMs: null }
+      return {
+        status: 'ok',
+        detail: { code: 'telegram.connected', params: { count: Number(rows[0].groups) } },
+        latencyMs: null,
+      }
     } catch {
       return { status: 'not_configured', detail: null, latencyMs: null }
     }
@@ -869,7 +889,7 @@ export async function getSystemHealth(): Promise<{
     } catch (err) {
       return {
         status: 'down',
-        detail: err instanceof Error ? err.message.slice(0, 200) : 'unreachable',
+        detail: { code: 'error.raw', params: { message: rawErrorMessage(err, 'unreachable') } },
         latencyMs: null,
       }
     }
@@ -883,7 +903,7 @@ export async function getSystemHealth(): Promise<{
       const { join } = await import('node:path')
       const entries = await readdir(dir)
       if (entries.length === 0)
-        return { status: 'degraded', detail: 'no backups found', latencyMs: null }
+        return { status: 'degraded', detail: { code: 'backups.none' }, latencyMs: null }
       let newest = 0
       for (const entry of entries) {
         const s = await stat(join(dir, entry))
@@ -892,13 +912,13 @@ export async function getSystemHealth(): Promise<{
       const ageHours = (Date.now() - newest) / 3_600_000
       return {
         status: ageHours > 48 ? 'degraded' : 'ok',
-        detail: `latest backup ${Math.round(ageHours)}h ago`,
+        detail: { code: 'backups.latest', params: { hours: Math.round(ageHours) } },
         latencyMs: null,
       }
     } catch (err) {
       return {
         status: 'down',
-        detail: err instanceof Error ? err.message.slice(0, 200) : 'unknown error',
+        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
         latencyMs: null,
       }
     }
