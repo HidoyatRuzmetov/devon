@@ -114,6 +114,70 @@ async function main(): Promise<void> {
     }
     assertEqual(board.columns[0]!.cards.length, 1, "the new card is in the assignee's column")
 
+    // Array-binding regression (the `sql.param()` fix in `work/repo.ts`): a one-element array used
+    // to render as `($1)::uuid[]` (malformed array literal), a multi-element one as
+    // `($1, $2)::uuid[]` ("cannot cast type record to uuid[]") and an empty one as `()::uuid[]`
+    // (syntax error). This step drives all three shapes through create AND patch.
+    step(
+      'labels: create two, create a card with one label, PATCH to both + a watcher, then to none',
+    )
+    const labelIds: string[] = []
+    for (const [name, colour] of [
+      ['Shoshilinch', '#dc2626'],
+      ['Hisobot', '#2563eb'],
+    ] as const) {
+      const labelRes = await fetch(`${server.baseUrl}/api/v1/labels`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ name, colour }),
+      })
+      assertEqual(labelRes.status, 201, `create label "${name}" status`)
+      labelIds.push(((await labelRes.json()) as { id: string }).id)
+    }
+    const labelledRes = await fetch(`${server.baseUrl}/api/v1/cards`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        title: 'Yigʻilish bayonnomasini rasmiylashtirish',
+        assigneeUserId: user.id,
+        labels: [labelIds[0]!],
+      }),
+    })
+    assertEqual(labelledRes.status, 201, 'create card with one label status')
+    const labelled = (await labelledRes.json()) as {
+      id: string
+      version: number
+      labels: string[]
+    }
+    assertEqual(labelled.labels.length, 1, 'a one-label card round-trips one label')
+    assertEqual(labelled.labels[0], labelIds[0], 'the label id round-trips')
+    const relabelRes = await fetch(`${server.baseUrl}/api/v1/cards/${labelled.id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ labels: labelIds, watchers: [user.id], version: labelled.version }),
+    })
+    assertEqual(relabelRes.status, 200, 'patch labels + watchers status')
+    const relabelled = (await relabelRes.json()) as {
+      version: number
+      labels: string[]
+      watchers: string[]
+    }
+    assertEqual(relabelled.labels.length, 2, 'two labels after the patch')
+    assertTrue(
+      labelIds.every((id) => relabelled.labels.includes(id)),
+      'both label ids round-trip',
+    )
+    assertEqual(relabelled.watchers.length, 1, 'one watcher after the patch')
+    assertEqual(relabelled.watchers[0], user.id, 'the watcher id round-trips')
+    const unlabelRes = await fetch(`${server.baseUrl}/api/v1/cards/${labelled.id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ labels: [], version: relabelled.version }),
+    })
+    assertEqual(unlabelRes.status, 200, 'patch labels to empty status')
+    const unlabelled = (await unlabelRes.json()) as { labels: string[] }
+    assertEqual(unlabelled.labels.length, 0, 'labels cleared by an empty-array patch')
+
     step('POST checklist item, PATCH it done, GET card detail reflects it')
     const checklistRes = await fetch(`${server.baseUrl}/api/v1/cards/${card.id}/checklist`, {
       method: 'POST',
@@ -206,9 +270,12 @@ async function main(): Promise<void> {
       archiveList.items.some((c) => c.id === card.id),
       'archived card appears in /archive',
     )
+    // Body `{}` mirrors the web client (`apiClient.post(..., {}, ...)` in `features/work/api.ts`):
+    // Fastify rejects a body-less request that still carries `content-type: application/json`.
     const restoreRes = await fetch(`${server.baseUrl}/api/v1/cards/${card.id}/restore`, {
       method: 'POST',
       headers,
+      body: '{}',
     })
     assertEqual(restoreRes.status, 204, 'restore status')
 
@@ -284,6 +351,43 @@ async function main(): Promise<void> {
       milestones: { doneAt: string | null }[]
     }
     assertTrue(afterMilestone.milestones[0]!.doneAt !== null, 'milestone marked done')
+
+    // Same array-binding regression for `projects.members` (`sql.param()` in `projects/repo.ts`):
+    // a one-member create, then a two-member patch. The second member is made a real member of
+    // this department first so the data stays honest (project members are not FK-checked).
+    step('projects: POST /projects with one member, then PATCH members to two')
+    const superuser3 = new Client({ connectionString: db.superuserUrl })
+    await superuser3.connect()
+    try {
+      await superuser3.query(
+        `insert into app.memberships (id, department_id, user_id, role) values ($1, $2, $3, 'member')`,
+        [randomUUID(), departmentId, otherUserId],
+      )
+    } finally {
+      await superuser3.end()
+    }
+    const directRes = await fetch(`${server.baseUrl}/api/v1/projects`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        title: 'Yillik ish rejasi',
+        ownerUserId: user.id,
+        members: [user.id],
+      }),
+    })
+    assertEqual(directRes.status, 201, 'create project status')
+    const direct = (await directRes.json()) as { id: string; version: number; members: string[] }
+    assertEqual(direct.members.length, 1, 'a one-member project round-trips one member')
+    assertEqual(direct.members[0], user.id, 'the member id round-trips')
+    const membersRes = await fetch(`${server.baseUrl}/api/v1/projects/${direct.id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ members: [user.id, otherUserId], version: direct.version }),
+    })
+    assertEqual(membersRes.status, 200, 'patch members status')
+    const widened = (await membersRes.json()) as { members: string[] }
+    assertEqual(widened.members.length, 2, 'two members after the patch')
+    assertTrue(widened.members.includes(otherUserId), 'the second member id round-trips')
 
     console.log('\nwork:prove PASSED')
   } finally {
