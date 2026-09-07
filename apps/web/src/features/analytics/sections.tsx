@@ -9,6 +9,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  LabelList,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -291,6 +292,10 @@ export function OpenVsOverdueSection({
       pinned={pinnedKeys.has('openVsOverdue')}
       pinBusy={pinBusy}
       onTogglePin={() => onTogglePin('openVsOverdue', t('analytics.sections.openVsOverdue.title'))}
+      legend={[
+        { label: t('analytics.legend.open'), colorVar: COLOR_INFO },
+        { label: t('analytics.legend.overdue'), colorVar: COLOR_DESTRUCTIVE },
+      ]}
       table={{
         headers: [
           t('analytics.filterBar.since'),
@@ -364,6 +369,10 @@ export function LoadPerPersonSection({
       pinned={pinnedKeys.has('loadPerPerson')}
       pinBusy={pinBusy}
       onTogglePin={() => onTogglePin('loadPerPerson', t('analytics.sections.loadPerPerson.title'))}
+      legend={[
+        { label: t('analytics.legend.open'), colorVar: COLOR_PRIMARY },
+        { label: t('analytics.legend.overdue'), colorVar: COLOR_DESTRUCTIVE },
+      ]}
       table={{
         headers: [
           t('analytics.filterBar.since'),
@@ -441,6 +450,10 @@ export function LoadPerUnitSection({
       pinned={pinnedKeys.has('loadPerUnit')}
       pinBusy={pinBusy}
       onTogglePin={() => onTogglePin('loadPerUnit', t('analytics.sections.loadPerUnit.title'))}
+      legend={[
+        { label: t('analytics.legend.open'), colorVar: COLOR_PRIMARY },
+        { label: t('analytics.legend.overdue'), colorVar: COLOR_DESTRUCTIVE },
+      ]}
       table={{
         headers: ['', t('analytics.legend.open'), t('analytics.legend.overdue')],
         rows: data.map((u) => [u.name, u.openCount, u.overdueCount]),
@@ -545,7 +558,17 @@ export function ProjectProgressSection({
             fill={COLOR_INFO}
             radius={[0, 4, 4, 0]}
             isAnimationActive={animate}
-          />
+          >
+            {/* round2 SEV3 #28: a 0-100 domain makes a low percentage an invisible sliver near the
+                axis -- a value label just outside the bar's own end reads regardless of its length. */}
+            <LabelList
+              dataKey="percent"
+              position="right"
+              formatter={(v) => `${typeof v === 'number' ? v : ''}%`}
+              fontSize={11}
+              fill={COLOR_MUTED}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -575,6 +598,12 @@ export function EventsParticipationSection({
       onTogglePin={() =>
         onTogglePin('eventsParticipation', t('analytics.sections.eventsParticipation.title'))
       }
+      legend={[
+        { label: t('analytics.legend.yes'), colorVar: COLOR_PRIMARY },
+        { label: t('analytics.legend.maybe'), colorVar: COLOR_WARNING },
+        { label: t('analytics.legend.waitlist'), colorVar: COLOR_INFO },
+        { label: t('analytics.legend.no'), colorVar: COLOR_MUTED },
+      ]}
       table={{
         headers: [
           '',
@@ -701,7 +730,18 @@ export function PollTurnoutSection({
             fill={COLOR_INFO}
             radius={[0, 4, 4, 0]}
             isAnimationActive={animate}
-          />
+          >
+            {/* round2 SEV3 #28: "Soʻrovnomalarda qatnashish" is a 3% sliver on a 0-100% axis with
+                nothing else to read -- a value label just outside the bar makes the number legible no
+                matter how short the bar is. */}
+            <LabelList
+              dataKey="percent"
+              position="right"
+              formatter={(v) => `${typeof v === 'number' ? v : ''}%`}
+              fontSize={11}
+              fill={COLOR_MUTED}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>

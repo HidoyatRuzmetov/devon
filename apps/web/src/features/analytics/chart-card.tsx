@@ -34,6 +34,10 @@ export type ChartCardProps = {
   table: { headers: string[]; rows: (string | number)[][] }
   children: React.ReactNode
   className?: string
+  /** round2 critique #28: a multi-series chart with no legend left the reader guessing what each
+   *  colour meant. One dot + label per series, in the same order the bars/lines render -- omit for a
+   *  single-series chart, which already carries its own meaning in the title. */
+  legend?: { label: string; colorVar: string }[]
   /** DESIGN.md §4: renders `ChartEmptyState` (labelled by `emptyLabelKey`) in place of `children` --
    *  the header and owner question stay visible either way. Every section passes this instead of
    *  hand-rolling its own early-return branch, so "no data yet" looks the same on every chart. */
@@ -95,6 +99,7 @@ export function ChartCard({
   className,
   isEmpty = false,
   emptyLabelKey,
+  legend,
 }: ChartCardProps) {
   const t = useT()
   const [showTable, setShowTable] = React.useState(false)
@@ -171,6 +176,24 @@ export function ChartCard({
           </IconButton>
         </div>
       </header>
+
+      {legend && !isEmpty ? (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          {legend.map((entry) => (
+            <span
+              key={entry.label}
+              className="flex items-center gap-1.5 text-caption text-muted-foreground"
+            >
+              <span
+                aria-hidden="true"
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: entry.colorVar }}
+              />
+              {entry.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       {/* `flex-1 min-h-0`: gives ResponsiveContainer's own `height="100%"` (sections.tsx) a real,
           definite height to resolve against -- filling whatever extra room the grid's row-stretch
