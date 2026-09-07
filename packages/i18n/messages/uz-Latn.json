@@ -106,7 +106,11 @@
       "settings": "Sozlamalar",
       "account": "Hisob",
       "recent": "Yaqinda",
-      "actions": "Amallar"
+      "actions": "Amallar",
+      "people": "Kishilar",
+      "cards": "Kartalar",
+      "events": "Tadbirlar",
+      "pages": "Sahifalar"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",
@@ -186,7 +190,14 @@
     "signedOut": "Siz tizimdan chiqdingiz",
     "offline": "Aloqa tiklangach, qayta urinib koʻring.",
     "showPassword": "Parolni koʻrsatish",
-    "hidePassword": "Parolni yashirish"
+    "hidePassword": "Parolni yashirish",
+    "forgot": {
+      "link": "Parolni unutdingizmi?",
+      "title": "Parolni tiklash",
+      "body": "Bu yerda parolni oʻzingiz tiklay olmaysiz — ikki yoʻldan biri ishlaydi:",
+      "telegram": "Telegram ulangan boʻlsa, bot sizga bir martalik kod yuboradi.",
+      "admin": "Aks holda, boʻlim boshligʻiga yoki tizim administratoriga murojaat qiling — ular parolingizni tiklab beradi."
+    }
   },
   "setup": {
     "eyebrow": "BIRINCHI ISHGA TUSHIRISH",

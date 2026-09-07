@@ -106,7 +106,11 @@
       "settings": "Sozlamalar",
       "account": "Hisob",
       "recent": "Yaqinda",
-      "actions": "Amallar"
+      "actions": "Amallar",
+      "people": "Kishilar",
+      "cards": "Kartalar",
+      "events": "Tadbirlar",
+      "pages": "Sahifalar"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",
@@ -227,7 +231,14 @@
     "signedOut": "Siz tizimdan chiqdingiz",
     "offline": "Aloqa tiklangach, qayta urinib koʻring.",
     "showPassword": "Parolni koʻrsatish",
-    "hidePassword": "Parolni yashirish"
+    "hidePassword": "Parolni yashirish",
+    "forgot": {
+      "link": "Parolni unutdingizmi?",
+      "title": "Parolni tiklash",
+      "body": "Bu yerda parolni oʻzingiz tiklay olmaysiz — ikki yoʻldan biri ishlaydi:",
+      "telegram": "Telegram ulangan boʻlsa, bot sizga bir martalik kod yuboradi.",
+      "admin": "Aks holda, boʻlim boshligʻiga yoki tizim administratoriga murojaat qiling — ular parolingizni tiklab beradi."
+    }
   },
   "setup": {
     "eyebrow": "BIRINCHI ISHGA TUSHIRISH",
@@ -490,6 +501,13 @@
       "email": "Elektron pochta (ixtiyoriy)",
       "password": "Parol",
       "passwordHint": "Kamida 12 ta belgi",
+      "passwordStrength": {
+        "label": "Parol mustahkamligi",
+        "weak": "Kuchsiz",
+        "fair": "Oʻrtacha",
+        "good": "Yaxshi",
+        "strong": "Kuchli"
+      },
       "givenName": "Ism",
       "familyName": "Familiya",
       "patronymic": "Sharif (ixtiyoriy)",
@@ -557,7 +575,10 @@
       "confirmDialog": "Hisobingizni rostdan ham o'chirmoqchimisiz?",
       "cancel": "Bekor qilish",
       "scheduled": "Hisobingiz {date} sanasida o'chiriladi.",
-      "cancelled": "O'chirish so'rovi bekor qilindi"
+      "cancelled": "O'chirish so'rovi bekor qilindi",
+      "dialog": {
+        "loginLabel": "Tasdiqlash uchun loginingizni kiriting: {login}"
+      }
     },
     "admin": {
       "resetPassword": {
@@ -572,6 +593,8 @@
     },
     "settings": {
       "title": "Hisob sozlamalari",
+      "subtitle": "Profil, seanslar, ikki bosqichli tekshiruv va parol shu yerda boshqariladi.",
+      "subnavAria": "Sozlamalar boʻlimlari",
       "profile": "Profil",
       "security": "Xavfsizlik",
       "dangerZone": "Xavfli hudud"

@@ -15,6 +15,7 @@ import { ApiError } from '../../lib/api-client.js'
 import { navigate, Link } from '../../lib/router.js'
 import { AVATAR_MAX_BYTES, isAvatarContentType, registerAccount, uploadAvatar } from './api.js'
 import { AvatarPicker } from './avatar-picker.js'
+import { PasswordStrengthMeter } from './password-strength.js'
 
 export default function RegisterScreen() {
   const t = useT()
@@ -157,6 +158,7 @@ export default function RegisterScreen() {
           <Input
             type="password"
             required
+            minLength={12}
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -164,6 +166,7 @@ export default function RegisterScreen() {
           <span className="text-small text-muted-foreground">
             {t('accounts.register.passwordHint')}
           </span>
+          <PasswordStrengthMeter password={password} />
         </label>
 
         <label className="flex flex-col gap-1.5">

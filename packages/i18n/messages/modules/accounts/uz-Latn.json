@@ -20,6 +20,13 @@
       "email": "Elektron pochta (ixtiyoriy)",
       "password": "Parol",
       "passwordHint": "Kamida 12 ta belgi",
+      "passwordStrength": {
+        "label": "Parol mustahkamligi",
+        "weak": "Kuchsiz",
+        "fair": "Oʻrtacha",
+        "good": "Yaxshi",
+        "strong": "Kuchli"
+      },
       "givenName": "Ism",
       "familyName": "Familiya",
       "patronymic": "Sharif (ixtiyoriy)",
@@ -87,7 +94,10 @@
       "confirmDialog": "Hisobingizni rostdan ham o'chirmoqchimisiz?",
       "cancel": "Bekor qilish",
       "scheduled": "Hisobingiz {date} sanasida o'chiriladi.",
-      "cancelled": "O'chirish so'rovi bekor qilindi"
+      "cancelled": "O'chirish so'rovi bekor qilindi",
+      "dialog": {
+        "loginLabel": "Tasdiqlash uchun loginingizni kiriting: {login}"
+      }
     },
     "admin": {
       "resetPassword": {
@@ -102,6 +112,8 @@
     },
     "settings": {
       "title": "Hisob sozlamalari",
+      "subtitle": "Profil, seanslar, ikki bosqichli tekshiruv va parol shu yerda boshqariladi.",
+      "subnavAria": "Sozlamalar boʻlimlari",
       "profile": "Profil",
       "security": "Xavfsizlik",
       "dangerZone": "Xavfli hudud"
