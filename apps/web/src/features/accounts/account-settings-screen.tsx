@@ -267,7 +267,7 @@ function SessionsSection() {
             </Collapsible>
           ) : null}
         </div>
-        {overflow.length > 0 && !showAll ? (
+        {!showAll && overflow.length > 0 ? (
           <Button
             variant="secondary"
             size="sm"

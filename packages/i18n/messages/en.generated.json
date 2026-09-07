@@ -2361,6 +2361,7 @@
       "next": "Next month",
       "today": "Today",
       "more": "{count} more",
+      "showLess": "Show less",
       "weekday": {
         "mon": "Mon",
         "tue": "Tue",

@@ -2361,6 +2361,7 @@
       "next": "Keyingi oy",
       "today": "Bugun",
       "more": "yana {count} ta",
+      "showLess": "Kamroq koʻrsatish",
       "weekday": {
         "mon": "Du",
         "tue": "Se",
