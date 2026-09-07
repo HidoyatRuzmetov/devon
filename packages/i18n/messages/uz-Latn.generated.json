@@ -874,7 +874,9 @@
       "activeTerms": "Filtrlar:",
       "removeTerm": "\"{term}\" filtrini olib tashlash",
       "dateRange": "Davr:",
-      "presetDays": "Oxirgi {count} kun"
+      "presetDays": "Oxirgi {count} kun",
+      "showAdvanced": "Kengaytirilgan",
+      "hideAdvanced": "Kengaytirilganni yashirish"
     },
     "savedFilters": {
       "title": "Saqlangan filtrlar",

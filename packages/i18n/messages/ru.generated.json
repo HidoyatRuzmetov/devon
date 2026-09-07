@@ -874,7 +874,9 @@
       "activeTerms": "Фильтры:",
       "removeTerm": "Убрать фильтр «{term}»",
       "dateRange": "Период:",
-      "presetDays": "За {count} дн."
+      "presetDays": "За {count} дн.",
+      "showAdvanced": "Расширенный режим",
+      "hideAdvanced": "Скрыть расширенный режим"
     },
     "savedFilters": {
       "title": "Сохранённые фильтры",

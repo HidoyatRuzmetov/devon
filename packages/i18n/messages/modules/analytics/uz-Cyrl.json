@@ -38,7 +38,9 @@
       "activeTerms": "Филтрлар:",
       "removeTerm": "\"{term}\" филтрини олиб ташлаш",
       "dateRange": "Давр:",
-      "presetDays": "Охирги {count} кун"
+      "presetDays": "Охирги {count} кун",
+      "showAdvanced": "Кенгайтирилган",
+      "hideAdvanced": "Кенгайтирилганни яшириш"
     },
     "savedFilters": {
       "title": "Сақланган филтрлар",

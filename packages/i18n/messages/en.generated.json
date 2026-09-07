@@ -874,7 +874,9 @@
       "activeTerms": "Filters:",
       "removeTerm": "Remove filter \"{term}\"",
       "dateRange": "Range:",
-      "presetDays": "Last {count} days"
+      "presetDays": "Last {count} days",
+      "showAdvanced": "Advanced",
+      "hideAdvanced": "Hide advanced"
     },
     "savedFilters": {
       "title": "Saved filters",

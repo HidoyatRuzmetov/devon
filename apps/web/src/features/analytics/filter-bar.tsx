@@ -1,14 +1,17 @@
-// The analytics filter bar (TECH-SPEC §9): a text field over the Work module's own filter grammar
-// (`@devon/contracts`'s `parseFilterQuery` -- person/unit/project/giver/label/status), a date range
-// with quick presets, the active filter terms as removable chips, and saved views as a chip row
-// (UI-OVERHAUL.md §2 "Filters": "chips with type-ahead, a '+ Filter' popover, saved views as tabs").
-// Keyboard-complete: every control is a native `<input>`/`<button>`, tabbable in document order,
-// `Enter` in the text field applies the filter (form submit) exactly like every other search input in
-// this app.
+// The analytics filter bar (TECH-SPEC §9): the exact same removable-chips + "+ Filtr" popover editor
+// the work views use over the shared filter grammar (`@devon/contracts`'s `parseFilterQuery` --
+// person/unit/project/giver/label/status), a date range with quick presets, and saved filters as a
+// chip row (UI-OVERHAUL.md §2 "Filters": "chips with type-ahead, a '+ Filter' popover, saved views as
+// tabs"). Round 1 rejected a bare query-syntax text box here; round 2 found it still shipping --
+// `FilterClauseChips` (work/components/filter-clause-chips.tsx) is reused verbatim rather than a
+// second implementation of the same grammar editor, with the raw text kept one "Kengaytirilgan"
+// toggle away for anyone who prefers it, same as the work views. Keyboard-complete: every control is
+// a native `<input>`/`<button>`, tabbable in document order.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import { Button, chipVariants, cn, DatePicker, FilterChip, Input } from '@devon/ui'
-import { Save } from 'lucide-react'
+import { Filter as FilterIcon, Save } from 'lucide-react'
+import { FilterClauseChips } from '../work/components/filter-clause-chips.js'
 import {
   useCreateSavedFilterMutation,
   useDeleteSavedFilterMutation,
@@ -42,14 +45,6 @@ function toIsoDate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-/** Splits the filter-grammar text into its space-separated terms, respecting a `"quoted phrase"`
- * (e.g. `project:"Autumn fair"`) as one term -- the same tokens `@devon/contracts`'s
- * `parseFilterQuery` treats as one clause, so a chip always removes exactly one clause. */
-function splitFilterTerms(filter: string): string[] {
-  const re = /[^\s"]+(?:"[^"]*"[^\s"]*)*|"[^"]*"/g
-  return filter.trim().length === 0 ? [] : (filter.match(re) ?? [])
-}
-
 export function FilterBar({
   value,
   onChange,
@@ -60,6 +55,7 @@ export function FilterBar({
   const t = useT()
   const locale = useLocale()
   const [draft, setDraft] = React.useState(value.filter)
+  const [advanced, setAdvanced] = React.useState(false)
   const [saveOpen, setSaveOpen] = React.useState(false)
   const [saveName, setSaveName] = React.useState('')
 
@@ -69,15 +65,7 @@ export function FilterBar({
 
   React.useEffect(() => setDraft(value.filter), [value.filter])
 
-  const applyDraft = (e: React.FormEvent) => {
-    e.preventDefault()
-    onChange({ ...value, filter: draft })
-  }
-
-  const terms = splitFilterTerms(value.filter)
-  const removeTerm = (term: string) => {
-    const next = terms.filter((tm) => tm !== term).join(' ')
-    setDraft(next)
+  function applyFilter(next: string) {
     onChange({ ...value, filter: next })
   }
 
@@ -87,21 +75,17 @@ export function FilterBar({
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1">
-      <form className="flex flex-wrap items-center gap-2" onSubmit={applyDraft}>
-        <Input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={t('analytics.filterBar.placeholder')}
-          aria-label={t('analytics.filterBar.placeholder')}
-          className="min-w-64 flex-1"
-        />
-        <Button type="submit" variant="secondary" size="sm">
-          {t('analytics.filterBar.apply')}
-        </Button>
+      {/* round2 SEV2: this used to be a bare input pre-filled with the raw filter-grammar syntax
+          ("assignee:@me status:active due:<today") -- the same removable-chips + "+ Filtr" popover
+          editor the work views use (`FilterClauseChips`) replaces it; the raw text is still reachable
+          for anyone who prefers it, one "Kengaytirilgan" toggle away, exactly like there. */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <FilterClauseChips query={value.filter} onChange={applyFilter} className="flex-1" />
         <Button
           type="button"
           variant="ghost"
           size="sm"
+          disabled={value.filter.trim().length === 0}
           onClick={() => {
             setSaveName(draft)
             setSaveOpen((v) => !v)
@@ -110,26 +94,39 @@ export function FilterBar({
           <Save className="mr-1.5 size-4" aria-hidden="true" />
           {t('analytics.savedFilters.new')}
         </Button>
-      </form>
+        <button
+          type="button"
+          onClick={() => setAdvanced((v) => !v)}
+          className="rounded-sm px-2 py-1 text-caption font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          {advanced ? t('analytics.filterBar.hideAdvanced') : t('analytics.filterBar.showAdvanced')}
+        </button>
+      </div>
 
-      {terms.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-caption text-muted-foreground">
-            {t('analytics.filterBar.activeTerms')}
-          </span>
-          {terms.map((term) => (
-            <FilterChip
-              key={term}
-              active
-              onClick={() => removeTerm(term)}
-              aria-label={t('analytics.filterBar.removeTerm', { term })}
-            >
-              {term}
-              <span aria-hidden="true" className="ml-1 text-muted-foreground">
-                ×
-              </span>
-            </FilterChip>
-          ))}
+      {advanced ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border p-2">
+          <FilterIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                applyFilter(draft)
+              }
+            }}
+            placeholder={t('analytics.filterBar.placeholder')}
+            aria-label={t('analytics.filterBar.placeholder')}
+            className="max-w-96 flex-1"
+          />
+          <Button size="sm" variant="secondary" onClick={() => applyFilter(draft)}>
+            {t('analytics.filterBar.apply')}
+          </Button>
+          {value.filter.length > 0 ? (
+            <Button size="sm" variant="ghost" onClick={() => applyFilter('')}>
+              {t('analytics.filterBar.clear')}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
