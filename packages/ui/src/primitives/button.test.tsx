@@ -37,4 +37,35 @@ describe('Button', () => {
     const link = screen.getByRole('link', { name: 'Bosh sahifa' })
     expect(link).toHaveAttribute('href', '/home')
   })
+
+  // Regression for a twMerge classGroup collision: `cn()` used to keep only the last `text-*`
+  // class it saw, so a size class written after the variant's colour class (size="lg" -> text-lead,
+  // size="sm" -> text-small) silently deleted `text-primary-foreground` / `text-destructive-foreground`,
+  // rendering the label near-black on a coloured button at every size except the accidental survivor
+  // `md`. See packages/ui/src/lib/cn.ts.
+  it.each(['sm', 'md', 'lg'] as const)(
+    'keeps the primary label colour class at size %s',
+    (size) => {
+      render(
+        <Button variant="primary" size={size}>
+          Kirish
+        </Button>,
+      )
+      const button = screen.getByRole('button', { name: 'Kirish' })
+      expect(button.className.split(/\s+/)).toContain('text-primary-foreground')
+    },
+  )
+
+  it.each(['sm', 'md', 'lg'] as const)(
+    'keeps the destructive label colour class at size %s',
+    (size) => {
+      render(
+        <Button variant="destructive" size={size}>
+          O'chirish
+        </Button>,
+      )
+      const button = screen.getByRole('button', { name: "O'chirish" })
+      expect(button.className.split(/\s+/)).toContain('text-destructive-foreground')
+    },
+  )
 })
