@@ -3,7 +3,7 @@
 // due date. Month navigation via `?month=YYYY-MM` so a linked month is shareable like every other view.
 import * as React from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useT, useLocale } from '@devon/i18n'
+import { useT, useLocale, formatMonthYear } from '@devon/i18n'
 import { Button, IconButton, Skeleton, StateView, cn } from '@devon/ui'
 import { navigate, replaceSearchParam, useSearchParams } from '../../../lib/router.js'
 import { useCardsQuery } from '../hooks.js'
@@ -141,7 +141,7 @@ export default function CalendarScreen() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lead font-semibold text-foreground">
-              {month.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+              {formatMonthYear(month, locale)}
             </h2>
             <div className="flex items-center gap-1">
               <IconButton aria-label={t('work.calendar.prev')} onClick={() => goMonth(-1)}>

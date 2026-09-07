@@ -56,6 +56,98 @@ export function formatNumber(n: number, locale: Locale): string {
   return new Intl.NumberFormat(locale).format(n)
 }
 
+/** Full month names, January-first, capitalised for standalone display ("Sentabr 2026", a section
+ * header or a calendar title). Not delegated to `Intl.DateTimeFormat(locale, { month: 'long' })`:
+ * verified against a real embedded-Chromium build that ships reduced CLDR data for `uz-Latn` --
+ * `Intl` silently falls back to the bare numeric-month skeleton pattern there ("2026 M09" instead of
+ * "sentabr 2026") with no error to catch, exactly the defect this replaces. Small enough (48 words)
+ * that hand-rolling it outweighs a bundled date-fns locale pack (design.md §1.1's bundle-budget
+ * argument against that) while guaranteeing every shipped browser renders the same word regardless
+ * of its own ICU completeness. */
+const MONTH_NAMES: Record<Locale, readonly string[]> = {
+  'uz-Latn': [
+    'Yanvar',
+    'Fevral',
+    'Mart',
+    'Aprel',
+    'May',
+    'Iyun',
+    'Iyul',
+    'Avgust',
+    'Sentabr',
+    'Oktabr',
+    'Noyabr',
+    'Dekabr',
+  ],
+  'uz-Cyrl': [
+    'Январ',
+    'Феврал',
+    'Март',
+    'Апрел',
+    'Май',
+    'Июн',
+    'Июл',
+    'Август',
+    'Сентябр',
+    'Октябр',
+    'Ноябр',
+    'Декабр',
+  ],
+  ru: [
+    'Январь',
+    'Февраль',
+    'Март',
+    'Апрель',
+    'Май',
+    'Июнь',
+    'Июль',
+    'Август',
+    'Сентябрь',
+    'Октябрь',
+    'Ноябрь',
+    'Декабрь',
+  ],
+  en: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+}
+
+/** "Sentabr 2026" / "Сентябр 2026" / "Сентябрь 2026" / "September 2026" -- the events list's month
+ * grouping and the work calendar's own title, both previously built from raw `Intl` output (see the
+ * `MONTH_NAMES` doc comment above for why that broke). `tz` matters only at midnight-boundary UTC
+ * offsets; defaults to the same Tashkent zone every other formatter here uses. */
+export function formatMonthYear(d: Date, locale: Locale, tz: string = DEFAULT_TZ): string {
+  const monthIndex = Number(datePart(d, tz, { month: 'numeric' }, 'month')) - 1
+  const year = datePart(d, tz, { year: 'numeric' }, 'year')
+  return `${MONTH_NAMES[locale][monthIndex] ?? ''} ${year}`
+}
+
+/** Hand-picked (not sliced from `MONTH_NAMES`) so Uzbek's July/June don't both collapse to "Iyu" --
+ * the same reduced-ICU risk `formatMonthYear` guards against, for the invitation-style date badge
+ * (`EventCard`'s "SEN / 20" block) that needs a 3-letter abbreviation instead of the full word. */
+const MONTH_NAMES_SHORT: Record<Locale, readonly string[]> = {
+  'uz-Latn': ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'],
+  'uz-Cyrl': ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+  ru: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+}
+
+export function formatMonthShort(d: Date, locale: Locale, tz: string = DEFAULT_TZ): string {
+  const monthIndex = Number(datePart(d, tz, { month: 'numeric' }, 'month')) - 1
+  return MONTH_NAMES_SHORT[locale][monthIndex] ?? ''
+}
+
 /** UZS suffix per locale (DESIGN §9.0.6, `maximumFractionDigits: 0` -- the som has no subunit in
  *  everyday use). `Intl.NumberFormat`'s built-in `currency: 'UZS'` style renders as "UZS 1 234",
  *  which reads as a foreign ISO code to a civil servant; the shell instead uses the everyday word. */
@@ -97,5 +189,8 @@ export function formatRelativeTime(d: Date, locale: Locale, now: Date = new Date
     deltaSeconds /= division.amount
     unit = division.unit
   }
-  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(Math.round(deltaSeconds), unit)
+  return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(
+    Math.round(deltaSeconds),
+    unit,
+  )
 }

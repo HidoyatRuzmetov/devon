@@ -3,7 +3,7 @@
 // owns the click-to-open wiring. The big date block sitting on the cover, and a capacity meter
 // instead of a plain fraction, are the two things that make this read as an invitation rather than a
 // row in a table (Luma, Meetup).
-import { useT, useLocale, formatTime } from '@devon/i18n'
+import { useT, useLocale, formatTime, formatMonthShort, type Locale } from '@devon/i18n'
 import { Badge, HoverLift, Progress } from '@devon/ui'
 import { EventIllustration } from '../illustrations/index.js'
 import type { EventDto } from '../schemas.js'
@@ -19,25 +19,20 @@ const STATUS_TONE: Record<
   done: 'neutral',
 }
 
-const MONTH_LOCALE: Record<string, string> = {
-  'uz-Latn': 'uz-Latn',
-  'uz-Cyrl': 'uz-Cyrl',
-  ru: 'ru-RU',
-  en: 'en-US',
-}
-
 /** The date block Luma and Google Calendar invites both use: month abbreviation over a big day
- * number. A `<time>` so the two lines still read as one date to assistive tech. */
-function DateBlock({ date, locale }: { date: Date; locale: string }) {
-  const intlLocale = MONTH_LOCALE[locale] ?? 'en-US'
-  const month = new Intl.DateTimeFormat(intlLocale, { month: 'short' }).format(date)
+ * number. A `<time>` so the two lines still read as one date to assistive tech. `formatMonthShort`
+ * (not raw `Intl.DateTimeFormat`) for the same reason `events-screen.tsx`'s month grouping does --
+ * verified live against a real reduced-ICU embedded browser rendering `uz-Latn` short months as the
+ * bare numeric fallback ("M08") instead of a word. */
+function DateBlock({ date, locale }: { date: Date; locale: Locale }) {
+  const month = formatMonthShort(date, locale)
   return (
     <time
       dateTime={date.toISOString()}
       className="flex w-14 shrink-0 flex-col items-center overflow-hidden rounded-sm border border-border bg-card shadow-1"
     >
       <span className="w-full bg-destructive py-0.5 text-center text-caption font-medium uppercase tracking-wide text-destructive-foreground">
-        {month.replace('.', '')}
+        {month}
       </span>
       <span className="py-1 font-display text-h3 leading-none text-foreground">
         {date.getDate()}

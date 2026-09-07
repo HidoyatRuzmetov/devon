@@ -3,7 +3,7 @@
 // `?event=<id>`) rather than nested routes, matching `router.tsx`'s "exact-path only, no :params yet"
 // tradeoff (MODULE-GUIDE.md "Web features") -- both are shareable/bookmarkable links this way too.
 import * as React from 'react'
-import { useT, useLocale } from '@devon/i18n'
+import { useT, useLocale, formatMonthYear, type Locale } from '@devon/i18n'
 import { Button, PageHeader, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { CalendarDays, List, Plus } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
@@ -19,31 +19,22 @@ import { fetchMyIcs } from './api.js'
 import { useCreateEventMutation, useEventsQuery } from './hooks.js'
 import type { EventDto } from './schemas.js'
 
-const MONTH_LABEL_LOCALE: Record<string, string> = {
-  'uz-Latn': 'uz-Latn',
-  'uz-Cyrl': 'uz-Cyrl',
-  ru: 'ru-RU',
-  en: 'en-US',
-}
-
 /** Luma-style month grouping for the list view: events fall into a sticky-headed month bucket,
  * chronologically, each bucket's cards staggering in as their own group (UI-OVERHAUL.md's "month
- * grouping with stagger"). */
-function groupByMonth(events: EventDto[], locale: string): { label: string; items: EventDto[] }[] {
+ * grouping with stagger"). `formatMonthYear` (not raw `Intl.DateTimeFormat`) -- verified live
+ * against a real reduced-ICU embedded browser that renders `uz-Latn` month names as the bare numeric
+ * skeleton fallback ("2026 M09") with no error to catch. */
+function groupByMonth(events: EventDto[], locale: Locale): { label: string; items: EventDto[] }[] {
   const sorted = [...events].sort(
     (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
   )
-  const fmt = new Intl.DateTimeFormat(MONTH_LABEL_LOCALE[locale] ?? 'en-US', {
-    month: 'long',
-    year: 'numeric',
-  })
   const groups: { key: string; label: string; items: EventDto[] }[] = []
   for (const event of sorted) {
     const d = new Date(event.startsAt)
     const key = `${d.getFullYear()}-${d.getMonth()}`
     let group = groups.find((g) => g.key === key)
     if (!group) {
-      group = { key, label: fmt.format(d), items: [] }
+      group = { key, label: formatMonthYear(d, locale), items: [] }
       groups.push(group)
     }
     group.items.push(event)
