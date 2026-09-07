@@ -95,7 +95,7 @@ if (WAVE === 'all' || WAVE === 2 || WAVE === '2') {
   built2 = await runWave('Wave 2', wave2)
   const m2 = await merge('Merge 2', built2)
   log(`merge 2: ${m2 ? m2.status : 'died'} — ${m2 ? m2.summary.slice(0, 200) : ''}`)
-  const i2 = await integrate('Integrate 2', wave1Modules.concat(['analytics page with filters and pinned charts, Home per role, pages editor with versions, onboarding template on join', 'AI previews: quick-add parse, subtasks, sprint plan, weekly summary, event draft, thread summary, NL analytics, translate (mock provider if no key)', 'super admin console: requests, departments view-as, accounts, audit chain verify, health, pause switch shows the four-locale message and API returns 503, wipe switch flow up to the countdown (do not execute the wipe)']).join('; '))
+  const i2 = await integrate('Integrate 2', wave1Modules.concat(['analytics page with filters and pinned charts, Home per role, pages editor with versions, onboarding template on join', 'AI previews: quick-add parse, subtasks, sprint plan, weekly summary, event draft, thread summary, NL analytics, translate (mock provider if no key)', 'super admin console: requests, departments view-as, accounts, audit chain verify, health, pause switch shows the four-locale message and API returns 503, wipe switch flow up to the countdown (do not execute the wipe)']).join('; ') + ((args && args.integrateNotes) ? ('. ' + args.integrateNotes) : ''))
   log(`integrate 2: ${i2 ? i2.status : 'died'} — ${i2 ? i2.summary.slice(0, 200) : ''}`)
 }
 return { skeleton: skeleton && skeleton.status, wave1: built1.map(x => ({ key: x.key, status: x.r && x.r.status, branch: x.r && x.r.branch })), wave2: built2.map(x => ({ key: x.key, status: x.r && x.r.status, branch: x.r && x.r.branch })) }
