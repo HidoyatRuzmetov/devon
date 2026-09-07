@@ -6,19 +6,10 @@ export { cn } from './lib/cn.js'
 export { isMacPlatform, modKeyLabel } from './lib/platform.js'
 export { useReducedMotion } from './lib/use-reduced-motion.js'
 export { useFontsLoaded } from './lib/use-fonts-loaded.js'
-export {
-  DUR_MICRO,
-  DUR_STANDARD,
-  DUR_PAGE,
-  DUR_CELEBRATION,
-  EASE_OUT,
-  EASE_IN,
-  EASE_STANDARD,
-  EASE_EMPHASIZED,
-  springSettle,
-  springSheet,
-  springDrag,
-} from './lib/motion-tokens.js'
+// The motion catalogue (UI-OVERHAUL.md §3): tokens, provider, and one reusable piece per row.
+// Re-exports the duration/ease/spring constants from `lib/motion-tokens.ts` too, so a consumer that
+// mixes CSS transitions and `motion` animations still has exactly one import.
+export * from './motion/index.js'
 
 export { Button, buttonVariants, type ButtonProps } from './primitives/button.js'
 export { IconButton, iconButtonVariants, type IconButtonProps } from './primitives/icon-button.js'

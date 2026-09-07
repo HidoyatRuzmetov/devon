@@ -57,9 +57,35 @@
   --color-sidebar: oklch(22% 0.05 252);
   --color-sidebar-foreground: oklch(93% 0.01 240);
   --color-sidebar-accent: oklch(30% 0.05 252);
+  --color-sidebar-border: oklch(30% 0.05 252);
+  --color-sidebar-muted: oklch(70% 0.02 250);
   /* Ministry navy, verbatim. Exactly two touchpoints (DESIGN.md §2.1): header hairline + credit
      line. Never used as chrome, never used for a third purpose. */
   --color-official: oklch(38% 0.143 258.6);
+
+  /* -- Surface / elevation scale (DESIGN.md v2 §2.4) -------------------------------------------
+     Light mode expresses elevation with shadow; dark mode cannot (a shadow on a dark ground is
+     invisible), so it expresses elevation as a *lightness tint*. Three named steps so a component
+     never has to guess: `surface-1` is the page-level card, `surface-2` a raised block inside it
+     (a popover, a board column head, a KPI tile), `surface-3` an overlay (dialog, sheet, palette).
+     In light mode all three resolve near `--color-card` on purpose -- the step is carried by
+     `--shadow-1..3` there. */
+  --color-surface-1: oklch(99% 0 0);
+  --color-surface-2: oklch(97.5% 0.003 90);
+  --color-surface-3: oklch(100% 0 0);
+
+  /* -- Ambient gradient (DESIGN.md v2 §2.6) -- auth and hub screens only, never inside a working
+     screen, always static under reduced motion. */
+  --color-ambient-1: oklch(40% 0.09 250);
+  --color-ambient-2: oklch(74% 0.11 72);
+
+  /* -- Illustration palette (DESIGN.md v2 §2.7). The open-licence SVGs in `src/illustrations` are
+     recoloured to exactly these four roles -- never a literal hex, so a palette or theme change
+     repaints the whole set. */
+  --color-illustration-ink: oklch(40% 0.09 250);
+  --color-illustration-fill: oklch(93% 0.02 250);
+  --color-illustration-accent: oklch(74% 0.11 72);
+  --color-illustration-muted: oklch(90% 0.006 90);
 
   /* Unit identity (8-hue categorical set, DESIGN.md §2.1) -- avatars and unit chips only, never a
      status signal. Fixed hues at L 60% C 0.09 stepped every 45deg. */
@@ -130,8 +156,11 @@
   --width-sidebar-rail: 64px;
   --width-sidebar-drawer: 300px;
   --width-content: 1280px;
+  --width-content-narrow: 960px;
+  --width-content-prose: 720px;
   --width-detail-panel: 480px;
   --height-topbar: 56px;
+  --height-tabbar: 60px;
 }
 
 /* -- Colour, dark theme -- DESIGN.md §2.2. Elevation is lightness tint, not shadow; semantic colours
@@ -161,6 +190,20 @@
   --color-sidebar: oklch(13% 0.03 252);
   --color-sidebar-foreground: oklch(93% 0.01 240);
   --color-sidebar-accent: oklch(22% 0.04 252);
+  --color-sidebar-border: oklch(24% 0.03 252);
+  --color-sidebar-muted: oklch(66% 0.02 250);
+  /* Elevation as lightness tint (DESIGN.md v2 §2.4) -- the dark theme's real elevation mechanism.
+     Each step is ~4% lighter than the one below it, which is the smallest difference that still
+     reads as "in front of" on an OLED panel at office brightness. */
+  --color-surface-1: oklch(22% 0.015 250);
+  --color-surface-2: oklch(26% 0.015 250);
+  --color-surface-3: oklch(30% 0.015 250);
+  --color-ambient-1: oklch(72% 0.09 250);
+  --color-ambient-2: oklch(80% 0.11 72);
+  --color-illustration-ink: oklch(72% 0.09 250);
+  --color-illustration-fill: oklch(30% 0.04 250);
+  --color-illustration-accent: oklch(80% 0.11 72);
+  --color-illustration-muted: oklch(32% 0.015 250);
   /* Shadows read as tint at 40% opacity in dark theme (DESIGN.md §2.4), not as plain box-shadow. */
   --shadow-1: 0 1px 2px oklch(0 0 0 / 0.24);
   --shadow-2: 0 4px 12px oklch(0 0 0 / 0.32);
@@ -176,10 +219,17 @@
   --dur-standard: 220ms;
   --dur-page: 300ms;
   --dur-celebration: 480ms;
+  --dur-enter: 220ms;
+  --dur-ambient: 24s;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+
+  /* -- Focus ring (DESIGN.md v2 §2.4). One ring, one width, one offset, everywhere -- a component
+     that wants a "tighter" ring changes the offset token on itself, never the width. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
 }
 
 /* Status is never colour alone (DESIGN.md §2.1); reduced motion replaces motion with a crossfade or
@@ -297,5 +347,141 @@
   }
   100% {
     opacity: 0.6;
+  }
+}
+
+/* -- UI overhaul motion catalogue (UI-OVERHAUL.md §3) ------------------------------------------
+   Everything below is the CSS half of the catalogue: the animations that must not cost a JS frame
+   (a page full of skeletons, an ambient wash, an idle-floating illustration) plus the Radix
+   `data-state` keyframes for the two new overlay families. The `prefers-reduced-motion` block above
+   is the backstop for every one of them -- each is additionally *replaced* (not just stopped) by
+   its own component, which is why none of them is the only feedback its surface has. */
+
+@keyframes devon-shimmer-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* A light band travelling across a muted block. `::after` rather than a background-position trick so
+   the block keeps its own `--color-muted` fill and the sweep composites on top of it. */
+.devon-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--color-card) 70%, transparent) 50%,
+    transparent 100%
+  );
+  animation: devon-shimmer-sweep 1.4s var(--ease-standard) infinite;
+}
+
+@keyframes devon-ambient-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, 3%, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.devon-ambient-drift {
+  animation: devon-ambient-drift var(--dur-ambient) var(--ease-standard) infinite;
+  will-change: transform;
+}
+.devon-ambient-drift-slow {
+  animation-duration: calc(var(--dur-ambient) * 1.5);
+  animation-direction: reverse;
+}
+
+@keyframes devon-idle-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.devon-idle-float {
+  animation: devon-idle-float 4s var(--ease-standard) infinite;
+}
+
+@keyframes devon-hover-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* UI-OVERHAUL.md §3 "Inbox badge": pop on increment. One shot, `--dur-micro`. */
+@keyframes devon-badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* -- Route change: View Transitions (UI-OVERHAUL.md §3 row 1) ----------------------------------
+   The router calls `startViewTransition()` around its own state update (`packages/ui/src/motion/
+   view-transition.ts`); these two rules are what the browser then plays. Crossfade plus an 8 px
+   slide, at `--dur-page` on `--ease-emphasized`, exactly as the catalogue specifies. The paired
+   `AnimatePresence` fallback in `<PageTransition>` is what runs where this API does not exist. */
+::view-transition-old(devon-page) {
+  animation: devon-page-out var(--dur-page) var(--ease-emphasized) both;
+}
+::view-transition-new(devon-page) {
+  animation: devon-page-in var(--dur-page) var(--ease-emphasized) both;
+}
+
+@keyframes devon-page-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes devon-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* The theme toggle's circular reveal clips the *incoming* root layer, so the outgoing one must sit
+   still underneath it rather than crossfading out from under the circle. */
+::view-transition-old(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
