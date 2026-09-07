@@ -10,16 +10,18 @@ import {
   Button,
   Dialog,
   DialogContent,
+  IconButton,
   Input,
   ProgressRing,
   StateView,
+  Switch,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
   toast,
 } from '@devon/ui'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Copy } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
 import {
   cancelWipe,
@@ -60,17 +62,28 @@ function RegistrationCard() {
       {query.isPending ? (
         <StateView kind="loading" titleKey="state.loading" />
       ) : (
-        <Button
-          variant={query.data?.registrationOpen ? 'destructive' : 'primary'}
-          loading={toggle.isPending}
-          onClick={() => toggle.mutate(!query.data?.registrationOpen)}
-        >
-          {t(
-            query.data?.registrationOpen
-              ? 'admin.console.settings.registrationClose'
-              : 'admin.console.settings.registrationOpen',
-          )}
-        </Button>
+        // round2 SEV3 #26: closing registration is reversible, not a destruction -- painting it
+        // the same solid red as the wipe card's own button flattened the danger scale that card is
+        // trying to establish. A Switch (this product's own "takes effect now" control) plus a
+        // subtle status badge reads as a routine setting; red now means only one thing in this
+        // whole console: the wipe.
+        <label className="flex items-center justify-between gap-4">
+          <span className="flex items-center gap-2 text-body text-foreground">
+            {t('admin.console.settings.registrationSwitchLabel')}
+            <Badge tone={query.data?.registrationOpen ? 'info' : 'neutral'}>
+              {t(
+                query.data?.registrationOpen
+                  ? 'admin.console.settings.registrationStatusOpen'
+                  : 'admin.console.settings.registrationStatusClosed',
+              )}
+            </Badge>
+          </span>
+          <Switch
+            checked={query.data?.registrationOpen ?? false}
+            disabled={toggle.isPending}
+            onCheckedChange={(next) => toggle.mutate(next)}
+          />
+        </label>
       )}
     </section>
   )
@@ -233,9 +246,23 @@ function SentinelCard() {
               <span className="text-small text-foreground">
                 {t('admin.console.settings.sentinelPublicKeyLabel')}
               </span>
-              <code className="select-all break-all rounded-sm border border-border bg-muted p-3 text-small">
-                {query.data.publicKeyB64}
-              </code>
+              {/* round2 SEV3 #26: the key had no copy affordance at all -- an inline icon button
+                  next to the field, the same recipe the invite link and its own review copy. */}
+              <div className="flex items-start gap-2">
+                <code className="min-w-0 flex-1 select-all break-all rounded-sm border border-border bg-muted p-3 text-small">
+                  {query.data.publicKeyB64}
+                </code>
+                <IconButton
+                  aria-label={t('admin.console.settings.sentinelCopyKey')}
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(query.data?.publicKeyB64 ?? '')
+                      .then(() => toast(t('admin.console.settings.sentinelKeyCopiedToast')))
+                  }}
+                >
+                  <Copy className="size-4" aria-hidden="true" />
+                </IconButton>
+              </div>
               <p className="text-caption text-muted-foreground">
                 {t('admin.console.settings.sentinelPublicKeyHint')}
               </p>
