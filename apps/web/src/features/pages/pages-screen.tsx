@@ -3,13 +3,13 @@
 // history. `?tab=onboarding` switches the list view to the onboarding checklist template editor.
 import * as React from 'react'
 import { useT, formatDate, useLocale } from '@devon/i18n'
-import { Button, Input, StateView, toast } from '@devon/ui'
+import { AnimatedCheck, Button, HoverLift, Input, PageHeader, StateView, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import { fetchMembers } from '../structure/api.js'
 import { useDepartment } from '../../lib/session.js'
-import { FileText, Plus } from 'lucide-react'
+import { BookOpen, ClipboardList, FileText, Notebook, Plus, StickyNote } from 'lucide-react'
 import {
   useCreatePageMutation,
   useDeletePageMutation,
@@ -24,6 +24,13 @@ import type { PageKind, TiptapNode } from './types.js'
 import type { MentionCandidate } from './mention-suggestion.js'
 
 const PAGE_KINDS: PageKind[] = ['how_we_work', 'brief', 'note', 'onboarding']
+
+const KIND_ICON: Record<PageKind, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+  how_we_work: BookOpen,
+  brief: ClipboardList,
+  note: StickyNote,
+  onboarding: Notebook,
+}
 
 function useDebouncedCallback<A extends unknown[]>(fn: (...args: A) => void, delayMs: number) {
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -129,28 +136,95 @@ function PageList({ onOpen }: { onOpen: (id: string) => void }) {
     return <StateView kind="empty" titleKey="pages.empty.title" bodyKey="pages.empty.body" />
   }
 
+  // A page tree grouped by kind (UI-OVERHAUL.md §2 "Pages ... page tree sidebar"): the department's
+  // pages have no free-form folder hierarchy of their own (TECH-SPEC §3.5's four fixed `PageKind`s
+  // are the only grouping this data model has), so the tree's branches are those four kinds -- each
+  // with its own icon, holding whichever pages exist under it, empty groups omitted entirely.
+  const groups = PAGE_KINDS.map((kind) => ({
+    kind,
+    pages: pages.filter((p) => p.kind === kind),
+  })).filter((g) => g.pages.length > 0)
+
   return (
-    <ul className="flex flex-col gap-1">
-      {pages.map((page) => (
-        <li key={page.id}>
-          <button
-            type="button"
-            onClick={() => onOpen(page.id)}
-            className="flex w-full items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left shadow-1 hover:bg-accent"
-          >
-            <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="flex-1 truncate text-body text-foreground">{page.title}</span>
-            <span className="shrink-0 text-small text-muted-foreground">
-              {t(`pages.kind.${page.kind}`)}
-            </span>
-            <span className="shrink-0 text-small text-muted-foreground">
-              {formatDate(new Date(page.updatedAt), locale)}
-            </span>
-          </button>
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col gap-6">
+      {groups.map(({ kind, pages: kindPages }) => {
+        const Icon = KIND_ICON[kind]
+        return (
+          <section key={kind} className="flex flex-col gap-2">
+            <h2 className="flex items-center gap-2 text-small font-medium text-muted-foreground">
+              <Icon className="size-4 shrink-0" aria-hidden="true" />
+              {t(`pages.kind.${kind}`)}
+              <span className="text-caption tabular-nums">({kindPages.length})</span>
+            </h2>
+            <ul className="flex flex-col gap-1">
+              {kindPages.map((page) => (
+                <li key={page.id}>
+                  <HoverLift>
+                    <button
+                      type="button"
+                      onClick={() => onOpen(page.id)}
+                      className="flex w-full items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left shadow-1 hover:bg-accent"
+                    >
+                      <FileText
+                        className="size-4 shrink-0 text-muted-foreground"
+                        aria-hidden="true"
+                      />
+                      <span className="flex-1 truncate text-body text-foreground">
+                        {page.title}
+                      </span>
+                      <span className="shrink-0 text-small text-muted-foreground">
+                        {formatDate(new Date(page.updatedAt), locale)}
+                      </span>
+                    </button>
+                  </HoverLift>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
+    </div>
   )
+}
+
+function AutosaveIndicator({ saving }: { saving: boolean }) {
+  const t = useT()
+  // The check *draws in* the moment a save lands (DESIGN.md's motion catalogue: "task done" never
+  // just appears) -- keyed so each successful save remounts a fresh `AnimatedCheck` and its
+  // `checked` flips false -> true one frame after mount, not already-true on arrival.
+  const [saveEpoch, setSaveEpoch] = React.useState(0)
+  const wasSaving = React.useRef(saving)
+  React.useEffect(() => {
+    if (wasSaving.current && !saving) setSaveEpoch((e) => e + 1)
+    wasSaving.current = saving
+  }, [saving])
+
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-1.5 text-small text-muted-foreground"
+    >
+      {saving ? (
+        <span
+          aria-hidden="true"
+          className="size-1.5 shrink-0 animate-pulse rounded-full bg-warning"
+        />
+      ) : (
+        <DrawnCheck key={saveEpoch} />
+      )}
+      {saving ? t('pages.editor.autosaving') : t('pages.editor.saved')}
+    </span>
+  )
+}
+
+function DrawnCheck() {
+  const [checked, setChecked] = React.useState(false)
+  React.useEffect(() => {
+    const id = requestAnimationFrame(() => setChecked(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+  return <AnimatedCheck checked={checked} className="shrink-0 text-success" />
 }
 
 function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
@@ -202,11 +276,7 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
           ← {t('pages.backToList')}
         </button>
         <div className="flex items-center gap-2">
-          {patchPage.isPending ? (
-            <span className="text-small text-muted-foreground">{t('pages.editor.autosaving')}</span>
-          ) : (
-            <span className="text-small text-muted-foreground">{t('pages.editor.saved')}</span>
-          )}
+          <AutosaveIndicator saving={patchPage.isPending} />
           <Button
             variant="destructive"
             size="sm"
@@ -246,7 +316,11 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
               onChange={(blocks) => debouncedPatch({ blocks })}
             />
           </div>
-          <VersionHistory page={page} onRestored={() => pageQuery.refetch()} />
+          <VersionHistory
+            page={page}
+            onRestored={() => pageQuery.refetch()}
+            authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
+          />
         </div>
       )}
     </div>
@@ -280,32 +354,35 @@ export default function PagesScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-h2 text-foreground">{t('pages.title')}</h1>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={tab === 'onboarding' ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => {
-              const url = new URL(window.location.href)
-              if (tab === 'onboarding') url.searchParams.delete('tab')
-              else url.searchParams.set('tab', 'onboarding')
-              navigate(`${url.pathname}${url.search}`)
-            }}
-          >
-            {t('pages.onboarding.title')}
-          </Button>
-          {tab !== 'onboarding' ? (
-            <CreatePageForm
-              onCreated={(id) => {
+      <PageHeader
+        eyebrow={t('pages.eyebrow')}
+        title={t('pages.title')}
+        actions={
+          <>
+            <Button
+              variant={tab === 'onboarding' ? 'primary' : 'secondary'}
+              size="sm"
+              onClick={() => {
                 const url = new URL(window.location.href)
-                url.searchParams.set('page', id)
+                if (tab === 'onboarding') url.searchParams.delete('tab')
+                else url.searchParams.set('tab', 'onboarding')
                 navigate(`${url.pathname}${url.search}`)
               }}
-            />
-          ) : null}
-        </div>
-      </div>
+            >
+              {t('pages.onboarding.title')}
+            </Button>
+            {tab !== 'onboarding' ? (
+              <CreatePageForm
+                onCreated={(id) => {
+                  const url = new URL(window.location.href)
+                  url.searchParams.set('page', id)
+                  navigate(`${url.pathname}${url.search}`)
+                }}
+              />
+            ) : null}
+          </>
+        }
+      />
 
       {tab === 'onboarding' ? (
         <OnboardingTemplatesPanel />

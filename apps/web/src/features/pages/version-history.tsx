@@ -35,7 +35,17 @@ function DiffView({ before, after }: { before: string; after: string }) {
   )
 }
 
-export function VersionHistory({ page, onRestored }: { page: Page; onRestored: () => void }) {
+export function VersionHistory({
+  page,
+  onRestored,
+  authorName,
+}: {
+  page: Page
+  onRestored: () => void
+  /** Resolves `authorUserId` to a display name (the department's member roster the editor already
+   * loaded for `@mentions`) -- falls back to a shortened id when the author is no longer a member. */
+  authorName?: (userId: string) => string | undefined
+}) {
   const t = useT()
   const locale = useLocale()
   const versionsQuery = useVersionsQuery(page.id)
@@ -84,7 +94,9 @@ export function VersionHistory({ page, onRestored }: { page: Page; onRestored: (
                 {i === 0 ? ` · ${t('pages.versions.current')}` : ''}
               </span>
               <span className="text-muted-foreground">
-                {t('pages.versions.by', { name: v.authorUserId })}
+                {t('pages.versions.by', {
+                  name: authorName?.(v.authorUserId) ?? `${v.authorUserId.slice(0, 8)}…`,
+                })}
               </span>
             </button>
             {selectedId === v.id ? (

@@ -1,6 +1,7 @@
 {
   "pages": {
     "title": "Pages",
+    "eyebrow": "Knowledge",
     "create": "New page",
     "newTitlePlaceholder": "Page title",
     "kind": {
@@ -32,9 +33,24 @@
         "callout": "Callout",
         "mention": "Mention someone",
         "blockquote": "Quote",
-        "codeBlock": "Code block"
+        "codeBlock": "Code block",
+        "translate": "Translate selection"
       },
-      "mentionPlaceholder": "Search for someone..."
+      "contentPlaceholder": "Write something, or type \"/\" for commands…",
+      "translate": {
+        "selectFirst": "Select some text first, then translate it",
+        "title": "Translate selection",
+        "pending": "Translating…",
+        "accept": "Replace selection",
+        "edit": "Edit",
+        "discard": "Discard",
+        "retry": "Retry",
+        "errors": {
+          "invalid": "Check the selected text and try again",
+          "forbidden": "Translate is off or the AI budget is used up",
+          "failed": "The AI could not translate this time"
+        }
+      }
     },
     "versions": {
       "title": "Version history",

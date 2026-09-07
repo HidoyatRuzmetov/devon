@@ -1,6 +1,7 @@
 {
   "pages": {
     "title": "Sahifalar",
+    "eyebrow": "Bilim bazasi",
     "create": "Yangi sahifa",
     "newTitlePlaceholder": "Sahifa nomi",
     "kind": {
@@ -32,9 +33,24 @@
         "callout": "Eslatma bloki",
         "mention": "Kishini eslatish",
         "blockquote": "Iqtibos",
-        "codeBlock": "Kod bloki"
+        "codeBlock": "Kod bloki",
+        "translate": "Belgilanganni tarjima qilish"
       },
-      "mentionPlaceholder": "Kishini qidiring..."
+      "contentPlaceholder": "Yozishni boshlang yoki buyruqlar uchun \"/\" bosing…",
+      "translate": {
+        "selectFirst": "Avval matnni belgilang, keyin tarjima qiling",
+        "title": "Belgilanganni tarjima qilish",
+        "pending": "Tarjima qilinmoqda…",
+        "accept": "Belgilanganni almashtirish",
+        "edit": "Tahrirlash",
+        "discard": "Bekor qilish",
+        "retry": "Qayta urinish",
+        "errors": {
+          "invalid": "Belgilangan matnni tekshirib, qayta urinib koʻring",
+          "forbidden": "Tarjima oʻchirilgan yoki AI byudjeti tugagan",
+          "failed": "AI bu safar tarjima qila olmadi"
+        }
+      }
     },
     "versions": {
       "title": "Versiyalar tarixi",

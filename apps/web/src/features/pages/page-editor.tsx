@@ -8,8 +8,8 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
-import { useT } from '@devon/i18n'
-import { IconButton, Input, cn } from '@devon/ui'
+import { useT, useLocale } from '@devon/i18n'
+import { AiPreviewPanel, IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
 import {
   Bold,
   Code2,
@@ -24,7 +24,18 @@ import {
 } from 'lucide-react'
 import { Callout } from './callout-extension.js'
 import { createMentionSuggestion, type MentionCandidate } from './mention-suggestion.js'
+import { createSlashCommandExtension, type SlashCommandItem } from './slash-command-extension.js'
+import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { ApiError } from '../../lib/api-client.js'
 import type { TiptapNode } from './types.js'
+
+function translateErrorKey(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.code === 'validation_failed') return 'pages.editor.translate.errors.invalid'
+    if (err.code === 'forbidden') return 'pages.editor.translate.errors.forbidden'
+  }
+  return 'pages.editor.translate.errors.failed'
+}
 
 export type PageEditorHandle = { getJSON: () => TiptapNode }
 
@@ -70,6 +81,58 @@ export function PageEditor({
   const t = useT()
   const candidatesRef = React.useRef(mentionCandidates)
   candidatesRef.current = mentionCandidates
+
+  // The slash menu's item list (UI-OVERHAUL.md §2 "block editor with slash menu"): the same block
+  // commands the toolbar already exposes, so typing `/` never offers something a toolbar button
+  // could not also do. Built fresh every render (translations can change with the locale) but read
+  // through a ref, same convention as `candidatesRef` above -- `createSlashCommandExtension` closes
+  // over the ref once, at editor construction, never re-reading `useEditor`'s own extensions list.
+  const slashItemsRef = React.useRef<SlashCommandItem[]>([])
+  slashItemsRef.current = React.useMemo<SlashCommandItem[]>(
+    () => [
+      {
+        id: 'heading1',
+        label: t('pages.editor.toolbar.heading1'),
+        run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(),
+      },
+      {
+        id: 'heading2',
+        label: t('pages.editor.toolbar.heading2'),
+        run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(),
+      },
+      {
+        id: 'bulletList',
+        label: t('pages.editor.toolbar.bulletList'),
+        run: (e) => e.chain().focus().toggleBulletList().run(),
+      },
+      {
+        id: 'orderedList',
+        label: t('pages.editor.toolbar.orderedList'),
+        run: (e) => e.chain().focus().toggleOrderedList().run(),
+      },
+      {
+        id: 'taskList',
+        label: t('pages.editor.toolbar.taskList'),
+        run: (e) => e.chain().focus().toggleTaskList().run(),
+      },
+      {
+        id: 'blockquote',
+        label: t('pages.editor.toolbar.blockquote'),
+        run: (e) => e.chain().focus().toggleBlockquote().run(),
+      },
+      {
+        id: 'codeBlock',
+        label: t('pages.editor.toolbar.codeBlock'),
+        run: (e) => e.chain().focus().toggleCodeBlock().run(),
+      },
+      {
+        id: 'callout',
+        label: t('pages.editor.toolbar.callout'),
+        run: (e) => e.chain().focus().toggleCallout('info').run(),
+      },
+    ],
+    [t],
+  )
   // Tiptap fires one or more `onUpdate` transactions while extensions attach and normalise the
   // initial `content` document on mount (schema-conformance fixups), before any real keystroke --
   // found live: opening a page with zero edits still PATCHed it and wrote an identical extra version
@@ -84,12 +147,13 @@ export function PageEditor({
       StarterKit.configure({ heading: { levels: [1, 2] } }),
       TaskList,
       TaskItem.configure({ nested: true }),
-      Placeholder.configure({ placeholder: t('pages.editor.mentionPlaceholder') }),
+      Placeholder.configure({ placeholder: t('pages.editor.contentPlaceholder') }),
       Callout,
       Mention.configure({
         HTMLAttributes: { class: 'text-primary font-medium' },
         suggestion: createMentionSuggestion(() => candidatesRef.current),
       }),
+      createSlashCommandExtension(() => slashItemsRef.current),
     ],
     content: content as JSONContent,
     onCreate: () => {
@@ -106,6 +170,46 @@ export function PageEditor({
   React.useEffect(() => {
     editor?.setEditable(editable)
   }, [editable, editor])
+
+  // AI wiring (TECH-SPEC §8 `translate`): translate the selected text, preview it, and only replace
+  // the selection on Accept -- never a whole-document rewrite, so a bad translation never costs more
+  // than the sentence the person already had selected.
+  const locale = useLocale()
+  const translateMutation = useRunAiFeatureMutation('translate')
+  const [translateOpen, setTranslateOpen] = React.useState(false)
+  const [translateRange, setTranslateRange] = React.useState<{ from: number; to: number } | null>(
+    null,
+  )
+
+  function startTranslate() {
+    if (!editor) return
+    const { from, to, empty } = editor.state.selection
+    if (empty) {
+      toast(t('pages.editor.translate.selectFirst'))
+      return
+    }
+    const text = editor.state.doc.textBetween(from, to, ' ')
+    setTranslateRange({ from, to })
+    setTranslateOpen(true)
+    translateMutation.mutate({ text, locale })
+  }
+
+  const [editedTranslation, setEditedTranslation] = React.useState('')
+  React.useEffect(() => {
+    const data = translateMutation.data?.data
+    const text =
+      typeof data?.['translatedText'] === 'string' ? (data['translatedText'] as string) : ''
+    setEditedTranslation(text)
+    // Reset the editable draft only when a *new* result object arrives (each successful mutation
+    // resolves to a fresh response), never on a re-render that leaves it unchanged -- that would
+    // stomp the person's own in-panel edits.
+  }, [translateMutation.data])
+
+  function closeTranslate() {
+    setTranslateOpen(false)
+    setTranslateRange(null)
+    translateMutation.reset()
+  }
 
   if (!editor) return null
 
@@ -196,7 +300,51 @@ export function PageEditor({
           >
             <Megaphone className="size-4" aria-hidden="true" />
           </ToolbarButton>
+          <SparkleButton
+            aria-label={t('pages.editor.toolbar.translate')}
+            size="sm"
+            className="ml-auto"
+            onClick={startTranslate}
+          />
         </div>
+      ) : null}
+
+      {translateOpen ? (
+        <AiPreviewPanel
+          title={t('pages.editor.translate.title')}
+          status={
+            translateMutation.isPending ? 'pending' : translateMutation.isError ? 'error' : 'ready'
+          }
+          pendingLabel={t('pages.editor.translate.pending')}
+          {...(translateMutation.error
+            ? { errorMessage: t(translateErrorKey(translateMutation.error)) }
+            : {})}
+          acceptLabel={t('pages.editor.translate.accept')}
+          editLabel={t('pages.editor.translate.edit')}
+          discardLabel={t('pages.editor.translate.discard')}
+          retryLabel={t('pages.editor.translate.retry')}
+          onRetry={startTranslate}
+          onAccept={() => {
+            if (editedTranslation && translateRange) {
+              editor.chain().focus().insertContentAt(translateRange, editedTranslation).run()
+            }
+            closeTranslate()
+          }}
+          onEdit={() => {
+            // The field below is always editable -- "Edit" has nothing further to switch on; it
+            // exists so every AI preview in the product offers the same three actions.
+          }}
+          onDiscard={closeTranslate}
+        >
+          {translateMutation.data ? (
+            <textarea
+              value={editedTranslation}
+              onChange={(e) => setEditedTranslation(e.target.value)}
+              rows={3}
+              className="w-full resize-y rounded-sm border border-border bg-card p-2 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          ) : null}
+        </AiPreviewPanel>
       ) : null}
 
       <EditorContent
