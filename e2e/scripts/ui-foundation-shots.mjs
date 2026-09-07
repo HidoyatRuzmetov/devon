@@ -86,7 +86,14 @@ async function main() {
               // signed-in shot in another language has to be switched the way a user would: two
               // clicks in the locale menu.
               if (locale === 'ru') {
-                await page.getByRole('button', { name: 'Interfeys tili' }).click()
+                // The trigger's accessible name is itself translated, and which language it is in
+                // depends on whether `LocaleReconciler` has applied the user record's locale yet --
+                // so match all four rather than guessing the moment.
+                await page
+                  .getByRole('button', {
+                    name: /Interfeys tili|Интерфейс тили|Язык интерфейса|Interface language/,
+                  })
+                  .click()
                 await page.getByRole('menuitemradio', { name: 'Русский' }).click()
                 await page.waitForTimeout(400)
               }
