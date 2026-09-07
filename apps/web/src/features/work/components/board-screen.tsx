@@ -43,25 +43,24 @@ function BoardScreenInner() {
   // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
   // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
-  const [scrollerRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
+  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
+  const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
   const [showRightFade, setShowRightFade] = React.useState(false)
-  const updateEdgeFade = React.useCallback(
-    (e: React.UIEvent<HTMLDivElement> | undefined) => {
-      const el = e ? e.currentTarget : scrollerRef.current
-      if (!el) return
-      setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
-    },
-    [scrollerRef],
-  )
+  const updateEdgeFade = React.useCallback((e: React.UIEvent<HTMLDivElement> | undefined) => {
+    const el = e ? e.currentTarget : scrollerElRef.current
+    if (!el) return
+    setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+  }, [])
   const setScrollerRefs = React.useCallback(
     (el: HTMLDivElement | null) => {
-      scrollerRef.current = el
+      scrollerElRef.current = el
+      heightRef(el)
       // Re-check once the columns have actually rendered/resized (member count, filter results),
       // not just on scroll -- a department that grows past the visible width should show the fade
       // immediately, before anyone has touched the scrollbar.
       if (el) requestAnimationFrame(() => updateEdgeFade(undefined))
     },
-    [scrollerRef, updateEdgeFade],
+    [heightRef, updateEdgeFade],
   )
   // "showing N of M" (UI-OVERHAUL.md's column-collapse affordance): each column owns its own
   // collapsed flag in `localStorage` (a per-viewer convenience, not shared state), so the board only
@@ -232,7 +231,13 @@ function BoardScreenInner() {
         <div
           ref={setScrollerRefs}
           onScroll={updateEdgeFade}
-          className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden pb-2"
+          // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
+          // an inline `height` for sizing along the flex container's main axis, so as long as this
+          // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
+          // to its content size regardless -- found live, in the browser, the whole reason this file
+          // has a viewport-bounded-height hook instead of a CSS-only fix. `min-h-80` is only the
+          // instant-before-first-measurement fallback (`useViewportBoundedHeight`'s own floor).
+          className="flex flex-none gap-4 overflow-x-auto overflow-y-hidden pb-2 min-h-80"
           style={{
             ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
             // A five-person department already overflows the board horizontally with no scrollbar

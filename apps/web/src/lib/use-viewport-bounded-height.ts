@@ -10,40 +10,52 @@ import * as React from 'react'
  * the element's own top offset plus the nearest `<main>`'s bottom padding, live across resizes and
  * content changes (a filter chip wrapping to a second line, the header growing).
  *
- * Returns a ref to attach to the element that should fill the rest of the viewport, and its computed
- * height in pixels (`undefined` before the first measurement, e.g. during SSR/first paint -- callers
- * should pair it with a `min-h-*` Tailwind class so nothing collapses to 0 in that instant). */
+ * Returns a **callback ref** rather than a `RefObject`, on purpose: the caller's target element is
+ * typically mounted after a loading/skeleton branch (the board renders its skeleton first, then the
+ * real scroller once the query resolves), and a `useLayoutEffect` keyed on `ref.current` at mount
+ * time would measure `null` once, on the skeleton render, and then never re-run -- effects do not
+ * re-fire just because a ref's `.current` changes later. A callback ref re-measures (and re-wires its
+ * listeners) exactly when React actually attaches it to a new DOM node, skeleton or not. */
 export function useViewportBoundedHeight<T extends HTMLElement>(
   minPx = 320,
-): [React.RefObject<T | null>, number | undefined] {
-  const ref = React.useRef<T | null>(null)
+): [(node: T | null) => void, number | undefined] {
   const [height, setHeight] = React.useState<number | undefined>(undefined)
+  const cleanupRef = React.useRef<() => void>(() => {})
 
-  React.useLayoutEffect(() => {
-    const el = ref.current
-    if (!el || typeof ResizeObserver === 'undefined') return
-
-    function measure() {
-      if (!el) return
+  const measure = React.useCallback(
+    (el: T) => {
       const top = el.getBoundingClientRect().top
       const main = el.closest('main')
       const bottomGutter = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0
       setHeight(Math.max(minPx, window.innerHeight - top - bottomGutter))
-    }
+    },
+    [minPx],
+  )
 
-    measure()
-    window.addEventListener('resize', measure)
-    // Anything above the scroller (header tabs wrapping to a second line in a longer locale, a
-    // filter chip row growing) moves `top` -- a ResizeObserver on the element itself plus its
-    // previous sibling chain would be exact, but observing `document.body` catches every such
-    // reflow with one observer and no per-ancestor wiring.
-    const ro = new ResizeObserver(measure)
-    ro.observe(document.body)
-    return () => {
-      window.removeEventListener('resize', measure)
-      ro.disconnect()
-    }
-  }, [minPx])
+  const setRef = React.useCallback(
+    (node: T | null) => {
+      cleanupRef.current()
+      cleanupRef.current = () => {}
+      if (!node || typeof ResizeObserver === 'undefined') return
 
-  return [ref, height]
+      const onResize = () => measure(node)
+      onResize()
+      window.addEventListener('resize', onResize)
+      // Anything above the scroller (header tabs wrapping to a second line in a longer locale, a
+      // filter chip row growing) moves the element's own top offset -- a ResizeObserver on the
+      // element itself plus its previous-sibling chain would be exact, but observing
+      // `document.body` catches every such reflow with one observer and no per-ancestor wiring.
+      const ro = new ResizeObserver(onResize)
+      ro.observe(document.body)
+      cleanupRef.current = () => {
+        window.removeEventListener('resize', onResize)
+        ro.disconnect()
+      }
+    },
+    [measure],
+  )
+
+  React.useEffect(() => () => cleanupRef.current(), [])
+
+  return [setRef, height]
 }
