@@ -12,8 +12,10 @@ const STATUS_TONE: Record<
   EventDto['status'],
   'neutral' | 'success' | 'warning' | 'destructive' | 'info'
 > = {
+  // DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an open event is
+  // merely available to RSVP to, not an accomplishment, so it reads as `info` (blue), not `success`.
   draft: 'neutral',
-  open: 'success',
+  open: 'info',
   full: 'warning',
   cancelled: 'destructive',
   done: 'neutral',

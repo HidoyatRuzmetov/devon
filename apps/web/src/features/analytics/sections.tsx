@@ -607,10 +607,13 @@ export function EventsParticipationSection({
           />
           <Tooltip contentStyle={tooltipStyle} cursor={barCursor} />
           <Bar
+            // DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an RSVP
+            // headcount is a category in a stacked breakdown, not an accomplishment, so it uses the
+            // primary token like every other "how many" series rather than borrowing green's meaning.
             dataKey="yes"
             name={t('analytics.legend.yes')}
             stackId="rsvp"
-            fill={COLOR_SUCCESS}
+            fill={COLOR_PRIMARY}
             isAnimationActive={animate}
           />
           <Bar

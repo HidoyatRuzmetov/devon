@@ -10,6 +10,7 @@ import { useT } from '@devon/i18n'
 import {
   Badge,
   Button,
+  Chip,
   CreateDepartmentIllustration,
   HoverLift,
   HubAmbientWash,
@@ -166,7 +167,12 @@ export default function DepartmentsHubScreen() {
                   </span>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {d.id === activeDepartmentId ? (
-                      <Badge tone="success">{t('departments.switcher.current')}</Badge>
+                      // DESIGN.md §2.1: green is reserved for success/done/approved -- "current
+                      // department" is a plain status, not an accomplishment, so it reads as a
+                      // primary outline chip instead of a solid green pill.
+                      <Chip tone="outline" className="border-primary text-primary">
+                        {t('departments.switcher.current')}
+                      </Chip>
                     ) : null}
                     <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
                       {t(

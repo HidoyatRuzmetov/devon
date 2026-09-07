@@ -40,10 +40,12 @@ import { PhotosPanel } from './photos-panel.js'
 import { PollsPanel } from './polls-panel.js'
 import { RsvpPanel } from './rsvp-panel.js'
 
+// DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an open event is
+// merely available to RSVP to, not an accomplishment, so it reads as `info` (blue), not `success`.
 const STATUS_TONE: Record<EventStatus, 'neutral' | 'success' | 'warning' | 'destructive' | 'info'> =
   {
     draft: 'neutral',
-    open: 'success',
+    open: 'info',
     full: 'warning',
     cancelled: 'destructive',
     done: 'neutral',
