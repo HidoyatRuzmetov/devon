@@ -12,7 +12,7 @@
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Bu maydonni faqat siz koʻrasiz -- boʻlim boshligʻi ham, boshqa hech kim ham emas.",
+      "note": "Bu maydonni faqat siz koʻrasiz — boʻlim boshligʻi ham, boshqa hech kim ham emas.",
       "dismiss": "Yopish"
     },
     "duration": {
@@ -88,7 +88,7 @@
       "autosave": { "saving": "Saqlanmoqda…", "saved": "Saqlandi" },
       "empty": {
         "title": "Hali qaydlar yoʻq",
-        "body": "Qaydlar faqat siz uchun -- xohlagan narsangizni yozib qoʻying."
+        "body": "Qaydlar faqat siz uchun — xohlagan narsangizni yozib qoʻying."
       }
     },
     "canvas": {
@@ -101,7 +101,7 @@
       "autosave": { "saving": "Saqlanmoqda…", "saved": "Saqlandi" },
       "empty": {
         "title": "Hali doskalar yoʻq",
-        "body": "Doska -- eskiz va eslatma qogʻozlari uchun erkin joy."
+        "body": "Doska — eskiz va eslatma qogʻozlari uchun erkin joy."
       },
       "addSticky": "Eslatma qogʻoz qoʻshish",
       "undo": "Bekor qilish",
@@ -165,8 +165,11 @@
       },
       "log": {
         "title": "Seanslar jurnali",
+        "today": "Bugun",
+        "yesterday": "Kecha",
         "completed": "Yakunlangan",
         "skipped": "Oʻtkazib yuborilgan",
+        "showMore": "Yana {count} kunni koʻrsatish",
         "empty": {
           "title": "Hali seanslar yoʻq",
           "body": "Bu yerda koʻrish uchun fokus seansini boshlang."
@@ -178,7 +181,7 @@
       "accept": "Qabul qilish",
       "edit": "Tahrirlash",
       "discard": "Rad etish",
-      "disclaimer": "AI takliflari xato boʻlishi mumkin -- hech narsa tekshirmasdan qoʻshilmaydi.",
+      "disclaimer": "AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi.",
       "quickAdd": { "action": "AI bilan tozalash", "title": "AI tozalash" },
       "subtasks": {
         "action": "Quyi vazifalarga boʻlish",

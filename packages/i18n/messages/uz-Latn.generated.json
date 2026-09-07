@@ -297,7 +297,7 @@
         "instanceKind": "Tizim turi",
         "demo": "Demo",
         "live": "Ishchi",
-        "maintenanceActive": "Texnik xizmat rejimi yoqilgan -- foydalanuvchilar tizimga kira olmaydi.",
+        "maintenanceActive": "Texnik xizmat rejimi yoqilgan — foydalanuvchilar tizimga kira olmaydi.",
         "quickLinks": "Tezkor havolalar",
         "reviewRequests": "Bo'lim so'rovlarini ko'rib chiqish",
         "manageDepartments": "Bo'limlarni boshqarish",
@@ -1280,7 +1280,7 @@
       "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
       "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
-      "waitlistedToast": "Joylar toʻlgan -- navbatga qoʻyildingiz",
+      "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
       "myStatus": "Sizning javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
@@ -1604,7 +1604,7 @@
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Bu maydonni faqat siz koʻrasiz -- boʻlim boshligʻi ham, boshqa hech kim ham emas.",
+      "note": "Bu maydonni faqat siz koʻrasiz — boʻlim boshligʻi ham, boshqa hech kim ham emas.",
       "dismiss": "Yopish"
     },
     "duration": {
@@ -1708,7 +1708,7 @@
       },
       "empty": {
         "title": "Hali qaydlar yoʻq",
-        "body": "Qaydlar faqat siz uchun -- xohlagan narsangizni yozib qoʻying."
+        "body": "Qaydlar faqat siz uchun — xohlagan narsangizni yozib qoʻying."
       }
     },
     "canvas": {
@@ -1726,7 +1726,7 @@
       },
       "empty": {
         "title": "Hali doskalar yoʻq",
-        "body": "Doska -- eskiz va eslatma qogʻozlari uchun erkin joy."
+        "body": "Doska — eskiz va eslatma qogʻozlari uchun erkin joy."
       },
       "addSticky": "Eslatma qogʻoz qoʻshish",
       "undo": "Bekor qilish",
@@ -1798,8 +1798,11 @@
       },
       "log": {
         "title": "Seanslar jurnali",
+        "today": "Bugun",
+        "yesterday": "Kecha",
         "completed": "Yakunlangan",
         "skipped": "Oʻtkazib yuborilgan",
+        "showMore": "Yana {count} kunni koʻrsatish",
         "empty": {
           "title": "Hali seanslar yoʻq",
           "body": "Bu yerda koʻrish uchun fokus seansini boshlang."
@@ -1811,7 +1814,7 @@
       "accept": "Qabul qilish",
       "edit": "Tahrirlash",
       "discard": "Rad etish",
-      "disclaimer": "AI takliflari xato boʻlishi mumkin -- hech narsa tekshirmasdan qoʻshilmaydi.",
+      "disclaimer": "AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi.",
       "quickAdd": {
         "action": "AI bilan tozalash",
         "title": "AI tozalash"
@@ -1849,7 +1852,7 @@
     "title": "Guruh loyihalari",
     "description": "Boʻlim yuritayotgan barcha guruh loyihalari, taraqqiyoti bilan.",
     "emptyTitle": "Hali loyihalar yoʻq",
-    "emptyBody": "Birinchi guruh loyihasini yarating -- shablondan yoki boshidan.",
+    "emptyBody": "Birinchi guruh loyihasini yarating — shablondan yoki boshidan.",
     "noIdTitle": "Loyiha koʻrsatilmagan",
     "noIdBody": "Havolada loyiha identifikatori yoʻq.",
     "tile": {
@@ -2025,7 +2028,7 @@
     "phoneMock": {
       "online": "onlayn",
       "replyMessage": "Ulandi! Endi Devon bildirishnomalari shu yerga keladi.",
-      "connectedMessage": "Siz ulandingiz -- Devon bildirishnomalari shu chatga keladi."
+      "connectedMessage": "Siz ulandingiz — Devon bildirishnomalari shu chatga keladi."
     },
     "notConfigured": {
       "title": "Telegram hali ulanmagan",
