@@ -68,7 +68,7 @@ async function main(): Promise<boolean> {
       '[migrate:verify] 5/7 RLS cross-department isolation, Drizzle path + tx.raw() (AC-10)',
     )
     const seeded = await seedDepartments(db.superuserUrl, 4)
-    const isolationResults = await runRlsIsolationChecks(db.appUrl, seeded)
+    const isolationResults = await runRlsIsolationChecks(db.appUrl, seeded, db.superuserUrl)
     sections.push({ label: 'rls.isolation', results: isolationResults })
 
     console.log(

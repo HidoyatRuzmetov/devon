@@ -6,13 +6,26 @@ import { sql } from 'drizzle-orm'
 import { Client } from 'pg'
 import { configurePool, withContext, type RequestContext } from '../../src/context.js'
 import * as schema from '../../src/schema/index.js'
+import { TENANCY } from '../../src/tenancy.js'
 import type { CheckResult } from './types.js'
 
 export type SeededDepartment = { departmentId: string; userId: string }
 
-/** Seeds N departments, one user and one active membership each, directly as the superuser (which
- * bypasses RLS even under FORCE, per Postgres semantics) -- RLS itself is exactly what is under test,
- * so fixture setup must not go through it. */
+/** Every `department_owned` table in the registry except `app.memberships` -- the one table with the
+ * I-1a self-read carve-out (`agentic/INVARIANTS.md`). With no department context set, each of these must
+ * return zero rows to the application role, whatever the caller's `app.user_id` is. Derived from the
+ * registry rather than hand-listed so a newly registered table joins the sweep automatically. */
+export const STRICT_DEFAULT_DENY_TABLES: readonly string[] = Object.entries(TENANCY)
+  .filter(([name, cls]) => cls === 'department_owned' && name !== 'app.memberships')
+  .map(([name]) => name)
+
+/** The tables `seedDepartments()` puts a row into per department, so the sweep over them is
+ * non-vacuous: an empty table returns zero rows to anyone and proves nothing. */
+export const SEEDED_STRICT_TABLES: readonly string[] = ['app.units', 'app.cards']
+
+/** Seeds N departments, one user, one active membership, one unit and one card each, directly as the
+ * superuser (which bypasses RLS even under FORCE, per Postgres semantics) -- RLS itself is exactly what
+ * is under test, so fixture setup must not go through it. */
 export async function seedDepartments(
   superuserConnectionString: string,
   count: number,
@@ -38,6 +51,16 @@ export async function seedDepartments(
         `insert into app.memberships (department_id, user_id, role) values ($1, $2, 'member')`,
         [departmentId, userId],
       )
+      // One ordinary department-owned row on two unrelated modules' tables (structure, work), so the
+      // no-context default-deny sweep below has something real to hide.
+      await client.query(
+        `insert into app.units (department_id, name, created_by) values ($1, $2, $3)`,
+        [departmentId, `RLS probe unit ${suffix}`, userId],
+      )
+      await client.query(
+        `insert into app.cards (department_id, title, created_by_user_id) values ($1, $2, $3)`,
+        [departmentId, `RLS probe card ${suffix}`, userId],
+      )
       out.push({ departmentId, userId })
     }
     return out
@@ -59,11 +82,45 @@ function contextFor(seeded: SeededDepartment, requestId: string): RequestContext
   }
 }
 
+const QUALIFIED_NAME = /^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$/
+
+/** One statement counting every listed table -- `select 't', count(*) from t union all ...` -- so the
+ * sweep is a single round trip for each role rather than a query per table. Names come from the frozen
+ * `TENANCY` registry, and are re-validated here so a malformed entry can never reach the SQL text. */
+function countEveryTableSql(tables: readonly string[]): string {
+  return tables
+    .map((qualified) => {
+      if (!QUALIFIED_NAME.test(qualified)) {
+        throw new Error(`refusing to probe malformed table name ${JSON.stringify(qualified)}`)
+      }
+      const [schemaName, table] = qualified.split('.') as [string, string]
+      return `select '${qualified}' as t, count(*)::int as n from "${schemaName}"."${table}"`
+    })
+    .join(' union all ')
+}
+
+async function countAsSuperuser(
+  superuserConnectionString: string,
+  tables: readonly string[],
+): Promise<Map<string, number>> {
+  const client = new Client({ connectionString: superuserConnectionString })
+  await client.connect()
+  try {
+    const { rows } = await client.query<{ t: string; n: number }>(countEveryTableSql(tables))
+    return new Map(rows.map((r) => [r.t, r.n]))
+  } finally {
+    await client.end()
+  }
+}
+
 /** Drizzle path + `tx.raw()` path, both ways round (A cannot see B, B cannot see A), against the real
- * `app.departments` and `app.memberships` tables. */
+ * `app.departments` and `app.memberships` tables; then the no-department-context probes: the I-1a
+ * self-read carve-out on `app.memberships` (and its one-join-away shadow on `app.departments`) never
+ * crosses users, and every other department-owned table stays strictly zero rows. */
 export async function runRlsIsolationChecks(
   appConnectionString: string,
   seeded: SeededDepartment[],
+  superuserConnectionString: string,
 ): Promise<CheckResult[]> {
   configurePool(appConnectionString)
   const results: CheckResult[] = []
@@ -114,40 +171,91 @@ export async function runRlsIsolationChecks(
     })
   })
 
-  // `app.memberships` carries two *additive* self-read policies alongside the base department-scoped
-  // one (`memberships_read_own`, `migrations/0100_accounts_departments.sql`; `memberships_self_read`,
-  // `migrations/0200_structure.sql` -- independently added by two modules for the same reason: `GET
-  // /me` and `Actor.memberships` need to list every department a user belongs to, which is impossible
-  // to ask with a department_id already chosen, since resolving that list is what *establishes* which
-  // department a request acts for). Both policies are `user_id = app.current_user_id()` only, so an
-  // unset department context on this one table no longer means zero rows -- it means "only the calling
-  // user's own row(s), never anyone else's". See docs/04-escalations/
-  // INTEGRATION-memberships-self-read-vs-I-1.md for the open question of whether I-1 should be read to
-  // allow this; the check below asserts the guarantee that is actually true today either way.
+  // I-1a (`agentic/INVARIANTS.md`, decided 2026-09-06 via docs/04-escalations/
+  // INTEGRATION-memberships-self-read-vs-I-1.md): `app.memberships` carries additive self-read policies
+  // (`memberships_read_own`, `migrations/0100_accounts_departments.sql`; `memberships_self_read`,
+  // `0200_structure.sql`; the `or user_id = ...` arm of `memberships_read`, `0303_...sql`), all
+  // `user_id = app.current_user_id()` only, because `GET /me` / `Actor.memberships` must list every
+  // department a user belongs to before any department context exists -- resolving that list is what
+  // *establishes* the context. So on this one table an unset department context does not mean zero
+  // rows; it means "only the calling user's own row(s), never anyone else's". That is the guarantee
+  // asserted here.
   await withContext({ ...contextFor(a, 'probe-no-context'), departmentId: null }, async (tx) => {
     const memberships = await tx.drizzle.select().from(schema.memberships)
     results.push({
-      name: 'unset department context on app.memberships never crosses users (self-read carve-out, see escalation)',
+      name: 'unset department context on app.memberships never crosses users (I-1a self-read carve-out)',
       ok: memberships.every((m) => m.userId === a.userId),
       detail: `rows=${memberships.length}`,
+    })
+
+    // `app.departments` (`tenant_root`) has the same read one join away: `departments_self_read`
+    // (`0200_structure.sql`) shows a department row without context iff one of the caller's own active
+    // memberships points at it -- `listActiveMembershipsForUser` (`apps/api/src/db/repo.ts`) joins the
+    // two to give `GET /me` its department names. Never another department's row.
+    const departments = await tx.drizzle.select().from(schema.departments)
+    results.push({
+      name: "unset department context on app.departments shows only the caller's own departments (I-1a, one join away), never another department",
+      ok: departments.every((d) => d.id === a.departmentId),
+      detail: `rows=${departments.length}`,
     })
   })
 
   // A user with no memberships of their own at all (every `seedDepartments()` user has exactly one,
   // in their own department, so this has to be a fresh id, not one of `seeded`) must still see zero
-  // rows with no department context -- proving the carve-out is genuinely self-scoped, not "any
-  // authenticated user sees everything once department_id is null".
+  // rows of both tables with no department context -- proving the carve-out is genuinely self-scoped,
+  // not "any authenticated user sees everything once department_id is null".
   await withContext(
     { ...contextFor(a, 'probe-no-context-stranger'), userId: randomUUID(), departmentId: null },
     async (tx) => {
       const memberships = await tx.drizzle.select().from(schema.memberships)
       results.push({
-        name: 'unset department context returns zero rows for a user with no memberships of their own',
+        name: 'unset department context returns zero app.memberships rows for a user with no memberships of their own',
         ok: memberships.length === 0,
         detail: `rows=${memberships.length}`,
       })
+      const departments = await tx.drizzle.select().from(schema.departments)
+      results.push({
+        name: 'unset department context returns zero app.departments rows for a user with no memberships of their own',
+        ok: departments.length === 0,
+        detail: `rows=${departments.length}`,
+      })
     },
   )
+
+  // Every other department-owned table has no carve-out at all: unset department context must mean
+  // zero rows (default-deny), even for a signed-in user who is a member somewhere and even though the
+  // superuser can see rows exist. Counted as the superuser first so a "zero rows" result on an empty
+  // table is reported as vacuous rather than passed off as proof.
+  const total = await countAsSuperuser(superuserConnectionString, STRICT_DEFAULT_DENY_TABLES)
+  const visible = await withContext(
+    { ...contextFor(a, 'probe-no-context-sweep'), departmentId: null },
+    async (tx) => {
+      const rows = await tx.raw<{ t: string; n: number }>(
+        sql.raw(countEveryTableSql(STRICT_DEFAULT_DENY_TABLES)),
+      )
+      return new Map(rows.map((r) => [r.t, r.n]))
+    },
+  )
+  for (const table of STRICT_DEFAULT_DENY_TABLES) {
+    const seen = visible.get(table) ?? -1
+    const exists = total.get(table) ?? -1
+    results.push({
+      name: `unset department context sees zero rows of ${table} (default-deny, no self-read carve-out)`,
+      ok: seen === 0 && exists >= 0,
+      detail:
+        exists === 0
+          ? 'total=0 (nothing to hide yet -- vacuous until a seed puts rows here)'
+          : `total=${exists} visible=${seen}`,
+    })
+  }
+  const vacuous = SEEDED_STRICT_TABLES.filter((t) => (total.get(t) ?? 0) < seeded.length)
+  results.push({
+    name: `default-deny sweep is non-vacuous: ${SEEDED_STRICT_TABLES.join(', ')} hold seeded rows the caller cannot see`,
+    ok: vacuous.length === 0 && SEEDED_STRICT_TABLES.every((t) => visible.get(t) === 0),
+    detail: SEEDED_STRICT_TABLES.map(
+      (t) => `${t}: total=${total.get(t)} visible=${visible.get(t)}`,
+    ).join('; '),
+  })
 
   return results
 }
