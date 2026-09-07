@@ -193,6 +193,9 @@
         "wipeFailed": "Muvaffaqiyatsiz",
         "sentinelPublicKeyLabel": "Ochiq kalit",
         "sentinelPublicKeyHint": "Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=... sifatida joylashtiring. Bu maxfiy emas, istalgan vaqtda shu yerda ko'rsatilishi mumkin."
+      },
+      "maintenanceNotice": {
+        "title": "Xizmat vaqtincha to'xtatilgan"
       }
     }
   }

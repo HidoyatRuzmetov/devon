@@ -77,6 +77,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const role = user?.role ?? 'member'
   const isDemo = instanceQuery.data?.isDemo ?? false
 
+  // TECH-SPEC §11 "pause switch": every page renders the maintenance message except the super
+  // admin's own console (`/admin*`) and login/setup, which never reach `AppShell` at all
+  // (`app.tsx`'s `AuthShell` branch) -- so gating here, the one shell every other route passes
+  // through, is what "everywhere except super admin login/console" actually means client-side. The
+  // server enforces the same exemption independently (`modules/admin/availability-gate.ts`); this is
+  // the UX half, never the security boundary.
+  const maintenance = instanceQuery.data?.maintenance
+  const maintenanceBlocksThisRoute =
+    Boolean(maintenance?.enabled) && role !== 'super_admin' && !route.startsWith('/admin')
+  const maintenanceMessage = maintenance?.message ?? null
+
   function toggleCollapsed(): void {
     setCollapsed((prev) => {
       const next = !prev
@@ -247,16 +258,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <main id="main" className="min-w-0 flex-1 px-4 py-8 sm:px-6 md:px-8">
           <PaletteProvider onOpen={() => setPaletteOpen(true)}>
-            {meQuery.isError ? (
-              <StateView
-                kind="error"
-                titleKey="state.error.title"
-                bodyKey="state.error.body"
-                action={{ labelKey: 'state.error.action', onAction: () => meQuery.refetch() }}
-              />
-            ) : (
-              children
-            )}
+            {renderMainContent({
+              meQueryIsError: meQuery.isError,
+              onRetry: () => meQuery.refetch(),
+              maintenanceBlocksThisRoute,
+              maintenanceMessage,
+              locale,
+              children,
+            })}
           </PaletteProvider>
         </main>
       </div>
@@ -285,6 +294,61 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       />
 
       <Toaster position={isDesktop ? 'bottom-right' : 'bottom-center'} />
+    </div>
+  )
+}
+
+/** Extracted to a plain function (never an inline ternary chain in the JSX above) so a closing angle
+ * bracket from one branch's element is never immediately followed, on the next source line, by plain
+ * conditional-expression code before the next opening bracket -- `agentic/scripts/check-i18n.mjs`'s
+ * hard-coded-text heuristic bridges a newline with its own whitespace match and false-positives on
+ * exactly that shape, as it did here before this refactor. */
+function renderMainContent(props: {
+  meQueryIsError: boolean
+  onRetry: () => void
+  maintenanceBlocksThisRoute: boolean
+  maintenanceMessage: Record<string, string> | null
+  locale: Locale
+  children: React.ReactNode
+}): React.ReactNode {
+  if (props.meQueryIsError) {
+    return (
+      <StateView
+        kind="error"
+        titleKey="state.error.title"
+        bodyKey="state.error.body"
+        action={{ labelKey: 'state.error.action', onAction: props.onRetry }}
+      />
+    )
+  }
+  if (props.maintenanceBlocksThisRoute) {
+    return <MaintenanceNotice message={props.maintenanceMessage} locale={props.locale} />
+  }
+  return props.children
+}
+
+/** TECH-SPEC §11: the branded page every route renders while maintenance is on, for everyone except
+ * the super admin. `message` is the super admin's own, live, four-locale text (`GET /api/v1/instance`,
+ * set from `/admin/settings` -- `features/admin/settings-screen.tsx`'s `MaintenanceCard`); only the
+ * heading is a fixed i18n string, kept in the admin module's own message namespace (never the core
+ * catalogue a module must not edit) since this component itself is the one necessary exception to
+ * "features never edit the shell". */
+function MaintenanceNotice({
+  message,
+  locale,
+}: {
+  message: Record<string, string> | null
+  locale: Locale
+}) {
+  const t = useT()
+  const text = message?.[locale] || message?.['uz-Latn'] || null
+  return (
+    <div
+      role="alert"
+      className="mx-auto flex max-w-140 flex-col items-center gap-3 rounded-md border border-border bg-card p-10 text-center"
+    >
+      <h1 className="text-h3 text-foreground">{t('admin.console.maintenanceNotice.title')}</h1>
+      {text ? <p className="max-w-100 text-body text-muted-foreground">{text}</p> : null}
     </div>
   )
 }

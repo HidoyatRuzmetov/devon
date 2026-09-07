@@ -359,6 +359,9 @@
         "wipeFailed": "Не удалось",
         "sentinelPublicKeyLabel": "Публичный ключ",
         "sentinelPublicKeyHint": "Вставьте это значение в infra/sentinel/sentinel.conf на хосте как public_key=... . Это не секрет, его можно показывать здесь в любое время."
+      },
+      "maintenanceNotice": {
+        "title": "Служба временно приостановлена"
       }
     }
   },

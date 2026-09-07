@@ -359,6 +359,9 @@
         "wipeFailed": "Failed",
         "sentinelPublicKeyLabel": "Public key",
         "sentinelPublicKeyHint": "Paste this into infra/sentinel/sentinel.conf on the host as public_key=... . It is not secret and can be shown here at any time."
+      },
+      "maintenanceNotice": {
+        "title": "The service is paused for maintenance"
       }
     }
   },
