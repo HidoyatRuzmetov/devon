@@ -5,6 +5,9 @@
     "markAllRead": "Отметить все как прочитанные",
     "groupByReason": "Группировать по причине",
     "calendarLink": "Ссылка календаря",
+    "viewMenu": {
+      "title": "Вид"
+    },
     "tabs": {
       "inbox": "Все",
       "unread": "Непрочитанные",

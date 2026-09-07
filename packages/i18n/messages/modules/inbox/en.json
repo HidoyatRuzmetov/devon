@@ -5,6 +5,9 @@
     "markAllRead": "Mark all as read",
     "groupByReason": "Group by reason",
     "calendarLink": "Calendar link",
+    "viewMenu": {
+      "title": "View"
+    },
     "tabs": {
       "inbox": "All",
       "unread": "Unread",

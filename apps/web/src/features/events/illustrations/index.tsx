@@ -25,8 +25,8 @@ function Base({
       // "meet" (the SVG default) letterboxes/pillarboxes to fit the whole viewBox inside the
       // element's box -- which is why a full-bleed `object-cover w-full` container still showed
       // card background on either side of an illustration that never actually filled it. "slice"
-      // crops instead, the SVG-native equivalent of object-fit: cover (CSS object-fit is not
-      // reliably honoured on an inline <svg> root the way it is on an <img>).
+      // crops instead, the SVG-native equivalent of object-fit: cover -- CSS object-fit is not
+      // reliably honoured on an inline SVG root element the way it is on a real img tag.
       preserveAspectRatio="xMidYMid slice"
       className={className}
       style={style}

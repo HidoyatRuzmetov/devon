@@ -16,6 +16,10 @@ import {
   Badge,
   Button,
   Chip,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   EmptyInboxIllustration,
   PageHeader,
   Stagger,
@@ -25,7 +29,7 @@ import {
   toast,
   toastWithUndo,
 } from '@devon/ui'
-import { CalendarDays, CheckCheck, LayoutList, SlidersHorizontal, Ungroup } from 'lucide-react'
+import { CalendarDays, Check, CheckCheck, SlidersHorizontal, View } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useMediaQuery } from '../../lib/use-media-query.js'
 import { useMeQuery } from '../../lib/session.js'
@@ -270,7 +274,9 @@ export default function InboxScreen() {
   const [status, setStatus] = React.useState<InboxStatus>('inbox')
   const [openId, setOpenId] = React.useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
-  const [grouped, setGrouped] = React.useState(false)
+  // UI-OVERHAUL.md §8: grouped by reason is the default view, not an opt-in someone has to find --
+  // the toggle moved into a "View" menu (below) rather than staying its own header button.
+  const [grouped, setGrouped] = React.useState(true)
   // The split becomes a stack below this width (UI-OVERHAUL.md "stack at 390") -- Tailwind's own
   // `md` breakpoint, so this hook's threshold and the `md:` classes below never drift apart.
   const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -380,25 +386,31 @@ export default function InboxScreen() {
         title={t('inbox.title')}
         actions={
           <>
+            {/* The one primary action in the row (UI-OVERHAUL.md §2): the most consequential single
+                thing to do from this screen, whenever there is anything to do it to. */}
             {unreadCount > 0 ? (
-              <Button variant="secondary" size="sm" onClick={() => markAllRead.mutate()}>
+              <Button variant="primary" size="sm" onClick={() => markAllRead.mutate()}>
                 <CheckCheck className="size-4" aria-hidden="true" />
                 {t('inbox.markAllRead')}
               </Button>
             ) : null}
-            <Button
-              variant={grouped ? 'secondary' : 'ghost'}
-              size="sm"
-              aria-pressed={grouped}
-              onClick={() => setGrouped((v) => !v)}
-            >
-              {grouped ? (
-                <Ungroup className="size-4" aria-hidden="true" />
-              ) : (
-                <LayoutList className="size-4" aria-hidden="true" />
-              )}
-              {t('inbox.groupByReason')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <View className="size-4" aria-hidden="true" />
+                  {t('inbox.viewMenu.title')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={() => setGrouped((v) => !v)}
+                  className="justify-between"
+                >
+                  {t('inbox.groupByReason')}
+                  {grouped ? <Check className="size-3.5" aria-hidden="true" /> : null}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" size="sm" onClick={handleCopyCalendar}>
               <CalendarDays className="size-4" aria-hidden="true" />
               {t('inbox.calendarLink')}
@@ -412,7 +424,10 @@ export default function InboxScreen() {
         tabs={<InboxTabs status={status} onChange={setStatus} unreadCount={unreadCount} />}
       />
 
-      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,420px)_1fr]">
+      {/* `minmax(0,440px)`: the list was ~420px of a 1,144px content column with the detail pane
+          only an 80px bordered box below it (item handoff) -- widening the list a little and letting
+          the detail pane take the rest evens that out. */}
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
         <InboxBody
           query={notificationsQuery}
           status={status}
@@ -428,11 +443,18 @@ export default function InboxScreen() {
             (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so
             the two never both claim the same open notification at once. */}
         {isDesktop ? (
-          <div className="sticky top-4 rounded-md border border-border bg-card p-6">
+          <div className="sticky top-4 min-h-100 rounded-md border border-border bg-card p-6">
             {openNotification ? (
               <NotificationDetail notification={openNotification} onArchive={handleArchiveNow} />
             ) : (
-              <p className="text-body text-muted-foreground">{t('inbox.detail.emptySelection')}</p>
+              // Centred, illustrated "nothing selected" instead of one sentence in an otherwise
+              // empty box (item handoff: "~600px of nothing below it").
+              <div className="flex h-full min-h-88 flex-col items-center justify-center gap-3 text-center">
+                <EmptyInboxIllustration className="w-32" />
+                <p className="max-w-72 text-body text-muted-foreground">
+                  {t('inbox.detail.emptySelection')}
+                </p>
+              </div>
             )}
           </div>
         ) : null}

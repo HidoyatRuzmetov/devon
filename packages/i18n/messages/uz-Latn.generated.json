@@ -1406,6 +1406,9 @@
     "markAllRead": "Barchasini oʻqilgan deb belgilash",
     "groupByReason": "Sababi boʻyicha guruhlash",
     "calendarLink": "Taqvim havolasi",
+    "viewMenu": {
+      "title": "Ko'rinish"
+    },
     "tabs": {
       "inbox": "Barchasi",
       "unread": "Oʻqilmagan",
