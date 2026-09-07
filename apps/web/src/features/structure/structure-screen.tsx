@@ -11,6 +11,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  EmptyStructureIllustration,
   IdleFloat,
   Input,
   RadioGroup,
@@ -47,7 +48,6 @@ import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
 import { UnitTree, buildTree, type TreeActions } from './unit-tree.js'
 import { OrgChart } from './org-chart.js'
-import { EmptyStructureIllustration } from './components/illustrations.js'
 import { fullName } from './member-card.js'
 
 type View = 'tree' | 'chart'

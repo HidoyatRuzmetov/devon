@@ -7,7 +7,16 @@
 // `useRunAiFeatureMutation` hook this panel already calls.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { AiPreviewPanel, Badge, SparkleButton, StateView, toast } from '@devon/ui'
+import {
+  AiPreviewPanel,
+  Badge,
+  Field,
+  Select,
+  SparkleButton,
+  StateView,
+  Textarea,
+  toast,
+} from '@devon/ui'
 import { Sparkles } from 'lucide-react'
 import { useDepartment } from '../../lib/session.js'
 import { ApiError } from '../../lib/api-client.js'
@@ -18,7 +27,6 @@ import {
   remapPlanSprintTasks,
   type FieldSpec,
 } from './feature-forms.js'
-import { Field, Select, Textarea } from './components/form-controls.js'
 import type { RunFeatureResponse } from './types.js'
 
 function fieldValue(t: ReturnType<typeof useT>, field: FieldSpec): string {

@@ -14,18 +14,21 @@ import { useT, useLocale } from '@devon/i18n'
 import {
   AiPreviewPanel,
   Button,
+  Checkbox,
   Dialog,
   DialogClose,
   DialogContent,
+  Field,
   Input,
+  Select,
   SparkleButton,
+  Textarea,
   cn,
   toast,
 } from '@devon/ui'
 import { Check } from 'lucide-react'
 import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { EVENT_CATEGORIES, type EventDto } from '../schemas.js'
-import { Checkbox, Field, Select, Textarea } from './form-controls.js'
 
 export type EventFormValues = {
   title: string
@@ -437,7 +440,7 @@ export function EventFormDialog({
                 <Checkbox
                   id="event-waitlist"
                   checked={values.waitlistEnabled}
-                  onCheckedChange={(v) => set('waitlistEnabled', v)}
+                  onCheckedChange={(v) => set('waitlistEnabled', v === true)}
                 />
                 <label htmlFor="event-waitlist" className="text-small text-foreground">
                   {t('events.form.waitlistEnabledLabel')}
@@ -461,7 +464,7 @@ export function EventFormDialog({
                   <Checkbox
                     id="event-reminder-day"
                     checked={values.reminderDayBefore}
-                    onCheckedChange={(v) => set('reminderDayBefore', v)}
+                    onCheckedChange={(v) => set('reminderDayBefore', v === true)}
                   />
                   <label htmlFor="event-reminder-day" className="text-small text-foreground">
                     {t('events.form.reminderDayBefore')}
@@ -471,7 +474,7 @@ export function EventFormDialog({
                   <Checkbox
                     id="event-reminder-hour"
                     checked={values.reminderHourBefore}
-                    onCheckedChange={(v) => set('reminderHourBefore', v)}
+                    onCheckedChange={(v) => set('reminderHourBefore', v === true)}
                   />
                   <label htmlFor="event-reminder-hour" className="text-small text-foreground">
                     {t('events.form.reminderHourBefore')}

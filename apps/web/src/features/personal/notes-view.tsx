@@ -15,12 +15,12 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  Textarea,
   cn,
   toastWithUndo,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { aiCostLine, aiErrorMessageKey } from './lib/ai-helpers.js'
-import { Textarea } from './components/form-controls.js'
 import {
   useCreateNoteMutation,
   useDelayedDelete,

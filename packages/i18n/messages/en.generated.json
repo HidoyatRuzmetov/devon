@@ -302,7 +302,10 @@
         "reviewRequests": "Review department requests",
         "manageDepartments": "Manage departments",
         "manageAccounts": "Manage accounts",
-        "checkHealth": "Check system health"
+        "checkHealth": "Check system health",
+        "healthTitle": "System health",
+        "healthSeeAll": "See all",
+        "healthUnavailable": "Health status is unavailable right now."
       },
       "departments": {
         "searchPlaceholder": "Search by department name",
@@ -329,13 +332,25 @@
         "stopViewingAs": "Stop viewing as",
         "pauseDialogTitle": "Pause department",
         "pauseReasonLabel": "Reason",
+        "pauseCancel": "Cancel",
         "pauseSubmit": "Pause",
         "pausedToast": "Department paused",
         "resumedToast": "Department resumed",
         "archivedToast": "Department archived",
         "restoredToast": "Department restored",
         "viewAsStartedToast": "View-as mode started",
-        "viewAsStoppedToast": "View-as mode stopped"
+        "viewAsStoppedToast": "View-as mode stopped",
+        "columnName": "Department",
+        "columnStatus": "Status",
+        "columnHead": "Head",
+        "columnMembers": "Members",
+        "columnCreated": "Created",
+        "drawerTitle": "Department details",
+        "drawerClose": "Close",
+        "memberCountLabel": "Members",
+        "headLabel": "Head",
+        "createdLabel": "Created",
+        "localeLabel": "Default locale"
       },
       "accounts": {
         "searchPlaceholder": "Search by name or login",
@@ -353,8 +368,15 @@
           "title": "No accounts found"
         },
         "role": {
-          "superAdmin": "Super admin"
+          "superAdmin": "Super admin",
+          "head": "Head",
+          "member": "Member"
         },
+        "columnName": "Name",
+        "columnLogin": "Login",
+        "columnStatus": "Status",
+        "columnRole": "Role",
+        "actionsMenu": "Actions",
         "lock": "Lock",
         "unlock": "Unlock",
         "resetPassword": "Reset password",
@@ -442,6 +464,10 @@
         "maintenanceBody": "When on, everyone but the super admin sees this message.",
         "maintenanceOnBadge": "On",
         "maintenanceMessagePlaceholder": "Enter the message text",
+        "maintenanceMessageLabel": "Message",
+        "maintenancePreviewLabel": "Preview",
+        "maintenancePreviewBadge": "The service is paused for maintenance",
+        "maintenancePreviewEmpty": "No message yet -- people will see the default notice.",
         "maintenanceEnable": "Turn on",
         "maintenanceDisable": "Turn off",
         "maintenanceSaveMessage": "Save message",
@@ -456,13 +482,23 @@
         "wipeBody": "This button permanently removes the whole system from the server. It cannot be undone.",
         "wipeStartCta": "Start wipe",
         "wipeDialogTitle": "Confirmation required",
-        "wipeDialogBody": "To continue, type the phrase shown, re-enter your password, and enter your 2FA code if it is enabled.",
+        "wipeDialogBody": "This permanently removes the whole system from the server: every department, account, page, card, and file. It cannot be undone. The next steps ask you to type a confirmation phrase and re-enter your credentials.",
+        "wipeStepOf": "Step {step} of {total}",
+        "wipeStepContinue": "Continue",
+        "wipeStepBack": "Back",
+        "wipeStepCancel": "Cancel",
         "wipePhraseLabel": "Type the phrase: {phrase}",
         "wipePasswordLabel": "Password",
         "wipeTotpLabel": "2FA code (if enabled)",
+        "wipeReviewPhrase": "Phrase",
+        "wipeReviewPassword": "Password",
+        "wipeReviewTotp": "2FA code",
+        "wipeReviewTotpNone": "Not provided",
+        "wipeReviewBody": "Starting the countdown cannot be undone once it reaches zero, though you can still cancel while it counts down.",
         "wipeConfirmCta": "Start the 60-second countdown",
         "wipeStartFailedToast": "Confirmation failed",
         "wipeCountdownBody": "The wipe command is sent to the host service when the countdown reaches zero. You can still cancel.",
+        "wipeCountdownAria": "{seconds} seconds remaining before the wipe runs",
         "wipeCancel": "Cancel",
         "wipeCancelledToast": "Wipe cancelled",
         "wipeExecuting": "Sending the wipe command...",
@@ -625,6 +661,8 @@
   },
   "ai": {
     "title": "AI",
+    "eyebrow": "AI",
+    "description": "Budget, feature flags and usage for this department's AI helpers.",
     "tabs": {
       "overview": "Overview",
       "usage": "Usage",
@@ -674,12 +712,18 @@
       "tokens": "{count} tokens",
       "latency": "{ms} ms",
       "accept": "Copy result",
-      "copied": "Copied to clipboard"
+      "copied": "Copied to clipboard",
+      "retried": "Retried once",
+      "edit": "Edit",
+      "discard": "Discard",
+      "retry": "Retry",
+      "costLine": "{tokens} tokens · {ms} ms"
     },
     "assistant": {
       "title": "AI assistant",
       "description": "Try an AI feature: fill in the fields, preview the result, then copy it or use it in the matching screen.",
       "preview": "Preview",
+      "pending": "Preparing the answer…",
       "disabled": {
         "title": "This feature is off",
         "body": "Ask a department head to turn it on in the Overview tab."
@@ -780,12 +824,44 @@
   },
   "analytics": {
     "title": "Analytics",
+    "eyebrow": "Reports",
+    "kpi": {
+      "throughput": "Cards done, last week",
+      "throughputQuestion": "vs. the week before",
+      "open": "Open cards",
+      "openQuestion": "vs. the week before",
+      "overdue": "Overdue cards",
+      "overdueQuestion": "vs. the week before",
+      "onTimeRate": "On-time rate",
+      "onTimeRateQuestion": "percentage points vs. the week before"
+    },
+    "ask": {
+      "title": "Ask analytics",
+      "placeholder": "Ask a question, e.g. \"overdue cards this month\"",
+      "action": "Ask",
+      "pending": "Reading the question…",
+      "apply": "Apply filter",
+      "edit": "Edit",
+      "discard": "Discard",
+      "retry": "Retry",
+      "resultWithFilter": "Filter: {filter}",
+      "resultNoFilter": "Could not map this to a filter -- try rephrasing it.",
+      "errors": {
+        "invalid": "Check the question and try again",
+        "forbidden": "Ask analytics is off or the AI budget is used up",
+        "failed": "The AI could not answer this time"
+      }
+    },
     "filterBar": {
       "placeholder": "assignee:@me status:active due:<today",
       "apply": "Apply",
       "clear": "Clear",
       "since": "From",
-      "until": "To"
+      "until": "To",
+      "activeTerms": "Filters:",
+      "removeTerm": "Remove filter \"{term}\"",
+      "dateRange": "Range:",
+      "presetDays": "Last {count} days"
     },
     "savedFilters": {
       "title": "Saved filters",
@@ -797,6 +873,7 @@
       "empty": "No saved filters yet"
     },
     "actions": {
+      "export": "Export",
       "exportCsv": "Download as CSV",
       "exportPng": "Download as image",
       "pin": "Pin to Home",
@@ -1046,6 +1123,8 @@
   },
   "events": {
     "title": "Events",
+    "eyebrow": "EVENTS",
+    "description": "Plan, RSVP and organise everything the department does together.",
     "view": {
       "list": "List",
       "calendar": "Calendar"
@@ -1104,9 +1183,31 @@
       "deadline": "RSVP by {date}",
       "cancelledBanner": "This event was cancelled",
       "cancelledReason": "Reason: {reason}",
-      "doneBanner": "This event is done"
+      "doneBanner": "This event is done",
+      "viewMap": "View map"
+    },
+    "calendar": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "today": "Today"
     },
     "form": {
+      "stepBasics": "Basics",
+      "stepSchedule": "Schedule & place",
+      "stepCapacity": "Capacity & reminders",
+      "stepBack": "Back",
+      "stepNext": "Next",
+      "aiIdeaLabel": "One-line idea",
+      "aiIdeaPlaceholder": "E.g. a team picnic in the park next month",
+      "aiDraftButton": "Draft with AI",
+      "aiDraftPending": "Drafting…",
+      "aiDraftFailed": "Could not draft this event",
+      "aiDraftAccept": "Use this draft",
+      "aiDraftEdit": "Use and edit",
+      "aiDraftDiscard": "Discard",
+      "aiDraftChecklist": "Suggested checklist",
+      "aiDraftPoll": "Suggested poll options: {options}",
+      "aiDraftFollowUp": "Add the checklist, poll and carpool plan from the event page after you create it.",
       "titleLabel": "Event title",
       "titlePlaceholder": "E.g. autumn team picnic",
       "descriptionLabel": "Description",
@@ -1176,6 +1277,7 @@
     "attendees": {
       "title": "Attendees",
       "titleCount": "Attendees ({count})",
+      "whosComing": "Who's coming",
       "empty": "No one has answered yet",
       "guestsSuffix": "+{count} guests"
     },
@@ -1185,7 +1287,13 @@
       "placeholder": "Write a comment",
       "submit": "Post",
       "delete": "Delete",
-      "deleteConfirm": "Delete this comment?"
+      "deleteConfirm": "Delete this comment?",
+      "summarize": "Summarize discussion",
+      "summaryPending": "Summarizing…",
+      "summaryFailed": "Could not summarize this discussion",
+      "summaryAccept": "Insert into comment",
+      "summaryEdit": "Insert to edit",
+      "summaryDiscard": "Discard"
     },
     "carpool": {
       "title": "Carpooling",
@@ -1286,6 +1394,7 @@
     "title": "Inbox",
     "eyebrow": "NOTIFICATIONS",
     "markAllRead": "Mark all as read",
+    "groupByReason": "Group by reason",
     "calendarLink": "Calendar link",
     "tabs": {
       "inbox": "All",
@@ -1294,8 +1403,8 @@
     },
     "empty": {
       "inbox": {
-        "title": "Your inbox is empty",
-        "body": "Notifications about your work will appear here."
+        "title": "Inbox zero",
+        "body": "Nothing needs your attention right now. Enjoy the quiet."
       },
       "unread": {
         "title": "Nothing unread",
@@ -1332,16 +1441,21 @@
         "hour": "In 1 hour",
         "tomorrow": "Tomorrow morning",
         "nextWeek": "Next week"
-      }
+      },
+      "approve": "Approve",
+      "rsvp": "RSVP",
+      "open": "Open"
     },
     "detail": {
       "title": "Notification",
       "close": "Close",
-      "openLink": "Open"
+      "openLink": "Open",
+      "emptySelection": "Select a notification to read it here."
     },
     "preferences": {
       "title": "Notification preferences",
       "body": "Choose which notifications reach you, and where.",
+      "matrixTitle": "By type and channel",
       "reasonColumn": "Notification type",
       "toggleAria": "{reason} via {channel}",
       "digestFrequency": "Summary frequency",
@@ -1373,6 +1487,7 @@
   },
   "pages": {
     "title": "Pages",
+    "eyebrow": "Knowledge",
     "create": "New page",
     "newTitlePlaceholder": "Page title",
     "kind": {
@@ -1404,9 +1519,24 @@
         "callout": "Callout",
         "mention": "Mention someone",
         "blockquote": "Quote",
-        "codeBlock": "Code block"
+        "codeBlock": "Code block",
+        "translate": "Translate selection"
       },
-      "mentionPlaceholder": "Search for someone..."
+      "contentPlaceholder": "Write something, or type \"/\" for commands…",
+      "translate": {
+        "selectFirst": "Select some text first, then translate it",
+        "title": "Translate selection",
+        "pending": "Translating…",
+        "accept": "Replace selection",
+        "edit": "Edit",
+        "discard": "Discard",
+        "retry": "Retry",
+        "errors": {
+          "invalid": "Check the selected text and try again",
+          "forbidden": "Translate is off or the AI budget is used up",
+          "failed": "The AI could not translate this time"
+        }
+      }
     },
     "versions": {
       "title": "Version history",
@@ -1449,6 +1579,8 @@
   },
   "personal": {
     "title": "Personal",
+    "eyebrow": "JUST FOR YOU",
+    "description": "Your private space for periods, to-dos, notes, a canvas and focus time.",
     "tabs": {
       "today": "Today",
       "sprints": "Periods",
@@ -1457,15 +1589,39 @@
       "canvas": "Canvas",
       "pomodoro": "Pomodoro"
     },
+    "privacy": {
+      "note": "Only you can see what's in this workspace -- not your department head, not anyone else.",
+      "dismiss": "Dismiss"
+    },
+    "duration": {
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
+    },
     "today": {
       "tasks": {
-        "title": "Today's to-dos"
+        "title": "Today's to-dos",
+        "remaining": "{count} left"
       },
       "empty": {
         "title": "Nothing planned for today",
         "body": "Add a to-do or start a period to see it here."
       },
-      "focus": "Focus"
+      "allDone": {
+        "title": "All done for now",
+        "body": "Nothing left in your active periods or inbox. Enjoy the quiet."
+      },
+      "addPlaceholder": "Add a to-do for today",
+      "focus": "Focus",
+      "period": {
+        "progressAria": "Period progress",
+        "timeLeft": "{value} left",
+        "noGoal": "No goal set for this period yet"
+      },
+      "rollover": {
+        "banner": "This period's time is up. Roll the unfinished to-dos into a new one?",
+        "bannerGoal": "Time is up for “{goal}”. Roll the unfinished to-dos into a new period?"
+      }
     },
     "sprints": {
       "active": {
@@ -1492,6 +1648,7 @@
       "complete": {
         "action": "Mark complete"
       },
+      "ended": "Time's up",
       "kind": {
         "threeHour": "3 hours",
         "day": "Day",
@@ -1507,6 +1664,7 @@
     "tasks": {
       "inbox": "Inbox",
       "addPlaceholder": "Add a to-do",
+      "openCount": "{count} open",
       "toggleDone": "Mark done",
       "delete": "Delete to-do",
       "deleted": {
@@ -1529,6 +1687,10 @@
       },
       "pin": "Pin",
       "unpin": "Unpin",
+      "autosave": {
+        "saving": "Saving…",
+        "saved": "Saved"
+      },
       "empty": {
         "title": "No notes yet",
         "body": "Notes are just for you -- jot down anything."
@@ -1542,6 +1704,10 @@
       "delete": "Delete canvas",
       "deleted": {
         "toast": "Canvas deleted"
+      },
+      "autosave": {
+        "saving": "Saving…",
+        "saved": "Saved"
       },
       "empty": {
         "title": "No canvases yet",
@@ -1590,7 +1756,9 @@
         "chime": "Chime",
         "bell": "Bell",
         "digital": "Digital",
-        "none": "Silent"
+        "none": "Silent",
+        "muteOn": "Mute",
+        "muteOff": "Unmute"
       },
       "notifications": {
         "on": "Notifications on",
@@ -1621,6 +1789,43 @@
           "title": "No sessions yet",
           "body": "Start a focus session to see it here."
         }
+      }
+    },
+    "ai": {
+      "pending": "Preparing…",
+      "accept": "Accept",
+      "edit": "Edit",
+      "discard": "Discard",
+      "disclaimer": "AI suggestions can be wrong -- always reviewed before anything is added.",
+      "quickAdd": {
+        "action": "Clean up with AI",
+        "title": "AI clean-up"
+      },
+      "subtasks": {
+        "action": "Break into subtasks",
+        "title": "Suggested subtasks",
+        "editAria": "Edit the suggested subtasks, one per line"
+      },
+      "planSprint": {
+        "action": "Plan with AI",
+        "title": "AI period plan",
+        "editAria": "Edit the suggested order, one to-do per line",
+        "focusBadge": "Start here",
+        "emptyBucket": "Add a to-do to this period first"
+      },
+      "weeklySummary": {
+        "action": "Weekly summary",
+        "title": "AI weekly summary",
+        "acceptLabel": "Save as a note",
+        "editAria": "Edit the summary",
+        "subjectSelf": "You",
+        "periodLabel": "the last 7 days",
+        "noteTitle": "Weekly summary",
+        "savedToast": "Added to Notes"
+      },
+      "translate": {
+        "action": "Translate to {locale}",
+        "title": "Translation to {locale}"
       }
     }
   },
@@ -1800,6 +2005,11 @@
   },
   "telegram": {
     "title": "Telegram",
+    "phoneMock": {
+      "online": "online",
+      "replyMessage": "Connected! You'll get your Devon notifications here from now on.",
+      "connectedMessage": "You're connected -- Devon notifications now arrive in this chat."
+    },
     "notConfigured": {
       "title": "Telegram is not connected yet",
       "body": "Ask your administrator to set up the Telegram bot for this instance."

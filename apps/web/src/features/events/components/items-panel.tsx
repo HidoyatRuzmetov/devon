@@ -3,7 +3,7 @@
 // toast, never a silent no-op.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Input, Skeleton, StateView, toast } from '@devon/ui'
+import { Button, Field, Input, Skeleton, StateView, toast } from '@devon/ui'
 import {
   useAddItemMutation,
   useClaimItemMutation,
@@ -11,7 +11,6 @@ import {
   useReleaseItemMutation,
 } from '../hooks.js'
 import type { ItemDto } from '../schemas.js'
-import { Field } from './form-controls.js'
 
 export function ItemsPanel({ eventId }: { eventId: string }) {
   const t = useT()

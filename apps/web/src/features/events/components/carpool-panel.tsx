@@ -8,9 +8,11 @@ import {
   Badge,
   Button,
   Celebrate,
+  Field,
   Input,
   Skeleton,
   StateView,
+  Textarea,
   initialsFromName,
   toast,
   useCelebrate,
@@ -23,7 +25,6 @@ import {
   useReleaseCarpoolSeatMutation,
 } from '../hooks.js'
 import type { CarpoolDto } from '../schemas.js'
-import { Field, Textarea } from './form-controls.js'
 
 function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDto }) {
   const t = useT()

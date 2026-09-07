@@ -3,11 +3,22 @@
 // vote" is just "vote again" here -- no separate retract step.
 import * as React from 'react'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
-import { Badge, Button, Input, cn, toast, useReducedMotion, Skeleton, StateView } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Field,
+  Input,
+  Select,
+  Skeleton,
+  StateView,
+  cn,
+  toast,
+  useReducedMotion,
+} from '@devon/ui'
 import { Plus, X } from 'lucide-react'
 import { useCreatePollMutation, usePollsQuery, useVoteOnPollMutation } from '../hooks.js'
 import type { PollDto } from '../schemas.js'
-import { Checkbox, Field, Select } from './form-controls.js'
 
 function PollResultBar({
   option,
@@ -248,7 +259,11 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
         />
       </Field>
       <div className="flex items-center gap-2">
-        <Checkbox checked={anonymous} onCheckedChange={setAnonymous} id="poll-anonymous" />
+        <Checkbox
+          checked={anonymous}
+          onCheckedChange={(v) => setAnonymous(v === true)}
+          id="poll-anonymous"
+        />
         <label htmlFor="poll-anonymous" className="text-small text-foreground">
           {t('events.polls.anonymousLabel')}
         </label>

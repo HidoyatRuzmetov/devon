@@ -9,12 +9,11 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { BlurFade, Button, Input, StateView } from '@devon/ui'
+import { BlurFade, Button, Input, JoinDepartmentIllustration, StateView } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useSession } from '../../lib/session.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { fetchJoinPreview, joinDepartment } from './api.js'
-import { JoinDepartmentIllustration } from './components/illustrations.js'
 
 export default function JoinScreen() {
   const t = useT()

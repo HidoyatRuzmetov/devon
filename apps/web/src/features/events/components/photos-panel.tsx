@@ -2,10 +2,9 @@
 // its own file storage for this feature -- an external image URL, shown as a simple gallery grid.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, IconButton, Input, Skeleton, StateView, toast } from '@devon/ui'
+import { Button, Field, IconButton, Input, Skeleton, StateView, Textarea, toast } from '@devon/ui'
 import { Trash2 } from 'lucide-react'
 import { useAddPhotoMutation, useDeletePhotoMutation, usePhotosQuery } from '../hooks.js'
-import { Field, Textarea } from './form-controls.js'
 
 export function PhotosPanel({ eventId }: { eventId: string }) {
   const t = useT()

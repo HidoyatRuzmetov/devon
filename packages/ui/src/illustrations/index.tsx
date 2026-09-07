@@ -287,6 +287,138 @@ export function AllDoneIllustration({ className }: IllustrationProps): React.JSX
   )
 }
 
+/** The "create a department" card: a building going up, a plus breaking ground. */
+export function CreateDepartmentIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <rect x="62" y="34" width="76" height="88" rx="6" fill={FILL} />
+      <rect x="76" y="48" width="14" height="14" rx="2" fill={MUTED} />
+      <rect x="100" y="48" width="14" height="14" rx="2" fill={MUTED} />
+      <rect x="76" y="70" width="14" height="14" rx="2" fill={MUTED} />
+      <rect x="100" y="70" width="14" height="14" rx="2" fill={MUTED} />
+      <rect x="88" y="96" width="24" height="26" rx="2" fill={INK} opacity="0.85" />
+      <circle cx="146" cy="40" r="18" fill={ACCENT} />
+      <path d="M146 32 v16 M138 40 h16" stroke={INK} strokeWidth="3.5" strokeLinecap="round" />
+    </Frame>
+  )
+}
+
+/** The "join a department" card: a key sliding toward an open door. */
+export function JoinDepartmentIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <path d="M70 30 h50 a8 8 0 0 1 8 8 v76 h-58 z" fill={FILL} />
+      <rect x="70" y="30" width="8" height="84" rx="4" fill={INK} opacity="0.85" />
+      <circle cx="102" cy="74" r="4" fill={MUTED} />
+      <circle cx="150" cy="70" r="12" fill="none" stroke={ACCENT} strokeWidth="5" />
+      <path
+        d="M159 78 l16 16 M170 89 l7 -7"
+        stroke={ACCENT}
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+    </Frame>
+  )
+}
+
+/** The pending-request screen: a document with a clock, waiting. */
+export function PendingReviewIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <rect x="56" y="24" width="70" height="92" rx="6" fill={FILL} />
+      <rect x="68" y="40" width="46" height="7" rx="3.5" fill={MUTED} />
+      <rect x="68" y="56" width="34" height="7" rx="3.5" fill={MUTED} />
+      <rect x="68" y="72" width="40" height="7" rx="3.5" fill={MUTED} />
+      <circle cx="140" cy="92" r="26" fill="var(--color-card)" stroke={ACCENT} strokeWidth="4" />
+      <path
+        d="M140 78 v14 l10 8"
+        fill="none"
+        stroke={INK}
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Frame>
+  )
+}
+
+/** Structure's empty state: an org-chart shape with the top box solid and the two below it dashed --
+ * "draw the first unit, the rest follows" read at a glance, without a word of text. */
+export function EmptyStructureIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <path
+        d="M100 46 V64 M100 64 H70 M100 64 H130 M70 64 V78 M130 64 V78"
+        stroke={MUTED}
+        strokeWidth="3"
+        fill="none"
+      />
+      <rect x="70" y="20" width="60" height="26" rx="6" fill={FILL} />
+      <circle cx="100" cy="33" r="7" fill={ACCENT} />
+      <rect
+        x="36"
+        y="78"
+        width="56"
+        height="26"
+        rx="6"
+        fill="none"
+        stroke={INK}
+        strokeWidth="2.5"
+        strokeDasharray="5 5"
+      />
+      <rect
+        x="108"
+        y="78"
+        width="56"
+        height="26"
+        rx="6"
+        fill="none"
+        stroke={INK}
+        strokeWidth="2.5"
+        strokeDasharray="5 5"
+      />
+    </Frame>
+  )
+}
+
+/** The org chart's own empty state and the "no head yet" vacancy motif share this drawing: a dashed
+ * placeholder person in a role slot. */
+export function VacantRoleIllustration({ className }: IllustrationProps): React.JSX.Element {
+  return (
+    <Frame className={className}>
+      <rect
+        x="52"
+        y="30"
+        width="96"
+        height="78"
+        rx="8"
+        fill="none"
+        stroke={MUTED}
+        strokeWidth="2.5"
+        strokeDasharray="6 6"
+      />
+      <circle
+        cx="100"
+        cy="58"
+        r="14"
+        fill="none"
+        stroke={INK}
+        strokeWidth="2.5"
+        strokeDasharray="4 4"
+      />
+      <path
+        d="M78 92 a22 18 0 0 1 44 0"
+        fill="none"
+        stroke={INK}
+        strokeWidth="2.5"
+        strokeDasharray="4 4"
+      />
+      <circle cx="146" cy="34" r="10" fill={ACCENT} />
+      <path d="M141 34 h10 M146 29 v10" stroke={INK} strokeWidth="2" strokeLinecap="round" />
+    </Frame>
+  )
+}
+
 /** Name → component, so a screen can pick one from data (an event category, a state kind) without a
  * switch statement of its own. */
 export const ILLUSTRATIONS = {
@@ -302,6 +434,11 @@ export const ILLUSTRATIONS = {
   offline: OfflineIllustration,
   welcome: WelcomeIllustration,
   allDone: AllDoneIllustration,
+  createDepartment: CreateDepartmentIllustration,
+  joinDepartment: JoinDepartmentIllustration,
+  pendingReview: PendingReviewIllustration,
+  emptyStructure: EmptyStructureIllustration,
+  vacantRole: VacantRoleIllustration,
 } as const
 
 export type IllustrationName = keyof typeof ILLUSTRATIONS

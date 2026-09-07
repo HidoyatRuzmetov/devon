@@ -15,13 +15,13 @@ import {
   Skeleton,
   SparkleButton,
   StateView,
+  Textarea,
   initialsFromName,
   toast,
 } from '@devon/ui'
 import { Trash2 } from 'lucide-react'
 import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { useAddCommentMutation, useCommentsQuery, useDeleteCommentMutation } from '../hooks.js'
-import { Textarea } from './form-controls.js'
 
 function ThreadSummary({
   eventTitle,

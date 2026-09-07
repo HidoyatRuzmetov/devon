@@ -24,6 +24,7 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  Textarea,
   toast,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
@@ -35,7 +36,6 @@ import {
   sprintElapsedPct,
   sprintHasEnded,
 } from './lib/sprint-labels.js'
-import { Textarea } from './components/form-controls.js'
 import {
   useCreateNoteMutation,
   useCreateSprintMutation,

@@ -2,10 +2,9 @@
 // (the caller only mounts this tab then) -- one rating per person, resubmitting updates it.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Skeleton, StateView, toast } from '@devon/ui'
+import { Button, Checkbox, Field, Skeleton, StateView, Textarea, toast } from '@devon/ui'
 import { Star } from 'lucide-react'
 import { useFeedbackQuery, useSubmitFeedbackMutation } from '../hooks.js'
-import { Checkbox, Field, Textarea } from './form-controls.js'
 
 function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
@@ -84,7 +83,11 @@ export function FeedbackPanel({ eventId }: { eventId: string }) {
           />
         </Field>
         <div className="flex items-center gap-2">
-          <Checkbox checked={anonymous} onCheckedChange={setAnonymous} id="feedback-anonymous" />
+          <Checkbox
+            checked={anonymous}
+            onCheckedChange={(v) => setAnonymous(v === true)}
+            id="feedback-anonymous"
+          />
           <label htmlFor="feedback-anonymous" className="text-small text-foreground">
             {t('events.feedback.anonymousLabel')}
           </label>

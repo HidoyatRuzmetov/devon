@@ -11,7 +11,9 @@ import {
   AmbientGradient,
   Badge,
   Button,
+  CreateDepartmentIllustration,
   HoverLift,
+  JoinDepartmentIllustration,
   PageHeader,
   Reveal,
   Stagger,
@@ -23,10 +25,6 @@ import {
 import { useSession, useDepartment } from '../../lib/session.js'
 import { navigate, Link } from '../../lib/router.js'
 import { fetchMyDepartments } from './api.js'
-import {
-  CreateDepartmentIllustration,
-  JoinDepartmentIllustration,
-} from './components/illustrations.js'
 
 function ChoiceCard({
   illustration,

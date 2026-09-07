@@ -20,6 +20,7 @@ import {
   StateView,
   SparkleButton,
   EmptyPersonalIllustration,
+  Textarea,
   toast,
   toastWithUndo,
 } from '@devon/ui'
@@ -27,7 +28,6 @@ import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { TaskRow } from './task-row.js'
 import { buildTree, flattenTree, isSelfOrDescendant, type TaskNode } from './task-tree.js'
 import { aiCostLine, aiErrorMessageKey } from './lib/ai-helpers.js'
-import { Textarea } from './components/form-controls.js'
 import {
   useCreateTaskMutation,
   useDelayedDelete,

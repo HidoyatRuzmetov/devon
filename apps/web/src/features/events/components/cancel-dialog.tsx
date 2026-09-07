@@ -3,9 +3,8 @@
 // notification.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Dialog, DialogClose, DialogContent, toast } from '@devon/ui'
+import { Button, Dialog, DialogClose, DialogContent, Field, Textarea, toast } from '@devon/ui'
 import { useCancelEventMutation } from '../hooks.js'
-import { Field, Textarea } from './form-controls.js'
 
 export function CancelDialog({
   open,

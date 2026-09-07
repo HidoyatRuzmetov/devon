@@ -14,13 +14,13 @@ import {
   IdleFloat,
   Input,
   PageHeader,
+  PendingReviewIllustration,
   Reveal,
   StateView,
   cn,
 } from '@devon/ui'
 import { fetchMyRequests, createDepartmentRequest, type UnitDraft } from './api.js'
 import { useMeQuery } from '../../lib/session.js'
-import { PendingReviewIllustration } from './components/illustrations.js'
 
 const HEX_SWATCHES = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2']
 const STEP_KEYS = ['name', 'units', 'settings'] as const

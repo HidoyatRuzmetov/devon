@@ -11,9 +11,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** All twelve, in both themes (switch with the Storybook theme toolbar) -- every fill is a token, so
- * the whole set repaints with the theme and with any future palette change. */
-export const AllTwelve: Story = {
+/** The whole set, in both themes (switch with the Storybook theme toolbar) -- every fill is a token,
+ * so the whole set repaints with the theme and with any future palette change. */
+export const AllIllustrations: Story = {
   render: () => (
     <div className="grid grid-cols-2 gap-6 bg-background p-8 font-sans sm:grid-cols-3 lg:grid-cols-4">
       {(Object.keys(ILLUSTRATIONS) as IllustrationName[]).map((name) => {
