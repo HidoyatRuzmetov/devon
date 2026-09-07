@@ -28,6 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   Input,
+  Select,
   Skeleton,
   StateView,
   cn,
@@ -77,7 +78,15 @@ type Density = 'compact' | 'comfortable'
 // own -- the fix is giving this column enough real width for its two fixed-size (`shrink-0`)
 // children, taken from the title column's own flexible `1fr` slack rather than any other fixed
 // column, since the title track already renders with hundreds of spare pixels at 1440/390.
-const GRID_COLUMNS = '40px minmax(220px,1fr) 200px 160px 260px 140px'
+//
+// round2 SEV1: every cell used to be a form control at full width regardless of whether it was being
+// edited (a bordered `Input`, a bordered `MemberPicker` combobox, a native `<select>`) -- ~90px sat
+// unused to the right of HOLAT and four per-row borders' worth of chrome besides, while the title
+// column (an `<Input>`, which cannot ellipsize) simply cut long titles mid-word. Cells now render as
+// plain text by default and only look like controls on hover/focus (`TableRow` below), so the
+// assignee/priority/due/status columns need less width than a permanently-bordered control did --
+// that freed width, plus the unused strip, goes to the title column's `minmax` floor.
+const GRID_COLUMNS = '40px minmax(310px,1fr) 180px 120px 260px 110px'
 
 function useLocalStorageDensity(): [Density, (d: Density) => void] {
   const key = 'devon.work.table.density'
@@ -486,9 +495,21 @@ function TableRow({
   const patchCard = usePatchCardMutation()
   const [title, setTitle] = React.useState(card.title)
   React.useEffect(() => setTitle(card.title), [card.title])
+  // round2 SEV1: the title cell used to be an `<Input>` at all times, which cannot ellipsize -- a
+  // long title was simply cut mid-word with no tooltip. It now renders as plain truncated text (with
+  // a `title` attribute) and only becomes the editable `Input` on hover/click/Enter, same as Notion/
+  // Linear's own inline-rename affordance.
+  const [editingTitle, setEditingTitle] = React.useState(false)
+
+  function commitTitle() {
+    setEditingTitle(false)
+    const next = title.trim()
+    if (next && next !== card.title) patchCard.mutate({ id: card.id, patch: { title: next } })
+    else setTitle(card.title)
+  }
 
   // The row itself opens the card (no redundant "Ochish" column) -- but a click that lands on one
-  // of the row's own editable controls (the title input, a picker trigger, the native select, the
+  // of the row's own editable controls (the title text/input, a picker trigger, the select, the
   // date-picker button) must edit that field instead. Checking `e.target` against the actual
   // interactive tags, rather than wrapping every cell in its own click-swallowing element, keeps
   // every cell a plain grid child (no non-interactive element carries its own click handler, which
@@ -519,50 +540,73 @@ function TableRow({
       // per-item delay) gets the same "this just arrived" read at virtualization speed with zero JS
       // animation cost per row, and the global reduced-motion backstop in `tokens.css` still
       // collapses it to an instant appearance.
-      className="grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring animate-[devon-rise-in_160ms_var(--ease-out)]"
+      className="relative grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring animate-[devon-rise-in_160ms_var(--ease-out)]"
     >
+      {/* DESIGN.md §9.2's own overdue signal, on a row -- the rail, not (only) a solid-tinted date
+          chip, since the row already carries a per-cell risk badge for the "colour is never the
+          only signal" text. */}
+      {card.risk === 'overdue' ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
+        />
+      ) : null}
       <Checkbox
         checked={checked}
         onCheckedChange={(v) => onCheckedChange(v === true)}
         aria-label={card.title}
       />
-      <Input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onBlur={() =>
-          title.trim() &&
-          title !== card.title &&
-          patchCard.mutate({ id: card.id, patch: { title: title.trim() } })
-        }
-        className="h-9 border-transparent bg-transparent hover:border-border"
-      />
+      {editingTitle ? (
+        <Input
+          autoFocus
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            } else if (e.key === 'Escape') {
+              setTitle(card.title)
+              setEditingTitle(false)
+            }
+          }}
+          className="h-9 border-primary bg-transparent"
+        />
+      ) : (
+        <button
+          type="button"
+          title={card.title}
+          onClick={() => setEditingTitle(true)}
+          className="h-9 min-w-0 truncate rounded-sm px-2 text-left text-body text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {card.title}
+        </button>
+      )}
       <MemberPicker
         members={members}
         value={card.assigneeUserId}
         onChange={(userId) => patchCard.mutate({ id: card.id, patch: { assigneeUserId: userId } })}
         placeholderKey="work.field.unassigned"
+        triggerClassName="w-full border-transparent bg-transparent px-2 hover:border-border hover:bg-accent"
       />
-      <select
+      <Select
+        aria-label={t('work.field.priority')}
         value={card.priority}
         onChange={(e) =>
           patchCard.mutate({ id: card.id, patch: { priority: e.target.value as CardPriority } })
         }
-        className="h-9 w-full rounded-sm border border-transparent bg-transparent px-2 text-small hover:border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {PRIORITIES.map((p) => (
-          <option key={p} value={p}>
-            {t(PRIORITY_LABEL_KEY[p])}
-          </option>
-        ))}
-      </select>
-      <span className="flex items-center gap-1.5">
+        options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
+        className="h-9 border-transparent bg-transparent px-2 text-small hover:border-border"
+      />
+      <span className="flex min-w-0 items-center gap-1.5">
         <DatePicker
           locale={locale}
           label={t('work.field.due')}
           placeholder={t('work.field.due')}
           selected={toDateInputValue(card.dueAt)}
           onSelect={(date) => patchCard.mutate({ id: card.id, patch: { dueAt: dateToIso(date) } })}
-          triggerClassName="h-9 border-transparent bg-transparent hover:border-border px-2"
+          triggerClassName="h-9 shrink-0 border-transparent bg-transparent hover:border-border px-2"
         />
         {card.risk !== 'none'
           ? (() => {

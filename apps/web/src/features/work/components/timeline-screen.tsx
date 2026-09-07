@@ -22,6 +22,9 @@ import type { Card, CardRisk } from '../api.js'
 
 const DAY_MS = 86_400_000
 const ROW_HEIGHT = 40
+// Its own band above the month/day scale for the "Bugun" marker (round2 SEV1: it used to sit inside
+// the day-number row and print on top of whatever date shared its x).
+const TODAY_BAND_HEIGHT = 18
 const MONTH_BAND_HEIGHT = 22
 const TICK_BAND_HEIGHT = 24
 const GROUP_HEADER_HEIGHT = 32
@@ -130,6 +133,10 @@ function GanttBar({
   }
   const x1 = clampX(start)
   const x2 = Math.max(clampX(due) + pxPerDay, x1 + MIN_BAR_WIDTH)
+  // round2 SEV1: a bar whose real start is earlier than the visible window ran flush into the grid's
+  // left edge with nothing to say it continues off-screen -- a left fade + chevron makes that explicit
+  // instead of reading as "this card starts exactly at the window edge".
+  const clippedAtStart = startOfDay(start).getTime() < rangeStart.getTime()
 
   function onHandlePointerDown(edge: 'start' | 'end', e: React.PointerEvent<HTMLDivElement>) {
     e.stopPropagation()
@@ -203,6 +210,14 @@ function GanttBar({
       )}
       style={{ left: x1, width: x2 - x1 }}
     >
+      {clippedAtStart ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 flex w-5 items-center justify-start rounded-l-md bg-gradient-to-r from-black/25 to-transparent pl-0.5 text-current"
+        >
+          <ChevronLeft className="size-3" aria-hidden="true" />
+        </span>
+      ) : null}
       <span className="truncate text-caption font-medium">{card.title}</span>
       <div
         role="separator"
@@ -384,6 +399,17 @@ export default function TimelineScreen() {
       >
         <div className="relative" style={{ width: Math.max(totalWidth, 1) }}>
           <div className="sticky top-0 z-20 bg-card">
+            {/* round2 SEV1: "Bugun" used to sit inside the day-number row and print on top of
+                whatever date shared its x ("Bugun8") -- its own band above the day scale (Linear/
+                Plane's own convention) means it can never collide with a number again. */}
+            <div className="relative" style={{ height: TODAY_BAND_HEIGHT }}>
+              <div
+                className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-primary px-1.5 py-0.5 text-caption font-semibold text-primary-foreground shadow-1"
+                style={{ left: todayX }}
+              >
+                {t('work.timeline.today')}
+              </div>
+            </div>
             <div
               className="relative border-b border-border/70"
               style={{ height: MONTH_BAND_HEIGHT }}
@@ -411,12 +437,6 @@ export default function TimelineScreen() {
                   {tick.label}
                 </div>
               ))}
-              <div
-                className="absolute top-0 flex h-full items-center px-1 text-caption font-semibold text-primary"
-                style={{ left: todayX }}
-              >
-                {t('work.timeline.today')}
-              </div>
             </div>
           </div>
 

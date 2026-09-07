@@ -8,6 +8,7 @@ import { useT } from '@devon/i18n'
 import {
   Avatar,
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -25,6 +26,10 @@ export interface MemberPickerProps {
   placeholderKey: string
   allowClear?: boolean
   disabled?: boolean
+  /** Overrides the trigger button's own classes -- e.g. the table view's row cells (round2 SEV1)
+   * want a borderless, truncating trigger that reads as plain text until hovered/clicked, not the
+   * always-bordered combobox every other picker call site keeps. */
+  triggerClassName?: string
 }
 
 export function MemberPicker({
@@ -34,6 +39,7 @@ export function MemberPicker({
   placeholderKey,
   allowClear = true,
   disabled,
+  triggerClassName,
 }: MemberPickerProps) {
   const t = useT()
   const selected = members.find((m) => m.userId === value) ?? null
@@ -41,9 +47,14 @@ export function MemberPicker({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary" size="sm" disabled={disabled} className="justify-between gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={disabled}
+          className={cn('min-w-0 justify-between gap-2', triggerClassName)}
+        >
           {selected ? (
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-2">
               <Avatar
                 size="sm"
                 src={null}
@@ -51,15 +62,15 @@ export function MemberPicker({
                 initials={initialsFromName(selected.givenName, selected.familyName)}
                 hueSeed={selected.userId}
               />
-              {fullName(selected)}
+              <span className="min-w-0 truncate">{fullName(selected)}</span>
             </span>
           ) : (
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <UserRound className="size-4" aria-hidden="true" />
-              {t(placeholderKey)}
+            <span className="flex min-w-0 items-center gap-2 text-muted-foreground">
+              <UserRound className="size-4 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 truncate">{t(placeholderKey)}</span>
             </span>
           )}
-          <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="max-h-80 overflow-y-auto" align="start">
