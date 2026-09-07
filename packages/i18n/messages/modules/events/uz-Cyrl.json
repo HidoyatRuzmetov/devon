@@ -1,6 +1,8 @@
 {
   "events": {
     "title": "Тадбирлар",
+    "eyebrow": "ТАДБИРЛАР",
+    "description": "Бўлим биргаликда қиладиган ҳар бир ишни режалаштиринг, иштирокни белгиланг.",
     "view": {
       "list": "Рўйхат",
       "calendar": "Тақвим"
@@ -59,9 +61,31 @@
       "deadline": "Рўйхатдан ўтиш: {date}",
       "cancelledBanner": "Бу тадбир бекор қилинди",
       "cancelledReason": "Сабаб: {reason}",
-      "doneBanner": "Бу тадбир якунланди"
+      "doneBanner": "Бу тадбир якунланди",
+      "viewMap": "Харитада кўриш"
+    },
+    "calendar": {
+      "previousMonth": "Олдинги ой",
+      "nextMonth": "Кейинги ой",
+      "today": "Бугун"
     },
     "form": {
+      "stepBasics": "Асосий маълумот",
+      "stepSchedule": "Вақт ва манзил",
+      "stepCapacity": "Жойлар ва эслатмалар",
+      "stepBack": "Орқага",
+      "stepNext": "Кейингиси",
+      "aiIdeaLabel": "Бир қаторли идея",
+      "aiIdeaPlaceholder": "Масалан, кейинги ойда боғда жамоавий пикник",
+      "aiDraftButton": "AI билан қоралама тузиш",
+      "aiDraftPending": "Қоралама тузилмоқда…",
+      "aiDraftFailed": "Тадбир қораламасини тузиб бўлмади",
+      "aiDraftAccept": "Шу қораламадан фойдаланиш",
+      "aiDraftEdit": "Фойдаланиб, таҳрирлаш",
+      "aiDraftDiscard": "Рад этиш",
+      "aiDraftChecklist": "Таклиф қилинган рўйхат",
+      "aiDraftPoll": "Таклиф қилинган сўровнома вариантлари: {options}",
+      "aiDraftFollowUp": "Рўйхат, сўровнома ва бирга бориш режасини тадбирни яратгандан кейин унинг саҳифасида қўшинг.",
       "titleLabel": "Тадбир номи",
       "titlePlaceholder": "Масалан, кузги жамоавий пикник",
       "descriptionLabel": "Тавсиф",
@@ -131,6 +155,7 @@
     "attendees": {
       "title": "Иштирокчилар",
       "titleCount": "Иштирокчилар ({count})",
+      "whosComing": "Кимлар боради",
       "empty": "Ҳозирча ҳеч ким жавоб бермади",
       "guestsSuffix": "+{count} меҳмон"
     },
@@ -140,7 +165,13 @@
       "placeholder": "Изоҳ ёзинг",
       "submit": "Юбориш",
       "delete": "Ўчириш",
-      "deleteConfirm": "Изоҳни ўчирмоқчимисиз?"
+      "deleteConfirm": "Изоҳни ўчирмоқчимисиз?",
+      "summarize": "Муҳокамани қисқача ифодалаш",
+      "summaryPending": "Қисқача баён тузилмоқда…",
+      "summaryFailed": "Муҳокамани қисқача баён қилиб бўлмади",
+      "summaryAccept": "Изоҳга қўшиш",
+      "summaryEdit": "Қўшиб, таҳрирлаш",
+      "summaryDiscard": "Рад этиш"
     },
     "carpool": {
       "title": "Бирга бориш",

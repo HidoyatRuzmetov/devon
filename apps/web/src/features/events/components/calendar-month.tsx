@@ -90,28 +90,34 @@ export function CalendarMonth({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() =>
-            onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1))
-          }
-          aria-label={t('events.actions.back')}
-        >
-          <ChevronLeft className="size-4" aria-hidden="true" />
-        </Button>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1))
+            }
+            aria-label={t('events.calendar.previousMonth')}
+          >
+            <ChevronLeft className="size-4" aria-hidden="true" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1))
+            }
+            aria-label={t('events.calendar.nextMonth')}
+          >
+            <ChevronRight className="size-4" aria-hidden="true" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onMonthChange(new Date())}>
+            {t('events.calendar.today')}
+          </Button>
+        </div>
         <p className="text-lead font-medium capitalize text-foreground">{monthLabel}</p>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() =>
-            onMonthChange(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1))
-          }
-          aria-label={t('events.actions.back')}
-        >
-          <ChevronRight className="size-4" aria-hidden="true" />
-        </Button>
+        <span className="w-24" aria-hidden="true" />
       </div>
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-md border border-border bg-border text-caption">
         {weekdayLabels.map((label) => (

@@ -1,13 +1,99 @@
 // Event discussion (TECH-SPEC §3.4 `event_comments`). Flat, newest-last, no threading -- matches the
 // scale of a department-wide event thread, not a project's activity feed.
+//
+// AI wiring (UI-OVERHAUL.md "AI helpers ... thread summary"): a `SparkleButton` runs the AI module's
+// `summarize_thread` feature over the visible comments and previews the result in an `AiPreviewPanel`
+// -- Accept drops the summary into the compose box so the person can review it once more and post it
+// themselves (TECH-SPEC §8: "the user always sees a preview and accepts", never an auto-post).
 import * as React from 'react'
-import { useT } from '@devon/i18n'
-import { Avatar, Button, IconButton, Skeleton, StateView, initialsFromName, toast } from '@devon/ui'
+import { useT, useLocale } from '@devon/i18n'
+import {
+  AiPreviewPanel,
+  Avatar,
+  Button,
+  IconButton,
+  Skeleton,
+  SparkleButton,
+  StateView,
+  initialsFromName,
+  toast,
+} from '@devon/ui'
 import { Trash2 } from 'lucide-react'
+import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { useAddCommentMutation, useCommentsQuery, useDeleteCommentMutation } from '../hooks.js'
 import { Textarea } from './form-controls.js'
 
-export function CommentsPanel({ eventId }: { eventId: string }) {
+function ThreadSummary({
+  eventTitle,
+  comments,
+  onInsert,
+}: {
+  eventTitle: string
+  comments: { id: string; author: string; body: string }[]
+  onInsert: (text: string) => void
+}) {
+  const t = useT()
+  const locale = useLocale()
+  const runMutation = useRunAiFeatureMutation('summarize_thread')
+  const [open, setOpen] = React.useState(false)
+
+  if (comments.length < 2) return null
+
+  const handleRun = () => {
+    setOpen(true)
+    runMutation.mutate({
+      cardTitle: eventTitle,
+      comments: comments.map((c) => ({ id: c.id, author: c.author, text: c.body })),
+      locale,
+    })
+  }
+
+  const summary =
+    runMutation.data && typeof runMutation.data.data === 'object' && runMutation.data.data
+      ? ((runMutation.data.data as Record<string, unknown>)['summary'] as string | undefined)
+      : undefined
+
+  return (
+    <div className="flex flex-col gap-2">
+      <SparkleButton
+        aria-label={t('events.comments.summarize')}
+        label={t('events.comments.summarize')}
+        size="sm"
+        className="self-start"
+        onClick={handleRun}
+      />
+      {open ? (
+        <AiPreviewPanel
+          title={t('events.comments.summarize')}
+          status={runMutation.isPending ? 'pending' : runMutation.isError ? 'error' : 'ready'}
+          pendingLabel={t('events.comments.summaryPending')}
+          errorMessage={t('events.comments.summaryFailed')}
+          acceptLabel={t('events.comments.summaryAccept')}
+          editLabel={t('events.comments.summaryEdit')}
+          discardLabel={t('events.comments.summaryDiscard')}
+          retryLabel={t('events.actions.retry')}
+          onRetry={handleRun}
+          onAccept={() => {
+            if (summary) onInsert(summary)
+            setOpen(false)
+          }}
+          onEdit={() => {
+            if (summary) onInsert(summary)
+            setOpen(false)
+          }}
+          onDiscard={() => setOpen(false)}
+          {...(runMutation.data
+            ? { costLine: t('ai.result.tokens', { count: runMutation.data.meta.totalTokens }) }
+            : {})}
+        >
+          {summary}
+        </AiPreviewPanel>
+      ) : null}
+    </div>
+  )
+}
+
+export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventTitle: string }) {
   const t = useT()
   const commentsQuery = useCommentsQuery(eventId, true)
   const addMutation = useAddCommentMutation(eventId)
@@ -83,6 +169,17 @@ export function CommentsPanel({ eventId }: { eventId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {commentsQuery.data ? (
+        <ThreadSummary
+          eventTitle={eventTitle}
+          comments={commentsQuery.data.items.map((c) => ({
+            id: c.id,
+            author: `${c.author.givenName} ${c.author.familyName}`,
+            body: c.body,
+          }))}
+          onInsert={(text) => setBody((prev) => (prev ? `${prev}\n\n${text}` : text))}
+        />
+      ) : null}
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <Textarea
           value={body}

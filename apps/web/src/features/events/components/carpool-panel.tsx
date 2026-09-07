@@ -7,11 +7,13 @@ import {
   Avatar,
   Badge,
   Button,
+  Celebrate,
   Input,
   Skeleton,
   StateView,
   initialsFromName,
   toast,
+  useCelebrate,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
 import {
@@ -34,10 +36,12 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
   const myShare = carpool.passengers.find((p) => p.userId === user?.id)
   const full = carpool.seatsClaimed >= carpool.seats
   const cancelled = carpool.status === 'cancelled'
+  const celebrate = useCelebrate()
 
   const handleClaim = async () => {
     try {
       await claimMutation.mutateAsync({ carpoolId: carpool.id, seats: 1 })
+      if (!full) celebrate.fire()
     } catch {
       toast(t('events.error.title'))
     }
@@ -148,8 +152,14 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
     }
     return (
       <div className="flex justify-end">
-        <Button size="sm" onClick={handleClaim} loading={claimMutation.isPending}>
+        <Button
+          size="sm"
+          className="relative"
+          onClick={handleClaim}
+          loading={claimMutation.isPending}
+        >
           {t('events.carpool.claim')}
+          <Celebrate play={celebrate.play} onDone={celebrate.onDone} />
         </Button>
       </div>
     )

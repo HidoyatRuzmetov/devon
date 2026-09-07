@@ -3,6 +3,7 @@
     "title": "Inbox",
     "eyebrow": "NOTIFICATIONS",
     "markAllRead": "Mark all as read",
+    "groupByReason": "Group by reason",
     "calendarLink": "Calendar link",
     "tabs": {
       "inbox": "All",
@@ -11,8 +12,8 @@
     },
     "empty": {
       "inbox": {
-        "title": "Your inbox is empty",
-        "body": "Notifications about your work will appear here."
+        "title": "Inbox zero",
+        "body": "Nothing needs your attention right now. Enjoy the quiet."
       },
       "unread": {
         "title": "Nothing unread",
@@ -49,16 +50,21 @@
         "hour": "In 1 hour",
         "tomorrow": "Tomorrow morning",
         "nextWeek": "Next week"
-      }
+      },
+      "approve": "Approve",
+      "rsvp": "RSVP",
+      "open": "Open"
     },
     "detail": {
       "title": "Notification",
       "close": "Close",
-      "openLink": "Open"
+      "openLink": "Open",
+      "emptySelection": "Select a notification to read it here."
     },
     "preferences": {
       "title": "Notification preferences",
       "body": "Choose which notifications reach you, and where.",
+      "matrixTitle": "By type and channel",
       "reasonColumn": "Notification type",
       "toggleAria": "{reason} via {channel}",
       "digestFrequency": "Summary frequency",

@@ -1,6 +1,8 @@
 {
   "events": {
     "title": "Мероприятия",
+    "eyebrow": "МЕРОПРИЯТИЯ",
+    "description": "Планируйте, отмечайте участие и организуйте всё, чем занимается отдел вместе.",
     "view": {
       "list": "Список",
       "calendar": "Календарь"
@@ -59,9 +61,31 @@
       "deadline": "Регистрация до: {date}",
       "cancelledBanner": "Это мероприятие отменено",
       "cancelledReason": "Причина: {reason}",
-      "doneBanner": "Это мероприятие завершено"
+      "doneBanner": "Это мероприятие завершено",
+      "viewMap": "Открыть карту"
+    },
+    "calendar": {
+      "previousMonth": "Предыдущий месяц",
+      "nextMonth": "Следующий месяц",
+      "today": "Сегодня"
     },
     "form": {
+      "stepBasics": "Основное",
+      "stepSchedule": "Время и место",
+      "stepCapacity": "Места и напоминания",
+      "stepBack": "Назад",
+      "stepNext": "Далее",
+      "aiIdeaLabel": "Идея в одну строку",
+      "aiIdeaPlaceholder": "Например, командный пикник в парке в следующем месяце",
+      "aiDraftButton": "Черновик с ИИ",
+      "aiDraftPending": "Готовим черновик…",
+      "aiDraftFailed": "Не удалось составить черновик мероприятия",
+      "aiDraftAccept": "Использовать черновик",
+      "aiDraftEdit": "Использовать и отредактировать",
+      "aiDraftDiscard": "Отклонить",
+      "aiDraftChecklist": "Предложенный список дел",
+      "aiDraftPoll": "Предложенные варианты опроса: {options}",
+      "aiDraftFollowUp": "Добавьте список дел, опрос и план поездок на странице мероприятия после его создания.",
       "titleLabel": "Название мероприятия",
       "titlePlaceholder": "Например, осенний командный пикник",
       "descriptionLabel": "Описание",
@@ -131,6 +155,7 @@
     "attendees": {
       "title": "Участники",
       "titleCount": "Участники ({count})",
+      "whosComing": "Кто идёт",
       "empty": "Пока никто не ответил",
       "guestsSuffix": "+{count} гостей"
     },
@@ -140,7 +165,13 @@
       "placeholder": "Напишите комментарий",
       "submit": "Отправить",
       "delete": "Удалить",
-      "deleteConfirm": "Удалить комментарий?"
+      "deleteConfirm": "Удалить комментарий?",
+      "summarize": "Кратко изложить обсуждение",
+      "summaryPending": "Составляем краткое изложение…",
+      "summaryFailed": "Не удалось составить краткое изложение",
+      "summaryAccept": "Вставить в комментарий",
+      "summaryEdit": "Вставить и отредактировать",
+      "summaryDiscard": "Отклонить"
     },
     "carpool": {
       "title": "Совместные поездки",

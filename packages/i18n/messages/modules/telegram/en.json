@@ -1,6 +1,11 @@
 {
   "telegram": {
     "title": "Telegram",
+    "phoneMock": {
+      "online": "online",
+      "replyMessage": "Connected! You'll get your Devon notifications here from now on.",
+      "connectedMessage": "You're connected -- Devon notifications now arrive in this chat."
+    },
     "notConfigured": {
       "title": "Telegram is not connected yet",
       "body": "Ask your administrator to set up the Telegram bot for this instance."
