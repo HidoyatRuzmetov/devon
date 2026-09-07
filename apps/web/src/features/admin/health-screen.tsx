@@ -24,10 +24,7 @@ function useHealthDetailText(): (detail: HealthCheck['detail']) => string | null
 }
 
 // DESIGN.md §2.1: green stays reserved for success/approved/on-track (round2 SEV2 "Ishlayapti").
-const STATUS_TONE: Record<
-  HealthCheck['status'],
-  'info' | 'warning' | 'destructive' | 'neutral'
-> = {
+const STATUS_TONE: Record<HealthCheck['status'], 'info' | 'warning' | 'destructive' | 'neutral'> = {
   ok: 'info',
   degraded: 'warning',
   down: 'destructive',
@@ -50,7 +47,8 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
       <div className="flex items-center gap-2">
         {check.latencyMs !== null ? (
           <span className="text-small tabular-nums text-muted-foreground">
-            {formatNumber(check.latencyMs, locale)}{' '}ms
+            {formatNumber(check.latencyMs, locale)}
+            {' '}ms
           </span>
         ) : null}
         <Badge tone={STATUS_TONE[check.status]}>

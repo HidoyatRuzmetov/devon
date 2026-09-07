@@ -14,7 +14,16 @@ import {
   type CompareOp,
   type FilterClause,
 } from '@devon/contracts'
-import { Button, cn, comboboxScore, FilterChip, Input, Popover, PopoverContent, PopoverTrigger } from '@devon/ui'
+import {
+  Button,
+  cn,
+  comboboxScore,
+  FilterChip,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@devon/ui'
 import { useBoardQuery } from '../hooks.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { fullName } from '../lib/format.js'

@@ -667,7 +667,13 @@ function UnitRow({
                 {node.name}
               </button>
             )}
-            <RoleChips unit={node} actions={actions} indent={false} variant="avatars" showActions={false} />
+            <RoleChips
+              unit={node}
+              actions={actions}
+              indent={false}
+              variant="avatars"
+              showActions={false}
+            />
           </div>
         </DataRow>
         {dropHint === 'after' ? (

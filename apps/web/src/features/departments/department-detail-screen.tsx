@@ -437,7 +437,10 @@ function MemberRow({
           {member.title ? <span className="text-muted-foreground">· {member.title}</span> : null}
         </p>
         <span className="flex flex-wrap items-center gap-2 text-small text-muted-foreground">
-          <Badge tone={member.role === 'head' ? 'primary' : 'neutral'} variant={member.role === 'head' ? 'outline' : 'subtle'}>
+          <Badge
+            tone={member.role === 'head' ? 'primary' : 'neutral'}
+            variant={member.role === 'head' ? 'outline' : 'subtle'}
+          >
             {t(
               member.role === 'head'
                 ? 'departments.members.roleHead'

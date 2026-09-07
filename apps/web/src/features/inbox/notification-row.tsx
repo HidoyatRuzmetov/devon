@@ -79,10 +79,7 @@ export function NotificationRow({
           to miss once the title itself wraps to two lines, so the rail carries the same signal at a
           glance down the whole list. */}
       {unread ? (
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-0.5 bg-primary"
-        />
+        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-0.5 bg-primary" />
       ) : null}
       <button
         type="button"

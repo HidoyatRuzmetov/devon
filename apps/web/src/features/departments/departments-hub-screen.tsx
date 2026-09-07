@@ -447,7 +447,10 @@ export default function DepartmentsHubScreen() {
                           {d.name}
                         </span>
                       </span>
-                      <Badge tone={d.myRole === 'head' ? 'primary' : 'neutral'} variant={d.myRole === 'head' ? 'outline' : 'subtle'}>
+                      <Badge
+                        tone={d.myRole === 'head' ? 'primary' : 'neutral'}
+                        variant={d.myRole === 'head' ? 'outline' : 'subtle'}
+                      >
                         {t(
                           d.myRole === 'head'
                             ? 'departments.members.roleHead'
