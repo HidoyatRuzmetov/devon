@@ -218,6 +218,26 @@ function hashString(s: string): number {
   return h
 }
 
+const ILLUSTRATION_KEYS = Object.keys(REGISTRY)
+
+/** round2 SEV2: two events sharing a category (and so the same `REGISTRY` component) could still
+ * land on the same look-variant hash and render pixel-for-pixel identical covers -- confirmed live,
+ * two September events both drew `TrainingIllustration` with no variant to tell them apart. Call
+ * this once per month group (`events-screen.tsx`'s own grouping) with every event id in it: when the
+ * group has no more events than the illustration set (8), every event gets a distinct base
+ * illustration -- not just a distinct variant of the same one -- so nothing in that month can repeat,
+ * adjacent or not. A group larger than 8 still spreads repeats out (hash order, not calendar order,
+ * decides who repeats) rather than falling back to the old category-only pick. Deterministic: the
+ * same set of ids always assigns the same way, no `Math.random`. */
+export function pickGroupIllustrationKeys(eventIds: readonly string[]): Map<string, string> {
+  const sorted = [...new Set(eventIds)].sort((a, b) => hashString(a) - hashString(b))
+  const map = new Map<string, string>()
+  sorted.forEach((id, i) => {
+    map.set(id, ILLUSTRATION_KEYS[i % ILLUSTRATION_KEYS.length]!)
+  })
+  return map
+}
+
 export type EventIllustrationProps = {
   /** `event.illustrationKey`, falling back to `event.category` when the key names nothing here. */
   illustrationKey: string
@@ -226,6 +246,10 @@ export type EventIllustrationProps = {
    *  context with no real event yet (a form preview), where every render sharing the fallback look
    *  is fine. */
   eventId?: string
+  /** From `pickGroupIllustrationKeys` -- overrides the category-fallback pick so a month group never
+   * repeats a base illustration unnecessarily. Omitted in a single-event context (the detail dialog)
+   * that has no sibling group to dedupe against. */
+  illustrationKeyOverride?: string | undefined
   className?: string | undefined
 }
 
@@ -233,9 +257,14 @@ export function EventIllustration({
   illustrationKey,
   category,
   eventId,
+  illustrationKeyOverride,
   className,
 }: EventIllustrationProps) {
-  const Component = REGISTRY[illustrationKey] ?? REGISTRY[category] ?? OtherIllustration
+  const Component =
+    REGISTRY[illustrationKeyOverride ?? ''] ??
+    REGISTRY[illustrationKey] ??
+    REGISTRY[category] ??
+    OtherIllustration
   const variant = VARIANTS[hashString(eventId ?? illustrationKey) % VARIANTS.length]!
   const style: React.CSSProperties = {
     transform: variant.flip ? 'scaleX(-1)' : undefined,

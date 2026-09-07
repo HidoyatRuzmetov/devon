@@ -41,7 +41,17 @@ function DateBlock({ date, locale }: { date: Date; locale: Locale }) {
   )
 }
 
-export function EventCard({ event, onOpen }: { event: EventDto; onOpen: () => void }) {
+export function EventCard({
+  event,
+  onOpen,
+  illustrationKeyOverride,
+}: {
+  event: EventDto
+  onOpen: () => void
+  /** round2 SEV2: the containing month group's own `pickGroupIllustrationKeys` pick, so two events
+   * in the same month never draw the same cover art. */
+  illustrationKeyOverride?: string | undefined
+}) {
   const t = useT()
   const locale = useLocale()
   const starts = new Date(event.startsAt)
@@ -95,6 +105,7 @@ export function EventCard({ event, onOpen }: { event: EventDto; onOpen: () => vo
             illustrationKey={event.illustrationKey}
             category={event.category}
             eventId={event.id}
+            illustrationKeyOverride={illustrationKeyOverride}
             className="size-full object-cover"
           />
           {/* A soft top scrim, not the illustration's own colour: the date block and status pill

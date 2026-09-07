@@ -13,6 +13,7 @@ import { CalendarMonth } from './components/calendar-month.js'
 import { EventCard } from './components/event-card.js'
 import { EventDetailDialog } from './components/event-detail-dialog.js'
 import { EventFormDialog } from './components/event-form-dialog.js'
+import { pickGroupIllustrationKeys } from './illustrations/index.js'
 import { downloadIcs } from './lib/ics-download.js'
 import { eventFormValuesToCreateInput } from './lib/event-form-mapping.js'
 import { fetchMyIcs } from './api.js'
@@ -127,24 +128,35 @@ export default function EventsScreen() {
       const groups = groupByMonth(events, locale)
       return (
         <div className="flex flex-col gap-8">
-          {groups.map((group) => (
-            <section key={group.label} className="flex flex-col gap-3">
-              <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                {group.label}
-              </h2>
-              <Stagger
-                as="div"
-                animateKey={group.label}
-                className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {group.items.map((event) => (
-                  <StaggerItem key={event.id}>
-                    <EventCard event={event} onOpen={() => navigate(`/events?event=${event.id}`)} />
-                  </StaggerItem>
-                ))}
-              </Stagger>
-            </section>
-          ))}
+          {groups.map((group) => {
+            // round2 SEV2: two events in the same month could draw the identical cover illustration
+            // (same category -> same component, and occasionally the same look-variant hash besides)
+            // -- computed once per group, from every id in it, so a month with <=8 events never
+            // repeats a base illustration at all.
+            const illustrationKeys = pickGroupIllustrationKeys(group.items.map((e) => e.id))
+            return (
+              <section key={group.label} className="flex flex-col gap-3">
+                <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                  {group.label}
+                </h2>
+                <Stagger
+                  as="div"
+                  animateKey={group.label}
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {group.items.map((event) => (
+                    <StaggerItem key={event.id}>
+                      <EventCard
+                        event={event}
+                        onOpen={() => navigate(`/events?event=${event.id}`)}
+                        illustrationKeyOverride={illustrationKeys.get(event.id)}
+                      />
+                    </StaggerItem>
+                  ))}
+                </Stagger>
+              </section>
+            )
+          })}
         </div>
       )
     }
