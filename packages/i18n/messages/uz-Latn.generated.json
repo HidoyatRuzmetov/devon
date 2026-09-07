@@ -90,6 +90,32 @@
       "demo": {
         "title": "Namoyish boʻlimi tayyor"
       }
+    },
+    "dashboard": {
+      "dueFromMe": {
+        "title": "Mendan kutilmoqda",
+        "body": "{open} ta ochiq, {overdue} tasi muddatidan o'tgan",
+        "cta": "Ishlarimni ko'rish"
+      },
+      "needsMyDecision": {
+        "title": "Mening qarorim kerak",
+        "body": "Men topshirgan {count} ta ish muddatidan o'tib ketgan",
+        "empty": "Hozircha qaror kerak bo'lgan narsa yo'q"
+      },
+      "aroundMe": {
+        "title": "Atrofimda",
+        "body": "{count} ta tadbirga qatnashishni tasdiqlagansiz",
+        "cta": "Tadbirlarni ko'rish"
+      },
+      "pinned": {
+        "title": "Mahkamlangan diagrammalar",
+        "empty": "Hali hech narsa mahkamlanmagan",
+        "cta": "Tahlil sahifasini ochish"
+      },
+      "personal": {
+        "onTimeRate": "O'z vaqtida bajarilish",
+        "focusMinutes": "Bu hafta fokus daqiqalari"
+      }
     }
   },
   "state": {
@@ -651,6 +677,102 @@
       "taskLines": "t1 | Xatlarga javob berish\nt2 | Hisobotni yozish"
     }
   },
+  "analytics": {
+    "title": "Tahlil",
+    "filterBar": {
+      "placeholder": "assignee:@me status:active due:<today",
+      "apply": "Qo'llash",
+      "clear": "Tozalash",
+      "since": "Boshlanishi",
+      "until": "Tugashi"
+    },
+    "savedFilters": {
+      "title": "Saqlangan filtrlar",
+      "new": "Filtrni saqlash",
+      "namePlaceholder": "Filtr nomi",
+      "save": "Saqlash",
+      "delete": "O'chirish",
+      "shared": "Bo'lim bilan bo'lishilgan",
+      "empty": "Hali saqlangan filtr yo'q"
+    },
+    "actions": {
+      "exportCsv": "CSV formatida yuklab olish",
+      "exportPng": "Rasm sifatida yuklab olish",
+      "pin": "Bosh sahifaga mahkamlash",
+      "unpin": "Mahkamlashni bekor qilish",
+      "viewAsTable": "Jadval ko'rinishida ko'rish",
+      "viewAsChart": "Diagramma ko'rinishida ko'rish"
+    },
+    "legend": {
+      "open": "Ochiq",
+      "overdue": "Muddati o'tgan",
+      "done": "Bajarilgan",
+      "yes": "Kelaman",
+      "no": "Kelmayman",
+      "maybe": "Balki",
+      "waitlist": "Kutish ro'yxatida",
+      "unassigned": "Bo'limsiz"
+    },
+    "sections": {
+      "throughput": {
+        "title": "Haftalik bajarilgan topshiriqlar",
+        "question": "Har hafta nechta topshiriq yakunlandi?"
+      },
+      "onTimeRate": {
+        "title": "O'z vaqtida bajarilish darajasi",
+        "question": "Topshiriqlar muddatida bajarilyaptimi?",
+        "overall": "Umumiy: {percent}%"
+      },
+      "openVsOverdue": {
+        "title": "Ochiq va muddati o'tgan topshiriqlar",
+        "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?"
+      },
+      "loadPerPerson": {
+        "title": "Xodimlar bo'yicha yuklama",
+        "question": "Hozir kimning ustida qancha ish bor?"
+      },
+      "loadPerUnit": {
+        "title": "Bo'limlar bo'yicha yuklama",
+        "question": "Qaysi bo'lim eng band?"
+      },
+      "projectProgress": {
+        "title": "Loyihalar bo'yicha jarayon",
+        "question": "Har bir loyiha qay darajada bajarilgan?",
+        "empty": "Hali loyihalar yo'q"
+      },
+      "eventsParticipation": {
+        "title": "Tadbirlarda ishtirok",
+        "question": "Tadbirlarga qanday javob berishmoqda?",
+        "empty": "Bu davrda tadbirlar yo'q"
+      },
+      "pollTurnout": {
+        "title": "So'rovnomalarda qatnashish",
+        "question": "So'rovnomalarga qancha kishi ovoz berdi?",
+        "empty": "Hali so'rovnomalar yo'q"
+      },
+      "personal": {
+        "title": "Shaxsiy ko'rsatkichlarim",
+        "question": "Mening ishlarim qanday ketyapti?"
+      }
+    },
+    "personal": {
+      "open": "Ochiq",
+      "overdue": "Muddati o'tgan",
+      "doneThisWeek": "Shu hafta bajarilgan",
+      "onTimeRate": "O'z vaqtida bajarilish",
+      "focusMinutes": "Fokus daqiqalari",
+      "upcomingEvents": "Yaqinlashib kelayotgan tadbirlar"
+    },
+    "empty": {
+      "title": "Hali tahlil qiladigan narsa yo'q",
+      "body": "Topshiriqlar va tadbirlar paydo bo'lgach, bu yerda hisobotlar ko'rinadi."
+    },
+    "pinDialog": {
+      "title": "Bosh sahifaga mahkamlash",
+      "titlePlaceholder": "Diagramma nomi",
+      "confirm": "Mahkamlash"
+    }
+  },
   "departments": {
     "title": "Bo'limlar",
     "landing": {
@@ -1109,6 +1231,82 @@
       },
       "save": "Saqlash",
       "saved": "Sozlamalar saqlandi"
+    }
+  },
+  "pages": {
+    "title": "Sahifalar",
+    "create": "Yangi sahifa",
+    "newTitlePlaceholder": "Sahifa nomi",
+    "kind": {
+      "how_we_work": "Biz qanday ishlaymiz",
+      "onboarding": "Moslashuv",
+      "brief": "Qisqacha ma'lumot",
+      "note": "Qayd"
+    },
+    "empty": {
+      "title": "Hali sahifalar yo'q",
+      "body": "Bo'limingiz uchun birinchi sahifani yarating -- masalan, \"Biz qanday ishlaymiz\"."
+    },
+    "backToList": "Sahifalar ro'yxatiga qaytish",
+    "delete": "Sahifani o'chirish",
+    "deleted": "Sahifa o'chirildi",
+    "editor": {
+      "titlePlaceholder": "Sarlavha",
+      "save": "Saqlash",
+      "saved": "Saqlandi",
+      "autosaving": "Saqlanmoqda...",
+      "toolbar": {
+        "bold": "Qalin",
+        "italic": "Qiya",
+        "heading1": "Sarlavha 1",
+        "heading2": "Sarlavha 2",
+        "bulletList": "Belgili ro'yxat",
+        "orderedList": "Raqamli ro'yxat",
+        "taskList": "Ro'yxat (belgilash mumkin)",
+        "callout": "Eslatma bloki",
+        "mention": "Kishini eslatish",
+        "blockquote": "Iqtibos",
+        "codeBlock": "Kod bloki"
+      },
+      "mentionPlaceholder": "Kishini qidiring..."
+    },
+    "versions": {
+      "title": "Versiyalar tarixi",
+      "empty": "Hali versiyalar yo'q",
+      "restore": "Ushbu versiyani tiklash",
+      "restored": "Versiya tiklandi",
+      "viewDiff": "Farqni ko'rish",
+      "current": "Joriy",
+      "by": "Muallif: {name}"
+    },
+    "diff": {
+      "added": "Qo'shilgan",
+      "removed": "O'chirilgan",
+      "noChanges": "Bu versiyalar orasida farq yo'q"
+    },
+    "conflict": {
+      "title": "Sahifa allaqachon yangilangan",
+      "body": "Boshqa birov shu orada o'zgartirish kiritdi. Sahifani qayta yuklab, o'zgarishlaringizni qayta kiriting."
+    },
+    "onboarding": {
+      "title": "Moslashuv ro'yxati",
+      "subtitle": "Yangi xodim bo'limga qo'shilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar ro'yxatiga qo'shiladi.",
+      "enable": "Yoqish",
+      "enabled": "Yoqilgan",
+      "disabled": "O'chirilgan",
+      "newTemplate": "Yangi ro'yxat",
+      "namePlaceholder": "Ro'yxat nomi",
+      "addItem": "Band qo'shish",
+      "itemPlaceholder": "Nima qilish kerak?",
+      "ownerRole": {
+        "newcomer": "Yangi xodim",
+        "head": "Bo'lim rahbari",
+        "buddy": "Yordamchi hamkasb"
+      },
+      "empty": "Hali moslashuv ro'yxati yo'q",
+      "save": "Saqlash",
+      "saved": "Saqlandi",
+      "removeItem": "Bandni o'chirish"
     }
   },
   "personal": {

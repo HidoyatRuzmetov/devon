@@ -1,0 +1,30 @@
+{
+  "home": {
+    "dashboard": {
+      "dueFromMe": {
+        "title": "Due from me",
+        "body": "{open} open, {overdue} overdue",
+        "cta": "View my work"
+      },
+      "needsMyDecision": {
+        "title": "Needs my decision",
+        "body": "{count} thing(s) you assigned are now overdue",
+        "empty": "Nothing needs a decision right now"
+      },
+      "aroundMe": {
+        "title": "Around me",
+        "body": "You're going to {count} upcoming event(s)",
+        "cta": "View events"
+      },
+      "pinned": {
+        "title": "Pinned charts",
+        "empty": "Nothing pinned yet",
+        "cta": "Open Analytics"
+      },
+      "personal": {
+        "onTimeRate": "On-time rate",
+        "focusMinutes": "Focus minutes this week"
+      }
+    }
+  }
+}

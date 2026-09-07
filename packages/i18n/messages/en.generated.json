@@ -90,6 +90,32 @@
       "demo": {
         "title": "The demo department is ready"
       }
+    },
+    "dashboard": {
+      "dueFromMe": {
+        "title": "Due from me",
+        "body": "{open} open, {overdue} overdue",
+        "cta": "View my work"
+      },
+      "needsMyDecision": {
+        "title": "Needs my decision",
+        "body": "{count} thing(s) you assigned are now overdue",
+        "empty": "Nothing needs a decision right now"
+      },
+      "aroundMe": {
+        "title": "Around me",
+        "body": "You're going to {count} upcoming event(s)",
+        "cta": "View events"
+      },
+      "pinned": {
+        "title": "Pinned charts",
+        "empty": "Nothing pinned yet",
+        "cta": "Open Analytics"
+      },
+      "personal": {
+        "onTimeRate": "On-time rate",
+        "focusMinutes": "Focus minutes this week"
+      }
     }
   },
   "state": {
@@ -651,6 +677,102 @@
       "taskLines": "t1 | Reply to emails\nt2 | Write the report"
     }
   },
+  "analytics": {
+    "title": "Analytics",
+    "filterBar": {
+      "placeholder": "assignee:@me status:active due:<today",
+      "apply": "Apply",
+      "clear": "Clear",
+      "since": "From",
+      "until": "To"
+    },
+    "savedFilters": {
+      "title": "Saved filters",
+      "new": "Save filter",
+      "namePlaceholder": "Filter name",
+      "save": "Save",
+      "delete": "Delete",
+      "shared": "Shared with the department",
+      "empty": "No saved filters yet"
+    },
+    "actions": {
+      "exportCsv": "Download as CSV",
+      "exportPng": "Download as image",
+      "pin": "Pin to Home",
+      "unpin": "Unpin",
+      "viewAsTable": "View as table",
+      "viewAsChart": "View as chart"
+    },
+    "legend": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "done": "Done",
+      "yes": "Going",
+      "no": "Not going",
+      "maybe": "Maybe",
+      "waitlist": "Waitlisted",
+      "unassigned": "Unassigned"
+    },
+    "sections": {
+      "throughput": {
+        "title": "Cards done per week",
+        "question": "How many cards did we finish each week?"
+      },
+      "onTimeRate": {
+        "title": "On-time rate",
+        "question": "Are cards finishing on time?",
+        "overall": "Overall: {percent}%"
+      },
+      "openVsOverdue": {
+        "title": "Open vs. overdue",
+        "question": "How much of our open work is overdue?"
+      },
+      "loadPerPerson": {
+        "title": "Load per person",
+        "question": "Who is carrying the most work right now?"
+      },
+      "loadPerUnit": {
+        "title": "Load per unit",
+        "question": "Which unit is busiest?"
+      },
+      "projectProgress": {
+        "title": "Project progress",
+        "question": "How far along is each project?",
+        "empty": "No projects yet"
+      },
+      "eventsParticipation": {
+        "title": "Events participation",
+        "question": "How are people responding to events?",
+        "empty": "No events in this period"
+      },
+      "pollTurnout": {
+        "title": "Poll turnout",
+        "question": "How many people voted in each poll?",
+        "empty": "No polls yet"
+      },
+      "personal": {
+        "title": "My stats",
+        "question": "How is my own work going?"
+      }
+    },
+    "personal": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "doneThisWeek": "Done this week",
+      "onTimeRate": "On-time rate",
+      "focusMinutes": "Focus minutes",
+      "upcomingEvents": "Upcoming events"
+    },
+    "empty": {
+      "title": "Nothing to analyse yet",
+      "body": "Once cards and events start happening, reports will show up here."
+    },
+    "pinDialog": {
+      "title": "Pin to Home",
+      "titlePlaceholder": "Chart name",
+      "confirm": "Pin"
+    }
+  },
   "departments": {
     "title": "Departments",
     "landing": {
@@ -1109,6 +1231,82 @@
       },
       "save": "Save",
       "saved": "Preferences saved"
+    }
+  },
+  "pages": {
+    "title": "Pages",
+    "create": "New page",
+    "newTitlePlaceholder": "Page title",
+    "kind": {
+      "how_we_work": "How we work",
+      "onboarding": "Onboarding",
+      "brief": "Brief",
+      "note": "Note"
+    },
+    "empty": {
+      "title": "No pages yet",
+      "body": "Create your department's first page -- for example, \"How we work\"."
+    },
+    "backToList": "Back to pages",
+    "delete": "Delete page",
+    "deleted": "Page deleted",
+    "editor": {
+      "titlePlaceholder": "Title",
+      "save": "Save",
+      "saved": "Saved",
+      "autosaving": "Saving...",
+      "toolbar": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "bulletList": "Bullet list",
+        "orderedList": "Numbered list",
+        "taskList": "Checklist",
+        "callout": "Callout",
+        "mention": "Mention someone",
+        "blockquote": "Quote",
+        "codeBlock": "Code block"
+      },
+      "mentionPlaceholder": "Search for someone..."
+    },
+    "versions": {
+      "title": "Version history",
+      "empty": "No versions yet",
+      "restore": "Restore this version",
+      "restored": "Version restored",
+      "viewDiff": "View diff",
+      "current": "Current",
+      "by": "By {name}"
+    },
+    "diff": {
+      "added": "Added",
+      "removed": "Removed",
+      "noChanges": "No changes between these versions"
+    },
+    "conflict": {
+      "title": "This page was already updated",
+      "body": "Someone else changed it in the meantime. Reload the page and re-enter your changes."
+    },
+    "onboarding": {
+      "title": "Onboarding checklist",
+      "subtitle": "When a newcomer joins the department, the items below are added to their own personal to-do list automatically.",
+      "enable": "Enable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "newTemplate": "New checklist",
+      "namePlaceholder": "Checklist name",
+      "addItem": "Add item",
+      "itemPlaceholder": "What needs to happen?",
+      "ownerRole": {
+        "newcomer": "Newcomer",
+        "head": "Department head",
+        "buddy": "Buddy"
+      },
+      "empty": "No onboarding checklist yet",
+      "save": "Save",
+      "saved": "Saved",
+      "removeItem": "Remove item"
     }
   },
   "personal": {

@@ -1,0 +1,98 @@
+{
+  "analytics": {
+    "title": "Analytics",
+    "filterBar": {
+      "placeholder": "assignee:@me status:active due:<today",
+      "apply": "Apply",
+      "clear": "Clear",
+      "since": "From",
+      "until": "To"
+    },
+    "savedFilters": {
+      "title": "Saved filters",
+      "new": "Save filter",
+      "namePlaceholder": "Filter name",
+      "save": "Save",
+      "delete": "Delete",
+      "shared": "Shared with the department",
+      "empty": "No saved filters yet"
+    },
+    "actions": {
+      "exportCsv": "Download as CSV",
+      "exportPng": "Download as image",
+      "pin": "Pin to Home",
+      "unpin": "Unpin",
+      "viewAsTable": "View as table",
+      "viewAsChart": "View as chart"
+    },
+    "legend": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "done": "Done",
+      "yes": "Going",
+      "no": "Not going",
+      "maybe": "Maybe",
+      "waitlist": "Waitlisted",
+      "unassigned": "Unassigned"
+    },
+    "sections": {
+      "throughput": {
+        "title": "Cards done per week",
+        "question": "How many cards did we finish each week?"
+      },
+      "onTimeRate": {
+        "title": "On-time rate",
+        "question": "Are cards finishing on time?",
+        "overall": "Overall: {percent}%"
+      },
+      "openVsOverdue": {
+        "title": "Open vs. overdue",
+        "question": "How much of our open work is overdue?"
+      },
+      "loadPerPerson": {
+        "title": "Load per person",
+        "question": "Who is carrying the most work right now?"
+      },
+      "loadPerUnit": {
+        "title": "Load per unit",
+        "question": "Which unit is busiest?"
+      },
+      "projectProgress": {
+        "title": "Project progress",
+        "question": "How far along is each project?",
+        "empty": "No projects yet"
+      },
+      "eventsParticipation": {
+        "title": "Events participation",
+        "question": "How are people responding to events?",
+        "empty": "No events in this period"
+      },
+      "pollTurnout": {
+        "title": "Poll turnout",
+        "question": "How many people voted in each poll?",
+        "empty": "No polls yet"
+      },
+      "personal": {
+        "title": "My stats",
+        "question": "How is my own work going?"
+      }
+    },
+    "personal": {
+      "open": "Open",
+      "overdue": "Overdue",
+      "doneThisWeek": "Done this week",
+      "onTimeRate": "On-time rate",
+      "focusMinutes": "Focus minutes",
+      "upcomingEvents": "Upcoming events"
+    },
+    "empty": {
+      "title": "Nothing to analyse yet",
+      "body": "Once cards and events start happening, reports will show up here."
+    },
+    "pinDialog": {
+      "title": "Pin to Home",
+      "titlePlaceholder": "Chart name",
+      "confirm": "Pin"
+    }
+  }
+}

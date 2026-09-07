@@ -5,19 +5,22 @@ import { NAV_ENTRIES } from '../../src/shell/nav.js'
 describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // Core entries (`home`, `admin`) plus whatever `src/features/*/manifest.ts(x)` registers
   // (MODULE-GUIDE.md "Web features"), flattened in alphabetical directory order
-  // (`registry.ts`'s `import.meta.glob` sort): accounts, ai, departments, events, inbox, personal,
-  // projects, structure, work. Every one of those sidebar entries is visible to every signed-in role
-  // except `department-requests` (the super-admin approval queue) and the core `admin` entry, which
-  // stay `super_admin`-only -- 'personal' (EPIC-009), 'inbox' (EPIC-010) and 'ai' (EPIC-012) included:
-  // a personal workspace, a notification inbox and the AI assistant/settings screen all belong to
-  // whoever is signed in, never gated by role (a head-only action inside the `ai` screen, like editing
-  // the budget, is enforced by `can()` on the route, not by hiding the sidebar entry).
+  // (`registry.ts`'s `import.meta.glob` sort): accounts, ai, analytics, departments, events, inbox,
+  // pages, personal, projects, structure, work. Every one of those sidebar entries is visible to
+  // every signed-in role except `department-requests` (the super-admin approval queue) and the core
+  // `admin` entry, which stay `super_admin`-only -- 'personal' (EPIC-009), 'inbox' (EPIC-010), 'ai'
+  // (EPIC-012), 'analytics' and 'pages' (EPIC-010/011) included: a personal workspace, a notification
+  // inbox, the AI assistant/settings screen, department-wide analytics and department pages all
+  // belong to whoever is signed in, never gated by role (a head-only action inside the `ai` screen,
+  // like editing the budget, is enforced by `can()` on the route, not by hiding the sidebar entry).
   const featureEntryIds = [
     'account-settings',
     'ai',
+    'analytics',
     'departments',
     'events',
     'inbox',
+    'pages',
     'personal',
     'projects',
     'structure',
@@ -42,10 +45,12 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'admin',
       'account-settings',
       'ai',
+      'analytics',
       'departments',
       'department-requests',
       'events',
       'inbox',
+      'pages',
       'personal',
       'projects',
       'structure',
