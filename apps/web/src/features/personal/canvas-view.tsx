@@ -4,8 +4,20 @@
 // every feature today.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
-import { Button, IconButton, Input, StateView, toast, toastWithUndo } from '@devon/ui'
+import { ArrowLeft, Check, Loader2, Plus, Trash2 } from 'lucide-react'
+import {
+  Button,
+  Card,
+  EmptyPersonalIllustration,
+  IconButton,
+  Input,
+  Stagger,
+  StaggerItem,
+  StateView,
+  cn,
+  toast,
+  toastWithUndo,
+} from '@devon/ui'
 import { CanvasEditor } from './canvas-editor.js'
 import {
   useCanvasQuery,
@@ -92,6 +104,7 @@ export function CanvasView() {
           kind="empty"
           titleKey="personal.canvas.empty.title"
           bodyKey="personal.canvas.empty.body"
+          illustration={<EmptyPersonalIllustration />}
           action={{
             labelKey: 'personal.canvas.create',
             onAction: () =>
@@ -102,36 +115,35 @@ export function CanvasView() {
           }}
         />
       ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger as="ul" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {canvases.map((canvas) => (
-            <li
-              key={canvas.id}
-              className="flex flex-col gap-2 rounded-md border border-border bg-card p-4"
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedId(canvas.id)}
-                className="flex h-24 items-center justify-center rounded-sm border border-dashed border-border text-small text-muted-foreground hover:bg-accent"
-              >
-                {t('personal.canvas.open')}
-              </button>
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate text-body font-medium text-foreground">
-                  {canvas.title}
-                </span>
-                <IconButton
-                  aria-label={t('personal.canvas.delete')}
-                  onClick={() => scheduleDelete(canvas.id)}
+            <StaggerItem key={canvas.id} as="li">
+              <Card padding="md" interactive className="flex h-full flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(canvas.id)}
+                  className="flex h-24 items-center justify-center rounded-sm border border-dashed border-border text-small text-muted-foreground transition-colors duration-(--dur-micro) hover:bg-accent"
                 >
-                  <Trash2 className="size-4" aria-hidden="true" />
-                </IconButton>
-              </div>
-              <span className="text-caption text-muted-foreground">
-                {new Date(canvas.updatedAt).toLocaleString()}
-              </span>
-            </li>
+                  {t('personal.canvas.open')}
+                </button>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate text-body font-medium text-foreground">
+                    {canvas.title}
+                  </span>
+                  <IconButton
+                    aria-label={t('personal.canvas.delete')}
+                    onClick={() => scheduleDelete(canvas.id)}
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  </IconButton>
+                </div>
+                <span className="text-caption text-muted-foreground">
+                  {new Date(canvas.updatedAt).toLocaleString()}
+                </span>
+              </Card>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
       )}
     </div>
   )
@@ -199,6 +211,25 @@ function CanvasDetail({
           }}
           className="h-9 max-w-80 flex-1 border-none bg-transparent px-1 text-h3 font-medium shadow-none focus-visible:ring-0"
         />
+        <span
+          aria-live="polite"
+          className={cn(
+            'hidden shrink-0 items-center gap-1 text-caption text-muted-foreground sm:flex',
+          )}
+        >
+          {patchCanvas.isPending && (
+            <>
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              {t('personal.canvas.autosave.saving')}
+            </>
+          )}
+          {!patchCanvas.isPending && patchCanvas.isSuccess && (
+            <>
+              <Check className="size-3.5 text-success" aria-hidden="true" />
+              {t('personal.canvas.autosave.saved')}
+            </>
+          )}
+        </span>
         <IconButton
           aria-label={t('personal.canvas.delete')}
           onClick={() => deleteCanvasMutation.mutate(canvas.id, { onSuccess: onDeleted })}

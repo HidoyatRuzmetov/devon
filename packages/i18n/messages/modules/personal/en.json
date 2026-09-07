@@ -1,6 +1,8 @@
 {
   "personal": {
     "title": "Personal",
+    "eyebrow": "JUST FOR YOU",
+    "description": "Your private space for periods, to-dos, notes, a canvas and focus time.",
     "tabs": {
       "today": "Today",
       "sprints": "Periods",
@@ -9,13 +11,36 @@
       "canvas": "Canvas",
       "pomodoro": "Pomodoro"
     },
+    "privacy": {
+      "note": "Only you can see what's in this workspace -- not your department head, not anyone else.",
+      "dismiss": "Dismiss"
+    },
+    "duration": {
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
+    },
     "today": {
-      "tasks": { "title": "Today's to-dos" },
+      "tasks": { "title": "Today's to-dos", "remaining": "{count} left" },
       "empty": {
         "title": "Nothing planned for today",
         "body": "Add a to-do or start a period to see it here."
       },
-      "focus": "Focus"
+      "allDone": {
+        "title": "All done for now",
+        "body": "Nothing left in your active periods or inbox. Enjoy the quiet."
+      },
+      "addPlaceholder": "Add a to-do for today",
+      "focus": "Focus",
+      "period": {
+        "progressAria": "Period progress",
+        "timeLeft": "{value} left",
+        "noGoal": "No goal set for this period yet"
+      },
+      "rollover": {
+        "banner": "This period's time is up. Roll the unfinished to-dos into a new one?",
+        "bannerGoal": "Time is up for “{goal}”. Roll the unfinished to-dos into a new period?"
+      }
     },
     "sprints": {
       "active": { "title": "Active periods" },
@@ -32,12 +57,14 @@
         "toast": "Moved {count} unfinished to-dos to a new period"
       },
       "complete": { "action": "Mark complete" },
+      "ended": "Time's up",
       "kind": { "threeHour": "3 hours", "day": "Day", "week": "Week", "custom": "Custom" },
       "status": { "active": "Active", "completed": "Completed", "archived": "Archived" }
     },
     "tasks": {
       "inbox": "Inbox",
       "addPlaceholder": "Add a to-do",
+      "openCount": "{count} open",
       "toggleDone": "Mark done",
       "delete": "Delete to-do",
       "deleted": { "toast": "To-do deleted" },
@@ -54,6 +81,7 @@
       "deleted": { "toast": "Note deleted" },
       "pin": "Pin",
       "unpin": "Unpin",
+      "autosave": { "saving": "Saving…", "saved": "Saved" },
       "empty": { "title": "No notes yet", "body": "Notes are just for you -- jot down anything." }
     },
     "canvas": {
@@ -63,6 +91,7 @@
       "back": "Back to canvases",
       "delete": "Delete canvas",
       "deleted": { "toast": "Canvas deleted" },
+      "autosave": { "saving": "Saving…", "saved": "Saved" },
       "empty": {
         "title": "No canvases yet",
         "body": "A canvas is a free-form board for sketches and sticky notes."
@@ -101,7 +130,14 @@
         "stop": "Stop"
       },
       "notification": { "body": "Time's up" },
-      "sound": { "chime": "Chime", "bell": "Bell", "digital": "Digital", "none": "Silent" },
+      "sound": {
+        "chime": "Chime",
+        "bell": "Bell",
+        "digital": "Digital",
+        "none": "Silent",
+        "muteOn": "Mute",
+        "muteOff": "Unmute"
+      },
       "notifications": { "on": "Notifications on", "off": "Notifications off" },
       "settings": {
         "title": "Pomodoro settings",
@@ -125,6 +161,40 @@
         "completed": "Completed",
         "skipped": "Skipped",
         "empty": { "title": "No sessions yet", "body": "Start a focus session to see it here." }
+      }
+    },
+    "ai": {
+      "pending": "Preparing…",
+      "accept": "Accept",
+      "edit": "Edit",
+      "discard": "Discard",
+      "disclaimer": "AI suggestions can be wrong -- always reviewed before anything is added.",
+      "quickAdd": { "action": "Clean up with AI", "title": "AI clean-up" },
+      "subtasks": {
+        "action": "Break into subtasks",
+        "title": "Suggested subtasks",
+        "editAria": "Edit the suggested subtasks, one per line"
+      },
+      "planSprint": {
+        "action": "Plan with AI",
+        "title": "AI period plan",
+        "editAria": "Edit the suggested order, one to-do per line",
+        "focusBadge": "Start here",
+        "emptyBucket": "Add a to-do to this period first"
+      },
+      "weeklySummary": {
+        "action": "Weekly summary",
+        "title": "AI weekly summary",
+        "acceptLabel": "Save as a note",
+        "editAria": "Edit the summary",
+        "subjectSelf": "You",
+        "periodLabel": "the last 7 days",
+        "noteTitle": "Weekly summary",
+        "savedToast": "Added to Notes"
+      },
+      "translate": {
+        "action": "Translate to {locale}",
+        "title": "Translation to {locale}"
       }
     }
   }
