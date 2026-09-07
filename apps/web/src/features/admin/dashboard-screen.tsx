@@ -6,11 +6,39 @@
 import type * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { KpiTile, StateView } from '@devon/ui'
-import { Link } from '../../lib/router.js'
+import { DataList, DataRow, KpiTile, StateView } from '@devon/ui'
+import { Activity, Building2, ChevronRight, ClipboardCheck, Users } from 'lucide-react'
+import { Link, navigate } from '../../lib/router.js'
 import { fetchAdminHealth, fetchAdminInstanceDetail, fetchMaintenance } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 import { StatTile, StatusDot } from './charts.js'
+
+const QUICK_LINKS = [
+  {
+    to: '/departments/requests',
+    icon: ClipboardCheck,
+    titleKey: 'admin.console.dashboard.reviewRequests',
+    descKey: 'admin.console.dashboard.reviewRequestsDesc',
+  },
+  {
+    to: '/admin/departments',
+    icon: Building2,
+    titleKey: 'admin.console.dashboard.manageDepartments',
+    descKey: 'admin.console.dashboard.manageDepartmentsDesc',
+  },
+  {
+    to: '/admin/accounts',
+    icon: Users,
+    titleKey: 'admin.console.dashboard.manageAccounts',
+    descKey: 'admin.console.dashboard.manageAccountsDesc',
+  },
+  {
+    to: '/admin/health',
+    icon: Activity,
+    titleKey: 'admin.console.dashboard.checkHealth',
+    descKey: 'admin.console.dashboard.checkHealthDesc',
+  },
+] as const
 
 const HEALTH_ROWS = [
   { key: 'db', labelKey: 'admin.console.health.db' },
@@ -112,30 +140,29 @@ function DashboardBody() {
 
       <HealthSnapshot />
 
-      <section className="rounded-md border border-border bg-card p-6">
-        <h2 className="mb-3 text-h3 text-foreground">{t('admin.console.dashboard.quickLinks')}</h2>
-        <ul className="flex flex-col gap-2">
-          <li>
-            <Link to="/departments/requests" className="text-body text-primary hover:underline">
-              {t('admin.console.dashboard.reviewRequests')}
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/departments" className="text-body text-primary hover:underline">
-              {t('admin.console.dashboard.manageDepartments')}
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/accounts" className="text-body text-primary hover:underline">
-              {t('admin.console.dashboard.manageAccounts')}
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/health" className="text-body text-primary hover:underline">
-              {t('admin.console.dashboard.checkHealth')}
-            </Link>
-          </li>
-        </ul>
+      <section className="flex flex-col gap-3">
+        <h2 className="text-h3 text-foreground">{t('admin.console.dashboard.quickLinks')}</h2>
+        {/* round2 SEV3 #25: this used to be four plain underlined text links in a card -- the
+            DataRow recipe every other dense list in the console already uses (icon, title,
+            one-line description, a chevron that says "this goes somewhere"). */}
+        <DataList label={t('admin.console.dashboard.quickLinks')}>
+          {QUICK_LINKS.map((link) => (
+            <DataRow
+              key={link.to}
+              interactive
+              onClick={() => navigate(link.to)}
+              leading={<link.icon className="size-5 text-muted-foreground" aria-hidden="true" />}
+              trailing={
+                <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+              }
+            >
+              <div className="min-w-0">
+                <p className="truncate text-body font-medium text-foreground">{t(link.titleKey)}</p>
+                <p className="truncate text-small text-muted-foreground">{t(link.descKey)}</p>
+              </div>
+            </DataRow>
+          ))}
+        </DataList>
       </section>
     </div>
   )

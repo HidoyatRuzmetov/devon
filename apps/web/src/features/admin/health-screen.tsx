@@ -4,7 +4,6 @@ import { useT, useLocale, formatTime, formatNumber } from '@devon/i18n'
 import { Badge, Button, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { fetchAdminHealth, type HealthCheck } from './api.js'
 import { AdminScreen } from './admin-screen.js'
-import { StatusDot } from './charts.js'
 
 /** Formats a `HealthCheck.detail` (`{ code, params }`) into the sentence for the current locale --
  * `code` is looked up as `admin.console.health.detail.<code>`, and any numeric params are run through
@@ -36,13 +35,13 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
   const locale = useLocale()
   const detailText = useHealthDetailText()(check.detail)
   return (
+    // round2 SEV3 #25: a coloured dot next to a status Badge said the same thing twice -- the
+    // Badge alone (tone + text) already carries the status, so the dot is gone; "Sozlanmagan"
+    // reads as its own explanation for the grey/not-configured case without it.
     <StaggerItem as="li" className="flex items-center justify-between gap-4 py-3">
-      <div className="flex items-center gap-3">
-        <StatusDot status={check.status} />
-        <div>
-          <p className="text-body text-foreground">{t(labelKey)}</p>
-          {detailText ? <p className="text-small text-muted-foreground">{detailText}</p> : null}
-        </div>
+      <div>
+        <p className="text-body text-foreground">{t(labelKey)}</p>
+        {detailText ? <p className="text-small text-muted-foreground">{detailText}</p> : null}
       </div>
       <div className="flex items-center gap-2">
         {check.latencyMs !== null ? (
