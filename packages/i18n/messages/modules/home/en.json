@@ -24,7 +24,22 @@
       "personal": {
         "onTimeRate": "On-time rate",
         "focusMinutes": "Focus minutes this week"
-      }
+      },
+      "onboarding": {
+        "title": "Getting started",
+        "body": "{done} of {total} done",
+        "photo": "Add your photo",
+        "department": "Join a department",
+        "work": "Open your first task",
+        "event": "Sign up for an event",
+        "focus": "Run a focus session",
+        "done": "All done"
+      },
+      "kpi": {
+        "onTimeQuestion": "How well are deadlines being met?",
+        "focusQuestion": "How much focused time did you get this week?"
+      },
+      "sectionTiles": "Today"
     }
   }
 }

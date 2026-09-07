@@ -67,7 +67,7 @@ export function LoginRoute() {
 
   if (challengeToken) {
     return (
-      <div className="flex flex-col gap-6 rounded-md border border-border bg-card p-8">
+      <div className="mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
         <div className="flex flex-col gap-1">
           <h1 className="text-h2 text-foreground">{t('accounts.login2fa.title')}</h1>
           <p className="text-small text-muted-foreground">{t('accounts.login2fa.body')}</p>
@@ -119,7 +119,7 @@ export function LoginRoute() {
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-md border border-border bg-card p-8">
+    <div className="mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
       <div className="flex flex-col gap-1">
         <h1 className="text-h2 text-foreground">{t('login.title')}</h1>
       </div>

@@ -1,13 +1,27 @@
 // `/` -- Home (TECH-SPEC §5: "a Home page per role answering 'due from me / needs my decision /
-// around me' with the pinned charts and upcoming events"). This feature's manifest registers the
-// exact-path route `/` (MODULE-GUIDE.md "Web features": a feature route is checked before the five
-// core routes), so this screen fully replaces `apps/web/src/routes/home.tsx`'s EPIC-000 placeholder --
-// every guard that placeholder had (forced state, loading, offline, redirect-to-login) is reproduced
-// here first, verbatim, before any of this module's own content renders.
+// around me' with the pinned charts and upcoming events"), rebuilt to UI-OVERHAUL.md §2 row 4:
+// "Greeting by time of day, 'due from me / needs my decision / around me' tiles, pinned charts,
+// everything staggers in", plus the onboarding checklist card from row "Onboarding".
+//
+// This feature's manifest registers the exact-path route `/`, so this screen fully replaces
+// `apps/web/src/routes/home.tsx`'s EPIC-000 placeholder -- every guard that placeholder had (forced
+// state, loading, offline, redirect-to-login) is reproduced here first, verbatim, before any of this
+// module's own content renders.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { StateView } from '@devon/ui'
-import NumberFlow from '@number-flow/react'
+import {
+  AmbientGradient,
+  Card,
+  Checkbox,
+  KpiTile,
+  Progress,
+  Reveal,
+  Stagger,
+  StaggerItem,
+  StateView,
+  WelcomeIllustration,
+} from '@devon/ui'
+import { ArrowRight, CalendarDays, Gavel, ListTodo } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useDepartment, useInstanceQuery, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
@@ -47,34 +61,107 @@ const SECTION_BY_KEY: Record<AnalyticsChartKey, React.ComponentType<SectionProps
   personal: PersonalStatsSection,
 }
 
+/** One of the three "what is being asked of me" tiles. A tile that has nothing to say still renders
+ * -- three tiles that come and go would move the two that remain, and the shape of Home is part of
+ * what makes it readable in ten seconds. */
 function DashboardTile({
+  icon: Icon,
   titleKey,
   bodyKey,
   bodyParams,
   ctaKey,
   onCta,
+  tone,
 }: {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   titleKey: string
   bodyKey: string
   bodyParams?: Record<string, string | number>
   ctaKey?: string
   onCta?: () => void
+  tone?: 'attention' | 'neutral'
 }) {
   const t = useT()
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-5 shadow-1">
-      <h3 className="text-h3 text-foreground">{t(titleKey)}</h3>
-      <p className="text-body text-muted-foreground">{t(bodyKey, bodyParams)}</p>
+    <Card
+      interactive={Boolean(onCta)}
+      className="flex h-full flex-col gap-3"
+      {...(onCta ? { onClick: onCta } : {})}
+    >
+      <span
+        className={
+          tone === 'attention'
+            ? 'inline-flex size-9 items-center justify-center rounded-sm bg-attention/20 text-foreground'
+            : 'inline-flex size-9 items-center justify-center rounded-sm bg-accent text-accent-foreground'
+        }
+      >
+        <Icon className="size-4.5" aria-hidden="true" />
+      </span>
+      <h3 className="text-lead font-medium text-foreground">{t(titleKey)}</h3>
+      <p className="flex-1 text-body text-muted-foreground">{t(bodyKey, bodyParams)}</p>
       {ctaKey && onCta ? (
-        <button
-          type="button"
-          onClick={onCta}
-          className="self-start text-small font-medium text-primary hover:underline"
-        >
-          {t(ctaKey)} →
-        </button>
+        <span className="inline-flex items-center gap-1 text-small font-medium text-primary">
+          {t(ctaKey)}
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </span>
       ) : null}
-    </div>
+    </Card>
+  )
+}
+
+interface ChecklistItem {
+  id: string
+  labelKey: string
+  done: boolean
+  onGo: () => void
+}
+
+/** UI-OVERHAUL.md §2 "Onboarding" (Notion, Slack): a checklist card on Home with progress, each item
+ * one click away. Every item is derived from data Home already has -- nothing here is a stored
+ * "tour step", so it can never disagree with reality, and the whole card disappears for good once
+ * the last item is true. */
+function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
+  const t = useT()
+  const done = items.filter((item) => item.done).length
+  if (done === items.length) return null
+
+  return (
+    <Reveal>
+      <Card className="flex flex-col gap-4">
+        <div className="flex items-start gap-4">
+          <WelcomeIllustration className="hidden w-28 shrink-0 sm:block" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h3 className="text-lead font-medium text-foreground">
+              {t('home.dashboard.onboarding.title')}
+            </h3>
+            <p className="text-small tabular-nums text-muted-foreground">
+              {t('home.dashboard.onboarding.body', { done, total: items.length })}
+            </p>
+            <Progress
+              value={(done / items.length) * 100}
+              label={t('home.dashboard.onboarding.title')}
+              size="sm"
+            />
+          </div>
+        </div>
+        <ul className="flex flex-col gap-1">
+          {items.map((item) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                onClick={item.onGo}
+                className="flex min-h-11 w-full items-center gap-3 rounded-sm px-2 text-left text-body text-foreground transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Checkbox checked={item.done} disabled aria-hidden="true" tabIndex={-1} />
+                <span className={item.done ? 'text-muted-foreground line-through' : undefined}>
+                  {t(item.labelKey)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </Reveal>
   )
 }
 
@@ -88,17 +175,20 @@ function PinnedCharts() {
   if (pinnedQuery.isPending || summaryQuery.isPending) return null
   if (pins.length === 0 || !summaryQuery.data) {
     return (
-      <div className="flex flex-col gap-2 rounded-md border border-dashed border-border bg-card p-5">
-        <h3 className="text-h3 text-foreground">{t('home.dashboard.pinned.title')}</h3>
+      <Card dashed elevation="flat" className="flex flex-col gap-2">
+        <h3 className="text-lead font-medium text-foreground">
+          {t('home.dashboard.pinned.title')}
+        </h3>
         <p className="text-small text-muted-foreground">{t('home.dashboard.pinned.empty')}</p>
         <button
           type="button"
           onClick={() => navigate('/analytics')}
-          className="self-start text-small font-medium text-primary hover:underline"
+          className="inline-flex items-center gap-1 self-start text-small font-medium text-primary hover:underline"
         >
-          {t('home.dashboard.pinned.cta')} →
+          {t('home.dashboard.pinned.cta')}
+          <ArrowRight className="size-3.5" aria-hidden="true" />
         </button>
-      </div>
+      </Card>
     )
   }
 
@@ -116,18 +206,22 @@ function PinnedCharts() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="text-h3 text-foreground">{t('home.dashboard.pinned.title')}</h3>
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+      <h3 className="text-lead font-medium text-foreground">{t('home.dashboard.pinned.title')}</h3>
+      <Stagger className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {pins.map((pin) => {
           const Section = SECTION_BY_KEY[pin.chartKey]
-          return <Section key={pin.id} {...sectionProps} />
+          return (
+            <StaggerItem key={pin.id}>
+              <Section {...sectionProps} />
+            </StaggerItem>
+          )
         })}
-      </div>
+      </Stagger>
     </div>
   )
 }
 
-function Dashboard() {
+function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
   const t = useT()
   const overviewQuery = usePersonalOverviewQuery()
 
@@ -147,61 +241,102 @@ function Dashboard() {
   const hasAnything =
     p.openCount > 0 || p.overdueCount > 0 || p.givenOverdueCount > 0 || p.upcomingEventCount > 0
 
-  return (
-    <div className="flex w-full max-w-320 flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <DashboardTile
-          titleKey="home.dashboard.dueFromMe.title"
-          bodyKey="home.dashboard.dueFromMe.body"
-          bodyParams={{ open: p.openCount, overdue: p.overdueCount }}
-          ctaKey="home.dashboard.dueFromMe.cta"
-          onCta={() => navigate('/work/mine')}
-        />
-        {p.givenOverdueCount > 0 ? (
-          <DashboardTile
-            titleKey="home.dashboard.needsMyDecision.title"
-            bodyKey="home.dashboard.needsMyDecision.body"
-            bodyParams={{ count: p.givenOverdueCount }}
-            ctaKey="home.dashboard.dueFromMe.cta"
-            onCta={() => navigate('/work')}
-          />
-        ) : (
-          <DashboardTile
-            titleKey="home.dashboard.needsMyDecision.title"
-            bodyKey="home.dashboard.needsMyDecision.empty"
-          />
-        )}
-        <DashboardTile
-          titleKey="home.dashboard.aroundMe.title"
-          bodyKey="home.dashboard.aroundMe.body"
-          bodyParams={{ count: p.upcomingEventCount }}
-          ctaKey="home.dashboard.aroundMe.cta"
-          onCta={() => navigate('/events')}
-        />
-      </div>
+  const checklist: ChecklistItem[] = [
+    {
+      id: 'photo',
+      labelKey: 'home.dashboard.onboarding.photo',
+      done: hasAvatar,
+      onGo: () => navigate('/account'),
+    },
+    {
+      id: 'work',
+      labelKey: 'home.dashboard.onboarding.work',
+      done: p.openCount > 0 || p.overdueCount > 0,
+      onGo: () => navigate('/work'),
+    },
+    {
+      id: 'event',
+      labelKey: 'home.dashboard.onboarding.event',
+      done: p.upcomingEventCount > 0,
+      onGo: () => navigate('/events'),
+    },
+    {
+      id: 'focus',
+      labelKey: 'home.dashboard.onboarding.focus',
+      done: p.focusMinutesThisWeek > 0,
+      onGo: () => navigate('/personal'),
+    },
+  ]
 
-      <div className="flex items-center gap-8 rounded-md border border-border bg-card p-4">
-        <div className="flex flex-col">
-          <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-            {t('home.dashboard.personal.onTimeRate')}
-          </span>
-          <span className="font-display text-h2 tabular-nums text-foreground">
-            {p.onTimeRate === null ? (
-              '—'
+  return (
+    <div className="flex w-full flex-col gap-8">
+      <section className="flex flex-col gap-3">
+        <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+          {t('home.dashboard.sectionTiles')}
+        </h2>
+        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StaggerItem className="h-full">
+            <DashboardTile
+              icon={ListTodo}
+              titleKey="home.dashboard.dueFromMe.title"
+              bodyKey="home.dashboard.dueFromMe.body"
+              bodyParams={{ open: p.openCount, overdue: p.overdueCount }}
+              ctaKey="home.dashboard.dueFromMe.cta"
+              onCta={() => navigate('/work/mine')}
+              tone={p.overdueCount > 0 ? 'attention' : 'neutral'}
+            />
+          </StaggerItem>
+          <StaggerItem className="h-full">
+            {p.givenOverdueCount > 0 ? (
+              <DashboardTile
+                icon={Gavel}
+                titleKey="home.dashboard.needsMyDecision.title"
+                bodyKey="home.dashboard.needsMyDecision.body"
+                bodyParams={{ count: p.givenOverdueCount }}
+                ctaKey="home.dashboard.dueFromMe.cta"
+                onCta={() => navigate('/work')}
+                tone="attention"
+              />
             ) : (
-              <NumberFlow value={Math.round(p.onTimeRate * 100)} suffix="%" />
+              <DashboardTile
+                icon={Gavel}
+                titleKey="home.dashboard.needsMyDecision.title"
+                bodyKey="home.dashboard.needsMyDecision.empty"
+              />
             )}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-            {t('home.dashboard.personal.focusMinutes')}
-          </span>
-          <span className="font-display text-h2 tabular-nums text-foreground">
-            <NumberFlow value={p.focusMinutesThisWeek} />
-          </span>
-        </div>
-      </div>
+          </StaggerItem>
+          <StaggerItem className="h-full">
+            <DashboardTile
+              icon={CalendarDays}
+              titleKey="home.dashboard.aroundMe.title"
+              bodyKey="home.dashboard.aroundMe.body"
+              bodyParams={{ count: p.upcomingEventCount }}
+              ctaKey="home.dashboard.aroundMe.cta"
+              onCta={() => navigate('/events')}
+            />
+          </StaggerItem>
+        </Stagger>
+      </section>
+
+      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StaggerItem>
+          <KpiTile
+            label={t('home.dashboard.personal.onTimeRate')}
+            value={p.onTimeRate === null ? null : Math.round(p.onTimeRate * 100)}
+            suffix="%"
+            question={t('home.dashboard.kpi.onTimeQuestion')}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <KpiTile
+            label={t('home.dashboard.personal.focusMinutes')}
+            value={p.focusMinutesThisWeek}
+            question={t('home.dashboard.kpi.focusQuestion')}
+          />
+        </StaggerItem>
+      </Stagger>
+
+      <OnboardingCard items={checklist} />
 
       {hasAnything ? <PinnedCharts /> : null}
     </div>
@@ -251,7 +386,7 @@ export default function HomeScreen() {
   const now = new Date()
 
   const header = (
-    <div className="flex flex-col items-center gap-2 text-center">
+    <Reveal className="flex flex-col gap-1">
       <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
         {t('home.eyebrow')}
       </p>
@@ -259,7 +394,7 @@ export default function HomeScreen() {
         {t(greetingKey(tashkentHour(now)), { name: greetingName(user) })}
       </h1>
       <p className="text-lead text-muted-foreground">{formatHomeDateLine(now, locale)}</p>
-    </div>
+    </Reveal>
   )
 
   // No active department yet (a brand-new account, or a super admin with none) -- the original
@@ -289,12 +424,14 @@ export default function HomeScreen() {
           }
 
     return (
-      <div className="mx-auto flex max-w-320 flex-col items-center gap-10">
+      <div className="relative flex flex-col gap-8">
+        <AmbientGradient variant="hub" />
         {header}
         <StateView
           kind="empty"
           titleKey={empty.titleKey}
           bodyKey={empty.bodyKey}
+          illustration={<WelcomeIllustration />}
           action={{ labelKey: empty.actionKey, onAction: empty.onAction }}
           className="w-full max-w-140"
         />
@@ -303,9 +440,11 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="mx-auto flex max-w-320 flex-col items-center gap-8">
+    <div className="relative flex flex-col gap-8">
+      {/* DESIGN.md v2: the ambient gradient lives on auth and the hub only. Home is the hub. */}
+      <AmbientGradient variant="hub" />
       {header}
-      <Dashboard />
+      <Dashboard hasAvatar={Boolean(user.avatarKey)} />
     </div>
   )
 }

@@ -70,12 +70,14 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
       />
 
       <main id="main" className="flex flex-1 flex-col items-center justify-center px-4 py-10">
-        <BlurFade className="w-full max-w-105">
-          <div className="mb-6 flex flex-col items-center gap-1 text-center">
+        {/* The card's own width is the screen's business (a sign-in form and a registration form are
+            not the same size); this shell only centres it and puts the same greeting above it. */}
+        <BlurFade className="flex w-full flex-col items-center">
+          <div className="mb-6 flex max-w-115 flex-col items-center gap-1 text-center">
             <h2 className="font-display text-h2 text-foreground">{WORDMARK}</h2>
-            <p className="max-w-90 text-body text-muted-foreground">{t('auth.tagline')}</p>
+            <p className="text-body text-muted-foreground">{t('auth.tagline')}</p>
           </div>
-          {children}
+          <div className="w-full">{children}</div>
         </BlurFade>
       </main>
 

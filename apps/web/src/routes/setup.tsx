@@ -43,7 +43,7 @@ function DoneScreen({ user }: { user: PublicUser }) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 rounded-md border border-border bg-card p-8 text-center">
+    <div className="mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm items-center text-center">
       <h1 className="text-h2 text-foreground">{t('setup.done.title')}</h1>
       <div className="flex items-center gap-2 rounded-sm bg-muted px-3 py-2">
         <span className="select-text font-mono text-body text-foreground">{user.login}</span>

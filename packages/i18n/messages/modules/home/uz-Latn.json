@@ -24,7 +24,22 @@
       "personal": {
         "onTimeRate": "O'z vaqtida bajarilish",
         "focusMinutes": "Bu hafta fokus daqiqalari"
-      }
+      },
+      "onboarding": {
+        "title": "Boshlash",
+        "body": "{done}/{total} bajarildi",
+        "photo": "Suratingizni qoʻshing",
+        "department": "Boʻlimga qoʻshiling",
+        "work": "Birinchi ishingizni oching",
+        "event": "Tadbirga yoziling",
+        "focus": "Fokus seansini oʻtkazing",
+        "done": "Hammasi bajarildi"
+      },
+      "kpi": {
+        "onTimeQuestion": "Muddatlarga qanchalik amal qilinmoqda?",
+        "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
+      },
+      "sectionTiles": "Bugungi holat"
     }
   }
 }

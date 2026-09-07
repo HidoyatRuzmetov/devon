@@ -1,6 +1,6 @@
-// `/register` (EPIC-001, TECH-SPEC §2.1). Reuses the `AuthShell`-less `AppShell` chrome every feature
-// route gets (`app.tsx`'s `RouteOutlet`) -- unauthenticated visitors see it with no department/avatar,
-// same as any other feature route reached while signed out.
+// `/register` (EPIC-001, TECH-SPEC §2.1). Renders inside `AuthShell` -- `app.tsx`'s `AUTH_ROUTES`
+// lists it alongside `/login`, `/setup` and `/join`, because a visitor creating an account has no
+// session and a sidebar full of destinations they cannot reach is not chrome, it is noise.
 //
 // The optional photo is chosen here but uploaded only *after* the account exists: the presigned-URL
 // endpoint needs a session (an anonymous presign would be an open upload slot for anyone), so the
@@ -88,7 +88,7 @@ export default function RegisterScreen() {
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 rounded-md border border-border bg-card p-8">
+    <div className="mx-auto flex w-full max-w-125 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
       <div className="flex flex-col gap-1">
         <h1 className="text-h2 text-foreground">{t('accounts.register.title')}</h1>
         <p className="text-small text-muted-foreground">{t('accounts.register.subtitle')}</p>
