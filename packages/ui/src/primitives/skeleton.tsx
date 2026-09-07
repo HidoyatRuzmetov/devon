@@ -6,8 +6,12 @@ export type SkeletonProps = React.HTMLAttributes<HTMLDivElement>
 
 /** DESIGN.md §4/§8.2: blocks in `--color-muted`, matched to the *real* dimensions of what is
  * coming (a caller passes `className="h-9 w-70"` etc. -- there is no default size, because a
- * default size is how "header-and-footer-only" skeletons happen). Shimmer 1.4s, static under
- * `prefers-reduced-motion` (opacity blocks 0.6, never fully invisible). */
+ * default size is how "header-and-footer-only" skeletons happen).
+ *
+ * UI-OVERHAUL.md §3 "Skeleton → content": a shimmer sweep, then a crossfade to the real content.
+ * The sweep is the same pure-CSS `devon-shimmer` the `<Shimmer>` motion piece uses -- `Skeleton` is
+ * the layout-matched, `role="presentation"` form of it that every loading state composes; under
+ * `prefers-reduced-motion` the sweep is replaced by a steady, still-visible tint. */
 export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
   ({ className, style, ...props }, ref) => {
     const reduced = useReducedMotion()
@@ -17,11 +21,11 @@ export const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
         role="presentation"
         aria-hidden="true"
         className={cn(
-          'rounded-sm bg-muted',
-          !reduced && 'animate-[devon-shimmer_1.4s_linear_infinite]',
+          'relative overflow-hidden rounded-sm bg-muted',
+          !reduced && 'devon-shimmer',
           className,
         )}
-        style={reduced ? { opacity: 0.6, ...style } : style}
+        style={reduced ? { opacity: 0.75, ...style } : style}
         {...props}
       />
     )

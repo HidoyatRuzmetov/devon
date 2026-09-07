@@ -16,7 +16,8 @@ export const TooltipContent = React.forwardRef<
       sideOffset={sideOffset}
       className={cn(
         'z-50 rounded-sm bg-foreground px-2 py-1 text-caption text-background shadow-1',
-        'data-[state=delayed-open]:animate-[devon-fade-in_140ms_var(--ease-out)]',
+        'data-[state=delayed-open]:animate-[devon-rise-in_140ms_var(--ease-out)]',
+        'data-[state=instant-open]:animate-[devon-rise-in_140ms_var(--ease-out)]',
         'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
         className,
       )}

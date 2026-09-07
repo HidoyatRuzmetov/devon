@@ -1,9 +1,15 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { CircleAlert, Inbox, ShieldOff, WifiOff } from 'lucide-react'
 import { cn } from '../lib/cn.js'
 import { Button } from '../primitives/button.js'
 import { Skeleton } from '../primitives/skeleton.js'
+import { EmptyState, ErrorState, NoPermissionState, OfflineState } from './empty-state.js'
+import {
+  EmptySearchIllustration,
+  ErrorIllustration,
+  NoPermissionIllustration,
+  OfflineIllustration,
+} from '../illustrations/index.js'
 
 /** design.md §8 / AC-7's five forceable states, verbatim per the frozen work-item handoff contract
  * (EPIC-000.4). "Success" is the sixth state in DESIGN.md §4 but is a `Toast`, not a `StateView`
@@ -28,31 +34,34 @@ export interface StateViewProps {
   /** kind="error" only (spec.md §8.3): a selectable, copyable reference id -- never a stack trace,
    * never an HTTP status, never "Error 500". */
   requestId?: string
+  /** Replaces the kind's default illustration -- e.g. a board's empty state wants the board drawing,
+   * not the generic one. */
+  illustration?: React.ReactNode
+  /** Drops the illustration for a state rendered inside a column or a small card. */
+  compact?: boolean
   className?: string
 }
 
-const ICON: Partial<Record<StateKind, React.ComponentType<React.SVGProps<SVGSVGElement>>>> = {
-  empty: Inbox,
-  error: CircleAlert,
-  forbidden: ShieldOff,
-  offline: WifiOff,
-}
-
-/** The one state primitive every route in this epic renders for empty/loading/error/forbidden/
- * offline (AC-7). Loading renders a generic skeleton (a caller building a bespoke, pixel-matched
- * skeleton for its own layout composes `<Skeleton>` directly instead -- see design.md §8.2 "matching
- * final layout", which a one-size-fits-all component structurally cannot promise). The other four
- * kinds render: an icon standing in for design.md's "illustration <=160px or none", an h3 title, a
- * body line, and at most one primary `<Button data-primary>` -- asserted by the unit test below to be
- * exactly one element per kind whenever `action` is given, never zero and never two. */
+/** The one state primitive every route renders for empty/loading/error/forbidden/offline (AC-7).
+ *
+ * Since the UI overhaul this is a thin, i18n-key-taking façade over the four designed state
+ * components in `empty-state.tsx` (which take plain strings, because a feature already has `t`).
+ * Keeping both is deliberate: every existing call site passes keys, and the *rule* this component
+ * enforces -- one primary action, never two -- lives in one place either way.
+ *
+ * Loading renders a layout-shaped shimmer skeleton (a caller building a pixel-matched skeleton for
+ * its own layout composes `<Skeleton>` directly instead -- design.md §8.2's "matching final layout"
+ * is something a one-size-fits-all component structurally cannot promise). */
 export function StateView({
   kind,
   titleKey,
   bodyKey,
   action,
   requestId,
+  illustration,
+  compact = false,
   className,
-}: StateViewProps) {
+}: StateViewProps): React.JSX.Element {
   const t = useT()
 
   if (kind === 'loading') {
@@ -60,14 +69,25 @@ export function StateView({
       <div
         role="status"
         aria-live="polite"
-        className={cn('flex flex-col items-center gap-4 p-10', className)}
+        className={cn('mx-auto flex w-full max-w-160 flex-col gap-4 p-6', className)}
       >
         <span className="sr-only">{t(titleKey)}</span>
-        <Skeleton className="h-9 w-70" />
-        <Skeleton className="h-4 w-45" />
-        <Skeleton className="h-55 w-full max-w-140" />
+        <Skeleton className="h-8 w-60" />
+        <Skeleton className="h-4 w-40" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+        <Skeleton className="h-40 w-full" />
         {action ? (
-          <Button data-primary variant="secondary" size="sm" onClick={action.onAction}>
+          <Button
+            data-primary
+            variant="secondary"
+            size="sm"
+            className="self-center"
+            onClick={action.onAction}
+          >
             {t(action.labelKey)}
           </Button>
         ) : null}
@@ -75,29 +95,32 @@ export function StateView({
     )
   }
 
-  const Icon = ICON[kind]
-  return (
-    <div
-      role={kind === 'error' ? 'alert' : undefined}
-      className={cn(
-        'mx-auto flex max-w-140 flex-col items-center gap-4 rounded-md border border-border',
-        'bg-card p-10 text-center',
-        className,
-      )}
-    >
-      {Icon ? <Icon className="size-10 text-muted-foreground" aria-hidden="true" /> : null}
-      <h3 className="text-h3 text-foreground">{t(titleKey)}</h3>
-      {bodyKey ? <p className="max-w-90 text-body text-muted-foreground">{t(bodyKey)}</p> : null}
-      {kind === 'error' && requestId ? (
-        <p className="select-text font-mono text-caption text-muted-foreground">
-          {t('state.error.requestId', { id: requestId })}
-        </p>
-      ) : null}
-      {action ? (
-        <Button data-primary onClick={action.onAction}>
-          {t(action.labelKey)}
-        </Button>
-      ) : null}
-    </div>
-  )
+  const common = {
+    title: t(titleKey),
+    ...(bodyKey ? { body: t(bodyKey) } : {}),
+    ...(action ? { action: { label: t(action.labelKey), onAction: action.onAction } } : {}),
+    compact,
+    ...(className ? { className } : {}),
+  }
+
+  if (kind === 'error') {
+    return (
+      <ErrorState
+        {...common}
+        illustration={illustration ?? <ErrorIllustration />}
+        {...(requestId
+          ? { requestId, requestIdLabel: t('state.error.requestId', { id: requestId }) }
+          : {})}
+      />
+    )
+  }
+  if (kind === 'forbidden') {
+    return (
+      <NoPermissionState {...common} illustration={illustration ?? <NoPermissionIllustration />} />
+    )
+  }
+  if (kind === 'offline') {
+    return <OfflineState {...common} illustration={illustration ?? <OfflineIllustration />} />
+  }
+  return <EmptyState {...common} illustration={illustration ?? <EmptySearchIllustration />} />
 }

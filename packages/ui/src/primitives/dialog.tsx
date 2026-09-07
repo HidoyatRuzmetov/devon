@@ -14,8 +14,10 @@ export const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      'fixed inset-0 z-50 bg-foreground/40',
-      'data-[state=open]:animate-[devon-fade-in_140ms_var(--ease-out)]',
+      // UI-OVERHAUL.md §3 "Dialog": the backdrop *blurs* the page behind it as it fades, so the
+      // dialog reads as being in front of the work rather than pasted over it.
+      'fixed inset-0 z-50 bg-foreground/30 backdrop-blur-[3px]',
+      'data-[state=open]:animate-[devon-fade-in_220ms_var(--ease-out)]',
       'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
       className,
     )}
@@ -47,7 +49,7 @@ export const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         'fixed left-1/2 top-1/2 z-50 w-full max-w-120 -translate-x-1/2 -translate-y-1/2',
-        'rounded-lg border border-border bg-card p-6 shadow-3',
+        'rounded-lg border border-border bg-surface-3 p-6 shadow-3',
         'data-[state=open]:animate-[devon-dialog-in_220ms_var(--ease-out)]',
         'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
         className,

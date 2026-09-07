@@ -57,7 +57,69 @@ export {
   SheetTrigger,
   type SheetContentProps,
 } from './primitives/sheet.js'
-export { Toaster, toast, toastWithUndo, type UndoToastOptions } from './primitives/toast.js'
+export {
+  Toaster,
+  toast,
+  toastWithUndo,
+  TOAST_DURATION_MS,
+  type UndoToastOptions,
+} from './primitives/toast.js'
+
+// -- Overhaul primitives (UI-OVERHAUL.md §2 / DESIGN.md §3) ----------------------------------------
+export { Checkbox, type CheckboxProps } from './primitives/checkbox.js'
+export { Switch, type SwitchProps } from './primitives/switch.js'
+export {
+  RadioGroup,
+  RadioGroupItem,
+  RadioOption,
+  type RadioOptionProps,
+} from './primitives/radio-group.js'
+export {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  type TabsTriggerProps,
+} from './primitives/tabs.js'
+export {
+  Combobox,
+  comboboxScore,
+  normalizeForSearch,
+  type ComboboxOption,
+  type ComboboxProps,
+} from './primitives/combobox.js'
+export {
+  Calendar,
+  DatePicker,
+  type CalendarProps,
+  type DatePickerProps,
+} from './primitives/date-picker.js'
+export { Progress, type ProgressProps } from './primitives/progress.js'
+export {
+  Chip,
+  chipVariants,
+  FilterChip,
+  type ChipProps,
+  type FilterChipProps,
+} from './primitives/chip.js'
+export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from './primitives/breadcrumb.js'
+export {
+  Card,
+  cardVariants,
+  SectionCard,
+  type CardProps,
+  type SectionCardProps,
+} from './primitives/card.js'
+export { KpiTile, type KpiTileProps } from './primitives/kpi-tile.js'
+export {
+  AvatarStack,
+  type AvatarStackPerson,
+  type AvatarStackProps,
+} from './primitives/avatar-stack.js'
+export { DataList, DataRow, type DataListProps, type DataRowProps } from './primitives/data-list.js'
+export { PageHeader, type PageHeaderProps } from './primitives/page-header.js'
+export { SparkleButton, type SparkleButtonProps } from './primitives/sparkle-button.js'
+export { AiPreviewPanel, type AiPreviewPanelProps } from './primitives/ai-preview-panel.js'
 
 export {
   StateView,
@@ -65,7 +127,19 @@ export {
   type StateViewAction,
   type StateViewProps,
 } from './states/state-view.js'
+export {
+  EmptyState,
+  ErrorState,
+  NoPermissionState,
+  OfflineState,
+  COMPACT_STATE_ICON,
+  type StateAction,
+  type ErrorStateProps,
+} from './states/empty-state.js'
 export { OfflineBanner, type OfflineBannerProps } from './states/offline-banner.js'
+
+// Open-licence illustration set, recoloured to tokens (DESIGN.md v2 §2.7).
+export * from './illustrations/index.js'
 
 export { resolveNavEntries, type NavContext, type NavEntry } from './shell/nav-registry.js'
 export { Sidebar, type SidebarProps } from './shell/sidebar.js'

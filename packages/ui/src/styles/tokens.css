@@ -299,11 +299,25 @@
 @keyframes devon-dialog-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(8px) scale(0.96);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* UI-OVERHAUL.md §3 "Hover cards" / "Tooltip and Popover": fade + a 4 px rise, never a scale --
+   a scale from a trigger corner reads as "a menu grew out of this", which is right for a dropdown
+   and wrong for a tooltip that is simply revealing information already anchored there. */
+@keyframes devon-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 @keyframes devon-slide-in-left {

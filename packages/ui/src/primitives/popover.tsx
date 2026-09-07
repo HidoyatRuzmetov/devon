@@ -17,8 +17,8 @@ export const PopoverContent = React.forwardRef<
       align={align}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-60 rounded-md border border-border bg-card p-4 text-body text-foreground shadow-2',
-        'data-[state=open]:animate-[devon-scale-in_140ms_var(--ease-out)]',
+        'z-50 min-w-60 rounded-md border border-border bg-surface-2 p-4 text-body text-foreground shadow-2',
+        'data-[state=open]:animate-[devon-rise-in_140ms_var(--ease-out)]',
         'data-[state=closed]:animate-[devon-scale-out_140ms_var(--ease-in)]',
         'origin-(--radix-popover-content-transform-origin)',
         className,
