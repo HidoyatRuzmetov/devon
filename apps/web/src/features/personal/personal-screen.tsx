@@ -1,12 +1,15 @@
-// The personal workspace screen (TECH-SPEC §3.3): today/focus, sprints, tasks, notes, canvas,
-// Pomodoro -- one route (`/personal`), tabbed internally (MODULE-GUIDE.md: routes are exact-path
-// only, no nested params yet). The Pomodoro widget renders at the top of every tab so it is visible
-// while working, not tucked away inside the Pomodoro tab alone -- see `pomodoro-widget.tsx`'s header
-// for the follow-up that would make it visible from every route in the app, not only this one.
+// The personal workspace screen (TECH-SPEC §3.3): today/focus, sprints (called "periods" in copy),
+// tasks, notes, canvas, Pomodoro -- one route (`/personal`), tabbed internally (MODULE-GUIDE.md:
+// routes are exact-path only, no nested params yet), following the page-header + sliding-underline
+// tabs recipe every other screen in the product uses (DESIGN.md §9.1).
+//
+// The Pomodoro widget renders in the header's actions slot on every tab, not tucked away inside the
+// Pomodoro tab alone -- see `pomodoro-widget.tsx`'s header for the follow-up that would make it
+// visible from every route in the app, not only this one.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { CalendarClock, ListTodo, NotebookPen, PenTool, Sun, Timer } from 'lucide-react'
-import { StateView, cn } from '@devon/ui'
+import { PageHeader, StateView, Tabs, TabsContent, TabsList, TabsTrigger } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
 import { PomodoroWidget } from './pomodoro-widget.js'
 import { PomodoroPanel } from './pomodoro-panel.js'
@@ -54,47 +57,42 @@ export default function PersonalScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-h2 text-foreground">{t('personal.title')}</h1>
-        <PomodoroWidget activeTaskId={focusedTaskId} />
-      </div>
+    <Tabs value={tab} onValueChange={(v) => setTab(v as TabId)} className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow={t('personal.eyebrow')}
+        title={t('personal.title')}
+        description={t('personal.description')}
+        actions={<PomodoroWidget activeTaskId={focusedTaskId} />}
+        tabs={
+          <TabsList aria-label={t('personal.title')}>
+            {TABS.map(({ id, labelKey, icon: Icon }) => (
+              <TabsTrigger key={id} value={id}>
+                <Icon className="size-4" aria-hidden="true" />
+                {t(labelKey)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        }
+      />
 
-      <div
-        role="tablist"
-        aria-label={t('personal.title')}
-        className="flex flex-wrap gap-1 border-b border-border"
-      >
-        {TABS.map(({ id, labelKey, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            onClick={() => setTab(id)}
-            className={cn(
-              'flex items-center gap-1.5 rounded-t-sm px-3 py-2 text-small font-medium',
-              tab === id
-                ? 'border-b-2 border-primary text-foreground'
-                : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground',
-            )}
-          >
-            <Icon className="size-4" aria-hidden="true" />
-            {t(labelKey)}
-          </button>
-        ))}
-      </div>
-
-      <div role="tabpanel">
-        {tab === 'today' ? (
-          <TodayView focusedTaskId={focusedTaskId} onFocusTask={setFocusedTaskId} />
-        ) : null}
-        {tab === 'sprints' ? <SprintsView /> : null}
-        {tab === 'tasks' ? <TasksView /> : null}
-        {tab === 'notes' ? <NotesView /> : null}
-        {tab === 'canvas' ? <CanvasView /> : null}
-        {tab === 'pomodoro' ? <PomodoroPanel /> : null}
-      </div>
-    </div>
+      <TabsContent value="today">
+        <TodayView focusedTaskId={focusedTaskId} onFocusTask={setFocusedTaskId} />
+      </TabsContent>
+      <TabsContent value="sprints">
+        <SprintsView />
+      </TabsContent>
+      <TabsContent value="tasks">
+        <TasksView />
+      </TabsContent>
+      <TabsContent value="notes">
+        <NotesView />
+      </TabsContent>
+      <TabsContent value="canvas">
+        <CanvasView />
+      </TabsContent>
+      <TabsContent value="pomodoro">
+        <PomodoroPanel />
+      </TabsContent>
+    </Tabs>
   )
 }

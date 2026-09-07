@@ -16,15 +16,18 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  ProgressRing,
   Separator,
   cn,
 } from '@devon/ui'
 import {
+  PHASE_RING_TONE,
   advanceCycle,
   attachSessionId,
   nextPhaseAfterFocus,
   notifyPhaseEnd,
   pause as pauseEngine,
+  phaseDurationMs,
   phaseToKind,
   playPhaseEndSound,
   remainingMs,
@@ -120,6 +123,11 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
   const running = state.phase !== 'idle'
   const paused = running && state.remainingAtPause !== null
   const remaining = remainingMs()
+  const ringValue =
+    running && settings
+      ? 100 -
+        (remaining / phaseDurationMs(state.phase as Exclude<PomodoroPhase, 'idle'>, settings)) * 100
+      : 0
 
   function start(kind: 'focus' | 'short_break' | 'long_break') {
     if (!settings) return
@@ -150,12 +158,22 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
           type="button"
           className={cn(
             'inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-2.5 text-small',
-            'text-foreground transition-colors hover:bg-accent',
+            'text-foreground transition-colors duration-(--dur-micro) hover:bg-accent',
             running && !paused && 'border-primary/40 text-primary',
           )}
           aria-label={t('personal.pomodoro.widget.aria')}
         >
-          <Timer className="size-4" aria-hidden="true" />
+          {running ? (
+            <ProgressRing
+              value={ringValue}
+              size={16}
+              strokeWidth={2}
+              label={t(PHASE_LABEL_KEY[state.phase])}
+              toneClassName={PHASE_RING_TONE[state.phase]}
+            />
+          ) : (
+            <Timer className="size-4" aria-hidden="true" />
+          )}
           {running ? (
             <span className="tabular-nums">{formatCountdown(remaining)}</span>
           ) : (

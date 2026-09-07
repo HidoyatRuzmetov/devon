@@ -119,6 +119,25 @@ function durationMsFor(phase: Exclude<PomodoroPhase, 'idle'>, settings: Pomodoro
   return minutes * 60_000
 }
 
+/** Exported for the big-ring view (`pomodoro-panel.tsx`): the ring's `value` is
+ * `100 - remainingMs/phaseDurationMs*100`, i.e. how much of the current phase has elapsed. */
+export function phaseDurationMs(
+  phase: Exclude<PomodoroPhase, 'idle'>,
+  settings: PomodoroSettings,
+): number {
+  return durationMsFor(phase, settings)
+}
+
+/** UI-OVERHAUL.md's "Pomodoro" row ("animated ring stroke, phase colour crossfade"): the one tone
+ * class per phase, shared by the mini widget's ring and the big-ring panel so the two never drift on
+ * which colour means which phase. */
+export const PHASE_RING_TONE: Record<PomodoroPhase, string> = {
+  idle: 'text-muted-foreground',
+  focus: 'text-primary',
+  short_break: 'text-success',
+  long_break: 'text-info',
+}
+
 export function phaseToKind(phase: Exclude<PomodoroPhase, 'idle'>): PomodoroKind {
   return phase
 }

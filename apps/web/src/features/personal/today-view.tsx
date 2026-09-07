@@ -1,11 +1,157 @@
-// Today / focus view (TECH-SPEC §3.3): active sprint goals plus every not-done task across active
-// sprints and the sprint-less "Inbox", in one flat, fast list -- picking a task as the Pomodoro's
-// linked task is one click away.
+// Today / focus view (TECH-SPEC §3.3): the sprint header (goal, progress ring, time left) for every
+// active sprint, a rollover banner for one whose time has run out, then every not-done to-do across
+// active sprints and the sprint-less "Inbox" in one flat, fast list -- quick-add (with an AI
+// clean-up pass) and picking a to-do as the Pomodoro's linked task are both one step away.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
-import { Play, Target } from 'lucide-react'
-import { Button, StateView } from '@devon/ui'
-import { usePatchTaskMutation, useSprintsQuery, useTasksQuery } from './use-personal.js'
+import { useT, useLocale } from '@devon/i18n'
+import { Lock, Play, Plus, RotateCcw, Target, X } from 'lucide-react'
+import {
+  AiPreviewPanel,
+  AllDoneIllustration,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  EmptyPersonalIllustration,
+  IconButton,
+  Input,
+  ProgressRing,
+  Reveal,
+  SparkleButton,
+  Stagger,
+  StaggerItem,
+  StateView,
+  toast,
+} from '@devon/ui'
+import { useQuickAddAi } from './lib/use-quick-add-ai.js'
+import {
+  SPRINT_KIND_LABEL_KEYS,
+  defaultSprintRange,
+  formatTimeLeft,
+  sprintElapsedPct,
+  sprintHasEnded,
+} from './lib/sprint-labels.js'
+import {
+  useCreateTaskMutation,
+  usePatchTaskMutation,
+  useRolloverSprintMutation,
+  useSprintsQuery,
+  useTasksQuery,
+} from './use-personal.js'
+import type { Sprint, Task } from './types.js'
+
+const PRIVACY_NOTE_KEY = 'devon.personal.privacyNoteDismissed'
+
+function PrivacyNote() {
+  const t = useT()
+  const [dismissed, setDismissed] = React.useState(() => {
+    try {
+      return window.localStorage.getItem(PRIVACY_NOTE_KEY) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (dismissed) return null
+  return (
+    <Reveal>
+      <div className="flex items-start gap-3 rounded-md border border-border bg-muted/40 px-4 py-3">
+        <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <p className="min-w-0 flex-1 text-small text-muted-foreground">
+          {t('personal.privacy.note')}
+        </p>
+        <IconButton
+          aria-label={t('personal.privacy.dismiss')}
+          size="md"
+          onClick={() => {
+            setDismissed(true)
+            try {
+              window.localStorage.setItem(PRIVACY_NOTE_KEY, '1')
+            } catch {
+              // Storage disabled -- the note simply reappears next visit, which is harmless.
+            }
+          }}
+        >
+          <X className="size-4" aria-hidden="true" />
+        </IconButton>
+      </div>
+    </Reveal>
+  )
+}
+
+function RolloverBanner({ sprint }: { sprint: Sprint }) {
+  const t = useT()
+  const rollover = useRolloverSprintMutation()
+  return (
+    <Reveal>
+      <div className="flex flex-wrap items-center gap-3 rounded-md border border-attention/40 bg-attention/10 px-4 py-3">
+        <Badge tone="warning">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
+        <p className="min-w-0 flex-1 text-small text-foreground">
+          {sprint.goal
+            ? t('personal.today.rollover.bannerGoal', { goal: sprint.goal })
+            : t('personal.today.rollover.banner')}
+        </p>
+        <Button
+          size="sm"
+          loading={rollover.isPending}
+          onClick={() => {
+            const range = defaultSprintRange(sprint.kind)
+            rollover.mutate(
+              { id: sprint.id, input: { ...range, goal: sprint.goal } },
+              {
+                onSuccess: (result) =>
+                  toast(t('personal.sprints.rollover.toast', { count: result.movedTaskCount })),
+                onError: () => toast(t('toast.saveError')),
+              },
+            )
+          }}
+        >
+          <RotateCcw className="size-4" aria-hidden="true" />
+          {t('personal.sprints.rollover.action')}
+        </Button>
+      </div>
+    </Reveal>
+  )
+}
+
+function SprintHero({ sprint, taskCount }: { sprint: Sprint; taskCount: number }) {
+  const t = useT()
+  const [, setTick] = React.useState(0)
+  React.useEffect(() => {
+    const id = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
+  const pct = sprintElapsedPct(sprint)
+  const remainingMs = Math.max(0, new Date(sprint.endsAt).getTime() - Date.now())
+
+  return (
+    <Card padding="md" className="flex items-center gap-4">
+      <ProgressRing
+        value={pct}
+        size={56}
+        strokeWidth={5}
+        label={t('personal.today.period.progressAria')}
+      >
+        <Target className="size-4 text-primary" aria-hidden="true" />
+      </ProgressRing>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
+          <span className="text-caption tabular-nums text-muted-foreground">
+            {t('personal.today.period.timeLeft', { value: formatTimeLeft(t, remainingMs) })}
+          </span>
+        </div>
+        {sprint.goal ? (
+          <p className="truncate font-display text-h3 text-foreground">{sprint.goal}</p>
+        ) : (
+          <p className="text-body text-muted-foreground">{t('personal.today.period.noGoal')}</p>
+        )}
+      </div>
+      <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-caption tabular-nums text-muted-foreground">
+        {t('personal.tasks.openCount', { count: taskCount })}
+      </span>
+    </Card>
+  )
+}
 
 export function TodayView({
   focusedTaskId,
@@ -15,9 +161,15 @@ export function TodayView({
   onFocusTask: (id: string | null) => void
 }) {
   const t = useT()
+  const locale = useLocale()
   const sprintsQuery = useSprintsQuery()
   const tasksQuery = useTasksQuery()
   const patchTask = usePatchTaskMutation()
+  const createTask = useCreateTaskMutation()
+  const quickAddAi = useQuickAddAi(t, locale)
+
+  const [quickAddText, setQuickAddText] = React.useState('')
+  const quickAddInputRef = React.useRef<HTMLInputElement>(null)
 
   if (sprintsQuery.isPending || tasksQuery.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
@@ -40,73 +192,192 @@ export function TodayView({
   }
 
   const activeSprints = sprintsQuery.data.filter((s) => s.status === 'active')
+  const ongoingSprints = activeSprints.filter((s) => !sprintHasEnded(s))
+  const endedSprints = activeSprints.filter((s) => sprintHasEnded(s))
   const activeSprintIds = new Set(activeSprints.map((s) => s.id))
-  const todaysTasks = tasksQuery.data
-    .filter(
-      (task) =>
-        task.doneAt === null && (task.sprintId === null || activeSprintIds.has(task.sprintId)),
-    )
+  const allTasks = tasksQuery.data
+  const inScope = (task: Task) => task.sprintId === null || activeSprintIds.has(task.sprintId)
+  const totalTasksInScope = allTasks.filter(inScope)
+  const todaysTasks = totalTasksInScope
+    .filter((task) => task.doneAt === null)
     .sort((a, b) => a.sort - b.sort)
+  const targetSprintId = ongoingSprints[0]?.id ?? null
+
+  function submitQuickAdd(title: string) {
+    const trimmed = title.trim()
+    if (!trimmed) return
+    const siblingCount = allTasks.filter(
+      (tk) => tk.sprintId === targetSprintId && tk.parentId === null,
+    ).length
+    createTask.mutate(
+      { title: trimmed, sprintId: targetSprintId, sort: siblingCount },
+      {
+        onSuccess: () => {
+          setQuickAddText('')
+          quickAddAi.discard()
+        },
+        onError: () => toast(t('toast.saveError')),
+      },
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      {activeSprints.length > 0 ? (
-        <section className="flex flex-col gap-2">
-          {activeSprints
-            .filter((s) => s.goal)
-            .map((s) => (
-              <div
-                key={s.id}
-                className="flex items-start gap-2 rounded-md border border-border bg-card p-3"
-              >
-                <Target className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
-                <p className="text-body text-foreground">{s.goal}</p>
-              </div>
-            ))}
-        </section>
+      <PrivacyNote />
+
+      {endedSprints.map((sprint) => (
+        <RolloverBanner key={sprint.id} sprint={sprint} />
+      ))}
+
+      {ongoingSprints.length > 0 ? (
+        <Stagger className="flex flex-col gap-3" as="section">
+          {ongoingSprints.map((sprint) => (
+            <StaggerItem key={sprint.id}>
+              <SprintHero
+                sprint={sprint}
+                taskCount={
+                  allTasks.filter((tk) => tk.sprintId === sprint.id && tk.doneAt === null).length
+                }
+              />
+            </StaggerItem>
+          ))}
+        </Stagger>
       ) : null}
 
-      <section className="flex flex-col gap-1">
-        <h3 className="mb-1 text-h3 text-foreground">{t('personal.today.tasks.title')}</h3>
+      <section className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-h3 text-foreground">{t('personal.today.tasks.title')}</h3>
+          {totalTasksInScope.length > 0 ? (
+            <span className="text-caption tabular-nums text-muted-foreground">
+              {t('personal.today.tasks.remaining', { count: todaysTasks.length })}
+            </span>
+          ) : null}
+        </div>
+
         {todaysTasks.length === 0 ? (
-          <StateView
-            kind="empty"
-            titleKey="personal.today.empty.title"
-            bodyKey="personal.today.empty.body"
-          />
+          totalTasksInScope.length > 0 ? (
+            <Reveal className="flex flex-col items-center gap-3 rounded-md border border-border bg-card px-6 py-10 text-center">
+              <AllDoneIllustration className="w-40 max-w-full text-illustration-ink" />
+              <h3 className="font-display text-h3 text-foreground">
+                {t('personal.today.allDone.title')}
+              </h3>
+              <p className="max-w-100 text-body text-muted-foreground">
+                {t('personal.today.allDone.body')}
+              </p>
+            </Reveal>
+          ) : (
+            <StateView
+              kind="empty"
+              titleKey="personal.today.empty.title"
+              bodyKey="personal.today.empty.body"
+              illustration={<EmptyPersonalIllustration />}
+            />
+          )
         ) : (
-          <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-            {todaysTasks.map((task) => (
-              <li key={task.id} className="flex items-center gap-2 px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={task.doneAt !== null}
-                  onChange={() =>
-                    patchTask.mutate({ id: task.id, input: { done: true, version: task.version } })
-                  }
-                  aria-label={t('personal.tasks.toggleDone')}
-                  className="size-4 shrink-0 rounded-sm border-border"
-                />
-                <span className="min-w-0 flex-1 truncate text-body text-foreground">
-                  {task.title}
-                </span>
-                {task.estimateMin ? (
-                  <span className="shrink-0 text-caption text-muted-foreground">
-                    {task.estimateMin}′
-                  </span>
-                ) : null}
-                <Button
-                  size="sm"
-                  variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
-                  onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
-                >
-                  <Play className="size-3.5" aria-hidden="true" />
-                  {t('personal.today.focus')}
-                </Button>
-              </li>
-            ))}
-          </ul>
+          <Stagger
+            as="ul"
+            className="flex flex-col divide-y divide-border rounded-md border border-border"
+          >
+            {todaysTasks.map((task) => {
+              const sourceSprint = activeSprints.find((s) => s.id === task.sprintId)
+              return (
+                <StaggerItem key={task.id} as="li">
+                  <div className="flex items-center gap-2 px-3 py-2 transition-colors duration-(--dur-micro) hover:bg-accent/40">
+                    <Checkbox
+                      celebrate
+                      checked={task.doneAt !== null}
+                      onCheckedChange={() =>
+                        patchTask.mutate({
+                          id: task.id,
+                          input: { done: task.doneAt === null, version: task.version },
+                        })
+                      }
+                      aria-label={t('personal.tasks.toggleDone')}
+                      size="sm"
+                      className="relative shrink-0"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-body text-foreground">
+                      {task.title}
+                    </span>
+                    {task.sprintId === null && (
+                      <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
+                    )}
+                    {task.sprintId !== null && sourceSprint && (
+                      <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}</Badge>
+                    )}
+                    {task.estimateMin ? (
+                      <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+                        {task.estimateMin}′
+                      </span>
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant={focusedTaskId === task.id ? 'primary' : 'ghost'}
+                      onClick={() => onFocusTask(focusedTaskId === task.id ? null : task.id)}
+                    >
+                      <Play className="size-3.5" aria-hidden="true" />
+                      {t('personal.today.focus')}
+                    </Button>
+                  </div>
+                </StaggerItem>
+              )
+            })}
+          </Stagger>
         )}
+
+        <form
+          className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-border px-2 py-1"
+          onSubmit={(e) => {
+            e.preventDefault()
+            submitQuickAdd(quickAddText)
+          }}
+        >
+          <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Input
+            ref={quickAddInputRef}
+            value={quickAddText}
+            onChange={(e) => setQuickAddText(e.target.value)}
+            placeholder={t('personal.today.addPlaceholder')}
+            className="h-8 border-none bg-transparent px-1 shadow-none focus-visible:ring-0"
+          />
+          <SparkleButton
+            aria-label={t('personal.ai.quickAdd.action')}
+            size="sm"
+            loading={quickAddAi.state?.status === 'pending'}
+            disabled={!quickAddText.trim()}
+            onClick={() => quickAddAi.run(quickAddText)}
+          />
+        </form>
+
+        {quickAddAi.state ? (
+          <Reveal>
+            <AiPreviewPanel
+              title={t('personal.ai.quickAdd.title')}
+              status={quickAddAi.state.status}
+              pendingLabel={t('personal.ai.pending')}
+              acceptLabel={t('personal.ai.accept')}
+              editLabel={t('personal.ai.edit')}
+              discardLabel={t('personal.ai.discard')}
+              {...(quickAddAi.state.status === 'error'
+                ? { errorMessage: quickAddAi.state.message }
+                : {})}
+              {...(quickAddAi.state.status === 'ready'
+                ? { costLine: quickAddAi.state.costLine }
+                : {})}
+              onAccept={() =>
+                quickAddAi.state?.status === 'ready' && submitQuickAdd(quickAddAi.state.title)
+              }
+              onDiscard={quickAddAi.discard}
+              onEdit={() => {
+                if (quickAddAi.state?.status === 'ready') setQuickAddText(quickAddAi.state.title)
+                quickAddAi.discard()
+                requestAnimationFrame(() => quickAddInputRef.current?.focus())
+              }}
+            >
+              {quickAddAi.state.status === 'ready' ? <p>{quickAddAi.state.title}</p> : null}
+            </AiPreviewPanel>
+          </Reveal>
+        ) : null}
       </section>
     </div>
   )
