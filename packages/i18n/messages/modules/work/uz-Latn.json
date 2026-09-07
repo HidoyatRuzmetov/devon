@@ -6,7 +6,7 @@
     "view": {
       "board": "Doska",
       "table": "Jadval",
-      "timeline": "Grafik",
+      "timeline": "Muddatlar",
       "calendar": "Taqvim",
       "mine": "Mening vazifalarim",
       "archive": "Arxiv"
@@ -139,12 +139,43 @@
     "table": {
       "open": "Ochish",
       "emptyTitle": "Vazifalar topilmadi",
-      "emptyBody": "Filtrni oʻzgartiring yoki yangi vazifa qoʻshing."
+      "emptyBody": "Filtrni oʻzgartiring yoki yangi vazifa qoʻshing.",
+      "selectAll": "Barchasini tanlash",
+      "density": {
+        "label": "Zichlik",
+        "compact": "Ixcham",
+        "comfortable": "Keng"
+      },
+      "bulk": {
+        "selectedCount": "{count} ta tanlandi",
+        "assign": "Biriktirish",
+        "addLabel": "Yorliq qoʻshish",
+        "archived": "{count} ta vazifa arxivlandi",
+        "clear": "Bekor qilish"
+      }
     },
     "timeline": {
       "today": "Bugun",
       "emptyTitle": "Muddati belgilangan vazifalar yoʻq",
-      "emptyBody": "Grafikda faqat muddati bor faol vazifalar koʻrinadi."
+      "emptyBody": "Bu yerda faqat muddati bor faol vazifalar koʻrinadi.",
+      "groupByLabel": "Guruhlash",
+      "groupBy": {
+        "person": "Xodim boʻyicha",
+        "project": "Loyiha boʻyicha"
+      },
+      "zoomLabel": "Masshtab",
+      "zoom": {
+        "day": "Kun",
+        "week": "Hafta",
+        "month": "Oy"
+      },
+      "noProject": "Loyihasiz",
+      "dateChanged": "\"{title}\" sanasi yangilandi",
+      "resizeStart": "Boshlanish sanasini oʻzgartirish",
+      "resizeEnd": "Muddatni oʻzgartirish",
+      "legend": {
+        "onTrack": "Faol"
+      }
     },
     "calendar": {
       "prev": "Oldingi oy",

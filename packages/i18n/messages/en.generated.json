@@ -1891,7 +1891,8 @@
       "addSubjectivePlaceholder": "Add a personal card"
     },
     "action": {
-      "archive": "Archive project"
+      "archive": "Archive project",
+      "archived": "\"{title}\" archived"
     },
     "ai": {
       "plan": "Suggest today's order",
@@ -2214,12 +2215,43 @@
     "table": {
       "open": "Open",
       "emptyTitle": "No cards found",
-      "emptyBody": "Adjust the filter or add a new card."
+      "emptyBody": "Adjust the filter or add a new card.",
+      "selectAll": "Select all",
+      "density": {
+        "label": "Density",
+        "compact": "Compact",
+        "comfortable": "Comfortable"
+      },
+      "bulk": {
+        "selectedCount": "{count} selected",
+        "assign": "Assign",
+        "addLabel": "Add label",
+        "archived": "{count} card(s) archived",
+        "clear": "Clear selection"
+      }
     },
     "timeline": {
       "today": "Today",
       "emptyTitle": "No cards with a due date",
-      "emptyBody": "The timeline only shows active cards that have a due date."
+      "emptyBody": "This view only shows active cards that have a due date.",
+      "groupByLabel": "Group by",
+      "groupBy": {
+        "person": "By person",
+        "project": "By project"
+      },
+      "zoomLabel": "Zoom",
+      "zoom": {
+        "day": "Day",
+        "week": "Week",
+        "month": "Month"
+      },
+      "noProject": "No project",
+      "dateChanged": "\"{title}\"'s date updated",
+      "resizeStart": "Change start date",
+      "resizeEnd": "Change due date",
+      "legend": {
+        "onTrack": "Active"
+      }
     },
     "calendar": {
       "prev": "Previous month",

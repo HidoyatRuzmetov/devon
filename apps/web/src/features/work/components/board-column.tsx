@@ -21,6 +21,7 @@ import { ProjectTile } from '../../projects/components/project-tile.js'
 import type { Project } from '../../projects/api.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
+import { useIsTouchDropTarget } from '../lib/touch-drag.js'
 import { CARD_DRAG_TYPE, CardTile, type CardDropSpec } from './card-tile.js'
 import { QuickAddBar } from './quick-add-bar.js'
 
@@ -91,6 +92,7 @@ export function BoardColumn({
   const userId = member?.userId ?? null
   const columnKey = userId ?? 'unassigned'
   const [collapsed, setCollapsed] = useColumnCollapsed(columnKey)
+  const touchOver = useIsTouchDropTarget(columnKey)
 
   React.useEffect(() => {
     onCollapsedChange?.(columnKey, collapsed)
@@ -206,7 +208,8 @@ export function BoardColumn({
           grow instead, exactly the "board is not a board" defect this fixes. */}
       <div
         ref={listRef}
-        data-drop-target={isDropTarget || undefined}
+        data-dnd-column={columnKey}
+        data-drop-target={isDropTarget || touchOver || undefined}
         className="min-h-0 flex-1 overflow-y-auto rounded-md p-1 outline-2 outline-offset-2
           outline-transparent transition-colors duration-(--dur-micro)
           data-[drop-target]:bg-accent/40 data-[drop-target]:outline-primary/40"
