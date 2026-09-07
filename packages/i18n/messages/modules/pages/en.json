@@ -56,7 +56,7 @@
     },
     "onboarding": {
       "title": "Onboarding checklist",
-      "subtitle": "When a newcomer joins the department, the items below are added to their own personal task list automatically.",
+      "subtitle": "When a newcomer joins the department, the items below are added to their own personal to-do list automatically.",
       "enable": "Enable",
       "enabled": "Enabled",
       "disabled": "Disabled",
