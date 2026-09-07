@@ -1,0 +1,32 @@
+{
+  "name": "@devon/ai",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GLM-5.2 gateway (TECH-SPEC §8): the OpenAI-compatible chat call, tool-call Zod validation, per-department UZS budgets, per-call traces, feature flags, a mock provider, and one prompt+schema per AI feature.",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint --config ../config/eslint/base.js . && prettier --check --config ../config/prettier.config.js --ignore-unknown \"src/**/*.ts\" \"test/**/*.ts\" \"*.json\"",
+    "test:unit": "vitest run --config test/vitest.config.ts",
+    "build": "tsc -p tsconfig.json",
+    "evals": "tsx evals/run.ts"
+  },
+  "dependencies": {
+    "@devon/contracts": "workspace:*",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@devon/config": "workspace:*",
+    "@types/node": "22.20.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "eslint": "10.10.0",
+    "prettier": "3.7.1",
+    "tsx": "4.23.13",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  }
+}
