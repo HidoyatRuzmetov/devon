@@ -4,7 +4,7 @@
     "phoneMock": {
       "online": "onlayn",
       "replyMessage": "Ulandi! Endi Devon bildirishnomalari shu yerga keladi.",
-      "connectedMessage": "Siz ulandingiz -- Devon bildirishnomalari shu chatga keladi."
+      "connectedMessage": "Siz ulandingiz — Devon bildirishnomalari shu chatga keladi."
     },
     "notConfigured": {
       "title": "Telegram hali ulanmagan",

@@ -3,7 +3,7 @@
 // feature flags, head-editable), Usage (recent traces), Assistant (`assistant-panel.tsx`'s preview-
 // then-accept panel).
 import * as React from 'react'
-import { useT, useLocale, formatDate, formatTime, formatUzs } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatTime, formatUzs, formatNumber } from '@devon/i18n'
 import {
   Badge,
   Button,
@@ -74,7 +74,7 @@ function BudgetGauge({
         label={t('ai.budget.title')}
       >
         <span className="text-small font-medium tabular-nums text-foreground">
-          {Math.round(Math.min(100, usedPct))}%
+          {formatNumber(Math.round(Math.min(100, usedPct)), locale)}%
         </span>
       </ProgressRing>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -250,10 +250,12 @@ function UsageTab() {
                     {t(`ai.usage.status.${trace.status}`)}
                   </Badge>
                 </td>
-                <td className="px-3 py-2 text-foreground">{trace.totalTokens}</td>
+                <td className="px-3 py-2 tabular-nums text-foreground">
+                  {formatNumber(trace.totalTokens, locale)}
+                </td>
                 <td className="px-3 py-2 text-foreground">{formatUzs(trace.costUzs, locale)}</td>
                 <td className="px-3 py-2 text-foreground">
-                  {t('ai.result.latency', { ms: trace.latencyMs })}
+                  {t('ai.result.latency', { ms: formatNumber(trace.latencyMs, locale) })}
                 </td>
               </tr>
             )

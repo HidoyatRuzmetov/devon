@@ -8,6 +8,13 @@ export interface KpiTileProps {
   /** Small-caps eyebrow above the number (DESIGN.md §2.3). */
   label: string
   value: number | null
+  /** Active locale (DESIGN.md §5: "numbers with locale separators") -- passed straight through to
+   * NumberFlow's own `locales`, which formats the ticker with `Intl.NumberFormat` internally.
+   * Without it NumberFlow falls back to the browser's own locale, which can silently diverge from
+   * the app's chosen one (a `uz-Latn` UI on an `en-US` browser rendering `1,234` instead of the
+   * space-grouped `1 234` DESIGN.md asks for). Optional only so existing call sites keep compiling
+   * during the sweep; new call sites should always pass it. */
+  locale?: Intl.LocalesArgument
   /** Appended to the number inside the ticker, e.g. `%`. */
   suffix?: string
   prefix?: string
@@ -34,6 +41,7 @@ export interface KpiTileProps {
 export function KpiTile({
   label,
   value,
+  locale,
   suffix,
   prefix,
   delta = null,
@@ -66,6 +74,7 @@ export function KpiTile({
           <NumberFlow
             value={value}
             animated={!reduced}
+            {...(locale ? { locales: locale } : {})}
             {...(prefix ? { prefix } : {})}
             {...(suffix ? { suffix } : {})}
           />

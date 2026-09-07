@@ -4,7 +4,7 @@
 // cleaned-up `title` is ever used -- the rest of the feature's structured output is simply not
 // applicable here, which is honest rather than inventing fields this module does not have.
 import * as React from 'react'
-import type { useT } from '@devon/i18n'
+import type { useT, Locale } from '@devon/i18n'
 import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { aiCostLine, aiErrorMessageKey } from './ai-helpers.js'
 
@@ -13,7 +13,7 @@ export type QuickAddAiState =
   | { status: 'ready'; title: string; costLine: string }
   | { status: 'error'; message: string }
 
-export function useQuickAddAi(t: ReturnType<typeof useT>, locale: string) {
+export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
   const runMutation = useRunAiFeatureMutation('quick_add_parse')
   const [state, setState] = React.useState<QuickAddAiState | null>(null)
 
@@ -27,7 +27,7 @@ export function useQuickAddAi(t: ReturnType<typeof useT>, locale: string) {
         {
           onSuccess: (res) => {
             const title = String(res.data['title'] ?? trimmed).trim() || trimmed
-            setState({ status: 'ready', title, costLine: aiCostLine(t, res.meta) })
+            setState({ status: 'ready', title, costLine: aiCostLine(t, res.meta, locale) })
           },
           onError: (err) => setState({ status: 'error', message: t(aiErrorMessageKey(err)) }),
         },

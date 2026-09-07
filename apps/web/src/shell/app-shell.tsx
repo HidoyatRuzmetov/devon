@@ -462,7 +462,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ]}
       />
 
-      <Toaster position={isDesktop ? 'bottom-right' : 'bottom-center'} />
+      {/* Package report item 34: at <768px this shell renders `BottomTabBar`, a 60px
+          (`--height-tabbar`) fixed bar with its own safe-area padding -- Sonner's default mobile
+          offset put every toast right on top of it. `mobileOffset` lifts the stack clear of the bar
+          plus its own safe-area inset (the tab bar's padding-bottom is a *visual* inset, not extra
+          height Sonner's own layout knows about) with one gap token of breathing room above it. */}
+      <Toaster
+        position={isDesktop ? 'bottom-right' : 'bottom-center'}
+        mobileOffset={{
+          bottom: 'calc(var(--height-tabbar) + env(safe-area-inset-bottom) + var(--space-3))',
+        }}
+      />
     </div>
   )
 }

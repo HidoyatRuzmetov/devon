@@ -22,7 +22,7 @@
       "discard": "Discard",
       "retry": "Retry",
       "resultWithFilter": "Filter: {filter}",
-      "resultNoFilter": "Could not map this to a filter -- try rephrasing it.",
+      "resultNoFilter": "Could not map this to a filter — try rephrasing it.",
       "errors": {
         "invalid": "Check the question and try again",
         "forbidden": "Ask analytics is off or the AI budget is used up",

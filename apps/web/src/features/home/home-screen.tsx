@@ -8,7 +8,7 @@
 // state, loading, offline, redirect-to-login) is reproduced here first, verbatim, before any of this
 // module's own content renders.
 import * as React from 'react'
-import { useT, useLocale } from '@devon/i18n'
+import { useT, useLocale, formatNumber } from '@devon/i18n'
 import {
   Card,
   cn,
@@ -18,6 +18,7 @@ import {
   Reveal,
   Stagger,
   StaggerItem,
+  StatNumber,
   StateView,
   WelcomeIllustration,
 } from '@devon/ui'
@@ -63,10 +64,19 @@ const SECTION_BY_KEY: Record<AnalyticsChartKey, React.ComponentType<SectionProps
 
 /** One of the three "what is being asked of me" tiles. A tile that has nothing to say still renders
  * -- three tiles that come and go would move the two that remain, and the shape of Home is part of
- * what makes it readable in ten seconds. */
+ * what makes it readable in ten seconds.
+ *
+ * UI-OVERHAUL.md's critique (item 35): these three led with a prose sentence ("11 ta ochiq, 3 tasi
+ * muddatidan o'tgan") and buried the count inside it, unlike every KpiTile on this same page and on
+ * Linear's own "My issues" tile, which show the number first. `value` is now the tile's own headline,
+ * rendered through `StatNumber` (a bare NumberFlow ticker, locale-aware) exactly the way `KpiTile`
+ * renders its number -- the icon + title move up to a small eyebrow row, the full sentence (still
+ * carrying the secondary breakdown, e.g. the overdue count) reads underneath as the "prose second"
+ * the critique asked for. */
 function DashboardTile({
   icon: Icon,
   titleKey,
+  value,
   bodyKey,
   bodyParams,
   ctaKey,
@@ -75,6 +85,7 @@ function DashboardTile({
 }: {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   titleKey: string
+  value: number
   bodyKey: string
   bodyParams?: Record<string, string | number>
   ctaKey?: string
@@ -82,22 +93,30 @@ function DashboardTile({
   tone?: 'attention' | 'neutral'
 }) {
   const t = useT()
+  const locale = useLocale()
   return (
     <Card
       interactive={Boolean(onCta)}
-      className="flex h-full flex-col gap-3"
+      className="flex h-full flex-col gap-2"
       {...(onCta ? { onClick: onCta } : {})}
     >
-      <span
-        className={
-          tone === 'attention'
-            ? 'inline-flex size-9 items-center justify-center rounded-sm bg-attention/20 text-foreground'
-            : 'inline-flex size-9 items-center justify-center rounded-sm bg-accent text-accent-foreground'
-        }
-      >
-        <Icon className="size-4.5" aria-hidden="true" />
+      <div className="flex items-center gap-2">
+        <span
+          className={
+            tone === 'attention'
+              ? 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm bg-attention/20 text-foreground'
+              : 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm bg-accent text-accent-foreground'
+          }
+        >
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
+        <h3 className="min-w-0 truncate text-small font-medium text-muted-foreground">
+          {t(titleKey)}
+        </h3>
+      </div>
+      <span className="font-display text-h1 tabular-nums text-foreground">
+        <StatNumber value={value} locale={locale} />
       </span>
-      <h3 className="text-lead font-medium text-foreground">{t(titleKey)}</h3>
       <p className="flex-1 text-body text-muted-foreground">{t(bodyKey, bodyParams)}</p>
       {ctaKey && onCta ? (
         <span className="inline-flex items-center gap-1 text-small font-medium text-primary">
@@ -128,52 +147,59 @@ function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
   return (
     <Reveal>
       <Card className="flex flex-col gap-4">
+        {/* One grid: an illustration column, then a single content column that the title, the
+            progress bar AND the checklist rows all share -- previously the list sat as a sibling of
+            the title's own flex row, so it started flush with the card's left edge (one grid column
+            left of "Boshlash" itself) instead of lining up under it. */}
         <div className="flex items-start gap-4">
           <WelcomeIllustration className="hidden w-28 shrink-0 sm:block" />
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h3 className="text-lead font-medium text-foreground">
-              {t('home.dashboard.onboarding.title')}
-            </h3>
-            <p className="text-small tabular-nums text-muted-foreground">
-              {t('home.dashboard.onboarding.body', { done, total: items.length })}
-            </p>
-            <Progress
-              value={(done / items.length) * 100}
-              label={t('home.dashboard.onboarding.title')}
-              size="sm"
-            />
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <div className="flex flex-col gap-2">
+              <h3 className="text-lead font-medium text-foreground">
+                {t('home.dashboard.onboarding.title')}
+              </h3>
+              <p className="text-small tabular-nums text-muted-foreground">
+                {t('home.dashboard.onboarding.body', { done, total: items.length })}
+              </p>
+              <Progress
+                value={(done / items.length) * 100}
+                label={t('home.dashboard.onboarding.title')}
+                size="sm"
+              />
+            </div>
+            <ul className="flex flex-col gap-0.5">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={item.onGo}
+                    className="flex min-h-10 w-full items-center gap-3 rounded-sm px-2 text-left text-body text-foreground transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {/* A real Checkbox renders Radix's own button element with role=checkbox --
+                        nesting that inside this row's own button is invalid HTML (a button inside a
+                        button) and threw a React hydration warning (found clicking through Home,
+                        2026-09). This row's checkmark is purely a status glyph (the click target and
+                        the "done" state both live on the outer button), so it renders as a plain
+                        decorative span with the same visual language as Checkbox, not the
+                        interactive primitive. */}
+                    <span
+                      aria-hidden="true"
+                      className={cn(
+                        'inline-flex size-5 shrink-0 items-center justify-center rounded-sm border border-border bg-card text-primary-foreground',
+                        item.done && 'border-primary bg-primary',
+                      )}
+                    >
+                      {item.done ? <Check className="size-3.5" aria-hidden="true" /> : null}
+                    </span>
+                    <span className={item.done ? 'text-muted-foreground line-through' : undefined}>
+                      {t(item.labelKey)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-        <ul className="flex flex-col gap-1">
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                onClick={item.onGo}
-                className="flex min-h-11 w-full items-center gap-3 rounded-sm px-2 text-left text-body text-foreground transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {/* A real Checkbox renders Radix's own button element with role=checkbox -- nesting
-                    that inside this row's own button is invalid HTML (a button inside a button) and
-                    threw a React hydration warning (found clicking through Home, 2026-09). This row's
-                    checkmark is purely a status glyph (the click target and the "done" state both live
-                    on the outer button), so it renders as a plain decorative span with the same visual
-                    language as Checkbox, not the interactive primitive. */}
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    'inline-flex size-5 shrink-0 items-center justify-center rounded-sm border border-border bg-card text-primary-foreground',
-                    item.done && 'border-primary bg-primary',
-                  )}
-                >
-                  {item.done ? <Check className="size-3.5" aria-hidden="true" /> : null}
-                </span>
-                <span className={item.done ? 'text-muted-foreground line-through' : undefined}>
-                  {t(item.labelKey)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
       </Card>
     </Reveal>
   )
@@ -237,6 +263,7 @@ function PinnedCharts() {
 
 function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
   const t = useT()
+  const locale = useLocale()
   const overviewQuery = usePersonalOverviewQuery()
 
   if (overviewQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -293,8 +320,12 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
             <DashboardTile
               icon={ListTodo}
               titleKey="home.dashboard.dueFromMe.title"
+              value={p.openCount}
               bodyKey="home.dashboard.dueFromMe.body"
-              bodyParams={{ open: p.openCount, overdue: p.overdueCount }}
+              bodyParams={{
+                open: formatNumber(p.openCount, locale),
+                overdue: formatNumber(p.overdueCount, locale),
+              }}
               ctaKey="home.dashboard.dueFromMe.cta"
               onCta={() => navigate('/work/mine')}
               tone={p.overdueCount > 0 ? 'attention' : 'neutral'}
@@ -305,8 +336,9 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
               <DashboardTile
                 icon={Gavel}
                 titleKey="home.dashboard.needsMyDecision.title"
+                value={p.givenOverdueCount}
                 bodyKey="home.dashboard.needsMyDecision.body"
-                bodyParams={{ count: p.givenOverdueCount }}
+                bodyParams={{ count: formatNumber(p.givenOverdueCount, locale) }}
                 ctaKey="home.dashboard.dueFromMe.cta"
                 onCta={() => navigate('/work')}
                 tone="attention"
@@ -315,6 +347,7 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
               <DashboardTile
                 icon={Gavel}
                 titleKey="home.dashboard.needsMyDecision.title"
+                value={0}
                 bodyKey="home.dashboard.needsMyDecision.empty"
               />
             )}
@@ -323,8 +356,9 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
             <DashboardTile
               icon={CalendarDays}
               titleKey="home.dashboard.aroundMe.title"
+              value={p.upcomingEventCount}
               bodyKey="home.dashboard.aroundMe.body"
-              bodyParams={{ count: p.upcomingEventCount }}
+              bodyParams={{ count: formatNumber(p.upcomingEventCount, locale) }}
               ctaKey="home.dashboard.aroundMe.cta"
               onCta={() => navigate('/events')}
             />
@@ -337,6 +371,7 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
           <KpiTile
             label={t('home.dashboard.personal.onTimeRate')}
             value={p.onTimeRate === null ? null : Math.round(p.onTimeRate * 100)}
+            locale={locale}
             suffix="%"
             question={t('home.dashboard.kpi.onTimeQuestion')}
           />
@@ -345,6 +380,7 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
           <KpiTile
             label={t('home.dashboard.personal.focusMinutes')}
             value={p.focusMinutesThisWeek}
+            locale={locale}
             question={t('home.dashboard.kpi.focusQuestion')}
           />
         </StaggerItem>

@@ -4,7 +4,7 @@
 // times -- same convention as `apps/web/src/features/ai/assistant-panel.tsx`'s own local helper,
 // which this mirrors, since `features/ai` is import-only from this module (UI-OVERHAUL.md: a wave
 // agent never edits another feature's folder).
-import type { useT } from '@devon/i18n'
+import { formatNumber, type useT, type Locale } from '@devon/i18n'
 import { ApiError } from '../../../lib/api-client.js'
 
 /** Maps a failed `useRunAiFeatureMutation` call to one of the generic `ai.errors.*` message keys the
@@ -20,10 +20,14 @@ export function aiErrorMessageKey(err: unknown): string {
 }
 
 /** The `costLine` every `<AiPreviewPanel>` shows in its footer (TECH-SPEC §8: "the cost of every run
- * is visible") -- tokens and latency, reusing the `ai` module's own generic wording. */
+ * is visible") -- tokens and latency, reusing the `ai` module's own generic wording. Both numbers go
+ * through `formatNumber` before they reach `t()` -- `t()`'s own interpolation is a bare `String()`
+ * (packages/i18n/src/t.ts), so a locale-formatted string has to be built first and handed in as the
+ * param, exactly like `formatUzs` already is at every other AI cost-line call site. */
 export function aiCostLine(
   t: ReturnType<typeof useT>,
   meta: { totalTokens: number; latencyMs: number },
+  locale: Locale,
 ): string {
-  return `${t('ai.result.tokens', { count: meta.totalTokens })} · ${t('ai.result.latency', { ms: meta.latencyMs })}`
+  return `${t('ai.result.tokens', { count: formatNumber(meta.totalTokens, locale) })} · ${t('ai.result.latency', { ms: formatNumber(meta.latencyMs, locale) })}`
 }

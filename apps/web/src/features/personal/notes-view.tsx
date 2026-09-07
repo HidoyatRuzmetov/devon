@@ -98,7 +98,7 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
             status: 'ready',
             text: translated || text,
             targetLocale,
-            costLine: aiCostLine(t, res.meta),
+            costLine: aiCostLine(t, res.meta, locale),
           })
         },
         onError: (err) => setTranslateAi({ status: 'error', message: t(aiErrorMessageKey(err)) }),

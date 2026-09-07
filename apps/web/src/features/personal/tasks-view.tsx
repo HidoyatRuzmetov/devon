@@ -208,7 +208,12 @@ export function TasksView() {
       {
         onSuccess: (res) => {
           const title = String(res.data['title'] ?? text).trim() || text
-          setQuickAddAi({ sectionKey, status: 'ready', title, costLine: aiCostLine(t, res.meta) })
+          setQuickAddAi({
+            sectionKey,
+            status: 'ready',
+            title,
+            costLine: aiCostLine(t, res.meta, locale),
+          })
         },
         onError: (err) =>
           setQuickAddAi({ sectionKey, status: 'error', message: t(aiErrorMessageKey(err)) }),
@@ -256,7 +261,7 @@ export function TasksView() {
             taskId: node.id,
             status: 'ready',
             subtasks,
-            costLine: aiCostLine(t, res.meta),
+            costLine: aiCostLine(t, res.meta, locale),
             editing: false,
           })
           setSubtaskDraft(subtasks.join('\n'))

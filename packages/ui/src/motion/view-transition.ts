@@ -37,3 +37,15 @@ export const PAGE_VIEW_TRANSITION_NAME = 'devon-page'
 
 /** The `view-transition-name` used by the theme toggle's circular reveal. */
 export const THEME_VIEW_TRANSITION_NAME = 'devon-theme'
+
+/** Set on `<html>` for exactly the duration of a theme transition (`useViewTransitionTheme`), so the
+ * paired rule in `styles/tokens.css` can exclude any OTHER element's own permanent
+ * `view-transition-name` (`PageTransition`'s `devon-page`, always set once the browser supports the
+ * API -- see that file) from this transition's snapshot. Without it, `document.startViewTransition()`
+ * being unscoped ("root") still sweeps up every named element in the document as its OWN separate
+ * transition group; `devon-page` carries a real crossfade+slide animation
+ * (`::view-transition-old/new(devon-page)`), so that animation played *underneath* the theme's
+ * circular reveal at the same time -- the literal cause of the "greeting printed twice mid-transition"
+ * defect (UI-OVERHAUL.md's "no double exposure -- circular reveal only where View Transitions
+ * exist"). */
+export const THEME_TRANSITION_CLASS = 'devon-theme-transition'

@@ -12,7 +12,7 @@
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Only you can see what's in this workspace -- not your department head, not anyone else.",
+      "note": "Only you can see what's in this workspace — not your department head, not anyone else.",
       "dismiss": "Dismiss"
     },
     "duration": {
@@ -86,7 +86,7 @@
       "pin": "Pin",
       "unpin": "Unpin",
       "autosave": { "saving": "Saving…", "saved": "Saved" },
-      "empty": { "title": "No notes yet", "body": "Notes are just for you -- jot down anything." }
+      "empty": { "title": "No notes yet", "body": "Notes are just for you — jot down anything." }
     },
     "canvas": {
       "create": "New canvas",
@@ -162,8 +162,11 @@
       },
       "log": {
         "title": "Session log",
+        "today": "Today",
+        "yesterday": "Yesterday",
         "completed": "Completed",
         "skipped": "Skipped",
+        "showMore": "Show {count} more days",
         "empty": { "title": "No sessions yet", "body": "Start a focus session to see it here." }
       }
     },
@@ -172,7 +175,7 @@
       "accept": "Accept",
       "edit": "Edit",
       "discard": "Discard",
-      "disclaimer": "AI suggestions can be wrong -- always reviewed before anything is added.",
+      "disclaimer": "AI suggestions can be wrong — always reviewed before anything is added.",
       "quickAdd": { "action": "Clean up with AI", "title": "AI clean-up" },
       "subtasks": {
         "action": "Break into subtasks",

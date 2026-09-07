@@ -1,5 +1,9 @@
 import * as React from 'react'
-import { startViewTransition, supportsViewTransitions } from './view-transition.js'
+import {
+  startViewTransition,
+  supportsViewTransitions,
+  THEME_TRANSITION_CLASS,
+} from './view-transition.js'
 
 /** Where the reveal starts. Pass the toggle button's own bounding box centre so the new theme
  * appears to spread out of the button the user just pressed. */
@@ -37,7 +41,13 @@ export function useViewTransitionTheme(): (
       Math.max(point.y, window.innerHeight - point.y),
     )
 
-    void startViewTransition(apply).then(() => undefined)
+    // Exclude every other named `view-transition-name` (the page container's permanent `devon-page`)
+    // from this transition's snapshot for its whole duration -- see THEME_TRANSITION_CLASS's own doc
+    // comment for why an unscoped `startViewTransition()` would otherwise double-expose that element's
+    // text underneath this circular reveal. Removed once the transition (successfully or not) settles.
+    const root = document.documentElement
+    root.classList.add(THEME_TRANSITION_CLASS)
+    void startViewTransition(apply).then(() => root.classList.remove(THEME_TRANSITION_CLASS))
 
     // `startViewTransition` above already ran `apply` inside the transition; the clip animation is
     // attached on the next frame, once the pseudo-elements exist. `document.documentElement.animate`

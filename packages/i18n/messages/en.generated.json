@@ -297,7 +297,7 @@
         "instanceKind": "Instance kind",
         "demo": "Demo",
         "live": "Live",
-        "maintenanceActive": "Maintenance mode is on -- everyone but the super admin is locked out.",
+        "maintenanceActive": "Maintenance mode is on — everyone but the super admin is locked out.",
         "quickLinks": "Quick links",
         "reviewRequests": "Review department requests",
         "manageDepartments": "Manage departments",
@@ -467,7 +467,7 @@
         "maintenanceMessageLabel": "Message",
         "maintenancePreviewLabel": "Preview",
         "maintenancePreviewBadge": "The service is paused for maintenance",
-        "maintenancePreviewEmpty": "No message yet -- people will see the default notice.",
+        "maintenancePreviewEmpty": "No message yet — people will see the default notice.",
         "maintenanceEnable": "Turn on",
         "maintenanceDisable": "Turn off",
         "maintenanceSaveMessage": "Save message",
@@ -847,7 +847,7 @@
       "discard": "Discard",
       "retry": "Retry",
       "resultWithFilter": "Filter: {filter}",
-      "resultNoFilter": "Could not map this to a filter -- try rephrasing it.",
+      "resultNoFilter": "Could not map this to a filter — try rephrasing it.",
       "errors": {
         "invalid": "Check the question and try again",
         "forbidden": "Ask analytics is off or the AI budget is used up",
@@ -1056,7 +1056,7 @@
       "approvalToggleLabel": "Require approval to join",
       "approvalToggleBody": "When on, new members wait for the head's approval.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
-      "saveNowWarning": "Save this now -- it won't be shown again.",
+      "saveNowWarning": "Save this now — it won't be shown again.",
       "linkDescription": "Anyone who opens this link can ask to join your department.",
       "rotateKeyDialogTitle": "Rotate the invite key",
       "rotatePasswordDialogTitle": "Rotate the password"
@@ -1278,9 +1278,9 @@
       "submit": "Submit",
       "update": "Update",
       "deadlinePassed": "The RSVP deadline has passed",
-      "eventFull": "This event is full -- you've been waitlisted",
+      "eventFull": "This event is full — you've been waitlisted",
       "confirmedToast": "Your RSVP is recorded",
-      "waitlistedToast": "Full -- you've been added to the waitlist",
+      "waitlistedToast": "Full — you've been added to the waitlist",
       "myStatus": "Your answer: {status}",
       "notYet": "You haven't answered yet"
     },
@@ -1604,7 +1604,7 @@
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Only you can see what's in this workspace -- not your department head, not anyone else.",
+      "note": "Only you can see what's in this workspace — not your department head, not anyone else.",
       "dismiss": "Dismiss"
     },
     "duration": {
@@ -1708,7 +1708,7 @@
       },
       "empty": {
         "title": "No notes yet",
-        "body": "Notes are just for you -- jot down anything."
+        "body": "Notes are just for you — jot down anything."
       }
     },
     "canvas": {
@@ -1798,8 +1798,11 @@
       },
       "log": {
         "title": "Session log",
+        "today": "Today",
+        "yesterday": "Yesterday",
         "completed": "Completed",
         "skipped": "Skipped",
+        "showMore": "Show {count} more days",
         "empty": {
           "title": "No sessions yet",
           "body": "Start a focus session to see it here."
@@ -1811,7 +1814,7 @@
       "accept": "Accept",
       "edit": "Edit",
       "discard": "Discard",
-      "disclaimer": "AI suggestions can be wrong -- always reviewed before anything is added.",
+      "disclaimer": "AI suggestions can be wrong — always reviewed before anything is added.",
       "quickAdd": {
         "action": "Clean up with AI",
         "title": "AI clean-up"
@@ -1849,7 +1852,7 @@
     "title": "Group projects",
     "description": "Every group project the department is running, and its progress.",
     "emptyTitle": "No projects yet",
-    "emptyBody": "Start the first group project -- from a template or from scratch.",
+    "emptyBody": "Start the first group project — from a template or from scratch.",
     "noIdTitle": "No project selected",
     "noIdBody": "This link is missing a project id.",
     "tile": {
@@ -2025,7 +2028,7 @@
     "phoneMock": {
       "online": "online",
       "replyMessage": "Connected! You'll get your Devon notifications here from now on.",
-      "connectedMessage": "You're connected -- Devon notifications now arrive in this chat."
+      "connectedMessage": "You're connected — Devon notifications now arrive in this chat."
     },
     "notConfigured": {
       "title": "Telegram is not connected yet",

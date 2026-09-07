@@ -147,9 +147,9 @@
       "submit": "Submit",
       "update": "Update",
       "deadlinePassed": "The RSVP deadline has passed",
-      "eventFull": "This event is full -- you've been waitlisted",
+      "eventFull": "This event is full — you've been waitlisted",
       "confirmedToast": "Your RSVP is recorded",
-      "waitlistedToast": "Full -- you've been added to the waitlist",
+      "waitlistedToast": "Full — you've been added to the waitlist",
       "myStatus": "Your answer: {status}",
       "notYet": "You haven't answered yet"
     },

@@ -231,7 +231,7 @@ export function SprintsView() {
             orderedTitles,
             focusTitle,
             note,
-            costLine: aiCostLine(t, res.meta),
+            costLine: aiCostLine(t, res.meta, locale),
             editing: false,
           })
           setPlanDraft(orderedTitles.join('\n'))
@@ -299,7 +299,7 @@ export function SprintsView() {
           setWeeklyAi({
             status: 'ready',
             narrative,
-            costLine: aiCostLine(t, res.meta),
+            costLine: aiCostLine(t, res.meta, locale),
             editing: false,
           })
           setWeeklyDraft(narrative)

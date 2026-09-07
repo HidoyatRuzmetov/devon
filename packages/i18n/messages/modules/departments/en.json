@@ -93,7 +93,7 @@
       "approvalToggleLabel": "Require approval to join",
       "approvalToggleBody": "When on, new members wait for the head's approval.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
-      "saveNowWarning": "Save this now -- it won't be shown again.",
+      "saveNowWarning": "Save this now — it won't be shown again.",
       "linkDescription": "Anyone who opens this link can ask to join your department.",
       "rotateKeyDialogTitle": "Rotate the invite key",
       "rotatePasswordDialogTitle": "Rotate the password"
