@@ -14,6 +14,7 @@ import {
   StateView,
   cn,
   toast,
+  toastWithUndo,
   useReducedMotion,
 } from '@devon/ui'
 import { Plus, X } from 'lucide-react'
@@ -70,12 +71,33 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
     }
   }
 
+  // §11: "poll vote retraction ... use toastWithUndo". Voting replaces the whole ballot server-side
+  // (this file's own header comment) and the API requires at least one option (`optionIds.min(1)`),
+  // so there is no true "vote for nothing" call to make -- the closest, honest retraction available
+  // from here is reverting to whatever the previous ballot was. A first-ever vote has no previous
+  // ballot to revert to, so it gets the plain confirmation instead of an undo it can't fulfil.
+  const previousSelected = poll.options.filter((o) => o.votedByMe).map((o) => o.id)
+
   const handleVote = async () => {
     if (selected.length === 0) return
+    const hadPreviousVote = previousSelected.length > 0
     try {
       await voteMutation.mutateAsync({ pollId: poll.id, optionIds: selected })
       setEditing(false)
-      toast(t('events.polls.vote'))
+      if (hadPreviousVote) {
+        toastWithUndo({
+          message: t('events.polls.voteChangedToast'),
+          undoLabel: t('events.actions.undo'),
+          onUndo: () => {
+            voteMutation.mutate(
+              { pollId: poll.id, optionIds: previousSelected },
+              { onSuccess: () => toast(t('events.polls.voteRevertedToast')) },
+            )
+          },
+        })
+      } else {
+        toast(t('events.polls.votedToast'))
+      }
     } catch {
       toast(t('events.error.title'))
     }

@@ -1,17 +1,22 @@
 // A member card (TECH-SPEC EPIC-003: "member cards") -- the People directory's grid card (avatar,
-// title, unit chip, a hover card with more detail) and, `compact`, the org-chart's role rows.
+// title) and, `compact`, the org-chart's role rows. A `PersonHoverCard` (avatar, title, unit, "open
+// board column") appears on hover/focus (UI-OVERHAUL.md §8 "People directory": Slack-members
+// conventions) -- it is the *only* place the card repeats the unit, because the grid always already
+// groups by unit (a heading, or the active filter chip): saying it again on every card's face is
+// exactly the repeated-null-state the design pass flagged.
 import { useT } from '@devon/i18n'
 import {
   Avatar,
   Badge,
-  Chip,
+  Button,
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
   initialsFromName,
-  unitHueClass,
 } from '@devon/ui'
+import { KanbanSquare } from 'lucide-react'
 import { avatarUrl } from '../../lib/avatar.js'
+import { navigate } from '../../lib/router.js'
 import type { Member, Unit } from './api.js'
 
 const ROLE_KEY = {
@@ -24,18 +29,15 @@ export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymi
   return [m.familyName, m.givenName, m.patronymic].filter(Boolean).join(' ')
 }
 
-function unitColourClass(unit: Unit): string {
-  return unit.colour ? `bg-unit-${unit.colour}` : unitHueClass(unit.id)
-}
-
 export function MemberCard({
   member,
   unit,
   compact = false,
 }: {
   member: Member
-  /** The bo'lim this member belongs to, when known -- renders as a coloured chip (People directory
-   * grid card). Omit where the surrounding layout already groups by unit (nothing left to repeat). */
+  /** The bo'lim this member belongs to, when known -- surfaced only in the hover card's detail, never
+   * on the card's own face, because the grid that renders these cards already groups by unit (a
+   * heading, or the active filter chip). */
   unit?: Unit | null
   compact?: boolean
 }) {
@@ -70,30 +72,12 @@ export function MemberCard({
             <p className="truncate text-caption text-muted-foreground">{member.title}</p>
           ) : null}
         </div>
-        {compact && member.unitRole ? (
+        {member.unitRole ? (
           <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
             {t(ROLE_KEY[member.unitRole])}
           </Badge>
         ) : null}
       </div>
-      {!compact ? (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {unit ? (
-            <Chip dotClassName={unitColourClass(unit)} tone="outline">
-              {unit.name}
-            </Chip>
-          ) : (
-            <span className="text-caption text-muted-foreground">
-              {t('structure.people.memberCard.noUnit')}
-            </span>
-          )}
-          {member.unitRole ? (
-            <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
-              {t(ROLE_KEY[member.unitRole])}
-            </Badge>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   )
 
@@ -132,6 +116,17 @@ export function MemberCard({
             {unit ? unit.name : t('structure.people.memberCard.noUnit')}
           </p>
         </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          className="mt-3 w-full"
+          onClick={() =>
+            navigate(`/work?q=${encodeURIComponent(`assignee:"${member.givenName}"`)}`)
+          }
+        >
+          <KanbanSquare className="size-4" aria-hidden="true" />
+          {t('structure.people.hoverCard.openBoardColumn')}
+        </Button>
       </HoverCardContent>
     </HoverCard>
   )

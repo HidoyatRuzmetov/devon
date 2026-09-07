@@ -18,6 +18,9 @@ const V_GAP = 56
 const MARGIN = 32
 const MIN_SCALE = 0.4
 const MAX_SCALE = 2
+const NAME_MAX_CHARS = 20
+// The name label starts at x=16 and needs room to breathe before the node's right edge.
+const NAME_AVAILABLE_WIDTH = NODE_W - 16 - 12
 
 interface Positioned extends Omit<TreeNode, 'children'> {
   x: number
@@ -362,13 +365,28 @@ export function OrgChart({
                     strokeWidth={isFocused ? 2 : 1}
                   />
                   <rect x={0} y={0} width={6} height={NODE_H} rx={3} fill={unitFillVar(node)} />
+                  {/* Two-layer overflow guard (§25: "org chart nodes must not overflow their box at
+                      long names"): character-count slicing handles the common case, and `textLength`
+                      + `lengthAdjust` forces the SVG renderer to compress whatever remains into the
+                      node's own width regardless of script or glyph width -- a guarantee char-count
+                      alone can't give across locales. A native `<title>` carries the full name as a
+                      hover tooltip either way. */}
                   <text
                     x={16}
                     y={24}
                     className="fill-foreground text-body"
                     style={{ fontWeight: 600 }}
+                    {...(node.name.length > NAME_MAX_CHARS
+                      ? {
+                          textLength: NAME_AVAILABLE_WIDTH,
+                          lengthAdjust: 'spacingAndGlyphs' as const,
+                        }
+                      : {})}
                   >
-                    {node.name.length > 22 ? `${node.name.slice(0, 21)}…` : node.name}
+                    {node.name.length > NAME_MAX_CHARS
+                      ? `${node.name.slice(0, NAME_MAX_CHARS - 1)}…`
+                      : node.name}
+                    <title>{node.name}</title>
                   </text>
                   {head ? (
                     <>

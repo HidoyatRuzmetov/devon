@@ -14,6 +14,7 @@
       "rename": "Nomini oʻzgartirish",
       "renameLabel": "Boʻlim nomi",
       "delete": "Oʻchirish",
+      "rowActions": "Boʻlim amallari",
       "deleteConfirm": {
         "title": "«{name}» oʻchirilsinmi?",
         "body": "Aʼzolar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarish mumkin.",
@@ -94,7 +95,8 @@
       },
       "hoverCard": {
         "membership": "Aʼzolik",
-        "unit": "Boʻlim"
+        "unit": "Boʻlim",
+        "openBoardColumn": "Doskadagi ustunini ochish"
       }
     },
     "common": { "head": "Boshligʻi", "member": "Aʼzo" }

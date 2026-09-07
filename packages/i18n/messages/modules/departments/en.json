@@ -165,6 +165,14 @@
     "switcher": {
       "label": "Switch department",
       "current": "Current department"
+    },
+    "hub": {
+      "statHead": "Head",
+      "statMembers": "Members",
+      "statRole": "Your role",
+      "noHead": "Not yet assigned",
+      "otherMemberships": "Your other memberships",
+      "manageLink": "Open settings"
     }
   }
 }

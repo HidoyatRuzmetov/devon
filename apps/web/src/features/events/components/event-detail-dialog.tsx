@@ -44,17 +44,17 @@ import { ItemsPanel } from './items-panel.js'
 import { PhotosPanel } from './photos-panel.js'
 import { PollsPanel } from './polls-panel.js'
 import { RsvpPanel } from './rsvp-panel.js'
+import { EventChip, type EventChipTone } from './status-chip.js'
 
 // DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an open event is
 // merely available to RSVP to, not an accomplishment, so it reads as `info` (blue), not `success`.
-const STATUS_TONE: Record<EventStatus, 'neutral' | 'success' | 'warning' | 'destructive' | 'info'> =
-  {
-    draft: 'neutral',
-    open: 'info',
-    full: 'warning',
-    cancelled: 'destructive',
-    done: 'neutral',
-  }
+const STATUS_TONE: Record<EventStatus, EventChipTone> = {
+  draft: 'neutral',
+  open: 'info',
+  full: 'warning',
+  cancelled: 'destructive',
+  done: 'neutral',
+}
 
 /** The "organiser update" banner (UI-OVERHAUL.md "organiser update banner with diff"): a distinct
  * amber surface rather than the plain muted box the field list used to sit in, so a change to an
@@ -234,7 +234,10 @@ function EventHeader({
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-h3 text-foreground">{event.title}</h2>
-            <Badge tone={STATUS_TONE[event.status]}>{t(`events.status.${event.status}`)}</Badge>
+            <EventChip tone={STATUS_TONE[event.status]}>
+              {t(`events.status.${event.status}`)}
+            </EventChip>
+            <EventChip tone="outline">{t(`events.category.${event.category}`)}</EventChip>
           </div>
           <p className="text-small text-muted-foreground">
             {t('events.card.organizer', {

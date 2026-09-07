@@ -14,6 +14,7 @@ import {
   cn,
   initialsFromName,
   toast,
+  toastWithUndo,
   useCelebrate,
 } from '@devon/ui'
 import type { EventDto, RsvpDto, RsvpStatus } from '../schemas.js'
@@ -67,19 +68,37 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // The RSVP this reverts to on "Undo" (§11: "RSVP change, cancel RSVP ... use toastWithUndo") --
+    // captured before the mutation fires. A first-ever RSVP has nothing to revert to, so it keeps the
+    // plain toast; a genuine change or cancellation offers undo back to what it was.
+    const previous = event.myRsvp
     try {
       const updated = await mutation.mutateAsync({
         status,
         guests: status === 'yes' ? guests : 0,
         note: note.trim() ? note.trim() : undefined,
       })
-      toast(
-        t(
-          updated.myRsvp?.status === 'waitlist'
+      const toastKey =
+        updated.myRsvp?.status === 'no'
+          ? 'events.rsvp.cancelledToast'
+          : updated.myRsvp?.status === 'waitlist'
             ? 'events.rsvp.waitlistedToast'
-            : 'events.rsvp.confirmedToast',
-        ),
-      )
+            : 'events.rsvp.confirmedToast'
+      if (previous) {
+        toastWithUndo({
+          message: t(toastKey),
+          undoLabel: t('events.actions.undo'),
+          onUndo: () => {
+            void mutation.mutateAsync({
+              status: previous.status,
+              guests: previous.guests,
+              note: previous.note ?? undefined,
+            })
+          },
+        })
+      } else {
+        toast(t(toastKey))
+      }
       if (updated.myRsvp?.status === 'yes') celebrate.fire()
     } catch {
       toast(t('events.error.title'))

@@ -4,14 +4,12 @@
 // instead of a plain fraction, are the two things that make this read as an invitation rather than a
 // row in a table (Luma, Meetup).
 import { useT, useLocale, formatTime, formatMonthShort, type Locale } from '@devon/i18n'
-import { Badge, HoverLift, Progress } from '@devon/ui'
+import { HoverLift, Progress } from '@devon/ui'
 import { EventIllustration } from '../illustrations/index.js'
 import type { EventDto } from '../schemas.js'
+import { EventChip, type EventChipTone } from './status-chip.js'
 
-const STATUS_TONE: Record<
-  EventDto['status'],
-  'neutral' | 'success' | 'warning' | 'destructive' | 'info'
-> = {
+const STATUS_TONE: Record<EventDto['status'], EventChipTone> = {
   // DESIGN.md §2.1: green stays strictly the meaning of success/done/approved -- an open event is
   // merely available to RSVP to, not an accomplishment, so it reads as `info` (blue), not `success`.
   draft: 'neutral',
@@ -110,11 +108,16 @@ export function EventCard({ event, onOpen }: { event: EventDto; onOpen: () => vo
             <DateBlock date={starts} locale={locale} />
           </div>
           <div className="absolute right-3 top-3">
-            <Badge tone={STATUS_TONE[event.status]}>{t(`events.status.${event.status}`)}</Badge>
+            <EventChip tone={STATUS_TONE[event.status]}>
+              {t(`events.status.${event.status}`)}
+            </EventChip>
           </div>
         </div>
         <div className="flex flex-1 flex-col gap-2 p-4">
-          <h3 className="text-lead font-medium text-foreground">{event.title}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lead font-medium text-foreground">{event.title}</h3>
+            <EventChip tone="outline">{t(`events.category.${event.category}`)}</EventChip>
+          </div>
           <p className="text-small text-muted-foreground">
             {formatTime(starts, locale)}
             {event.place ? ` · ${event.place}` : ''}

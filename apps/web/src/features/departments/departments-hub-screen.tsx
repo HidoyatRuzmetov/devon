@@ -1,31 +1,50 @@
 // `/departments` -- the fresh-account landing ("Create a department or join one", TECH-SPEC §2.1)
-// when the signed-in user has no membership yet, and the department switcher/list once they do.
+// when the signed-in user has no membership yet, and the department switcher/hub once they do.
 // Rebuilt to UI-OVERHAUL.md's Jakob row "Departments hub / join" (Slack workspaces, Discord invite):
 // create-or-join as two big illustrated cards, the ambient gradient hub treatment (DESIGN.md v2 §2.6
-// -- allowed here because this is a hub screen, never behind a working board or a form).
-import type { ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowRight, Building2, Plus, Users } from 'lucide-react'
+// -- allowed here because this is a hub screen, never behind a working board or a form), a returning
+// applicant sees their request's status timeline instead of the cards again, and a member sees their
+// current department's facts (name, head, member count, role), the head's invite block (link, QR,
+// password) right on the hub, and a switcher for any other membership.
+import * as React from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { QRCodeSVG } from 'qrcode.react'
+import { ArrowRight, Building2, ChevronRight, Plus, RefreshCw, Users } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
+  Avatar,
   Badge,
   Button,
-  Chip,
   CreateDepartmentIllustration,
   HoverLift,
   HubAmbientWash,
+  Input,
   JoinDepartmentIllustration,
   PageHeader,
   Reveal,
+  SectionCard,
+  Sheet,
+  SheetContent,
+  Skeleton,
   Stagger,
   StaggerItem,
   StateView,
   cardVariants,
   cn,
+  initialsFromName,
+  toast,
 } from '@devon/ui'
-import { useSession, useDepartment } from '../../lib/session.js'
-import { navigate, Link } from '../../lib/router.js'
-import { fetchMyDepartments } from './api.js'
+import { avatarUrl } from '../../lib/avatar.js'
+import { useSession, useDepartment, useMeQuery } from '../../lib/session.js'
+import { navigate } from '../../lib/router.js'
+import {
+  fetchInvite,
+  fetchMembers,
+  fetchMyDepartments,
+  fetchMyRequests,
+  rotateJoinPassword,
+} from './api.js'
+import { PendingRequestView } from './components/pending-request-view.js'
 
 function ChoiceCard({
   illustration,
@@ -34,7 +53,7 @@ function ChoiceCard({
   ctaKey,
   onClick,
 }: {
-  illustration: ReactNode
+  illustration: React.ReactNode
   titleKey: string
   bodyKey: string
   ctaKey: string
@@ -62,6 +81,225 @@ function ChoiceCard({
   )
 }
 
+/** A label above a value -- the four facts the current-department card leads with (name is the card's
+ * own title; head, member count and role are these). */
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-caption uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+        {label}
+      </span>
+      <span className="min-w-0 text-body font-medium text-foreground">{children}</span>
+    </div>
+  )
+}
+
+/** The head's invite block, embedded directly on the hub (UI-OVERHAUL.md's Jakob row: "invite link
+ * with copy + QR") -- link, a real QR, and the join password with show/regenerate. Regenerating the
+ * password breaks it for anyone who still has the old one, so that action sits behind a bottom sheet
+ * that says exactly that, rather than firing on a single click. */
+function InviteBlock({ departmentId }: { departmentId: string }) {
+  const t = useT()
+  const meQuery = useMeQuery()
+  const queryClient = useQueryClient()
+  const inviteQuery = useQuery({
+    queryKey: ['departments', 'invite', departmentId],
+    queryFn: () => fetchInvite(departmentId),
+  })
+  const [revealedPassword, setRevealedPassword] = React.useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = React.useState(false)
+
+  const rotatePassword = useMutation({
+    mutationFn: () => rotateJoinPassword(departmentId, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (result) => {
+      setRevealedPassword(result.password)
+      setConfirmOpen(false)
+      void queryClient.invalidateQueries({ queryKey: ['departments', 'invite', departmentId] })
+    },
+  })
+
+  if (inviteQuery.isPending) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    )
+  }
+  if (inviteQuery.isError || !inviteQuery.data.joinKey) return null
+
+  const link = `${window.location.origin}/join?key=${inviteQuery.data.joinKey}`
+
+  function copyInvitation() {
+    const text = revealedPassword
+      ? t('departments.invite.inviteText', { link, password: revealedPassword })
+      : link
+    void navigator.clipboard
+      .writeText(text)
+      .then(() =>
+        toast(
+          t(revealedPassword ? 'departments.invite.copiedInvite' : 'departments.invite.copiedLink'),
+        ),
+      )
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+        {t('departments.invite.title')}
+      </span>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex flex-1 flex-col gap-2">
+          <Input readOnly value={link} className="font-mono text-small" />
+          <Button size="sm" className="w-fit" onClick={copyInvitation}>
+            {t('departments.invite.copyInvite')}
+          </Button>
+        </div>
+        {/* Fixed black-on-white, never theme tokens: a QR scanner needs the highest contrast the
+            camera can find, not the current colour scheme. */}
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          <div className="rounded-md border border-border bg-white p-3">
+            <QRCodeSVG value={link} size={112} fgColor="#000000" bgColor="#ffffff" />
+          </div>
+          <span className="text-caption text-muted-foreground">
+            {t('departments.invite.qrLabel')}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-border pt-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-small text-foreground">
+            {t('departments.invite.passwordLabel')}
+          </span>
+          <Button variant="secondary" size="sm" onClick={() => setConfirmOpen(true)}>
+            <RefreshCw className="size-4" aria-hidden="true" />
+            {t('departments.invite.rotatePassword')}
+          </Button>
+        </div>
+        {revealedPassword ? (
+          <Input readOnly value={revealedPassword} className="font-mono text-small" />
+        ) : (
+          <p className="text-caption text-muted-foreground">
+            {t('departments.invite.passwordHiddenNotice')}
+          </p>
+        )}
+      </div>
+
+      <Sheet direction="bottom" open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <SheetContent
+          side="bottom"
+          title={t('departments.invite.rotatePasswordDialogTitle')}
+          className="flex flex-col gap-4 p-5"
+        >
+          <h2 className="text-h3 text-foreground">
+            {t('departments.invite.rotatePasswordDialogTitle')}
+          </h2>
+          <p className="text-body text-muted-foreground">
+            {t('departments.invite.rotatePasswordConfirm')}
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setConfirmOpen(false)}>
+              {t('departments.common.cancel')}
+            </Button>
+            <Button loading={rotatePassword.isPending} onClick={() => rotatePassword.mutate()}>
+              {t('departments.invite.rotatePassword')}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  )
+}
+
+/** The signed-in member's own department: name, head, member count and role, plus (for the head) the
+ * invite block right here -- UI-OVERHAUL.md's Jakob row "Departments hub / join". */
+function CurrentDepartmentCard({
+  department,
+}: {
+  department: {
+    id: string
+    name: string
+    emoji: string | null
+    memberCount: number
+    myRole: 'head' | 'member'
+  }
+}) {
+  const t = useT()
+  const isHead = department.myRole === 'head'
+  const membersQuery = useQuery({
+    queryKey: ['departments', 'members', department.id],
+    queryFn: () => fetchMembers(department.id),
+  })
+  const head = membersQuery.data?.members.find((m) => m.role === 'head')
+
+  // A plain if/else (not a JSX ternary chain) so no `>...<` boundary at the branch seam can ever be
+  // mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic -- the same reasoning
+  // `structure-screen.tsx`'s own body switch documents for its ternary.
+  let headStat: React.ReactNode
+  if (membersQuery.isPending) {
+    headStat = <Skeleton className="h-5 w-24" />
+  } else if (head) {
+    headStat = (
+      <span className="flex items-center gap-2">
+        <Avatar
+          src={avatarUrl(head.avatarKey, 64)}
+          size="sm"
+          alt={`${head.givenName} ${head.familyName}`}
+          initials={initialsFromName(head.givenName, head.familyName)}
+          hueSeed={head.userId}
+        />
+        <span className="truncate">{`${head.givenName} ${head.familyName}`}</span>
+      </span>
+    )
+  } else {
+    headStat = <span className="text-muted-foreground">{t('departments.hub.noHead')}</span>
+  }
+
+  return (
+    <SectionCard
+      title={`${department.emoji ? `${department.emoji} ` : ''}${department.name}`}
+      headerAside={
+        <Badge tone={isHead ? 'info' : 'neutral'}>
+          {t(isHead ? 'departments.members.roleHead' : 'departments.members.roleMember')}
+        </Badge>
+      }
+    >
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Stat label={t('departments.hub.statHead')}>{headStat}</Stat>
+          <Stat label={t('departments.hub.statMembers')}>
+            <span className="flex items-center gap-1.5">
+              <Users className="size-4 text-muted-foreground" aria-hidden="true" />
+              {department.memberCount}
+            </span>
+          </Stat>
+          <Stat label={t('departments.hub.statRole')}>
+            {t(isHead ? 'departments.members.roleHead' : 'departments.members.roleMember')}
+          </Stat>
+        </div>
+
+        {isHead ? (
+          <div className="border-t border-border pt-5">
+            <InviteBlock departmentId={department.id} />
+          </div>
+        ) : null}
+
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/department?id=${department.id}`)}
+          >
+            {t('departments.hub.manageLink')}
+            <ChevronRight className="size-4" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+    </SectionCard>
+  )
+}
+
 export default function DepartmentsHubScreen() {
   const t = useT()
   const session = useSession()
@@ -71,17 +309,31 @@ export default function DepartmentsHubScreen() {
     queryFn: fetchMyDepartments,
     enabled: session.isAuthenticated,
   })
+  const requestsQuery = useQuery({
+    queryKey: ['departments', 'requests', 'mine'],
+    queryFn: fetchMyRequests,
+    enabled: session.isAuthenticated,
+  })
 
-  if (session.isLoading || (session.isAuthenticated && query.isPending)) {
+  if (
+    session.isLoading ||
+    (session.isAuthenticated && (query.isPending || requestsQuery.isPending))
+  ) {
     return <StateView kind="loading" titleKey="state.loading" />
   }
-  if (query.isError) {
+  if (query.isError || requestsQuery.isError) {
     return (
       <StateView
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => {
+            void query.refetch()
+            void requestsQuery.refetch()
+          },
+        }}
       />
     )
   }
@@ -89,6 +341,23 @@ export default function DepartmentsHubScreen() {
   const departments = query.data?.departments ?? []
 
   if (departments.length === 0) {
+    // A returning applicant whose department-creation request is still in flight (or was just
+    // approved but this list hasn't caught up yet) sees where it stands, not the create-or-join
+    // cards again -- UI-OVERHAUL.md's "pending request state with a friendly illustration". A
+    // rejected request falls through to the cards below; `/departments/new` shows its reason and
+    // its own working "create another" action.
+    const latestRequest = requestsQuery.data?.requests[0]
+    if (latestRequest && latestRequest.status !== 'rejected') {
+      return (
+        <PendingRequestView
+          status={latestRequest.status}
+          name={latestRequest.name}
+          reason={latestRequest.reason}
+          onCreateAnother={() => navigate('/departments/new')}
+        />
+      )
+    }
+
     return (
       <div className="relative flex flex-col gap-8">
         <HubAmbientWash />
@@ -125,9 +394,13 @@ export default function DepartmentsHubScreen() {
     )
   }
 
+  const active = departments.find((d) => d.id === activeDepartmentId) ?? departments[0]!
+  const others = departments.filter((d) => d.id !== active.id)
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageHeader
+        eyebrow={t('departments.landing.eyebrow')}
         title={t('departments.title')}
         description={t('departments.subtitle')}
         actions={
@@ -142,55 +415,56 @@ export default function DepartmentsHubScreen() {
         }
       />
 
-      <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {departments.map((d) => (
-          <StaggerItem key={d.id} className="h-full">
-            <HoverLift className="h-full rounded-md">
-              <Link
-                to={`/department?id=${d.id}`}
-                onClick={() => setDepartmentId(d.id)}
-                className={cn(
-                  cardVariants(),
-                  'flex h-full flex-col gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex min-w-0 items-center gap-2 text-body font-medium text-foreground">
-                    <Building2
-                      className="size-4 shrink-0 text-muted-foreground"
-                      aria-hidden="true"
-                    />
-                    <span className="truncate">
-                      {d.emoji ? `${d.emoji} ` : ''}
-                      {d.name}
+      <Reveal>
+        <CurrentDepartmentCard department={active} />
+      </Reveal>
+
+      {others.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+            {t('departments.hub.otherMemberships')}
+          </h2>
+          <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {others.map((d) => (
+              <StaggerItem key={d.id} className="h-full">
+                <HoverLift className="h-full rounded-md">
+                  <button
+                    type="button"
+                    onClick={() => setDepartmentId(d.id)}
+                    className={cn(
+                      cardVariants(),
+                      'flex h-full w-full flex-col gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    )}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="flex min-w-0 items-center gap-2 text-body font-medium text-foreground">
+                        <Building2
+                          className="size-4 shrink-0 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <span className="truncate">
+                          {d.emoji ? `${d.emoji} ` : ''}
+                          {d.name}
+                        </span>
+                      </span>
+                      <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
+                        {t(
+                          d.myRole === 'head'
+                            ? 'departments.members.roleHead'
+                            : 'departments.members.roleMember',
+                        )}
+                      </Badge>
+                    </div>
+                    <span className="flex items-center gap-1 text-small text-muted-foreground">
+                      <Users className="size-3.5" aria-hidden="true" /> {d.memberCount}
                     </span>
-                  </span>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {d.id === activeDepartmentId ? (
-                      // DESIGN.md §2.1: green is reserved for success/done/approved -- "current
-                      // department" is a plain status, not an accomplishment, so it reads as a
-                      // primary outline chip instead of a solid green pill.
-                      <Chip tone="outline" className="border-primary text-primary">
-                        {t('departments.switcher.current')}
-                      </Chip>
-                    ) : null}
-                    <Badge tone={d.myRole === 'head' ? 'info' : 'neutral'}>
-                      {t(
-                        d.myRole === 'head'
-                          ? 'departments.members.roleHead'
-                          : 'departments.members.roleMember',
-                      )}
-                    </Badge>
-                  </div>
-                </div>
-                <span className="flex items-center gap-1 text-small text-muted-foreground">
-                  <Users className="size-3.5" aria-hidden="true" /> {d.memberCount}
-                </span>
-              </Link>
-            </HoverLift>
-          </StaggerItem>
-        ))}
-      </Stagger>
+                  </button>
+                </HoverLift>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -1128,6 +1128,14 @@
     "switcher": {
       "label": "Bo'limni almashtirish",
       "current": "Joriy bo'lim"
+    },
+    "hub": {
+      "statHead": "Boshliq",
+      "statMembers": "A'zolar",
+      "statRole": "Sizning rolingiz",
+      "noHead": "Hali tayinlanmagan",
+      "otherMemberships": "Boshqa a'zoliklaringiz",
+      "manageLink": "Sozlamalarni ochish"
     }
   },
   "events": {
@@ -1146,7 +1154,8 @@
       "moreActions": "Qo'shimcha amallar",
       "close": "Yopish",
       "retry": "Qayta urinish",
-      "back": "Orqaga"
+      "back": "Orqaga",
+      "undo": "Bekor qilish"
     },
     "empty": {
       "title": "Hozircha tadbirlar yoʻq",
@@ -1281,6 +1290,7 @@
       "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
       "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
+      "cancelledToast": "Ishtirokingiz bekor qilindi",
       "myStatus": "Sizning javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
@@ -1321,7 +1331,9 @@
       "confirmed": "Tasdiqlangan",
       "passengers": "Yoʻlovchilar",
       "driverCannotClaim": "Haydovchi oʻz taklifidan oʻrin ololmaydi",
-      "cancelled": "Bu taklif bekor qilingan"
+      "cancelled": "Bu taklif bekor qilingan",
+      "releasedToast": "Oʻrindan voz kechdingiz",
+      "reclaimedToast": "Oʻrin qayta band qilindi"
     },
     "items": {
       "title": "Kim nima olib keladi",
@@ -1355,6 +1367,9 @@
       "removeOption": "Olib tashlash",
       "vote": "Ovoz berish",
       "changeVote": "Ovozni oʻzgartirish",
+      "votedToast": "Ovozingiz qabul qilindi",
+      "voteChangedToast": "Ovozingiz oʻzgartirildi",
+      "voteRevertedToast": "Avvalgi ovozingiz tiklandi",
       "totalVotes": "{count} ta ovoz",
       "closed": "Yakunlangan",
       "yourVote": "Sizning ovozingiz",
@@ -1922,6 +1937,7 @@
       "rename": "Nomini oʻzgartirish",
       "renameLabel": "Boʻlim nomi",
       "delete": "Oʻchirish",
+      "rowActions": "Boʻlim amallari",
       "deleteConfirm": {
         "title": "«{name}» oʻchirilsinmi?",
         "body": "Aʼzolar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarish mumkin.",
@@ -2015,7 +2031,8 @@
       },
       "hoverCard": {
         "membership": "Aʼzolik",
-        "unit": "Boʻlim"
+        "unit": "Boʻlim",
+        "openBoardColumn": "Doskadagi ustunini ochish"
       }
     },
     "common": {

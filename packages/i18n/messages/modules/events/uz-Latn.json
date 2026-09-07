@@ -15,7 +15,8 @@
       "moreActions": "Qo'shimcha amallar",
       "close": "Yopish",
       "retry": "Qayta urinish",
-      "back": "Orqaga"
+      "back": "Orqaga",
+      "undo": "Bekor qilish"
     },
     "empty": {
       "title": "Hozircha tadbirlar yoʻq",
@@ -149,8 +150,8 @@
       "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
       "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
-      "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
-      "myStatus": "Sizning javobingiz: {status}",
+"waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
+      "cancelledToast": "Ishtirokingiz bekor qilindi",      "myStatus": "Sizning javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
     "attendees": {
@@ -190,7 +191,9 @@
       "confirmed": "Tasdiqlangan",
       "passengers": "Yoʻlovchilar",
       "driverCannotClaim": "Haydovchi oʻz taklifidan oʻrin ololmaydi",
-      "cancelled": "Bu taklif bekor qilingan"
+      "cancelled": "Bu taklif bekor qilingan",
+      "releasedToast": "Oʻrindan voz kechdingiz",
+      "reclaimedToast": "Oʻrin qayta band qilindi"
     },
     "items": {
       "title": "Kim nima olib keladi",
@@ -224,6 +227,9 @@
       "removeOption": "Olib tashlash",
       "vote": "Ovoz berish",
       "changeVote": "Ovozni oʻzgartirish",
+      "votedToast": "Ovozingiz qabul qilindi",
+      "voteChangedToast": "Ovozingiz oʻzgartirildi",
+      "voteRevertedToast": "Avvalgi ovozingiz tiklandi",
       "totalVotes": "{count} ta ovoz",
       "closed": "Yakunlangan",
       "yourVote": "Sizning ovozingiz",

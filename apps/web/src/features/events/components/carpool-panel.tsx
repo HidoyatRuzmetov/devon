@@ -15,6 +15,7 @@ import {
   Textarea,
   initialsFromName,
   toast,
+  toastWithUndo,
   useCelebrate,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
@@ -49,8 +50,21 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
   }
 
   const handleRelease = async () => {
+    // §11: "carpool claim release ... use toastWithUndo" -- keep the seat count this person held so
+    // "Undo" can re-claim exactly that many, not just one.
+    const heldSeats = myShare?.seatsClaimed ?? 1
     try {
       await releaseMutation.mutateAsync(carpool.id)
+      toastWithUndo({
+        message: t('events.carpool.releasedToast'),
+        undoLabel: t('events.actions.undo'),
+        onUndo: () => {
+          claimMutation.mutate(
+            { carpoolId: carpool.id, seats: heldSeats },
+            { onSuccess: () => toast(t('events.carpool.reclaimedToast')) },
+          )
+        },
+      })
     } catch {
       toast(t('events.error.title'))
     }
