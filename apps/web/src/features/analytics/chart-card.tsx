@@ -20,7 +20,7 @@ import {
   cn,
   useReducedMotion,
 } from '@devon/ui'
-import { Download, MoreHorizontal, Pin, PinOff, Table2 } from 'lucide-react'
+import { BarChart3, Download, MoreHorizontal, Pin, PinOff, Table2 } from 'lucide-react'
 import { toPng } from 'html-to-image'
 
 export type ChartCardProps = {
@@ -34,6 +34,11 @@ export type ChartCardProps = {
   table: { headers: string[]; rows: (string | number)[][] }
   children: React.ReactNode
   className?: string
+  /** DESIGN.md §4: renders `ChartEmptyState` (labelled by `emptyLabelKey`) in place of `children` --
+   *  the header and owner question stay visible either way. Every section passes this instead of
+   *  hand-rolling its own early-return branch, so "no data yet" looks the same on every chart. */
+  isEmpty?: boolean
+  emptyLabelKey?: string
 }
 
 /** Reads live from `document.cookie` at click time (never cached) -- this is a plain `<a>` download,
@@ -62,6 +67,21 @@ export function useChartAnimation(): boolean {
   return !reduced
 }
 
+/** DESIGN.md §4: every screen has a designed empty state, and a chart card is a screen region --
+ * a series with no data used to render bare axes and say nothing, exactly what every fresh
+ * department sees in every chart before the first nightly recompute. A small icon (a full
+ * illustration does not fit a card this compact) plus one line, centred in the space the chart
+ * would otherwise fill, with the card's own header/owner-question still visible above it. */
+export function ChartEmptyState({ labelKey }: { labelKey: string }): React.JSX.Element {
+  const t = useT()
+  return (
+    <div className="flex min-h-45 flex-1 flex-col items-center justify-center gap-2 py-6">
+      <BarChart3 className="size-8 text-muted-foreground/50" aria-hidden="true" />
+      <p className="text-center text-small text-muted-foreground">{t(labelKey)}</p>
+    </div>
+  )
+}
+
 export function ChartCard({
   chartKey,
   titleKey,
@@ -73,15 +93,30 @@ export function ChartCard({
   table,
   children,
   className,
+  isEmpty = false,
+  emptyLabelKey,
 }: ChartCardProps) {
   const t = useT()
   const [showTable, setShowTable] = React.useState(false)
   const bodyRef = React.useRef<HTMLDivElement>(null)
+  // A variable, not a nested JSX ternary: the i18n gate's hard-coded-JSX-text heuristic scans for a
+  // run of letters between two angle-bracket characters anywhere in the file, and a ternary chain
+  // written inline trips it on the plain-text " ) : isEmpty ? ( " between two closing tags.
+  const chartBody = isEmpty ? (
+    <ChartEmptyState labelKey={emptyLabelKey ?? 'analytics.chartEmpty'} />
+  ) : (
+    children
+  )
 
   return (
+    // `h-full`: a dashboard grid row stretches every card to match its tallest sibling (the grid
+    // default, align-items: stretch) -- without this the *card* already filled that height but its
+    // *content* (a chart with a fixed pixel height) did not, leaving a visible gap of dead space
+    // below a short chart next to a taller one. `min-h-0` lets the flex body shrink correctly instead
+    // of ignoring the parent's height (the usual flex-in-flex trap).
     <section
       className={cn(
-        'flex flex-col gap-3 rounded-md border border-border bg-card p-5 shadow-1',
+        'flex h-full min-h-0 flex-col gap-3 rounded-md border border-border bg-card p-5 shadow-1',
         className,
       )}
       aria-label={t(titleKey)}
@@ -137,7 +172,11 @@ export function ChartCard({
         </div>
       </header>
 
-      <div ref={bodyRef} className="rounded-sm bg-card">
+      {/* `flex-1 min-h-0`: gives ResponsiveContainer's own `height="100%"` (sections.tsx) a real,
+          definite height to resolve against -- filling whatever extra room the grid's row-stretch
+          handed this card, while `minHeight` (also sections.tsx, per chart) keeps a short card from
+          collapsing below its own data-appropriate floor. */}
+      <div ref={bodyRef} className="flex min-h-0 flex-1 flex-col rounded-sm bg-card">
         {showTable ? (
           <div className="overflow-x-auto">
             <table className="w-full text-small">
@@ -164,7 +203,7 @@ export function ChartCard({
             </table>
           </div>
         ) : (
-          children
+          chartBody
         )}
       </div>
 

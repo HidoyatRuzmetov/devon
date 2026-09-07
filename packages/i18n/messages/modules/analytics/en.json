@@ -71,24 +71,29 @@
     "sections": {
       "throughput": {
         "title": "Cards done per week",
-        "question": "How many cards did we finish each week?"
+        "question": "How many cards did we finish each week?",
+        "empty": "No completed cards yet"
       },
       "onTimeRate": {
         "title": "On-time rate",
         "question": "Are cards finishing on time?",
-        "overall": "Overall: {percent}%"
+        "overall": "Overall: {percent}%",
+        "empty": "Not enough data to score yet"
       },
       "openVsOverdue": {
         "title": "Open vs. overdue",
-        "question": "How much of our open work is overdue?"
+        "question": "How much of our open work is overdue?",
+        "empty": "No open cards yet"
       },
       "loadPerPerson": {
         "title": "Load per person",
-        "question": "Who is carrying the most work right now?"
+        "question": "Who is carrying the most work right now?",
+        "empty": "Nobody has an assigned card yet"
       },
       "loadPerUnit": {
         "title": "Load per unit",
-        "question": "Which unit is busiest?"
+        "question": "Which unit is busiest?",
+        "empty": "No per-unit data yet"
       },
       "projectProgress": {
         "title": "Project progress",
@@ -107,7 +112,8 @@
       },
       "personal": {
         "title": "My stats",
-        "question": "How is my own work going?"
+        "question": "How is my own work going?",
+        "empty": "No personal stats yet"
       }
     },
     "personal": {
@@ -126,6 +132,7 @@
       "title": "Pin to Home",
       "titlePlaceholder": "Chart name",
       "confirm": "Pin"
-    }
+    },
+    "chartEmpty": "No data yet"
   }
 }

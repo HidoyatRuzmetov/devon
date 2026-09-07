@@ -71,24 +71,29 @@
     "sections": {
       "throughput": {
         "title": "Haftalik bajarilgan topshiriqlar",
-        "question": "Har hafta nechta topshiriq yakunlandi?"
+        "question": "Har hafta nechta topshiriq yakunlandi?",
+        "empty": "Hali yakunlangan topshiriqlar yo'q"
       },
       "onTimeRate": {
         "title": "O'z vaqtida bajarilish darajasi",
         "question": "Topshiriqlar muddatida bajarilyaptimi?",
-        "overall": "Umumiy: {percent}%"
+        "overall": "Umumiy: {percent}%",
+        "empty": "Baholash uchun yetarli ma'lumot yo'q"
       },
       "openVsOverdue": {
         "title": "Ochiq va muddati o'tgan topshiriqlar",
-        "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?"
+        "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?",
+        "empty": "Hozircha ochiq topshiriqlar yo'q"
       },
       "loadPerPerson": {
         "title": "Xodimlar bo'yicha yuklama",
-        "question": "Hozir kimning ustida qancha ish bor?"
+        "question": "Hozir kimning ustida qancha ish bor?",
+        "empty": "Hozircha hech kimga topshiriq biriktirilmagan"
       },
       "loadPerUnit": {
         "title": "Bo'limlar bo'yicha yuklama",
-        "question": "Qaysi bo'lim eng band?"
+        "question": "Qaysi bo'lim eng band?",
+        "empty": "Hozircha bo'limlar bo'yicha ma'lumot yo'q"
       },
       "projectProgress": {
         "title": "Loyihalar bo'yicha jarayon",
@@ -107,7 +112,8 @@
       },
       "personal": {
         "title": "Shaxsiy ko'rsatkichlarim",
-        "question": "Mening ishlarim qanday ketyapti?"
+        "question": "Mening ishlarim qanday ketyapti?",
+        "empty": "Hozircha shaxsiy ko'rsatkichlar yo'q"
       }
     },
     "personal": {
@@ -126,6 +132,7 @@
       "title": "Bosh sahifaga mahkamlash",
       "titlePlaceholder": "Diagramma nomi",
       "confirm": "Mahkamlash"
-    }
+    },
+    "chartEmpty": "Hozircha ma'lumot yo'q"
   }
 }

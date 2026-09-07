@@ -162,8 +162,10 @@ export function ThroughputSection({
         headers: [t('analytics.filterBar.since'), t('analytics.legend.done')],
         rows: data.map((p) => [p.label, p.count]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.throughput.empty"
     >
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={220}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR_MUTED }} tickLine={false} />
@@ -221,13 +223,15 @@ export function OnTimeRateSection({
         headers: [t('analytics.filterBar.since'), '%'],
         rows: data.map((p) => [p.label, p.rate ?? '-']),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.onTimeRate.empty"
     >
       {overallPercent !== null ? (
         <p className="mb-2 text-lead text-foreground">
           {t('analytics.sections.onTimeRate.overall', { percent: overallPercent })}
         </p>
       ) : null}
-      <ResponsiveContainer width="100%" height={200}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={200}>
         <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR_MUTED }} tickLine={false} />
@@ -286,8 +290,10 @@ export function OpenVsOverdueSection({
         ],
         rows: data.map((p) => [p.label, p.openCount, p.overdueCount]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.openVsOverdue.empty"
     >
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={220}>
         <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: COLOR_MUTED }} tickLine={false} />
@@ -351,8 +357,10 @@ export function LoadPerPersonSection({
         ].slice(1),
         rows: summary.loadPerPerson.map((p) => [p.name, p.openCount, p.overdueCount]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.loadPerPerson.empty"
     >
-      <ResponsiveContainer width="100%" height={Math.max(200, data.length * 32)}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={Math.max(200, data.length * 32)}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} horizontal={false} />
           <XAxis
@@ -416,8 +424,10 @@ export function LoadPerUnitSection({
         headers: ['', t('analytics.legend.open'), t('analytics.legend.overdue')],
         rows: data.map((u) => [u.name, u.openCount, u.overdueCount]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.loadPerUnit.empty"
     >
-      <ResponsiveContainer width="100%" height={Math.max(180, data.length * 40)}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={Math.max(180, data.length * 40)}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} horizontal={false} />
           <XAxis
@@ -468,27 +478,6 @@ export function ProjectProgressSection({
     percent: Math.round(p.progress * 100),
   }))
 
-  if (data.length === 0) {
-    return (
-      <ChartCard
-        chartKey="projectProgress"
-        titleKey="analytics.sections.projectProgress.title"
-        questionKey="analytics.sections.projectProgress.question"
-        csvHref={exportCsvUrl('projectProgress', query)}
-        pinned={pinnedKeys.has('projectProgress')}
-        pinBusy={pinBusy}
-        onTogglePin={() =>
-          onTogglePin('projectProgress', t('analytics.sections.projectProgress.title'))
-        }
-        table={{ headers: [], rows: [] }}
-      >
-        <p className="py-6 text-center text-small text-muted-foreground">
-          {t('analytics.sections.projectProgress.empty')}
-        </p>
-      </ChartCard>
-    )
-  }
-
   return (
     <ChartCard
       chartKey="projectProgress"
@@ -504,8 +493,10 @@ export function ProjectProgressSection({
         headers: ['', '%'],
         rows: data.map((p) => [p.title, p.percent]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.projectProgress.empty"
     >
-      <ResponsiveContainer width="100%" height={Math.max(180, data.length * 36)}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={Math.max(180, data.length * 36)}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} horizontal={false} />
           <XAxis
@@ -546,27 +537,6 @@ export function EventsParticipationSection({
   const animate = useChartAnimation()
   const data = summary.eventsParticipation
 
-  if (data.length === 0) {
-    return (
-      <ChartCard
-        chartKey="eventsParticipation"
-        titleKey="analytics.sections.eventsParticipation.title"
-        questionKey="analytics.sections.eventsParticipation.question"
-        csvHref={exportCsvUrl('eventsParticipation', query)}
-        pinned={pinnedKeys.has('eventsParticipation')}
-        pinBusy={pinBusy}
-        onTogglePin={() =>
-          onTogglePin('eventsParticipation', t('analytics.sections.eventsParticipation.title'))
-        }
-        table={{ headers: [], rows: [] }}
-      >
-        <p className="py-6 text-center text-small text-muted-foreground">
-          {t('analytics.sections.eventsParticipation.empty')}
-        </p>
-      </ChartCard>
-    )
-  }
-
   return (
     <ChartCard
       chartKey="eventsParticipation"
@@ -588,8 +558,10 @@ export function EventsParticipationSection({
         ],
         rows: data.map((e: EventParticipation) => [e.title, e.yes, e.no, e.maybe, e.waitlist]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.eventsParticipation.empty"
     >
-      <ResponsiveContainer width="100%" height={Math.max(180, data.length * 40)}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={Math.max(180, data.length * 40)}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} horizontal={false} />
           <XAxis
@@ -658,25 +630,6 @@ export function PollTurnoutSection({
     percent: Math.round(p.turnoutRate * 100),
   }))
 
-  if (data.length === 0) {
-    return (
-      <ChartCard
-        chartKey="pollTurnout"
-        titleKey="analytics.sections.pollTurnout.title"
-        questionKey="analytics.sections.pollTurnout.question"
-        csvHref={exportCsvUrl('pollTurnout', query)}
-        pinned={pinnedKeys.has('pollTurnout')}
-        pinBusy={pinBusy}
-        onTogglePin={() => onTogglePin('pollTurnout', t('analytics.sections.pollTurnout.title'))}
-        table={{ headers: [], rows: [] }}
-      >
-        <p className="py-6 text-center text-small text-muted-foreground">
-          {t('analytics.sections.pollTurnout.empty')}
-        </p>
-      </ChartCard>
-    )
-  }
-
   return (
     <ChartCard
       chartKey="pollTurnout"
@@ -690,8 +643,10 @@ export function PollTurnoutSection({
         headers: ['', '%'],
         rows: data.map((p) => [p.question, p.percent]),
       }}
+      isEmpty={data.length === 0}
+      emptyLabelKey="analytics.sections.pollTurnout.empty"
     >
-      <ResponsiveContainer width="100%" height={Math.max(180, data.length * 36)}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={Math.max(180, data.length * 36)}>
         <BarChart data={data} layout="vertical" margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={COLOR_BORDER} horizontal={false} />
           <XAxis
