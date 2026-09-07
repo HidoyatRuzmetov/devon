@@ -49,6 +49,10 @@ const DONUT_COLOURS = [
   'var(--color-muted-foreground)',
 ]
 
+/** UI-OVERHAUL.md §3 "Charts": draw-in on mount. Each segment's arc sweeps in from a hidden
+ * `strokeDashoffset` (rather than growing `strokeDasharray` itself, which most browsers cannot
+ * transition smoothly) to its real position one frame after mount. Reduced motion renders every
+ * arc already in place. */
 export function DonutChart({
   segments,
   size = 120,
@@ -61,6 +65,13 @@ export function DonutChart({
   const stroke = radius * 0.32
   const innerRadius = radius - stroke / 2
   const circumference = 2 * Math.PI * innerRadius
+  const reduced = useReducedMotion()
+  const [drawn, setDrawn] = React.useState(reduced)
+  React.useEffect(() => {
+    if (reduced) return
+    const id = requestAnimationFrame(() => setDrawn(true))
+    return () => cancelAnimationFrame(id)
+  }, [reduced])
 
   let offset = 0
   return (
@@ -94,7 +105,8 @@ export function DonutChart({
               stroke={DONUT_COLOURS[i % DONUT_COLOURS.length]}
               strokeWidth={stroke}
               strokeDasharray={`${dash} ${circumference - dash}`}
-              strokeDashoffset={-offset}
+              strokeDashoffset={drawn ? -offset : circumference}
+              style={{ transition: 'stroke-dashoffset var(--dur-standard) var(--ease-out)' }}
               transform={`rotate(-90 ${radius} ${radius})`}
             />
           )
@@ -134,6 +146,11 @@ export function ChartLegend({ segments }: { segments: { label: string; value: nu
   )
 }
 
+/** UI-OVERHAUL.md §3 "Charts": draw-in on mount, once. Every bar starts at 0 % and transitions to
+ * its real height one animation frame after mount -- the CSS `transition-[height]` these bars
+ * already carried only fired on a later *value* change (a re-fetch), never on the chart's own
+ * first paint, since React sets that first `style.height` directly with nothing to transition
+ * from. Reduced motion skips the 0 % frame entirely and renders at the final height immediately. */
 export function BarChart({
   data,
   height = 140,
@@ -142,6 +159,13 @@ export function BarChart({
   height?: number
 }) {
   const max = Math.max(1, ...data.map((d) => d.value))
+  const reduced = useReducedMotion()
+  const [drawn, setDrawn] = React.useState(reduced)
+  React.useEffect(() => {
+    if (reduced) return
+    const id = requestAnimationFrame(() => setDrawn(true))
+    return () => cancelAnimationFrame(id)
+  }, [reduced])
   return (
     <div
       className="flex items-end gap-2"
@@ -154,7 +178,7 @@ export function BarChart({
           <div className="flex w-full flex-1 items-end">
             <div
               className="w-full rounded-t-sm bg-primary transition-[height] duration-(--dur-standard) ease-out"
-              style={{ height: `${Math.max(2, (d.value / max) * 100)}%` }}
+              style={{ height: drawn ? `${Math.max(2, (d.value / max) * 100)}%` : '0%' }}
             />
           </div>
           <span className="text-caption text-muted-foreground">{d.label}</span>

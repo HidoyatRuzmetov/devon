@@ -11,13 +11,13 @@ export interface StaggerProps {
   animateKey?: string | number
   /** Seconds before the first child enters. */
   delay?: number
-  as?: 'div' | 'ul' | 'ol' | 'section'
+  as?: 'div' | 'ul' | 'ol' | 'section' | 'tbody'
 }
 
 export interface StaggerItemProps {
   children: React.ReactNode
   className?: string
-  as?: 'div' | 'li' | 'article'
+  as?: 'div' | 'li' | 'article' | 'tr'
   /** Opt-in only -- omit for the ordinary case (a parent that just adds/removes children with no
    * animated exit). Pass `"hidden"` (the same variant this item already enters from) to reverse it
    * on the way out instead, when the immediate parent is wrapped in framer-motion's own
@@ -26,6 +26,16 @@ export interface StaggerItemProps {
    * array). Layout-shifts the remaining siblings into place at the same time. */
   exit?: TargetAndTransition | VariantLabels
   layout?: boolean
+  /** For `as="tr"` (an admin table's own rows are the row's whole click target, not one cell in
+   * it) -- the handful of DOM props an interactive row needs, kept as an explicit, narrow list
+   * rather than a blanket `HTMLAttributes` extension (which pulls in an optional `style` whose
+   * `CSSProperties | undefined` this package's `exactOptionalPropertyTypes` rejects against
+   * `motion`'s own `MotionStyle`). */
+  onClick?: React.MouseEventHandler<HTMLElement>
+  onKeyDown?: React.KeyboardEventHandler<HTMLElement>
+  tabIndex?: number
+  role?: React.AriaRole
+  'aria-label'?: string
 }
 
 function containerVariants(reduced: boolean, delay: number): Variants {
@@ -87,6 +97,7 @@ export function StaggerItem({
   as = 'div',
   exit,
   layout,
+  ...rest
 }: StaggerItemProps): React.JSX.Element {
   const reduced = React.useContext(StaggerReducedContext)
   const Comp = motion[as]
@@ -96,6 +107,7 @@ export function StaggerItem({
       variants={reduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS}
       {...(exit !== undefined ? { exit } : {})}
       {...(layout !== undefined ? { layout } : {})}
+      {...rest}
     >
       {children}
     </Comp>

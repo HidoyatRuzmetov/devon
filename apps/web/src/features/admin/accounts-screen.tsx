@@ -16,6 +16,8 @@ import {
   DropdownMenuTrigger,
   IconButton,
   Input,
+  Stagger,
+  StaggerItem,
   StateView,
   toast,
 } from '@devon/ui'
@@ -211,7 +213,11 @@ function AccountsBody() {
                 <th className="w-10 px-3 py-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <Stagger
+              as="tbody"
+              className="divide-y divide-border"
+              animateKey={`${query}:${status}`}
+            >
               {users.map((u) => {
                 const rowBusy =
                   (lock.isPending && lockTarget?.id === u.id) ||
@@ -219,7 +225,7 @@ function AccountsBody() {
                   (resetPassword.isPending && resetPassword.variables === u.id) ||
                   (forceReset2fa.isPending && forceReset2fa.variables === u.id)
                 return (
-                  <tr key={u.id} className="bg-card">
+                  <StaggerItem as="tr" key={u.id} className="bg-card">
                     <td className="px-3 py-2.5 font-medium text-foreground">
                       {u.givenName} {u.familyName}
                     </td>
@@ -253,10 +259,10 @@ function AccountsBody() {
                         onAnonymize={() => setAnonymizeTarget(u)}
                       />
                     </td>
-                  </tr>
+                  </StaggerItem>
                 )
               })}
-            </tbody>
+            </Stagger>
           </table>
         </div>
       )}

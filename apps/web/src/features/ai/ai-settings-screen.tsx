@@ -9,6 +9,8 @@ import {
   Button,
   PageHeader,
   ProgressRing,
+  Stagger,
+  StaggerItem,
   StateView,
   Switch,
   Tabs,
@@ -170,9 +172,13 @@ function OverviewTab() {
       <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4">
         <h3 className="text-small font-medium text-foreground">{t('ai.flags.title')}</h3>
         <p className="mb-2 text-caption text-muted-foreground">{t('ai.flags.description')}</p>
-        <ul className="flex flex-col divide-y divide-border">
+        <Stagger as="ul" className="flex flex-col divide-y divide-border">
           {AI_FEATURE_IDS.map((feature) => (
-            <li key={feature} className="flex items-center justify-between gap-3 py-2.5">
+            <StaggerItem
+              as="li"
+              key={feature}
+              className="flex items-center justify-between gap-3 py-2.5"
+            >
               <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
                 {t(featureLabelKey(feature))}
               </label>
@@ -183,9 +189,9 @@ function OverviewTab() {
                 disabled={!isHead}
                 aria-label={t(featureLabelKey(feature))}
               />
-            </li>
+            </StaggerItem>
           ))}
-        </ul>
+        </Stagger>
         {!isHead ? (
           <p className="pt-2 text-caption text-muted-foreground">{t('ai.flags.headOnly')}</p>
         ) : null}
@@ -236,11 +242,11 @@ function UsageTab() {
             <th className="px-3 py-2">{t('ai.usage.columns.latency')}</th>
           </tr>
         </thead>
-        <tbody>
+        <Stagger as="tbody">
           {usageQuery.data.map((trace) => {
             const date = new Date(trace.createdAt)
             return (
-              <tr key={trace.id} className="border-b border-border last:border-0">
+              <StaggerItem as="tr" key={trace.id} className="border-b border-border last:border-0">
                 <td className="px-3 py-2 text-foreground">
                   {formatDate(date, locale)} {formatTime(date, locale)}
                 </td>
@@ -257,10 +263,10 @@ function UsageTab() {
                 <td className="px-3 py-2 text-foreground">
                   {t('ai.result.latency', { ms: formatNumber(trace.latencyMs, locale) })}
                 </td>
-              </tr>
+              </StaggerItem>
             )
           })}
-        </tbody>
+        </Stagger>
       </table>
     </div>
   )

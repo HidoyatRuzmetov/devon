@@ -4,7 +4,18 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT, formatDate, useLocale, LOCALE_LABEL } from '@devon/i18n'
-import { Badge, Button, IconButton, Input, Sheet, SheetContent, StateView, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  IconButton,
+  Input,
+  Sheet,
+  SheetContent,
+  Stagger,
+  StaggerItem,
+  StateView,
+  toast,
+} from '@devon/ui'
 import { Eye, X } from 'lucide-react'
 import { navigate } from '../../lib/router.js'
 import { useMeQuery } from '../../lib/session.js'
@@ -335,15 +346,20 @@ function DepartmentsBody() {
                 <th className="px-3 py-2">{t('admin.console.departments.columnCreated')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <Stagger
+              as="tbody"
+              className="divide-y divide-border"
+              animateKey={`${query}:${status}`}
+            >
               {departments.map((d) => (
-                <tr
+                <StaggerItem
+                  as="tr"
                   key={d.id}
                   tabIndex={0}
                   role="button"
                   aria-label={d.name}
                   onClick={() => setOpenId(d.id)}
-                  onKeyDown={(e) => {
+                  onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter') setOpenId(d.id)
                   }}
                   className="cursor-pointer bg-card transition-colors duration-(--dur-micro) ease-out hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
@@ -361,9 +377,9 @@ function DepartmentsBody() {
                   <td className="px-3 py-2.5 text-muted-foreground">
                     {formatDate(new Date(d.createdAt), locale)}
                   </td>
-                </tr>
+                </StaggerItem>
               ))}
-            </tbody>
+            </Stagger>
           </table>
         </div>
       )}

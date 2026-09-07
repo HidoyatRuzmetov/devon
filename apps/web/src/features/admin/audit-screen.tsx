@@ -2,7 +2,16 @@
 import * as React from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
-import { AnimatedCheck, Badge, Button, Input, StateView, toast } from '@devon/ui'
+import {
+  AnimatedCheck,
+  Badge,
+  Button,
+  Input,
+  Stagger,
+  StaggerItem,
+  StateView,
+  toast,
+} from '@devon/ui'
 import { AlertTriangle } from 'lucide-react'
 import { auditExportUrl, fetchAuditEvents, fetchAuditVerify } from './api.js'
 import { AdminScreen } from './admin-screen.js'
@@ -112,9 +121,13 @@ function AuditBody() {
                 <th className="p-2">{t('admin.console.audit.columnSubject')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <Stagger
+              as="tbody"
+              className="divide-y divide-border"
+              animateKey={`${action}:${cursor ?? 0}`}
+            >
               {events.map((e) => (
-                <tr key={e.seq}>
+                <StaggerItem as="tr" key={e.seq}>
                   <td className="p-2 text-foreground">
                     {formatDate(new Date(e.at), locale)} {formatTime(new Date(e.at), locale)}
                   </td>
@@ -124,9 +137,9 @@ function AuditBody() {
                     {e.subjectType}
                     {e.subjectId ? ` · ${e.subjectId.slice(0, 8)}` : ''}
                   </td>
-                </tr>
+                </StaggerItem>
               ))}
-            </tbody>
+            </Stagger>
           </table>
         </div>
       )}

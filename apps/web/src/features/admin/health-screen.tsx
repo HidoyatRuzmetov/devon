@@ -1,7 +1,7 @@
 // `/admin/health` -- queues, DB, storage, Telegram, AI endpoint latency, backups.
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatTime } from '@devon/i18n'
-import { Badge, Button, StateView } from '@devon/ui'
+import { Badge, Button, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { fetchAdminHealth, type HealthCheck } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 import { StatusDot } from './charts.js'
@@ -19,7 +19,7 @@ const STATUS_TONE: Record<
 function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }) {
   const t = useT()
   return (
-    <li className="flex items-center justify-between gap-4 py-3">
+    <StaggerItem as="li" className="flex items-center justify-between gap-4 py-3">
       <div className="flex items-center gap-3">
         <StatusDot status={check.status} />
         <div>
@@ -35,7 +35,7 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
           {t(`admin.console.health.status.${check.status}`)}
         </Badge>
       </div>
-    </li>
+    </StaggerItem>
   )
 }
 
@@ -75,14 +75,14 @@ function HealthBody() {
         </Button>
       </div>
       <section className="rounded-md border border-border bg-card p-6">
-        <ul className="divide-y divide-border">
+        <Stagger as="ul" className="divide-y divide-border">
           <HealthRow labelKey="admin.console.health.db" check={h.db} />
           <HealthRow labelKey="admin.console.health.queue" check={h.queue} />
           <HealthRow labelKey="admin.console.health.storage" check={h.storage} />
           <HealthRow labelKey="admin.console.health.telegram" check={h.telegram} />
           <HealthRow labelKey="admin.console.health.ai" check={h.ai} />
           <HealthRow labelKey="admin.console.health.backups" check={h.backups} />
-        </ul>
+        </Stagger>
       </section>
     </div>
   )
