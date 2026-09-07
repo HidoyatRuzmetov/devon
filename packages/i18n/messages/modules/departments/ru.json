@@ -165,6 +165,14 @@
     "switcher": {
       "label": "Сменить отдел",
       "current": "Текущий отдел"
+    },
+    "hub": {
+      "statHead": "Руководитель",
+      "statMembers": "Участники",
+      "statRole": "Ваша роль",
+      "noHead": "Пока не назначен",
+      "otherMemberships": "Другие ваши отделы",
+      "manageLink": "Открыть настройки"
     }
   }
 }

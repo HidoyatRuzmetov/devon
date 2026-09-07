@@ -165,6 +165,14 @@
     "switcher": {
       "label": "Bo'limni almashtirish",
       "current": "Joriy bo'lim"
+    },
+    "hub": {
+      "statHead": "Boshliq",
+      "statMembers": "A'zolar",
+      "statRole": "Sizning rolingiz",
+      "noHead": "Hali tayinlanmagan",
+      "otherMemberships": "Boshqa a'zoliklaringiz",
+      "manageLink": "Sozlamalarni ochish"
     }
   }
 }
