@@ -9,14 +9,37 @@
 // listing of their four/three options) survive as the same small `root | locale | theme` mode
 // switch inside the one dialog.
 import * as React from 'react'
-import { Globe, LogOut, Monitor, Moon, Sun } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  CalendarDays,
+  FileText,
+  Globe,
+  KanbanSquare,
+  LogOut,
+  Monitor,
+  Moon,
+  Sun,
+  Users,
+} from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { CommandPalette, resolveNavEntries, type CommandPaletteGroup } from '@devon/ui'
 import { LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
+import { useDepartment } from '../lib/session.js'
 import { navigate, useRoutePath } from '../lib/router.js'
 import { setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { getFeatureCommandEntries, getFeatureQuickAddEntries } from '../features/registry.js'
+import { fetchCards, type Card } from '../features/work/api.js'
+import { fetchEvents } from '../features/events/api.js'
+import type { EventDto } from '../features/events/schemas.js'
+import { fetchPages } from '../features/pages/api.js'
+import type { PageSummary } from '../features/pages/types.js'
+import { fetchMembers, type Member } from '../features/structure/api.js'
 import { NAV_ENTRIES } from './nav.js'
+
+/** How many rows a single async source contributes to the palette before typing narrows them --
+ * enough that "type a few letters, see it" holds for a department of ordinary size, never so many
+ * that the untyped palette is a wall of everything the department has ever created. */
+const SOURCE_LIMIT = 8
 
 const RECENT_STORAGE_KEY = 'wp.palette.recent'
 const RECENT_MAX = 4
@@ -83,6 +106,55 @@ function useRecentRoutes(): string[] {
   return recent.filter((p) => p !== route).slice(0, RECENT_MAX)
 }
 
+interface PaletteEntities {
+  members: Member[]
+  cards: Card[]
+  events: EventDto[]
+  pages: PageSummary[]
+}
+
+/** The palette's real, async sources -- people, cards, events, pages -- each fetched once the
+ * palette opens (never while it is closed: `enabled` gates every query on `open`) and only when a
+ * department is active. `cmdk`'s own fuzzy filter (already wired in `@devon/ui`'s `CommandPalette`)
+ * narrows this candidate set as the user types, exactly as it narrows every other group here -- this
+ * hook's only job is fetching the rows; the caller turns them into `CommandPaletteItem`s so their
+ * `onSelect` can close the palette the same way every other row's does. */
+function usePaletteEntities(open: boolean, departmentId: string | null): PaletteEntities {
+  const enabled = open && departmentId !== null
+
+  const membersQuery = useQuery({
+    queryKey: ['palette', 'members', departmentId],
+    queryFn: () => fetchMembers(departmentId!),
+    enabled,
+    staleTime: 60_000,
+  })
+  const cardsQuery = useQuery({
+    queryKey: ['palette', 'cards'],
+    queryFn: () => fetchCards({ limit: SOURCE_LIMIT }),
+    enabled,
+    staleTime: 30_000,
+  })
+  const eventsQuery = useQuery({
+    queryKey: ['palette', 'events'],
+    queryFn: () => fetchEvents({}),
+    enabled,
+    staleTime: 30_000,
+  })
+  const pagesQuery = useQuery({
+    queryKey: ['palette', 'pages'],
+    queryFn: () => fetchPages(),
+    enabled,
+    staleTime: 30_000,
+  })
+
+  return {
+    members: membersQuery.data ?? [],
+    cards: cardsQuery.data?.items ?? [],
+    events: eventsQuery.data?.items ?? [],
+    pages: pagesQuery.data ?? [],
+  }
+}
+
 export function CommandPaletteController({
   open,
   onOpenChange,
@@ -95,6 +167,8 @@ export function CommandPaletteController({
   const t = useT()
   const [mode, setMode] = React.useState<Mode>('root')
   const recentRoutes = useRecentRoutes()
+  const { departmentId } = useDepartment()
+  const entities = usePaletteEntities(open, departmentId)
 
   React.useEffect(() => {
     if (!open) setMode('root')
@@ -135,6 +209,38 @@ export function CommandPaletteController({
     onSelect: () => go(entry.route),
   }))
 
+  const peopleItems = entities.members.slice(0, SOURCE_LIMIT).map((member) => ({
+    id: `person:${member.userId}`,
+    label: [member.familyName, member.givenName].filter(Boolean).join(' '),
+    icon: Users,
+    ...(member.title ? { hint: member.title } : {}),
+    onSelect: () => go('/people'),
+  }))
+  const cardItems = entities.cards.slice(0, SOURCE_LIMIT).map((card) => ({
+    id: `card:${card.id}`,
+    label: card.title,
+    icon: KanbanSquare,
+    onSelect: () => go(`/work/card?id=${encodeURIComponent(card.id)}`),
+  }))
+  const eventItems = entities.events.slice(0, SOURCE_LIMIT).map((event) => ({
+    id: `event:${event.id}`,
+    label: event.title,
+    icon: CalendarDays,
+    onSelect: () => go(`/events?event=${encodeURIComponent(event.id)}`),
+  }))
+  const pageItems = entities.pages.slice(0, SOURCE_LIMIT).map((page) => ({
+    id: `page:${page.id}`,
+    label: page.title,
+    icon: FileText,
+    onSelect: () => go(`/pages?page=${encodeURIComponent(page.id)}`),
+  }))
+  const entityGroups: CommandPaletteGroup[] = [
+    ...(peopleItems.length > 0 ? [{ heading: t('cmd.group.people'), items: peopleItems }] : []),
+    ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
+    ...(eventItems.length > 0 ? [{ heading: t('cmd.group.events'), items: eventItems }] : []),
+    ...(pageItems.length > 0 ? [{ heading: t('cmd.group.pages'), items: pageItems }] : []),
+  ]
+
   // "Create" first (that is what a palette is reached for mid-task), then everything else a feature
   // registered.
   const actionItems = [
@@ -158,6 +264,7 @@ export function CommandPaletteController({
   const rootGroups: CommandPaletteGroup[] = [
     ...(recentItems.length > 0 ? [{ heading: t('cmd.group.recent'), items: recentItems }] : []),
     { heading: t('cmd.group.goto'), items: gotoItems },
+    ...entityGroups,
     ...(actionItems.length > 0 ? [{ heading: t('cmd.group.actions'), items: actionItems }] : []),
     {
       heading: t('cmd.group.settings'),

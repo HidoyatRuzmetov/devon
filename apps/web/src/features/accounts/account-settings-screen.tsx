@@ -4,6 +4,15 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
+import {
+  Image as ImageIcon,
+  KeyRound,
+  Monitor,
+  ShieldAlert,
+  Smartphone,
+  Tablet,
+  Trash2,
+} from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
   Badge,
@@ -12,7 +21,8 @@ import {
   DialogContent,
   initialsFromName,
   Input,
-  Separator,
+  PageHeader,
+  SectionCard,
   StateView,
   toast,
 } from '@devon/ui'
@@ -101,14 +111,26 @@ function PhotoSection() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="text-h3 text-foreground">{t('accounts.photo.title')}</h2>
-        <p className="text-small text-muted-foreground">{t('accounts.photo.subtitle')}</p>
-      </div>
+    <SectionCard
+      id="section-photo"
+      title={t('accounts.photo.title')}
+      description={t('accounts.photo.subtitle')}
+    >
       {body}
-    </section>
+    </SectionCard>
   )
+}
+
+/** Sniffed straight from `userAgent` -- the sessions endpoint stores exactly what the browser sent
+ * at login and nothing more (TECH-SPEC §2.1's device list has no client-side platform field to read
+ * instead), so a best-effort icon from that string is what "device icons" can mean here. Wrong on an
+ * unusual UA is a cosmetic miss, never a security signal -- the label text next to it is still the
+ * real device name. */
+function deviceIcon(userAgent: string | null): React.ComponentType<React.SVGProps<SVGSVGElement>> {
+  const ua = (userAgent ?? '').toLowerCase()
+  if (/ipad|tablet/.test(ua)) return Tablet
+  if (/mobi|iphone|android/.test(ua)) return Smartphone
+  return Monitor
 }
 
 function SessionsSection() {
@@ -116,6 +138,7 @@ function SessionsSection() {
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['accounts', 'sessions'], queryFn: fetchSessions })
+  const [revokeAllOpen, setRevokeAllOpen] = React.useState(false)
 
   const revokeOne = useMutation({
     mutationFn: (id: string) => revokeSession(id, csrfToken),
@@ -142,55 +165,74 @@ function SessionsSection() {
   } else {
     body = (
       <ul className="flex flex-col divide-y divide-border rounded-md border border-border">
-        {query.data.sessions.map((s: SessionView) => (
-          <li key={s.id} className="flex items-center justify-between gap-3 p-4">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-body text-foreground">
-                {s.userAgent ?? '—'}{' '}
-                {s.isCurrent ? <Badge>{t('accounts.sessions.current')}</Badge> : null}
-              </span>
-              <span className="text-small text-muted-foreground">
-                {s.ip ?? '—'} ·{' '}
-                {t('accounts.sessions.lastSeen', { when: new Date(s.lastSeenAt).toLocaleString() })}
-              </span>
-            </div>
-            {!s.isCurrent ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                loading={revokeOne.isPending}
-                onClick={() => revokeOne.mutate(s.id)}
-              >
-                {t('accounts.sessions.revoke')}
-              </Button>
-            ) : null}
-          </li>
-        ))}
+        {query.data.sessions.map((s: SessionView) => {
+          const DeviceIcon = deviceIcon(s.userAgent)
+          return (
+            <li key={s.id} className="flex items-center justify-between gap-3 p-4">
+              <div className="flex items-start gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+                  <DeviceIcon className="size-4.5" aria-hidden="true" />
+                </span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-body text-foreground">
+                    {s.userAgent ?? '—'}{' '}
+                    {s.isCurrent ? <Badge>{t('accounts.sessions.current')}</Badge> : null}
+                  </span>
+                  <span className="text-small text-muted-foreground">
+                    {s.ip ?? '—'} ·{' '}
+                    {t('accounts.sessions.lastSeen', {
+                      when: new Date(s.lastSeenAt).toLocaleString(),
+                    })}
+                  </span>
+                </div>
+              </div>
+              {!s.isCurrent ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  loading={revokeOne.isPending}
+                  onClick={() => revokeOne.mutate(s.id)}
+                >
+                  {t('accounts.sessions.revoke')}
+                </Button>
+              ) : null}
+            </li>
+          )
+        })}
       </ul>
     )
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-h3 text-foreground">{t('accounts.sessions.title')}</h2>
-          <p className="text-small text-muted-foreground">{t('accounts.sessions.subtitle')}</p>
-        </div>
-        <Button
-          variant="secondary"
-          size="sm"
-          loading={revokeAll.isPending}
-          onClick={() => {
-            if (window.confirm(t('accounts.sessions.revokeAllConfirm'))) revokeAll.mutate()
-          }}
-        >
+    <SectionCard
+      id="section-sessions"
+      title={t('accounts.sessions.title')}
+      description={t('accounts.sessions.subtitle')}
+      actions={
+        <Button variant="secondary" size="sm" onClick={() => setRevokeAllOpen(true)}>
           {t('accounts.sessions.revokeAll')}
         </Button>
-      </div>
-
+      }
+    >
       {body}
-    </section>
+
+      <Dialog open={revokeAllOpen} onOpenChange={setRevokeAllOpen}>
+        <DialogContent title={t('accounts.sessions.revokeAll')}>
+          <div className="flex flex-col gap-4 pt-4">
+            <p className="text-body text-muted-foreground">
+              {t('accounts.sessions.revokeAllConfirm')}
+            </p>
+            <Button
+              variant="destructive"
+              loading={revokeAll.isPending}
+              onClick={() => revokeAll.mutate()}
+            >
+              {t('accounts.sessions.revokeAll')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SectionCard>
   )
 }
 
@@ -317,17 +359,16 @@ function TwoFactorSection() {
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-h3 text-foreground">{t('accounts.twoFactor.title')}</h2>
-          <p className="text-small text-muted-foreground">{t('accounts.twoFactor.subtitle')}</p>
-        </div>
+    <SectionCard
+      id="section-2fa"
+      title={t('accounts.twoFactor.title')}
+      description={t('accounts.twoFactor.subtitle')}
+      headerAside={
         <Badge tone={enabled ? 'success' : 'neutral'}>
           {t(enabled ? 'accounts.twoFactor.enabled' : 'accounts.twoFactor.disabled')}
         </Badge>
-      </div>
-
+      }
+    >
       {mainContent}
 
       <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
@@ -358,7 +399,7 @@ function TwoFactorSection() {
           </div>
         </DialogContent>
       </Dialog>
-    </section>
+    </SectionCard>
   )
 }
 
@@ -380,8 +421,15 @@ function PasswordSection() {
   })
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-h3 text-foreground">{t('accounts.password.title')}</h2>
+    <SectionCard
+      id="section-password"
+      title={t('accounts.password.title')}
+      actions={
+        <Button size="sm" loading={mutation.isPending} onClick={() => mutation.mutate()}>
+          {t('accounts.password.submit')}
+        </Button>
+      }
+    >
       <div className="flex max-w-sm flex-col gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-small text-foreground">{t('accounts.password.current')}</span>
@@ -401,28 +449,32 @@ function PasswordSection() {
             {message === 'success' ? t('accounts.password.success') : t('accounts.password.error')}
           </p>
         ) : null}
-        <Button
-          size="sm"
-          className="w-fit"
-          loading={mutation.isPending}
-          onClick={() => mutation.mutate()}
-        >
-          {t('accounts.password.submit')}
-        </Button>
       </div>
-    </section>
+    </SectionCard>
   )
 }
 
+/** DESIGN.md §9.5: "danger zone ... every destructive action is a full dialog with a typed
+ * confirmation -- never an inline button." Typing the account's own login (never a generic word: a
+ * login is the one string every account holder already knows by heart and no phishing page could
+ * have pre-filled) is what enables the submit button, the same shape `WipeCard` uses for the
+ * instance-wide wipe (`features/admin/settings-screen.tsx`) one level further up in severity. */
 function DeleteAccountSection() {
   const t = useT()
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
+  const meQuery = useMeQuery()
   const statusQuery = useQuery({ queryKey: ['accounts', 'deletion'], queryFn: fetchDeletionStatus })
+  const [confirmOpen, setConfirmOpen] = React.useState(false)
+  const [typedLogin, setTypedLogin] = React.useState('')
 
   const request = useMutation({
     mutationFn: () => requestAccountDeletion(csrfToken),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['accounts', 'deletion'] }),
+    onSuccess: () => {
+      setConfirmOpen(false)
+      setTypedLogin('')
+      void queryClient.invalidateQueries({ queryKey: ['accounts', 'deletion'] })
+    },
   })
   const cancel = useMutation({
     mutationFn: () => cancelAccountDeletion(csrfToken),
@@ -433,11 +485,15 @@ function DeleteAccountSection() {
   })
 
   const scheduledFor = statusQuery.data?.scheduledFor ?? null
+  const expectedLogin = meQuery.data?.user.login ?? ''
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-h3 text-destructive">{t('accounts.delete.title')}</h2>
-      <p className="max-w-lg text-small text-muted-foreground">{t('accounts.delete.warning')}</p>
+    <SectionCard
+      id="section-delete"
+      className="border-destructive"
+      title={t('accounts.delete.title')}
+      description={t('accounts.delete.warning')}
+    >
       {scheduledFor ? (
         <div className="flex items-center gap-3">
           <p className="text-small text-foreground">
@@ -457,32 +513,142 @@ function DeleteAccountSection() {
           variant="destructive"
           size="sm"
           className="w-fit"
-          loading={request.isPending}
-          onClick={() => {
-            if (window.confirm(t('accounts.delete.confirmDialog'))) request.mutate()
-          }}
+          onClick={() => setConfirmOpen(true)}
         >
           {t('accounts.delete.confirm')}
         </Button>
       )}
-    </section>
+
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(next) => {
+          setConfirmOpen(next)
+          if (!next) setTypedLogin('')
+        }}
+      >
+        <DialogContent title={t('accounts.delete.title')}>
+          <div className="flex flex-col gap-3 pt-4">
+            <p className="text-body text-muted-foreground">{t('accounts.delete.confirmDialog')}</p>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">
+                {t('accounts.delete.dialog.loginLabel', { login: expectedLogin })}
+              </span>
+              <Input value={typedLogin} onChange={(e) => setTypedLogin(e.target.value)} />
+            </label>
+            <Button
+              variant="destructive"
+              disabled={typedLogin !== expectedLogin || expectedLogin === ''}
+              loading={request.isPending}
+              onClick={() => request.mutate()}
+            >
+              {t('accounts.delete.confirm')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </SectionCard>
   )
 }
+
+interface SubNavItem {
+  id: string
+  labelKey: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+}
+
+/** Three groups, not five flat rows -- `accounts.settings.{profile,security,dangerZone}` already
+ * existed in the catalogue (a settings recipe this screen never finished wiring up) and are exactly
+ * the grouping DESIGN.md's own settings recipe implies: what you look like, how you sign in, and the
+ * one card that ends the account. */
+const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNavItem[] }> = [
+  {
+    headingKey: 'accounts.settings.profile',
+    items: [{ id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon }],
+  },
+  {
+    headingKey: 'accounts.settings.security',
+    items: [
+      { id: 'section-sessions', labelKey: 'accounts.sessions.title', icon: Monitor },
+      { id: 'section-2fa', labelKey: 'accounts.twoFactor.title', icon: ShieldAlert },
+      { id: 'section-password', labelKey: 'accounts.password.title', icon: KeyRound },
+    ],
+  },
+  {
+    headingKey: 'accounts.settings.dangerZone',
+    items: [{ id: 'section-delete', labelKey: 'accounts.delete.title', icon: Trash2 }],
+  },
+]
+
+/** DESIGN.md §9.5 puts two columns on this screen from the 1024px breakpoint up: a left sub-nav
+ * and a stack of section cards. A plain anchor list rather than routed tabs -- every section stays
+ * mounted (no section's own `useQuery` should refire on a tab switch that never unmounted it), and
+ * `scroll-mt` on each card gives the jumped-to section room under the sticky app top bar. Below that
+ * breakpoint the same list becomes the horizontal, scrollable strip DESIGN.md offers as the
+ * alternative -- flattened there (a two-level scrolling strip of group headings would be its own new
+ * pattern for one screen). */
+function SettingsSubNav({ className, flat = false }: { className?: string; flat?: boolean }) {
+  const t = useT()
+  const items = flat ? SUB_NAV_GROUPS.flatMap((g) => g.items) : null
+  return (
+    <nav aria-label={t('accounts.settings.subnavAria')} className={className}>
+      {flat && items ? (
+        <ul className="flex gap-1 overflow-x-auto">
+          {items.map((item) => (
+            <li key={item.id} className="shrink-0">
+              <a href={`#${item.id}`} className={SUB_NAV_LINK_CLASS}>
+                <item.icon className="size-4 shrink-0" aria-hidden="true" />
+                {t(item.labelKey)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {SUB_NAV_GROUPS.map((group) => (
+            <div key={group.headingKey} className="flex flex-col gap-1">
+              <p className="px-3 text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                {t(group.headingKey)}
+              </p>
+              <ul className="flex flex-col gap-0.5">
+                {group.items.map((item) => (
+                  <li key={item.id}>
+                    <a href={`#${item.id}`} className={SUB_NAV_LINK_CLASS}>
+                      <item.icon className="size-4 shrink-0" aria-hidden="true" />
+                      {t(item.labelKey)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </nav>
+  )
+}
+
+const SUB_NAV_LINK_CLASS =
+  'flex items-center gap-2 whitespace-nowrap rounded-sm px-3 py-2 text-small text-muted-foreground transition-colors duration-(--dur-micro) hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 export default function AccountSettingsScreen() {
   const t = useT()
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8">
-      <h1 className="text-h2 text-foreground">{t('accounts.settings.title')}</h1>
-      <PhotoSection />
-      <Separator />
-      <SessionsSection />
-      <Separator />
-      <TwoFactorSection />
-      <Separator />
-      <PasswordSection />
-      <Separator />
-      <DeleteAccountSection />
+    <div className="mx-auto flex max-w-4xl flex-col gap-6">
+      <PageHeader
+        title={t('accounts.settings.title')}
+        description={t('accounts.settings.subtitle')}
+      />
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+        <SettingsSubNav className="sticky top-4 hidden shrink-0 basis-48 lg:block" />
+        <SettingsSubNav className="lg:hidden" flat />
+        <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
+          <PhotoSection />
+          <SessionsSection />
+          <TwoFactorSection />
+          <PasswordSection />
+          <DeleteAccountSection />
+        </div>
+      </div>
     </div>
   )
 }

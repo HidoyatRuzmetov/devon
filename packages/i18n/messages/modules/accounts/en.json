@@ -20,6 +20,13 @@
       "email": "Email (optional)",
       "password": "Password",
       "passwordHint": "At least 12 characters",
+      "passwordStrength": {
+        "label": "Password strength",
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong"
+      },
       "givenName": "Given name",
       "familyName": "Family name",
       "patronymic": "Patronymic (optional)",
@@ -87,7 +94,10 @@
       "confirmDialog": "Are you sure you want to delete your account?",
       "cancel": "Cancel deletion",
       "scheduled": "Your account will be deleted on {date}.",
-      "cancelled": "Deletion request cancelled"
+      "cancelled": "Deletion request cancelled",
+      "dialog": {
+        "loginLabel": "Type your login to confirm: {login}"
+      }
     },
     "admin": {
       "resetPassword": {
@@ -102,6 +112,8 @@
     },
     "settings": {
       "title": "Account settings",
+      "subtitle": "Profile, sessions, two-factor authentication and password all live here.",
+      "subnavAria": "Settings sections",
       "profile": "Profile",
       "security": "Security",
       "dangerZone": "Danger zone"

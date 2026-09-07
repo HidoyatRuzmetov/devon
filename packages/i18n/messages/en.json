@@ -106,7 +106,11 @@
       "settings": "Settings",
       "account": "Account",
       "recent": "Recent",
-      "actions": "Actions"
+      "actions": "Actions",
+      "people": "People",
+      "cards": "Cards",
+      "events": "Events",
+      "pages": "Pages"
     },
     "item": {
       "home": "Go to Home",
@@ -186,7 +190,14 @@
     "signedOut": "You have signed out",
     "offline": "Try again when the connection is back.",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "forgot": {
+      "link": "Forgot password?",
+      "title": "Reset password",
+      "body": "You can't reset your password here yourself — one of two paths applies:",
+      "telegram": "If Telegram is linked, the bot will send you a one-time code.",
+      "admin": "Otherwise, ask your department head or the super admin — they can reset it for you."
+    }
   },
   "setup": {
     "eyebrow": "FIRST RUN",
