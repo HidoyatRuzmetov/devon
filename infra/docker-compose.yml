@@ -121,6 +121,10 @@ services:
       - "${CADDY_HTTPS_PORT:-443}:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # TECH-SPEC §11 / EPIC-013: the static "unavailable" page Caddyfile's `handle_errors` serves
+      # when `api`/`web` are genuinely unreachable (not the same thing as app-level maintenance mode,
+      # which the SPA renders live from `GET /api/v1/instance` -- see the Caddyfile's own comment).
+      - ./maintenance:/srv/maintenance:ro
       - caddy_data:/data
       - caddy_config:/config
     healthcheck:

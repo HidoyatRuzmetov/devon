@@ -13,6 +13,17 @@ export const DEFAULTS = Object.freeze({
   logPath: '/var/log/devon-sentinel.log',
   nonceStorePath: '/var/lib/devon-sentinel/nonces.log',
   configPath: '/etc/devon/sentinel.conf',
+  // EPIC-013 / ADR-014: where `wipe` (src/wipe-executor.mjs) removes things. `projectRoot` is the
+  // one directory tree the whole command is scoped to -- there is no `allowed_commands`-style widening
+  // knob here either (config.mjs's own header comment): the *targets* wipe touches are configuration,
+  // but *that wipe exists at all* is a code fact, same as the allow-list below. `composeFile` has no
+  // default HERE on purpose (test/no-destructive-path.test.mjs's grep scans every file but wipe-
+  // executor.mjs for the container-runtime's name, and the conventional compose filename contains
+  // it) -- `null` means "let wipe-executor.mjs derive the project's compose file path itself",
+  // exactly the one file allowed to write that name down.
+  projectRoot: '/opt/devon',
+  composeFile: null,
+  wipeLogPath: '/var/log/devon-wipe.log',
 })
 
 function parseConfFile(text) {
@@ -59,10 +70,14 @@ export function loadConfig(env = process.env) {
     freshnessMs,
     nonceRetentionMs,
     maxBodyBytes: Number(env.SENTINEL_MAX_BODY_BYTES || fileConf.max_body_bytes || DEFAULTS.maxBodyBytes),
-    // Fixed here, in code, not sourced from the conf file (see file header): "noop" and nothing
-    // else in this epic (AC-15). Adding a command is a code change plus a new ADR (ADR-011).
-    allowedCommands: Object.freeze(['noop']),
+    // Fixed here, in code, not sourced from the conf file (see file header): EPIC-000 shipped "noop"
+    // only (AC-15); EPIC-013 / ADR-014 adds "wipe" -- a code change plus a new ADR, exactly as
+    // ADR-011's consequences section anticipated, never a config-file toggle.
+    allowedCommands: Object.freeze(['noop', 'wipe']),
     logPath: env.SENTINEL_LOG_PATH || fileConf.log_path || DEFAULTS.logPath,
     nonceStorePath: env.SENTINEL_NONCE_STORE_PATH || fileConf.nonce_store_path || DEFAULTS.nonceStorePath,
+    projectRoot: env.SENTINEL_PROJECT_ROOT || fileConf.project_root || DEFAULTS.projectRoot,
+    composeFile: env.SENTINEL_COMPOSE_FILE || fileConf.compose_file || DEFAULTS.composeFile,
+    wipeLogPath: env.SENTINEL_WIPE_LOG_PATH || fileConf.wipe_log_path || DEFAULTS.wipeLogPath,
   }
 }

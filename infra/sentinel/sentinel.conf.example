@@ -25,3 +25,9 @@ public_key=<paste the "public_key=" line from keygen.mjs's output here>
 # There is no "allowed_commands" setting here on purpose: the command allow-list is fixed in
 # infra/sentinel/src/config.mjs / server.mjs, not read from this file. Widening what the sentinel
 # will execute always requires a code change and a new ADR, never a config edit alone.
+
+# --- EPIC-013 / ADR-014: the "wipe" command's targets. Also code-configurable defaults; override
+# only if this deployment's project root genuinely lives somewhere other than /opt/devon. ------------
+# project_root=/opt/devon
+# compose_file=/opt/devon/infra/docker-compose.yml
+# wipe_log_path=/var/log/devon-wipe.log

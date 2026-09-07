@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Devon</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --color-background: oklch(97% 0.007 88);
+    --color-foreground: oklch(24% 0.015 240);
+    --color-card: oklch(99% 0 0);
+    --color-muted-foreground: oklch(50% 0.015 245);
+    --color-border: oklch(90% 0.006 90);
+    --color-primary: oklch(40% 0.09 250);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: oklch(18% 0.015 250);
+      --color-foreground: oklch(93% 0.01 240);
+      --color-card: oklch(22% 0.015 250);
+      --color-muted-foreground: oklch(72% 0.015 245);
+      --color-border: oklch(32% 0.015 250);
+      --color-primary: oklch(72% 0.09 250);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    max-width: 480px;
+    width: 100%;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .glyph {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 20px;
+    color: var(--color-primary);
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 12px;
+  }
+  p {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-muted-foreground);
+    margin: 0 0 6px;
+  }
+  .locales {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .locales p { color: var(--color-foreground); font-size: 14px; }
+  .retry {
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--color-muted-foreground);
+  }
+</style>
+</head>
+<body>
+  <main class="card" role="alert">
+    <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <path d="M12 8v5" stroke-linecap="round"/>
+      <circle cx="12" cy="16.2" r="0.9" fill="currentColor" stroke="none"/>
+      <path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke-linejoin="round"/>
+    </svg>
+    <h1 id="title">Xizmat vaqtincha ishlamayapti</h1>
+    <p id="body">Devon hozircha mavjud emas. Iltimos, birozdan so'ng qayta urinib ko'ring.</p>
+    <div class="locales">
+      <p lang="ru">Служба временно недоступна. Пожалуйста, повторите попытку позже.</p>
+      <p lang="en">The service is temporarily unavailable. Please try again shortly.</p>
+    </div>
+    <p class="retry" id="retry">Sahifa avtomatik yangilanadi...</p>
+  </main>
+  <script>
+    // No framework, no CDN (this page must render on a fully air-gapped network with the API/web
+    // containers themselves unreachable -- that is precisely the condition it exists for). Best-effort
+    // locale pick from the browser only; Caddy has no session/cookie context to read the visitor's
+    // actual saved preference from when it is the one serving this page instead of the app.
+    var COPY = {
+      uz: { title: "Xizmat vaqtincha ishlamayapti", body: "Devon hozircha mavjud emas. Iltimos, birozdan so'ng qayta urinib ko'ring.", retry: "Sahifa avtomatik yangilanadi..." },
+      ru: { title: "Служба временно недоступна", body: "Devon сейчас недоступен. Пожалуйста, повторите попытку позже.", retry: "Страница обновится автоматически..." },
+      en: { title: "Service temporarily unavailable", body: "Devon is not reachable right now. Please try again shortly.", retry: "This page will refresh automatically..." }
+    };
+    var lang = (navigator.language || "uz").slice(0, 2);
+    var copy = COPY[lang] || COPY.uz;
+    document.getElementById("title").textContent = copy.title;
+    document.getElementById("body").textContent = copy.body;
+    document.getElementById("retry").textContent = copy.retry;
+    document.documentElement.lang = COPY[lang] ? lang : "uz";
+    setTimeout(function () { window.location.reload(); }, 30000);
+  </script>
+</body>
+</html>

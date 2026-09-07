@@ -1,7 +1,8 @@
 [Unit]
-Description=Devon (WorkPortal) sentinel -- loopback-only signed command executor (noop only in this release)
+Description=Devon (WorkPortal) sentinel -- loopback-only signed command executor (noop, wipe)
 Documentation=file:/opt/devon/infra/README.md
-After=network.target
+After=network.target docker.service
+Wants=docker.service
 
 [Service]
 Type=simple
@@ -10,11 +11,12 @@ Restart=on-failure
 RestartSec=5
 
 # Runs as root (see infra/README.md#sentinel): /etc/devon/sentinel.conf is 0600 root-owned by design
-# (ADR-011), and the sentinel must be able to read it. Nothing in THIS epic's code needs root -- the
-# only command is "noop" -- so every privilege below is stripped anyway; running as root today only
-# avoids a second permissions migration when EPIC-013 adds the wipe executor, which genuinely needs
-# host-level access to stop/remove this project's own containers and files. Revisit
-# CapabilityBoundingSet at that point; it must grant exactly what wipe needs, never a blanket set.
+# (ADR-011), and the sentinel must be able to read it. EPIC-013 / ADR-014 revisits the capability set
+# this comment used to defer: `wipe` (infra/sentinel/src/wipe-executor.mjs) needs to run `docker
+# compose down` against the project's stack and remove the project directory outright, which needs
+# DAC override (files it does not own, e.g. a bind-mounted volume written by a container as a
+# different uid) and read/write access to the project root and the Docker socket -- granted narrowly
+# below, never a blanket "run unconfined" escape hatch.
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
@@ -26,9 +28,9 @@ RestrictSUIDSGID=true
 LockPersonality=true
 MemoryDenyWriteExecute=true
 ReadOnlyPaths=/etc/devon/sentinel.conf
-ReadWritePaths=/var/log/devon-sentinel.log /var/lib/devon-sentinel
-CapabilityBoundingSet=
-AmbientCapabilities=
+ReadWritePaths=/var/log/devon-sentinel.log /var/log/devon-wipe.log /var/lib/devon-sentinel /opt/devon /var/run/docker.sock
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER
+AmbientCapabilities=CAP_DAC_OVERRIDE CAP_DAC_READ_SEARCH CAP_FOWNER
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
 

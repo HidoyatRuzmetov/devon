@@ -1,0 +1,202 @@
+{
+  "admin": {
+    "console": {
+      "eyebrow": "Бошқарув",
+      "title": "Супер администратор панели",
+      "tabs": {
+        "label": "Администратор бўлимлари",
+        "dashboard": "Умумий кўриниш",
+        "departments": "Бўлимлар",
+        "accounts": "Ҳисоблар",
+        "analytics": "Таҳлиллар",
+        "audit": "Аудит",
+        "health": "Ҳолат",
+        "settings": "Созламалар"
+      },
+      "dashboard": {
+        "userCount": "Фойдаланувчилар сони",
+        "registration": "Рўйхатдан ўтиш",
+        "registrationOpen": "Очиқ",
+        "registrationClosed": "Ёпиқ",
+        "instanceKind": "Тизим тури",
+        "demo": "Демо",
+        "live": "Ишчи",
+        "maintenanceActive": "Техник хизмат режими ёқилган -- фойдаланувчилар тизимга кира олмайди.",
+        "quickLinks": "Тезкор ҳаволалар",
+        "reviewRequests": "Бўлим сўровларини кўриб чиқиш",
+        "manageDepartments": "Бўлимларни бошқариш",
+        "manageAccounts": "Ҳисобларни бошқариш",
+        "checkHealth": "Тизим ҳолатини текшириш"
+      },
+      "departments": {
+        "searchPlaceholder": "Бўлим номи бўйича қидириш",
+        "statusFilter": "Ҳолат бўйича филтр",
+        "statusAll": "Барчаси",
+        "statusActive": "Фаол",
+        "statusPaused": "Тўхтатилган",
+        "statusArchived": "Архивланган",
+        "status": {
+          "active": "Фаол",
+          "paused_by_admin": "Тўхтатилган",
+          "deletion_requested": "Ўчириш сўралган",
+          "archived": "Архивланган"
+        },
+        "empty": {
+          "title": "Бўлимлар топилмади"
+        },
+        "memberCount": "{cоунт} та аъзо",
+        "viewAs": "Кўриниш сифатида очиш",
+        "pause": "Тўхтатиш",
+        "archive": "Архивлаш",
+        "resume": "Давом эттириш",
+        "restore": "Тиклаш",
+        "stopViewingAs": "Кўринишни ёпиш",
+        "pauseDialogTitle": "Бўлимни тўхтатиш",
+        "pauseReasonLabel": "Сабаб",
+        "pauseSubmit": "Тўхтатиш",
+        "pausedToast": "Бўлим тўхтатилди",
+        "resumedToast": "Бўлим қайта фаоллаштирилди",
+        "archivedToast": "Бўлим архивланди",
+        "restoredToast": "Бўлим тикланди",
+        "viewAsStartedToast": "Кўриниш сифатида режим ёқилди",
+        "viewAsStoppedToast": "Кўриниш сифатида режим ёпилди"
+      },
+      "accounts": {
+        "searchPlaceholder": "Исм ёки логин бўйича қидириш",
+        "statusFilter": "Ҳолат бўйича филтр",
+        "statusAll": "Барчаси",
+        "statusActive": "Фаол",
+        "statusLocked": "Блокланган",
+        "statusDeleted": "Ўчирилган",
+        "status": {
+          "active": "Фаол",
+          "locked": "Блокланган",
+          "deleted": "Ўчирилган"
+        },
+        "empty": {
+          "title": "Ҳисоблар топилмади"
+        },
+        "role": {
+          "superAdmin": "Супер администратор"
+        },
+        "lock": "Блоклаш",
+        "unlock": "Блокдан чиқариш",
+        "resetPassword": "Паролни тиклаш",
+        "forceTwoFactorReset": "2ФА ни бекор қилиш",
+        "anonymize": "Ўчириш",
+        "lockDialogTitle": "Ҳисобни блоклаш",
+        "lockReasonLabel": "Сабаб",
+        "lockSubmit": "Блоклаш",
+        "lockedToast": "Ҳисоб блокланди",
+        "unlockedToast": "Ҳисоб блокдан чиқарилди",
+        "twoFactorResetToast": "Икки босқичли тасдиқлаш бекор қилинди",
+        "temporaryPasswordTitle": "Вақтинчалик парол",
+        "temporaryPasswordBody": "Ушбу паролни фойдаланувчига хавфсиз усулда етказинг. Биринчи киришда у янги парол ўрнатиши сўралади.",
+        "temporaryPasswordClose": "Ёпиш",
+        "anonymizeDialogTitle": "Ҳисобни ўчириш",
+        "anonymizeDialogBody": "Фойдаланувчи маълумотлари анонимлаштирилади ва ҳисоб доимий равишда ўчирилади. Бу амални бекор қилиб бўлмайди.",
+        "anonymizeSubmit": "Ўчириш",
+        "anonymizedToast": "Ҳисоб ўчирилди"
+      },
+      "analytics": {
+        "totalDepartments": "Жами бўлимлар",
+        "totalPeople": "Жами фойдаланувчилар",
+        "cardsCreated30d": "Карточкалар (30 кун)",
+        "logins7d": "Киришлар (7 кун)",
+        "departmentsTitle": "Бўлимлар ҳолати",
+        "peopleTitle": "Фойдаланувчилар таркиби",
+        "activityTitle": "Фаоллик",
+        "aiSpendTitle": "АИ харажатлари",
+        "active": "Фаол",
+        "paused": "Тўхтатилган",
+        "archived": "Архивланган",
+        "heads": "Раҳбарлар",
+        "members": "Аъзолар",
+        "superAdmins": "Супер администраторлар",
+        "noActivity": "Ҳозирча фаоллик маълумотлари ёъқ",
+        "weeklyLoginsCaption": "Ҳафталик киришлар сони (сўнгги 8 ҳафта)",
+        "notAvailable": "Мавжуд эмас",
+        "tokensThisMonth": "Ушбу ойдаги токенлар",
+        "costThisMonth": "Ушбу ойдаги харажат",
+        "uzs": "сўм",
+        "aiSpendUnavailable": "АИ модули ҳали уланмаган."
+      },
+      "audit": {
+        "actionFilterPlaceholder": "Амал бўйича филтр (масалан: админ.усер.лоcкед)",
+        "verifyChain": "Занжирни текшириш",
+        "export": "CСВ юклаб олиш",
+        "verifyOkToast": "Аудит занжири бутун",
+        "verifyFailedToast": "Аудит занжирида номувофиқлик топилди",
+        "chainOk": "Занжир бутун",
+        "chainBroken": "Занжир бузилган",
+        "chainRowsChecked": "{cоунт} та ёзув текширилди",
+        "empty": {
+          "title": "Воқеалар топилмади"
+        },
+        "columnAt": "Вақт",
+        "columnAction": "Амал",
+        "columnActor": "Бажарувчи",
+        "columnSubject": "Объэкт",
+        "previousPage": "Олдинги",
+        "nextPage": "Кейинги"
+      },
+      "health": {
+        "refresh": "Янгилаш",
+        "checkedAt": "Охирги текширув: {тиме}",
+        "db": "Маълумотлар базаси",
+        "queue": "Навбат",
+        "storage": "Хотира",
+        "telegram": "Телеграм",
+        "ai": "АИ хизмати",
+        "backups": "Захира нусхалар",
+        "status": {
+          "ok": "Ишлаяпти",
+          "degraded": "Секинлашган",
+          "down": "Ишламаяпти",
+          "not_configured": "Созланмаган"
+        }
+      },
+      "settings": {
+        "registrationTitle": "Рўйхатдан ўтиш",
+        "registrationBody": "Янги фойдаланувчилар рўйхатдан ўтиши мумкинлигини бошқаринг.",
+        "registrationOpen": "Рўйхатдан ўтишни очиш",
+        "registrationClose": "Рўйхатдан ўтишни ёпиш",
+        "registrationSavedToast": "Рўйхатдан ўтиш созламаси сақланди",
+        "maintenanceTitle": "Техник хизмат режими",
+        "maintenanceBody": "Ёқилганда барча фойдаланувчилар (супер администратордан ташқари) ушбу хабарни кўради.",
+        "maintenanceOnBadge": "Ёқилган",
+        "maintenanceMessagePlaceholder": "Хабар матнини киритинг",
+        "maintenanceEnable": "Ёқиш",
+        "maintenanceDisable": "Ўчириш",
+        "maintenanceSaveMessage": "Хабарни сақлаш",
+        "maintenanceSavedToast": "Техник хизмат созламаси сақланди",
+        "sentinelTitle": "Сентинел калити",
+        "sentinelBody": "Ўчириш тугмасини хост хизматига юбориш учун ишлатиладиган махфий калит.",
+        "sentinelConfigured": "Созланган",
+        "sentinelNotConfigured": "Созланмаган",
+        "sentinelRotate": "Калитни янгилаш",
+        "sentinelGenerate": "Калит яратиш",
+        "wipeTitle": "Ўчириш тугмаси",
+        "wipeBody": "Ушбу тугма бутун тизимни сервердан бутунлай ўчиради. Амални ортга қайтариб бўлмайди.",
+        "wipeStartCta": "Ўчиришни бошлаш",
+        "wipeDialogTitle": "Тасдиқлаш талаб қилинади",
+        "wipeDialogBody": "Давом этиш учун қуйидаги махсус иборани киритинг, паролингизни қайта киритинг ва агар ёқилган бўлса 2ФА кодини киритинг.",
+        "wipePhraseLabel": "Иборани киритинг: {пҳрасе}",
+        "wipePasswordLabel": "Парол",
+        "wipeTotpLabel": "2ФА коди (агар ёқилган бўлса)",
+        "wipeConfirmCta": "60 сониялик ҳисоблашни бошлаш",
+        "wipeStartFailedToast": "Тасдиқлаш муваффақияциз тугади",
+        "wipeCountdownBody": "Ҳисоблаш тугагач ўчириш буйруғи хост хизматига юборилади. Ҳозир бекор қилишингиз мумкин.",
+        "wipeCancel": "Бекор қилиш",
+        "wipeCancelledToast": "Ўчириш бекор қилинди",
+        "wipeExecuting": "Ўчириш буйруғи юборилмоқда...",
+        "wipeFailed": "Муваффақияциз",
+        "sentinelPublicKeyLabel": "Очиқ калит",
+        "sentinelPublicKeyHint": "Буни хост машинадаги инфра/сентинел/сентинел.cонф файлига публиc_кей=... сифатида жойлаштиринг. Бу махфий эмас, исталган вақтда шу ерда кўрсатилиши мумкин."
+      },
+      "maintenanceNotice": {
+        "title": "Хизмат вақтинча тўхтатилган"
+      }
+    }
+  }
+}

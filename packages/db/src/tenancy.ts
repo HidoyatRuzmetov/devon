@@ -64,6 +64,10 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.event_photos': 'department_owned',
   'app.event_feedback': 'department_owned',
   'app.event_reminder_jobs': 'global',
+
+  // EPIC-013 admin console (MODULE-GUIDE.md "DB: schema").
+  'app.wipe_requests': 'global',
+  'app.sentinel_keys': 'global',
 })
 
 /**
@@ -115,6 +119,14 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
   'app.telegram_group_connect_codes':
     'Bootstrap-only, mirrors app.telegram_link_codes: a group `/connect <code>` is consumed by an ' +
     'inbound webhook update before any department context exists for that request.',
+  'app.wipe_requests':
+    'EPIC-013: the wipe switch is instance-wide by definition (it removes the whole deployment, not ' +
+    'one department) -- reachable only behind {kind:"instance"} (super_admin-only, I-8b), same ' +
+    'bootstrap-shaped reasoning as app.setup_tokens.',
+  'app.sentinel_keys':
+    'EPIC-013: the sentinel ed25519 keypair signs a host-level command that also removes the whole ' +
+    'deployment, not one department -- reachable only behind {kind:"instance"}, same reasoning as ' +
+    'app.wipe_requests immediately above.',
 })
 
 export type TenancyCoverageResult = {
