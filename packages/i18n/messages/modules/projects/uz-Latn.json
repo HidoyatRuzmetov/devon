@@ -6,7 +6,8 @@
     "noIdTitle": "Loyiha koʻrsatilmagan",
     "noIdBody": "Havolada loyiha identifikatori yoʻq.",
     "tile": {
-      "progress": "{percent}% bajarildi"
+      "progress": "{percent}% bajarildi",
+      "progressAria": "{percent}% bajarildi"
     },
     "field": {
       "title": "Nomi",
@@ -44,6 +45,13 @@
     },
     "action": {
       "archive": "Loyihani arxivlash"
+    },
+    "ai": {
+      "plan": "Bugungi tartibni taklif qilish",
+      "planPreviewTitle": "AI reja koʻrinishi",
+      "applyFocus": "Asosiy kartani qoʻllash",
+      "focus": "Shundan boshlang: {title}",
+      "planApplied": "Asosiy karta yangilandi"
     }
   }
 }

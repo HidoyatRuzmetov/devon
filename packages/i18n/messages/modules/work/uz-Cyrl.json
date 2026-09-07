@@ -1,6 +1,8 @@
 {
   "work": {
+    "eyebrow": "ИШ",
     "title": "Вазифалар",
+    "description": "Ходимлар доскаси: бошқарма аъзосига битта устундан.",
     "view": {
       "board": "Доска",
       "table": "Жадвал",
@@ -15,13 +17,21 @@
       "columnEmpty": "Вазифалар йўқ",
       "emptyTitle": "Бошқарма аъзолари топилмади",
       "emptyBody": "Доска кўриниши учун аввал бошқармага аъзолар қўшилиши керак.",
-      "moved": "\"{title}\" {target} устунига кўчирилди"
+      "moved": "\"{title}\" {target} устунига кўчирилди",
+      "addCard": "+ Карта қўшиш",
+      "expandColumn": "Устунни ёйиш",
+      "collapseColumn": "Устунни йиғиш",
+      "loadCount": "Устунда {count} та карта"
     },
     "quickAdd": {
       "placeholder": "Тез қўшиш: \"Нодира: ЭГДИ пакети, жума\"",
       "created": "\"{title}\" яратилди",
       "error": "Вазифани яратиб бўлмади",
-      "unknownAssignee": "\"{name}\" номли ходим топилмади"
+      "unknownAssignee": "\"{name}\" номли ходим топилмади",
+      "aiParse": "AI билан аниқлаш",
+      "aiPreviewTitle": "AI аниқлаган карта",
+      "aiError": "Матнни аниқлаб бўлмади",
+      "aiMeta": "{tokens} токен · {ms} мс"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -49,7 +59,9 @@
       "links": "Ҳаволалар",
       "checklist": "Бажариш рўйхати",
       "comments": "Изоҳлар",
-      "activity": "Тарих"
+      "activity": "Тарих",
+      "project": "Лойиҳа",
+      "labels": "Ёрлиқлар"
     },
     "card": {
       "peekTitle": "Вазифа тафсилотлари",
@@ -135,6 +147,21 @@
       "save": "Сақлаш",
       "delete": "Ўчириш",
       "send": "Юбориш"
+    },
+    "ai": {
+      "accept": "Қабул қилиш",
+      "edit": "Таҳрирлаш",
+      "discard": "Бекор қилиш",
+      "retry": "Қайта уриниш",
+      "translate": "AI билан таржима қилиш",
+      "translatePreviewTitle": "AI таржимаси",
+      "subtasks": "Рўйхат бандларини таклиф қилиш",
+      "subtasksPreviewTitle": "AI рўйхат таклифлари",
+      "subtasksAdded": "{count} та банд қўшилди",
+      "summarize": "AI билан хулосалаш",
+      "summarizePreviewTitle": "AI хулосаси",
+      "summarizeCitations": "{count} та изоҳ асосида",
+      "postSummary": "Изоҳ сифатида жойлаш"
     },
     "actions": {
       "create": "Янги вазифа"

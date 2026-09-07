@@ -170,8 +170,10 @@ function BoardScreenInner() {
               member={col.member}
               cards={col.cards.filter(filterCard)}
               projects={projects.filter((p) => p.members.includes(col.member.userId))}
+              allProjects={projects}
               members={board.members}
               labels={board.labels}
+              filterKey={q}
               onOpenCard={openCardPeek}
               onDropped={handleDropped}
               onMoveTo={handleMoveTo}
@@ -181,8 +183,10 @@ function BoardScreenInner() {
             member={null}
             cards={board.unassigned.filter(filterCard)}
             projects={[]}
+            allProjects={projects}
             members={board.members}
             labels={board.labels}
+            filterKey={q}
             onOpenCard={openCardPeek}
             onDropped={handleDropped}
             onMoveTo={handleMoveTo}
