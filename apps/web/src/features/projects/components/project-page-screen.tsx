@@ -276,7 +276,8 @@ export default function ProjectPageScreen() {
                         // `celebrate` already bursts on check -- this toast is the same "named
                         // moment" acknowledgement `personal.sprints.complete.toast` gives a
                         // completed sprint, so a milestone reads as just as real a finish line.
-                        if (v === true) toast(t('projects.milestone.completedToast', { title: m.title }))
+                        if (v === true)
+                          toast(t('projects.milestone.completedToast', { title: m.title }))
                       }}
                       celebrate
                       size="sm"

@@ -979,7 +979,9 @@ function Comments({
                 className="flex gap-2"
                 initial={commentsReduced ? { opacity: 0 } : { opacity: 0, y: RISE_PX }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={commentsReduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
+                transition={
+                  commentsReduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }
+                }
               >
                 <Avatar
                   size="sm"

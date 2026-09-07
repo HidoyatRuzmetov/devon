@@ -452,9 +452,7 @@ export default function TimelineScreen() {
           key={zoomKey}
           className="relative"
           style={{ width: Math.max(totalWidth, 1), transformOrigin: 'top left' }}
-          initial={
-            reducedTimeline ? { opacity: 1 } : { scaleX: zoomScaleFrom || 1, opacity: 0.85 }
-          }
+          initial={reducedTimeline ? { opacity: 1 } : { scaleX: zoomScaleFrom || 1, opacity: 0.85 }}
           animate={{ scaleX: 1, opacity: 1 }}
           transition={reducedTimeline ? { duration: 0 } : tweenStandard}
         >
