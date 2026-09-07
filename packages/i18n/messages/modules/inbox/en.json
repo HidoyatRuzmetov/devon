@@ -12,8 +12,8 @@
     },
     "empty": {
       "inbox": {
-        "title": "Your inbox is empty",
-        "body": "Notifications about your work will appear here."
+        "title": "Inbox zero",
+        "body": "Nothing needs your attention right now. Enjoy the quiet."
       },
       "unread": {
         "title": "Nothing unread",

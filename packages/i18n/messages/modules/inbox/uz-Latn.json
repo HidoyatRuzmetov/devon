@@ -12,8 +12,8 @@
     },
     "empty": {
       "inbox": {
-        "title": "Bildirishnomalar yoʻq",
-        "body": "Ishingizga oid bildirishnomalar shu yerda koʻrinadi."
+        "title": "Hammasi tekshirildi",
+        "body": "Hozircha eʼtibor talab qiladigan narsa yoʻq. Xotirjam boʻling."
       },
       "unread": {
         "title": "Oʻqilmagan narsa yoʻq",
