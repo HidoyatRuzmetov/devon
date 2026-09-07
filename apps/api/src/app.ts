@@ -16,6 +16,7 @@ import type { Config } from './config.js'
 import type { Deps } from './deps.js'
 import sessionPlugin from './plugins/session.js'
 import authorizePlugin from './plugins/authorize.js'
+import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
 import { loadApiModules } from './module-loader.js'
@@ -27,7 +28,17 @@ declare module 'fastify' {
   }
 }
 
-export async function buildApp(deps: Deps, config: Config): Promise<FastifyInstance> {
+export type BuildAppOptions = {
+  /** Test seam for the storage plugin (a fake malware scanner, a fake object store). Production
+   * (`server.ts`) never passes this: both are built from `Config` (`plugins/storage.ts`). */
+  storage?: StorageOverrides
+}
+
+export async function buildApp(
+  deps: Deps,
+  config: Config,
+  options: BuildAppOptions = {},
+): Promise<FastifyInstance> {
   const app = Fastify({
     logger: { level: config.LOG_LEVEL },
     trustProxy: true,
@@ -72,6 +83,22 @@ export async function buildApp(deps: Deps, config: Config): Promise<FastifyInsta
         })
       return
     }
+    // A body past the route's `bodyLimit` (the storage plugin's raw image parser) is a client error
+    // with a fixed shape, never a 500 -- and never the JSON-body 422 above either.
+    if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
+      reply
+        .code(413)
+        .header('content-type', 'application/problem+json; charset=utf-8')
+        .send({
+          type: 'https://devon.local/problems/validation_failed',
+          title: 'Validation Failed',
+          status: 413,
+          code: 'validation_failed',
+          detail: 'The request did not pass validation.',
+          errors: [{ path: 'body', code: 'too_large' }],
+        })
+      return
+    }
     req.log.error(err)
     reply.code(500).header('content-type', 'application/problem+json; charset=utf-8').send({
       type: 'https://devon.local/problems/internal',
@@ -94,6 +121,9 @@ export async function buildApp(deps: Deps, config: Config): Promise<FastifyInsta
 
   await app.register(sessionPlugin)
   await app.register(authorizePlugin)
+  // After `authorizePlugin`: the storage plugin registers the local driver's two routes, and every
+  // route must be seen by authorize's `onRoute` boot guard (plugins/authorize.ts).
+  await app.register(storagePlugin, { ...(options.storage ? { overrides: options.storage } : {}) })
 
   await app.register(healthRoutes)
   await app.register(openapiRoutes)

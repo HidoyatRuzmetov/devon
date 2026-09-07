@@ -13,7 +13,13 @@ import {
   getTwoFactorStatus as accountsGetTwoFactorStatus,
 } from '../modules/accounts/repo.js'
 import type { Deps, CreatedSession, LoadedSession, ConsumeSetupTokenResult } from '../deps.js'
-import type { AuditCtx, InstanceSettingsRecord, MembershipRecord, UserRecord } from '../types.js'
+import type {
+  AuditCtx,
+  InstanceSettingsRecord,
+  MembershipRecord,
+  UploadRecord,
+  UserRecord,
+} from '../types.js'
 
 const SESSION_ABSOLUTE_DAYS = 30
 const SETUP_TOKEN_TTL_HOURS = 24
@@ -87,6 +93,41 @@ async function selectUserById(tx: Tx, id: string): Promise<UserRecord | null> {
     .where(and(eq(schema.users.id, id), isNull(schema.users.deletedAt)))
     .limit(1)
   return rows[0] ? toUserRecord(rows[0]) : null
+}
+
+/** `app.uploads` is reached through `Tx.raw()` (it is not in the typed `schema` barrel -- MODULE-GUIDE.md
+ * "DB: schema"), exactly like `app.user_security` in `modules/accounts/repo.ts`. */
+type UploadRow = {
+  id: string
+  user_id: string
+  purpose: 'avatar'
+  key: string
+  mime: string
+  size: number
+  status: UploadRecord['status']
+  error: string | null
+  // Strings, not Dates: drizzle's node-postgres driver hands `db.execute()` (what `Tx.raw()` wraps) the
+  // raw textual value for every timestamp column, unlike the typed query builder (found by
+  // `test/checks/avatar-prove.ts` against a real Postgres -- the fake `Deps` never showed it).
+  created_at: string | Date
+  expires_at: string | Date
+  finalized_at: string | Date | null
+}
+
+function toUploadRecord(row: UploadRow): UploadRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    purpose: row.purpose,
+    key: row.key,
+    mime: row.mime,
+    size: row.size,
+    status: row.status,
+    error: row.error,
+    createdAt: new Date(row.created_at),
+    expiresAt: new Date(row.expires_at),
+    finalizedAt: row.finalized_at === null ? null : new Date(row.finalized_at),
+  }
 }
 
 export function createRepo(): Deps {
@@ -405,6 +446,109 @@ export function createRepo(): Deps {
 
     async createLoginChallenge(userId) {
       return accountsCreateLoginChallenge(userId)
+    },
+
+    // --- EPIC-001 photo upload (storage plugin, TECH-SPEC §6) -------------------------------------
+
+    async createUpload(input, ctx) {
+      return withContext(toDbContext(ctx), async (tx) => {
+        const rows = await tx.raw<UploadRow>(
+          sql`insert into app.uploads (id, user_id, purpose, key, mime, size, expires_at)
+              values (${input.id}, ${input.userId}, ${input.purpose}, ${input.key}, ${input.mime},
+                      ${input.size}, ${input.expiresAt})
+              returning *`,
+        )
+        tx.audit({
+          action: 'storage.upload_requested',
+          subjectType: 'upload',
+          subjectId: input.id,
+          after: { purpose: input.purpose, mime: input.mime, size: input.size },
+        })
+        return toUploadRecord(rows[0]!)
+      })
+    },
+
+    async findOwnUpload(uploadId, userId) {
+      return withContext(anonymousCtx(), async (tx) => {
+        const rows = await tx.raw<UploadRow>(
+          sql`select * from app.uploads where id = ${uploadId} and user_id = ${userId} limit 1`,
+        )
+        return rows[0] ? toUploadRecord(rows[0]) : null
+      })
+    },
+
+    async markUpload(uploadId, userId, patch, ctx) {
+      await withContext(toDbContext(ctx), async (tx) => {
+        const rows = await tx.raw<{ id: string }>(
+          sql`update app.uploads
+              set status = ${patch.status}::app.upload_status, error = ${patch.error ?? null}, updated_at = now()
+              where id = ${uploadId} and user_id = ${userId} and status = 'pending'
+              returning id`,
+        )
+        if (rows.length === 0) return
+        tx.audit({
+          action: `storage.upload_${patch.status}` as `${string}.${string}`,
+          subjectType: 'upload',
+          subjectId: uploadId,
+          after: { status: patch.status, error: patch.error ?? null },
+        })
+      })
+    },
+
+    async setUserAvatar(userId, next, ctx) {
+      return withContext(toDbContext(ctx), async (tx) => {
+        const before = await selectUserById(tx, userId)
+        if (!before) throw new Error('setUserAvatar: user not found')
+        const rows = await tx.drizzle
+          .update(schema.users)
+          .set({ avatarKey: next.avatarKey, updatedAt: new Date() })
+          .where(eq(schema.users.id, userId))
+          .returning()
+        const after = toUserRecord(rows[0]!)
+        if (next.uploadId) {
+          await tx.raw(
+            sql`update app.uploads set status = 'finalized', finalized_at = now(), updated_at = now()
+                where id = ${next.uploadId} and user_id = ${userId}`,
+          )
+        }
+        tx.audit({
+          action: next.avatarKey ? 'accounts.avatar_updated' : 'accounts.avatar_removed',
+          subjectType: 'user',
+          subjectId: userId,
+          before: { avatarKey: before.avatarKey },
+          after: { avatarKey: after.avatarKey },
+        })
+        tx.emit({
+          type: 'accounts.user.avatar_updated',
+          departmentId: null,
+          payload: { userId, avatarKey: after.avatarKey },
+        })
+        return after
+      })
+    },
+
+    async expirePendingUploads(before, limit) {
+      return withContext(anonymousCtx(), async (tx) => {
+        const rows = await tx.raw<{ id: string; user_id: string; key: string }>(
+          sql`update app.uploads set status = 'expired', updated_at = now()
+              where id in (
+                select id from app.uploads
+                where status = 'pending' and expires_at < ${before}
+                order by expires_at asc
+                limit ${limit}
+              )
+              returning id, user_id, key`,
+        )
+        if (rows.length > 0) {
+          tx.audit({
+            action: 'storage.uploads_expired',
+            subjectType: 'upload',
+            subjectId: null,
+            after: { count: rows.length },
+          })
+        }
+        return rows.map((r) => ({ id: r.id, userId: r.user_id, key: r.key }))
+      })
     },
 
     async checkDbReady() {

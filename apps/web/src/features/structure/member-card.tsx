@@ -2,6 +2,7 @@
 // the org chart's unit nodes.
 import { useT } from '@devon/i18n'
 import { Avatar, Badge, initialsFromName } from '@devon/ui'
+import { avatarUrl } from '../../lib/avatar.js'
 import type { Member } from './api.js'
 
 const ROLE_KEY = {
@@ -25,6 +26,7 @@ export function MemberCard({ member, compact = false }: { member: Member; compac
       }
     >
       <Avatar
+        src={avatarUrl(member.avatarKey, compact ? 64 : 128)}
         size={compact ? 'sm' : 'md'}
         alt={fullName(member)}
         initials={initialsFromName(member.givenName, member.familyName)}

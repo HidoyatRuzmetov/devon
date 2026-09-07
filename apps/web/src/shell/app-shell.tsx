@@ -5,6 +5,7 @@
 import * as React from 'react'
 import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { useT, useLocale, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
+import { avatarUrl } from '../lib/avatar.js'
 import {
   Avatar,
   AvatarMenu,
@@ -139,6 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           avatarLabel={`${user.givenName} ${user.familyName}`}
           avatar={
             <Avatar
+              src={avatarUrl(user.avatarKey, 64)}
               alt={`${user.givenName} ${user.familyName}`}
               initials={initialsFromName(user.givenName, user.familyName)}
               hueSeed={user.id}

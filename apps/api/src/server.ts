@@ -6,6 +6,7 @@ import { buildApp } from './app.js'
 import { createRepo } from './db/repo.js'
 import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
+import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -24,9 +25,15 @@ async function main(): Promise<void> {
   const reminderWorker = startEventReminderWorker({
     onError: (err) => app.log.error(err, 'event reminder scan failed'),
   })
+  // EPIC-001 storage plugin: hourly retention sweep of abandoned presigned uploads (TECH-SPEC §6
+  // `retention.sweep`), same start-here-only rule as the two workers above.
+  const uploadSweeper = startUploadSweeper(app, {
+    onError: (err) => app.log.error(err, 'upload retention sweep failed'),
+  })
   app.addHook('onClose', async () => {
     outboxWorker.stop()
     reminderWorker.stop()
+    uploadSweeper.stop()
   })
 
   await app.listen({ port: config.API_PORT, host: '0.0.0.0' })

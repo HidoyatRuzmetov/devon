@@ -11,3 +11,4 @@ agentic/.unlock
 tools/gate-mutation/.tmp/
 tools/gate-mutation/.tmp-evidence.*
 .claude/worktrees/
+.data/

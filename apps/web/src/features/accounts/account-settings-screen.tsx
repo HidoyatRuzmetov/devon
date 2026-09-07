@@ -1,13 +1,25 @@
-// `/account` -- EPIC-001: sessions/devices, 2FA, password change, account deletion. One screen with a
-// few sections rather than several thin routes (this module's own screens/components only, per
-// MODULE-GUIDE.md "Web features").
+// `/account` -- EPIC-001: profile photo, sessions/devices, 2FA, password change, account deletion.
+// One screen with a few sections rather than several thin routes (this module's own
+// screens/components only, per MODULE-GUIDE.md "Web features").
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { useT } from '@devon/i18n'
-import { Badge, Button, Dialog, DialogContent, Input, Separator, StateView, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  initialsFromName,
+  Input,
+  Separator,
+  StateView,
+  toast,
+} from '@devon/ui'
+import { avatarUrl } from '../../lib/avatar.js'
 import { useMeQuery } from '../../lib/session.js'
 import {
+  avatarErrorKey,
   cancelAccountDeletion,
   changePassword,
   disableTotp,
@@ -15,16 +27,88 @@ import {
   fetchDeletionStatus,
   fetchSessions,
   fetchTwoFactorStatus,
+  removeAvatar,
   requestAccountDeletion,
   revokeAllSessions,
   revokeSession,
+  uploadAvatar,
   verifyTotpEnroll,
+  type AvatarUploadStage,
   type SessionView,
 } from './api.js'
+import { AvatarPicker } from './avatar-picker.js'
 
 function useCsrfToken(): string {
   const meQuery = useMeQuery()
   return meQuery.data?.csrfToken ?? ''
+}
+
+/** TECH-SPEC §2.1 "photo (optional)": choose -> upload straight to the presigned URL -> the server
+ * scans, checks and resizes -> the shell avatar updates from the refreshed `/me`. Removal is a plain
+ * action with a toast, not a confirm dialog (DESIGN.md: undo over confirm; a photo is re-uploadable
+ * in seconds, so neither is warranted). */
+function PhotoSection() {
+  const t = useT()
+  const csrfToken = useCsrfToken()
+  const queryClient = useQueryClient()
+  const meQuery = useMeQuery()
+  const user = meQuery.data?.user ?? null
+  const [stage, setStage] = React.useState<AvatarUploadStage | null>(null)
+  const [errorKey, setErrorKey] = React.useState<string | null>(null)
+
+  const upload = useMutation({
+    mutationFn: (file: File) => uploadAvatar(file, csrfToken, setStage),
+    onSuccess: async () => {
+      setErrorKey(null)
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+      toast(t('accounts.photo.savedToast'))
+    },
+    onError: (err) => setErrorKey(avatarErrorKey(err)),
+    onSettled: () => setStage(null),
+  })
+  const remove = useMutation({
+    mutationFn: () => removeAvatar(csrfToken),
+    onSuccess: async () => {
+      setErrorKey(null)
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
+      toast(t('accounts.photo.removedToast'))
+    },
+    onError: () => setErrorKey('accounts.photo.error.generic'),
+  })
+
+  let body: React.ReactNode
+  if (meQuery.isPending) {
+    body = <StateView kind="loading" titleKey="state.loading" />
+  } else if (meQuery.isError) {
+    body = <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
+  } else if (!user) {
+    body = <StateView kind="forbidden" titleKey="state.forbidden.title" />
+  } else {
+    body = (
+      <AvatarPicker
+        currentSrc={avatarUrl(user.avatarKey, 128)}
+        file={null}
+        alt={t('accounts.photo.alt')}
+        initials={initialsFromName(user.givenName, user.familyName)}
+        hueSeed={user.id}
+        onSelect={(file) => upload.mutate(file)}
+        onRemove={() => remove.mutate()}
+        busy={stage}
+        errorKey={errorKey}
+        disabled={remove.isPending}
+      />
+    )
+  }
+
+  return (
+    <section className="flex flex-col gap-4">
+      <div>
+        <h2 className="text-h3 text-foreground">{t('accounts.photo.title')}</h2>
+        <p className="text-small text-muted-foreground">{t('accounts.photo.subtitle')}</p>
+      </div>
+      {body}
+    </section>
+  )
 }
 
 function SessionsSection() {
@@ -390,6 +474,8 @@ export default function AccountSettingsScreen() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8">
       <h1 className="text-h2 text-foreground">{t('accounts.settings.title')}</h1>
+      <PhotoSection />
+      <Separator />
       <SessionsSection />
       <Separator />
       <TwoFactorSection />

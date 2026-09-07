@@ -14,7 +14,12 @@ export type ProveServer = {
   stop(): Promise<void>
 }
 
-export async function startProveServer(db: ProveDatabase): Promise<ProveServer> {
+/** `envOverrides`: extra env vars for `loadConfig` (e.g. `STORAGE_LOCAL_DIR` pointed at a temp
+ * directory by `avatar-prove.ts`). */
+export async function startProveServer(
+  db: ProveDatabase,
+  envOverrides: Record<string, string> = {},
+): Promise<ProveServer> {
   configurePool(db.appUrl)
   const config = loadConfig({
     NODE_ENV: 'test',
@@ -24,6 +29,7 @@ export async function startProveServer(db: ProveDatabase): Promise<ProveServer> 
     CSRF_SECRET: 'prove-script-csrf-secret-example-value',
     DEVON_SETUP_REMOTE: 'false',
     LOG_LEVEL: 'error',
+    ...envOverrides,
   })
   const deps = createRepo()
   const app = await buildApp(deps, config)

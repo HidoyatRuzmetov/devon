@@ -36,7 +36,9 @@
     "sessions": {
       "title": "Devices and sessions",
       "subtitle": "Every device currently signed in to your account.",
-      "empty": { "title": "No active sessions" },
+      "empty": {
+        "title": "No active sessions"
+      },
       "current": "This device",
       "lastSeen": "Last active: {when}",
       "revoke": "Sign out",
@@ -103,6 +105,29 @@
       "profile": "Profile",
       "security": "Security",
       "dangerZone": "Danger zone"
+    },
+    "photo": {
+      "title": "Profile photo",
+      "subtitle": "Shown next to your name across Devon.",
+      "hint": "JPEG, PNG or WebP, up to 5 MB. The photo is checked for malware and resized before it is shown.",
+      "choose": "Choose photo",
+      "change": "Change photo",
+      "remove": "Remove photo",
+      "optional": "Photo (optional)",
+      "uploading": "Uploading…",
+      "scanning": "Checking the file…",
+      "savedToast": "Photo updated",
+      "removedToast": "Photo removed",
+      "registerFailedToast": "Your account was created, but the photo could not be uploaded. You can add it in Account settings.",
+      "alt": "Your profile photo",
+      "error": {
+        "type": "Choose a JPEG, PNG or WebP image.",
+        "tooLarge": "The file is larger than 5 MB.",
+        "invalidImage": "This file is not a valid image.",
+        "infected": "This file failed the malware check and was not saved.",
+        "unavailable": "Photo upload is not available right now. Try again in a few minutes.",
+        "generic": "Could not upload the photo. Try again."
+      }
     }
   }
 }

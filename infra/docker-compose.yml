@@ -138,10 +138,11 @@ services:
     logging: *default-logging
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
-      # Not part of .env.example yet -- MinIO arrives with the file-upload epic, which adds these to
-      # the checked-in variable list (design.md §7.4 note: each profiled service's env vars land with
-      # its owning epic). The placeholders below only ever apply when this profile is explicitly
-      # started, which `pnpm setup`/`pnpm start` never does (AC-1).
+      # Consumed by the API's `storage` plugin when STORAGE_DRIVER=s3 (EPIC-001 photo upload): point
+      # STORAGE_S3_ACCESS_KEY / STORAGE_S3_SECRET_KEY at these (infra/README.md "Object storage and
+      # malware scanning"). The placeholder password is refused by a NODE_ENV=production boot, like
+      # every other example secret (apps/api/src/config.ts). Only ever applies when this profile is
+      # explicitly started, which `pnpm setup`/`pnpm start` never does (AC-1).
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-devon_minio_admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-devon_local_dev_minio_change_me}
     ports:
@@ -198,6 +199,9 @@ services:
       - "${CLAMAV_PORT:-3310}:3310"
     volumes:
       - clamav_data:/var/lib/clamav
+    # Consumed by the API's `storage` plugin when CLAMAV_MODE=clamd (EPIC-001 photo upload): every
+    # upload is streamed here over INSTREAM before it can become visible; clamd down => the upload is
+    # discarded, never let through unscanned. Production refuses to boot with CLAMAV_MODE=off.
     healthcheck:
       # The image ships clamdcheck.sh; the long start_period covers the first virus-database load,
       # which is slow and, on an air-gapped box, must be seeded from a mirrored freshclam feed rather

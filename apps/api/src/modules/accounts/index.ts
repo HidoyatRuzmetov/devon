@@ -1,7 +1,8 @@
 // /api/v1/accounts/* -- EPIC-001 (registration, sessions/devices, 2FA, password reset/change, account
-// deletion). `POST /register` and `POST /2fa/login-verify` are the two public routes this module adds
-// (registered in `plugins/authorize.ts`'s `PUBLIC_ROUTES`, MODULE-GUIDE.md's one sanctioned
-// public-route edit); everything else is `own_account` (or, for the admin reset, `instance`).
+// deletion, profile photo). `POST /register` and `POST /2fa/login-verify` are the two public routes
+// this module adds (registered in `plugins/authorize.ts`'s `PUBLIC_ROUTES`, MODULE-GUIDE.md's one
+// sanctioned public-route edit); everything else is `own_account` (or, for the admin reset,
+// `instance`).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -12,9 +13,16 @@ import {
   expiredSessionCookieOptions,
   sessionCookieOptions,
 } from '../../lib/cookies.js'
+import { avatarKeyPrefix, avatarVariantKey } from '../../lib/storage/object-store.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import * as repo from './repo.js'
+import { finalizeAvatar, removeAvatar, requestAvatarUpload } from './avatar-service.js'
 import {
+  avatarFinalizeBodySchema,
+  avatarImageParamsSchema,
+  avatarResultSchema,
+  avatarUploadUrlBodySchema,
+  avatarUploadUrlResultSchema,
   changePasswordBodySchema,
   deleteAccountResultSchema,
   registerBodySchema,
@@ -34,6 +42,9 @@ import {
 
 const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 
+/** A served avatar variant is at most a few tens of KB; this is a sanity ceiling, not a budget. */
+const AVATAR_VARIANT_MAX_BYTES = 2 * 1024 * 1024
+
 const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   const ownAccount = (userId: string) => ({ kind: 'own_account' as const, userId })
 
@@ -48,6 +59,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     }
   }
 
+  /** Returns the created session so a handler that needs the raw CSRF token in its *response body*
+   * (`POST /register`) can send the real one: `req.cookies` only ever holds what the client sent, never
+   * a cookie this same reply is setting. */
   async function startSession(userId: string, req: FastifyRequest, reply: FastifyReply) {
     const session = await app.devon.createSession(
       userId,
@@ -60,6 +74,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       sessionCookieOptions(SESSION_ABSOLUTE_SECONDS),
     )
     reply.setCookie(CSRF_COOKIE_NAME, session.rawCsrf, csrfCookieOptions(SESSION_ABSOLUTE_SECONDS))
+    return session
   }
 
   app.post(
@@ -82,10 +97,11 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         throw err
       }
-      await startSession(user.id, req, reply)
-      reply
-        .code(201)
-        .send({ user: toAccountPublicUser(user), csrfToken: req.cookies[CSRF_COOKIE_NAME] ?? '' })
+      const session = await startSession(user.id, req, reply)
+      // The raw CSRF token from the session just created -- NOT `req.cookies[...]`, which is empty on
+      // the very request that sets the cookie (found live: the post-registration photo upload was
+      // 403ing on its first CSRF-checked call because the body carried an empty token).
+      reply.code(201).send({ user: toAccountPublicUser(user), csrfToken: session.rawCsrf })
     },
   )
 
@@ -330,6 +346,129 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const scheduledFor = await repo.getPendingDeletion(req.actor!.userId)
       reply.send(scheduledFor ? { scheduledFor: scheduledFor.toISOString() } : null)
+    },
+  )
+
+  // --- Profile photo (TECH-SPEC §2.1: "presigned upload, ClamAV, 512 px WebP variants") ----------
+  // Three-step flow, see `avatar-service.ts`: (1) `POST /avatar/upload-url` hands the browser a
+  // presigned PUT; (2) the browser uploads straight to it (MinIO, or the local driver's own route);
+  // (3) `POST /avatar` scans, validates, resizes and only then writes `users.avatar_key`.
+
+  app.post(
+    '/avatar/upload-url',
+    {
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      },
+      schema: { body: avatarUploadUrlBodySchema, response: { 200: avatarUploadUrlResultSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      if (req.body.size > app.storage.maxUploadBytes) {
+        sendProblem(reply, 'validation_failed', { errors: [{ path: 'size', code: 'too_large' }] })
+        return
+      }
+      const { upload, presigned } = await requestAvatarUpload(
+        app,
+        req.actor!.userId,
+        req.body,
+        auditCtx(req),
+      )
+      reply.send({
+        uploadId: upload.id,
+        url: presigned.url,
+        method: presigned.method,
+        headers: presigned.headers,
+        expiresAt: presigned.expiresAt.toISOString(),
+      })
+    },
+  )
+
+  app.post(
+    '/avatar',
+    {
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      },
+      schema: { body: avatarFinalizeBodySchema, response: { 200: avatarResultSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await finalizeAvatar(app, req.actorUser!, req.body.uploadId, auditCtx(req))
+      if (result.ok) {
+        reply.send({ user: toAccountPublicUser(result.user) })
+        return
+      }
+      switch (result.reason) {
+        case 'not_found':
+          sendProblem(reply, 'not_found')
+          return
+        case 'consumed':
+        case 'not_uploaded':
+          sendProblem(reply, 'conflict')
+          return
+        case 'expired':
+          sendProblem(reply, 'gone')
+          return
+        case 'rejected':
+          sendProblem(reply, 'validation_failed', { errors: [{ path: 'file', code: result.code }] })
+          return
+        case 'infected':
+          // The signature name stays in the audit row and the server log; a Problem body carries
+          // fixed sentences and machine codes only (design.md §1.5).
+          sendProblem(reply, 'validation_failed', { errors: [{ path: 'file', code: 'infected' }] })
+          return
+        case 'scanner_unavailable':
+          // 503: the scanner is down and the upload was discarded rather than let through unscanned
+          // (H8.1). The client shows "try again later", never "your photo is saved".
+          sendProblem(reply, 'maintenance')
+          return
+      }
+    },
+  )
+
+  app.delete(
+    '/avatar',
+    {
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      await removeAvatar(app, req.actorUser!, auditCtx(req))
+      reply.code(204).send()
+    },
+  )
+
+  // Any signed-in user may see any user's photo: it is `public`-tier profile data within the
+  // instance, exactly like the name it sits beside (design.md §3.2). `own_account` on the *caller's
+  // own* id is the one `Subject` shape that means precisely "authenticated as yourself" -- it allows
+  // every signed-in actor and turns an anonymous caller into a 401, without inventing a new kind.
+  // Content-addressed by upload id (a new photo is always a new URL), so the variant is immutable and
+  // cacheable for a day; no database read happens here at all.
+  app.get(
+    '/avatar/:userId/:uploadId/:size',
+    {
+      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      schema: { params: avatarImageParamsSchema },
+    },
+    async (req, reply) => {
+      const { userId, uploadId, size } = req.params
+      const key = avatarVariantKey(avatarKeyPrefix(userId, uploadId), Number(size))
+      const bytes = await app.storage.store.get(key, { maxBytes: AVATAR_VARIANT_MAX_BYTES })
+      if (!bytes) {
+        sendProblem(reply, 'not_found')
+        return
+      }
+      reply
+        .header('content-type', 'image/webp')
+        .header('content-length', bytes.length)
+        .header('cache-control', 'private, max-age=86400, immutable')
+        .header('x-content-type-options', 'nosniff')
+        .send(bytes)
     },
   )
 }

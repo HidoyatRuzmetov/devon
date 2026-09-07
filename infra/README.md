@@ -38,9 +38,9 @@ epic that needs the service — design.md §0's "simplicity budget"):
 | Service | Image | Wired by this epic? |
 |---|---|---|
 | `caddy` | `caddy:2-alpine` | Config validated (`caddy validate`), written against `api`/`web`/`centrifugo` service names that do not exist yet -- no rework needed when they land (TECH-SPEC §13's deployment-image epic). |
-| `minio` | `minio/minio` | Declared only. Wired with the file-upload epic, which also adds `MINIO_*` to `.env.example`. |
+| `minio` | `minio/minio` | **Wired (EPIC-001 photo upload).** The API's `storage` plugin talks to it when `STORAGE_DRIVER=s3` -- see [Object storage and malware scanning](#object-storage-and-malware-scanning). Not required for `pnpm start`: the default `STORAGE_DRIVER=local` keeps uploads on disk. |
 | `centrifugo` | `centrifugo/centrifugo:v6` | Declared only (config via env vars, no mounted file needed). Wired with the realtime epic. |
-| `clamav` | `clamav/clamav:1.4` | Declared only. Air-gapped boxes must mirror the ClamAV virus-definition feed themselves (`freshclam` needs internet by default) -- wired with the upload-scanning epic. |
+| `clamav` | `clamav/clamav:1.4` | **Wired (EPIC-001 photo upload).** Every upload is streamed to clamd before it can become visible when `CLAMAV_MODE=clamd`; production refuses to boot with `CLAMAV_MODE=off`. Air-gapped boxes must mirror the ClamAV virus-definition feed themselves (`freshclam` needs internet by default). |
 | `pgbackrest` | `woblerr/pgbackrest` | Declared only, deliberately inert (see `infra/docker-compose.yml`'s comment on that service) -- **the working backup path today is `infra/backup/*.sh`, below.** WAL-level PITR is TECH-SPEC §13's "drilled in EPIC-014" follow-up. |
 | `glitchtip` | `glitchtip/glitchtip` | Declared only. Needs a `glitchtip` database created manually on `postgres` before it will boot (`docker compose exec postgres createdb -U postgres glitchtip`) until the observability epic adds a proper init step. |
 
@@ -205,6 +205,47 @@ Scheduling: `infra/backup/systemd/devon-backup.timer` (daily, 02:15) and
 
 Demo audit rows are never removed by any of this -- `audit.events` has no delete path at all (I-3 /
 I-5a), by design; a restore rolls the row count backward only if the backup itself predates them.
+
+## Object storage and malware scanning
+
+EPIC-001's photo upload ships the `storage` Fastify plugin (TECH-SPEC §6): presigned PUT, ClamAV
+before visibility, sharp-generated 64/128/512 px WebP variants with EXIF stripped, random object keys,
+size/MIME/magic-byte allow-lists. Two object-store drivers and two scanner modes, chosen by env:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `STORAGE_DRIVER` | `local` | `local`: files under `STORAGE_LOCAL_DIR`, "presigned" URLs are the API's own HMAC-signed routes (`/api/v1/storage/uploads`, `/api/v1/storage/objects`). `s3`: MinIO / any S3 endpoint, real presigned PUT/GET URLs. |
+| `STORAGE_LOCAL_DIR` | `.data/storage` | Local-driver directory, relative to the API process's cwd (`apps/api` under `pnpm start`). Git-ignored. |
+| `STORAGE_S3_ENDPOINT` | -- | Required with `s3`. What the API reaches, e.g. `http://minio:9000` inside Compose or `http://127.0.0.1:9000` from the host. |
+| `STORAGE_S3_PUBLIC_ENDPOINT` | = endpoint | What the *browser* reaches for a presigned URL (the signature covers the host). Behind Caddy, expose MinIO on a route and put that URL here. |
+| `STORAGE_S3_ACCESS_KEY` / `STORAGE_S3_SECRET_KEY` | -- | Required with `s3`. In dev these are `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from this Compose file; the placeholder password is refused in production exactly like the other example secrets. |
+| `STORAGE_S3_BUCKET` / `STORAGE_S3_REGION` | `devon` / `us-east-1` | Bucket is created on first use if missing. |
+| `STORAGE_S3_FORCE_PATH_STYLE` | `true` | MinIO needs path-style addressing. |
+| `STORAGE_MAX_UPLOAD_BYTES` | `5242880` | 5 MiB. Enforced at presign, on the local PUT route (413) and at finalise. |
+| `STORAGE_TIMEOUT_MS` | `10000` | Every MinIO call carries this timeout (H8.1). |
+| `CLAMAV_MODE` | `off` | `clamd`: stream every upload to clamd and fail closed when it is unreachable. `off`: **no scanning** -- developer machines only; logged as a warning at every boot; **refused when `NODE_ENV=production`**. |
+| `CLAMAV_HOST` / `CLAMAV_PORT` | `127.0.0.1` / `3310` | The `clamav` profile publishes 3310 on the host. |
+| `CLAMAV_TIMEOUT_MS` | `20000` | Per-scan timeout. |
+
+These are not yet listed in `.env.example` (that file could not be edited from the session that built
+the plugin -- the same permission block MODULE-GUIDE.md already documents); every variable has a
+working default, so an untouched `.env` boots with the local driver and scanning off. Add the
+`STORAGE_S3_*` and `CLAMAV_*` lines to `.env.example` by hand when you next touch it.
+
+Production shape:
+
+```bash
+docker compose -f infra/docker-compose.yml --profile minio --profile clamav up -d
+# .env: STORAGE_DRIVER=s3, STORAGE_S3_ENDPOINT=http://minio:9000 (or the host port), real MinIO
+# credentials, STORAGE_S3_PUBLIC_ENDPOINT=<the URL browsers reach>, CLAMAV_MODE=clamd
+```
+
+Prove it against real services:
+
+```bash
+pnpm --filter @devon/api avatar:prove    # real Postgres (Testcontainers) + local driver: the whole flow, every SQL path
+pnpm --filter @devon/api storage:prove   # the s3 driver against a running MinIO (defaults to this Compose file's dev credentials)
+```
 
 ## Rollback
 

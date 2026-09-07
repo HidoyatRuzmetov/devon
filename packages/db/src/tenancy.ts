@@ -23,6 +23,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.login_challenges': 'global',
   'app.join_attempts': 'global',
   'app.account_deletion_requests': 'global',
+  'app.uploads': 'global',
   'app.cards': 'department_owned',
   'app.card_checklist_items': 'department_owned',
   'app.card_comments': 'department_owned',
@@ -86,6 +87,8 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'EPIC-008: the reminder worker polls this queue across every department at once, exactly like app.outbox_events; department_id is a plain column for filtering/audit, not a row-visibility boundary.',
   'app._migrations':
     'Migration-runner bookkeeping (which .sql files have applied), not tenant data.',
+  'app.uploads':
+    'EPIC-001 storage plugin: presigned-upload bookkeeping (random object keys, sizes, scan states -- never file content or a user filename). The API scopes every read/write to the owner via own_account; the hourly retention sweep must see the expired rows of every user at once, exactly like app.event_reminder_jobs.',
   'app.department_requests':
     'A request exists before any department does, so it cannot carry a department_id yet; visibility is code-level (own_account for the requester, instance for the super admin approval queue), same reasoning as app.setup_tokens (EPIC-002).',
   'app.user_security':
