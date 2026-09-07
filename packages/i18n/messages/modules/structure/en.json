@@ -30,6 +30,8 @@
         "selfAssign": "Only the department head can assign unit roles right now"
       },
       "dragHint": "Drag to reorder",
+      "expandBranch": "Expand sub-units",
+      "collapseBranch": "Collapse sub-units",
       "view": { "tree": "List", "chart": "Org chart" },
       "chart": {
         "exportPng": "Export as PNG",
@@ -37,7 +39,11 @@
         "headBadge": "Head",
         "deputyBadge": "Deputy",
         "memberCount": "{count} people",
-        "keyboardHint": "Use the arrow keys to move between units"
+        "keyboardHint": "Use the arrow keys to move between units",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "resetView": "Reset view",
+        "closePanel": "Close"
       },
       "validation": { "nameRequired": "Enter a name" },
       "addDialog": {
@@ -76,7 +82,20 @@
       "empty": { "title": "No members yet" },
       "searchPlaceholder": "Search people",
       "unassignedGroup": "Unassigned",
-      "memberCard": { "noUnit": "No unit assigned" }
+      "memberCard": { "noUnit": "No unit assigned" },
+      "filters": {
+        "label": "Filter by unit",
+        "all": "All",
+        "clear": "Clear filters"
+      },
+      "noResults": {
+        "title": "No one found",
+        "body": "Try a different search or clear the filter."
+      },
+      "hoverCard": {
+        "membership": "Membership",
+        "unit": "Unit"
+      }
     },
     "common": { "head": "Head", "member": "Member" }
   }

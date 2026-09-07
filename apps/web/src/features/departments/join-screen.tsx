@@ -2,15 +2,19 @@
 // following `/join?key=...` is intercepted by the shell's own auth check today (feature routes always
 // render inside `AppShell`, `app.tsx`'s `RouteOutlet`) -- signing in first, then returning here with
 // the same query string, satisfies "if logged out, register/login first, then the password prompt"
-// without this screen needing its own redirect logic.
+// without this screen needing its own redirect logic. `/join` is one of `app.tsx`'s `AUTH_ROUTES`, so
+// this renders inside `AuthShell` -- the ambient gradient and the centred-card treatment
+// (UI-OVERHAUL.md's Jakob row "Auth: Linear, Vercel, Notion") already come from there; this file only
+// supplies the card itself, styled to match (`bg-card/90` + blur so the wash still reads through it).
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { Button, Input, StateView } from '@devon/ui'
+import { BlurFade, Button, Input, StateView } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useSession } from '../../lib/session.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { fetchJoinPreview, joinDepartment } from './api.js'
+import { JoinDepartmentIllustration } from './components/illustrations.js'
 
 export default function JoinScreen() {
   const t = useT()
@@ -42,14 +46,15 @@ export default function JoinScreen() {
 
   if (outcome) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-16 text-center">
-        <h1 className="text-h2 text-foreground">
+      <BlurFade className="mx-auto flex w-full max-w-105 flex-col items-center gap-4 rounded-lg border border-border bg-card/90 p-8 text-center shadow-2 backdrop-blur-sm">
+        <JoinDepartmentIllustration className="w-28" />
+        <h1 className="font-display text-h2 text-foreground">
           {t(
             outcome === 'success' ? 'departments.join.success' : 'departments.join.pendingApproval',
           )}
         </h1>
         <Button onClick={() => navigate('/departments')}>{t('departments.title')}</Button>
-      </div>
+      </BlurFade>
     )
   }
 
@@ -61,7 +66,7 @@ export default function JoinScreen() {
       : null
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-6 rounded-md border border-border bg-card p-8">
+    <BlurFade className="mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
       {keyFromLink ? (
         <div className="flex flex-col gap-1">
           <h1 className="text-h2 text-foreground">{t('departments.join.byLink.title')}</h1>
@@ -128,6 +133,6 @@ export default function JoinScreen() {
           </Button>
         )}
       </form>
-    </div>
+    </BlurFade>
   )
 }

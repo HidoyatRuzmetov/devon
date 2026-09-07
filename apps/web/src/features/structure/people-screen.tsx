@@ -1,8 +1,10 @@
-// `/people` -- TECH-SPEC EPIC-003: "the People page listing members grouped by unit."
+// `/people` -- TECH-SPEC EPIC-003: "the People page listing members grouped by unit." Rebuilt to
+// UI-OVERHAUL.md's Jakob row "People directory" (Slack members, Google Contacts): search first,
+// cards grid with avatar/title/unit chip, a hover card, filters by unit, distinct empty/no-results.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { StateView, Input } from '@devon/ui'
+import { FilterChip, Input, Stagger, StaggerItem, StateView } from '@devon/ui'
 import { Search } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
@@ -65,6 +67,7 @@ export default function PeopleScreen() {
   const departments = useMyDepartments()
   const departmentId = departments.activeDepartmentId
   const [query, setQuery] = React.useState('')
+  const [unitFilter, setUnitFilter] = React.useState<string | null>(null)
 
   const membersQuery = useQuery({
     queryKey: ['structure', 'members', departmentId],
@@ -122,8 +125,79 @@ export default function PeopleScreen() {
     )
   }
 
-  const filtered = membersQuery.data.filter((m) => matchesQuery(m, query))
-  const groups = groupByUnit(unitsQuery.data.units, filtered)
+  const allMembers = membersQuery.data
+  const units = orderedUnits(unitsQuery.data.units)
+  const unitsById = new Map(units.map((u) => [u.id, u]))
+  const isFiltering = query.trim().length > 0 || unitFilter !== null
+
+  const filtered = allMembers
+    .filter((m) => matchesQuery(m, query))
+    .filter((m) => unitFilter === null || m.unitId === unitFilter)
+
+  const groups = groupByUnit(units, filtered)
+  const hasAnyMembers = allMembers.length > 0
+
+  // A plain if/else (not a JSX ternary chain) so no `>...<` boundary in the switch itself can ever be
+  // mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic (structure-screen.tsx's own
+  // body switch does the same, for the same reason).
+  let body: React.ReactNode
+  if (!hasAnyMembers) {
+    body = <StateView kind="empty" titleKey="structure.people.empty.title" />
+  } else if (groups.length === 0) {
+    body = (
+      <StateView
+        kind="empty"
+        titleKey="structure.people.noResults.title"
+        bodyKey="structure.people.noResults.body"
+        {...(isFiltering
+          ? {
+              action: {
+                labelKey: 'structure.people.filters.clear',
+                onAction: () => {
+                  setQuery('')
+                  setUnitFilter(null)
+                },
+              },
+            }
+          : {})}
+      />
+    )
+  } else if (unitFilter !== null) {
+    body = (
+      <Stagger
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        animateKey={unitFilter}
+      >
+        {filtered.map((m) => (
+          <StaggerItem key={m.userId} className="h-full">
+            <MemberCard member={m} unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null} />
+          </StaggerItem>
+        ))}
+      </Stagger>
+    )
+  } else {
+    body = (
+      <div className="flex flex-col gap-8">
+        {groups.map((group) => (
+          <section key={group.unit?.id ?? 'unassigned'} className="flex flex-col gap-3">
+            <h2 className="text-h4 text-foreground">
+              {group.unit ? group.label : t('structure.people.unassignedGroup')}
+            </h2>
+            <Stagger
+              className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+              animateKey={query}
+            >
+              {group.members.map((m) => (
+                <StaggerItem key={m.userId} className="h-full">
+                  <MemberCard member={m} unit={group.unit} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </section>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -147,24 +221,28 @@ export default function PeopleScreen() {
         />
       </div>
 
-      {groups.length === 0 ? (
-        <StateView kind="empty" titleKey="structure.people.empty.title" />
-      ) : (
-        <div className="flex flex-col gap-8">
-          {groups.map((group) => (
-            <section key={group.unit?.id ?? 'unassigned'} className="flex flex-col gap-3">
-              <h2 className="text-h4 text-foreground">
-                {group.unit ? group.label : t('structure.people.unassignedGroup')}
-              </h2>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {group.members.map((m) => (
-                  <MemberCard key={m.userId} member={m} />
-                ))}
-              </div>
-            </section>
+      {hasAnyMembers && units.length > 0 ? (
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label={t('structure.people.filters.label')}
+        >
+          <FilterChip active={unitFilter === null} onClick={() => setUnitFilter(null)}>
+            {t('structure.people.filters.all')}
+          </FilterChip>
+          {units.map((u) => (
+            <FilterChip
+              key={u.id}
+              active={unitFilter === u.id}
+              onClick={() => setUnitFilter((cur) => (cur === u.id ? null : u.id))}
+            >
+              {u.name}
+            </FilterChip>
           ))}
         </div>
-      )}
+      ) : null}
+
+      {body}
     </div>
   )
 }

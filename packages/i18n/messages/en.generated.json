@@ -853,11 +853,20 @@
   },
   "departments": {
     "title": "Departments",
+    "subtitle": "Your departments, and ways to join more",
+    "common": {
+      "cancel": "Cancel"
+    },
     "landing": {
+      "eyebrow": "Departments",
       "title": "Create a department or join one",
       "body": "You don't belong to a department yet. Create a new one or join an existing one.",
       "createCta": "Create a department",
-      "joinCta": "Join a department"
+      "createTitle": "Create a department",
+      "createBody": "Set up your department and its units. Your request is reviewed by the super admin.",
+      "joinCta": "Join a department",
+      "joinTitle": "Join a department",
+      "joinBody": "Join with an invite link, or with a key and a password."
     },
     "create": {
       "title": "New department request",
@@ -865,13 +874,23 @@
       "name": "Department name",
       "description": "Description (optional)",
       "unitsTitle": "Units (optional)",
+      "unitsHint": "Add units you already know, or add more later from the structure page.",
       "unitName": "Unit name",
       "unitColour": "Colour",
       "addUnit": "Add a unit",
       "removeUnit": "Remove",
       "locale": "Language",
       "submit": "Send request",
-      "submitted": "Your request has been sent"
+      "submitted": "Your request has been sent",
+      "steps": {
+        "name": "Name",
+        "units": "Units",
+        "settings": "Settings"
+      },
+      "reviewTitle": "Review",
+      "noUnitsYet": "Units can be added later",
+      "back": "Back",
+      "next": "Next"
     },
     "pending": {
       "title": "Your request is under review",
@@ -882,7 +901,13 @@
         "rejected": "Rejected"
       },
       "reasonLabel": "Reason",
-      "createAnother": "Send another request"
+      "createAnother": "Send another request",
+      "timeline": {
+        "submitted": "Submitted",
+        "review": "Under review",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     },
     "approvalQueue": {
       "title": "Department requests",
@@ -898,6 +923,7 @@
       "rejectSubmit": "Reject",
       "approvedToast": "Department created",
       "rejectedToast": "Request rejected",
+      "rejectCancel": "Cancel",
       "filterAll": "All",
       "filterPending": "Pending"
     },
@@ -921,7 +947,10 @@
       "approvalToggleLabel": "Require approval to join",
       "approvalToggleBody": "When on, new members wait for the head's approval.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
-      "saveNowWarning": "Save this now -- it won't be shown again."
+      "saveNowWarning": "Save this now -- it won't be shown again.",
+      "linkDescription": "Anyone who opens this link can ask to join your department.",
+      "rotateKeyDialogTitle": "Rotate the invite key",
+      "rotatePasswordDialogTitle": "Rotate the password"
     },
     "join": {
       "title": "Join a department",
@@ -958,13 +987,19 @@
       "leftToast": "You left the department",
       "transfer": "Transfer headship",
       "transferConfirm": "Headship will be transferred to {name}. Continue?",
-      "transferredToast": "Headship transferred"
+      "transferredToast": "Headship transferred",
+      "transferDialogTitle": "Transfer headship",
+      "removeDialogTitle": "Remove member from the department",
+      "leaveDialogTitle": "Leave the department"
     },
     "settings": {
       "title": "Department settings",
       "general": "General",
       "name": "Name",
       "description": "Description",
+      "permissionsTitle": "Permissions",
+      "permissionsDescription": "Set what members can do on their own.",
+      "save": "Save",
       "allowSelfAssign": "Members can assign themselves to units",
       "allowStructureEdit": "Members can edit the structure",
       "telegramGroupLabel": "Who can connect a Telegram group",
@@ -975,9 +1010,11 @@
       "quietHoursEnd": "Ends",
       "saved": "Settings saved",
       "dangerZone": "Danger zone",
+      "dangerZoneDescription": "Irreversible actions that affect the whole department.",
       "requestDeletion": "Request department deletion",
-      "requestDeletionConfirm": "The super admin will review this request. Continue?",
-      "deletionRequested": "Deletion requested"
+      "requestDeletionConfirm": "The super admin will review this request. This cannot be undone.",
+      "deletionRequested": "Deletion requested",
+      "typedConfirmLabel": "Type \"{name}\" to confirm"
     },
     "switcher": {
       "label": "Switch department",
@@ -1645,6 +1682,8 @@
         "selfAssign": "Only the department head can assign unit roles right now"
       },
       "dragHint": "Drag to reorder",
+      "expandBranch": "Expand sub-units",
+      "collapseBranch": "Collapse sub-units",
       "view": {
         "tree": "List",
         "chart": "Org chart"
@@ -1655,7 +1694,11 @@
         "headBadge": "Head",
         "deputyBadge": "Deputy",
         "memberCount": "{count} people",
-        "keyboardHint": "Use the arrow keys to move between units"
+        "keyboardHint": "Use the arrow keys to move between units",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "resetView": "Reset view",
+        "closePanel": "Close"
       },
       "validation": {
         "nameRequired": "Enter a name"
@@ -1704,6 +1747,19 @@
       "unassignedGroup": "Unassigned",
       "memberCard": {
         "noUnit": "No unit assigned"
+      },
+      "filters": {
+        "label": "Filter by unit",
+        "all": "All",
+        "clear": "Clear filters"
+      },
+      "noResults": {
+        "title": "No one found",
+        "body": "Try a different search or clear the filter."
+      },
+      "hoverCard": {
+        "membership": "Membership",
+        "unit": "Unit"
       }
     },
     "common": {
