@@ -1,7 +1,10 @@
-// The card detail content (TECH-SPEC §5, DESIGN.md §9.4 "two columns: left title/description/
-// checklist/comments, right properties, each inline-editable; activity a collapsible timeline at the
-// bottom"). Shared, unstyled-of-container content component -- `card-peek-dialog.tsx` wraps it in a
-// `Dialog` for the side-peek, `card-page-screen.tsx` renders it directly as the full page (TECH-SPEC
+// The card detail content (TECH-SPEC §5, DESIGN.md §9.4). round2 SEV2: the original two-column
+// layout ran its left column at ~170px inside the 480px sheet -- title/status/description, then a
+// full-width label-above-value property list (assignee, priority, due, ...), then links/checklist/
+// comments, all in one column at the now-wider `--width-detail-panel`; activity stays a collapsible
+// timeline at the bottom. Shared, unstyled-of-container content component -- `card-peek-dialog.tsx`
+// wraps it in a `Dialog` for the side-peek, `card-page-screen.tsx` renders it directly as the full
+// page (TECH-SPEC
 // "card peek panel and full card page"). AI actions (subtasks, summarise thread, translate the
 // description) are the preview-then-accept pattern UI-OVERHAUL.md's AI helpers row requires: a
 // `SparkleButton` next to the field it enhances, an `AiPreviewPanel` with Accept/Edit/Discard, and no
@@ -22,6 +25,7 @@ import {
   DatePicker,
   IconButton,
   Input,
+  Select,
   SparkleButton,
   Skeleton,
   StateView,
@@ -304,121 +308,70 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-[minmax(0,1fr)_240px]">
-        {/* Left: description, links, checklist, comments (DESIGN.md §9.4). */}
-        <div className="flex min-w-0 flex-col gap-6">
-          <Field
-            label={t('work.field.description')}
-            action={
-              translateEnabled && descDraft.trim() ? (
-                <SparkleButton
-                  aria-label={t('work.ai.translate')}
-                  size="sm"
-                  loading={translateAi.isPending}
-                  onClick={runTranslate}
-                />
-              ) : undefined
-            }
-          >
-            <textarea
-              value={descDraft}
-              onChange={(e) => setDescDraft(e.target.value)}
-              onBlur={() => void saveDescription()}
-              rows={5}
-              placeholder={t('work.card.descriptionPlaceholder')}
-              className="w-full resize-y rounded-sm border border-border bg-card p-3 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-            {translateAi.isPending || translatePreview || translateAi.isError ? (
-              <AiPreviewPanel
-                className="mt-2"
-                title={t('work.ai.translatePreviewTitle')}
-                status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
-                pendingLabel={t('work.ai.translate')}
-                errorMessage={t('work.quickAdd.aiError')}
-                acceptLabel={t('work.ai.accept')}
-                editLabel={t('work.ai.edit')}
-                discardLabel={t('work.ai.discard')}
-                retryLabel={t('work.ai.retry')}
-                onAccept={() => void acceptTranslate()}
-                onEdit={() => setTranslatePreview(null)}
-                onDiscard={() => {
-                  setTranslatePreview(null)
-                  translateAi.reset()
-                }}
-                onRetry={runTranslate}
-                {...(translatePreview
-                  ? {
-                      costLine: t('work.quickAdd.aiMeta', {
-                        tokens: translatePreview.tokens,
-                        ms: translatePreview.ms,
-                      }),
-                    }
-                  : {})}
-              >
-                {translatePreview ? (
-                  <p className="whitespace-pre-wrap">{translatePreview.text}</p>
-                ) : null}
-              </AiPreviewPanel>
-            ) : null}
-          </Field>
-
-          <Field label={t('work.field.links')}>
-            <div className="flex flex-col gap-2">
-              {card.links.map((link) => (
-                <div
-                  key={link.url}
-                  className="flex items-center gap-2 rounded-sm border border-border p-2"
-                >
-                  <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 truncate text-small text-primary underline"
-                  >
-                    {link.title}
-                  </a>
-                  <IconButton
-                    aria-label={t('work.action.delete')}
-                    onClick={() => void removeLink(link.url)}
-                  >
-                    <X className="size-3.5" />
-                  </IconButton>
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <Input
-                  value={linkInput}
-                  onChange={(e) => setLinkInput(e.target.value)}
-                  placeholder={t('work.card.addLinkPlaceholder')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') void addLink()
-                  }}
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void addLink()}
-                  loading={unfurl.isPending}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </div>
-            </div>
-          </Field>
-
-          <Checklist card={card} />
-
-          <Comments
-            cardId={card.id}
-            cardTitle={card.title}
-            comments={card.comments}
-            members={members}
+      {/* round2 SEV2: the two-column split ran the left column at ~170px inside the 480px sheet --
+          a description textarea broke after four words, a three-word comment took four lines, and
+          two field labels ("Havola manzilini kiriting"/"Izoh yozing" placeholders, in practice) were
+          clipped by their own inputs. One column, full sheet width (now 560-600px, see
+          --width-detail-panel), reads as a document instead of a cramped two-up form. */}
+      <div className="flex min-w-0 flex-col gap-6">
+        <Field
+          label={t('work.field.description')}
+          action={
+            translateEnabled && descDraft.trim() ? (
+              <SparkleButton
+                aria-label={t('work.ai.translate')}
+                size="sm"
+                loading={translateAi.isPending}
+                onClick={runTranslate}
+              />
+            ) : undefined
+          }
+        >
+          <textarea
+            value={descDraft}
+            onChange={(e) => setDescDraft(e.target.value)}
+            onBlur={() => void saveDescription()}
+            rows={5}
+            placeholder={t('work.card.descriptionPlaceholder')}
+            className="w-full resize-y rounded-sm border border-border bg-card p-3 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-        </div>
+          {translateAi.isPending || translatePreview || translateAi.isError ? (
+            <AiPreviewPanel
+              className="mt-2"
+              title={t('work.ai.translatePreviewTitle')}
+              status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
+              pendingLabel={t('work.ai.translate')}
+              errorMessage={t('work.quickAdd.aiError')}
+              acceptLabel={t('work.ai.accept')}
+              editLabel={t('work.ai.edit')}
+              discardLabel={t('work.ai.discard')}
+              retryLabel={t('work.ai.retry')}
+              onAccept={() => void acceptTranslate()}
+              onEdit={() => setTranslatePreview(null)}
+              onDiscard={() => {
+                setTranslatePreview(null)
+                translateAi.reset()
+              }}
+              onRetry={runTranslate}
+              {...(translatePreview
+                ? {
+                    costLine: t('work.quickAdd.aiMeta', {
+                      tokens: translatePreview.tokens,
+                      ms: translatePreview.ms,
+                    }),
+                  }
+                : {})}
+            >
+              {translatePreview ? (
+                <p className="whitespace-pre-wrap">{translatePreview.text}</p>
+              ) : null}
+            </AiPreviewPanel>
+          ) : null}
+        </Field>
 
-        {/* Right: properties, each inline-editable (DESIGN.md §9.4). */}
-        <div className="flex flex-col gap-4">
+        {/* Properties: a label-above-value row per field, full sheet width -- DESIGN.md §9.4,
+              round2 SEV2's "definition list" fix for the old cramped 240px right column. */}
+        <div className="flex flex-col gap-4 border-y border-border py-4">
           {card.projectId ? (
             <Field label={t('work.field.project')}>
               {(() => {
@@ -457,7 +410,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             />
           </Field>
           <Field label={t('work.field.priority')}>
-            <select
+            <Select
+              aria-label={t('work.field.priority')}
               value={card.priority}
               onChange={(e) =>
                 void patchCard.mutateAsync({
@@ -465,14 +419,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                   patch: { priority: e.target.value as CardPriority },
                 })
               }
-              className="h-11 w-full rounded-sm border border-border bg-card px-3 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {t(PRIORITY_LABEL_KEY[p])}
-                </option>
-              ))}
-            </select>
+              options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
+            />
           </Field>
           <Field label={t('work.field.due')}>
             <DatePicker
@@ -516,10 +464,11 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             <div className="flex flex-wrap gap-1.5">
               {labels.map((label) => {
                 const active = card.labels.includes(label.id)
-                // A pastel label colour with hardcoded white text was illegible the moment someone
-                // picked a light hue ("Hisobot"/"Tashqi" in the item handoff) -- labelChipColors
-                // derives a background/foreground pair from that one colour, guaranteed >= 4.5:1
-                // contrast, so any colour a member picks stays readable in both themes.
+                // A pastel label colour with hardcoded white text was illegible the moment
+                // someone picked a light hue ("Hisobot"/"Tashqi" in the item handoff) --
+                // labelChipColors derives a background/foreground pair from that one colour,
+                // guaranteed >= 4.5:1 contrast, so any colour a member picks stays readable in
+                // both themes.
                 const { background, foreground } = labelChipColors(label.colour, isDark)
                 return (
                   <button
@@ -553,6 +502,60 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             </div>
           </Field>
         </div>
+
+        <Field label={t('work.field.links')}>
+          <div className="flex flex-col gap-2">
+            {card.links.map((link) => (
+              <div
+                key={link.url}
+                className="flex items-center gap-2 rounded-sm border border-border p-2"
+              >
+                <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 truncate text-small text-primary underline"
+                >
+                  {link.title}
+                </a>
+                <IconButton
+                  aria-label={t('work.action.delete')}
+                  onClick={() => void removeLink(link.url)}
+                >
+                  <X className="size-3.5" />
+                </IconButton>
+              </div>
+            ))}
+            <div className="flex gap-2">
+              <Input
+                value={linkInput}
+                onChange={(e) => setLinkInput(e.target.value)}
+                placeholder={t('work.card.addLinkPlaceholder')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void addLink()
+                }}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => void addLink()}
+                loading={unfurl.isPending}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </Field>
+
+        <Checklist card={card} />
+
+        <Comments
+          cardId={card.id}
+          cardTitle={card.title}
+          comments={card.comments}
+          members={members}
+        />
       </div>
 
       {card.activity.length > 0 ? (

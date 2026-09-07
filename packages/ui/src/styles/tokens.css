@@ -168,7 +168,9 @@
   --width-content: 1280px;
   --width-content-narrow: 960px;
   --width-content-prose: 720px;
-  --width-detail-panel: 480px;
+  /* round2 SEV2: at 480px the card-detail sheet's (now-abandoned) two-column layout ran its left
+     column at ~170px -- widened so a one-column layout (card-detail.tsx) still reads comfortably. */
+  --width-detail-panel: 580px;
   --height-topbar: 56px;
   --height-tabbar: 60px;
 }
