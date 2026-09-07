@@ -507,6 +507,20 @@
   mix-blend-mode: normal;
 }
 
+/* UI-OVERHAUL.md's theme toggle: "no double exposure -- circular reveal only where View Transitions
+   exist". `document.startViewTransition()` is unscoped for a theme change (it captures the whole
+   document as "root"), but the page container above ALSO carries its own permanent
+   `view-transition-name: devon-page` (`page-transition.tsx`, for a future route-level transition) --
+   the browser captures that as a second, independent transition group regardless of which call
+   started the transition, and `devon-page`'s own crossfade+slide keyframes (below) would then play
+   underneath the circular reveal at the same time: the page's text visibly printed twice. While
+   `useViewTransitionTheme` has this class on `<html>`, this rule removes the page container's name
+   for that one transition only -- `!important` is required to outrank the element's own inline
+   `view-transition-name` style. */
+.devon-theme-transition [data-devon-page-transition] {
+  view-transition-name: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),

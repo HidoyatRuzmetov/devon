@@ -37,7 +37,15 @@ export function PageTransition({
 
   if (native) {
     return (
-      <div className={className} style={{ viewTransitionName: PAGE_VIEW_TRANSITION_NAME }}>
+      // `data-devon-page-transition` is the hook `styles/tokens.css`'s
+      // `.devon-theme-transition [data-devon-page-transition]` rule targets to null out this
+      // element's own `view-transition-name` for the duration of an unrelated (theme) transition --
+      // see THEME_TRANSITION_CLASS's doc comment in `view-transition.ts`.
+      <div
+        className={className}
+        data-devon-page-transition
+        style={{ viewTransitionName: PAGE_VIEW_TRANSITION_NAME }}
+      >
         {children}
       </div>
     )
