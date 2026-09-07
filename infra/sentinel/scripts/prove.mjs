@@ -12,7 +12,7 @@ import { execFileSync } from 'node:child_process'
 import { createSentinel } from '../src/server.mjs'
 import { isLoopbackAddress } from '../src/net.mjs'
 import { buildSignedCommand, postCommand, getHealthz } from './client.mjs'
-import { checkNoDestructivePath } from '../test/lib/grep-source.mjs'
+import { checkNoDestructivePath, checkDestructiveFileContainsCapability } from '../test/lib/grep-source.mjs'
 
 const results = []
 function record(name, ok, detail) {
@@ -35,7 +35,7 @@ const config = {
   freshnessMs: 60_000,
   nonceRetentionMs: 300_000,
   maxBodyBytes: 4096,
-  allowedCommands: Object.freeze(['noop']),
+  allowedCommands: Object.freeze(['noop', 'wipe']),
   logPath: join(workDir, 'sentinel.log'),
   nonceStorePath: join(workDir, 'nonces.log'),
 }
@@ -104,13 +104,15 @@ try {
   const allAcceptedByCheck = loopbackSamples.every((a) => isLoopbackAddress(a) === true)
   record('isLoopbackAddress() accepts every loopback form', allAcceptedByCheck, JSON.stringify(loopbackSamples))
 
-  // --- healthz sanity (not a break attempt, just confirms the allow-list surface is "noop" only) ---
+  // --- healthz sanity (not a break attempt, just confirms the allow-list surface) ---------------
   const health = await getHealthz({ port: addr.port })
-  record('/healthz reports commands=["noop"] only', health.status === 200 && JSON.stringify(health.body?.commands) === JSON.stringify(['noop']), JSON.stringify(health.body))
+  record('/healthz reports commands=["noop","wipe"]', health.status === 200 && JSON.stringify(health.body?.commands) === JSON.stringify(['noop', 'wipe']), JSON.stringify(health.body))
 
-  // --- no destructive code path (ADR-011: proved, not claimed) --------------------------------
-  const grep = checkNoDestructivePath()
-  record('no destructive verb appears in infra/sentinel/src', grep.clean, grep.clean ? 'checked ' + grep.filesChecked + ' file(s)' : JSON.stringify(grep.hits))
+  // --- no destructive code path outside wipe-executor.mjs (ADR-014: proved, not claimed) --------
+  const grep = checkNoDestructivePath({ excludeFiles: ['wipe-executor.mjs'] })
+  record('no destructive verb appears in infra/sentinel/src outside wipe-executor.mjs', grep.clean, grep.clean ? 'checked ' + grep.filesChecked + ' file(s)' : JSON.stringify(grep.hits))
+  const capability = checkDestructiveFileContainsCapability('wipe-executor.mjs')
+  record('wipe-executor.mjs exists and actually contains the wipe capability', capability.found && capability.hasCapability, JSON.stringify(capability))
 } finally {
   server.close()
   rmSync(workDir, { recursive: true, force: true })

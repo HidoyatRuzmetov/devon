@@ -33,15 +33,18 @@ test('SENTINEL_PUBLIC_KEY env var works without any conf file', () => {
   assert.equal(config.publicKeyB64, 'env-key')
 })
 
-test('the command allow-list is always exactly ["noop"], regardless of conf-file content', () => {
+test('the command allow-list is always exactly ["noop","wipe"], regardless of conf-file content', () => {
   const dir = mkdtempSync(join(tmpdir(), 'devon-sentinel-config-'))
   const confPath = join(dir, 'sentinel.conf')
   try {
     // Even if an operator tried to add commands via the conf file, loadConfig ignores that field --
-    // the allow-list is fixed in code (config.mjs, server.mjs), per ADR-011.
+    // the allow-list is fixed in code (config.mjs, server.mjs). ADR-011 shipped ["noop"] only;
+    // ADR-014 (EPIC-013) added "wipe" as a code change plus a new ADR, exactly as ADR-011's own
+    // consequences section said any future widening would have to be -- this assertion now reflects
+    // that shipped, documented state, never an ungoverned addition of "pause" from a conf file.
     writeFileSync(confPath, ['public_key=abc123', 'allowed_commands=noop,wipe,pause'].join('\n'))
     const config = loadConfig({ SENTINEL_CONFIG_PATH: confPath })
-    assert.deepEqual(config.allowedCommands, ['noop'])
+    assert.deepEqual(config.allowedCommands, ['noop', 'wipe'])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

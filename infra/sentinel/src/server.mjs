@@ -2,9 +2,11 @@
 // for AC-15's evidence: peer address -> size -> parse -> signature -> freshness -> nonce unseen ->
 // command allow-list. Every branch below appears in exactly that order.
 //
-// This service accepts exactly one command in this epic ("noop") and executes nothing destructive --
-// there is no code path here that removes a file, stops a container, or touches a database. That is
-// a property proved by test/no-destructive-path.test.mjs, not merely a claim in this comment.
+// EPIC-000 shipped exactly one command ("noop") and no destructive code path at all. EPIC-013 /
+// ADR-014 adds "wipe" -- the destructive verbs it needs live in exactly one file, `wipe-executor.mjs`,
+// never inline here; `test/no-destructive-path.test.mjs` now proves that every OTHER file under
+// `src/` (this one included) still contains none, so the blast radius stays that one small, auditable
+// file rather than spreading through the request-handling code.
 import { createServer } from 'node:http'
 import { appendFileSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
@@ -12,6 +14,7 @@ import { isLoopbackAddress } from './net.mjs'
 import { canonicalJson } from './canonical.mjs'
 import { publicKeyFromRaw, verifySignature } from './keys.mjs'
 import { NonceStore } from './nonces.mjs'
+import { executeWipe } from './wipe-executor.mjs'
 
 const NONCE_RE = /^[0-9a-f]{64}$/i
 
@@ -112,12 +115,16 @@ export function createSentinel(config) {
         typeof payload.issued_at !== 'string' ||
         Number.isNaN(Date.parse(payload.issued_at)) ||
         typeof payload.sig !== 'string' ||
-        payload.sig.length === 0
+        payload.sig.length === 0 ||
+        // `actor` is optional and, per the header comment above the `wipe` branch below, deliberately
+        // NOT part of the signed fields -- it still has to be a string when present, or absent, never
+        // some other JSON type that would make `sanitizeActor` downstream do something surprising.
+        (payload.actor !== undefined && typeof payload.actor !== 'string')
       ) {
         return reply(res, peer, 400, 'malformed')
       }
 
-      const { v, command, nonce, issued_at: issuedAt, sig } = payload
+      const { v, command, nonce, issued_at: issuedAt, sig, actor } = payload
       const message = canonicalJson({ v, command, nonce, issued_at: issuedAt })
 
       // 4. signature
@@ -136,14 +143,24 @@ export function createSentinel(config) {
         return reply(res, peer, 401, 'replay')
       }
 
-      // 7. command allow-list -- "noop" only in this epic; see config.mjs for why this list is
-      //    fixed in code rather than read from the conf file.
+      // 7. command allow-list -- "noop" and "wipe" (EPIC-013 / ADR-014); see config.mjs for why this
+      //    list is fixed in code rather than read from the conf file.
       if (!config.allowedCommands.includes(command)) {
         return reply(res, peer, 400, 'unknown_command')
       }
 
-      // The only command that exists in this epic. It does nothing and exists to prove the pipeline
-      // above end to end (AC-15). Executing "noop" is, by construction, executing nothing.
+      if (command === 'wipe') {
+        // `actor` (unsigned, informational only -- see the validation block above) is logged by
+        // `wipe-executor.mjs` for "wiped at <time> by <user>"; it is never consulted for the
+        // authorization decision, which is already final by this point (a validly signed, fresh,
+        // unreplayed command from the one trusted keypair).
+        const result = executeWipe(config, { actor })
+        if (!result.ok) return reply(res, peer, 500, 'wipe_failed', { steps: result.steps })
+        return reply(res, peer, 200, null, { command, at: new Date().toISOString(), steps: result.steps })
+      }
+
+      // "noop": does nothing and exists to prove the pipeline above end to end (AC-15). Executing
+      // "noop" is, by construction, executing nothing.
       return reply(res, peer, 200, null, { command, at: new Date().toISOString() })
     })
   })
