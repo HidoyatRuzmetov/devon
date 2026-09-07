@@ -150,8 +150,9 @@
       "deadlinePassed": "Срок регистрации истёк",
       "eventFull": "Мест нет — вы добавлены в очередь",
       "confirmedToast": "Ваше участие зафиксировано",
-"waitlistedToast": "Мест нет — вы поставлены в очередь",
-      "cancelledToast": "Ваше участие отменено",      "myStatus": "Ваш ответ: {status}",
+      "waitlistedToast": "Мест нет — вы поставлены в очередь",
+      "cancelledToast": "Ваше участие отменено",
+      "myStatus": "Ваш ответ: {status}",
       "notYet": "Вы ещё не ответили"
     },
     "attendees": {

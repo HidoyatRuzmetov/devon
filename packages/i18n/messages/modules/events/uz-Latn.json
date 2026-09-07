@@ -150,8 +150,9 @@
       "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
       "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
-"waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
-      "cancelledToast": "Ishtirokingiz bekor qilindi",      "myStatus": "Sizning javobingiz: {status}",
+      "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
+      "cancelledToast": "Ishtirokingiz bekor qilindi",
+      "myStatus": "Sizning javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
     "attendees": {
