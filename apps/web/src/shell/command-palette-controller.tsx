@@ -167,7 +167,7 @@ export function CommandPaletteController({
   const t = useT()
   const [mode, setMode] = React.useState<Mode>('root')
   const recentRoutes = useRecentRoutes()
-  const { departmentId } = useDepartment()
+  const { departmentId, memberships } = useDepartment()
   const entities = usePaletteEntities(open, departmentId)
 
   React.useEffect(() => {
@@ -185,8 +185,12 @@ export function CommandPaletteController({
 
   // Every destination in the product, with the icon it already carries in the sidebar -- so a
   // palette row and a nav row are recognisably the same thing (Jakob's Law inside one product).
+  // round2 SEV2: a membership-less super_admin's palette must drop the same nine department-scoped
+  // destinations the sidebar does (`nav.ts`'s `requireDepartmentFor`), or "Oʻtish" would still offer
+  // a shortcut to a screen the sidebar just hid.
   const navEntries = resolveNavEntries(NAV_ENTRIES, {
     role: isSuperAdmin ? 'super_admin' : 'member',
+    hasDepartment: memberships.length > 0,
   })
   const navByRoute = new Map(navEntries.map((entry) => [entry.route, entry]))
 

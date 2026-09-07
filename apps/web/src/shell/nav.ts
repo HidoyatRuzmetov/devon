@@ -16,9 +16,42 @@ const CORE_NAV_ENTRIES: readonly NavEntry[] = [
   },
 ]
 
+/** round2 SEV2: a `super_admin` session with no department membership was rendering all nine of
+ * these department-scoped destinations anyway -- confirmed live by signing in as that account and
+ * navigating to `/work`, which cannot work with no active department. Every feature manifest still
+ * owns its own `visibleWhen` (role gates, etc.); this wraps it with one more condition rather than
+ * editing nine manifest files to say the same thing nine times. `departments`/`department-requests`
+ * are deliberately not in this set -- discovering or requesting a department is exactly what a
+ * membership-less account still needs to reach. */
+const DEPARTMENT_SCOPED_ENTRY_IDS = new Set([
+  'work',
+  'projects',
+  'personal',
+  'events',
+  'people',
+  'structure',
+  'pages',
+  'analytics',
+  'ai',
+])
+
+function requireDepartmentFor(entries: readonly NavEntry[]): NavEntry[] {
+  return entries.map((entry) => {
+    if (!DEPARTMENT_SCOPED_ENTRY_IDS.has(entry.id)) return entry
+    const original = entry.visibleWhen
+    return {
+      ...entry,
+      visibleWhen: (ctx) => ctx.hasDepartment !== false && (original ? original(ctx) : true),
+    }
+  })
+}
+
 /** Core entries first, then every `src/features/<name>/manifest.ts(x)`'s own `sidebar` entries
  * (MODULE-GUIDE.md "Web features") -- a feature never edits this file to appear in the sidebar. */
-export const NAV_ENTRIES: readonly NavEntry[] = [...CORE_NAV_ENTRIES, ...getFeatureSidebarEntries()]
+export const NAV_ENTRIES: readonly NavEntry[] = requireDepartmentFor([
+  ...CORE_NAV_ENTRIES,
+  ...getFeatureSidebarEntries(),
+])
 
 /** UI-OVERHAUL.md §2 row 1: Linear, Huly, Notion and Vercel all *group* a nav past about six items.
  * Fifteen flat rows is the single biggest reason the blitz shell read as "software built module by

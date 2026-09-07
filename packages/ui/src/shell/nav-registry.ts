@@ -18,6 +18,13 @@ export interface NavEntry {
 export interface NavContext {
   role: 'super_admin' | 'head' | 'member'
   isDemo?: boolean
+  /** False for a `super_admin` session with no department membership (round2 SEV2: that account's
+   * sidebar was rendering all nine department-scoped destinations -- Vazifalar, Guruh loyihalari,
+   * Shaxsiy, Tadbirlar, Xodimlar, Tuzilma, Sahifalar, Tahlil, AI -- none of which can work with no
+   * active department). Defaults to `true` so every existing entry (which has no department
+   * requirement of its own) keeps rendering for a normal member/head session that never passes this
+   * field at all. */
+  hasDepartment?: boolean
 }
 
 /** The only place entries are filtered. `wp-qa-visual` can assert every entry `resolveNavEntries`

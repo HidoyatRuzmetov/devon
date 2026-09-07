@@ -105,7 +105,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const user = meQuery.data?.user ?? null
   const role = user?.role ?? 'member'
   const isDemo = instanceQuery.data?.isDemo ?? false
-  const navCtx = { role, isDemo }
+  // round2 SEV2: a super_admin with no department membership still saw all nine department-scoped
+  // sidebar entries -- `nav.ts`'s `requireDepartmentFor` is the gate, this is where the fact comes
+  // from (the same `memberships` the department switcher itself reads).
+  const navCtx = { role, isDemo, hasDepartment: memberships.length > 0 }
   const visibleEntries = resolveNavEntries(NAV_ENTRIES, navCtx)
   const inboxCount = counts['inbox'] ?? 0
 
@@ -261,7 +264,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           popoverText={t('shell.demo.popover')}
         />
       ) : null}
-      {user ? (
+      {/* round2 SEV2: every quick-add action creates something inside a department (a card, an
+          event, ...), so a membership-less super_admin session -- confirmed live navigating to
+          /work -- gets no working destination for any of them; the button itself is gated the same
+          way the sidebar's department groups are (`navCtx.hasDepartment`). */}
+      {user && navCtx.hasDepartment ? (
         <QuickAdd
           actions={quickAddActions}
           label={t('shell.quickAdd.aria')}
