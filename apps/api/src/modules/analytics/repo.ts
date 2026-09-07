@@ -101,6 +101,7 @@ export type PersonalOverview = {
   onTimeRate: number | null
   focusMinutesThisWeek: number
   upcomingEventCount: number
+  givenOverdueCount: number
 }
 
 export type SummaryResult = {
@@ -493,6 +494,14 @@ async function personalOverview(
     where r.user_id = ${viewerUserId} and r.status = 'yes' and e.starts_at >= now() and e.deleted_at is null
   `)
 
+  // Home's "needs my decision" (TECH-SPEC §5): work the viewer *gave out* that is now overdue -- a
+  // different count than `overdue_count` above (which is the viewer's own overdue assignments).
+  const givenRows = await tx.raw<{ count: string }>(sql`
+    select count(*) as count from app.cards
+    where department_id = ${departmentId} and deleted_at is null and giver_user_id = ${viewerUserId}
+      and status = 'active' and due_at is not null and due_at < now()
+  `)
+
   const due = Number(c?.due_count ?? 0)
   const onTime = Number(c?.on_time_count ?? 0)
   return {
@@ -502,6 +511,7 @@ async function personalOverview(
     onTimeRate: due > 0 ? onTime / due : null,
     focusMinutesThisWeek: Math.round(Number(focusRows[0]?.minutes ?? 0)),
     upcomingEventCount: Number(upcomingRows[0]?.count ?? 0),
+    givenOverdueCount: Number(givenRows[0]?.count ?? 0),
   }
 }
 

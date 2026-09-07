@@ -95,6 +95,7 @@ export function summaryChartToCsv(chartKey: AnalyticsChartKey, summary: SummaryR
           ],
           ['focus_minutes_this_week', summary.personal.focusMinutesThisWeek],
           ['upcoming_event_count', summary.personal.upcomingEventCount],
+          ['given_overdue_count', summary.personal.givenOverdueCount],
         ],
       )
   }
