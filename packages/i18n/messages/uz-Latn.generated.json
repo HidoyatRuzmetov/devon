@@ -876,11 +876,20 @@
   },
   "departments": {
     "title": "Bo'limlar",
+    "subtitle": "Sizning bo'limlaringiz va ularga qo'shilish yo'llari",
+    "common": {
+      "cancel": "Bekor qilish"
+    },
     "landing": {
+      "eyebrow": "Bo'limlar",
       "title": "Boshlash uchun bo'lim tanlang",
       "body": "Hozircha hech qanday bo'limga a'zo emassiz. Yangi bo'lim yarating yoki mavjud bo'limga qo'shiling.",
       "createCta": "Bo'lim yaratish",
-      "joinCta": "Bo'limga qo'shilish"
+      "createTitle": "Bo'lim yaratish",
+      "createBody": "Bo'limingizni tuzing, bo'linmalarni belgilang. So'rovingiz super administrator tomonidan tasdiqlanadi.",
+      "joinCta": "Bo'limga qo'shilish",
+      "joinTitle": "Bo'limga qo'shilish",
+      "joinBody": "Taklif havolasi yoki kalit va parol bilan mavjud bo'limga qo'shiling."
     },
     "create": {
       "title": "Yangi bo'lim so'rovi",
@@ -888,13 +897,23 @@
       "name": "Bo'lim nomi",
       "description": "Tavsif (ixtiyoriy)",
       "unitsTitle": "Bo'linmalar (ixtiyoriy)",
+      "unitsHint": "Bo'linmalarni hozir qo'shing yoki keyinroq tuzilma sahifasidan qo'shing.",
       "unitName": "Bo'linma nomi",
       "unitColour": "Rang",
       "addUnit": "Bo'linma qo'shish",
       "removeUnit": "O'chirish",
       "locale": "Til",
       "submit": "So'rov yuborish",
-      "submitted": "So'rovingiz yuborildi"
+      "submitted": "So'rovingiz yuborildi",
+      "steps": {
+        "name": "Nomi",
+        "units": "Bo'linmalar",
+        "settings": "Sozlamalar"
+      },
+      "reviewTitle": "Tekshirib chiqing",
+      "noUnitsYet": "Bo'linmalar keyinroq qo'shiladi",
+      "back": "Orqaga",
+      "next": "Keyingisi"
     },
     "pending": {
       "title": "So'rovingiz ko'rib chiqilmoqda",
@@ -905,7 +924,13 @@
         "rejected": "Rad etildi"
       },
       "reasonLabel": "Sabab",
-      "createAnother": "Yangi so'rov yuborish"
+      "createAnother": "Yangi so'rov yuborish",
+      "timeline": {
+        "submitted": "Yuborildi",
+        "review": "Ko'rib chiqilmoqda",
+        "approved": "Tasdiqlandi",
+        "rejected": "Rad etildi"
+      }
     },
     "approvalQueue": {
       "title": "Bo'lim so'rovlari",
@@ -921,6 +946,7 @@
       "rejectSubmit": "Rad etish",
       "approvedToast": "Bo'lim yaratildi",
       "rejectedToast": "So'rov rad etildi",
+      "rejectCancel": "Bekor qilish",
       "filterAll": "Barchasi",
       "filterPending": "Kutilmoqda"
     },
@@ -944,7 +970,10 @@
       "approvalToggleLabel": "Qo'shilishni tasdiqlash",
       "approvalToggleBody": "Yoqilgan bo'lsa, yangi a'zolar boshliq tasdiqlashini kutadi.",
       "passwordHiddenNotice": "Xavfsizlik uchun parol faqat yaratilgan/yangilangan paytda ko'rsatiladi.",
-      "saveNowWarning": "Buni hozir saqlab qo'ying — keyinroq qayta ko'rsatilmaydi."
+      "saveNowWarning": "Buni hozir saqlab qo'ying — keyinroq qayta ko'rsatilmaydi.",
+      "linkDescription": "Ushbu havola orqali kelgan har bir kishi bo'limingizga qo'shilishni so'raydi.",
+      "rotateKeyDialogTitle": "Havola kalitini yangilash",
+      "rotatePasswordDialogTitle": "Parolni yangilash"
     },
     "join": {
       "title": "Bo'limga qo'shilish",
@@ -981,13 +1010,19 @@
       "leftToast": "Bo'limdan chiqdingiz",
       "transfer": "Boshliqlikni topshirish",
       "transferConfirm": "Boshliqlik {name}ga topshiriladi. Davom etasizmi?",
-      "transferredToast": "Boshliqlik topshirildi"
+      "transferredToast": "Boshliqlik topshirildi",
+      "transferDialogTitle": "Boshliqlikni topshirish",
+      "removeDialogTitle": "A'zoni bo'limdan chiqarish",
+      "leaveDialogTitle": "Bo'limdan chiqish"
     },
     "settings": {
       "title": "Bo'lim sozlamalari",
       "general": "Umumiy",
       "name": "Nomi",
       "description": "Tavsif",
+      "permissionsTitle": "Ruxsatlar",
+      "permissionsDescription": "A'zolar nimani o'zi bajara olishini belgilang.",
+      "save": "Saqlash",
       "allowSelfAssign": "A'zolar o'zini bo'linmaga tayinlashi mumkin",
       "allowStructureEdit": "A'zolar tuzilmani tahrirlashi mumkin",
       "telegramGroupLabel": "Telegram guruhini kim ulashi mumkin",
@@ -998,9 +1033,11 @@
       "quietHoursEnd": "Tugashi",
       "saved": "Sozlamalar saqlandi",
       "dangerZone": "Xavfli hudud",
+      "dangerZoneDescription": "Bu bo'limga tegishli, orqaga qaytarib bo'lmaydigan amallar.",
       "requestDeletion": "Bo'limni o'chirishni so'rash",
-      "requestDeletionConfirm": "Super administrator so'rovni ko'rib chiqadi. Davom etasizmi?",
-      "deletionRequested": "O'chirish so'raldi"
+      "requestDeletionConfirm": "Super administrator so'rovni ko'rib chiqadi. Bu amalni orqaga qaytarib bo'lmaydi.",
+      "deletionRequested": "O'chirish so'raldi",
+      "typedConfirmLabel": "Tasdiqlash uchun \"{name}\" deb yozing"
     },
     "switcher": {
       "label": "Bo'limni almashtirish",
@@ -1676,6 +1713,8 @@
         "selfAssign": "Hozircha lavozimlarni faqat boʻlim boshligʻi belgilay oladi"
       },
       "dragHint": "Tartibini oʻzgartirish uchun torting",
+      "expandBranch": "Ichki boʻlimlarni yoyish",
+      "collapseBranch": "Ichki boʻlimlarni yigʻish",
       "view": {
         "tree": "Roʻyxat",
         "chart": "Tuzilma sxemasi"
@@ -1686,7 +1725,11 @@
         "headBadge": "Boshligʻi",
         "deputyBadge": "Oʻrinbosari",
         "memberCount": "{count} kishi",
-        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning"
+        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning",
+        "zoomIn": "Kattalashtirish",
+        "zoomOut": "Kichiklashtirish",
+        "resetView": "Koʻrinishni tiklash",
+        "closePanel": "Yopish"
       },
       "validation": {
         "nameRequired": "Nomini kiriting"
@@ -1735,6 +1778,19 @@
       "unassignedGroup": "Boʻlimsiz",
       "memberCard": {
         "noUnit": "Boʻlim belgilanmagan"
+      },
+      "filters": {
+        "label": "Boʻlim boʻyicha filtr",
+        "all": "Barchasi",
+        "clear": "Filtrlarni tozalash"
+      },
+      "noResults": {
+        "title": "Hech kim topilmadi",
+        "body": "Boshqa soʻz bilan qidiring yoki filtrni tozalang."
+      },
+      "hoverCard": {
+        "membership": "Aʼzolik",
+        "unit": "Boʻlim"
       }
     },
     "common": {

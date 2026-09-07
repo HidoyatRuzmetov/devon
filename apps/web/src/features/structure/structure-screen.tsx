@@ -1,15 +1,25 @@
 // `/structure` -- TECH-SPEC EPIC-003: bo'limlar with unlimited nesting, self-assignment, unit roles,
-// an org chart correct with or without unit heads, colours, drag reorder.
+// an org chart correct with or without unit heads, colours, drag reorder. Rebuilt to UI-OVERHAUL.md's
+// screen recipe (§9.1 page header, §9.6 empty/error) and Jakob map row "Structure / org chart" (Miro,
+// Lucidchart: tree with unit colours, vacancies dashed, zoom/pan, click to open unit).
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import {
   Button,
+  Combobox,
   Dialog,
   DialogClose,
   DialogContent,
+  IdleFloat,
   Input,
+  RadioGroup,
+  RadioOption,
+  Reveal,
   StateView,
+  Tabs,
+  TabsList,
+  TabsTrigger,
   toast,
   toastWithUndo,
 } from '@devon/ui'
@@ -37,6 +47,7 @@ import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
 import { UnitTree, buildTree, type TreeActions } from './unit-tree.js'
 import { OrgChart } from './org-chart.js'
+import { EmptyStructureIllustration } from './components/illustrations.js'
 import { fullName } from './member-card.js'
 
 type View = 'tree' | 'chart'
@@ -184,6 +195,11 @@ export default function StructureScreen() {
         kind="empty"
         titleKey="structure.units.empty.title"
         bodyKey="structure.units.empty.body"
+        illustration={
+          <IdleFloat>
+            <EmptyStructureIllustration className="w-36" />
+          </IdleFloat>
+        }
       />
     )
   }
@@ -246,6 +262,11 @@ export default function StructureScreen() {
         kind="empty"
         titleKey="structure.units.empty.title"
         bodyKey="structure.units.empty.body"
+        illustration={
+          <IdleFloat>
+            <EmptyStructureIllustration className="w-36" />
+          </IdleFloat>
+        }
         {...(canAddRoot
           ? {
               action: {
@@ -260,14 +281,25 @@ export default function StructureScreen() {
     body = <UnitTree roots={roots} actions={actions} />
   } else {
     body = (
-      <OrgChart
-        roots={roots}
-        rolesByUnit={rolesByUnit}
-        membersById={membersById}
-        departmentName={departments.active?.name ?? ''}
-      />
+      <OrgChart roots={roots} actions={actions} departmentName={departments.active?.name ?? ''} />
     )
   }
+
+  const tabs =
+    units.length === 0 ? undefined : (
+      <Tabs value={view} onValueChange={(v) => setView(v as View)}>
+        <TabsList>
+          <TabsTrigger value="tree">
+            <List className="size-4" aria-hidden="true" />
+            {t('structure.units.view.tree')}
+          </TabsTrigger>
+          <TabsTrigger value="chart">
+            <Network className="size-4" aria-hidden="true" />
+            {t('structure.units.view.chart')}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    )
 
   return (
     <div className="flex flex-col gap-6">
@@ -275,6 +307,7 @@ export default function StructureScreen() {
         titleKey="structure.units.title"
         subtitleKey="structure.units.subtitle"
         departments={departments}
+        tabs={tabs}
       >
         {canAddRoot ? (
           <Button size="sm" onClick={() => setAddParentId(null)}>
@@ -285,31 +318,12 @@ export default function StructureScreen() {
       </DepartmentHeader>
 
       {structureEditNoticeVisible || selfAssignNoticeVisible ? (
-        <div className="rounded-md border border-border bg-muted px-4 py-2 text-caption text-muted-foreground">
+        <Reveal className="rounded-md border border-border bg-muted px-4 py-2 text-caption text-muted-foreground">
           {structureEditNoticeVisible
             ? t('structure.units.settingsNotice.structureEdit')
             : t('structure.units.settingsNotice.selfAssign')}
-        </div>
+        </Reveal>
       ) : null}
-
-      <div className="inline-flex w-fit rounded-md border border-border p-0.5">
-        <button
-          type="button"
-          onClick={() => setView('tree')}
-          className={`flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-small ${view === 'tree' ? 'bg-accent text-foreground' : 'text-muted-foreground'}`}
-        >
-          <List className="size-4" aria-hidden="true" />
-          {t('structure.units.view.tree')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('chart')}
-          className={`flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-small ${view === 'chart' ? 'bg-accent text-foreground' : 'text-muted-foreground'}`}
-        >
-          <Network className="size-4" aria-hidden="true" />
-          {t('structure.units.view.chart')}
-        </button>
-      </div>
 
       {body}
 
@@ -438,23 +452,23 @@ function AddUnitDialog({
               </span>
             ) : null}
           </label>
-          <label className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             <span className="text-small text-foreground">
               {t('structure.units.addDialog.parentLabel')}
             </span>
-            <select
-              value={parent ?? ''}
-              onChange={(e) => setParent(e.target.value || null)}
-              className="h-11 rounded-sm border border-border bg-card px-3 text-body text-foreground"
-            >
-              <option value="">{t('structure.units.addDialog.rootOption')}</option>
-              {units.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <Combobox
+              value={parent}
+              onValueChange={(v) => setParent(v || null)}
+              label={t('structure.units.addDialog.parentLabel')}
+              placeholder={t('structure.units.addDialog.rootOption')}
+              searchPlaceholder={t('structure.people.searchPlaceholder')}
+              emptyMessage={t('structure.people.empty.title')}
+              options={[
+                { value: '', label: t('structure.units.addDialog.rootOption') },
+                ...units.map((u) => ({ value: u.id, label: u.name })),
+              ]}
+            />
+          </div>
           <div className="mt-2 flex justify-end gap-2">
             <DialogClose asChild>
               <Button variant="secondary">{t('structure.units.addDialog.cancel')}</Button>
@@ -500,41 +514,34 @@ function AssignDialog({
     <Dialog open={unitId !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent title={t('structure.roles.assignDialog.title', { unitName })}>
         <div className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             <span className="text-small text-foreground">
               {t('structure.roles.assignDialog.person')}
             </span>
-            <select
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              className="h-11 rounded-sm border border-border bg-card px-3 text-body text-foreground"
-            >
-              <option value="" disabled>
-                {t('structure.roles.assignDialog.person')}
-              </option>
-              {members.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {fullName(m)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1.5">
+            <Combobox
+              value={userId || null}
+              onValueChange={setUserId}
+              label={t('structure.roles.assignDialog.person')}
+              placeholder={t('structure.roles.assignDialog.person')}
+              searchPlaceholder={t('structure.people.searchPlaceholder')}
+              emptyMessage={t('structure.people.empty.title')}
+              options={members.map((m) => ({
+                value: m.userId,
+                label: fullName(m),
+                ...(m.title ? { description: m.title } : {}),
+              }))}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
             <span className="text-small text-foreground">
               {t('structure.roles.assignDialog.role')}
             </span>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as typeof role)}
-              className="h-11 rounded-sm border border-border bg-card px-3 text-body text-foreground"
-            >
+            <RadioGroup value={role} onValueChange={(v) => setRole(v as typeof role)}>
               {(['head', 'deputy', 'member'] as const).map((r) => (
-                <option key={r} value={r}>
-                  {t(`structure.roles.roleLabel.${r}`)}
-                </option>
+                <RadioOption key={r} value={r} label={t(`structure.roles.roleLabel.${r}`)} />
               ))}
-            </select>
-          </label>
+            </RadioGroup>
+          </div>
           <div className="mt-2 flex justify-end gap-2">
             <DialogClose asChild>
               <Button variant="secondary">{t('structure.roles.assignDialog.cancel')}</Button>

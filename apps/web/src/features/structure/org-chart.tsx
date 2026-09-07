@@ -1,13 +1,14 @@
 // The org chart view (TECH-SPEC EPIC-003: "an org chart view ... that renders a department with zero
 // unit heads and one with three levels equally well, keyboard navigable, PNG export"). A hand-written
 // SVG tree -- no charting library -- built from the same `TreeNode[]` the list view uses, so the two
-// views can never disagree about the shape of the tree.
+// views can never disagree about the shape of the tree. UI-OVERHAUL.md's Jakob row for this screen
+// (Miro/Lucidchart org charts): unit colours, vacancies dashed, zoom/pan, click to open a side panel.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, unitHueClass } from '@devon/ui'
-import { Download } from 'lucide-react'
-import type { MembersById, RolesByUnit } from './api.js'
-import type { TreeNode } from './unit-tree.js'
+import { Button, IconButton, Sheet, SheetContent, unitHueClass } from '@devon/ui'
+import { Download, Minus, Plus, RotateCcw, X } from 'lucide-react'
+import type { TreeActions, TreeNode } from './unit-tree.js'
+import { RoleChips } from './unit-tree.js'
 import { fullName } from './member-card.js'
 
 const NODE_W = 188
@@ -15,6 +16,8 @@ const NODE_H = 88
 const H_GAP = 28
 const V_GAP = 56
 const MARGIN = 32
+const MIN_SCALE = 0.4
+const MAX_SCALE = 2
 
 interface Positioned extends Omit<TreeNode, 'children'> {
   x: number
@@ -91,21 +94,41 @@ function unitFillVar(node: TreeNode): string {
     : `var(--color-${unitHueClass(node.id).replace('bg-', '')})`
 }
 
+/** Where a node sits in the tree, root first -- the side panel's breadcrumb. */
+function pathTo(nodes: Positioned[], id: string): Positioned[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]))
+  const chain: Positioned[] = []
+  let current = byId.get(id) ?? null
+  while (current) {
+    chain.unshift(current)
+    current = current.parentUnitId ? (byId.get(current.parentUnitId) ?? null) : null
+  }
+  return chain
+}
+
 export function OrgChart({
   roots,
-  rolesByUnit,
-  membersById,
+  actions,
   departmentName,
 }: {
   roots: TreeNode[]
-  rolesByUnit: RolesByUnit
-  membersById: MembersById
+  actions: TreeActions
   departmentName: string
 }) {
   const t = useT()
   const svgRef = React.useRef<SVGSVGElement>(null)
+  const viewportRef = React.useRef<HTMLDivElement>(null)
   const { nodes, width, height } = React.useMemo(() => layout(roots), [roots])
   const [focusedId, setFocusedId] = React.useState<string | null>(nodes[0]?.id ?? null)
+  const [panelUnitId, setPanelUnitId] = React.useState<string | null>(null)
+  const [zoom, setZoom] = React.useState(1)
+  const [pan, setPan] = React.useState({ x: 0, y: 0 })
+  const panState = React.useRef<{
+    startX: number
+    startY: number
+    panX: number
+    panY: number
+  } | null>(null)
 
   const nodeRefs = React.useRef(new Map<string, SVGGElement>())
   React.useEffect(() => {
@@ -145,6 +168,34 @@ export function OrgChart({
     if (next) setFocusedId(next.id)
   }
 
+  const clampZoom = (v: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, v))
+  const zoomBy = (factor: number) => setZoom((z) => clampZoom(Math.round(z * factor * 100) / 100))
+  const resetView = () => {
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+  }
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (!e.ctrlKey && !e.metaKey) return
+    e.preventDefault()
+    zoomBy(e.deltaY < 0 ? 1.08 : 0.93)
+  }
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    panState.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!panState.current) return
+    const dx = e.clientX - panState.current.startX
+    const dy = e.clientY - panState.current.startY
+    setPan({ x: panState.current.panX + dx, y: panState.current.panY + dy })
+  }
+  const onPointerUp = () => {
+    panState.current = null
+  }
+
   const exportPng = async () => {
     const svg = svgRef.current
     if (!svg) return
@@ -179,9 +230,37 @@ export function OrgChart({
     }
   }
 
+  const panelUnit = panelUnitId ? byId.get(panelUnitId) : undefined
+  const panelBreadcrumb = panelUnitId ? pathTo(nodes, panelUnitId) : []
+  const panelRoles = panelUnitId ? (actions.rolesByUnit.get(panelUnitId) ?? []) : []
+  const panelHead = panelRoles.find((r) => r.role === 'head')
+  const panelHeadMember = panelHead ? actions.membersById.get(panelHead.userId) : undefined
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-2">
+        <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card p-0.5">
+          <IconButton
+            aria-label={t('structure.units.chart.zoomOut')}
+            onClick={() => zoomBy(1 / 1.2)}
+            disabled={zoom <= MIN_SCALE}
+          >
+            <Minus className="size-4" aria-hidden="true" />
+          </IconButton>
+          <span className="w-12 text-center text-caption tabular-nums text-muted-foreground">
+            {Math.round(zoom * 100)}%
+          </span>
+          <IconButton
+            aria-label={t('structure.units.chart.zoomIn')}
+            onClick={() => zoomBy(1.2)}
+            disabled={zoom >= MAX_SCALE}
+          >
+            <Plus className="size-4" aria-hidden="true" />
+          </IconButton>
+          <IconButton aria-label={t('structure.units.chart.resetView')} onClick={resetView}>
+            <RotateCcw className="size-4" aria-hidden="true" />
+          </IconButton>
+        </div>
         <Button variant="secondary" size="sm" onClick={exportPng}>
           <Download className="size-4" aria-hidden="true" />
           {t('structure.units.chart.exportPng')}
@@ -190,111 +269,215 @@ export function OrgChart({
       <p className="sr-only" id="org-chart-keyboard-hint">
         {t('structure.units.chart.keyboardHint')}
       </p>
-      <div className="overflow-auto rounded-md border border-border bg-card p-4">
-        <svg
-          ref={svgRef}
-          role="tree"
-          aria-describedby="org-chart-keyboard-hint"
-          width={width}
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowLeft') {
-              e.preventDefault()
-              move('left')
-            }
-            if (e.key === 'ArrowRight') {
-              e.preventDefault()
-              move('right')
-            }
-            if (e.key === 'ArrowUp') {
-              e.preventDefault()
-              move('up')
-            }
-            if (e.key === 'ArrowDown') {
-              e.preventDefault()
-              move('down')
-            }
+      <div
+        ref={viewportRef}
+        className="relative h-[min(70vh,640px)] touch-none overflow-hidden rounded-md border border-border bg-card"
+        onWheel={onWheel}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerLeave={onPointerUp}
+        style={{ cursor: panState.current ? 'grabbing' : 'grab' }}
+      >
+        <div
+          className="size-full transition-transform duration-(--dur-micro) ease-out"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            transformOrigin: '0 0',
           }}
         >
-          <rect x={0} y={0} width={width} height={height} fill="var(--color-card)" />
-          {nodes.map((node) =>
-            node.children.map((child) => (
-              <path
-                key={`${node.id}-${child.id}`}
-                d={`M ${node.x + MARGIN} ${node.y + NODE_H + MARGIN} V ${node.y + NODE_H + V_GAP / 2 + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
-                fill="none"
-                stroke="var(--color-border)"
-                strokeWidth={1.5}
-              />
-            )),
-          )}
-          {nodes.map((node) => {
-            const roles = rolesByUnit.get(node.id) ?? []
-            const head = roles.find((r) => r.role === 'head')
-            const headMember = head ? membersById.get(head.userId) : undefined
-            const isFocused = node.id === focusedId
-            return (
-              <g
-                key={node.id}
-                ref={(el) => {
-                  if (el) nodeRefs.current.set(node.id, el)
-                  else nodeRefs.current.delete(node.id)
-                }}
-                role="treeitem"
-                aria-label={node.name}
-                aria-selected={isFocused}
-                tabIndex={isFocused ? 0 : -1}
-                transform={`translate(${node.x - NODE_W / 2 + MARGIN}, ${node.y + MARGIN})`}
-                onFocus={() => setFocusedId(node.id)}
-                onClick={() => setFocusedId(node.id)}
-                style={{ cursor: 'pointer', outline: 'none' }}
-              >
-                <rect
-                  width={NODE_W}
-                  height={NODE_H}
-                  rx={10}
-                  fill="var(--color-card)"
-                  stroke={isFocused ? 'var(--color-ring)' : 'var(--color-border)'}
-                  strokeWidth={isFocused ? 2 : 1}
+          <svg
+            ref={svgRef}
+            role="tree"
+            aria-describedby="org-chart-keyboard-hint"
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            className="m-4"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault()
+                move('left')
+              }
+              if (e.key === 'ArrowRight') {
+                e.preventDefault()
+                move('right')
+              }
+              if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                move('up')
+              }
+              if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                move('down')
+              }
+              if (e.key === 'Enter' && focusedId) {
+                e.preventDefault()
+                setPanelUnitId(focusedId)
+              }
+            }}
+          >
+            <rect x={0} y={0} width={width} height={height} fill="var(--color-card)" />
+            {nodes.map((node) =>
+              node.children.map((child) => (
+                <path
+                  key={`${node.id}-${child.id}`}
+                  d={`M ${node.x + MARGIN} ${node.y + NODE_H + MARGIN} V ${node.y + NODE_H + V_GAP / 2 + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
+                  fill="none"
+                  stroke="var(--color-border)"
+                  strokeWidth={1.5}
                 />
-                <rect x={0} y={0} width={6} height={NODE_H} rx={3} fill={unitFillVar(node)} />
-                <text
-                  x={16}
-                  y={24}
-                  className="fill-foreground text-body"
-                  style={{ fontWeight: 600 }}
+              )),
+            )}
+            {nodes.map((node) => {
+              const roles = actions.rolesByUnit.get(node.id) ?? []
+              const head = roles.find((r) => r.role === 'head')
+              const headMember = head ? actions.membersById.get(head.userId) : undefined
+              const isFocused = node.id === focusedId
+              return (
+                <g
+                  key={node.id}
+                  ref={(el) => {
+                    if (el) nodeRefs.current.set(node.id, el)
+                    else nodeRefs.current.delete(node.id)
+                  }}
+                  role="treeitem"
+                  aria-label={node.name}
+                  aria-selected={isFocused}
+                  tabIndex={isFocused ? 0 : -1}
+                  transform={`translate(${node.x - NODE_W / 2 + MARGIN}, ${node.y + MARGIN})`}
+                  onFocus={() => setFocusedId(node.id)}
+                  onClick={() => {
+                    setFocusedId(node.id)
+                    setPanelUnitId(node.id)
+                  }}
+                  style={{ cursor: 'pointer', outline: 'none' }}
                 >
-                  {node.name.length > 22 ? `${node.name.slice(0, 21)}…` : node.name}
-                </text>
-                {head ? (
-                  <>
-                    <circle cx={24} cy={48} r={11} fill={unitFillVar(node)} />
-                    <text x={24} y={52} textAnchor="middle" className="fill-white text-caption">
-                      {headMember
-                        ? `${headMember.givenName.charAt(0)}${headMember.familyName.charAt(0)}`.toUpperCase()
-                        : '?'}
-                    </text>
-                    <text x={40} y={44} className="fill-foreground text-caption">
-                      {headMember ? fullName(headMember) : head.userId}
-                    </text>
-                    <text x={40} y={58} className="fill-muted-foreground text-caption">
-                      {t('structure.units.chart.headBadge')}
-                    </text>
-                  </>
-                ) : (
-                  <text x={16} y={48} className="fill-muted-foreground text-caption">
-                    {t('structure.units.chart.noHead')}
+                  <rect
+                    width={NODE_W}
+                    height={NODE_H}
+                    rx={10}
+                    fill="var(--color-card)"
+                    stroke={isFocused ? 'var(--color-ring)' : 'var(--color-border)'}
+                    strokeWidth={isFocused ? 2 : 1}
+                  />
+                  <rect x={0} y={0} width={6} height={NODE_H} rx={3} fill={unitFillVar(node)} />
+                  <text
+                    x={16}
+                    y={24}
+                    className="fill-foreground text-body"
+                    style={{ fontWeight: 600 }}
+                  >
+                    {node.name.length > 22 ? `${node.name.slice(0, 21)}…` : node.name}
                   </text>
-                )}
-                <text x={16} y={NODE_H - 10} className="fill-muted-foreground text-caption">
-                  {t('structure.units.chart.memberCount', { count: roles.length })}
-                </text>
-              </g>
-            )
-          })}
-        </svg>
+                  {head ? (
+                    <>
+                      <circle cx={24} cy={48} r={11} fill={unitFillVar(node)} />
+                      <text x={24} y={52} textAnchor="middle" className="fill-white text-caption">
+                        {headMember
+                          ? `${headMember.givenName.charAt(0)}${headMember.familyName.charAt(0)}`.toUpperCase()
+                          : '?'}
+                      </text>
+                      <text x={40} y={44} className="fill-foreground text-caption">
+                        {headMember ? fullName(headMember) : head.userId}
+                      </text>
+                      <text x={40} y={58} className="fill-muted-foreground text-caption">
+                        {t('structure.units.chart.headBadge')}
+                      </text>
+                    </>
+                  ) : (
+                    <>
+                      {/* A vacant head slot draws the same way an unfilled position does on a Miro/
+                          Lucidchart org chart -- a dashed placeholder, never just muted text, so the
+                          gap in the org reads at a glance. */}
+                      <circle
+                        cx={24}
+                        cy={48}
+                        r={11}
+                        fill="none"
+                        stroke="var(--color-illustration-muted)"
+                        strokeWidth={2}
+                        strokeDasharray="3 3"
+                      />
+                      <text x={40} y={52} className="fill-muted-foreground text-caption">
+                        {t('structure.units.chart.noHead')}
+                      </text>
+                    </>
+                  )}
+                  <text x={16} y={NODE_H - 10} className="fill-muted-foreground text-caption">
+                    {t('structure.units.chart.memberCount', { count: roles.length })}
+                  </text>
+                </g>
+              )
+            })}
+          </svg>
+        </div>
       </div>
+
+      <Sheet
+        direction="right"
+        open={panelUnitId !== null}
+        onOpenChange={(open) => !open && setPanelUnitId(null)}
+      >
+        <SheetContent
+          title={panelUnit?.name ?? ''}
+          side="right"
+          className="flex flex-col gap-5 overflow-y-auto p-5"
+        >
+          {panelUnit ? (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {panelBreadcrumb.length > 1 ? (
+                    <p className="truncate text-caption text-muted-foreground">
+                      {panelBreadcrumb
+                        .slice(0, -1)
+                        .map((n) => n.name)
+                        .join(' / ')}
+                    </p>
+                  ) : null}
+                  <div className="flex items-center gap-2">
+                    <span
+                      aria-hidden="true"
+                      className="size-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: unitFillVar(panelUnit) }}
+                    />
+                    <h2 className="text-h3 text-foreground">{panelUnit.name}</h2>
+                  </div>
+                </div>
+                <IconButton
+                  aria-label={t('structure.units.chart.closePanel')}
+                  onClick={() => setPanelUnitId(null)}
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </IconButton>
+              </div>
+
+              <p className="text-small text-muted-foreground">
+                {t('structure.units.chart.memberCount', { count: panelRoles.length })}
+              </p>
+
+              {panelHead ? (
+                <p className="text-small text-foreground">
+                  {t('structure.units.chart.headBadge')}:{' '}
+                  {panelHeadMember ? fullName(panelHeadMember) : panelHead.userId}
+                </p>
+              ) : (
+                <p className="text-small text-muted-foreground">
+                  {t('structure.units.chart.noHead')}
+                </p>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                  {t('structure.roles.assign')}
+                </span>
+                <RoleChips unit={panelUnit} actions={actions} indent={false} />
+              </div>
+            </>
+          ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

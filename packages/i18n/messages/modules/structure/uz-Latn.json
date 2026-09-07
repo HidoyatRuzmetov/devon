@@ -30,6 +30,8 @@
         "selfAssign": "Hozircha lavozimlarni faqat boʻlim boshligʻi belgilay oladi"
       },
       "dragHint": "Tartibini oʻzgartirish uchun torting",
+      "expandBranch": "Ichki boʻlimlarni yoyish",
+      "collapseBranch": "Ichki boʻlimlarni yigʻish",
       "view": { "tree": "Roʻyxat", "chart": "Tuzilma sxemasi" },
       "chart": {
         "exportPng": "PNG sifatida saqlash",
@@ -37,7 +39,11 @@
         "headBadge": "Boshligʻi",
         "deputyBadge": "Oʻrinbosari",
         "memberCount": "{count} kishi",
-        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning"
+        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning",
+        "zoomIn": "Kattalashtirish",
+        "zoomOut": "Kichiklashtirish",
+        "resetView": "Koʻrinishni tiklash",
+        "closePanel": "Yopish"
       },
       "validation": { "nameRequired": "Nomini kiriting" },
       "addDialog": {
@@ -76,7 +82,20 @@
       "empty": { "title": "Hali aʼzo yoʻq" },
       "searchPlaceholder": "Xodimni qidirish",
       "unassignedGroup": "Boʻlimsiz",
-      "memberCard": { "noUnit": "Boʻlim belgilanmagan" }
+      "memberCard": { "noUnit": "Boʻlim belgilanmagan" },
+      "filters": {
+        "label": "Boʻlim boʻyicha filtr",
+        "all": "Barchasi",
+        "clear": "Filtrlarni tozalash"
+      },
+      "noResults": {
+        "title": "Hech kim topilmadi",
+        "body": "Boshqa soʻz bilan qidiring yoki filtrni tozalang."
+      },
+      "hoverCard": {
+        "membership": "Aʼzolik",
+        "unit": "Boʻlim"
+      }
     },
     "common": { "head": "Boshligʻi", "member": "Aʼzo" }
   }
