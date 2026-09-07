@@ -5,7 +5,21 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { LOCALES, LOCALE_LABEL } from '@devon/i18n'
-import { Badge, Button, Dialog, DialogContent, Input, StateView, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Dialog,
+  DialogContent,
+  Input,
+  ProgressRing,
+  StateView,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  toast,
+} from '@devon/ui'
+import { AlertTriangle } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
 import {
   cancelWipe,
@@ -68,6 +82,7 @@ function MaintenanceCard() {
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['admin', 'maintenance'], queryFn: fetchMaintenance })
   const [messages, setMessages] = React.useState<Record<string, string>>({})
+  const [previewLocale, setPreviewLocale] = React.useState<string>(LOCALES[0])
 
   React.useEffect(() => {
     if (query.data?.message) setMessages(query.data.message)
@@ -97,19 +112,52 @@ function MaintenanceCard() {
       <p className="mb-4 text-small text-muted-foreground">
         {t('admin.console.settings.maintenanceBody')}
       </p>
-      <div className="flex flex-col gap-3">
+
+      {/* UI-OVERHAUL.md §2 "maintenance message editor in four locales with live preview": one tab
+          per locale to edit, the banner exactly as a locked-out member would see it rendered
+          alongside -- so a head never publishes a message they have not actually read back. */}
+      <Tabs value={previewLocale} onValueChange={setPreviewLocale}>
+        <TabsList>
+          {LOCALES.map((locale) => (
+            <TabsTrigger key={locale} value={locale}>
+              {LOCALE_LABEL[locale]}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {LOCALES.map((locale) => (
-          <label key={locale} className="flex flex-col gap-1.5">
-            <span className="text-small text-foreground">{LOCALE_LABEL[locale]}</span>
-            <textarea
-              className="min-h-16 w-full rounded-sm border border-border bg-card px-3 py-2 text-body text-foreground"
-              value={messages[locale] ?? ''}
-              onChange={(e) => setMessages((m) => ({ ...m, [locale]: e.target.value }))}
-              placeholder={t('admin.console.settings.maintenanceMessagePlaceholder')}
-            />
-          </label>
+          <TabsContent key={locale} value={locale} className="pt-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-small font-medium text-foreground">
+                  {t('admin.console.settings.maintenanceMessageLabel')}
+                </span>
+                <textarea
+                  className="min-h-28 w-full rounded-sm border border-border bg-card px-3 py-2 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  value={messages[locale] ?? ''}
+                  onChange={(e) => setMessages((m) => ({ ...m, [locale]: e.target.value }))}
+                  placeholder={t('admin.console.settings.maintenanceMessagePlaceholder')}
+                />
+              </label>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-small font-medium text-foreground">
+                  {t('admin.console.settings.maintenancePreviewLabel')}
+                </span>
+                <div className="flex min-h-28 flex-col gap-2 rounded-md border border-warning bg-warning/10 p-4">
+                  <div className="flex items-center gap-2 text-small font-medium text-foreground">
+                    <AlertTriangle className="size-4 shrink-0 text-warning" aria-hidden="true" />
+                    {t('admin.console.settings.maintenancePreviewBadge')}
+                  </div>
+                  <p className="text-body text-foreground">
+                    {(messages[locale] ?? '').trim() ||
+                      t('admin.console.settings.maintenancePreviewEmpty')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
         ))}
-      </div>
+      </Tabs>
+
       <div className="mt-4 flex gap-2">
         <Button
           variant={query.data?.enabled ? 'destructive' : 'primary'}
@@ -200,6 +248,10 @@ function SentinelCard() {
 
 const WIPE_POLL_MS = 1000
 
+const WIPE_COUNTDOWN_SECONDS_DEFAULT = 60
+const WIPE_STEPS = ['warning', 'phrase', 'credentials', 'review'] as const
+type WipeStep = (typeof WIPE_STEPS)[number]
+
 function WipeCard() {
   const t = useT()
   const meQuery = useMeQuery()
@@ -209,10 +261,15 @@ function WipeCard() {
     queryFn: fetchAdminInstanceDetail,
   })
   const [open, setOpen] = React.useState(false)
+  const [step, setStep] = React.useState<WipeStep>('warning')
   const [phrase, setPhrase] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [totpCode, setTotpCode] = React.useState('')
   const executedRef = React.useRef(false)
+  // The countdown's own duration -- captured from `startWipe`'s response so the ring drains at the
+  // right rate; a page reload mid-countdown has nothing but `countdownEndsAt` to go on (design.md's
+  // documented "60-second ... countdown" is the honest fallback for that one case).
+  const totalSecondsRef = React.useRef(WIPE_COUNTDOWN_SECONDS_DEFAULT)
 
   const statusQuery = useQuery({
     queryKey: ['admin', 'wipe', 'status'],
@@ -224,14 +281,20 @@ function WipeCard() {
     ? Math.max(0, Math.ceil((new Date(pending.countdownEndsAt).getTime() - Date.now()) / 1000))
     : 0
 
+  function closeDialog() {
+    setOpen(false)
+    setStep('warning')
+  }
+
   const start = useMutation({
     mutationFn: () =>
       startWipe(
         { phrase, password, totpCode: totpCode || undefined },
         meQuery.data?.csrfToken ?? '',
       ),
-    onSuccess: () => {
-      setOpen(false)
+    onSuccess: (result) => {
+      totalSecondsRef.current = result.countdownSeconds
+      closeDialog()
       setPhrase('')
       setPassword('')
       setTotpCode('')
@@ -266,15 +329,36 @@ function WipeCard() {
 
   function renderWipeStatus(): React.ReactNode {
     if (pending && pending.status === 'countdown') {
+      const totalSeconds = totalSecondsRef.current
+      const ringPercent =
+        totalSeconds > 0 ? Math.max(0, Math.min(100, (secondsRemaining / totalSeconds) * 100)) : 0
       return (
-        <div className="flex flex-col gap-3 rounded-md border border-destructive bg-destructive/10 p-4">
-          <p className="text-h2 tabular-nums text-destructive">{secondsRemaining}s</p>
-          <p className="text-small text-foreground">
-            {t('admin.console.settings.wipeCountdownBody')}
-          </p>
-          <Button variant="secondary" loading={cancel.isPending} onClick={() => cancel.mutate()}>
-            {t('admin.console.settings.wipeCancel')}
-          </Button>
+        <div className="flex items-center gap-4 rounded-md border border-destructive bg-destructive/10 p-4">
+          <ProgressRing
+            value={ringPercent}
+            size={64}
+            strokeWidth={5}
+            toneClassName="text-destructive"
+            label={t('admin.console.settings.wipeCountdownAria', { seconds: secondsRemaining })}
+          >
+            <span className="text-small font-semibold tabular-nums text-destructive">
+              {secondsRemaining}s
+            </span>
+          </ProgressRing>
+          <div className="flex flex-1 flex-col gap-2">
+            <p className="text-small text-foreground">
+              {t('admin.console.settings.wipeCountdownBody')}
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="self-start"
+              loading={cancel.isPending}
+              onClick={() => cancel.mutate()}
+            >
+              {t('admin.console.settings.wipeCancel')}
+            </Button>
+          </div>
         </div>
       )
     }
@@ -304,47 +388,156 @@ function WipeCard() {
 
       {renderWipeStatus()}
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent title={t('admin.console.settings.wipeDialogTitle')}>
-          <div className="flex flex-col gap-3 pt-4">
-            <p className="text-body text-muted-foreground">
-              {t('admin.console.settings.wipeDialogBody')}
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (next) setOpen(true)
+          else closeDialog()
+        }}
+      >
+        <DialogContent title={t('admin.console.settings.wipeDialogTitle')} className="max-w-lg">
+          <div className="flex flex-col gap-4 pt-4">
+            <div className="flex items-center gap-1.5" aria-hidden="true">
+              {WIPE_STEPS.map((s, i) => (
+                <span
+                  key={s}
+                  className={
+                    'h-1 flex-1 rounded-full ' +
+                    (WIPE_STEPS.indexOf(step) >= i ? 'bg-destructive' : 'bg-muted')
+                  }
+                />
+              ))}
+            </div>
+            <p className="text-caption text-muted-foreground">
+              {t('admin.console.settings.wipeStepOf', {
+                step: WIPE_STEPS.indexOf(step) + 1,
+                total: WIPE_STEPS.length,
+              })}
             </p>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-small text-foreground">
-                {t('admin.console.settings.wipePhraseLabel', { phrase: expectedPhrase })}
-              </span>
-              <Input value={phrase} onChange={(e) => setPhrase(e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-small text-foreground">
-                {t('admin.console.settings.wipePasswordLabel')}
-              </span>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-small text-foreground">
-                {t('admin.console.settings.wipeTotpLabel')}
-              </span>
-              <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} maxLength={6} />
-            </label>
-            <Button
-              variant="destructive"
-              disabled={phrase !== expectedPhrase || password.length === 0}
-              loading={start.isPending}
-              onClick={() => start.mutate()}
-            >
-              {t('admin.console.settings.wipeConfirmCta')}
-            </Button>
+
+            {renderWipeStep()}
           </div>
         </DialogContent>
       </Dialog>
     </section>
   )
+
+  // TECH-SPEC §11's ceremony ("typed phrase + password + optional 2FA + a 60-second, server-verified
+  // countdown with cancel") as a multi-step dialog (UI-OVERHAUL.md §2 "wipe ceremony as a multi-step
+  // full dialog"): a warning the head must actively pass through, then the phrase, then credentials,
+  // then a review that shows exactly what is about to be submitted -- each step's own `disabled` gate
+  // keeps the "Next" affordance honest, never simply hidden.
+  function renderWipeStep(): React.ReactNode {
+    if (step === 'warning') {
+      return (
+        <>
+          <div className="flex items-start gap-3 rounded-md border border-destructive bg-destructive/10 p-4">
+            <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden="true" />
+            <p className="text-body text-foreground">
+              {t('admin.console.settings.wipeDialogBody')}
+            </p>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={closeDialog}>
+              {t('admin.console.settings.wipeStepCancel')}
+            </Button>
+            <Button variant="destructive" onClick={() => setStep('phrase')}>
+              {t('admin.console.settings.wipeStepContinue')}
+            </Button>
+          </div>
+        </>
+      )
+    }
+    if (step === 'phrase') {
+      return (
+        <>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">
+              {t('admin.console.settings.wipePhraseLabel', { phrase: expectedPhrase })}
+            </span>
+            <Input value={phrase} onChange={(e) => setPhrase(e.target.value)} />
+          </label>
+          <div className="flex justify-between gap-2">
+            <Button variant="ghost" onClick={() => setStep('warning')}>
+              {t('admin.console.settings.wipeStepBack')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={phrase !== expectedPhrase}
+              onClick={() => setStep('credentials')}
+            >
+              {t('admin.console.settings.wipeStepContinue')}
+            </Button>
+          </div>
+        </>
+      )
+    }
+    if (step === 'credentials') {
+      return (
+        <>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">
+              {t('admin.console.settings.wipePasswordLabel')}
+            </span>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">
+              {t('admin.console.settings.wipeTotpLabel')}
+            </span>
+            <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value)} maxLength={6} />
+          </label>
+          <div className="flex justify-between gap-2">
+            <Button variant="ghost" onClick={() => setStep('phrase')}>
+              {t('admin.console.settings.wipeStepBack')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={password.length === 0}
+              onClick={() => setStep('review')}
+            >
+              {t('admin.console.settings.wipeStepContinue')}
+            </Button>
+          </div>
+        </>
+      )
+    }
+    return (
+      <>
+        <dl className="flex flex-col gap-2 rounded-md border border-border bg-muted/40 p-3 text-small">
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted-foreground">
+              {t('admin.console.settings.wipeReviewPhrase')}
+            </dt>
+            <dd className="font-mono text-foreground">{phrase}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted-foreground">
+              {t('admin.console.settings.wipeReviewPassword')}
+            </dt>
+            <dd className="text-foreground">{'•'.repeat(Math.min(password.length, 12))}</dd>
+          </div>
+          <div className="flex justify-between gap-2">
+            <dt className="text-muted-foreground">{t('admin.console.settings.wipeReviewTotp')}</dt>
+            <dd className="font-mono text-foreground">
+              {totpCode || t('admin.console.settings.wipeReviewTotpNone')}
+            </dd>
+          </div>
+        </dl>
+        <p className="text-small text-muted-foreground">
+          {t('admin.console.settings.wipeReviewBody')}
+        </p>
+        <div className="flex justify-between gap-2">
+          <Button variant="ghost" onClick={() => setStep('credentials')}>
+            {t('admin.console.settings.wipeStepBack')}
+          </Button>
+          <Button variant="destructive" loading={start.isPending} onClick={() => start.mutate()}>
+            {t('admin.console.settings.wipeConfirmCta')}
+          </Button>
+        </div>
+      </>
+    )
+  }
 }
 
 function SettingsBody() {
