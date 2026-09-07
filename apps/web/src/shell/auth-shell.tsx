@@ -39,7 +39,12 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="relative flex min-h-full flex-col overflow-hidden bg-background">
+    // No `bg-background` here (unlike most shells): `AmbientGradient`'s own `-z-10` escapes to the
+    // nearest ancestor stacking context, since `position: relative` alone (no `z-index`) does not
+    // create one -- an opaque background painted on THIS div sits, in stacking terms, above that
+    // escaped layer and hid the wash completely. `body` already paints `--color-background`
+    // (styles.css), so this div can stay transparent and let it show through underneath the gradient.
+    <div className="relative flex min-h-full flex-col overflow-hidden">
       {/* DESIGN.md v2: ambient gradients live on auth and the hub, nowhere else, and stop dead under
           prefers-reduced-motion. */}
       <AmbientGradient variant="auth" />
