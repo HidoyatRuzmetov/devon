@@ -89,7 +89,7 @@ type Density = 'compact' | 'comfortable'
 // plain text by default and only look like controls on hover/focus (`TableRow` below), so the
 // assignee/priority/due/status columns need less width than a permanently-bordered control did --
 // that freed width, plus the unused strip, goes to the title column's `minmax` floor.
-const GRID_COLUMNS = '40px minmax(310px,1fr) 180px 120px 260px 110px'
+const GRID_COLUMNS = '40px minmax(300px,1fr) 180px 120px 260px 140px'
 
 function useLocalStorageDensity(): [Density, (d: Density) => void] {
   const key = 'devon.work.table.density'
@@ -396,7 +396,10 @@ export default function TableScreen() {
               <div
                 role="group"
                 aria-label={t('work.table.density.label')}
-                className="ml-auto flex rounded-md border border-border p-0.5"
+                // round2 critique #30: at 390 the table already collapses every column into one
+                // and the toggle "means nothing" there -- hide it below the `md` breakpoint the rest
+                // of the shell uses for its own mobile cutover.
+                className="ml-auto hidden rounded-md border border-border p-0.5 md:flex"
               >
                 {(['comfortable', 'compact'] as const).map((d) => (
                   <button
@@ -619,20 +622,29 @@ function TableRow({
         options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
         className="h-9 border-transparent bg-transparent px-2 text-small hover:border-border"
       />
-      <span className="flex min-w-0 items-center gap-1.5">
+      <span className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+        {/* Round-2 verification report #3 regression: the date trigger was `w-full shrink-0`, so on
+            an overdue row it refused to give up any width to the risk badge next to it -- the badge
+            got laid out past the cell's right edge and printed on top of the HOLAT column's status
+            Badge. `min-w-0` (dropping the hard `shrink-0`) lets the trigger give up its icon-only
+            width first; the risk badge keeps `shrink-0 whitespace-nowrap` so it is always shown whole,
+            never the thing that gives. */}
         <DatePicker
           locale={locale}
           label={t('work.field.due')}
           placeholder={t('work.field.due')}
           selected={toDateInputValue(card.dueAt)}
           onSelect={(date) => patchCard.mutate({ id: card.id, patch: { dueAt: dateToIso(date) } })}
-          triggerClassName="h-9 shrink-0 border-transparent bg-transparent hover:border-border px-2"
+          triggerClassName="h-9 min-w-0 border-transparent bg-transparent hover:border-border px-2"
         />
         {card.risk !== 'none'
           ? (() => {
               const RiskIcon = RISK_ICON[RISK_ICON_NAME[card.risk]!]
               return (
-                <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
+                <Badge
+                  tone="neutral"
+                  className={cn('shrink-0 whitespace-nowrap', RISK_BADGE_CLASSNAME[card.risk])}
+                >
                   <RiskIcon className="size-3" aria-hidden="true" />
                   {t(RISK_LABEL_KEY[card.risk])}
                 </Badge>
@@ -640,8 +652,10 @@ function TableRow({
             })()
           : null}
       </span>
-      <span>
-        <Badge tone="neutral">{t(`work.status.${card.status}`)}</Badge>
+      <span className="overflow-hidden">
+        <Badge tone="neutral" className="whitespace-nowrap">
+          {t(`work.status.${card.status}`)}
+        </Badge>
       </span>
     </div>
   )
