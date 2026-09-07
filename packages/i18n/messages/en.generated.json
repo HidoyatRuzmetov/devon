@@ -1128,6 +1128,14 @@
     "switcher": {
       "label": "Switch department",
       "current": "Current department"
+    },
+    "hub": {
+      "statHead": "Head",
+      "statMembers": "Members",
+      "statRole": "Your role",
+      "noHead": "Not yet assigned",
+      "otherMemberships": "Your other memberships",
+      "manageLink": "Open settings"
     }
   },
   "events": {
@@ -1146,7 +1154,8 @@
       "moreActions": "More actions",
       "close": "Close",
       "retry": "Retry",
-      "back": "Back"
+      "back": "Back",
+      "undo": "Undo"
     },
     "empty": {
       "title": "No events yet",
@@ -1281,6 +1290,7 @@
       "eventFull": "This event is full -- you've been waitlisted",
       "confirmedToast": "Your RSVP is recorded",
       "waitlistedToast": "Full -- you've been added to the waitlist",
+      "cancelledToast": "Your RSVP was cancelled",
       "myStatus": "Your answer: {status}",
       "notYet": "You haven't answered yet"
     },
@@ -1321,7 +1331,9 @@
       "confirmed": "Confirmed",
       "passengers": "Passengers",
       "driverCannotClaim": "The driver can't claim a seat on their own offer",
-      "cancelled": "This offer was cancelled"
+      "cancelled": "This offer was cancelled",
+      "releasedToast": "You gave up your seat",
+      "reclaimedToast": "Your seat was reclaimed"
     },
     "items": {
       "title": "Who brings what",
@@ -1355,6 +1367,9 @@
       "removeOption": "Remove",
       "vote": "Vote",
       "changeVote": "Change vote",
+      "votedToast": "Your vote is recorded",
+      "voteChangedToast": "Your vote was changed",
+      "voteRevertedToast": "Your previous vote was restored",
       "totalVotes": "{count} votes",
       "closed": "Closed",
       "yourVote": "Your vote",
@@ -1919,6 +1934,7 @@
       "rename": "Rename",
       "renameLabel": "Unit name",
       "delete": "Delete",
+      "rowActions": "Unit actions",
       "deleteConfirm": {
         "title": "Delete “{name}”?",
         "body": "Members become unassigned. You can undo this for a short while.",
@@ -2012,7 +2028,8 @@
       },
       "hoverCard": {
         "membership": "Membership",
-        "unit": "Unit"
+        "unit": "Unit",
+        "openBoardColumn": "Open board column"
       }
     },
     "common": {
