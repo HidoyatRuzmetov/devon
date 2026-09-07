@@ -98,7 +98,9 @@ export function AskAnalytics({
               {filterText
                 ? t('analytics.ask.resultWithFilter', { filter: filterText })
                 : t('analytics.ask.resultNoFilter')}
-              {explanation ? <span className="block text-small text-muted-foreground">{explanation}</span> : null}
+              {explanation ? (
+                <span className="block text-small text-muted-foreground">{explanation}</span>
+              ) : null}
             </p>
           ) : null}
         </AiPreviewPanel>

@@ -1,9 +1,10 @@
 // `/admin/health` -- queues, DB, storage, Telegram, AI endpoint latency, backups.
 import { useQuery } from '@tanstack/react-query'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatTime } from '@devon/i18n'
 import { Badge, Button, StateView } from '@devon/ui'
 import { fetchAdminHealth, type HealthCheck } from './api.js'
 import { AdminScreen } from './admin-screen.js'
+import { StatusDot } from './charts.js'
 
 const STATUS_TONE: Record<
   HealthCheck['status'],
@@ -19,13 +20,16 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
   const t = useT()
   return (
     <li className="flex items-center justify-between gap-4 py-3">
-      <div>
-        <p className="text-body text-foreground">{t(labelKey)}</p>
-        {check.detail ? <p className="text-small text-muted-foreground">{check.detail}</p> : null}
+      <div className="flex items-center gap-3">
+        <StatusDot status={check.status} />
+        <div>
+          <p className="text-body text-foreground">{t(labelKey)}</p>
+          {check.detail ? <p className="text-small text-muted-foreground">{check.detail}</p> : null}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         {check.latencyMs !== null ? (
-          <span className="text-small text-muted-foreground">{check.latencyMs}ms</span>
+          <span className="text-small tabular-nums text-muted-foreground">{check.latencyMs}ms</span>
         ) : null}
         <Badge tone={STATUS_TONE[check.status]}>
           {t(`admin.console.health.status.${check.status}`)}
@@ -37,6 +41,7 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
 
 function HealthBody() {
   const t = useT()
+  const locale = useLocale()
   const query = useQuery({
     queryKey: ['admin', 'health'],
     queryFn: fetchAdminHealth,
@@ -62,7 +67,7 @@ function HealthBody() {
       <div className="flex items-center justify-between">
         <p className="text-small text-muted-foreground">
           {t('admin.console.health.checkedAt', {
-            time: new Date(h.checkedAt).toLocaleTimeString(),
+            time: formatTime(new Date(h.checkedAt), locale),
           })}
         </p>
         <Button size="sm" variant="secondary" onClick={() => query.refetch()}>

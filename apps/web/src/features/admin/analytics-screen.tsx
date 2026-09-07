@@ -1,13 +1,14 @@
 // `/admin/analytics` -- global analytics: departments, people, activity, AI spend.
 import { useQuery } from '@tanstack/react-query'
-import { useT } from '@devon/i18n'
-import { Badge, StateView } from '@devon/ui'
+import { useT, useLocale, formatDate, formatUzs } from '@devon/i18n'
+import { Badge, KpiTile, StateView } from '@devon/ui'
 import { fetchAdminAnalytics } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 import { BarChart, ChartLegend, DonutChart, StatTile } from './charts.js'
 
 function AnalyticsBody() {
   const t = useT()
+  const locale = useLocale()
   const query = useQuery({ queryKey: ['admin', 'analytics'], queryFn: fetchAdminAnalytics })
 
   if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -34,23 +35,23 @@ function AnalyticsBody() {
     { label: t('admin.console.analytics.superAdmins'), value: a.people.superAdmins },
   ]
   const weeklyBars = a.activity.weeklyLogins.map((w) => ({
-    label: new Date(w.weekStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    label: formatDate(new Date(w.weekStart), locale),
     value: w.count,
   }))
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <StatTile
+        <KpiTile
           label={t('admin.console.analytics.totalDepartments')}
           value={a.departments.total}
         />
-        <StatTile label={t('admin.console.analytics.totalPeople')} value={a.people.total} />
-        <StatTile
+        <KpiTile label={t('admin.console.analytics.totalPeople')} value={a.people.total} />
+        <KpiTile
           label={t('admin.console.analytics.cardsCreated30d')}
           value={a.activity.cardsCreated30d}
         />
-        <StatTile label={t('admin.console.analytics.logins7d')} value={a.activity.logins7d} />
+        <KpiTile label={t('admin.console.analytics.logins7d')} value={a.activity.logins7d} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -99,13 +100,13 @@ function AnalyticsBody() {
         </div>
         {a.aiSpend.available ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <StatTile
+            <KpiTile
               label={t('admin.console.analytics.tokensThisMonth')}
               value={a.aiSpend.tokensThisMonth}
             />
             <StatTile
               label={t('admin.console.analytics.costThisMonth')}
-              value={`${a.aiSpend.costUzsThisMonth.toLocaleString()} ${t('admin.console.analytics.uzs')}`}
+              value={formatUzs(a.aiSpend.costUzsThisMonth, locale)}
             />
           </div>
         ) : (

@@ -5,6 +5,42 @@
 // module's own scope does not otherwise need. These use only design tokens (`var(--...)` via
 // Tailwind's arbitrary-value syntax, never a raw hex) so they render correctly in both themes.
 import * as React from 'react'
+import { cn, useReducedMotion } from '@devon/ui'
+
+const STATUS_DOT_TONE: Record<'ok' | 'degraded' | 'down' | 'not_configured', string> = {
+  ok: 'bg-success',
+  degraded: 'bg-warning',
+  down: 'bg-destructive',
+  not_configured: 'bg-muted-foreground',
+}
+
+/** UI-OVERHAUL.md §2 "Admin console ... health page with live status dots": a heartbeat pulse on a
+ * healthy check (Vercel/Supabase's own status-page convention), a still dot otherwise -- a degraded
+ * or down service is not something to animate attention away from. `prefers-reduced-motion` drops
+ * the pulse ring; the coloured dot alone still carries the status. */
+export function StatusDot({
+  status,
+  className,
+}: {
+  status: 'ok' | 'degraded' | 'down' | 'not_configured'
+  className?: string
+}) {
+  const reduced = useReducedMotion()
+  const tone = STATUS_DOT_TONE[status]
+  return (
+    <span className={cn('relative inline-flex size-2.5 shrink-0', className)} aria-hidden="true">
+      {status === 'ok' && !reduced ? (
+        <span
+          className={cn(
+            'absolute inline-flex size-full animate-ping rounded-full opacity-60',
+            tone,
+          )}
+        />
+      ) : null}
+      <span className={cn('relative inline-flex size-2.5 rounded-full', tone)} />
+    </span>
+  )
+}
 
 const DONUT_COLOURS = [
   'var(--color-primary)',
@@ -128,11 +164,15 @@ export function BarChart({
   )
 }
 
+/** For a tile whose value is not a number (a status word, a badge) -- `KpiTile` (`@devon/ui`) covers
+ * every numeric counter; this is its non-numeric sibling, styled to match. */
 export function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4">
-      <span className="text-small text-muted-foreground">{label}</span>
-      <span className="text-h2 font-medium tabular-nums text-foreground">{value}</span>
+    <div className="flex flex-col gap-1 rounded-md border border-border bg-surface-2 p-4 shadow-1">
+      <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+        {label}
+      </span>
+      <span className="font-display text-h1 text-foreground">{value}</span>
     </div>
   )
 }

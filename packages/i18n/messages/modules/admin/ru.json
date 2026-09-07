@@ -30,7 +30,10 @@
         "reviewRequests": "Рассмотреть заявки на отделы",
         "manageDepartments": "Управление отделами",
         "manageAccounts": "Управление аккаунтами",
-        "checkHealth": "Проверить состояние системы"
+        "checkHealth": "Проверить состояние системы",
+        "healthTitle": "Состояние системы",
+        "healthSeeAll": "Смотреть все",
+        "healthUnavailable": "Состояние системы сейчас недоступно."
       },
       "departments": {
         "searchPlaceholder": "Поиск по названию отдела",
@@ -57,13 +60,25 @@
         "stopViewingAs": "Закрыть режим просмотра",
         "pauseDialogTitle": "Приостановить отдел",
         "pauseReasonLabel": "Причина",
+        "pauseCancel": "Отмена",
         "pauseSubmit": "Приостановить",
         "pausedToast": "Отдел приостановлен",
         "resumedToast": "Отдел снова активен",
         "archivedToast": "Отдел архивирован",
         "restoredToast": "Отдел восстановлен",
         "viewAsStartedToast": "Режим просмотра включён",
-        "viewAsStoppedToast": "Режим просмотра закрыт"
+        "viewAsStoppedToast": "Режим просмотра закрыт",
+        "columnName": "Отдел",
+        "columnStatus": "Статус",
+        "columnHead": "Руководитель",
+        "columnMembers": "Участники",
+        "columnCreated": "Создан",
+        "drawerTitle": "Сведения об отделе",
+        "drawerClose": "Закрыть",
+        "memberCountLabel": "Участники",
+        "headLabel": "Руководитель",
+        "createdLabel": "Создан",
+        "localeLabel": "Язык по умолчанию"
       },
       "accounts": {
         "searchPlaceholder": "Поиск по имени или логину",
@@ -81,8 +96,15 @@
           "title": "Аккаунты не найдены"
         },
         "role": {
-          "superAdmin": "Супер администратор"
+          "superAdmin": "Супер администратор",
+          "head": "Руководитель",
+          "member": "Участник"
         },
+        "columnName": "Имя",
+        "columnLogin": "Логин",
+        "columnStatus": "Статус",
+        "columnRole": "Роль",
+        "actionsMenu": "Действия",
         "lock": "Заблокировать",
         "unlock": "Разблокировать",
         "resetPassword": "Сбросить пароль",

@@ -172,7 +172,11 @@ export function ThroughputSection({
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
-          <Tooltip contentStyle={tooltipStyle} cursor={barCursor} labelStyle={{ color: 'var(--color-foreground)' }} />
+          <Tooltip
+            contentStyle={tooltipStyle}
+            cursor={barCursor}
+            labelStyle={{ color: 'var(--color-foreground)' }}
+          />
           <Bar
             dataKey="count"
             name={t('analytics.legend.done')}

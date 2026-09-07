@@ -30,7 +30,10 @@
         "reviewRequests": "Bo'lim so'rovlarini ko'rib chiqish",
         "manageDepartments": "Bo'limlarni boshqarish",
         "manageAccounts": "Hisoblarni boshqarish",
-        "checkHealth": "Tizim holatini tekshirish"
+        "checkHealth": "Tizim holatini tekshirish",
+        "healthTitle": "Tizim holati",
+        "healthSeeAll": "Barchasini ko'rish",
+        "healthUnavailable": "Hozircha tizim holati mavjud emas."
       },
       "departments": {
         "searchPlaceholder": "Bo'lim nomi bo'yicha qidirish",
@@ -57,13 +60,25 @@
         "stopViewingAs": "Ko'rinishni yopish",
         "pauseDialogTitle": "Bo'limni to'xtatish",
         "pauseReasonLabel": "Sabab",
+        "pauseCancel": "Bekor qilish",
         "pauseSubmit": "To'xtatish",
         "pausedToast": "Bo'lim to'xtatildi",
         "resumedToast": "Bo'lim qayta faollashtirildi",
         "archivedToast": "Bo'lim arxivlandi",
         "restoredToast": "Bo'lim tiklandi",
         "viewAsStartedToast": "Ko'rinish sifatida rejim yoqildi",
-        "viewAsStoppedToast": "Ko'rinish sifatida rejim yopildi"
+        "viewAsStoppedToast": "Ko'rinish sifatida rejim yopildi",
+        "columnName": "Bo'lim",
+        "columnStatus": "Holat",
+        "columnHead": "Boshliq",
+        "columnMembers": "A'zolar",
+        "columnCreated": "Yaratilgan",
+        "drawerTitle": "Bo'lim tafsilotlari",
+        "drawerClose": "Yopish",
+        "memberCountLabel": "A'zolar",
+        "headLabel": "Boshliq",
+        "createdLabel": "Yaratilgan",
+        "localeLabel": "Standart til"
       },
       "accounts": {
         "searchPlaceholder": "Ism yoki login bo'yicha qidirish",
@@ -81,8 +96,15 @@
           "title": "Hisoblar topilmadi"
         },
         "role": {
-          "superAdmin": "Super administrator"
+          "superAdmin": "Super administrator",
+          "head": "Boshliq",
+          "member": "A'zo"
         },
+        "columnName": "Ism",
+        "columnLogin": "Login",
+        "columnStatus": "Holat",
+        "columnRole": "Rol",
+        "actionsMenu": "Amallar",
         "lock": "Bloklash",
         "unlock": "Blokdan chiqarish",
         "resetPassword": "Parolni tiklash",

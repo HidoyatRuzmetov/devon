@@ -30,7 +30,10 @@
         "reviewRequests": "Review department requests",
         "manageDepartments": "Manage departments",
         "manageAccounts": "Manage accounts",
-        "checkHealth": "Check system health"
+        "checkHealth": "Check system health",
+        "healthTitle": "System health",
+        "healthSeeAll": "See all",
+        "healthUnavailable": "Health status is unavailable right now."
       },
       "departments": {
         "searchPlaceholder": "Search by department name",
@@ -57,13 +60,25 @@
         "stopViewingAs": "Stop viewing as",
         "pauseDialogTitle": "Pause department",
         "pauseReasonLabel": "Reason",
+        "pauseCancel": "Cancel",
         "pauseSubmit": "Pause",
         "pausedToast": "Department paused",
         "resumedToast": "Department resumed",
         "archivedToast": "Department archived",
         "restoredToast": "Department restored",
         "viewAsStartedToast": "View-as mode started",
-        "viewAsStoppedToast": "View-as mode stopped"
+        "viewAsStoppedToast": "View-as mode stopped",
+        "columnName": "Department",
+        "columnStatus": "Status",
+        "columnHead": "Head",
+        "columnMembers": "Members",
+        "columnCreated": "Created",
+        "drawerTitle": "Department details",
+        "drawerClose": "Close",
+        "memberCountLabel": "Members",
+        "headLabel": "Head",
+        "createdLabel": "Created",
+        "localeLabel": "Default locale"
       },
       "accounts": {
         "searchPlaceholder": "Search by name or login",
@@ -81,8 +96,15 @@
           "title": "No accounts found"
         },
         "role": {
-          "superAdmin": "Super admin"
+          "superAdmin": "Super admin",
+          "head": "Head",
+          "member": "Member"
         },
+        "columnName": "Name",
+        "columnLogin": "Login",
+        "columnStatus": "Status",
+        "columnRole": "Role",
+        "actionsMenu": "Actions",
         "lock": "Lock",
         "unlock": "Unlock",
         "resetPassword": "Reset password",
