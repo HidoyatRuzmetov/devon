@@ -8,12 +8,13 @@
 // under `app.departments`'s RLS `with check` requires `app.department_id` to equal that row's own id
 // for the instant of the write, then restored to `DEMO_DEPARTMENT.id` so every module after this one
 // (there are none, at order 900, but the pattern is load-bearing regardless) sees the original scope.
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import type { Tx } from '../../context.js'
 import * as schema from '../../schema/index.js'
 import { DEMO_DEPARTMENT } from '../fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import { asDepartment } from '../scope.js'
 
 export const order = 900
 
@@ -89,6 +90,36 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
 
   for (const spec of SHOWCASE_DEPARTMENTS) {
     rows += await seedShowcaseDepartment(tx, spec)
+  }
+
+  return rows
+}
+
+/**
+ * Blitz integration fix: this module shipped `seed()` but no `reset()` -- `seed:reset --demo` only
+ * calls a module's `reset()` when one exists, so these two showcase departments were never cleaned up
+ * and `app.departments` stayed at 2 rows after a reset that should have zeroed it (reproduced end to
+ * end against a fresh Testcontainers Postgres, `test:seed-idempotence` -- the same class of gap
+ * `analytics.ts`/`pages.ts`/`ai.ts` had for their own tables, found fixing this same run). Same
+ * GUC-flip `seedShowcaseDepartment` above already uses for the insert, mirrored here for the delete:
+ * `departments_write`'s RLS needs `app.department_id` to equal the row's own id for the instant of the
+ * write (`scope.ts`'s `asDepartment`, the same helper `departments.ts`'s `resetDepartment` uses).
+ * Neither showcase department has members (this file's header), so there is no `memberships` row to
+ * delete first the way `departments.ts`'s own `resetDepartment` needs to.
+ */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let rows = 0
+
+  for (const spec of SHOWCASE_DEPARTMENTS) {
+    const departmentId = demoId(spec.key)
+    rows += await asDepartment(tx, departmentId, async () => {
+      const deleted = await tx.drizzle
+        .delete(schema.departments)
+        .where(eq(schema.departments.id, departmentId))
+        .returning({ id: schema.departments.id })
+      return deleted.length
+    })
   }
 
   return rows

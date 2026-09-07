@@ -6,6 +6,7 @@
 // Traces carry token/cost/latency metadata only -- never prompt/response text (same guard rail
 // `packages/db/src/schema/ai.ts`'s header explains) -- so this seed can be entirely believable numbers
 // without needing to fabricate any actual AI-generated content.
+import { eq } from 'drizzle-orm'
 import * as schema from '../../schema/ai.js'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
 import { demoId } from '../ids.js'
@@ -244,4 +245,40 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   inserted += insertedTraces.length
 
   return inserted
+}
+
+/**
+ * Blitz integration fix: this module shipped `seed()` but no `reset()` -- `seed:reset --demo` only
+ * calls a module's `reset()` when one exists, so `app.ai_department_settings`/`app.ai_traces` rows for
+ * the demo department were never cleaned up. Harmless on its own (neither table is referenced by
+ * anything else, so it never blocked `demo.ts`'s own department delete the way the missing
+ * `analytics.ts`/`pages.ts` resets did, both reproduced end to end against a fresh Testcontainers
+ * Postgres via `test:seed-idempotence`), but a repeat `seed:demo` after a `seed:reset --demo` would
+ * otherwise still find last time's settings/traces sitting there -- both `on conflict do nothing`, so
+ * harmless to insert *over*, but never actually reset to the seed's own defaults (e.g. a demo where
+ * someone had changed the AI budget through the UI would keep that changed value forever, defeating
+ * the point of resetting the tenant between demos).
+ *
+ * `ai_department_settings_write` additionally requires `current_actor_role() IN ('head',
+ * 'super_admin')` -- already satisfied, `demoContext()`'s actor role is `super_admin` for the whole
+ * seed transaction (`scope.ts`). Neither table has an owner column, so no `app.user_id` GUC dance is
+ * needed (unlike `analytics.ts`'s saved filters/pins).
+ */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let deleted = 0
+
+  const deletedTraces = await tx.drizzle
+    .delete(schema.aiTraces)
+    .where(eq(schema.aiTraces.departmentId, DEMO_DEPARTMENT.id))
+    .returning({ id: schema.aiTraces.id })
+  deleted += deletedTraces.length
+
+  const deletedSettings = await tx.drizzle
+    .delete(schema.aiDepartmentSettings)
+    .where(eq(schema.aiDepartmentSettings.departmentId, DEMO_DEPARTMENT.id))
+    .returning({ departmentId: schema.aiDepartmentSettings.departmentId })
+  deleted += deletedSettings.length
+
+  return deleted
 }

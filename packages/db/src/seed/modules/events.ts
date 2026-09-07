@@ -425,68 +425,103 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
 }
 
 /** Reverse of `seed()`: every child table (feedback, photos, comments, items, votes → options → polls,
- * seats → carpools, RSVPs), then the events themselves. */
+ * seats → carpools, RSVPs), then the events themselves.
+ *
+ * Blitz integration fix: every child table below used to be deleted by its own static fixture id list
+ * (`idsOf(FEEDBACK_ROWS)` etc.) rather than by `event_id`/`poll_id`/`carpool_id` -- correct only as
+ * long as nobody had actually *used* the demo (RSVP'd, commented, voted, claimed an item...) since the
+ * last seed, because any such row is real, not one `reset()` already knows about, and blocked the
+ * `events` delete below with `event_comments_event_id_fkey` (found running `seed:reset --demo` end to
+ * end against this session's demo tenant, which several hours of module builders' own click-through
+ * testing had left with exactly such rows). A demo's whole point is to be used between resets, so
+ * `reset()` now deletes every child row of *these* events/polls/carpools -- seeded or not -- rather
+ * than only the ones it remembers seeding. Never touches a row outside `EVENT_ROWS`' ids, so this is
+ * still exactly as scoped to the demo department's own seeded events as `DEMO_DELETE_ORDER`'s
+ * documented "the exact set seed:reset --demo deletes and nothing else" (this file's own fixtures.ts)
+ * -- only *within* one of those events does "nothing else" widen to "everything on it". */
 export async function reset(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let deleted = 0
+  const eventIds = idsOf(EVENT_ROWS)
 
   const deletedFeedback = await tx.drizzle
     .delete(schema.eventFeedback)
-    .where(inArray(schema.eventFeedback.id, idsOf(FEEDBACK_ROWS)))
+    .where(inArray(schema.eventFeedback.eventId, eventIds))
     .returning({ id: schema.eventFeedback.id })
   deleted += deletedFeedback.length
 
   const deletedPhotos = await tx.drizzle
     .delete(schema.eventPhotos)
-    .where(inArray(schema.eventPhotos.id, idsOf(PHOTO_ROWS)))
+    .where(inArray(schema.eventPhotos.eventId, eventIds))
     .returning({ id: schema.eventPhotos.id })
   deleted += deletedPhotos.length
 
   const deletedComments = await tx.drizzle
     .delete(schema.eventComments)
-    .where(inArray(schema.eventComments.id, idsOf(COMMENT_ROWS)))
+    .where(inArray(schema.eventComments.eventId, eventIds))
     .returning({ id: schema.eventComments.id })
   deleted += deletedComments.length
 
   const deletedItems = await tx.drizzle
     .delete(schema.eventItems)
-    .where(inArray(schema.eventItems.id, idsOf(ITEM_ROWS)))
+    .where(inArray(schema.eventItems.eventId, eventIds))
     .returning({ id: schema.eventItems.id })
   deleted += deletedItems.length
 
-  const deletedPollVotes = await tx.drizzle
-    .delete(schema.pollVotes)
-    .where(inArray(schema.pollVotes.id, idsOf(POLL_VOTE_ROWS)))
-    .returning({ id: schema.pollVotes.id })
+  // `polls.eventId` is nullable (a poll need not belong to an event), so this module's own polls are
+  // exactly the ones whose `eventId` is one of these events -- a plain fixture-id list would miss any
+  // live vote/option added since the seed, the same gap this whole fix closes for every other table.
+  const eventPolls = await tx.drizzle
+    .select({ id: schema.polls.id })
+    .from(schema.polls)
+    .where(inArray(schema.polls.eventId, eventIds))
+  const pollIds = eventPolls.map((p) => p.id)
+
+  const deletedPollVotes = pollIds.length
+    ? await tx.drizzle
+        .delete(schema.pollVotes)
+        .where(inArray(schema.pollVotes.pollId, pollIds))
+        .returning({ id: schema.pollVotes.id })
+    : []
   deleted += deletedPollVotes.length
 
-  const deletedPollOptions = await tx.drizzle
-    .delete(schema.pollOptions)
-    .where(inArray(schema.pollOptions.id, idsOf(POLL_OPTION_ROWS)))
-    .returning({ id: schema.pollOptions.id })
+  const deletedPollOptions = pollIds.length
+    ? await tx.drizzle
+        .delete(schema.pollOptions)
+        .where(inArray(schema.pollOptions.pollId, pollIds))
+        .returning({ id: schema.pollOptions.id })
+    : []
   deleted += deletedPollOptions.length
 
   const deletedPolls = await tx.drizzle
     .delete(schema.polls)
-    .where(inArray(schema.polls.id, idsOf(POLL_ROWS)))
+    .where(inArray(schema.polls.eventId, eventIds))
     .returning({ id: schema.polls.id })
   deleted += deletedPolls.length
 
-  const deletedCarpoolSeats = await tx.drizzle
-    .delete(schema.carpoolSeats)
-    .where(inArray(schema.carpoolSeats.id, idsOf(CARPOOL_SEAT_ROWS)))
-    .returning({ id: schema.carpoolSeats.id })
+  const eventCarpools = await tx.drizzle
+    .select({ id: schema.carpools.id })
+    .from(schema.carpools)
+    .where(inArray(schema.carpools.eventId, eventIds))
+  const carpoolIds = eventCarpools.map((c) => c.id)
+
+  const deletedCarpoolSeats = carpoolIds.length
+    ? await tx.drizzle
+        .delete(schema.carpoolSeats)
+        .where(inArray(schema.carpoolSeats.carpoolId, carpoolIds))
+        .returning({ id: schema.carpoolSeats.id })
+    : []
   deleted += deletedCarpoolSeats.length
 
   const deletedCarpools = await tx.drizzle
     .delete(schema.carpools)
-    .where(inArray(schema.carpools.id, idsOf(CARPOOL_ROWS)))
+    .where(inArray(schema.carpools.eventId, eventIds))
     .returning({ id: schema.carpools.id })
   deleted += deletedCarpools.length
 
   const deletedRsvps = await tx.drizzle
     .delete(schema.eventRsvps)
-    .where(inArray(schema.eventRsvps.id, idsOf(RSVP_ROWS)))
+    .where(inArray(schema.eventRsvps.eventId, eventIds))
     .returning({ id: schema.eventRsvps.id })
   deleted += deletedRsvps.length
 
@@ -498,11 +533,11 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   // not a seeded row, exactly as `demo.ts` does not count the sessions it sweeps.
   await tx.drizzle
     .delete(schema.eventReminderJobs)
-    .where(inArray(schema.eventReminderJobs.eventId, idsOf(EVENT_ROWS)))
+    .where(inArray(schema.eventReminderJobs.eventId, eventIds))
 
   const deletedEvents = await tx.drizzle
     .delete(schema.events)
-    .where(inArray(schema.events.id, idsOf(EVENT_ROWS)))
+    .where(inArray(schema.events.id, eventIds))
     .returning({ id: schema.events.id })
   deleted += deletedEvents.length
 

@@ -166,15 +166,27 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   return inserted.length
 }
 
-/** Deletes the 38 extra users. Their memberships (`departments.ts`, order 20) are already gone by the
- * time this runs (`runResetDemo` walks modules in descending `order`). Every demo account shares
- * `DEMO_PASSWORD`, so any of them may have been logged into since the seed -- their sessions go first,
- * for exactly the reason `demo.ts` deletes the core accounts' sessions (`sessions_user_id_fkey`). */
+/** Deletes the 38 extra users. Every demo account shares `DEMO_PASSWORD`, so any of them may have been
+ * logged into (and used to join a department, or create one, entirely outside any seed module) since
+ * the seed -- their sessions go first, for exactly the reason `demo.ts` deletes the core accounts'
+ * sessions (`sessions_user_id_fkey`).
+ *
+ * Blitz integration fix: the comment here used to claim "their memberships (departments.ts, order 20)
+ * are already gone by the time this runs" -- true only for the specific departments/membership ids
+ * `departments.ts`'s own `reset()` knows about. `memberships_user_id_fkey` still blocked this delete
+ * (found running `seed:reset --demo` against a demo tenant real usage had touched since seeding): one
+ * of these 38 users had a real membership in a department no seed module tracks (created through the
+ * app's own register/join flow during testing, the same class of gap `events.ts`'s `reset()` had for
+ * comments/RSVPs/etc. on its own events). Deleting every remaining `app.memberships` row for exactly
+ * these user ids -- regardless of which department it points at -- before the users themselves is safe
+ * (the user is about to be gone either way) and closes that gap the same way the session delete below
+ * already does for `app.sessions`. */
 export async function reset(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   const userIds = EXTRA_USERS.map(extraUserId)
 
   await tx.drizzle.delete(schema.sessions).where(inArray(schema.sessions.userId, userIds))
+  await tx.drizzle.delete(schema.memberships).where(inArray(schema.memberships.userId, userIds))
 
   const deleted = await tx.drizzle
     .delete(schema.users)

@@ -236,3 +236,45 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
 
   return rows
 }
+
+/**
+ * Blitz integration fix: this module shipped `seed()` but no `reset()` -- `seed:reset --demo` only
+ * calls a module's `reset()` when one exists, so `app.pages`/`app.page_versions`/
+ * `app.onboarding_templates` rows were never cleaned up and `demo.ts`'s own department delete at the
+ * end of the reset failed with `pages_department_id_fkey` (reproduced end to end against a fresh
+ * Testcontainers Postgres, `test:seed-idempotence` -- not specific to any one long-lived demo
+ * database). `onboarding_runs` isn't seeded here (it is a pure runtime ledger, written the first time
+ * a real member joins this department -- TECH-SPEC §3.5), but it holds `template_id ->
+ * onboarding_templates.id`, so a demo that has actually seen a join since the seed would otherwise
+ * fail `onboarding_runs_template_id_fkey` on the templates delete below, the identical "reset must
+ * clean up real usage on its own seeded rows too" shape `events.ts`'s `reset()` already needed to
+ * handle for RSVPs/comments/etc.
+ *
+ * No `app.user_id` GUC dance needed here (unlike `analytics.ts`'s saved filters/pins): this module's
+ * header comment already establishes neither `pages` nor `onboarding_templates` carries an owner
+ * column, RLS only checks `department_id`, and the shared seed transaction's `app.department_id` GUC
+ * already points at `DEPT` throughout.
+ */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let rows = 0
+
+  await tx.raw(sql`delete from app.onboarding_runs where department_id = ${DEPT}`)
+
+  const deletedTemplates = await tx.raw<{ id: string }>(sql`
+    delete from app.onboarding_templates where department_id = ${DEPT} returning id
+  `)
+  rows += deletedTemplates.length
+
+  const deletedVersions = await tx.raw<{ id: string }>(sql`
+    delete from app.page_versions where department_id = ${DEPT} returning id
+  `)
+  rows += deletedVersions.length
+
+  const deletedPages = await tx.raw<{ id: string }>(sql`
+    delete from app.pages where department_id = ${DEPT} returning id
+  `)
+  rows += deletedPages.length
+
+  return rows
+}

@@ -147,3 +147,60 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
 
   return rows
 }
+
+/**
+ * Blitz integration fix: this module shipped `seed()` but never `reset()` -- `seed:reset --demo`
+ * (`demo.ts`'s `runResetDemo`) only calls a module's `reset()` when one exists, so every row this
+ * module ever wrote was silently left behind. Harmless while nothing downstream pointed back at it,
+ * until the very next step of the same reset (`DEMO_DELETE_ORDER`'s own department delete, `demo.ts`)
+ * hit `analytics_daily_department_id_fkey` and failed outright -- reproduced end to end against a
+ * fresh Testcontainers Postgres (`test:seed-idempotence`), so this is not specific to any one
+ * long-lived demo database; every `seed:demo` followed by `seed:reset --demo` hit it.
+ *
+ * `analytics_daily`'s RLS write policy only checks `department_id` (no owner column on that table), so
+ * one department-scoped delete covers every row `seedDailyHistory` ever inserts, deterministic id or
+ * not -- and also covers a real recompute job's rows for this department, the same "reset cleans up
+ * live usage on its own seeded rows, not only what it remembers seeding" fix `events.ts`'s `reset()`
+ * needed for the same reason.
+ *
+ * `analytics_saved_filters`/`analytics_pinned_charts` additionally require `owner_user_id =
+ * current_user_id()` in their write policies (RLS, `owner_user_id` is a real column here, `personal.ts`'s
+ * exact problem) -- deleting each demo user's own rows needs `app.user_id` pointed at them first,
+ * exactly the same `setSeedUser` dance `seed()` above already does to insert them.
+ */
+export async function reset(ctx: SeedModuleContext): Promise<number> {
+  const { tx } = ctx
+  let rows = 0
+
+  const deletedDaily = await tx.raw<{ id: string }>(sql`
+    delete from app.analytics_daily where department_id = ${DEPARTMENT_ID} returning id
+  `)
+  rows += deletedDaily.length
+
+  // C-style loop, not for-of/Promise.all (TECH-SPEC §16's "no query in a loop" is about independent
+  // items; these share one transaction-local `app.user_id` GUC, so they have to run one at a time --
+  // the exact same reason `seed()` above loops this way over `savedFilterFixtures`).
+  const users = [HEAD, MEMBER]
+  for (let i = 0; i < users.length; i += 1) {
+    const user = users[i]!
+    await setSeedUser(tx, user.id)
+
+    const deletedFilters = await tx.raw<{ id: string }>(sql`
+      delete from app.analytics_saved_filters
+      where department_id = ${DEMO_DEPARTMENT.id} and owner_user_id = ${user.id}
+      returning id
+    `)
+    rows += deletedFilters.length
+
+    const deletedPins = await tx.raw<{ id: string }>(sql`
+      delete from app.analytics_pinned_charts
+      where department_id = ${DEMO_DEPARTMENT.id} and owner_user_id = ${user.id}
+      returning id
+    `)
+    rows += deletedPins.length
+  }
+
+  await setSeedUser(tx, null) // same reason seed() clears it: never leak a demo user id to the next module
+
+  return rows
+}
