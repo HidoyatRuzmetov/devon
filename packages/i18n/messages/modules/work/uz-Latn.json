@@ -3,6 +3,7 @@
     "eyebrow": "ISH",
     "title": "Vazifalar",
     "description": "Xodimlar doskasi: boshqarma aʼzosiga bitta ustundan.",
+    "filterChrome": { "toggle": "Filtrlar va tezkor qoʻshish" },
     "view": {
       "board": "Doska",
       "table": "Jadval",
@@ -23,7 +24,9 @@
       "collapseColumn": "Ustunni yigʻish",
       "loadCount": "Ustunda {count} ta karta",
       "columnsShowing": "{shown} / {total} ustun koʻrsatilmoqda",
-      "expandAllColumns": "Barchasini yoyish"
+      "expandAllColumns": "Barchasini yoyish",
+      "showAllMembers": "Barcha xodimlar ({count})",
+      "showFewer": "Kamroq koʻrsatish"
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",

@@ -11,7 +11,7 @@
 import * as React from 'react'
 import { cardMatchesFilterText, parseFilterQuery } from '@devon/contracts'
 import { useT } from '@devon/i18n'
-import { Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
+import { FilterChip, Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
@@ -27,6 +27,32 @@ import { WorkShell } from './work-shell.js'
 import type { CardDropSpec } from './card-tile.js'
 import { fullName } from '../lib/format.js'
 
+/** Per-viewer, remembered choice (round2 SEV2 "remember the choice per user") -- keyed by user id so
+ * a shared machine never leaks one person's board width preference onto the next signed-in user. */
+function useShowAllMembers(userId: string | undefined): [boolean, (v: boolean) => void] {
+  const key = `devon.work.board.showAllMembers.${userId ?? 'anon'}`
+  const [value, setValue] = React.useState(() => {
+    try {
+      return window.localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  })
+  const setAndStore = React.useCallback(
+    (next: boolean) => {
+      setValue(next)
+      try {
+        if (next) window.localStorage.setItem(key, '1')
+        else window.localStorage.removeItem(key)
+      } catch {
+        // Best-effort only -- the toggle still works for this render.
+      }
+    },
+    [key],
+  )
+  return [value, setAndStore]
+}
+
 function findMemberMatches(
   needle: string,
   members: readonly { userId: string; givenName: string; familyName: string }[],
@@ -41,6 +67,7 @@ function BoardScreenInner() {
   const t = useT()
   const { department, departmentId } = useDepartment()
   const { user } = useSession()
+  const [showAllMembers, setShowAllMembers] = useShowAllMembers(user?.id)
   // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
   // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
@@ -191,11 +218,25 @@ function BoardScreenInner() {
 
   const columnKeys = [...board.columns.map((c) => c.member.userId), 'unassigned']
   const collapsedCount = columnKeys.filter((k) => collapsedByColumn[k]).length
+  // round2 SEV2: a 26-person department opened the board at 27 columns with no way to narrow it (3.8
+  // of 27 fit an 1112px scroller) -- defaulting to just the viewer's own column, with a chip to bring
+  // the rest back, means the board opens at a width someone can actually scan. No manager/report
+  // relationship exists in this data model (CLAUDE.md: "no HR"), so "the viewer's own column" is the
+  // whole default set; a viewer with no column of their own (e.g. a head who never holds cards) still
+  // sees everyone, since narrowing to nothing would be worse than not narrowing at all.
+  const ownColumnIndex = board.columns.findIndex((c) => c.member.userId === user?.id)
+  // An active search/filter always searches every column -- narrowing to "just me" while a filter is
+  // typed would silently hide a matching card in a colleague's column with nothing to explain why.
+  const isFiltering = q.trim().length > 0
+  const visibleColumns =
+    showAllMembers || ownColumnIndex === -1 || isFiltering
+      ? board.columns
+      : [board.columns[ownColumnIndex]!]
 
   return (
     <div className="flex h-full flex-col gap-4">
       <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex flex-wrap items-center gap-2 px-1">
           <span
             className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(departmentId ?? 'devon'))}
             aria-hidden="true"
@@ -203,31 +244,43 @@ function BoardScreenInner() {
           <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
             {department?.name ?? t('work.board.department')}
           </h2>
-          {collapsedCount > 0 ? (
-            <span className="ml-auto flex items-center gap-2 text-caption text-muted-foreground">
-              {t('work.board.columnsShowing', {
-                shown: columnKeys.length - collapsedCount,
-                total: columnKeys.length,
-              })}
-              <button
-                type="button"
-                className="rounded-sm px-1.5 py-0.5 font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                onClick={() => {
-                  for (const key of columnKeys) {
-                    try {
-                      window.localStorage.removeItem(`devon.work.columnCollapsed.${key}`)
-                    } catch {
-                      // Best-effort -- the remount below still expands the columns for this render.
-                    }
-                  }
-                  setCollapsedByColumn({})
-                  setExpandAllNonce((n) => n + 1)
-                }}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {ownColumnIndex !== -1 ? (
+              <FilterChip
+                active={showAllMembers}
+                onClick={() => setShowAllMembers(!showAllMembers)}
               >
-                {t('work.board.expandAllColumns')}
-              </button>
-            </span>
-          ) : null}
+                {showAllMembers
+                  ? t('work.board.showFewer')
+                  : t('work.board.showAllMembers', { count: board.members.length })}
+              </FilterChip>
+            ) : null}
+            {collapsedCount > 0 ? (
+              <span className="flex items-center gap-2 text-caption text-muted-foreground">
+                {t('work.board.columnsShowing', {
+                  shown: columnKeys.length - collapsedCount,
+                  total: columnKeys.length,
+                })}
+                <button
+                  type="button"
+                  className="rounded-sm px-1.5 py-0.5 font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={() => {
+                    for (const key of columnKeys) {
+                      try {
+                        window.localStorage.removeItem(`devon.work.columnCollapsed.${key}`)
+                      } catch {
+                        // Best-effort -- the remount below still expands the columns for this render.
+                      }
+                    }
+                    setCollapsedByColumn({})
+                    setExpandAllNonce((n) => n + 1)
+                  }}
+                >
+                  {t('work.board.expandAllColumns')}
+                </button>
+              </span>
+            ) : null}
+          </div>
         </div>
         <div
           ref={setScrollerRefs}
@@ -253,7 +306,7 @@ function BoardScreenInner() {
               : undefined,
           }}
         >
-          {board.columns.map((col) => (
+          {visibleColumns.map((col) => (
             <BoardColumn
               key={`${col.member.userId}:${expandAllNonce}`}
               member={col.member}

@@ -3,6 +3,7 @@
     "eyebrow": "РАБОТА",
     "title": "Задачи",
     "description": "Доска сотрудников: по одной колонке на каждого работника отдела.",
+    "filterChrome": { "toggle": "Фильтры и быстрое добавление" },
     "view": {
       "board": "Доска",
       "table": "Таблица",
@@ -23,7 +24,9 @@
       "collapseColumn": "Свернуть колонку",
       "loadCount": "Карточек в колонке: {count}",
       "columnsShowing": "Показано {shown} из {total} колонок",
-      "expandAllColumns": "Развернуть все"
+      "expandAllColumns": "Развернуть все",
+      "showAllMembers": "Все сотрудники ({count})",
+      "showFewer": "Показать меньше"
     },
     "quickAdd": {
       "placeholder": "Быстро добавить: «Нодира: пакет ЕГДИ, пятница»",

@@ -2113,6 +2113,9 @@
     "eyebrow": "WORK",
     "title": "Cards",
     "description": "The People board: one column per department member.",
+    "filterChrome": {
+      "toggle": "Filters and quick add"
+    },
     "view": {
       "board": "Board",
       "table": "Table",
@@ -2133,7 +2136,9 @@
       "collapseColumn": "Collapse column",
       "loadCount": "{count} card(s) in this column",
       "columnsShowing": "Showing {shown} of {total} columns",
-      "expandAllColumns": "Expand all"
+      "expandAllColumns": "Expand all",
+      "showAllMembers": "All staff ({count})",
+      "showFewer": "Show fewer"
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",

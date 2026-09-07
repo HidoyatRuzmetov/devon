@@ -3,6 +3,7 @@
     "eyebrow": "ИШ",
     "title": "Вазифалар",
     "description": "Ходимлар доскаси: бошқарма аъзосига битта устундан.",
+    "filterChrome": { "toggle": "Филтрлар ва тезкор қўшиш" },
     "view": {
       "board": "Доска",
       "table": "Жадвал",
@@ -23,7 +24,9 @@
       "collapseColumn": "Устунни йиғиш",
       "loadCount": "Устунда {count} та карта",
       "columnsShowing": "{shown} / {total} устун кўрсатилмоқда",
-      "expandAllColumns": "Барчасини ёйиш"
+      "expandAllColumns": "Барчасини ёйиш",
+      "showAllMembers": "Барча ходимлар ({count})",
+      "showFewer": "Камроқ кўрсатиш"
     },
     "quickAdd": {
       "placeholder": "Тез қўшиш: \"Нодира: ЭГДИ пакети, жума\"",

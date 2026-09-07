@@ -3,9 +3,11 @@
 // is still there after clicking over to Table (TECH-SPEC "table, timeline, calendar and mine show the
 // same cards") -- the current `?q=` search string rides along on every tab link.
 import * as React from 'react'
+import { SlidersHorizontal } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
-import { PageHeader, cn } from '@devon/ui'
+import { useMediaQuery } from '../../../lib/use-media-query.js'
+import { Collapsible, IconButton, PageHeader, cn } from '@devon/ui'
 import { useBoardQuery } from '../hooks.js'
 import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'
@@ -37,12 +39,31 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
   const qs = search.get('q')
   const searchSuffix = qs ? `?q=${encodeURIComponent(qs)}` : ''
 
+  // round2 SEV2: at 390 the chrome above the board (title, six tabs, quick-add, filter row,
+  // "Kengaytirilgan") ate ~500px before any column started -- below 768 the quick-add bar and filter
+  // row collapse behind one toggle in the header instead of always taking their own vertical space.
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const [mobileChromeOpen, setMobileChromeOpen] = React.useState(false)
+  const hasCollapsibleChrome = (showQuickAdd || Boolean(filterLayout)) && !isDesktop
+
   return (
     <div className="flex h-full flex-col gap-4">
       <PageHeader
         eyebrow={t('work.eyebrow')}
         title={t('work.title')}
         description={t('work.description')}
+        actions={
+          hasCollapsibleChrome ? (
+            <IconButton
+              aria-label={t('work.filterChrome.toggle')}
+              aria-expanded={mobileChromeOpen}
+              aria-controls="work-shell-mobile-chrome"
+              onClick={() => setMobileChromeOpen((v) => !v)}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden="true" />
+            </IconButton>
+          ) : null
+        }
         tabs={
           <nav className="flex flex-wrap gap-1 border-b border-border" aria-label={t('work.title')}>
             {TABS.map((tab) => (
@@ -63,8 +84,19 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
           </nav>
         }
       />
-      {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
-      {filterLayout ? <FilterBar layout={filterLayout} /> : null}
+      {isDesktop ? (
+        <>
+          {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
+          {filterLayout ? <FilterBar layout={filterLayout} /> : null}
+        </>
+      ) : (
+        <Collapsible id="work-shell-mobile-chrome" open={mobileChromeOpen}>
+          <div className="flex flex-col gap-4">
+            {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
+            {filterLayout ? <FilterBar layout={filterLayout} /> : null}
+          </div>
+        </Collapsible>
+      )}
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>
     </div>
   )
