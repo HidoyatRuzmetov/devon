@@ -1,0 +1,16 @@
+# Golden-set descriptor (TECH-SPEC §8/§12: "promptfoo golden sets in CI"). The actual `ai-evals` gate
+# (agentic/gates.json) runs `pnpm --filter @devon/ai evals`, which executes `run.ts` against the same
+# cases as this file describes (`cases.ts` is the source of truth both read from conceptually) -- the
+# real `promptfoo` CLI is not yet part of this repo's toolchain, so this file is not wired to a command
+# today. It exists so the golden set is discoverable in the shape a future `promptfoo eval` run expects,
+# and so adding the real CLI later is "point it at packages/ai/evals", not "invent the golden set".
+description: "Devon AI features (TECH-SPEC §8) -- golden set, Uzbek/Russian/English coverage"
+
+providers:
+  - id: file://../src/index.ts
+    label: "@devon/ai gateway (GlmProvider when AI_API_KEY is set, offline simulator otherwise)"
+
+# See `cases.ts` for the real, executable case list (kept in TypeScript so every case gets Zod
+# validation and TypeScript's own type-checking for free -- a YAML golden set here would duplicate
+# that list and could silently drift from the actual `AiFeature`/schema shapes).
+tests: []

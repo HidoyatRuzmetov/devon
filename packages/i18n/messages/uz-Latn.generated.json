@@ -496,6 +496,161 @@
       }
     }
   },
+  "ai": {
+    "title": "AI",
+    "tabs": {
+      "overview": "Umumiy",
+      "usage": "Foydalanish",
+      "assistant": "Yordamchi"
+    },
+    "budget": {
+      "title": "Oylik AI byudjeti",
+      "status": {
+        "ok": "Me'yorida",
+        "soft_cap": "Chegaraga yaqin",
+        "hard_stop": "Byudjet tugadi"
+      },
+      "spentOfCap": "Bu oy {cap} dan {spent} sarflandi",
+      "editLabel": "Oylik byudjet (UZS)",
+      "save": "Byudjetni saqlash",
+      "invalidAmount": "Toʻgʻri miqdor kiriting"
+    },
+    "flags": {
+      "title": "Funksiyalar",
+      "description": "Ushbu boʻlim uchun AI funksiyalarini yoqing yoki oʻchiring. Yoqmaguningizcha oʻchirilgan boʻladi.",
+      "headOnly": "Faqat boʻlim boshligʻi bularni oʻzgartira oladi."
+    },
+    "usage": {
+      "empty": {
+        "title": "Hali AI chaqiruvlari yoʻq",
+        "body": "Boʻlimdan kimdir AI funksiyasini sinab koʻrgach, foydalanish shu yerda koʻrinadi."
+      },
+      "columns": {
+        "when": "Qachon",
+        "feature": "Funksiya",
+        "status": "Holat",
+        "tokens": "Tokenlar",
+        "cost": "Narx",
+        "latency": "Kechikish"
+      },
+      "status": {
+        "ok": "Yaxshi",
+        "empty_after_retry": "Boʻsh javob",
+        "schema_invalid_after_retry": "Notoʻgʻri javob",
+        "provider_error": "Provayder xatosi",
+        "blocked_budget": "Byudjet bloklandi",
+        "blocked_flag": "Funksiya oʻchirilgan"
+      }
+    },
+    "result": {
+      "title": "Oldindan koʻrish",
+      "tokens": "{count} token",
+      "latency": "{ms} ms",
+      "accept": "Natijani nusxalash",
+      "copied": "Almashish buferiga nusxalandi"
+    },
+    "assistant": {
+      "title": "AI yordamchi",
+      "description": "AI funksiyasini sinab koʻring: maydonlarni toʻldiring, natijani koʻring, soʻng uni nusxalang yoki mos ekranda ishlating.",
+      "preview": "Koʻrib chiqish",
+      "disabled": {
+        "title": "Bu funksiya oʻchirilgan",
+        "body": "Boʻlim boshligʻidan uni \"Umumiy\" boʻlimida yoqishni soʻrang."
+      },
+      "budgetExceeded": {
+        "title": "Bu oylik AI byudjeti tugadi",
+        "body": "Boʻlim boshligʻidan oylik byudjetni \"Umumiy\" boʻlimida oshirishni soʻrang."
+      }
+    },
+    "errors": {
+      "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",
+      "forbidden": "Bu funksiya oʻchirilgan yoki byudjet tugagan",
+      "runFailed": "AI hozircha javob bera olmadi"
+    },
+    "features": {
+      "quickAddParse": {
+        "label": "Tezkor qoʻshish tahlili",
+        "description": "Erkin yozilgan gapni kartochka nomi, mas'ul, muddat va muhimlik darajasiga aylantiradi, toʻrtta tildan istalganida."
+      },
+      "subtaskBreakdown": {
+        "label": "Quyi vazifalarga boʻlish",
+        "description": "Bitta kartochkani aniq, bajarilishi mumkin boʻlgan quyi vazifalar roʻyxatiga boʻladi."
+      },
+      "planSprint": {
+        "label": "Davrni rejalashtirish",
+        "description": "Shaxsiy ochiq vazifalaringiz uchun tartib va qaysi biridan boshlashni tavsiya qiladi."
+      },
+      "deadlineRisk": {
+        "label": "Muddat xavfi",
+        "description": "Kartochka muddatini oʻtkazib yuborish xavfi bor-yoʻqligini va nima qilish kerakligini tushuntiradi."
+      },
+      "weeklySummary": {
+        "label": "Haftalik xulosa",
+        "description": "Bitta xodim yoki boʻlim uchun bajarilgan/muddati oʻtgan/yangi kartochkalar asosida qisqa xulosa tayyorlaydi."
+      },
+      "draftEvent": {
+        "label": "Tadbir loyihasi",
+        "description": "Bir qatorli gʻoyani tavsif, roʻyxat, soʻrovnoma variantlari va yoʻl-yoʻriq rejasiga aylantiradi."
+      },
+      "summarizeThread": {
+        "label": "Muhokamani xulosalash",
+        "description": "Uzoq izohlar muhokamasini, ular asosidagi izohlarni koʻrsatgan holda xulosalaydi."
+      },
+      "nlAnalytics": {
+        "label": "Tahlildan soʻrash",
+        "description": "Oddiy tildagi savolni filtr va diagramma turiga aylantiradi."
+      },
+      "translate": {
+        "label": "Tarjima qilish",
+        "description": "Matnni toʻrtta tildan istalganiga tarjima qiladi."
+      },
+      "whatDidIMiss": {
+        "label": "Nimani oʻtkazib yubordim",
+        "description": "Oxirgi marta boʻlmagan vaqtingizdagi yangi kartochkalar, izohlar va tadbirlar bilan tanishtiradi."
+      }
+    },
+    "fields": {
+      "text": "Matn",
+      "cardTitle": "Kartochka nomi",
+      "cardDescription": "Kartochka tavsifi (ixtiyoriy)",
+      "memberNames": "Boʻlim aʼzolari (har birini alohida qatorda, ixtiyoriy)",
+      "idea": "Tadbir gʻoyasi",
+      "query": "Savol",
+      "knownUnits": "Maʼlum boʻlimlar (har birini alohida qatorda, ixtiyoriy)",
+      "dueDate": "Muddat (YYYY-MM-DD)",
+      "today": "Bugun (YYYY-MM-DD)",
+      "checklistTotal": "Roʻyxat bandlari soni",
+      "checklistDone": "Bajarilgan bandlar soni",
+      "daysSinceUpdate": "Oxirgi yangilanishdan necha kun oʻtdi",
+      "comments": "Izohlar (har qatorda: id | matn)",
+      "subjectName": "Xodim yoki boʻlim nomi",
+      "periodLabel": "Davr nomi",
+      "doneCards": "Bajarilgan kartochkalar (har qatorda: id | nom, ixtiyoriy)",
+      "overdueCards": "Muddati oʻtgan kartochkalar (har qatorda: id | nom, ixtiyoriy)",
+      "newCards": "Yangi kartochkalar (har qatorda: id | nom, ixtiyoriy)",
+      "sinceLabel": "Qaysi vaqtdan beri",
+      "commentsOnMyCards": "Sizning kartochkalaringizdagi izohlar (har qatorda: id | nom, ixtiyoriy)",
+      "upcomingEvents": "Kelayotgan tadbirlar (har qatorda: id | nom, ixtiyoriy)",
+      "goal": "Maqsad (ixtiyoriy)",
+      "tasks": "Ochiq vazifalar (har qatorda: id | nom)"
+    },
+    "samples": {
+      "translate": "Yigʻilish ertaga soat 10:00 da boshlanadi.",
+      "quickAdd": "Nodiraga choraklik hisobotni jumagacha tayinla, muhim",
+      "memberNames": "Nodira Karimova\nAnvar Aliyev",
+      "event": "Chorvoqda kuz sayli",
+      "analytics": "Bu oy Data boʻlimining muddati oʻtgan kartochkalari",
+      "dueDate": "2026-09-10",
+      "today": "2026-09-08",
+      "period": "shu hafta",
+      "since": "oʻtgan juma"
+    },
+    "placeholders": {
+      "commentLines": "k1 | Sentabr raqamlari boʻyicha kelishdik.\nk2 | Yakuniy PDF-ni ertaga yuboraman.",
+      "cardLines": "c1 | Choraklik hisobot\nc2 | Sayt yangilanishi",
+      "taskLines": "t1 | Xatlarga javob berish\nt2 | Hisobotni yozish"
+    }
+  },
   "departments": {
     "title": "Bo'limlar",
     "landing": {

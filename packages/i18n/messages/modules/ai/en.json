@@ -1,0 +1,157 @@
+{
+  "ai": {
+    "title": "AI",
+    "tabs": {
+      "overview": "Overview",
+      "usage": "Usage",
+      "assistant": "Assistant"
+    },
+    "budget": {
+      "title": "Monthly AI budget",
+      "status": {
+        "ok": "On track",
+        "soft_cap": "Near the cap",
+        "hard_stop": "Budget used up"
+      },
+      "spentOfCap": "{spent} spent of {cap} this month",
+      "editLabel": "Monthly budget (UZS)",
+      "save": "Save budget",
+      "invalidAmount": "Enter a valid amount"
+    },
+    "flags": {
+      "title": "Features",
+      "description": "Turn AI features on or off for this department. Off by default until you enable them.",
+      "headOnly": "Only a department head can change these."
+    },
+    "usage": {
+      "empty": {
+        "title": "No AI calls yet",
+        "body": "Usage will appear here once someone in this department tries an AI feature."
+      },
+      "columns": {
+        "when": "When",
+        "feature": "Feature",
+        "status": "Status",
+        "tokens": "Tokens",
+        "cost": "Cost",
+        "latency": "Latency"
+      },
+      "status": {
+        "ok": "OK",
+        "empty_after_retry": "Empty reply",
+        "schema_invalid_after_retry": "Invalid reply",
+        "provider_error": "Provider error",
+        "blocked_budget": "Budget blocked",
+        "blocked_flag": "Feature disabled"
+      }
+    },
+    "result": {
+      "title": "Preview",
+      "tokens": "{count} tokens",
+      "latency": "{ms} ms",
+      "accept": "Copy result",
+      "copied": "Copied to clipboard"
+    },
+    "assistant": {
+      "title": "AI assistant",
+      "description": "Try an AI feature: fill in the fields, preview the result, then copy it or use it in the matching screen.",
+      "preview": "Preview",
+      "disabled": {
+        "title": "This feature is off",
+        "body": "Ask a department head to turn it on in the Overview tab."
+      },
+      "budgetExceeded": {
+        "title": "This month's AI budget is used up",
+        "body": "Ask a department head to raise the monthly budget in the Overview tab."
+      }
+    },
+    "errors": {
+      "invalidInput": "Check the fields and try again",
+      "forbidden": "This feature is off or the budget is used up",
+      "runFailed": "The AI could not produce an answer this time"
+    },
+    "features": {
+      "quickAddParse": {
+        "label": "Quick-add parsing",
+        "description": "Turn a free-typed sentence into a card title, assignee, due date and priority, in any of the four locales."
+      },
+      "subtaskBreakdown": {
+        "label": "Break into subtasks",
+        "description": "Split one card into a checklist of concrete, actionable subtasks."
+      },
+      "planSprint": {
+        "label": "Plan my period",
+        "description": "Suggest an order for your open personal to-dos and what to focus on first."
+      },
+      "deadlineRisk": {
+        "label": "Deadline risk",
+        "description": "Explain whether a card is at risk of missing its deadline, and what to do about it."
+      },
+      "weeklySummary": {
+        "label": "Weekly summary",
+        "description": "Draft a short digest for one person or one department, from done/overdue/new cards."
+      },
+      "draftEvent": {
+        "label": "Draft an event",
+        "description": "Turn a one-line idea into a description, checklist, poll options and a carpool plan."
+      },
+      "summarizeThread": {
+        "label": "Summarise a thread",
+        "description": "Summarise a long card comment thread, citing the comments it is based on."
+      },
+      "nlAnalytics": {
+        "label": "Ask analytics",
+        "description": "Turn a plain-language question into a filter and a chart type."
+      },
+      "translate": {
+        "label": "Translate",
+        "description": "Translate text into any of the four locales."
+      },
+      "whatDidIMiss": {
+        "label": "What did I miss",
+        "description": "Catch up on new cards, comments and events since you were last here."
+      }
+    },
+    "fields": {
+      "text": "Text",
+      "cardTitle": "Card title",
+      "cardDescription": "Card description (optional)",
+      "memberNames": "Department members (one per line, optional)",
+      "idea": "Event idea",
+      "query": "Question",
+      "knownUnits": "Known units (one per line, optional)",
+      "dueDate": "Due date (YYYY-MM-DD)",
+      "today": "Today (YYYY-MM-DD)",
+      "checklistTotal": "Checklist items",
+      "checklistDone": "Checklist items done",
+      "daysSinceUpdate": "Days since last update",
+      "comments": "Comments (one per line: id | text)",
+      "subjectName": "Person or department name",
+      "periodLabel": "Period label",
+      "doneCards": "Done cards (one per line: id | title, optional)",
+      "overdueCards": "Overdue cards (one per line: id | title, optional)",
+      "newCards": "New cards (one per line: id | title, optional)",
+      "sinceLabel": "Since when",
+      "commentsOnMyCards": "Comments on your cards (one per line: id | title, optional)",
+      "upcomingEvents": "Upcoming events (one per line: id | title, optional)",
+      "goal": "Goal (optional)",
+      "tasks": "Open to-dos (one per line: id | title)"
+    },
+    "samples": {
+      "translate": "The meeting starts tomorrow at 10 AM.",
+      "quickAdd": "Assign Nodira the quarterly report by Friday, high priority",
+      "memberNames": "Nodira Karimova\nAnvar Aliyev",
+      "event": "Autumn picnic at Chorvoq",
+      "analytics": "Overdue cards of Data boʻlimi this month",
+      "dueDate": "2026-09-10",
+      "today": "2026-09-08",
+      "period": "this week",
+      "since": "last Friday"
+    },
+    "placeholders": {
+      "commentLines": "k1 | We agreed on the September figures.\nk2 | I will send the final PDF tomorrow.",
+      "cardLines": "c1 | Quarterly report\nc2 | Website update",
+      "taskLines": "t1 | Reply to emails\nt2 | Write the report"
+    }
+  }
+}

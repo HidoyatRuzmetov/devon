@@ -39,6 +39,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "3.1127.0",
     "@aws-sdk/s3-request-presigner": "3.1127.0",
+    "@devon/ai": "workspace:*",
     "@devon/contracts": "workspace:*",
     "@devon/db": "workspace:*",
     "@fastify/cookie": "11.1.2",
