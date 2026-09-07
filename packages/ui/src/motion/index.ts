@@ -22,6 +22,7 @@ export { AnimatedCheck, type AnimatedCheckProps } from './animated-check.js'
 export { ProgressRing, type ProgressRingProps } from './progress-ring.js'
 export {
   AmbientGradient,
+  HubAmbientWash,
   IdleFloat,
   type AmbientGradientProps,
   type IdleFloatProps,

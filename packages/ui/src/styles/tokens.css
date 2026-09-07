@@ -80,9 +80,14 @@
   --color-surface-3: oklch(100% 0 0);
 
   /* -- Ambient gradient (DESIGN.md v2 §2.6) -- auth and hub screens only, never inside a working
-     screen, always static under reduced motion. */
+     screen, always static under reduced motion. `--ambient-alpha-scale` multiplies the color-mix
+     percentage `ambient-gradient.tsx` uses (`calc(22% * var(--ambient-alpha-scale))`, etc.) --
+     dark theme's ambient colours are much lighter (72%/80% lightness vs light theme's 40%/74%), so
+     the same mix percentage against a dark page reads as a visible lighter panel rather than a wash;
+     1 keeps light theme's original strength, dark drops it further below. */
   --color-ambient-1: oklch(40% 0.09 250);
   --color-ambient-2: oklch(74% 0.11 72);
+  --ambient-alpha-scale: 1;
 
   /* -- Illustration palette (DESIGN.md v2 §2.7). The open-licence SVGs in `src/illustrations` are
      recoloured to exactly these four roles -- never a literal hex, so a palette or theme change
@@ -206,6 +211,10 @@
   --color-surface-3: oklch(30% 0.015 250);
   --color-ambient-1: oklch(72% 0.09 250);
   --color-ambient-2: oklch(80% 0.11 72);
+  /* Another step down from light theme's 1 (see the :root definition's comment) -- these colours
+     are ~30 points lighter than their light-theme counterparts, so the same mix strength would read
+     as a stray lighter panel rather than a wash on a dark page. */
+  --ambient-alpha-scale: 0.55;
   --color-illustration-ink: oklch(72% 0.09 250);
   --color-illustration-fill: oklch(30% 0.04 250);
   --color-illustration-accent: oklch(80% 0.11 72);

@@ -8,11 +8,11 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowRight, Building2, Plus, Users } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
-  AmbientGradient,
   Badge,
   Button,
   CreateDepartmentIllustration,
   HoverLift,
+  HubAmbientWash,
   JoinDepartmentIllustration,
   PageHeader,
   Reveal,
@@ -90,7 +90,7 @@ export default function DepartmentsHubScreen() {
   if (departments.length === 0) {
     return (
       <div className="relative flex flex-col gap-8">
-        <AmbientGradient variant="hub" />
+        <HubAmbientWash />
         <Reveal className="mx-auto flex max-w-160 flex-col items-center gap-2 pt-8 text-center">
           <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
             {t('departments.landing.eyebrow')}

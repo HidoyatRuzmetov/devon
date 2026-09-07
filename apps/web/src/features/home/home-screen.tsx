@@ -10,9 +10,9 @@
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import {
-  AmbientGradient,
   Card,
   cn,
+  HubAmbientWash,
   KpiTile,
   Progress,
   Reveal,
@@ -439,7 +439,7 @@ export default function HomeScreen() {
 
     return (
       <div className="relative flex flex-col gap-8">
-        <AmbientGradient variant="hub" />
+        <HubAmbientWash />
         {header}
         <StateView
           kind="empty"
@@ -456,7 +456,7 @@ export default function HomeScreen() {
   return (
     <div className="relative flex flex-col gap-8">
       {/* DESIGN.md v2: the ambient gradient lives on auth and the hub only. Home is the hub. */}
-      <AmbientGradient variant="hub" />
+      <HubAmbientWash />
       {header}
       <Dashboard hasAvatar={Boolean(user.avatarKey)} />
     </div>
