@@ -49,11 +49,25 @@
 	}
 
 	# Everything else: the static SPA build (apps/web's `build` output, served from a mounted volume
-	# once that image exists). 503s here (rather than a blank page) are what decision 16's pause page
-	# renders when the API is down -- Caddy, not the app, is the thing still answering.
+	# once that image exists). A live 503 from `api`/`web` (an app-level maintenance-mode response, or
+	# any other real 5xx) is left alone here -- the SPA already reads `GET /api/v1/instance`'s
+	# `maintenance` field and renders the real, super-admin-authored, four-locale message client-side,
+	# which this static fallback cannot know (it has no way to ask an api container that is up and
+	# answering). This block exists for the other case TECH-SPEC §11 names: "Caddy serves the same page
+	# if the API is down" -- `api`/`web` genuinely unreachable (container stopped, connection refused),
+	# where there is no JSON body, no SPA bundle and no live message to read at all.
 	handle {
 		reverse_proxy web:80 {
 			lb_try_duration 2s
+		}
+	}
+
+	handle_errors {
+		@upstream_down expression {http.error.status_code} >= 500
+		handle @upstream_down {
+			root * /srv/maintenance
+			rewrite * /maintenance.html
+			file_server
 		}
 	}
 }
