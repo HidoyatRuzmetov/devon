@@ -106,18 +106,22 @@ export default function CalendarScreen() {
               >
                 {day.getDate()}
               </span>
+              {/* round2 SEV2: every event chip was a solid saturated navy or red fill (Badge's own
+                  "SEV2 tinted badges" finding, restated here since this chip never went through
+                  Badge) -- a tinted background over the current surface, same 12% alpha `Badge`'s own
+                  `subtle` variant uses, reads as a calendar full of colour-coded chips rather than a
+                  wall of solid blocks. */}
               {dayCards.slice(0, 3).map((c) => (
                 <button
                   key={c.id}
                   type="button"
                   onClick={() => openCardPeek(c.id)}
-                  className="truncate rounded-sm px-1 py-0.5 text-left text-caption text-white"
-                  style={{
-                    backgroundColor:
-                      c.priority === 'urgent' || c.priority === 'high'
-                        ? 'var(--color-destructive)'
-                        : 'var(--color-primary)',
-                  }}
+                  className={cn(
+                    'truncate rounded-sm px-1 py-0.5 text-left text-caption',
+                    c.priority === 'urgent' || c.priority === 'high'
+                      ? 'bg-destructive/12 text-destructive'
+                      : 'bg-primary/12 text-primary',
+                  )}
                   title={c.title}
                 >
                   {c.title}
