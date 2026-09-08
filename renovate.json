@@ -1,0 +1,66 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Asia/Tashkent",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 0,
+  "rangeStrategy": "pin",
+  "minimumReleaseAge": "7 days",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on the first day of the month"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null
+  },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "Exact pins everywhere (pnpm-workspace.yaml's saveExact, TECH-SPEC §1.2 / §16) -- Renovate must never propose a semver range, only an exact-version bump.",
+      "matchManagers": ["npm"],
+      "rangeStrategy": "pin",
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Group the workspace's own internal packages together -- they always move in lockstep (pnpm workspace:* protocol) and Renovate should never see them as independent third-party updates.",
+      "matchPackageNames": ["@devon/**"],
+      "enabled": false,
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Runtime/dev toolchain pins with an operational blast radius beyond a normal patch bump (Node major, Postgres major, pnpm) -- reviewed by hand against TECH-SPEC §1.2's pinned-versions table, never auto-merged.",
+      "matchPackageNames": ["node", "postgres", "pgvector/pgvector", "pnpm"],
+      "matchDatasources": ["docker", "npm"],
+      "labels": ["dependencies", "needs-manual-review"],
+      "automerge": false,
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Docker base images (Dockerfiles pin by digest, TECH-SPEC §16) -- Renovate updates the digest comment/pin, never floats a tag.",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "pinDigests": true,
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "GitHub Actions are pinned by commit SHA (.github/workflows/ci.yml) -- Renovate keeps the SHA pin, updating only the trailing version comment.",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Lockfile-only maintenance and non-major bumps for well-established libraries can automerge once CI (the release gate profile) is green -- reduces manual toil for the highest-volume, lowest-risk update class. Every other update still needs a human to click merge.",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["patch", "pin", "digest", "lockFileMaintenance"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "minimumReleaseAge": "7 days"
+    }
+  ],
+  "postUpdateOptions": ["pnpmDedupe"],
+  "ignorePaths": ["**/node_modules/**", "e2e/node_modules/**", "tools/perf/playwright/node_modules/**"]
+}
