@@ -8,6 +8,7 @@ import * as React from 'react'
 import { Menu, PanelLeftClose, PanelLeftOpen, Settings, UserCog } from 'lucide-react'
 import { useT, useLocale, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { avatarUrl } from '../lib/avatar.js'
+import { usePageHead } from '../lib/page-meta.js'
 import {
   Avatar,
   AvatarMenu,
@@ -528,6 +529,16 @@ function MaintenanceNotice({
 }) {
   const t = useT()
   const text = message?.[locale] || message?.['uz-Latn'] || null
+  // H23.1 ("titles/meta on ... maintenance"): `renderMainContent` swaps this in *instead of*
+  // `children` (the route's own screen, which is what normally calls `usePageHead`), so without this
+  // the document's `<title>`/meta stayed on whatever the last real route had set -- never wrong
+  // exactly, but never "Xizmat vaqtincha to'xtatilgan" either. `noindex: true`: this is a
+  // point-in-time operational state, never a page a search engine should index.
+  usePageHead({
+    title: t('admin.console.maintenanceNotice.title'),
+    description: text ?? undefined,
+    noindex: true,
+  })
   return (
     <div
       role="alert"
