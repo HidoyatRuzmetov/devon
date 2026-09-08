@@ -39,6 +39,9 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     CLAMAV_HOST: '127.0.0.1',
     CLAMAV_PORT: 3310,
     CLAMAV_TIMEOUT_MS: 20_000,
+    HTTP_BODY_LIMIT_BYTES: 1 * 1024 * 1024,
+    JSON_MAX_DEPTH: 16,
+    AI_MAX_INPUT_BYTES: 32 * 1024,
     ...overrides,
   }
 }

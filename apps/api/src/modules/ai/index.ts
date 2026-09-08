@@ -124,6 +124,25 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         body: runFeatureBodySchema,
         response: { 200: runFeatureResponseSchema },
       },
+      // H7.4 "AI input length": checked in `preValidation`, ahead of the permission `preHandler` and
+      // ahead of `@devon/ai`'s own per-feature `inputSchema` (which only runs once `input` has
+      // already been hashed for the cache key and is about to reach a provider call) -- an oversized
+      // body is rejected before spending either a permission lookup or a provider call on it, the
+      // same "cheapest checks first" posture `app.ts`'s app-wide body-size/JSON-depth limits already
+      // have. `req.body` here is the parsed JSON object (parsing happens before `preValidation`) but
+      // not yet Zod-validated against `runFeatureBodySchema`, so `input` may not even be an object
+      // yet -- the guard below only measures it when it plausibly is one.
+      preValidation: async (req, reply) => {
+        const body = req.body as { input?: unknown } | undefined
+        if (body && typeof body === 'object' && 'input' in body) {
+          const inputByteLength = Buffer.byteLength(JSON.stringify(body.input), 'utf8')
+          if (inputByteLength > app.devonConfig.AI_MAX_INPUT_BYTES) {
+            sendProblem(reply, 'validation_failed', {
+              errors: [{ path: 'input', code: 'too_large' }],
+            })
+          }
+        }
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return

@@ -34,6 +34,24 @@ declare module 'fastify' {
   }
 }
 
+/** Greatest nesting depth of a parsed JSON value (a bare scalar is depth 0). Bails out early past a
+ * hard ceiling well above any realistic `JSON_MAX_DEPTH` so a pathologically deep body cannot make
+ * the depth check itself expensive to run -- the check's own cost must stay `O(small constant)`
+ * regardless of how deep an attacker's body goes. */
+function jsonDepth(value: unknown, depth = 0): number {
+  if (depth > 100) return depth
+  if (value !== null && typeof value === 'object') {
+    let max = depth
+    for (const v of Object.values(value)) {
+      const d = jsonDepth(v, depth + 1)
+      if (d > max) max = d
+      if (max > 100) break
+    }
+    return max
+  }
+  return depth
+}
+
 export type BuildAppOptions = {
   /** Test seam for the storage plugin (a fake malware scanner, a fake object store). Production
    * (`server.ts`) never passes this: both are built from `Config` (`plugins/storage.ts`). */
@@ -51,7 +69,45 @@ export async function buildApp(
     // Keep the route table exactly the OpenAPI path table in design.md §1.7 -- an auto-added HEAD
     // sibling for every GET would otherwise need its own, redundant `PUBLIC_ROUTES` entries.
     exposeHeadRoutes: false,
+    // H7.4: an explicit, reviewed default (Fastify's own undocumented default is already 1 MiB --
+    // see `config.ts`'s `HTTP_BODY_LIMIT_BYTES` doc comment). The storage plugin's own upload routes
+    // pass their own larger, per-route `bodyLimit` (`plugins/storage.ts`), which overrides this.
+    bodyLimit: config.HTTP_BODY_LIMIT_BYTES,
   }).withTypeProvider<ZodTypeProvider>()
+
+  // H7.4 "limits on ... JSON depth": an attacker-crafted deeply-nested JSON body costs every
+  // recursive validator/serializer that walks it far more CPU per byte than a flat body of the same
+  // size, so depth is bounded independently of the byte-count `bodyLimit` above. Parses exactly as
+  // Fastify's own default `application/json` parser would (`JSON.parse` on the full string; an empty
+  // body is `undefined`, matching the default parser's own behaviour) and only adds the depth check
+  // on top, so a malformed-JSON body still fails exactly the way it did before this parser existed.
+  app.addContentTypeParser<string>(
+    'application/json',
+    { parseAs: 'string' },
+    (_req, body, done) => {
+      if (body.length === 0) return done(null, undefined)
+      let json: unknown
+      try {
+        json = JSON.parse(body)
+      } catch (err) {
+        done(err as Error)
+        return
+      }
+      if (jsonDepth(json) > config.JSON_MAX_DEPTH) {
+        const err = new Error(
+          'JSON body nesting exceeds the configured maximum depth.',
+        ) as Error & {
+          code: string
+          statusCode: number
+        }
+        err.code = 'DEVON_JSON_TOO_DEEP'
+        err.statusCode = 422
+        done(err)
+        return
+      }
+      done(null, json)
+    },
+  )
 
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
@@ -86,6 +142,23 @@ export async function buildApp(
             path: v.instancePath || v.schemaPath,
             code: v.keyword,
           })),
+        })
+      return
+    }
+    // H7.4: a JSON body nested past `JSON_MAX_DEPTH` (the content-type parser above) -- same shape
+    // as the schema-validation 422 above, since from the caller's point of view this is exactly that:
+    // a request body that didn't pass validation, just a structural check ahead of Zod's own.
+    if (err.code === 'DEVON_JSON_TOO_DEEP') {
+      reply
+        .code(422)
+        .header('content-type', 'application/problem+json; charset=utf-8')
+        .send({
+          type: 'https://devon.local/problems/validation_failed',
+          title: 'Validation Failed',
+          status: 422,
+          code: 'validation_failed',
+          detail: 'The request did not pass validation.',
+          errors: [{ path: 'body', code: 'too_deep' }],
         })
       return
     }
