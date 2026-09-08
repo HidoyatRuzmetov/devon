@@ -7,6 +7,7 @@ import { closePool } from '../src/context.js'
 import { printReport } from './checks/assert.js'
 import { runAuditImmutabilityChecks } from './checks/audit.js'
 import { lintMigrations } from './checks/migration-lint.js'
+import { runPollVoteRaceChecks } from './checks/poll-votes.js'
 import {
   runPgBouncerConcurrencyCheck,
   runRlsIsolationChecks,
@@ -24,15 +25,15 @@ import {
 async function main(): Promise<boolean> {
   const sections: Array<{ label: string; results: CheckResult[] }> = []
 
-  console.log('[migrate:verify] 1/7 lint the migration files (no database needed)')
+  console.log('[migrate:verify] 1/8 lint the migration files (no database needed)')
   const files = readMigrationFiles()
   sections.push({ label: 'migration-lint', results: lintMigrations(files) })
 
-  console.log('[migrate:verify] 2/7 apply migrations to a fresh Postgres 17 (+pgvector) container')
+  console.log('[migrate:verify] 2/8 apply migrations to a fresh Postgres 17 (+pgvector) container')
   const db = await startMigratedDatabase()
 
   try {
-    console.log('[migrate:verify] 3/7 apply the same migrations again (idempotence)')
+    console.log('[migrate:verify] 3/8 apply the same migrations again (idempotence)')
     let idempotent = true
     let idempotentDetail: string | undefined
     try {
@@ -52,7 +53,7 @@ async function main(): Promise<boolean> {
       ],
     })
 
-    console.log('[migrate:verify] 4/7 tenancy registry (AC-10)')
+    console.log('[migrate:verify] 4/8 tenancy registry (AC-10)')
     const superuserClient = new Client({ connectionString: db.superuserUrl })
     await superuserClient.connect()
     try {
@@ -65,14 +66,14 @@ async function main(): Promise<boolean> {
     }
 
     console.log(
-      '[migrate:verify] 5/7 RLS cross-department isolation, Drizzle path + tx.raw() (AC-10)',
+      '[migrate:verify] 5/8 RLS cross-department isolation, Drizzle path + tx.raw() (AC-10)',
     )
     const seeded = await seedDepartments(db.superuserUrl, 4)
     const isolationResults = await runRlsIsolationChecks(db.appUrl, seeded, db.superuserUrl)
     sections.push({ label: 'rls.isolation', results: isolationResults })
 
     console.log(
-      '[migrate:verify] 6/7 RLS isolation under 20 concurrent transactions through PgBouncer (AC-10)',
+      '[migrate:verify] 6/8 RLS isolation under 20 concurrent transactions through PgBouncer (AC-10)',
     )
     const pgbouncer = await startPgBouncer(db)
     try {
@@ -84,10 +85,18 @@ async function main(): Promise<boolean> {
       await pgbouncer.stop()
     }
 
-    console.log('[migrate:verify] 7/7 audit immutability, hash chain and tamper detection (AC-9)')
+    console.log('[migrate:verify] 7/8 audit immutability, hash chain and tamper detection (AC-9)')
     sections.push({
       label: 'audit.immutability',
       results: await runAuditImmutabilityChecks(db.superuserUrl, db.appUrl),
+    })
+
+    console.log(
+      '[migrate:verify] 8/8 poll vote races under concurrency -- same-voter replace, different-voter fan-in (H10.1)',
+    )
+    sections.push({
+      label: 'poll-votes.race',
+      results: await runPollVoteRaceChecks(db.appUrl, db.superuserUrl),
     })
   } finally {
     await closePool()
