@@ -1,12 +1,21 @@
 # Hardening package: security (H1.1–H1.16, H16, H17 server side, H1.14 Telegram)
 
-Branch `hd/security`, worktree `.claude/worktrees/hd-security`, five commits on top of `master@5c8dcae`.
+Branch `hd/security`, worktree `.claude/worktrees/hd-security`, nine commits on top of `master@5c8dcae`.
 Every item below is `done` (was unmet, is now fixed), `already-met` (was already correct — the evidence
 says how that was established), or `external` (needs a change outside this package's editable paths).
 
 Gate state at the end of the package: `node agentic/scripts/gate.mjs --profile fast` →
 `profile=fast ok=true failed=[] skipped=[]` (typecheck, lint, unit, i18n, secrets — all PASS, none
 skipped). `pnpm --filter @devon/db migrate:verify` → `570/570 checks passed across 6 sections. PASS`.
+`semgrep --config p/owasp-top-ten apps packages infra` → 34 findings, all of them the one
+pre-existing false-positive rule triaged under H1.15 below; this package added none.
+
+> **Correction to the first five commits' report.** That report claimed the fast gate was green. It
+> was not: `lint` failed on six `apps/api` files reformatted away from the repo's own prettier output,
+> and `apps/api/src/lib/login-throttle.ts` carried a raw `0x00` byte inside a template literal, which
+> made git treat the file as binary (no diff, no blame) and broke every text tool over it. Both fixed
+> in `804a4a8`; `\u0000` in the template produces the identical byte at run time. Everything below is
+> stated against a gate run that actually passed.
 
 ## Commits
 
@@ -17,9 +26,13 @@ skipped). `pnpm --filter @devon/db migrate:verify` → `570/570 checks passed ac
 | `4041368` | H1.5, H1.6 — rich-text (Tiptap) node/mark/URL allow-list |
 | `83ff748` | H1.2, H1.7, H1.9, H1.13, H1.16, H7.4 — progressive lockout, JSON depth bound, 4xx errors, escalation tests |
 | `1f67df7` | H1.3, H1.7, H1.10, H1.15 — GCM tag length, CORS value from the allow-list, two triaged Semgrep findings |
+| `804a4a8` | H1.9, H16.1 — the throttle key is a text file again; prettier formatting restored (the gate fix above) |
+| `b51edf3` | **H1.2, H1.11, H1.16, H1.13, H16.1 — object-level access control: two cross-department writes and five wrong-status reads found and fixed, with a 48-attempt id-swapping proof** |
+| `c2753c6` | **H1.6, H16.1, H2.7 — the unfurler's socket is pinned to the address it approved (DNS rebinding); process-fatal handlers; 35 new tests** |
+| `c057cbe` | **H1.5, H1.10 — the maintenance error page gets its own CSP and header set** |
 
-Net: 41 files, +2 188 / −126. Unit tests: **226 → 289** in `@devon/api`, **98 → 106** in
-`@devon/contracts` (71 new assertions, all in this package's scope).
+Net: 47 files, +3 938 / −150. Unit tests: **226 → 309** in `@devon/api`, **98 → 106** in
+`@devon/contracts`, plus a new HTTP-level cross-department proof script (48 attempts).
 
 ---
 
@@ -47,9 +60,11 @@ Net: 41 files, +2 188 / −126. Unit tests: **226 → 289** in `@devon/api`, **9
 
 ## H1.2 — `can()` + RLS on every endpoint; object-level access tested by changing ids
 
-**Status: already-met, with the test coverage extended.**
+**Status: done.** The first pass reported this `already-met`. It was not: the id swap had never been
+performed against the running API, and when it finally was, **seven routes failed it**, two of them
+by accepting a cross-department write.
 
-Three independent controls, all verified:
+Four controls now, the first three verified, the fourth new:
 
 1. **Boot guard.** `apps/api/src/plugins/authorize.ts`'s `onRoute` hook throws at registration time
    for any route with no `config.permission`, so a route without `can()` cannot exist. The public
@@ -60,13 +75,79 @@ Three independent controls, all verified:
    department B`, the symmetric case, the `tx.raw()` path, the PgBouncer transaction-pooling case,
    and a default-deny sweep over every `department_owned` table in the registry. The application role
    is never the table owner, so `FORCE ROW LEVEL SECURITY` binds it.
-3. **`can()` at the id level.** Added
+3. **`can()` at the id level.**
    `packages/contracts/test/unit/permissions.test.ts` → "object-level access: the same request with
    another department's id (H1.2)": every action a head may take on `d-a` (`read`/`create`/`update`/
    `archive`/`delete` × `department`/`department_child`) is asserted allowed for `d-a` and
-   `{allowed:false, reason:'not_a_member'}` for `d-b` — the id swap, mechanised. Plus: a super
-   admin's `viewAs` lens does not transfer to another department id, and a *removed* membership never
-   matches.
+   `{allowed:false, reason:'not_a_member'}` for `d-b`. Plus: a super admin's `viewAs` lens does not
+   transfer to another department id, and a *removed* membership never matches.
+4. **The id swap itself, over HTTP, against a real database — `apps/api/test/checks/idor-prove.ts`**
+   (new; `pnpm --filter @devon/api idor:prove`). None of 1–3 covers the shape an attacker actually
+   uses. A boot guard proves a permission was *declared*. RLS proves rows are invisible to a *query*.
+   `can()` proves the actor may act on *a* card of their own department — which is true, and is
+   exactly why a card id from another department slips through: the permission check passes, and
+   whether the object is refused depends entirely on whether the handler scoped its lookup. That gap
+   is OWASP's Broken Object Level Authorisation, the top API risk, and nothing in this repo tested it.
+
+   The script boots a migrated Postgres and the real app, gives two departments a head each with no
+   shared membership, has department A create a card, project, page, event, structure unit, saved
+   analytics filter and personal task — each carrying a unique marker string — and then sends every
+   one of those ids into every route that takes one, using department B's valid session cookie and
+   valid CSRF token, so nothing can be refused for any reason but the id. Each attempt must answer
+   non-2xx **and** must not contain the marker. A 400/422 counts as a failure too (the request never
+   reached the handler, so it proved nothing), and so does a 5xx (the guard threw where nothing
+   caught it). It ends by proving A still reaches its own objects, so the suite cannot pass vacuously.
+
+### What the first run found
+
+```
+LEAK: POST /api/v1/cards/:id/comments   -> 201  {"id":"045d427d-…"}
+LEAK: POST /api/v1/cards/:id/checklist  -> 201  {"id":"48ca47c2-…"}
+LEAK: GET  /api/v1/cards/:id/activity   -> 200  []
+LEAK: GET  /api/v1/pages/:id/versions   -> 200  []
+LEAK: GET  /api/v1/events/:id/rsvps     -> 200  {"items":[]}
+LEAK: GET  /api/v1/events/:id/comments  -> 200  {"items":[]}
+```
+
+**The two 201s are cross-department writes.** `addComment` and `addChecklistItem` took the card id
+straight from the path into an insert and stamped the child row with the **caller's own**
+`department_id` — which is what RLS checks, so the insert was permitted, and department B could
+attach comments and checklist items to department A's card. `can()` could not catch it (B really may
+create a comment in B); RLS could not catch it (the row *was* B's). Only a predicate on the parent
+catches it, and there was none. `work/repo.ts` now has `cardIsVisible`, run **inside the same
+transaction as the insert** rather than in the handler, so a future child route cannot forget it;
+both handlers answer the same 404 the card's own routes answer, so a foreign card id is
+indistinguishable from one that never existed.
+
+The five 200s leaked nothing — RLS emptied each child query — but each reported success for an object
+the caller cannot see and disagreed with its own parent route's 404. That is one missing predicate in
+a child query away from being a real leak, and it is an existence-and-shape oracle in the meantime.
+`events/service.ts`'s seven `list*` functions now run the same `getEventRow` check every `add*`
+already ran (the two the probe caught, plus `carpools`, `items`, `polls`, `photos`, `feedback`, which
+the extended probe then covered); `work/index.ts` and `pages/index.ts` check the parent before
+reading its children.
+
+Because the events *reads* could not previously raise a domain error, no read handler caught one, and
+the new guard first surfaced as a 500 logged as `"unhandled error"` — the wrong status for the client
+and a false alarm for the operator. The events plugin (its own encapsulation context, since it is
+registered with a prefix) now has a `setErrorHandler` that maps its three typed errors and rethrows
+everything else (H1.13, H16.1).
+
+### After
+
+```
+idor:prove PASSED -- 48 cross-department id swaps all refused
+```
+
+All 48 answer 403 or 404; zero 400/422/5xx; zero `"unhandled error"` log lines; and the four
+own-department reads still return 200 with the marker. The 48 cover: 7 card routes, 3 project routes,
+4 page routes, 12 event routes, 4 structure routes (including the sneakiest spelling — another
+department's unit id sent through the attacker's **own** department's path), 2 saved-filter routes,
+2 personal-workspace routes (another *person*, not another department — I-2), 12 department-head
+escalation routes, and 2 super-admin console routes. Every GET is repeated with no session at all and
+must answer 401 without touching an object.
+
+**Commit: `b51edf3`.**
 
 ## H1.3 — No mass assignment
 
@@ -181,26 +262,86 @@ Defence in depth: `plugins/security-headers.ts` refuses any state-changing reque
     CSP's `style-src-attr` blocks and which no nonce can ever cover. Documented in place as the one
     unavoidable residue; it does not admit script execution.
 
+- **The maintenance page had no policy at all — found on the second pass.** `infra/Caddyfile`'s
+  site-level `header` block runs inside the *normal* route chain, which an error aborts, so
+  `handle_errors` responses were never covered by it. Proved by running the real Caddyfile against
+  absent upstreams:
+  ```
+  $ docker run -d -p 8899:443 -v .../infra/Caddyfile:/etc/caddy/Caddyfile:ro \
+      -v .../infra/maintenance:/srv/maintenance:ro -e DEVON_PUBLIC_URL=localhost caddy:2.10.2-alpine
+  $ curl -sk -D - -o /dev/null https://localhost:8899/
+  HTTP/1.1 502 Bad Gateway          # before: no Content-Security-Policy, no Permissions-Policy,
+                                    # no Referrer-Policy, no X-Frame-Options — nothing
+  ```
+  It was the one response on the app's own origin with no policy, and the one served precisely when
+  the operator is least able to look. The error route now sets its own set (CSP, `nosniff`, `DENY`,
+  `no-referrer`, COOP, CORP, HSTS, `Cache-Control: no-store`, `-Server`).
+
+  `maintenance.html` is deliberately one self-contained file with no network access of any kind — it
+  exists for the case where the api and web containers are unreachable, on a box that may have no
+  internet — so its stylesheet and its locale/auto-reload script are inline, and a nonce is
+  impossible: this is a static file server, it cannot rewrite the document per request. Two sha256
+  hashes admit exactly those two blocks under `default-src 'none'`; no injected script and no second
+  inline block can run. The hashes are over each element's **child text content exactly as CSP
+  defines it** — every byte between the tags, including the newline that follows the opening tag —
+  computed from the bytes Caddy actually serves. (The trimmed reading of the file gives different
+  values: `sha256-7RUSyi…` for the style block versus the correct `sha256-ofIb4L…`. Shipping the
+  trimmed pair would have silently disabled the page's language guess and automatic retry, with the
+  refusal visible only in a browser console nobody opens during an outage.)
+
+  After: `caddy validate` → `Valid configuration`, and the live 502 carries
+  `Content-Security-Policy: default-src 'none'; style-src 'sha256-ofIb4LymHslEln6DMAVROjYqtbDnfaQnv4UzGApxxGM='; script-src 'sha256-fyI1dWZ1Yfu0Q4gc44clgCwkdqMSC/FCfZ9SC64teqA='; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`
+  plus the rest of the set, with the 4 445-byte page intact. **Commit: `c057cbe`.**
+
 ## H1.6 — Server-side validation of type, size, format, range, enum, id, URL, filename, sniffed MIME
 
-**Status: already-met for uploads and unfurling; done for URLs in stored documents.**
+**Status: done.** (The first pass called the unfurler `already-met`; the second pass found that its
+central claim — "a rebinding answer is checked before the request is sent" — was not actually true of
+the code, and fixed it.)
 
 - Every route validates params, querystring and body with Zod through
   `fastify-type-provider-zod`; ids are `z.string().uuid()`, enums are `z.enum`, ranges are
-  `.min()/.max()`.
-- **SSRF-safe unfurling** was already correct and is thorough: `modules/work/link-unfurl.ts` refuses
-  non-http(s) schemes and embedded credentials, resolves DNS itself so a rebinding answer is checked
-  before the request is sent, blocks `0.0.0.0/8`, `10/8`, CGNAT `100.64/10`, loopback, link-local
-  (including `169.254.169.254`), `172.16/12`, `192.0.0/24`, `192.168/16`, `198.18/15`, multicast,
-  IPv6 loopback/link-local/ULA and IPv4-mapped forms, sets `redirect: 'manual'` so a redirect into a
-  private range is never followed, bounds the body at 200 kB and the whole call at 4 s.
+  `.min()/.max()`. Zod object schemas strip unknown keys rather than passing them through, and a grep
+  for `.passthrough()` / `.loose()` / `.catchall(` across `apps/api/src` and `packages/contracts/src`
+  finds none, so no write can be widened by an extra JSON key (H1.3).
+- **SSRF: the range list was right; the connection was not pinned to it.** `link-unfurl.ts` refused
+  non-http(s) schemes and embedded credentials, and blocked `0.0.0.0/8`, `10/8`, CGNAT `100.64/10`,
+  loopback, link-local (including `169.254.169.254`), `172.16/12`, `192.0.0/24`, `192.168/16`,
+  `198.18/15`, multicast, IPv6 loopback/link-local/ULA and IPv4-mapped forms. But it resolved the
+  hostname, approved the answer, then handed the **hostname** to `fetch`, which resolved it a second
+  time — so the check was advisory. An attacker who runs the authoritative DNS for their own domain
+  publishes a one-second TTL that answers with a public address on the first query and
+  `169.254.169.254` on the second. That is DNS rebinding, and it is the standard bypass for exactly
+  this shape of filter; the file's own comment claimed to defend against it.
+
+  The request now goes through `node:http`/`node:https` with a `lookup` hook (`pinnedLookup`) that
+  answers only from the already-approved list, so the name is resolved once and the bytes go where
+  they were vetted. TLS still negotiates on the hostname (`servername`), so certificate validation is
+  untouched — which is why this is a lookup hook rather than a rewrite of the URL to an IP literal.
+  `node:http` also never follows a redirect on its own, which is the behaviour that was wanted: the
+  redirect target is a *new* URL that none of these checks have run against.
+
+  `apps/api/test/unit/link-unfurl.test.ts` (new — the module had **no tests at all** before):
+  **27 tests**. 19 URLs that must be refused (`file:`/`gopher:`/`ftp:`, embedded credentials,
+  `localhost`/`.localhost`/`.local`, all of `127/8`, `169.254.169.254`, RFC 1918, CGNAT, `0.0.0.0`,
+  `::1`, `fd00::`, `fe80::`, and the metadata address written as `::ffff:169.254.169.254`); the three
+  call shapes of the pinned lookup; and three tests against a real loopback HTTP server reached
+  through the hostname **`example.invalid`** — a name RFC 2606 guarantees never resolves — so the
+  request succeeding at all is the proof that the socket used the pinned address and never the
+  resolver. The body budget and the no-redirect-follow behaviour are covered there too.
+  ```
+  Test Files  1 passed (1)
+       Tests  27 passed (27)
+  ```
 - **Sniffed MIME and filenames** were already correct: `lib/storage/image.ts` allow-lists exactly
   `image/jpeg|png|webp`, sniffs the magic number and refuses a mismatch (so a renamed `.exe` or an
   SVG never reaches libvips), caps input at 40 megapixels against decompression bombs, and writes
   WebP with metadata stripped. No user filename ever reaches disk: keys are
   `<userId>/<randomUUID uploadId>/...`.
-- **New:** URL validation inside stored rich-text documents (see H1.5), and a `MAX_JSON_DEPTH` bound
+- Also: URL validation inside stored rich-text documents (see H1.5), and a `MAX_JSON_DEPTH` bound
   (see H7.4).
+
+**Commit: `c2753c6`.**
 
 ## H1.7 — Parameterised queries only; no string SQL from input
 
@@ -435,6 +576,12 @@ HKDF pattern in `modules/*/crypto.ts` are the pieces it needs.
   32-bit tag is forgeable. Both halves now pin `authTagLength: 16`. (Found by Semgrep's
   `gcm-no-tag-length`; both findings are gone.)
 
+- **One accepted limitation, recorded rather than fixed:** the per-person ICS calendar feed
+  token is CSPRNG-derived, domain-separated and constant-time compared, but it never expires and
+  cannot be revoked without rotating `CSRF_SECRET` (which signs the whole instance out). The fix
+  needs a schema change and a UI control, both outside this package — see item 5b under "Requires
+  configuration outside this package".
+
 ## H1.16 — Privilege escalation tested negatively; least-privilege DB roles
 
 **Status: already-met for the DB role, done for the test coverage.**
@@ -465,16 +612,65 @@ HKDF pattern in `modules/*/crypto.ts` are the pieces it needs.
   admin with no membership cannot write to it); and nobody — member, head or super admin — reaches
   another user's personal workspace.
 
+- **New on the second pass: the ladder over HTTP, not only in `can()`.** The bullet above tests the
+  permission function; `apps/api/test/checks/idor-prove.ts` now tests the running API. A real
+  department **head**, signed in with a valid session and CSRF token, is refused on all 14 escalation
+  routes belonging to a department they do not belong to — read the department, read its members,
+  read its join key, rotate its join key, rotate its join password, change its settings, remove one
+  of its members, transfer its headship, request its deletion, read/patch/delete its structure units,
+  and both super-admin console routes (`GET /admin/accounts`, `POST /admin/departments/:id/pause`).
+  Twelve answer 403 (the caller is not a member of that department, so `can()` refuses before any
+  lookup); the two that route another department's unit id through the attacker's **own**
+  department path answer 404 (`can()` passes — it is their department in the URL — and the object is
+  simply not there). None carries a byte of the target department's data. Head is not a shortcut
+  into another department, and it is not a step towards the console. **Commit: `b51edf3`.**
+
 ## H16 — Error handling
 
 **Status: done** (server side). RFC 9457 bodies from a frozen table with a request id, correct status
 codes for transport-level 4xx, no swallowed exceptions in the changed paths. See H1.13.
 
-**Not covered by this package** (they belong to the frontend/reliability packages): route-level error
-boundaries (`apps/web/src/shell/route-error-boundary.tsx` exists on `master`), loading states, and the
-`unhandledRejection` / `uncaughtException` handler in `apps/api/src/server.ts` — `server.ts`'s
-`main().catch()` covers a boot failure but there is no process-level handler for a rejection after
-boot. Listed below.
+Two things the first pass left open, both now closed:
+
+- **Process-fatal handlers.** The first report listed these as belonging to the reliability package.
+  They are in this package's own file (`apps/api/src/server.ts`) and the checklist names them under
+  H16.1, so they are implemented here rather than described. `src/lib/fatal.ts` + 8 tests in
+  `test/unit/fatal.test.ts`: a post-boot unhandled rejection or uncaught exception writes one
+  pino-shaped JSON line at level 60 and terminates the process with status 1, instead of Node's
+  defaults (a warning and a process that keeps serving requests from a state nobody can reason about,
+  or a bare stack with no record). The logic lives in `lib/` and takes the process as a parameter so
+  a test can exercise it against a fake one; `installFatalHandlers(process)` is called only from
+  `server.ts`, so `buildApp()`-based unit tests and the `*:prove` scripts never gain a handler that
+  can end the test runner. `exitCode` is assigned before the terminating call, so a truncated stderr
+  write still leaves the right status. Verified live — the handlers installed, then a rejection
+  raised from a timer after boot:
+
+  ```
+  {"level":60,"time":1788845317972,"msg":"fatal: unhandledRejection","err":{"type":"Error",
+   "message":"post-boot rejection nobody awaited","stack":"Error: post-boot rejection …"}}
+  EXIT_CODE=1
+  ```
+
+  and the "STILL RUNNING" timer scheduled 290 ms later never fired.
+
+  It deliberately does not await `app.close()`: that draining sequence (signal handling, pg-boss
+  stop, in-flight requests) belongs to the reliability package, and awaiting a close from inside a
+  handler whose whole premise is that the process state is unsound is how a crash becomes a hang. The
+  two compose — this handler is the floor under that one.
+
+- **A read path that could not report its own domain error.** Every *write* handler in the events
+  module wrapped its service call in `mapServiceError`; the read handlers never did, because before
+  the H1.2 fix they could not raise one. Once they could, an `EventNotFoundError` from a `list*`
+  became a 500 logged as `"unhandled error"` — wrong status for the client, false alarm for the
+  operator. The events plugin now has a scoped `setErrorHandler` (it is registered with a prefix, so
+  it is its own encapsulation context) that maps its three typed errors and rethrows everything else.
+  `idor:prove` treats a 5xx as loudly as a leak, which is how this was caught rather than shipped.
+
+**Not covered by this package** (frontend/reliability): route-level error boundaries
+(`apps/web/src/shell/route-error-boundary.tsx` exists on `master`), loading states, and the graceful
+shutdown sequence.
+
+**Commits: `b51edf3`, `c2753c6`.**
 
 ## H17 — Build and production config
 
@@ -554,11 +750,34 @@ change to make.
    chain carrying GHSA-67mh-4wv8-2f99 (moderate, dev-only, not in any production tree). Pin the exact
    new version and re-run `pnpm --filter @devon/db migrate:verify`.
 
-5. **`apps/api/src/server.ts` — process-level `unhandledRejection` / `uncaughtException` handler
-   (H16.1).** `server.ts` is inside this package's paths, but the handler belongs with the graceful-
-   shutdown and dead-letter work in the reliability package (H13.1), which also owns `SIGTERM`
-   draining and the pg-boss stop sequence; adding half of it here would collide. The shape it needs:
-   log through `app.log.fatal`, stop accepting connections, `await app.close()`, `process.exit(1)`.
+5. ~~**`apps/api/src/server.ts` — process-level `unhandledRejection` / `uncaughtException` handler
+   (H16.1).**~~ **No longer external — implemented on the second pass** (`c2753c6`, see H16). It was
+   never outside this package's paths; listing it as external was a mistake. `src/lib/fatal.ts` logs
+   one structured line and ends the process with status 1, and stays deliberately separate from the
+   graceful shutdown sequence (signals, pg-boss stop, in-flight draining), which remains the
+   reliability package's to write and composes with this rather than replacing it.
+
+5a. **`infra/maintenance/maintenance.html` — keep it in step with the Caddyfile's two CSP hashes.**
+   The maintenance page's inline `<style>` and `<script>` are admitted by sha256 hash (H1.5); editing
+   the file invalidates them. A stale hash never breaks the page's text — it still renders and still
+   says the service is unavailable — it only disables the language guess and the automatic retry. The
+   Caddyfile says in place how to recompute them (the base64 sha256 of each element's exact child
+   text content, tag lines excluded, including the newline after the opening tag). The durable fix,
+   for whoever owns that file: move both blocks into `maintenance.css` / `maintenance.js` beside it
+   and drop the hashes for `'self'` — impossible from this package, which may edit the Caddyfile only.
+
+5b. **`app.users` — a revocable calendar-feed token (H1.15, accepted limitation).**
+   `GET /api/v1/notifications/ics/:userId/:token` is public by necessity (a calendar client sends no
+   cookie) and the token is `HMAC-SHA256(userId)` under a purpose-scoped derivation of `CSRF_SECRET`
+   — CSPRNG-derived, constant-time compared, domain-separated from every other HMAC in the process,
+   and not guessable. It is, however, **not revocable**: a subscription URL that leaks (calendar URLs
+   reach third-party calendar services, browser history and screen shares) grants that one user's
+   upcoming event titles forever, and the only remedy today is rotating `CSRF_SECRET`, which signs
+   every session out of the instance. Not fixed here because the fix is a schema change plus UI, both
+   outside this package: add `app.users.ics_feed_version integer not null default 1`, include it in
+   the HMAC input, and add a "reset my calendar link" control that increments it. The blast radius
+   meanwhile is one user's event titles and times — no contact details, no card content — which is
+   why it is recorded rather than rushed.
 
 6. **Not implemented, deliberately, with the reasoning recorded:** DOMPurify (no HTML is ever
    injected — H1.5), CSP nonces (the build emits no inline script, so `script-src 'self'` is stronger
@@ -568,6 +787,58 @@ change to make.
 
 ---
 
+## Second pass — what changed and why it mattered
+
+The first pass hardened the *perimeter*: headers, CORS, CSRF, redaction, the webhook, the rich-text
+schema, the throttle. All of that stands. What it did not do was **run the attack**. Three of its
+items were reported `already-met` on the strength of reading the code, and two of those three were
+wrong in ways only an executed request could show:
+
+| item | first pass said | what running it showed |
+|---|---|---|
+| H1.2 object-level access | `already-met` (boot guard + RLS + `can()` unit tests) | 7 of 48 id swaps got through, **2 of them writes** into another department's card |
+| H1.6 SSRF unfurling | `already-met` ("resolves DNS itself so a rebinding answer is checked") | the socket was never pinned to the checked answer, so rebinding still worked |
+| H1.5 CSP | `done` (API + SPA policies) | the maintenance page, on the same origin, had **no headers at all** |
+| gate state | "ok=true, none skipped" | `lint` was red on six files, and one source file was binary to git |
+
+The lesson recorded for the audit that follows this one: for authorisation and for SSRF, reading the
+code establishes intent, not behaviour. Both classes of bug live exactly in the gap between the two —
+an authorisation check that is correct about the *subject* and silent about the *object*, and a
+network filter that validates one resolution and connects with another. Each needed a script that
+performs the request and reads the status.
+
+Everything the second pass added is a runnable check, not a claim:
+
+- `pnpm --filter @devon/api idor:prove` — 48 cross-department id swaps, exit 1 on any 2xx, marker
+  leak, 400/422 (proved nothing) or 5xx (guard threw uncaught).
+- `apps/api/test/unit/link-unfurl.test.ts` — 27 tests, in the `fast` gate.
+- `apps/api/test/unit/fatal.test.ts` — 8 tests, in the `fast` gate.
+- `caddy validate` plus a live container answering 502 with the full header set.
+
+## Final state
+
+```
+$ node agentic/scripts/gate.mjs --profile fast
+[gate] typecheck … PASS
+[gate] lint … PASS
+[gate] unit … PASS
+[gate] i18n … PASS
+[gate] secrets … PASS
+[gate] profile=fast ok=true failed=[] skipped=[]
+
+$ pnpm --filter @devon/db migrate:verify
+[migrate:verify] 570/570 checks passed across 6 sections.  PASS
+
+$ pnpm --filter @devon/api idor:prove
+idor:prove PASSED -- 48 cross-department id swaps all refused
+
+$ semgrep --config p/owasp-top-ten apps packages infra
+total findings: 34
+34 javascript.express.security.audit.xss.direct-response-write.direct-response-write
+```
+
+`@devon/api` unit tests: 226 (before the package) → 309 (35 files). `@devon/contracts`: 98 → 106.
+
 ## Reproduction
 
 ```bash
@@ -575,8 +846,16 @@ cd .claude/worktrees/hd-security
 pnpm install --prefer-offline
 node agentic/scripts/gate.mjs --profile fast          # typecheck, lint, unit, i18n, secrets
 pnpm --filter @devon/db migrate:verify                # needs Docker; 570/570
+pnpm --filter @devon/api idor:prove                   # needs Docker; 48/48 refused
 pnpm audit --audit-level=high                         # 0 high/critical
-semgrep --config p/owasp-top-ten --quiet --json \
-  --exclude node_modules --exclude dist apps packages infra   # 34 direct-response-write only
+semgrep --config p/owasp-top-ten --quiet --json apps packages infra   # 34 direct-response-write only
 pnpm --filter @devon/web build && grep -oE "<script[^>]*>" apps/web/dist/index.html   # one, external
+
+# the maintenance page's headers, against the real Caddyfile with no upstream running
+docker run -d --name devon-caddy-check -p 8899:443 \
+  -v "$PWD/infra/Caddyfile:/etc/caddy/Caddyfile:ro" \
+  -v "$PWD/infra/maintenance:/srv/maintenance:ro" \
+  -e DEVON_PUBLIC_URL=localhost caddy:2.10.2-alpine
+curl -sk -D - -o /dev/null https://localhost:8899/     # 502 + CSP + HSTS + nosniff + DENY + no-store
+docker rm -f devon-caddy-check
 ```
