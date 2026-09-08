@@ -836,11 +836,9 @@ export async function listPolls(
 ): Promise<PollDto[]> {
   return withContext(ctx, async (tx) => {
     const polls = await repo.listPolls(tx, eventId)
-    const dtos: PollDto[] = []
-    for (let i = 0; i < polls.length; i += 1) {
-      dtos.push(await pollToDto(tx, polls[i]!, viewerUserId, isHead))
-    }
-    return dtos
+    // H3.1: each poll's DTO is independent of every other poll's -- Promise.all, not a for loop with
+    // an await per iteration (2-3 queries per poll: options, tally, my-votes).
+    return Promise.all(polls.map((poll) => pollToDto(tx, poll, viewerUserId, isHead)))
   })
 }
 
