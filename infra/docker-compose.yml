@@ -65,6 +65,13 @@ services:
       # object created by packages/db/migrations/0006_normalize_uz.sql, which detects ICU support and
       # falls back gracefully -- it does not require (and this image does not set) a non-default
       # cluster locale provider at initdb time.
+    # H15.1 / hardening-baseline: `pg_stat_statements` needs to be in `shared_preload_libraries` at
+    # server start (a plain `CREATE EXTENSION` is not enough) -- this is how the per-route SQL query
+    # counts in agentic/ledger/hardening/*/baseline.md are measured (query the view, diff calls/rows
+    # before and after a route load), and by <=1% overhead per the extension's own docs so it is safe
+    # to leave on permanently. `pg_stat_statements.track=all` also counts statements run inside
+    # PL/pgSQL functions, not just top-level ones.
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all", "-c", "pg_stat_statements.max=10000"]
     ports:
       - "${POSTGRES_PORT:-55432}:5432"
     volumes:

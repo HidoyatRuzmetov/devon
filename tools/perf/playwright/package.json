@@ -1,0 +1,13 @@
+{
+  "name": "devon-perf-playwright",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deliberately NOT a pnpm workspace package (pnpm-workspace.yaml lists only apps/* and packages/*), same reasoning as e2e/package.json -- these are measurement scripts (agentic/HARDENING.md H2.9/H24.1/H26.1 baseline), not product code, and manage their own npm-installed node_modules so this directory never needs pnpm-workspace.yaml touched. Pinned to the exact @playwright/test version e2e/package.json uses so both share the already-downloaded browser cache under %LOCALAPPDATA%/ms-playwright.",
+  "scripts": {
+    "measure": "node measure-routes.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

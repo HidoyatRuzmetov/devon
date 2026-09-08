@@ -12,3 +12,8 @@ tools/gate-mutation/.tmp/
 tools/gate-mutation/.tmp-evidence.*
 .claude/worktrees/
 .data/
+# Regenerated evidence from tools/perf/ measurement scripts (agentic/HARDENING.md baseline/after
+# passes) -- reproducible via the commands in agentic/ledger/hardening/*/baseline.md; not durable
+# evidence itself (that lives in the committed baseline.md's tables), same treatment as
+# playwright-report/ and test-results/ above.
+tools/perf/*/out/
