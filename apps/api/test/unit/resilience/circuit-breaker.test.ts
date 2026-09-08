@@ -3,6 +3,7 @@
 // `setTimeout`/sleep.
 import { describe, expect, it } from 'vitest'
 import { CircuitBreaker, CircuitOpenError } from '../../../src/lib/resilience/circuit-breaker.js'
+import { circuitBreakerFailuresTotal } from '../../../src/lib/metrics.js'
 
 function fakeClock(startAt = 0) {
   let now = startAt
@@ -118,5 +119,18 @@ describe('CircuitBreaker', () => {
     breaker.reset()
     expect(breaker.snapshot().state).toBe('closed')
     await expect(breaker.execute(async () => 'ok')).resolves.toBe('ok')
+  })
+
+  it('H15.1: every fail() increments the bounded devon_circuit_breaker_failures_total counter', async () => {
+    const name = `metrics-test-${Math.random().toString(36).slice(2)}`
+    const breaker = new CircuitBreaker({ name, failureThreshold: 5, resetTimeoutMs: 1000 })
+    const before = circuitBreakerFailuresTotal.render()
+    expect(before).not.toContain(`breaker="${name}"`)
+
+    await expect(breaker.execute(async () => Promise.reject(new Error('boom')))).rejects.toThrow()
+    await expect(breaker.execute(async () => Promise.reject(new Error('boom')))).rejects.toThrow()
+
+    const after = circuitBreakerFailuresTotal.render()
+    expect(after).toContain(`devon_circuit_breaker_failures_total{breaker="${name}"} 2`)
   })
 })

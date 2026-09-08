@@ -10,6 +10,7 @@ import { settingsToDto, traceToDto } from './dto.js'
 import type { AiSettingsDto, TraceDto } from './schemas.js'
 import { ai as aiBreaker } from '../../lib/resilience/registry.js'
 import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
+import { aiCostUzsTotal, aiRequestDuration, aiTokensTotal } from '../../lib/metrics.js'
 import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
@@ -48,6 +49,31 @@ export function classifyAiOutcomeForBreaker(result: {
 }): 'succeed' | 'fail' | 'neutral' {
   if (result.meta === null) return 'neutral' // caller input never reached the provider
   return result.meta.status === 'provider_error' ? 'fail' : 'succeed'
+}
+
+/**
+ * H15.1 "AI latency/cost": records one call's numbers into the three AI metrics, exported (like
+ * `classifyAiOutcomeForBreaker` above) so the recording itself -- which labels, which fields --
+ * has a unit test that never needs a real provider or database. Called for every call that actually
+ * reached the provider (non-null `meta`), whether the provider's own answer was `ok` or a
+ * `provider_error` -- a failed call still spent real wall-clock time and sometimes real tokens, both
+ * of which belong in these numbers the same way a failed HTTP request still counts toward
+ * `devon_http_request_duration_seconds` (`plugins/observability.ts`).
+ */
+export function recordAiRunMetrics(
+  feature: string,
+  meta: {
+    status: string
+    latencyMs: number
+    costUzs: number
+    promptTokens: number
+    completionTokens: number
+  },
+): void {
+  aiRequestDuration.observe(meta.latencyMs / 1000, { feature, status: meta.status })
+  aiCostUzsTotal.inc({ feature }, meta.costUzs)
+  aiTokensTotal.inc({ feature, kind: 'prompt' }, meta.promptTokens)
+  aiTokensTotal.inc({ feature, kind: 'completion' }, meta.completionTokens)
 }
 
 /** H8.1: whether a call right now would actually reach the provider, or fail fast against the open
@@ -194,6 +220,8 @@ export async function runFeatureForActor(
     // spent, and no signal either way about whether GLM itself is reachable.
     throw new AiInputValidationError(result.error)
   }
+
+  recordAiRunMetrics(params.feature, result.meta)
 
   // Step 3: record what happened -- in its OWN transaction, committed unconditionally, so a call that
   // spent real tokens but still failed schema validation (or came back empty even after the retry)

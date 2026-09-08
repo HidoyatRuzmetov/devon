@@ -14,6 +14,8 @@
 // from a dependency that is down, not to coordinate a fleet (TECH-SPEC §12: the API is stateless, so
 // nothing here may become a hidden source of cross-request or cross-instance state that would break
 // that).
+import { circuitBreakerFailuresTotal } from '../metrics.js'
+
 export type CircuitState = 'closed' | 'open' | 'half_open'
 
 export class CircuitOpenError extends Error {
@@ -85,6 +87,11 @@ export class CircuitBreaker {
     this.consecutiveFailures += 1
     this.lastFailureAt = this.now()
     this.lastError = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300)
+    // H15.1 "error rates": one bounded counter series per breaker name (a small, fixed set -- see
+    // `registry.ts`), incremented here so every call site that drives a breaker (`execute()` below,
+    // or a manual `succeed()`/`fail()` pair like `modules/ai/service.ts`'s) is covered by a single
+    // line rather than needing its own metrics call.
+    circuitBreakerFailuresTotal.inc({ breaker: this.options.name })
     if (this.state === 'half_open' || this.consecutiveFailures >= this.options.failureThreshold) {
       this.state = 'open'
       this.openedAt = this.now()
