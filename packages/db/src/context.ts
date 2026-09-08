@@ -59,13 +59,48 @@ export interface Tx {
 // Module-private connection pool. Not exported under any name, by design (handoff contract).
 let pool: Pool | null = null
 
+// H3.3 "pool sizing per process": `new Pool({ connectionString })` with no `max` used to fall back to
+// `node-postgres`'s default of 10 for the whole process -- verified as the exact cause of the p95
+// cliff between 10 and 100 concurrent requests measured in the hardening baseline (every one of
+// board-load/card-move/RSVP/analytics-summary went from ~35ms to 600-1300ms p95 right where 100
+// concurrent in-flight requests started queueing for one of only 10 pool slots; see
+// `agentic/ledger/hardening/*/baseline.md` §4). Every value below is process-wide and env-overridable
+// so `api`, `worker` and any future process (`infra/docker-compose.yml`'s separate services) can be
+// sized independently against Postgres's own `max_connections` (default 100) without a code change --
+// e.g. one `api` replica at `DB_POOL_MAX=20` plus one `worker` at `DB_POOL_MAX=10` plus headroom for
+// direct/admin connections and pgBackRest comfortably fits under 100.
+function poolEnvInt(name: string, fallback: number): number {
+  const raw = process.env[name]
+  if (!raw) return fallback
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) && n > 0 ? n : fallback
+}
+
 function getPool(): Pool {
   if (pool) return pool
   const connectionString = process.env['DATABASE_URL']
   if (!connectionString) {
     throw new Error('@devon/db: DATABASE_URL is not set')
   }
-  pool = new Pool({ connectionString })
+  pool = new Pool({
+    connectionString,
+    // Sized, not left at node-postgres's default of 10 (H3.3). Override per process via env.
+    max: poolEnvInt('DB_POOL_MAX', 20),
+    min: poolEnvInt('DB_POOL_MIN', 2),
+    // A connection idle longer than this is closed, not held open forever -- bounds the pool back
+    // down toward `min` once a traffic spike passes (H11.1 "bounded ... caches").
+    idleTimeoutMillis: poolEnvInt('DB_POOL_IDLE_TIMEOUT_MS', 30_000),
+    // Fail fast with a clear pool-exhaustion error instead of a request hanging indefinitely when
+    // every slot is busy (H8.1 "graceful degradation", H16.1 "no ... stuck" loading states) -- a
+    // request that cannot get a connection within 5s is not going to get useful work done anyway.
+    connectionTimeoutMillis: poolEnvInt('DB_POOL_CONN_TIMEOUT_MS', 5_000),
+    // Per-statement ceiling so one runaway query cannot hold a connection (and its transaction's
+    // locks) forever -- PgBouncer-safe because it is a `pg` client-side option sent as a startup
+    // parameter on every physical connection, not a session `SET` that could leak across a pooled
+    // connection's next borrower (H3.3's `set_config(..., true)` note above is the analogous
+    // guarantee for the tenancy GUCs).
+    statement_timeout: poolEnvInt('DB_STATEMENT_TIMEOUT_MS', 15_000),
+  })
   return pool
 }
 
