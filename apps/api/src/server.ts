@@ -8,6 +8,7 @@ import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
 import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
 import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
+import { registerGracefulShutdown } from './plugins/shutdown.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -43,6 +44,12 @@ async function main(): Promise<void> {
     uploadSweeper.stop()
     scanRetryWorker.stop()
   })
+
+  // H13.1 "graceful shutdown drains in-flight requests and jobs" / "safe restart": SIGTERM (docker
+  // stop, a supervisor restart) and SIGINT (Ctrl-C in a foreground dev run) both now drain instead of
+  // killing every in-flight request and background job outright -- see `plugins/shutdown.ts`'s header
+  // for what was silently never running before this.
+  registerGracefulShutdown(app)
 
   await app.listen({ port: config.API_PORT, host: '0.0.0.0' })
 }
