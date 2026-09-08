@@ -166,7 +166,7 @@ export default function PeopleScreen() {
     body = (
       <Stagger
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-        animateKey={unitFilter}
+        animateKey={`${unitFilter}:${query}`}
       >
         {filtered.map((m) => (
           <StaggerItem key={m.userId} className="h-full">

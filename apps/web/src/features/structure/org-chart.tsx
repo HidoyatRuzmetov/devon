@@ -4,8 +4,9 @@
 // views can never disagree about the shape of the tree. UI-OVERHAUL.md's Jakob row for this screen
 // (Miro/Lucidchart org charts): unit colours, vacancies dashed, zoom/pan, click to open a side panel.
 import * as React from 'react'
+import { motion } from 'motion/react'
 import { useT } from '@devon/i18n'
-import { Button, IconButton, Sheet, SheetContent, unitHueClass } from '@devon/ui'
+import { Button, IconButton, Sheet, SheetContent, unitHueClass, useReducedMotion } from '@devon/ui'
 import { Download, Minus, Plus, RotateCcw, X } from 'lucide-react'
 import type { TreeActions, TreeNode } from './unit-tree.js'
 import { RoleChips } from './unit-tree.js'
@@ -119,6 +120,7 @@ export function OrgChart({
   departmentName: string
 }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const svgRef = React.useRef<SVGSVGElement>(null)
   const viewportRef = React.useRef<HTMLDivElement>(null)
   const { nodes, width, height } = React.useMemo(() => layout(roots), [roots])
@@ -321,24 +323,35 @@ export function OrgChart({
             }}
           >
             <rect x={0} y={0} width={width} height={height} fill="var(--color-card)" />
+            {/* round2 SEV3.5 "connectors do not draw": each one draws from parent to child instead
+                of simply being present -- `pathLength` (a transform-equivalent motion reads natively
+                on an SVG `path`), staggered a beat behind the node it leads to so the line reads as
+                following the node down rather than racing ahead of it. */}
             {nodes.map((node) =>
-              node.children.map((child) => (
-                <path
+              node.children.map((child, childIndex) => (
+                <motion.path
                   key={`${node.id}-${child.id}`}
                   d={`M ${node.x + MARGIN} ${node.y + NODE_H + MARGIN} V ${node.y + NODE_H + V_GAP / 2 + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
                   fill="none"
                   stroke="var(--color-border)"
                   strokeWidth={1.5}
+                  initial={reduced ? { opacity: 0 } : { pathLength: 0, opacity: 0.6 }}
+                  animate={{ pathLength: 1, opacity: 1 }}
+                  transition={{
+                    duration: reduced ? 0.15 : 0.35,
+                    ease: 'easeOut',
+                    delay: reduced ? 0 : 0.08 + childIndex * 0.02,
+                  }}
                 />
               )),
             )}
-            {nodes.map((node) => {
+            {nodes.map((node, nodeIndex) => {
               const roles = actions.rolesByUnit.get(node.id) ?? []
               const head = roles.find((r) => r.role === 'head')
               const headMember = head ? actions.membersById.get(head.userId) : undefined
               const isFocused = node.id === focusedId
               return (
-                <g
+                <motion.g
                   key={node.id}
                   ref={(el) => {
                     if (el) nodeRefs.current.set(node.id, el)
@@ -348,7 +361,28 @@ export function OrgChart({
                   aria-label={node.name}
                   aria-selected={isFocused}
                   tabIndex={isFocused ? 0 : -1}
-                  transform={`translate(${node.x - NODE_W / 2 + MARGIN}, ${node.y + MARGIN})`}
+                  // round2 SEV3.5 "nodes appear staggered": fade + rise, one small step per node in
+                  // the tree's own top-down draw order (`layout()`'s `place` visits root before
+                  // children) -- capped so a large department's chart still settles quickly.
+                  initial={
+                    reduced
+                      ? { opacity: 0, x: node.x - NODE_W / 2 + MARGIN, y: node.y + MARGIN }
+                      : {
+                          opacity: 0,
+                          x: node.x - NODE_W / 2 + MARGIN,
+                          y: node.y + MARGIN + 8,
+                        }
+                  }
+                  animate={{
+                    opacity: 1,
+                    x: node.x - NODE_W / 2 + MARGIN,
+                    y: node.y + MARGIN,
+                  }}
+                  transition={{
+                    duration: reduced ? 0.15 : 0.3,
+                    ease: 'easeOut',
+                    delay: reduced ? 0 : Math.min(nodeIndex, 24) * 0.03,
+                  }}
                   onFocus={() => setFocusedId(node.id)}
                   onClick={() => {
                     setFocusedId(node.id)
@@ -425,7 +459,7 @@ export function OrgChart({
                   <text x={16} y={NODE_H - 10} className="fill-muted-foreground text-caption">
                     {t('structure.units.chart.memberCount', { count: roles.length })}
                   </text>
-                </g>
+                </motion.g>
               )
             })}
           </svg>

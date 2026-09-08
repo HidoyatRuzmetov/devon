@@ -47,7 +47,12 @@ export function MemberCard({
       className={
         compact
           ? 'flex items-center gap-2 rounded-sm border border-border bg-card px-2 py-1.5'
-          : 'flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1'
+          : // round2 SEV3.5 "cards have no lift": a plain CSS hover (not the `HoverLift` primitive,
+            // which wraps its child in a `motion.div` that would swallow the pointer/focus handlers
+            // `HoverCardTrigger asChild` injects onto this exact element) -- transform + shadow only,
+            // and `motion-reduce:` (the Tailwind variant for `prefers-reduced-motion: reduce`) drops
+            // just the travel, keeping the shadow step as the reduced-motion replacement.
+            'flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1 transition-[transform,box-shadow] duration-(--dur-micro) ease-out hover:-translate-y-0.5 hover:shadow-2 motion-reduce:hover:translate-y-0'
       }
     >
       <div className={compact ? 'contents' : 'flex items-center gap-3'}>
