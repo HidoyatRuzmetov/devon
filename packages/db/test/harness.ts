@@ -192,6 +192,37 @@ export async function startPgBouncer(db: DatabaseFixture): Promise<PgBouncerFixt
   const port = container.getMappedPort(5432)
   const connectionString = `postgres://devon_app:${encodeURIComponent(db.creds.appPassword)}@${host}:${port}/${db.database}`
 
+  // `Wait.forLogMessage(/process up/i)` resolves as soon as that line hits stdout, which on Docker
+  // Desktop for Windows can fire a short window before the *published* port is actually accepting TCP
+  // connections yet (observed: `ECONNREFUSED` on the very next connection attempt even though
+  // `.start()` itself never timed out -- a container-readiness race, not a PgBouncer misconfiguration;
+  // see `agentic/ledger/hardening/*/baseline.md` §6 "migrate" for the first reproduction). Poll with a
+  // real connection attempt instead of trusting the log line alone, bounded so a genuinely broken
+  // PgBouncer still fails fast rather than hanging.
+  const deadline = Date.now() + 10_000
+  let lastErr: unknown
+  for (;;) {
+    const probe = new Client({ connectionString, connectionTimeoutMillis: 2_000 })
+    try {
+      await probe.connect()
+      await probe.end()
+      lastErr = null
+      break
+    } catch (err) {
+      lastErr = err
+      await probe.end().catch(() => {})
+      if (Date.now() >= deadline) break
+      await new Promise((resolve) => setTimeout(resolve, 200))
+    }
+  }
+  if (lastErr) {
+    await container.stop().catch(() => {})
+    throw new Error(
+      `startPgBouncer: port ${port} never accepted a connection within 10s of "process up"`,
+      { cause: lastErr },
+    )
+  }
+
   return {
     container,
     connectionString,
