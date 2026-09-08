@@ -3,7 +3,9 @@
 // `/work` never pays for this feature's bundle.
 import * as React from 'react'
 import { KanbanSquare } from 'lucide-react'
+import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
+import { prefetchBoard } from './hooks.js'
 
 const BoardScreen = React.lazy(() => import('./components/board-screen.js'))
 const TableScreen = React.lazy(() => import('./components/table-screen.js'))
@@ -24,7 +26,16 @@ const manifest: FeatureManifest = {
     { path: '/work/archive', component: ArchiveScreen, titleKey: 'work.view.archive' },
     { path: '/work/card', component: CardPageScreen, titleKey: 'work.card.peekTitle' },
   ],
-  sidebar: [{ id: 'work', labelKey: 'work.title', icon: KanbanSquare, route: '/work' }],
+  // H5.2 "prefetch on hover/focus": warms the board query before the click that navigates here.
+  sidebar: [
+    {
+      id: 'work',
+      labelKey: 'work.title',
+      icon: KanbanSquare,
+      route: '/work',
+      onPrefetch: () => void prefetchBoard(queryClient),
+    },
+  ],
   commands: [
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },

@@ -3,7 +3,13 @@
 // response (`useMeQuery`) exactly like `useLocaleMutation` already does -- never a second network
 // call just to fetch a token.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type UseQueryResult,
+} from '@tanstack/react-query'
 import { useMeQuery } from '../../lib/session.js'
 import {
   archiveNotifications,
@@ -46,6 +52,17 @@ export function useNotificationsQuery(status: InboxStatus) {
     queryFn: () => fetchNotifications(status),
     staleTime: 15_000,
     refetchInterval: 60_000, // a lightweight poll -- there is no realtime push transport in this epic
+  })
+}
+
+/** H5.2 "prefetch on hover/focus" -- `nav.ts` calls this on the inbox sidebar entry's hover/focus,
+ * for `inbox-screen.tsx`'s own default tab (`'inbox'`), matching its `useNotificationsQuery` key. */
+export function prefetchNotifications(qc: QueryClient): Promise<unknown> {
+  const status: InboxStatus = 'inbox'
+  return qc.prefetchQuery({
+    queryKey: ['inbox', 'notifications', status],
+    queryFn: () => fetchNotifications(status),
+    staleTime: 15_000,
   })
 }
 

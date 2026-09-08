@@ -60,6 +60,10 @@ export function BottomTabBar({
             key={entry.id}
             href={entry.route}
             aria-current={active ? 'page' : undefined}
+            // H5.2 "prefetch on hover/focus": no hover on touch, but keyboard focus and the earliest
+            // touch contact both precede the tap that actually navigates.
+            onFocus={entry.onPrefetch}
+            onTouchStart={entry.onPrefetch}
             className={cn(
               'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1',
               'transition-colors duration-(--dur-micro) ease-out',

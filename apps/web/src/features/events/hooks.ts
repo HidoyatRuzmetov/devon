@@ -2,7 +2,7 @@
 // resource so a mutation's `invalidateQueries` stays precise -- a new comment never refetches the
 // whole event list, a new RSVP never refetches every event's comments.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import type { Me } from '../../lib/api-schemas.js'
 import * as api from './api.js'
 import type { EventDto, RsvpStatus } from './schemas.js'
@@ -31,6 +31,14 @@ const keys = {
 
 export function useEventsQuery(range: api.EventRange = {}) {
   return useQuery({ queryKey: keys.list(range), queryFn: () => api.fetchEvents(range) })
+}
+
+/** H5.2 "prefetch on hover/focus" -- `nav.ts` calls this on the "Tadbirlar" sidebar entry's hover/
+ * focus, matching `useEventsQuery()`'s own default (empty) range exactly so the warmed cache entry
+ * is the same one `events-screen.tsx` reads on mount, not a near-miss under a different key. */
+export function prefetchEvents(qc: QueryClient): Promise<unknown> {
+  const range: api.EventRange = {}
+  return qc.prefetchQuery({ queryKey: keys.list(range), queryFn: () => api.fetchEvents(range) })
 }
 
 export function useEventQuery(eventId: string | null) {
