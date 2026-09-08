@@ -11,10 +11,29 @@ import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
 import { AuthShell } from './shell/auth-shell.js'
 import { RouteErrorBoundary } from './shell/route-error-boundary.js'
-import { HomeRoute } from './routes/home.js'
-import { LoginRoute } from './routes/login.js'
-import { SetupRoute } from './routes/setup.js'
-import { NotFoundRoute } from './routes/not-found.js'
+
+// H4.3 (route-level code splitting): every `features/*/manifest.ts(x)` route is already
+// `React.lazy` -- these four core routes were the one place that wasn't, so their weight (plus
+// `routes/login.tsx`'s and `routes/setup.tsx`'s own form-handling code) sat in the eagerly
+// `modulepreload`ed entry chunk on *every* route, not just their own. `HomeRoute` is the most
+// direct win: `features/home/manifest.tsx` claims `/` first (MODULE-GUIDE.md "Web features"), so
+// the `'home'` case below is provably unreachable in production -- it was dead code shipped to
+// every single visitor's initial bundle. None of the six routes H24.1 measures (`/`, `/work`,
+// `/work/table`, `/events`, `/inbox`, `/analytics`) needs any of these four, so this is a pure win
+// for that measurement; `/login` itself pays one extra chunk fetch on a cold cache in exchange
+// (the same trade-off every other feature route already makes).
+const HomeRoute = React.lazy(() =>
+  import('./routes/home.js').then((m) => ({ default: m.HomeRoute })),
+)
+const LoginRoute = React.lazy(() =>
+  import('./routes/login.js').then((m) => ({ default: m.LoginRoute })),
+)
+const SetupRoute = React.lazy(() =>
+  import('./routes/setup.js').then((m) => ({ default: m.SetupRoute })),
+)
+const NotFoundRoute = React.lazy(() =>
+  import('./routes/not-found.js').then((m) => ({ default: m.NotFoundRoute })),
+)
 
 /** design.md §4.3/§8: once the signed-in user's own record resolves, its `locale` wins over whatever
  * `bootLocale()` guessed from storage/header (resolution order: user record → localStorage →
@@ -104,7 +123,9 @@ function RouteOutlet() {
       return (
         <AppShell>
           <RouteErrorBoundary>
-            <HomeRoute />
+            <React.Suspense fallback={<RouteFallback />}>
+              <HomeRoute />
+            </React.Suspense>
           </RouteErrorBoundary>
         </AppShell>
       )
@@ -112,7 +133,9 @@ function RouteOutlet() {
       return (
         <AuthShell>
           <RouteErrorBoundary>
-            <LoginRoute />
+            <React.Suspense fallback={<RouteFallback />}>
+              <LoginRoute />
+            </React.Suspense>
           </RouteErrorBoundary>
         </AuthShell>
       )
@@ -120,7 +143,9 @@ function RouteOutlet() {
       return (
         <AuthShell>
           <RouteErrorBoundary>
-            <SetupRoute />
+            <React.Suspense fallback={<RouteFallback />}>
+              <SetupRoute />
+            </React.Suspense>
           </RouteErrorBoundary>
         </AuthShell>
       )
@@ -129,7 +154,9 @@ function RouteOutlet() {
       return (
         <AppShell>
           <RouteErrorBoundary>
-            <NotFoundRoute />
+            <React.Suspense fallback={<RouteFallback />}>
+              <NotFoundRoute />
+            </React.Suspense>
           </RouteErrorBoundary>
         </AppShell>
       )

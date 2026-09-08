@@ -51,17 +51,18 @@ export default defineConfig(({ command, mode }) => {
     // here rather than copying the binary `.woff2` files into `apps/web` (which would also fall
     // outside TOUCHES). Storybook does the same via `staticDirs: ['../public']`.
     publicDir: '../../../packages/ui/public',
-    // H4.1: React Compiler on. `target: '19'` -- `package.json` pins `react`/`react-dom` at
-    // `19.2.8`, which ships the compiler's memoisation runtime (`useMemoCache`) natively, so no
-    // separate `react-compiler-runtime` polyfill package is needed. The compiler only ever memoises
+    // H4.1: React Compiler on. This is Rolldown-Vite (`vite: 8.2.2`'s own engine, not classic
+    // Rollup+Babel -- note the `rolldown-runtime` chunk in every build), so `@vitejs/plugin-react`
+    // v6's own `compiler` option (backed by the `oxc-transform-react` optional peer, an Oxc/Rust
+    // implementation) is the supported path here, not the classic `babel-plugin-react-compiler`
+    // (that still exists as an optional peer for the separate `@rolldown/plugin-babel` bridge, but
+    // going through Oxc directly avoids adding a Babel pass to a toolchain that otherwise has none).
+    // No `target` option needed: `package.json` pins `react`/`react-dom` at `19.2.8`, which ships the
+    // compiler's memoisation runtime (`useMemoCache`) natively. The compiler only ever memoises
     // components/hooks it can prove safe to (anything it cannot verify is left alone, not a build
     // failure), so turning it on is additive over the manual `useMemo`/`useCallback` already in this
     // codebase, not a replacement this item needs to migrate call sites for.
-    plugins: [
-      react({ babel: { plugins: [['babel-plugin-react-compiler', { target: '19' }]] } }),
-      tailwindcss(),
-      robotsTxtPlugin(),
-    ],
+    plugins: [react({ compiler: true }), tailwindcss(), robotsTxtPlugin()],
     build: {
       // `agentic/scripts/check-bundle.mjs` reads `apps/web/dist/assets` (design.md §1.1 table) --
       // relative to `root` (`apps/web/src`), that is `../dist`.
