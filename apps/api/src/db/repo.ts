@@ -551,6 +551,18 @@ export function createRepo(): Deps {
       })
     },
 
+    async listPendingAvatarUploads(limit) {
+      return withContext(anonymousCtx(), async (tx) => {
+        const rows = await tx.raw<{ id: string; user_id: string }>(
+          sql`select id, user_id from app.uploads
+              where status = 'pending' and purpose = 'avatar' and expires_at > now()
+              order by created_at asc
+              limit ${limit}`,
+        )
+        return rows.map((r) => ({ id: r.id, userId: r.user_id }))
+      })
+    },
+
     async checkDbReady() {
       try {
         await withContext(anonymousCtx(), (tx) => tx.raw(sql`select 1`))

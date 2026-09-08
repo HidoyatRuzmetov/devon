@@ -7,6 +7,7 @@ import { createRepo } from './db/repo.js'
 import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
 import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
+import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -30,10 +31,17 @@ async function main(): Promise<void> {
   const uploadSweeper = startUploadSweeper(app, {
     onError: (err) => app.log.error(err, 'upload retention sweep failed'),
   })
+  // H8.1: recovers avatar uploads a ClamAV outage left `pending` well before their 10-minute window
+  // expires (see `scan-retry-worker.ts`'s header) -- same start-here-only rule as the three workers
+  // above.
+  const scanRetryWorker = startScanRetryWorker(app, {
+    onError: (err) => app.log.error(err, 'avatar scan retry pass failed'),
+  })
   app.addHook('onClose', async () => {
     outboxWorker.stop()
     reminderWorker.stop()
     uploadSweeper.stop()
+    scanRetryWorker.stop()
   })
 
   await app.listen({ port: config.API_PORT, host: '0.0.0.0' })
