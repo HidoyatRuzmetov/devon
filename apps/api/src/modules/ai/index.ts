@@ -118,7 +118,13 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/features/:feature/run',
     {
-      config: { permission: { action: 'create', subject: featureRunSubject } },
+      config: {
+        permission: { action: 'create', subject: featureRunSubject },
+        // H1.9: the one endpoint in this API that spends money and calls a third party per request.
+        // The per-department budget (TECH-SPEC §8) caps the monthly cost; this caps the burst, so a
+        // single compromised session cannot exhaust a department's whole month in one minute.
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      },
       schema: {
         params: featureParamsSchema,
         body: runFeatureBodySchema,

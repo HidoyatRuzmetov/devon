@@ -71,12 +71,7 @@ export type SetupInput = {
  * server-chosen object key the bytes were uploaded under; the object itself lives in
  * `app.storage.store`, never here. */
 export type UploadStatus =
-  | 'pending'
-  | 'rejected'
-  | 'infected'
-  | 'scan_failed'
-  | 'finalized'
-  | 'expired'
+  'pending' | 'rejected' | 'infected' | 'scan_failed' | 'finalized' | 'expired'
 
 export type UploadRecord = {
   id: string

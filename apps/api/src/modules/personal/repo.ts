@@ -129,8 +129,7 @@ export async function patchSprint(
 }
 
 export type RolloverResult =
-  | { ok: 'done'; sprint: SprintRow; movedTaskCount: number }
-  | { ok: 'not_found' }
+  { ok: 'done'; sprint: SprintRow; movedTaskCount: number } | { ok: 'not_found' }
 
 export async function rolloverSprint(
   userId: string,

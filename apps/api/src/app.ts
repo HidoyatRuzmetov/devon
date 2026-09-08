@@ -18,6 +18,7 @@ import sessionPlugin from './plugins/session.js'
 import authorizePlugin from './plugins/authorize.js'
 import securityHeadersPlugin from './plugins/security-headers.js'
 import csrfPlugin from './plugins/csrf-guard.js'
+import jsonBodyPlugin from './plugins/json-body.js'
 import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
 import { redactPaths, REDACTION_CENSOR } from './lib/log-redaction.js'
 import { sendProblem } from './lib/problem-reply.js'
@@ -60,6 +61,10 @@ export async function buildApp(
     // Keep the route table exactly the OpenAPI path table in design.md §1.7 -- an auto-added HEAD
     // sibling for every GET would otherwise need its own, redundant `PUBLIC_ROUTES` entries.
     exposeHeadRoutes: false,
+    // H7.4: Fastify's own default, stated rather than inherited, so the bound on every JSON request
+    // body is visible here next to the depth bound (`plugins/json-body.ts`) and the upload bound
+    // (`STORAGE_MAX_UPLOAD_BYTES`, `plugins/storage.ts`).
+    bodyLimit: 1_048_576,
   }).withTypeProvider<ZodTypeProvider>()
 
   app.setValidatorCompiler(validatorCompiler)
@@ -106,10 +111,27 @@ export async function buildApp(
       })
       return
     }
+    // Every other transport-level client error -- a malformed JSON body, a body nested past
+    // `MAX_JSON_DEPTH` (`plugins/json-body.ts`), an unsupported media type, a rate-limit refusal --
+    // used to fall through to the 500 branch below, so the client was told the *server* had failed
+    // when in fact its own request was at fault (and a monitoring alert fired for it). Reported with
+    // the status the error carries and the same fixed Problem body: still no message, stack or path
+    // from the underlying error reaches the client (H1.13).
+    const status = typeof err.statusCode === 'number' ? err.statusCode : 500
+    if (status >= 400 && status < 500) {
+      sendProblem(reply, status === 429 ? 'rate_limited' : 'validation_failed', {
+        status,
+        instance,
+        ...(status === 429 ? {} : { errors: [{ path: 'body', code: 'invalid' }] }),
+      })
+      return
+    }
     req.log.error({ err }, 'unhandled error')
     sendProblem(reply, 'internal', { instance })
   })
 
+  // Before every route-registering plugin: the JSON parser must be in place when a route is added.
+  await app.register(jsonBodyPlugin)
   await app.register(cookie)
   await app.register(rateLimit, { global: false })
   // H1.10: helmet-equivalent headers, the CORS allow-list and the `Origin` guard, registered before

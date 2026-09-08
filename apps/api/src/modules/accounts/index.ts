@@ -15,6 +15,7 @@ import {
 } from '../../lib/cookies.js'
 import { avatarKeyPrefix, avatarVariantKey } from '../../lib/storage/object-store.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { LoginThrottle, loginThrottle } from '../../lib/login-throttle.js'
 import * as repo from './repo.js'
 import { finalizeAvatar, removeAvatar, requestAvatarUpload } from './avatar-service.js'
 import {
@@ -250,15 +251,31 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { body: twoFaLoginVerifyBodySchema },
     },
     async (req, reply) => {
+      // H1.9: the same progressive lockout the password step uses, keyed on the challenge token so
+      // a stolen challenge cannot be used to grind six digits. `consumeLoginChallenge` has its own
+      // per-challenge attempt cap; this adds the cross-request, time-widening half.
+      const throttleKey = LoginThrottle.key(
+        '2fa',
+        req.body.challengeToken.slice(0, 32),
+        requestIp(req),
+      )
+      const throttled = loginThrottle.check(throttleKey)
+      if (throttled.locked) {
+        reply.header('retry-after', String(throttled.retryAfterSeconds))
+        sendProblem(reply, 'rate_limited')
+        return
+      }
       const result = await repo.consumeLoginChallenge(
         req.body.challengeToken,
         req.body.code,
         app.devonConfig.CSRF_SECRET,
       )
       if (!result.ok) {
+        loginThrottle.recordFailure(throttleKey)
         sendProblem(reply, result.reason === 'locked' ? 'rate_limited' : 'unauthenticated')
         return
       }
+      loginThrottle.recordSuccess(throttleKey)
       await startSession(result.userId, req, reply)
       reply.code(204).send()
     },
@@ -269,6 +286,8 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       config: {
         permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        // H1.9: verifies `currentPassword`, so it is a credential-guessing surface like login.
+        rateLimit: { max: 10, timeWindow: '1 minute' },
       },
       schema: { body: changePasswordBodySchema },
     },
@@ -293,6 +312,8 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       config: {
         permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) },
+        // H1.9: mints a temporary password; bounded even for a super admin.
+        rateLimit: { max: 20, timeWindow: '1 minute' },
       },
       schema: { params: userIdParamsSchema, response: { 200: resetPasswordResultSchema } },
     },

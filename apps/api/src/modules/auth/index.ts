@@ -14,6 +14,7 @@ import {
   sessionCookieOptions,
 } from '../../lib/cookies.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { LoginThrottle, loginThrottle } from '../../lib/login-throttle.js'
 
 const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 
@@ -38,6 +39,18 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const { login, password } = req.body
+      // H1.9 progressive lockout. Keyed on the *submitted* login plus the client IP, before the
+      // account is looked up, so a locked-out attempt against a login that does not exist is
+      // indistinguishable from one against a real account (no enumeration). The failure is recorded
+      // for a nonexistent login too, for the same reason.
+      const throttleKey = LoginThrottle.key('login', login, requestIp(req))
+      const throttled = loginThrottle.check(throttleKey)
+      if (throttled.locked) {
+        reply.header('retry-after', String(throttled.retryAfterSeconds))
+        sendProblem(reply, 'rate_limited')
+        return
+      }
+
       const user = await app.devon.findUserByLogin(login)
       const passwordOk = await verifyPassword(
         user?.passwordHash ?? (await getDummyHash()),
@@ -45,9 +58,11 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
       )
 
       if (!user || !passwordOk || user.status !== 'active') {
+        loginThrottle.recordFailure(throttleKey)
         sendProblem(reply, 'unauthenticated')
         return
       }
+      loginThrottle.recordSuccess(throttleKey)
 
       const twoFactor = await app.devon.getTwoFactorStatus(user.id)
       if (twoFactor.enabled) {

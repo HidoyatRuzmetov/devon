@@ -170,6 +170,14 @@ export async function resolveFilter(
  * resolved to *zero* matches (e.g. `assignee:nobody-by-this-name`) still produces `= any('{}')`,
  * correctly matching nothing rather than silently dropping the restriction. */
 export function cardsFilterSql(f: ResolvedFilter, column = ''): SQL {
+  // H1.7: `sql.raw` is the one place in this package where a string becomes SQL rather than a bound
+  // parameter, so the string it is handed must be provably not from a request. Today every caller
+  // (`analytics/repo.ts`) passes a literal `''` or `'c'`, but nothing in the type signature said so
+  // -- a future caller threading a request field through here would be an injection with no compiler
+  // or reviewer signal. Asserted instead of assumed: a table alias is a short identifier, full stop.
+  if (column && !/^[a-z_][a-z0-9_]{0,30}$/i.test(column)) {
+    throw new Error(`cardsFilterSql: '${'column'}' must be a plain SQL identifier`)
+  }
   const col = (name: string) => sql.raw(column ? `${column}.${name}` : name)
   const parts: SQL[] = [sql`true`]
   // `sql.param(...)`, never a bare `${array}` -- drizzle's tagged template treats a plain JS array

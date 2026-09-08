@@ -265,3 +265,116 @@ describe('can() -- P7: actingFor requires a verified grantId; none exist, so any
     })
   })
 })
+
+// ---------------------------------------------------------------------------------------------
+// H1.16: the privilege-escalation ladder, tested negatively at every rung, and H1.2's object-level
+// half at the `can()` layer -- the same request with a *different department id* substituted must
+// deny. (The database half of H1.2 -- an id from another department being invisible even to a
+// correct query -- is `packages/db/test/integration/rls.isolation.test.ts`, which the `migrate`
+// gate runs; these are the two independent layers the item asks for.)
+// ---------------------------------------------------------------------------------------------
+
+describe('privilege-escalation ladder (H1.16)', () => {
+  const memberOfA = actor({
+    userId: 'u-member',
+    role: 'member',
+    memberships: [{ departmentId: 'd-a', role: 'member' }],
+    departmentId: 'd-a',
+  })
+  const headOfA = actor({
+    userId: 'u-head',
+    role: 'head',
+    memberships: [{ departmentId: 'd-a', role: 'head' }],
+    departmentId: 'd-a',
+  })
+  const superAdmin = actor({ userId: 'u-root', role: 'super_admin' })
+
+  it('rung 1 -- member cannot take a head-only action in their own department', () => {
+    for (const action of ['update', 'delete'] as const) {
+      expect(can(memberOfA, action, { kind: 'department', departmentId: 'd-a' })).toEqual({
+        allowed: false,
+        reason: 'not_head',
+      })
+    }
+  })
+
+  it('rung 2 -- head cannot take an instance (super admin) action', () => {
+    for (const action of ['read', 'create', 'update', 'delete', 'administer'] as const) {
+      expect(can(headOfA, action, { kind: 'instance' })).toEqual({
+        allowed: false,
+        reason: 'not_super_admin',
+      })
+    }
+  })
+
+  it('rung 2b -- member cannot take an instance action either', () => {
+    expect(can(memberOfA, 'administer', { kind: 'instance' })).toEqual({
+      allowed: false,
+      reason: 'not_super_admin',
+    })
+  })
+
+  it('rung 3 -- an instance-wide role claim never substitutes for a membership', () => {
+    // A `super_admin` with no membership in `d-a` cannot write to it; the top of the ladder is not
+    // a shortcut into a department's data (I-8a: the only cross-department lens is read-only).
+    expect(can(superAdmin, 'update', { kind: 'department_child', departmentId: 'd-a' })).toEqual({
+      allowed: false,
+      reason: 'not_a_member',
+    })
+  })
+
+  it('rung 4 -- nobody reaches another user’s personal workspace, at any rung', () => {
+    for (const a of [memberOfA, headOfA, superAdmin]) {
+      expect(can(a, 'read', { kind: 'personal', ownerUserId: 'someone-else' })).toEqual({
+        allowed: false,
+        reason: 'not_owner',
+      })
+    }
+  })
+})
+
+describe('object-level access: the same request with another department’s id (H1.2)', () => {
+  const headOfA = actor({
+    userId: 'u-head',
+    role: 'head',
+    memberships: [{ departmentId: 'd-a', role: 'head' }],
+    departmentId: 'd-a',
+  })
+
+  it('every action a head may take in d-a is denied when the id is swapped to d-b', () => {
+    for (const action of ['read', 'create', 'update', 'archive', 'delete'] as const) {
+      for (const kind of ['department', 'department_child'] as const) {
+        expect(can(headOfA, action, { kind, departmentId: 'd-a' }).allowed).toBe(true)
+        expect(can(headOfA, action, { kind, departmentId: 'd-b' })).toEqual({
+          allowed: false,
+          reason: 'not_a_member',
+        })
+      }
+    }
+  })
+
+  it('a super admin’s view-as lens does not transfer to a different department id', () => {
+    const viewer = actor({
+      userId: 'u-root',
+      role: 'super_admin',
+      departmentId: 'd-a',
+      viewAs: { departmentId: 'd-a' },
+    })
+    expect(can(viewer, 'read', { kind: 'department', departmentId: 'd-a' }).allowed).toBe(true)
+    expect(can(viewer, 'read', { kind: 'department', departmentId: 'd-b' })).toEqual({
+      allowed: false,
+      reason: 'not_a_member',
+    })
+  })
+
+  it('a membership in a *removed* state is not in `memberships` and therefore never matches', () => {
+    // `plugins/session.ts` builds `Actor.memberships` from `listActiveMembershipsForUser`, so a
+    // removed member's id simply is not there -- asserted here so a future change that starts
+    // passing inactive rows into `Actor` fails this test rather than silently re-granting access.
+    const removed = actor({ userId: 'u-ex', role: 'member', memberships: [], departmentId: 'd-a' })
+    expect(can(removed, 'read', { kind: 'department', departmentId: 'd-a' })).toEqual({
+      allowed: false,
+      reason: 'not_a_member',
+    })
+  })
+})

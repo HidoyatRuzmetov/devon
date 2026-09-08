@@ -198,8 +198,7 @@ type PatchProjectInput = {
 }
 
 export type PatchProjectResult =
-  | { ok: true; project: ProjectDTO }
-  | { ok: false; reason: 'not_found' | 'conflict' }
+  { ok: true; project: ProjectDTO } | { ok: false; reason: 'not_found' | 'conflict' }
 
 export async function patchProject(
   ctx: RequestContext,

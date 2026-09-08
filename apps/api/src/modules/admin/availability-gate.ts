@@ -31,8 +31,7 @@ type AvailabilityInput = {
 }
 
 export type AvailabilityDecision =
-  | { allow: true }
-  | { allow: false; problem: 'maintenance' | 'department_paused' }
+  { allow: true } | { allow: false; problem: 'maintenance' | 'department_paused' }
 
 /**
  * Pure decision (unit-tested in `test/unit/availability-gate.test.ts` -- no Fastify, no database).

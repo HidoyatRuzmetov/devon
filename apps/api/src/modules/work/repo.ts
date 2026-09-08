@@ -355,8 +355,7 @@ type PatchCardInput = {
 }
 
 export type PatchCardResult =
-  | { ok: true; card: CardDTO }
-  | { ok: false; reason: 'not_found' | 'conflict' }
+  { ok: true; card: CardDTO } | { ok: false; reason: 'not_found' | 'conflict' }
 
 export async function patchCard(
   ctx: RequestContext,

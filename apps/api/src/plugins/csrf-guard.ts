@@ -49,7 +49,42 @@ export const CSRF_EXEMPT_ROUTES: ReadonlyArray<{ method: string; url: string }> 
   { method: 'PUT', url: '/api/v1/storage/uploads' },
 ])
 
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Every state-changing route actually registered, with whether the guard exempts it. Populated
+     * by this plugin's `onRoute` hook and walked by `test/unit/csrf-guard.test.ts`, exactly as
+     * `authorize.ts`'s `publicRoutes` is walked by `public-routes.test.ts` -- so "is every mutating
+     * route CSRF-protected?" is answered from the real route table, not from a constant. */
+    csrfRoutes: { method: string; url: string; exempt: boolean }[]
+  }
+}
+
+/** The guard's decision, extracted so it can be asserted per registered route without a request. */
+export function isCsrfExemptRoute(config: {
+  csrfExempt?: true
+  permission?: { public?: true }
+}): boolean {
+  if (config.csrfExempt) return true
+  return config.permission?.public === true
+}
+
 export default fp(async function csrfGuardPlugin(app: FastifyInstance) {
+  app.decorate('csrfRoutes', [])
+
+  app.addHook('onRoute', (routeOptions) => {
+    const methods = Array.isArray(routeOptions.method) ? routeOptions.method : [routeOptions.method]
+    for (const method of methods) {
+      if (SAFE_METHODS.has(method as string)) continue
+      app.csrfRoutes.push({
+        method: method as string,
+        url: routeOptions.url,
+        exempt: isCsrfExemptRoute(
+          (routeOptions.config ?? {}) as { csrfExempt?: true; permission?: { public?: true } },
+        ),
+      })
+    }
+  })
+
   app.addHook('preHandler', async (req, reply) => {
     if (SAFE_METHODS.has(req.method)) return
     // No session -> no ambient authority to forge with. (`authorize.ts` has already answered 401 for
@@ -57,9 +92,11 @@ export default fp(async function csrfGuardPlugin(app: FastifyInstance) {
     if (!req.sessionId) return
 
     const config = req.routeOptions.config
-    if (config?.csrfExempt) return
-    const permission = config?.permission
-    if (permission && 'public' in permission && permission.public) return
+    if (
+      isCsrfExemptRoute((config ?? {}) as { csrfExempt?: true; permission?: { public?: true } })
+    ) {
+      return
+    }
 
     if (!checkCsrf(req, reply)) return reply
     return undefined
