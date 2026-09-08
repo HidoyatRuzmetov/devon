@@ -2,6 +2,7 @@
 // (URL-as-state, MODULE-GUIDE.md's "no path params yet" tradeoff), one page's editor + version
 // history. `?tab=onboarding` switches the list view to the onboarding checklist template editor.
 import * as React from 'react'
+import { motion } from 'motion/react'
 import { useT, formatDate, useLocale } from '@devon/i18n'
 import {
   AnimatedCheck,
@@ -13,6 +14,8 @@ import {
   StaggerItem,
   StateView,
   toast,
+  tweenPage,
+  useReducedMotion,
 } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
@@ -34,6 +37,15 @@ import type { PageKind, TiptapNode } from './types.js'
 import type { MentionCandidate } from './mention-suggestion.js'
 
 const PAGE_KINDS: PageKind[] = ['how_we_work', 'brief', 'note', 'onboarding']
+
+/** Shared between a row in `PageList` and `PageDetail`'s own outer panel -- UI-OVERHAUL.md §3
+ * "pages open with a shared-layout transition": the row's own box morphs into the detail panel
+ * instead of the list simply being replaced by it. `PagesScreen` swaps one for the other in the
+ * same commit (a `?page=` search-param change, not a route change), which is exactly the case
+ * `layoutId` is for -- matched by id even though the two elements are otherwise unrelated. */
+function pageLayoutId(id: string): string {
+  return `page-panel-${id}`
+}
 
 const KIND_ICON: Record<PageKind, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   how_we_work: BookOpen,
@@ -137,6 +149,7 @@ function PageList({
   const t = useT()
   const pagesQuery = usePagesQuery()
   const locale = useLocale()
+  const reduced = useReducedMotion()
 
   if (pagesQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (pagesQuery.isError) {
@@ -189,8 +202,9 @@ function PageList({
               {kindPages.map((page) => (
                 <StaggerItem as="li" key={page.id}>
                   <HoverLift>
-                    <button
+                    <motion.button
                       type="button"
+                      {...(reduced ? {} : { layoutId: pageLayoutId(page.id) })}
                       onClick={() => onOpen(page.id)}
                       className="flex w-full items-center gap-3 rounded-md border border-border bg-card px-4 py-3 text-left shadow-1 hover:bg-accent"
                     >
@@ -204,7 +218,7 @@ function PageList({
                       <span className="shrink-0 text-small text-muted-foreground">
                         {formatDate(new Date(page.updatedAt), locale)}
                       </span>
-                    </button>
+                    </motion.button>
                   </HoverLift>
                 </StaggerItem>
               ))}
@@ -258,6 +272,7 @@ function DrawnCheck() {
 
 function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const pageQuery = usePageQuery(id)
   const patchPage = usePatchPageMutation(id)
   const deletePage = useDeletePageMutation()
@@ -295,7 +310,11 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const page = pageQuery.data
 
   return (
-    <div className="flex flex-col gap-6">
+    <motion.div
+      {...(reduced ? {} : { layoutId: pageLayoutId(id) })}
+      transition={tweenPage}
+      className="flex flex-col gap-6 rounded-md"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
@@ -352,7 +371,7 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
           />
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }
 
