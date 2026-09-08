@@ -1,5 +1,9 @@
 node_modules/
 dist/
+# H6.3: apps/web/scripts/move-sourcemaps.mjs moves the production build's `.map` files here, out of
+# `dist/` (what a static server actually serves) -- kept only long enough to hand to an error
+# tracker's upload step, never committed.
+dist-sourcemaps/
 .env
 .env.*
 !.env.example

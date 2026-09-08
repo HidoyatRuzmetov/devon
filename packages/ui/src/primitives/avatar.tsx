@@ -63,7 +63,18 @@ export const Avatar = React.forwardRef<
     )}
     {...props}
   >
-    {src ? <AvatarPrimitive.Image src={src} alt={alt} className="size-full object-cover" /> : null}
+    {src ? (
+      // H6.1 "lazy loading below the fold": every caller renders dozens of these at once (board
+      // columns, the people grid, member lists) -- native lazy-loading defers the ones outside the
+      // viewport without this component (or its callers) needing to know which ones those are.
+      <AvatarPrimitive.Image
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        className="size-full object-cover"
+      />
+    ) : null}
     <AvatarPrimitive.Fallback delayMs={src ? 400 : 0} aria-hidden="true">
       {initials}
     </AvatarPrimitive.Fallback>
