@@ -176,13 +176,20 @@ async function runNightlyRecompute(log: FastifyBaseLogger): Promise<void> {
   }
   const yesterday = addDaysToDateString(tashkentDateString(), -1)
   const departmentIds = await listActiveDepartmentIds()
-  // Plain indexed `for`, never `for-of` (I-16's "no await in a loop" convention -- see
-  // `notifications/jobs.ts`'s header for the same reasoning applied to a department-scale batch job).
-  for (let i = 0; i < departmentIds.length; i += 1) {
-    try {
-      await recomputeDay(departmentIds[i]!, yesterday)
-    } catch (err) {
-      log.error({ err, departmentId: departmentIds[i] }, 'analytics: nightly recompute failed')
+  // H3.1/H3.2: every department's recompute is independent (its own transaction, its own rows) and
+  // there is no external rate limit to respect here (unlike `notifications/jobs.ts`'s Telegram sends)
+  // -- Promise.allSettled runs them concurrently while still isolating one department's failure from
+  // the rest, instead of paying N sequential round trips on a nightly batch job.
+  const results = await Promise.allSettled(
+    departmentIds.map((departmentId) => recomputeDay(departmentId, yesterday)),
+  )
+  for (let i = 0; i < results.length; i += 1) {
+    const result = results[i]!
+    if (result.status === 'rejected') {
+      log.error(
+        { err: result.reason, departmentId: departmentIds[i] },
+        'analytics: nightly recompute failed',
+      )
     }
   }
 }

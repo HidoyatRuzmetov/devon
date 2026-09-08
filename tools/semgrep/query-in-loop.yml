@@ -51,3 +51,10 @@ rules:
         - "**/*.test.ts"
         - "**/*.spec.ts"
         - "**/test/**"
+        # Seed fixtures (`pnpm --filter @devon/db seed`) run once at demo boot over a fixed, tiny
+        # cardinality (a handful of demo departments/users) -- never a production request path -- and
+        # most of their loops switch RLS session context per iteration (`asUser`/`asDepartment`,
+        # `set_config`), which by construction cannot be folded into one query across iterations
+        # (H3.1 is about batching *independent* reads/writes, not ones that each need a different
+        # tenancy context). Reviewed once here rather than annotating every line individually.
+        - "**/packages/db/src/seed/**"

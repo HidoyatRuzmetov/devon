@@ -928,11 +928,9 @@ export async function getSystemHealth(): Promise<{
       const entries = await readdir(dir)
       if (entries.length === 0)
         return { status: 'degraded', detail: { code: 'backups.none' }, latencyMs: null }
-      let newest = 0
-      for (const entry of entries) {
-        const s = await stat(join(dir, entry))
-        if (s.mtimeMs > newest) newest = s.mtimeMs
-      }
+      // H3.1: stat every backup file entry independently in parallel, not one at a time.
+      const stats = await Promise.all(entries.map((entry) => stat(join(dir, entry))))
+      const newest = stats.reduce((max, s) => Math.max(max, s.mtimeMs), 0)
       const ageHours = (Date.now() - newest) / 3_600_000
       return {
         status: ageHours > 48 ? 'degraded' : 'ok',

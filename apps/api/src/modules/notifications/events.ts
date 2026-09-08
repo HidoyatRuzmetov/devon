@@ -119,6 +119,9 @@ function makeHandler(log: FastifyBaseLogger): EventHandler {
     // invocation, and keeps a thrown error attributable to a single target.
     for (let i = 0; i < notify.targetUserIds.length; i += 1) {
       const userId = notify.targetUserIds[i]!
+      // See this function's comment above (deliberately sequential so a failing delivery to one
+      // target can never race another target's write, and stays attributable).
+      // nosemgrep: query-in-loop
       await notifyUser(log, {
         userId,
         type: event.type,

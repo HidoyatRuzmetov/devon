@@ -48,6 +48,7 @@ export async function dispatch(event: OutboxEventRecord): Promise<DispatchOutcom
     // no-await-in-loop lint rule (which only flags for-of bodies) does not mistake this for the
     // independent-items case it exists to catch.
     for (let i = 0; i < matched.length; i += 1) {
+      // nosemgrep: query-in-loop -- see this function's comment above.
       await matched[i]!(event)
     }
     return { ok: true }
@@ -103,13 +104,16 @@ async function drainWith(
   // this worker (see MODULE-GUIDE.md "Domain events").
   for (let i = 0; i < rows.length; i += 1) {
     const row = rows[i]!
+    // nosemgrep: query-in-loop -- see this function's comment above.
     const outcome = await dispatch(toRecord(row))
     if (outcome.ok) {
+      // nosemgrep: query-in-loop -- see this function's comment above.
       await client.query('update app.outbox_events set processed_at = now() where id = $1', [
         row.id,
       ])
       processed += 1
     } else {
+      // nosemgrep: query-in-loop -- see this function's comment above.
       await client.query(
         'update app.outbox_events set attempts = attempts + 1, last_error = $2 where id = $1',
         [row.id, outcome.error.slice(0, 2000)],

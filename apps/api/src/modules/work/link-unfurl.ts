@@ -125,11 +125,15 @@ export async function unfurlLink(rawUrl: string): Promise<UnfurlResult> {
     let html = ''
     const decoder = new TextDecoder()
     for (;;) {
+      // Reading a byte stream chunk by chunk is inherently sequential (each `read()` depends on the
+      // previous one), not an independent-item batch.
+      // nosemgrep: query-in-loop
       const { done, value } = await reader.read()
       if (done) break
       received += value.byteLength
       html += decoder.decode(value, { stream: true })
       if (received >= MAX_BODY_BYTES || /<\/head>/i.test(html)) {
+        // nosemgrep: query-in-loop -- terminal cleanup of the same stream, not a batchable read.
         await reader.cancel().catch(() => {})
         break
       }

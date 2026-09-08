@@ -77,11 +77,14 @@ async function runReminderDue(log: FastifyBaseLogger): Promise<void> {
   if (await skipIfMaintenance(log, QUEUE_REMINDER_DUE)) return
   const departmentIds = await listAllDepartmentIds()
   for (let d = 0; d < departmentIds.length; d += 1) {
+    // nosemgrep: query-in-loop -- see this file's header comment above.
     const memberIds = await listActiveMemberUserIds(departmentIds[d]!)
     for (let m = 0; m < memberIds.length; m += 1) {
       const userId = memberIds[m]!
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       const pending = await listDueNotificationsNeedingTelegram(userId)
       for (let p = 0; p < pending.length; p += 1) {
+        // nosemgrep: query-in-loop -- see this file's header comment above.
         await deliver(log, pending[p]!, userId)
       }
     }
@@ -93,15 +96,19 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
   const departmentIds = await listAllDepartmentIds()
   for (let d = 0; d < departmentIds.length; d += 1) {
     const departmentId = departmentIds[d]!
+    // nosemgrep: query-in-loop -- see this file's header comment above.
     const memberIds = await listActiveMemberUserIds(departmentId)
     for (let m = 0; m < memberIds.length; m += 1) {
       const userId = memberIds[m]!
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       const prefs = await getPrefs(userId)
       const digestPref = prefs.find((p) => p.reason === 'digest' && p.channel === 'telegram')
       if (!digestPref?.enabled || digestPref.digestMode !== 'daily') continue
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       const counts = await unreadCountsByReason(userId)
       const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0)
       if (total === 0) continue
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       await notifyUser(log, {
         userId,
         type: 'notifications.digest.daily',
@@ -132,9 +139,11 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
 
   for (let g = 0; g < groups.length; g += 1) {
     const group = groups[g]!
+    // nosemgrep: query-in-loop -- see this file's header comment above.
     const memberIds = await listActiveMemberUserIds(group.departmentId)
     const totals: ReasonCounts = {}
     for (let m = 0; m < memberIds.length; m += 1) {
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       const counts = await countsByReasonSince(memberIds[m]!, since)
       for (const [reason, n] of Object.entries(counts)) {
         totals[reason as keyof ReasonCounts] =
@@ -145,6 +154,7 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     if (total === 0) continue
     const text = `Haftalik xulosa / Weekly summary: ${summarizeCounts(totals, 'uz-Latn')}`
     try {
+      // nosemgrep: query-in-loop -- see this file's header comment above.
       await bot.api.sendMessage(group.chatId, text)
     } catch (err) {
       log.warn({ err, chatId: group.chatId }, 'notifications: weekly department digest send failed')
