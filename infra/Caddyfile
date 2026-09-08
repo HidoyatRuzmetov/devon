@@ -115,6 +115,38 @@
 	handle_errors {
 		@upstream_down expression {http.error.status_code} >= 500
 		handle @upstream_down {
+			# H1.5/H1.10: the site-level `header` above runs as part of the *normal* route chain, which
+			# an error aborts, so the error routes are their own chain and get their own headers. This
+			# page is served from the app's own origin, so it must not be the one response on that
+			# origin with no policy.
+			#
+			# `maintenance.html` is deliberately a single self-contained file with no network access of
+			# any kind -- it exists for the case where the api and web containers are unreachable, on a
+			# box that may have no internet at all -- so its stylesheet and its locale/auto-reload
+			# script are inline, and a nonce is impossible (this is a static file server; it cannot
+			# rewrite the document per request). The two sha256 hashes below admit exactly those two
+			# blocks and nothing else: no injected script, and no second inline block, can execute.
+			#
+			# If maintenance.html is ever edited, recompute both hashes: they are the base64 sha256 of the
+			# exact bytes BETWEEN the style and script tags -- every byte, including the newline that follows
+			# the opening tag and the indentation that precedes the closing one, which is what the browser
+			# hashes and what an off-by-one trim gets wrong. Any CSP hash generator, or the browser console -- a refusal logs the hash the
+			# browser computed and expected -- gives the same value. A stale hash never breaks the page text:
+			# it still renders and still says the service is unavailable. It only disables the language
+			# guess and the automatic retry, which the page's own
+			# `<noscript>`-equivalent copy already covers.
+			header {
+				Content-Security-Policy "default-src 'none'; style-src 'sha256-ofIb4LymHslEln6DMAVROjYqtbDnfaQnv4UzGApxxGM='; script-src 'sha256-fyI1dWZ1Yfu0Q4gc44clgCwkdqMSC/FCfZ9SC64teqA='; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+				X-Content-Type-Options "nosniff"
+				X-Frame-Options "DENY"
+				Referrer-Policy "no-referrer"
+				Cross-Origin-Opener-Policy "same-origin"
+				Cross-Origin-Resource-Policy "same-origin"
+				Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+				# The app is down; nothing about this page should be remembered as the app's answer.
+				Cache-Control "no-store"
+				-Server
+			}
 			root * /srv/maintenance
 			rewrite * /maintenance.html
 			file_server
