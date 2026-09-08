@@ -579,9 +579,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         // value reaching an outbound fetch. `unfurlLink` is that control, not a bypass of it -- it
         // resolves DNS itself and refuses loopback, link-local (including 169.254.169.254),
         // RFC 1918, CGNAT and unique-local addresses before a byte is sent, refuses embedded
-        // credentials and non-http(s) schemes, sets `redirect: 'manual'` so a redirect into a
-        // private range is never followed, bounds the body at 200 kB and the whole call at 4 s
-        // (`modules/work/link-unfurl.ts`).
+        // credentials and non-http(s) schemes, pins the socket to the address it approved so a DNS
+        // rebind cannot move the connection afterwards, never follows a redirect (the target is a
+        // new URL none of those checks have run against), and bounds the body at 200 kB and the
+        // whole call at 4 s (`modules/work/link-unfurl.ts`, `test/unit/link-unfurl.test.ts`).
         // nosemgrep: javascript.lang.security.audit.ssrf.ssrf-requests
         reply.send(await unfurlLink(req.body.url))
       } catch (err) {

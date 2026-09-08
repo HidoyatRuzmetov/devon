@@ -7,6 +7,7 @@ import { createRepo } from './db/repo.js'
 import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
 import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
+import { installFatalHandlers } from './lib/fatal.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -43,3 +44,10 @@ main().catch((err: unknown) => {
   console.error(err)
   process.exit(1)
 })
+
+// HARDENING H16.1: a post-boot unhandled rejection or uncaught exception logs one structured line
+// and exits 1, instead of Node's defaults (a warning and a process that keeps serving, or a bare
+// stack with no record). Installed here, in the process entry point, and nowhere else: `buildApp()`
+// is used by unit tests and by the `*:prove` scripts, which must never gain a handler that calls
+// `process.exit`. The reasoning and the unit tests are in `lib/fatal.ts`.
+installFatalHandlers(process)
