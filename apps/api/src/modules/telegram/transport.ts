@@ -8,6 +8,7 @@
 // `getBot()` returns `null`, never throws, and the web settings screen reads `isTelegramConfigured()`
 // to render that hint (`GET /api/v1/telegram/status`, `index.ts`).
 import { Bot, InlineKeyboard } from 'grammy'
+import type { Config } from '../../config.js'
 import type { NotificationRow } from '../notifications/repo.js'
 import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
@@ -16,10 +17,26 @@ import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
 let cachedBot: Bot | null = null
 let cachedToken: string | null = null
 
+// H7.3/H17.1: this module's configuration is now the boot-time, Zod-validated `Config`, handed over
+// once when the telegram plugin registers (`index.ts`), instead of `process.env` reads scattered
+// through the request path. `apps/api/src/server.ts` stays the only file in the package that touches
+// `process.env` at all, and a malformed `TELEGRAM_WEBHOOK_SECRET` now fails the boot rather than
+// silently producing a weak webhook URL.
+let telegramConfig: Pick<
+  Config,
+  'TELEGRAM_BOT_TOKEN' | 'TELEGRAM_BOT_USERNAME' | 'DEVON_PUBLIC_URL'
+> | null = null
+
+export function configureTelegram(config: Config): void {
+  telegramConfig = {
+    TELEGRAM_BOT_TOKEN: config.TELEGRAM_BOT_TOKEN,
+    TELEGRAM_BOT_USERNAME: config.TELEGRAM_BOT_USERNAME,
+    DEVON_PUBLIC_URL: config.DEVON_PUBLIC_URL,
+  }
+}
+
 function readToken(): string | null {
-  const raw = process.env['TELEGRAM_BOT_TOKEN']
-  const trimmed = raw?.trim()
-  return trimmed && trimmed.length > 0 ? trimmed : null
+  return telegramConfig?.TELEGRAM_BOT_TOKEN ?? null
 }
 
 export function isTelegramConfigured(): boolean {
@@ -27,13 +44,11 @@ export function isTelegramConfigured(): boolean {
 }
 
 export function publicUrl(): string {
-  return process.env['DEVON_PUBLIC_URL']?.trim() || 'http://localhost:5173'
+  return telegramConfig?.DEVON_PUBLIC_URL ?? 'http://localhost:5173'
 }
 
-/** Lazily constructs (and caches) the grammY `Bot` -- `null` when no token is configured. Re-reads the
- * env var each call (cheap) so a token added to a running process's environment via a supervisor
- * reload picks up without a restart; the constructed `Bot` instance itself is cached and only rebuilt
- * if the token value actually changes. */
+/** Lazily constructs (and caches) the grammY `Bot` -- `null` when no token is configured. The
+ * constructed `Bot` instance is cached and only rebuilt if the configured token actually changes. */
 export function getBot(): Bot | null {
   const token = readToken()
   if (!token) {

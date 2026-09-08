@@ -21,7 +21,12 @@ export async function printSetupUrlIfNeeded(
   // "havola eskirgan yoki notoʻgʻri" on the exact link this function prints) -- the one link a
   // brand-new instance's operator cannot fail to use.
   const url = `${config.DEVON_PUBLIC_URL}/setup?token=${issued.token}`
-  app.log.info({ setupUrl: url, expiresAt: issued.expiresAt.toISOString() }, 'first-boot setup URL')
+  // H1.11/H1.1: the URL embeds a live, single-use credential. It used to be written into the
+  // structured log as `setupUrl` -- i.e. into whatever aggregates, ships and backs those logs up,
+  // where it stays usable until someone completes setup. The log line now records only that a token
+  // was issued and when it expires; the token itself goes to the operator's terminal and nowhere
+  // else (`app.setup_tokens` stores a SHA-256 hash, never the raw value -- `lib/tokens.ts`).
+  app.log.info({ expiresAt: issued.expiresAt.toISOString() }, 'first-boot setup URL printed')
   // Deliberately also a plain stdout line: this is the one message an operator with no log
   // aggregation must be able to see and copy on a bare `pnpm start`.
   // eslint-disable-next-line no-console -- the one intentional operator-facing line in this package

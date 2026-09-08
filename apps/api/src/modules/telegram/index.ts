@@ -6,6 +6,7 @@ import type { Update } from 'grammy/types'
 import { z } from 'zod'
 import QRCode from 'qrcode'
 import type { FastifyRequest } from 'fastify'
+import type { Config } from '../../config.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
@@ -19,7 +20,8 @@ import {
   unlink,
 } from './repo.js'
 import { registerBotHandlers } from './bot.js'
-import { getBot, isTelegramConfigured, publicUrl } from './transport.js'
+import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
+import { configureTelegram, getBot, isTelegramConfigured, publicUrl } from './transport.js'
 import {
   groupConnectCodeSchema,
   groupListSchema,
@@ -41,16 +43,22 @@ function auditCtxFromReq(req: FastifyRequest): AuditCtx {
   }
 }
 
-function readWebhookSecret(): string | null {
-  const raw = process.env['TELEGRAM_WEBHOOK_SECRET']
-  const trimmed = raw?.trim()
-  return trimmed && trimmed.length > 0 ? trimmed : null
+// H1.14/H7.3: the webhook secret, the bot token and the bot username are parsed and validated once,
+// at boot, by `apps/api/src/config.ts` (a secret shorter than 32 CSPRNG characters is now a refused
+// boot, not a silently weak webhook path) -- never re-read from `process.env` per request.
+function readWebhookSecret(app: { devonConfig: Config }): string | null {
+  return app.devonConfig.TELEGRAM_WEBHOOK_SECRET ?? null
 }
+
+/** Process-wide, bounded (`webhook-guard.ts`). One bot per process, so one window. */
+const replayWindow = new UpdateReplayWindow()
 
 let botHandlersRegistered = false
 let pollingHandle: { stop(): Promise<void> } | null = null
 
 const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
+  // Hand this module its boot-validated configuration before anything asks for a bot (H7.3).
+  configureTelegram(app.devonConfig)
   const bot = getBot()
   if (bot && !botHandlersRegistered) {
     registerBotHandlers(bot)
@@ -72,7 +80,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const status = await getLinkStatus(req.actor!.userId)
-      const botUsername = process.env['TELEGRAM_BOT_USERNAME']?.trim() || null
+      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME ?? null
       reply.send({
         linked: status.linked,
         linkedAt: status.linkedAt ? status.linkedAt.toISOString() : null,
@@ -96,7 +104,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const { code, expiresAt } = await issueLinkCode(req.actor!.userId)
-      const botUsername = process.env['TELEGRAM_BOT_USERNAME']?.trim()
+      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME
       const deepLink = botUsername ? `https://t.me/${botUsername}?start=${code}` : null
       let qrDataUrl: string | null = null
       if (deepLink) {
@@ -267,14 +275,40 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/telegram/webhook/:secret',
     {
-      config: { permission: { public: true } },
+      config: {
+        permission: { public: true },
+        // H1.9: an unauthenticated, internet-reachable POST. Telegram's own delivery rate for one
+        // bot is far below this; anything above it is someone else's traffic.
+        rateLimit: { max: 120, timeWindow: '1 minute' },
+      },
       schema: { params: webhookParamsSchema, body: z.record(z.string(), z.unknown()) },
     },
     async (req, reply) => {
-      const expected = readWebhookSecret()
+      const expected = readWebhookSecret(app)
       const current = getBot()
-      if (!expected || !current || req.params.secret !== expected) {
+      // Both copies of the secret must match, both in constant time (H1.14, `webhook-guard.ts`):
+      // the one in the path (which Telegram echoes because we chose that URL) and the one in
+      // `X-Telegram-Bot-Api-Secret-Token` (which only Telegram, holding the value passed to
+      // `setWebhook`, can produce -- and which never appears in a proxy access log).
+      const headerSecret = req.headers[TELEGRAM_SECRET_HEADER]
+      const headerValue = Array.isArray(headerSecret) ? headerSecret[0] : headerSecret
+      if (
+        !expected ||
+        !current ||
+        !secretsEqual(req.params.secret, expected) ||
+        !secretsEqual(headerValue, expected)
+      ) {
+        // 404, never 401/403: an unauthenticated prober must not be able to tell a wrong secret
+        // from a bot that is not configured at all.
         reply.code(404).send()
+        return
+      }
+      // H10.1 replay protection. `update_id` is Telegram's own monotonic per-bot sequence number; a
+      // captured delivery replayed against this endpoint is answered 200 (so a genuine Telegram
+      // retry is never re-driven either) but is not handled a second time.
+      const updateId = (req.body as { update_id?: unknown }).update_id
+      if (typeof updateId !== 'number' || !replayWindow.accept(updateId)) {
+        reply.code(200).send({ ok: true })
         return
       }
       try {
@@ -302,12 +336,15 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       return
     }
 
-    const secret = readWebhookSecret()
+    const secret = readWebhookSecret(app)
     if (app.devonConfig.NODE_ENV === 'production' && secret) {
       const url = `${publicUrl()}/api/v1/telegram/webhook/${secret}`
       try {
         await activeBot.api.setWebhook(url, { secret_token: secret })
-        app.log.info({ url }, 'telegram: webhook registered')
+        // H1.11/H1.1: the URL contains the webhook secret -- logging it (as this line used to)
+        // wrote a live credential into every log sink and every backup of them. The path is a
+        // constant plus that secret, so there is nothing left worth logging but the fact.
+        app.log.info({}, 'telegram: webhook registered')
       } catch (err) {
         app.log.warn(
           { err },
