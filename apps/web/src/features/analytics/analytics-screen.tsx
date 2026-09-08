@@ -2,8 +2,9 @@
 // lists them. URL-as-state for the filter (design.md §8's convention, same as work's board filters)
 // so a link to a specific view is shareable and survives a reload.
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
-import { PageHeader, StateView } from '@devon/ui'
+import { PageHeader, Skeleton, StateView, useReducedMotion } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import {
@@ -35,6 +36,7 @@ function defaultRange(): { since: string; until: string } {
 
 export default function AnalyticsScreen() {
   const t = useT()
+  const analyticsReduced = useReducedMotion()
   const meQuery = useMeQuery()
   const search = useSearchParams()
   const fallback = React.useMemo(defaultRange, [])
@@ -77,7 +79,6 @@ export default function AnalyticsScreen() {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }
 
-  if (summaryQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (summaryQuery.isError) {
     return (
       <StateView
@@ -91,44 +92,97 @@ export default function AnalyticsScreen() {
 
   const summary = summaryQuery.data
   const isEmpty =
+    summary !== undefined &&
     summary.throughput.every((p) => p.count === 0) &&
     summary.loadPerPerson.every((p) => p.openCount === 0) &&
     summary.projectProgress.length === 0 &&
     summary.eventsParticipation.length === 0 &&
     summary.pollTurnout.length === 0
 
-  const sectionProps = {
-    summary,
-    query: value,
-    pinnedKeys,
-    onTogglePin: handleTogglePin,
-    pinBusy: pinChart.isPending || unpinChart.isPending,
-  }
+  const sectionProps = summary
+    ? {
+        summary,
+        query: value,
+        pinnedKeys,
+        onTogglePin: handleTogglePin,
+        pinBusy: pinChart.isPending || unpinChart.isPending,
+      }
+    : null
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader eyebrow={t('analytics.eyebrow')} title={t('analytics.title')} />
       <FilterBar value={value} onChange={setValue} />
-      <AskAnalytics summary={summary} onApplyFilter={(filter) => setValue({ ...value, filter })} />
+      {summary ? (
+        <AskAnalytics
+          summary={summary}
+          onApplyFilter={(filter) => setValue({ ...value, filter })}
+        />
+      ) : null}
 
-      {isEmpty ? (
-        <StateView kind="empty" titleKey="analytics.empty.title" bodyKey="analytics.empty.body" />
-      ) : (
-        <>
-          <KpiOverviewRow summary={summary} />
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-            <ThroughputSection {...sectionProps} />
-            <OnTimeRateSection {...sectionProps} />
-            <OpenVsOverdueSection {...sectionProps} />
-            <LoadPerPersonSection {...sectionProps} />
-            <LoadPerUnitSection {...sectionProps} />
-            <ProjectProgressSection {...sectionProps} />
-            <EventsParticipationSection {...sectionProps} />
-            <PollTurnoutSection {...sectionProps} />
-            <PersonalStatsSection {...sectionProps} />
-          </div>
-        </>
-      )}
+      {/* round2 SEV2 "no skeleton -> chart crossfade": a date-range change used to swap the whole
+          grid for a full-page spinner, which also hid the filter bar mid-edit -- the chrome above
+          now stays mounted and only this region crossfades between its skeleton and loaded shapes,
+          keyed on whether `summary` has resolved yet. */}
+      <AnimatePresence mode="wait" initial={false}>
+        {!sectionProps ? (
+          <motion.div
+            key="skeleton"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
+            className="flex flex-col gap-6"
+          >
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-24 w-full" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Skeleton key={i} className="h-64 w-full" />
+              ))}
+            </div>
+          </motion.div>
+        ) : isEmpty ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
+          >
+            <StateView
+              kind="empty"
+              titleKey="analytics.empty.title"
+              bodyKey="analytics.empty.body"
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="charts"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
+            className="flex flex-col gap-6"
+          >
+            <KpiOverviewRow summary={summary!} />
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <ThroughputSection {...sectionProps} />
+              <OnTimeRateSection {...sectionProps} />
+              <OpenVsOverdueSection {...sectionProps} />
+              <LoadPerPersonSection {...sectionProps} />
+              <LoadPerUnitSection {...sectionProps} />
+              <ProjectProgressSection {...sectionProps} />
+              <EventsParticipationSection {...sectionProps} />
+              <PollTurnoutSection {...sectionProps} />
+              <PersonalStatsSection {...sectionProps} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

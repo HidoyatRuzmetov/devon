@@ -10,6 +10,7 @@
 // (`sr-only`) data table mirroring exactly what the chart shows, plus a "view as table" toggle that
 // un-hides it visibly for anyone who wants the numbers instead of the shape.
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
 import {
   DropdownMenu,
@@ -102,6 +103,7 @@ export function ChartCard({
   legend,
 }: ChartCardProps) {
   const t = useT()
+  const reduced = useReducedMotion()
   const [showTable, setShowTable] = React.useState(false)
   const bodyRef = React.useRef<HTMLDivElement>(null)
   // A variable, not a nested JSX ternary: the i18n gate's hard-coded-JSX-text heuristic scans for a
@@ -162,17 +164,41 @@ export function ChartCard({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {/* round2 SEV2 "pin/unpin is instant": the glyph swap now pops in instead of the two
+              icons simply trading places -- `AnimatePresence` plays the outgoing one's exit and
+              the incoming one's entrance instead of a single-frame swap. */}
           <IconButton
             aria-label={t(pinned ? 'analytics.actions.unpin' : 'analytics.actions.pin')}
             aria-pressed={pinned}
             disabled={pinBusy}
             onClick={onTogglePin}
+            className="overflow-hidden"
           >
-            {pinned ? (
-              <PinOff className="size-4" aria-hidden="true" />
-            ) : (
-              <Pin className="size-4" aria-hidden="true" />
-            )}
+            <AnimatePresence mode="popLayout" initial={false}>
+              {pinned ? (
+                <motion.span
+                  key="pinned"
+                  className="inline-flex"
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5, rotate: -20 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5 }}
+                  transition={{ duration: reduced ? 0.1 : 0.2, ease: 'easeOut' }}
+                >
+                  <PinOff className="size-4" aria-hidden="true" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="unpinned"
+                  className="inline-flex"
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5, rotate: 20 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5 }}
+                  transition={{ duration: reduced ? 0.1 : 0.2, ease: 'easeOut' }}
+                >
+                  <Pin className="size-4" aria-hidden="true" />
+                </motion.span>
+              )}
+            </AnimatePresence>
           </IconButton>
         </div>
       </header>
@@ -200,6 +226,12 @@ export function ChartCard({
           handed this card, while `minHeight` (also sections.tsx, per chart) keeps a short card from
           collapsing below its own data-appropriate floor. */}
       <div ref={bodyRef} className="flex min-h-0 flex-1 flex-col rounded-sm bg-card">
+        {/* round2 SEV2 "charts do not re-animate when the date range changes": `csvHref` already
+            carries every filter param a section reads (since/until/filter, via `exportCsvUrl`), so
+            it changes exactly when the query does -- remounting the chart body on that key forces
+            Recharts to replay each `isAnimationActive` draw-in instead of just morphing the same
+            mounted shapes to their new values. Keyed one level inside the `toPng`-targeted
+            `bodyRef` div, not on it, so PNG export never loses its ref mid-transition. */}
         {showTable ? (
           <div className="overflow-x-auto">
             <table className="w-full text-small">
@@ -226,7 +258,9 @@ export function ChartCard({
             </table>
           </div>
         ) : (
-          chartBody
+          <div key={csvHref} className="flex min-h-0 flex-1 flex-col">
+            {chartBody}
+          </div>
         )}
       </div>
 
