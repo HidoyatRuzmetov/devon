@@ -7,9 +7,19 @@
 // current department's facts (name, head, member count, role), the head's invite block (link, QR,
 // password) right on the hub, and a switcher for any other membership.
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { ArrowRight, Building2, ChevronRight, Copy, Plus, RefreshCw, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  ChevronRight,
+  Copy,
+  Plus,
+  RefreshCw,
+  Users,
+} from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
   Avatar,
@@ -34,6 +44,7 @@ import {
   cn,
   initialsFromName,
   toast,
+  useReducedMotion,
 } from '@devon/ui'
 import { avatarUrl } from '../../lib/avatar.js'
 import { useSession, useDepartment, useMeQuery } from '../../lib/session.js'
@@ -101,6 +112,7 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
  * that says exactly that, rather than firing on a single click. */
 function InviteBlock({ departmentId }: { departmentId: string }) {
   const t = useT()
+  const reduced = useReducedMotion()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
   const inviteQuery = useQuery({
@@ -109,6 +121,11 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
   })
   const [revealedPassword, setRevealedPassword] = React.useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = React.useState(false)
+  // round2 SEV3 "copying the invite gives no inline confirmation animation (only a toast)": the
+  // button itself morphs its icon to a check for a beat, the same "acted on, here is proof" shape
+  // `Button`'s own `success` prop gives a text button -- there is no icon-button equivalent, so this
+  // is done by hand for the one icon-only copy action in the product that needs it.
+  const [justCopied, setJustCopied] = React.useState(false)
 
   const rotatePassword = useMutation({
     mutationFn: () => rotateJoinPassword(departmentId, meQuery.data?.csrfToken ?? ''),
@@ -137,13 +154,13 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
     const text = revealedPassword
       ? t('departments.invite.inviteText', { link, password: revealedPassword })
       : link
-    void navigator.clipboard
-      .writeText(text)
-      .then(() =>
-        toast(
-          t(revealedPassword ? 'departments.invite.copiedInvite' : 'departments.invite.copiedLink'),
-        ),
+    void navigator.clipboard.writeText(text).then(() => {
+      toast(
+        t(revealedPassword ? 'departments.invite.copiedInvite' : 'departments.invite.copiedLink'),
       )
+      setJustCopied(true)
+      window.setTimeout(() => setJustCopied(false), 1400)
+    })
   }
 
   return (
@@ -158,21 +175,49 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
               uses. */}
           <div className="flex items-center gap-2">
             <Input readOnly value={link} className="min-w-0 flex-1 font-mono text-small" />
-            <IconButton aria-label={t('departments.invite.copyInvite')} onClick={copyInvitation}>
-              <Copy className="size-4" aria-hidden="true" />
+            <IconButton
+              aria-label={t('departments.invite.copyInvite')}
+              onClick={copyInvitation}
+              className="overflow-hidden"
+            >
+              <AnimatePresence mode="popLayout" initial={false}>
+                {justCopied ? (
+                  <motion.span
+                    key="copied"
+                    className="inline-flex text-success"
+                    initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduced ? 0.1 : 0.18 }}
+                  >
+                    <Check className="size-4" aria-hidden="true" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="copy"
+                    className="inline-flex"
+                    initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: reduced ? 0.1 : 0.18 }}
+                  >
+                    <Copy className="size-4" aria-hidden="true" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </IconButton>
           </div>
         </div>
         {/* Fixed black-on-white, never theme tokens: a QR scanner needs the highest contrast the
-            camera can find, not the current colour scheme. */}
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
+            camera can find, not the current colour scheme. round2 SEV3 "the QR does not fade in". */}
+        <Reveal className="flex shrink-0 flex-col items-center gap-1.5">
           <div className="rounded-md border border-border bg-white p-3">
             <QRCodeSVG value={link} size={112} fgColor="#000000" bgColor="#ffffff" />
           </div>
           <span className="text-caption text-muted-foreground">
             {t('departments.invite.qrLabel')}
           </span>
-        </div>
+        </Reveal>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border pt-4">
@@ -423,9 +468,19 @@ export default function DepartmentsHubScreen() {
         }
       />
 
-      <Reveal>
-        <CurrentDepartmentCard department={active} />
-      </Reveal>
+      {/* round2 SEV3 "switching department does not transition": crossfades to the newly active
+          department's card instead of its facts simply swapping in place. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={active.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.16 }}
+        >
+          <CurrentDepartmentCard department={active} />
+        </motion.div>
+      </AnimatePresence>
 
       {others.length > 0 ? (
         <div className="flex flex-col gap-3">
