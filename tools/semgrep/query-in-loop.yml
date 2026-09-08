@@ -1,0 +1,53 @@
+## HARDENING H3.1 / H29.1 — "no query in a loop". Backed by TECH-SPEC §16's own rule ("no query in a
+## loop") and the codebase's own established convention (see e.g. `apps/api/src/modules/events/repo.ts`
+## `insertPollOptions`'s comment: "Independent rows for the same brand-new poll -- Promise.all, not a
+## for-of loop with an await inside it").
+##
+## Heuristic: any `await` inside a `for`/`for-of`/`for-in`/`while` loop body is a query-in-loop
+## candidate — in this codebase almost every DB call, HTTP call and job-queue publish is `await`ed, and
+## the fix is always the same shape (`Promise.all` over independent items, a single batched/relational
+## query, or a bulk insert/update). A loop that is awaiting something with a genuine, unavoidable
+## sequential dependency (e.g. a retry-with-backoff sleep, or writes that must be strictly ordered) is
+## the rare, reviewed exception — suppress those with a `// nosemgrep: query-in-loop` comment on the
+## `await` line explaining why the iteration cannot run independently, not by weakening this rule.
+rules:
+  - id: query-in-loop
+    languages: [typescript, ts]
+    severity: WARNING
+    message: >-
+      Await inside a loop body (H3.1/H29.1 "no query in a loop"). If each iteration is independent,
+      batch with Promise.all(items.map(...)), a single relational/batched query, or a bulk
+      insert/update instead of awaiting one at a time. If the sequence is genuinely required (retry
+      backoff, strictly-ordered writes), suppress with a `// nosemgrep: query-in-loop` comment
+      explaining why.
+    patterns:
+      - pattern: await $X
+      - pattern-either:
+          - pattern-inside: |
+              for (...) { ... }
+          - pattern-inside: |
+              for (const $I of $ITER) { ... }
+          - pattern-inside: |
+              for (let $I of $ITER) { ... }
+          - pattern-inside: |
+              for ($I in $OBJ) { ... }
+          - pattern-inside: |
+              while (...) { ... }
+      # Exclude awaits that live inside a callback passed to an array method (typically
+      # `items.map(async (x) => { await ... })` fed to `Promise.all`, which runs concurrently and is
+      # the *fix*, not the problem) -- scoped to the callback itself (not the whole enclosing
+      # function, which would otherwise swallow every await in the file) so only an await directly in
+      # the loop's own scope counts.
+      - pattern-not-inside: $ARR.$METHOD(async ($X) => { ... })
+      - pattern-not-inside: $ARR.$METHOD(async ($X) => $Y)
+      - pattern-not-inside: $ARR.$METHOD(async function ($X) { ... })
+      # Semgrep's native `// nosemgrep: query-in-loop` line-comment suppression (built in, needs no
+      # extra pattern here) is the escape hatch for a genuinely required sequential await.
+    paths:
+      include:
+        - "**/apps/api/src/**"
+        - "**/packages/db/src/**"
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.spec.ts"
+        - "**/test/**"
