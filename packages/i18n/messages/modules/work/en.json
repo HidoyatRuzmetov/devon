@@ -151,6 +151,10 @@
         "compact": "Compact",
         "comfortable": "Comfortable"
       },
+      "sort": {
+        "label": "Sort",
+        "none": "Unsorted"
+      },
       "bulk": {
         "selectedCount": "{count} selected",
         "assign": "Assign",

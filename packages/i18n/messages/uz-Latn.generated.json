@@ -2216,7 +2216,8 @@
       "hoverCard": {
         "membership": "Aʼzolik",
         "unit": "Boʻlim",
-        "openBoardColumn": "Doskadagi ustunini ochish"
+        "openBoardColumn": "Doskadagi ustunini ochish",
+        "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish"
       }
     },
     "common": {
@@ -2431,6 +2432,10 @@
         "label": "Zichlik",
         "compact": "Ixcham",
         "comfortable": "Keng"
+      },
+      "sort": {
+        "label": "Saralash",
+        "none": "Saralanmagan"
       },
       "bulk": {
         "selectedCount": "{count} ta tanlandi",

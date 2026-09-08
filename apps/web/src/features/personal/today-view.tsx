@@ -391,8 +391,10 @@ export function TodayView({
                           </Badge>
                         )}
                         {task.estimateMin ? (
+                          // ui-blitz round3 #21: same fix as `task-row.tsx` -- a translated unit
+                          // with a non-breaking space, not a bare prime mark.
                           <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-                            {task.estimateMin}′
+                            {task.estimateMin} {t('personal.duration.minutesShort')}
                           </span>
                         ) : null}
                         <Button

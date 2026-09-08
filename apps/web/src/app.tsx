@@ -6,6 +6,7 @@ import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import { useMeQuery } from './lib/session.js'
 import { useRouteName, useRoutePath } from './lib/router.js'
+import { usePageHead } from './lib/page-meta.js'
 import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
 import { AuthShell } from './shell/auth-shell.js'
@@ -51,11 +52,39 @@ function RouteFallback() {
  * A `src/features/<name>/manifest.ts(x)` route (MODULE-GUIDE.md "Web features") is checked first, by
  * exact pathname, before falling through to the core routes below -- the switch itself is never
  * edited to add one. */
+/** Core (non-feature) routes' `titleKey`s (`'home'` is unreachable in practice -- `features/home`'s
+ * manifest claims `/` first, MODULE-GUIDE.md "Web features" -- but is covered anyway so every
+ * `RouteName` this switch can produce ends up with a real, translated `<title>`, H23.1). */
+function coreTitleKey(name: ReturnType<typeof useRouteName>): string {
+  switch (name) {
+    case 'login':
+      return 'login.title'
+    case 'setup':
+      return 'setup.title'
+    case 'home':
+      return 'home.eyebrow'
+    case 'not-found':
+    default:
+      return 'state.notfound.title'
+  }
+}
+
 function RouteOutlet() {
   const path = useRoutePath()
   const name = useRouteName()
+  const t = useT()
 
   const featureRoute = matchFeatureRoute(path)
+  // H23.1: every route's `<title>`/`<meta name="robots">`/canonical link, set unconditionally
+  // (before the early returns below) so the Rules of Hooks hold regardless of which branch renders.
+  // `AUTH_ROUTES` are the public entry points (H23.1: "login, join... noindex" is only for *app*
+  // routes) -- everything else requires a session and is never meant to be indexed.
+  usePageHead({
+    title: featureRoute ? t(featureRoute.titleKey) : t(coreTitleKey(name)),
+    description: AUTH_ROUTES.has(path) ? t('auth.tagline') : undefined,
+    noindex: !AUTH_ROUTES.has(path),
+  })
+
   if (featureRoute) {
     const FeatureComponent = featureRoute.component
     const Shell = AUTH_ROUTES.has(path) ? AuthShell : AppShell

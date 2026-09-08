@@ -2216,7 +2216,8 @@
       "hoverCard": {
         "membership": "Членство",
         "unit": "Отдел",
-        "openBoardColumn": "Открыть колонку на доске"
+        "openBoardColumn": "Открыть колонку на доске",
+        "filterByUnitAria": "Показать только «{unit}»"
       }
     },
     "common": {
@@ -2431,6 +2432,10 @@
         "label": "Плотность",
         "compact": "Компактно",
         "comfortable": "Свободно"
+      },
+      "sort": {
+        "label": "Сортировка",
+        "none": "Без сортировки"
       },
       "bulk": {
         "selectedCount": "Выбрано: {count}",

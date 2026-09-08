@@ -170,6 +170,8 @@ export default function PeopleScreen() {
       >
         {filtered.map((m) => (
           <StaggerItem key={m.userId} className="h-full">
+            {/* Already filtered to exactly this unit (the filter chip bar above names it) -- no
+                `onFilterByUnit` here, since re-applying the same filter would be a no-op action. */}
             <MemberCard member={m} unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null} />
           </StaggerItem>
         ))}
@@ -192,7 +194,11 @@ export default function PeopleScreen() {
             >
               {group.members.map((m) => (
                 <StaggerItem key={m.userId} className="h-full">
-                  <MemberCard member={m} unit={group.unit} />
+                  <MemberCard
+                    member={m}
+                    unit={group.unit}
+                    onFilterByUnit={group.unit ? setUnitFilter : undefined}
+                  />
                 </StaggerItem>
               ))}
             </Stagger>

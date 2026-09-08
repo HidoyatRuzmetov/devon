@@ -151,6 +151,10 @@
         "compact": "Компактно",
         "comfortable": "Свободно"
       },
+      "sort": {
+        "label": "Сортировка",
+        "none": "Без сортировки"
+      },
       "bulk": {
         "selectedCount": "Выбрано: {count}",
         "assign": "Назначить",

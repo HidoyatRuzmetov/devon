@@ -96,7 +96,8 @@
       "hoverCard": {
         "membership": "Aʼzolik",
         "unit": "Boʻlim",
-        "openBoardColumn": "Doskadagi ustunini ochish"
+        "openBoardColumn": "Doskadagi ustunini ochish",
+        "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish"
       }
     },
     "common": { "head": "Boshligʻi", "member": "Aʼzo" }

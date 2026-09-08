@@ -2216,7 +2216,8 @@
       "hoverCard": {
         "membership": "Аъзолик",
         "unit": "Бўлим",
-        "openBoardColumn": "Доскадаги устунини очиш"
+        "openBoardColumn": "Доскадаги устунини очиш",
+        "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш"
       }
     },
     "common": {
@@ -2431,6 +2432,10 @@
         "label": "Зичлик",
         "compact": "Ихчам",
         "comfortable": "Кенг"
+      },
+      "sort": {
+        "label": "Саралаш",
+        "none": "Сараланмаган"
       },
       "bulk": {
         "selectedCount": "{count} та танланди",

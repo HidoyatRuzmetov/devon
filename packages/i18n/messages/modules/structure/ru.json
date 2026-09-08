@@ -96,7 +96,8 @@
       "hoverCard": {
         "membership": "Членство",
         "unit": "Отдел",
-        "openBoardColumn": "Открыть колонку на доске"
+        "openBoardColumn": "Открыть колонку на доске",
+        "filterByUnitAria": "Показать только «{unit}»"
       }
     },
     "common": { "head": "Руководитель", "member": "Участник" }

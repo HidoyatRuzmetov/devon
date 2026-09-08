@@ -151,6 +151,10 @@
         "compact": "Ixcham",
         "comfortable": "Keng"
       },
+      "sort": {
+        "label": "Saralash",
+        "none": "Saralanmagan"
+      },
       "bulk": {
         "selectedCount": "{count} ta tanlandi",
         "assign": "Biriktirish",

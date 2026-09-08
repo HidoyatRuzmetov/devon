@@ -96,7 +96,8 @@
       "hoverCard": {
         "membership": "Аъзолик",
         "unit": "Бўлим",
-        "openBoardColumn": "Доскадаги устунини очиш"
+        "openBoardColumn": "Доскадаги устунини очиш",
+        "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш"
       }
     },
     "common": { "head": "Бошлиғи", "member": "Аъзо" }

@@ -96,7 +96,8 @@
       "hoverCard": {
         "membership": "Membership",
         "unit": "Unit",
-        "openBoardColumn": "Open board column"
+        "openBoardColumn": "Open board column",
+        "filterByUnitAria": "View only «{unit}»"
       }
     },
     "common": { "head": "Head", "member": "Member" }

@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { robotsTxtPlugin } from './lib/robots-plugin.js'
 
 // Lives under `src/` (not a package-root `vite.config.ts`) so it stays inside this item's `TOUCHES`
 // (`apps/web/src/**`) -- mirrors the convention already used by `@devon/ui` (`src/test-config/`) and
@@ -50,7 +51,17 @@ export default defineConfig(({ command, mode }) => {
     // here rather than copying the binary `.woff2` files into `apps/web` (which would also fall
     // outside TOUCHES). Storybook does the same via `staticDirs: ['../public']`.
     publicDir: '../../../packages/ui/public',
-    plugins: [react(), tailwindcss()],
+    // H4.1: React Compiler on. `target: '19'` -- `package.json` pins `react`/`react-dom` at
+    // `19.2.8`, which ships the compiler's memoisation runtime (`useMemoCache`) natively, so no
+    // separate `react-compiler-runtime` polyfill package is needed. The compiler only ever memoises
+    // components/hooks it can prove safe to (anything it cannot verify is left alone, not a build
+    // failure), so turning it on is additive over the manual `useMemo`/`useCallback` already in this
+    // codebase, not a replacement this item needs to migrate call sites for.
+    plugins: [
+      react({ babel: { plugins: [['babel-plugin-react-compiler', { target: '19' }]] } }),
+      tailwindcss(),
+      robotsTxtPlugin(),
+    ],
     build: {
       // `agentic/scripts/check-bundle.mjs` reads `apps/web/dist/assets` (design.md §1.1 table) --
       // relative to `root` (`apps/web/src`), that is `../dist`.

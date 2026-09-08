@@ -4,8 +4,20 @@
 // tradeoff (MODULE-GUIDE.md "Web features") -- both are shareable/bookmarkable links this way too.
 import * as React from 'react'
 import { useT, useLocale, formatMonthYear, type Locale } from '@devon/i18n'
-import { Button, PageHeader, Reveal, Stagger, StaggerItem, StateView } from '@devon/ui'
-import { CalendarDays, List, Plus } from 'lucide-react'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  IconButton,
+  PageHeader,
+  Reveal,
+  Stagger,
+  StaggerItem,
+  StateView,
+} from '@devon/ui'
+import { CalendarDays, Download, List, MoreVertical, Plus } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
 import { useOnline } from '../../lib/use-online.js'
@@ -203,14 +215,24 @@ export default function EventsScreen() {
                 {t('events.view.calendar')}
               </Button>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              loading={downloadingMine}
-              onClick={handleDownloadMine}
-            >
-              {t('events.ics.exportMine')}
-            </Button>
+            {/* ui-blitz round3 #24: the header held four controls (view toggle x2, ".ics" export,
+                "create") and wrapped to two rows well before mobile widths. The export -- a
+                secondary, occasional action -- moves behind the same overflow-menu convention
+                `event-detail-dialog.tsx` already uses for its own less-common action, leaving
+                exactly the view toggle and the one primary "create" button in the row. */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <IconButton aria-label={t('events.actions.moreActions')} disabled={downloadingMine}>
+                  <MoreVertical className="size-4" aria-hidden="true" />
+                </IconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleDownloadMine} disabled={downloadingMine}>
+                  <Download className="size-3.5" aria-hidden="true" />
+                  {t('events.ics.exportMine')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button size="sm" onClick={() => navigate('/events?new=1')}>
               <Plus className="size-4" aria-hidden="true" />
               {t('events.actions.create')}
