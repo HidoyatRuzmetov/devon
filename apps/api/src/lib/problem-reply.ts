@@ -3,15 +3,28 @@
 import type { FastifyReply } from 'fastify'
 import { problem, type ProblemCode, type ProblemOptions } from '@devon/contracts'
 
+export type SendProblemOptions = ProblemOptions & {
+  /**
+   * Override the HTTP status *and* the body's `status` member. The one legitimate use is a
+   * transport-level failure that has no `ProblemCode` of its own but must not be reported with the
+   * code's table status: a body past `bodyLimit` is `validation_failed` semantically but `413`, not
+   * `422`, on the wire (`src/app.ts`'s `FST_ERR_CTP_BODY_TOO_LARGE` branch). `type`/`title`/`detail`
+   * still come from the frozen table -- this never lets a handler write its own Problem text.
+   */
+  status?: number
+}
+
 export function sendProblem(
   reply: FastifyReply,
   code: ProblemCode,
-  options: ProblemOptions = {},
+  options: SendProblemOptions = {},
 ): void {
-  const body = problem(code, options)
+  const { status, ...problemOptions } = options
+  const body = problem(code, problemOptions)
+  const httpStatus = status ?? body.status
   reply
-    .code(body.status)
+    .code(httpStatus)
     .header('content-type', 'application/problem+json; charset=utf-8')
     .header('cache-control', 'private, no-store')
-    .send(body)
+    .send(status === undefined ? body : { ...body, status: httpStatus })
 }

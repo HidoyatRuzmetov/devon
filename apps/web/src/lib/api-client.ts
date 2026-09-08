@@ -21,6 +21,26 @@ import {
 import type { Locale } from '@devon/i18n'
 
 const CSRF_HEADER = 'x-csrf-token'
+const CSRF_COOKIE = 'devon_csrf'
+
+/**
+ * The double-submit companion cookie (HARDENING H1.4). `devon_csrf` is deliberately NOT HttpOnly --
+ * `apps/api/src/lib/cookies.ts` sets it that way precisely so this file can echo it back as a header
+ * (the session cookie itself is HttpOnly and is never read here, exactly as this file's header says).
+ *
+ * Read on every mutating call rather than threaded from `useMe()` through each feature: the API now
+ * enforces the check globally (`apps/api/src/plugins/csrf-guard.ts`) instead of route by route, and
+ * a feature that forgot to pass the token -- as every `features/structure` call did -- must not be
+ * the thing that decides whether the request is protected. An explicit `csrfToken` argument still
+ * wins, so the one caller that needs a token the cookie cannot yet hold (the reply to `POST
+ * /accounts/register` sets the cookie in the same response it is read from) is unchanged.
+ */
+function csrfHeaders(explicit?: string): Record<string, string> {
+  if (explicit) return { [CSRF_HEADER]: explicit }
+  const match = new RegExp(`(?:^|;\\s*)${CSRF_COOKIE}=([^;]*)`).exec(document.cookie)
+  const value = match?.[1] ? decodeURIComponent(match[1]) : ''
+  return value ? { [CSRF_HEADER]: value } : {}
+}
 
 /** Thrown for every non-2xx response. `code` is the RFC 9457 `Problem.code` (design.md §1.5) when
  * the server sent one, else `'internal'`. `requestId` mirrors the `X-Request-Id` response header
@@ -103,10 +123,7 @@ async function del<T>(
 ): Promise<T | void> {
   const schema = typeof schemaOrCsrfToken === 'string' ? undefined : schemaOrCsrfToken
   const csrfToken = schema ? maybeCsrfToken : (schemaOrCsrfToken as string | undefined)
-  const res = await raw(path, {
-    method: 'DELETE',
-    ...(csrfToken ? { headers: { [CSRF_HEADER]: csrfToken } } : {}),
-  })
+  const res = await raw(path, { method: 'DELETE', headers: csrfHeaders(csrfToken) })
   if (!res.ok) await parseErrorAndThrow(res)
   if (!schema) return
   if (res.status === 204) return undefined as T
@@ -122,10 +139,7 @@ async function send<T>(
 ): Promise<T> {
   const res = await raw(path, {
     method,
-    headers: {
-      'content-type': 'application/json',
-      ...(csrfToken ? { [CSRF_HEADER]: csrfToken } : {}),
-    },
+    headers: { 'content-type': 'application/json', ...csrfHeaders(csrfToken) },
     body: JSON.stringify(body),
   })
   if (!res.ok) await parseErrorAndThrow(res)

@@ -17,6 +17,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     NODE_ENV: 'test',
     API_PORT: 0,
     DEVON_PUBLIC_URL: 'http://localhost:5173',
+    DEVON_ALLOWED_ORIGINS: '',
     DATABASE_URL: 'postgres://example:example@127.0.0.1:5432/example', // example, unused (fake deps)
     SESSION_COOKIE_NAME: 'devon_sid',
     SESSION_IDLE_MINUTES: 720,
@@ -39,6 +40,10 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     CLAMAV_HOST: '127.0.0.1',
     CLAMAV_PORT: 3310,
     CLAMAV_TIMEOUT_MS: 20_000,
+    // H1.14: the module runs in its documented no-op mode with no bot token (transport.ts).
+    TELEGRAM_BOT_TOKEN: undefined,
+    TELEGRAM_BOT_USERNAME: undefined,
+    TELEGRAM_WEBHOOK_SECRET: undefined,
     ...overrides,
   }
 }

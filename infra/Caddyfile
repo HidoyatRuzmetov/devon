@@ -32,6 +32,56 @@
 	# and a public DNS name and therefore only makes sense off an air-gapped network.
 	tls {$CADDY_TLS_MODE:internal}
 
+	# --- Security headers (HARDENING H1.10, H1.5) ------------------------------------------------
+	# Set once for every response this site serves. `apps/api` sets its own, stricter set on its own
+	# responses (`apps/api/src/plugins/security-headers.ts`); `header` below runs on the way out, so
+	# for a proxied /api/* response these values replace the API's where the names collide and the
+	# API keeps the ones Caddy does not name. The two agree deliberately on everything but CSP, which
+	# genuinely differs: an API response may load nothing at all, whereas the SPA document must load
+	# its own bundle.
+	header {
+		# H1.10. Caddy only ever serves this site over TLS (the `tls` directive above), so asserting
+		# HSTS here is always correct. Two years, subdomains included, preload-eligible.
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		# Both halves of the same control: the header for pre-CSP2 user agents, `frame-ancestors`
+		# (below, in the CSP) for everything current.
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		Origin-Agent-Cluster "?1"
+		X-DNS-Prefetch-Control "off"
+		X-Permitted-Cross-Domain-Policies "none"
+		Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()"
+		# Caddy advertises its own version by default; nothing downstream needs it.
+		-Server
+	}
+
+	# The SPA document's CSP (H1.5). Deliberately nonce-free, and stronger than a nonce policy would
+	# be here: `apps/web`'s production build emits **no inline script at all** (verified against
+	# `apps/web/dist/index.html` -- see the H1.5 entry in
+	# `agentic/ledger/hardening/2026-09-08T06-45-00-05-00/security.md`), so plain `script-src 'self'`
+	# admits exactly the fingerprinted bundle files and nothing else -- whereas a nonce policy would
+	# have to be paired with `'strict-dynamic'` and would need this static file server to rewrite the
+	# HTML per request, which it cannot do.
+	#
+	# `style-src` keeps `'unsafe-inline'`: React and `motion` set element `style` attributes, which
+	# CSP's `style-src-attr` blocks and which no nonce can ever cover. This is the documented,
+	# unavoidable residue of the policy and it does not admit script execution.
+	#
+	# `connect-src` is `'self'` plus whatever `DEVON_CSP_CONNECT_EXTRA` names -- set it to the MinIO
+	# public endpoint when `STORAGE_DRIVER=s3`, because the browser then PUTs avatar bytes straight to
+	# a presigned URL on that origin (`apps/web/src/lib/api-client.ts`'s `uploadFile`).
+	@spa not path /api/* /healthz /readyz /realtime/*
+	header @spa Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' {$DEVON_CSP_CONNECT_EXTRA:} ; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+	# H6.3: source maps are built (`sourcemap: command === 'build'`, apps/web/src/vite.config.ts) and
+	# are 11 MB of readable application source. They belong in the error tracker, never on the public
+	# origin -- and the static file server behind `web:80` would happily serve them otherwise.
+	@sourcemaps path *.map
+	respond @sourcemaps 404
+
 	# `/api/*` and the two operational endpoints go to the API container (apps/api's Dockerfile and
 	# `api` Compose service land with the deployment-image epic; TECH-SPEC §13).
 	@api path /api/* /healthz /readyz

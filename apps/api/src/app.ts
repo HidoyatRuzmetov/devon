@@ -16,7 +16,11 @@ import type { Config } from './config.js'
 import type { Deps } from './deps.js'
 import sessionPlugin from './plugins/session.js'
 import authorizePlugin from './plugins/authorize.js'
+import securityHeadersPlugin from './plugins/security-headers.js'
+import csrfPlugin from './plugins/csrf-guard.js'
 import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
+import { redactPaths, REDACTION_CENSOR } from './lib/log-redaction.js'
+import { sendProblem } from './lib/problem-reply.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
 import { loadApiModules } from './module-loader.js'
@@ -44,7 +48,14 @@ export async function buildApp(
   options: BuildAppOptions = {},
 ): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: { level: config.LOG_LEVEL },
+    // H1.11: passwords, tokens, codes and contact blocks are censored inside pino's serializer, so
+    // no call site can leak one by logging the wrong object (`lib/log-redaction.ts`).
+    logger: {
+      level: config.LOG_LEVEL,
+      redact: { paths: redactPaths(), censor: REDACTION_CENSOR },
+    },
+    // H1.10/H17.1: Caddy terminates TLS and sets X-Forwarded-For/-Proto (infra/Caddyfile), so
+    // `req.ip` is the real client (rate limits, audit rows) and `req.protocol` is `https` (HSTS).
     trustProxy: true,
     // Keep the route table exactly the OpenAPI path table in design.md §1.7 -- an auto-added HEAD
     // sibling for every GET would otherwise need its own, redundant `PUBLIC_ROUTES` entries.
@@ -70,51 +81,40 @@ export async function buildApp(
   // module is never inherited by that module's routes (verified empirically against fastify@5.12.3;
   // this is not documented behaviour worth relying on being fixed).
   app.setErrorHandler((err: FastifyError, req, reply) => {
+    // H1.13/H16.1: the body is built by `@devon/contracts`'s `problem()` from its frozen table --
+    // never hand-assembled here -- so a stack, a SQL fragment, a filesystem path or the offending
+    // value can never reach a client, in any environment. `instance` carries the request id, which
+    // is the only thread from what the user sees to what the server log holds (H15.1).
+    const instance = `urn:devon:request:${req.id}`
     if (err.validation) {
-      reply
-        .code(422)
-        .header('content-type', 'application/problem+json; charset=utf-8')
-        .send({
-          type: 'https://devon.local/problems/validation_failed',
-          title: 'Validation Failed',
-          status: 422,
-          code: 'validation_failed',
-          detail: 'The request did not pass validation.',
-          errors: err.validation.map((v) => ({
-            path: v.instancePath || v.schemaPath,
-            code: v.keyword,
-          })),
-        })
+      sendProblem(reply, 'validation_failed', {
+        instance,
+        errors: err.validation.map((v) => ({
+          path: v.instancePath || v.schemaPath,
+          code: v.keyword,
+        })),
+      })
       return
     }
     // A body past the route's `bodyLimit` (the storage plugin's raw image parser) is a client error
     // with a fixed shape, never a 500 -- and never the JSON-body 422 above either.
     if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
-      reply
-        .code(413)
-        .header('content-type', 'application/problem+json; charset=utf-8')
-        .send({
-          type: 'https://devon.local/problems/validation_failed',
-          title: 'Validation Failed',
-          status: 413,
-          code: 'validation_failed',
-          detail: 'The request did not pass validation.',
-          errors: [{ path: 'body', code: 'too_large' }],
-        })
+      sendProblem(reply, 'validation_failed', {
+        status: 413,
+        instance,
+        errors: [{ path: 'body', code: 'too_large' }],
+      })
       return
     }
-    req.log.error(err)
-    reply.code(500).header('content-type', 'application/problem+json; charset=utf-8').send({
-      type: 'https://devon.local/problems/internal',
-      title: 'Internal Server Error',
-      status: 500,
-      code: 'internal',
-      detail: 'An unexpected error occurred.',
-    })
+    req.log.error({ err }, 'unhandled error')
+    sendProblem(reply, 'internal', { instance })
   })
 
   await app.register(cookie)
   await app.register(rateLimit, { global: false })
+  // H1.10: helmet-equivalent headers, the CORS allow-list and the `Origin` guard, registered before
+  // anything that can answer a request so even a 404 or a rate-limit 429 carries them.
+  await app.register(securityHeadersPlugin)
   await app.register(swagger, {
     openapi: {
       info: { title: 'WorkPortal API', version: '0.0.0' },
@@ -130,6 +130,10 @@ export async function buildApp(
   // encapsulation of its own.
   registerAvailabilityGate(app)
   await app.register(authorizePlugin)
+  // After `authorizePlugin` so its 401/403 answers an unauthorised request before this hook turns it
+  // into a CSRF 403, and before every route-registering plugin below (a Fastify hook only applies to
+  // routes registered after it in the same encapsulation context): H1.4.
+  await app.register(csrfPlugin)
   // After `authorizePlugin`: the storage plugin registers the local driver's two routes, and every
   // route must be seen by authorize's `onRoute` boot guard (plugins/authorize.ts).
   await app.register(storagePlugin, { ...(options.storage ? { overrides: options.storage } : {}) })

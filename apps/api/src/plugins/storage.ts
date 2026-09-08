@@ -119,7 +119,11 @@ function registerLocalRoutes(
   app.put(
     `${LOCAL_ROUTE_PREFIX}/uploads`,
     {
-      config: { permission: { action: 'update', subject: ownAccount } },
+      // `csrfExempt`: the browser sends raw image bytes here with no application headers, exactly as
+      // it would to a MinIO presigned URL on another origin -- see `plugins/csrf-guard.ts`'s
+      // `CSRF_EXEMPT_ROUTES` for why the signed token plus the session-owner check is the whole
+      // authority for this route (H1.4).
+      config: { permission: { action: 'update', subject: ownAccount }, csrfExempt: true },
       bodyLimit: maxUploadBytes,
       schema: { querystring: tokenQuerySchema },
     },

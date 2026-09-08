@@ -81,10 +81,21 @@ describe('cookie replay after logout (AC-13)', () => {
     expect(before.statusCode).toBe(200)
     expect(before.json().user.login).toBe(user.login)
 
-    const logout = await app.inject({
+    // H1.4: `POST /auth/logout` is state-changing, so the global double-submit guard
+    // (`plugins/csrf-guard.ts`) applies to it -- the captured cookie alone is not enough, which is
+    // exactly what stops a cross-site page from signing the user out.
+    const forgedLogout = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/logout',
       headers: { cookie: capturedCookieHeader },
+    })
+    expect(forgedLogout.statusCode).toBe(403)
+    expect(state.sessions[0]?.revokedAt).toBeNull()
+
+    const logout = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout',
+      headers: { cookie: capturedCookieHeader, 'x-csrf-token': cookies['devon_csrf'] as string },
     })
     expect(logout.statusCode).toBe(204)
     expect(state.sessions[0]?.revokedAt).not.toBeNull()
@@ -113,7 +124,10 @@ describe('cookie replay after logout (AC-13)', () => {
     const logout = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/logout',
-      headers: { cookie: cookieHeader(cookies) },
+      headers: {
+        cookie: cookieHeader(cookies),
+        'x-csrf-token': cookies['devon_csrf'] as string,
+      },
     })
     const setCookie = logout.headers['set-cookie']
     const sidLine = (Array.isArray(setCookie) ? setCookie : [setCookie]).find((c) =>
