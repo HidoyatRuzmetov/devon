@@ -1,0 +1,160 @@
+[gate] typecheck … PASS (13.4s)
+[gate] lint … PASS (29.7s)
+[gate] unit … PASS (100.5s)
+[gate] i18n … PASS (1.2s)
+[gate] secrets … PASS (1.4s)
+[gate] build … PASS (20.9s)
+[gate] migrate … FAIL (17.8s)
+[gate] e2e … FAIL (3.2s)
+[gate] a11y … FAIL (3.3s)
+[gate] bundle … PASS (1.2s)
+[gate] deps … PASS (2.4s)
+{
+  "profile": "release",
+  "cwd": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal",
+  "startedAt": "2026-09-08T02:47:44.267Z",
+  "finishedAt": "2026-09-08T02:50:59.992Z",
+  "scaffolded": true,
+  "ok": false,
+  "failed": [
+    "migrate",
+    "e2e",
+    "a11y"
+  ],
+  "skipped": [
+    "security",
+    "perf"
+  ],
+  "skipped_blocking": [
+    "security",
+    "perf"
+  ],
+  "results": [
+    {
+      "name": "typecheck",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 13352,
+      "code": 0,
+      "cmd": "pnpm -r --if-present typecheck",
+      "tail": "packages/ui typecheck: Done\napps/api typecheck$ tsc --noEmit -p tsconfig.json\napps/web typecheck$ tsc --noEmit -p src/tsconfig.json\napps/api typecheck: Done\napps/web typecheck: Done"
+    },
+    {
+      "name": "lint",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 29716,
+      "code": 0,
+      "cmd": "pnpm -r --if-present lint",
+      "tail": "apps/api lint: All matched files use Prettier code style!\napps/api lint: Done\napps/web lint: Checking formatting...\napps/web lint: All matched files use Prettier code style!\napps/web lint: Done"
+    },
+    {
+      "name": "unit",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 100540,
+      "code": 0,
+      "cmd": "pnpm -r --if-present test:unit -- --run",
+      "tail": "apps/api test:unit:  Test Files  28 passed (28)\napps/api test:unit:       Tests  226 passed (226)\napps/api test:unit:    Start at  07:49:34\napps/api test:unit:    Duration  33.04s (transform 10.74s, setup 0ms, import 27.03s, tests 19.83s, environment 4ms)\napps/api test:unit: Done"
+    },
+    {
+      "name": "i18n",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 1160,
+      "code": 0,
+      "cmd": "node agentic/scripts/check-i18n.mjs",
+      "tail": "[i18n] locales=uz-Latn,uz-Cyrl,ru,en keys=1845 used=1106 errors=0"
+    },
+    {
+      "name": "secrets",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 1361,
+      "code": 0,
+      "cmd": "node agentic/scripts/check-secrets.mjs",
+      "tail": "[secrets] hits=0"
+    },
+    {
+      "name": "build",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 20932,
+      "code": 0,
+      "cmd": "pnpm -r --if-present build",
+      "tail": "apps/web build: - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting\napps/web build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\u001b[39m\napps/web build: \u001b[32m✓ built in 1.30s\u001b[39m\napps/web build: Done\napps/api build: Done"
+    },
+    {
+      "name": "migrate",
+      "status": "fail",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 17829,
+      "code": 1,
+      "cmd": "pnpm --filter @devon/db migrate:verify",
+      "tail": "$ tsx test/migrate-verify.ts\n[migrate:verify] 1/7 lint the migration files (no database needed)\n[migrate:verify] 2/7 apply migrations to a fresh Postgres 17 (+pgvector) container\n[migrate:verify] 3/7 apply the same migrations again (idempotence)\n[migrate:verify] 4/7 tenancy registry (AC-10)\n[migrate:verify] 5/7 RLS cross-department isolation, Drizzle path + tx.raw() (AC-10)\n[migrate:verify] 6/7 RLS isolation under 20 concurrent transactions through PgBouncer (AC-10)\n[migrate:verify] crashed: AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1194:18)\n    at afterConnectMultiple (node:net:1784:7) {\n  code: 'ECONNREFUSED',\n  [errors]: [\n    Error: connect ECONNREFUSED ::1:32834\n        at createConnectionError (node:net:1747:14)\n        at afterConnectMultiple (node:net:1777:16) {\n      errno: -4078,\n      code: 'ECONNREFUSED',\n      syscall: 'connect',\n      address: '::1',\n      port: 32834\n    },\n    Error: connect ECONNREFUSED 127.0.0.1:32834\n        at createConnectionError (node:net:1747:14)\n        at afterConnectMultiple (node:net:1777:16) {\n      errno: -4078,\n      code: 'ECONNREFUSED',\n      syscall: 'connect',\n      address: '127.0.0.1',\n      port: 32834\n    }\n  ]\n}\nC:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\db:\n[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/db@0.0.0 migrate:verify: `tsx test/migrate-verify.ts`\nExit status 1"
+    },
+    {
+      "name": "e2e",
+      "status": "fail",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 3163,
+      "code": 1,
+      "cmd": "pnpm --filter @devon/web test:e2e",
+      "tail": "$ playwright test --config test/e2e/playwright.config.ts\nError: http://127.0.0.1:5173 is already used, make sure that nothing is running on the port/url or set reuseExistingServer:true in config.webServer.\n\nC:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\apps\\web:\n[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 test:e2e: `playwright test --config test/e2e/playwright.config.ts`\nExit status 1"
+    },
+    {
+      "name": "a11y",
+      "status": "fail",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 3251,
+      "code": 1,
+      "cmd": "pnpm --filter @devon/web test:a11y",
+      "tail": "$ playwright test --config test/e2e/playwright.config.ts --grep @a11y\nError: http://127.0.0.1:5173 is already used, make sure that nothing is running on the port/url or set reuseExistingServer:true in config.webServer.\n\nC:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\apps\\web:\n[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @devon/web@0.0.0 test:a11y: `playwright test --config test/e2e/playwright.config.ts --grep @a11y`\nExit status 1"
+    },
+    {
+      "name": "bundle",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 1206,
+      "code": 0,
+      "cmd": "node agentic/scripts/check-bundle.mjs",
+      "tail": "[bundle] 23.4 kB gz  105 kB raw  .\\apps\\web\\dist\\assets\\personal-screen-CzZFrsFB.js\n[bundle] 18.9 kB gz  99 kB raw  .\\apps\\web\\dist\\assets\\events-screen-B6gcZPUj.js\n[bundle] 14.9 kB gz  52 kB raw  .\\apps\\web\\dist\\assets\\board-screen-kmlKswX-.js\n[bundle] 11.9 kB gz  39 kB raw  .\\apps\\web\\dist\\assets\\table-screen-DUO6zLDP.js\n[bundle] largest chunk 295.6 kB gz (budget 350 kB); total JS 888 kB gz"
+    },
+    {
+      "name": "security",
+      "status": "skipped",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 0,
+      "tail": "SKIPPED: required tool not installed: trivy. A skipped gate is NOT a pass."
+    },
+    {
+      "name": "perf",
+      "status": "skipped",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 0,
+      "tail": "SKIPPED: required tool not installed: lhci, k6. A skipped gate is NOT a pass."
+    },
+    {
+      "name": "deps",
+      "status": "pass",
+      "blocking": true,
+      "tolerated": false,
+      "ms": 2394,
+      "code": 0,
+      "cmd": "pnpm audit --audit-level=high",
+      "tail": "1 vulnerabilities found\nSeverity: 1 moderate"
+    }
+  ]
+}

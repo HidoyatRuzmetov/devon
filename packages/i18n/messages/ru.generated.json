@@ -852,6 +852,7 @@
         "hard_stop": "Бюджет исчерпан"
       },
       "spentOfCap": "В этом месяце потрачено {spent} из {cap}",
+      "resetToast": "Месячный бюджет ИИ обновлён",
       "editLabel": "Месячный бюджет (сум)",
       "save": "Сохранить бюджет",
       "invalidAmount": "Введите корректную сумму"
@@ -2083,7 +2084,8 @@
       "error": "Не удалось создать проект"
     },
     "milestone": {
-      "addPlaceholder": "Введите название этапа"
+      "addPlaceholder": "Введите название этапа",
+      "completedToast": "Этап завершён: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Добавить общую задачу",

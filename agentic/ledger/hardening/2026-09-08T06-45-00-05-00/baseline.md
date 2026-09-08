@@ -1,6 +1,6 @@
 # Hardening baseline (BEFORE) — 2026-09-08
 
-Measured against a locally booted `pnpm start --demo` (Postgres 17.11 in Docker, `devon.boshliq` /
+Measured against a locally booted `pnpm start --demo` (Postgres 17.11 in Docker, `demo.boshliq` /
 `Ishonchli#2026` as the signed-in actor for every route/API measurement) on the machine described in
 "Environment" below. No product code was changed to produce these numbers; only measurement scripts
 under `tools/perf/` and one infra change (`pg_stat_statements` enabled on the `postgres` Compose
@@ -136,12 +136,16 @@ statements by call count per route are in `tools/perf/playwright/out/*.json` (`r
   reflect what a real deployment serves. Request counts / bytes here are still useful for **duplicate
   request** and **API call count** analysis, which are dev/prod-independent (same React Query/router
   code runs either way).
-- **`/` (home) duplicates are real, and are TanStack Query / React double-invocation, not a dev-only
-  artifact**: `GET /api/v1/instance`, `/api/v1/notifications`, `/api/v1/analytics/personal`,
-  `/api/v1/analytics/pins`, `/api/v1/analytics/summary` were each requested **twice** on a single page
-  load (full list of 16 duplicate groups in `out/root.json`). This is exactly the H2.4 "no duplicate
-  requests on mount" acceptance criterion currently failing on the home route only — the other five
-  routes had **zero** duplicate request groups.
+- **`/` (home) has real duplicate API calls** — `GET /api/v1/instance`, `/api/v1/notifications`,
+  `/api/v1/analytics/personal`, `/api/v1/analytics/pins`, `/api/v1/analytics/summary` were each
+  requested **twice** on a single page load (full list of 16 duplicate groups, including duplicated
+  module fetches, in `out/root.json`). `apps/web/src/main.tsx` wraps the app in `React.StrictMode`,
+  whose dev-only double-invocation of effects is a plausible mechanical cause — **but that alone
+  doesn't explain why only `/` shows duplicates**: StrictMode wraps every route equally, and the other
+  five had **zero** duplicate request groups. That points to something route-specific (e.g. two
+  components on the home screen independently calling the same endpoint with query keys that don't
+  match well enough for TanStack Query's cache to dedupe them), which is the more useful lead for
+  whoever picks up H2.4 on this route.
 - **SQL call counts include background noise.** `pg-boss` (analytics nightly recompute, notification
   digests) polls Postgres continuously regardless of page activity — measured independently:
 
@@ -384,7 +388,85 @@ dev server would not necessarily show up in 10.
 node agentic/scripts/gate.mjs --profile release --json
 ```
 
-<!-- GATE_RESULTS_PLACEHOLDER -->
+**Result: `ok: false`. 3 gates FAILED (`migrate`, `e2e`, `a11y`), 2 gates SKIPPED-and-not-tolerated
+(`security`, `perf`) — release profile tolerates neither. Full JSON: `gate-release-output.log` in this
+directory (raw stdout, includes the JSON gate.mjs prints).**
+
+| gate | status | time | why |
+|---|---|---:|---|
+| typecheck | pass | 13.4s | |
+| lint | pass | 29.7s | |
+| unit | pass | 100.5s | 226 tests / 28 files |
+| i18n | pass | 1.2s | 1845 keys, 4 locales, 0 errors |
+| secrets | pass | 1.4s | 0 hits |
+| build | pass | 20.9s | |
+| **migrate** | **FAIL** | 17.8s | see below |
+| **e2e** | **FAIL** | 3.2s (as run through `gate.mjs`) | environmental — see below |
+| **a11y** | **FAIL** | 3.3s (as run through `gate.mjs`) | environmental *and* a structural gap — see below |
+| bundle | pass | 1.2s | 295.6 kB gz largest chunk (budget 350) |
+| **security** | **SKIPPED** | — | `trivy` not on PATH (`requires_cmd`); not tolerated on `release` |
+| **perf** | **SKIPPED** | — | `lhci`, `k6` not on PATH (`requires_cmd`); not tolerated on `release` — note this repo's own task instructions run both via `npx @lhci/cli@<version>` and `docker run grafana/k6`, neither of which `gate.mjs`'s `hasCmd()` (a literal `where <bin>` PATH check) can see; §3/§4 above show both tools work fine when invoked that way |
+| deps | pass | 2.4s | `pnpm audit --audit-level=high`: 1 moderate vulnerability (below the `--audit-level=high` threshold, so the gate still passes) |
+
+**`migrate` — real failure, not a product-code bug in the migrations themselves.**
+`packages/db/test/migrate-verify.ts` gets through steps 1-5 clean (lint migration files; apply to a
+fresh Testcontainers Postgres 17+pgvector; re-apply idempotently; tenancy registry; RLS
+cross-department isolation) and crashes on **step 6/7, "RLS isolation under 20 concurrent transactions
+through PgBouncer"**: `packages/db/test/harness.ts`'s `startPgBouncer()` spins up its own Testcontainers
+`edoburu/pgbouncer:v1.25.2-p0`, waits for a `process up` log line (which it got — `.start()` did not
+itself time out), then immediately gets `ECONNREFUSED` on **both** `::1` and `127.0.0.1` for the
+container's mapped port. This is a container-readiness race (the log line firing before the mapped
+port is actually accepting TCP connections), most plausibly Docker-Desktop-on-Windows-specific —
+`scripts/start.mjs` already documents unrelated but similar Windows Docker networking timing/binding
+quirks it had to work around while proving `pnpm start` boots. Re-running just this step in isolation
+(or adding a short retry/backoff after the wait strategy resolves) would confirm; not attempted here
+per this task's "measure, don't fix" scope.
+
+**`e2e` / `a11y` — FAIL through `gate.mjs`, for an environmental reason unrelated to product code, but
+digging into it surfaced two real, durable findings:**
+
+`agentic/scripts/gate.mjs` deliberately sets `CI: '1'` on every gate subprocess's environment (line 34).
+`apps/web/test/e2e/playwright.config.ts`'s `webServer.reuseExistingServer: !process.env['CI']` therefore
+always resolves to `false` when run through the gate — so Playwright always tries to start its own
+`pnpm --filter @devon/web dev` on port 5173, and refuses outright when that port is already occupied by
+something it didn't start itself (exactly `pnpm start --demo`, which this whole baseline runs against).
+That is what both failures actually say (`Error: http://127.0.0.1:5173 is already used ... or set
+reuseExistingServer:true`) — **not a test failure**, a collision between "keep the demo app running to
+measure it" (this task) and "the e2e gate always wants a clean port" (`gate.mjs`'s CI flag). Freeing
+the port and re-running each command directly (still with `CI=1`, matching the gate's own semantics)
+surfaced the real state underneath:
+
+- **`pnpm --filter @devon/web test:e2e` (freed port): 1 passed, 1 failed — a real, reproducible bug**
+  in `apps/web/test/e2e/shell.smoke.spec.ts`'s Russian-locale smoke test: `page.getByText('Пароль')`
+  resolves to **two** elements — the password field's label (`Пароль`) and the "forgot password?"
+  button (`Забыли пароль?`), because Playwright's `getByText` substring-matches case-insensitively and
+  `Забыли пароль?` contains `пароль`. Strict-mode violation, test fails on both the initial run and its
+  one CI retry. This is a test-code fragility, not a product bug (the two pieces of Russian copy are
+  both correct) — the fix is a more specific locator (e.g. `getByLabel` for the field), left as a
+  finding rather than fixed here (test files are out of this task's "measure, don't change product
+  code" scope, and are separately in `agentic/gates.json`'s `fixer_forbidden_globs` in spirit even
+  though `*.spec.ts` isn't literally matched by that glob).
+- **`pnpm --filter @devon/web test:a11y` (freed port): `Error: No tests found`.** This is not
+  environmental — `apps/web/test/e2e/playwright.config.ts`'s own header comment already names the gap:
+  the real `@a11y`-tagged axe suite lives in the separate `e2e/**` directory (EPIC-000.9's TOUCHES), and
+  wiring it into `apps/web/package.json`'s `test:a11y` script was explicitly deferred ("flagged in this
+  item's NOTES for wp-lead rather than worked around here"). **The `a11y` gate as wired in
+  `agentic/gates.json` is currently vacuous — it will fail with "No tests found" on every machine,
+  every time, until `apps/web/package.json`'s `test:a11y` script is pointed at (or additionally runs)
+  `e2e/**`'s suite.** This is the most actionable single finding in this whole gate run.
+
+**Net effect:** on a clean CI checkout (nothing pre-bound on 5173/3000), `e2e` would very likely run to
+the same one real locale-locator failure found above, and `a11y` would still hit "No tests found"
+regardless of environment. `migrate` would still hit the PgBouncer race regardless of what else is
+running, since it uses its own fully isolated Testcontainers. `security`/`perf` would still skip on any
+machine without `trivy`/`lhci`/`k6` literally on `PATH` (this one **is** environment-dependent, and this
+task's own instructions run those tools via `docker run`/`npx` specifically because they are not
+expected to be pre-installed — `gate.mjs`'s tolerance model doesn't currently have a way to say "but I
+ran it manually, see §3/§4 of the baseline" for that case).
+
+Last recorded `fast`-profile run before this baseline (`agentic/ledger/last-gate.json`,
+2026-09-08T01:17-01:19Z) was all-green (`typecheck`/`lint`/`unit`/`i18n`/`secrets`) — consistent with
+this run's fast-equivalent gates.
 
 Last recorded run before this baseline (`agentic/ledger/last-gate.json`, `fast` profile,
 2026-09-08T01:17-01:19Z): **all 5 gates green** (`typecheck`, `lint`, `unit` — 226 tests across 28
@@ -432,4 +514,10 @@ docker run --rm --network host -v "$PWD/tools/perf/k6:/scripts" -v "$PWD/tools/p
 
 # 6. gates
 node agentic/scripts/gate.mjs --profile release --json
+# NOTE: gate.mjs forces CI=1 on every gate subprocess, which makes apps/web/test/e2e/playwright.config
+# .ts always try to start its own dev server on :5173 (reuseExistingServer resolves false) -- if steps
+# 1-5 above left that port occupied, e2e/a11y fail on a port collision before running a single test.
+# Free it first (stop just the Vite process, leave the API up) for a clean read:
+#   powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort 5173 -State Listen).OwningProcess"
+#   taskkill /F /PID <that pid>
 ```

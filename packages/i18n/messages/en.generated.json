@@ -852,6 +852,7 @@
         "hard_stop": "Budget used up"
       },
       "spentOfCap": "{spent} spent of {cap} this month",
+      "resetToast": "Monthly AI budget reset",
       "editLabel": "Monthly budget (UZS)",
       "save": "Save budget",
       "invalidAmount": "Enter a valid amount"
@@ -2083,7 +2084,8 @@
       "error": "Could not create the project"
     },
     "milestone": {
-      "addPlaceholder": "Enter a milestone title"
+      "addPlaceholder": "Enter a milestone title",
+      "completedToast": "Milestone completed: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Add a shared card",

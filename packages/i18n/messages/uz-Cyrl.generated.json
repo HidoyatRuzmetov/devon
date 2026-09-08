@@ -852,6 +852,7 @@
         "hard_stop": "Бюджет тугади"
       },
       "spentOfCap": "Бу ой {cap} дан {spent} сарфланди",
+      "resetToast": "Ойлик AI бюджети янгиланди",
       "editLabel": "Ойлик бюджет (UZS)",
       "save": "Бюджетни сақлаш",
       "invalidAmount": "Тўғри миқдор киритинг"
@@ -2083,7 +2084,8 @@
       "error": "Лойиҳани яратиб бўлмади"
     },
     "milestone": {
-      "addPlaceholder": "Босқич номини киритинг"
+      "addPlaceholder": "Босқич номини киритинг",
+      "completedToast": "Босқич якунланди: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Умумий вазифа қўшиш",

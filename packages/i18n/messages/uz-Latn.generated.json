@@ -852,6 +852,7 @@
         "hard_stop": "Byudjet tugadi"
       },
       "spentOfCap": "Bu oy {cap} dan {spent} sarflandi",
+      "resetToast": "Oylik AI byudjeti yangilandi",
       "editLabel": "Oylik byudjet (UZS)",
       "save": "Byudjetni saqlash",
       "invalidAmount": "Toʻgʻri miqdor kiriting"
@@ -2083,7 +2084,8 @@
       "error": "Loyihani yaratib boʻlmadi"
     },
     "milestone": {
-      "addPlaceholder": "Bosqich nomini kiriting"
+      "addPlaceholder": "Bosqich nomini kiriting",
+      "completedToast": "Bosqich yakunlandi: {title}"
     },
     "card": {
       "addObjectivePlaceholder": "Umumiy vazifa qoʻshish",
