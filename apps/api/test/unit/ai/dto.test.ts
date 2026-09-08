@@ -11,26 +11,40 @@ describe('settingsToDto', () => {
   }
 
   it('reports ok well under the soft cap', () => {
-    const dto = settingsToDto(row, 10_000)
+    const dto = settingsToDto(row, 10_000, true)
     expect(dto.budgetStatus).toBe('ok')
     expect(dto.remainingUzs).toBe(990_000)
     expect(dto.flags).toEqual({ translate: true, plan_sprint: false })
+    expect(dto.available).toBe(true)
+    expect(dto.unavailableReason).toBeNull()
   })
 
   it('reports soft_cap at or above the configured percentage', () => {
-    const dto = settingsToDto(row, 850_000)
+    const dto = settingsToDto(row, 850_000, true)
     expect(dto.budgetStatus).toBe('soft_cap')
   })
 
   it('reports hard_stop once spend reaches the cap, with zero remaining', () => {
-    const dto = settingsToDto(row, 1_000_000)
+    const dto = settingsToDto(row, 1_000_000, true)
     expect(dto.budgetStatus).toBe('hard_stop')
     expect(dto.remainingUzs).toBe(0)
   })
 
   it('reports hard_stop when no budget has been configured (cap = 0)', () => {
-    const dto = settingsToDto({ ...row, budget_uzs_per_month: 0 }, 0)
+    const dto = settingsToDto({ ...row, budget_uzs_per_month: 0 }, 0, true)
     expect(dto.budgetStatus).toBe('hard_stop')
+  })
+
+  // H8.1 graceful degradation: every flag reads as `false` while the `ai` circuit breaker is open,
+  // regardless of what the department head actually configured -- see `dto.ts`'s doc comment for why
+  // this is the whole mechanism behind "AI off -> features hide".
+  it('forces every flag false and reports the reason when AI is unavailable', () => {
+    const dto = settingsToDto(row, 10_000, false)
+    expect(dto.flags).toEqual({ translate: false, plan_sprint: false })
+    expect(dto.available).toBe(false)
+    expect(dto.unavailableReason).toBe('circuit_open')
+    // Budget accounting is unaffected -- unavailability is orthogonal to spend.
+    expect(dto.budgetStatus).toBe('ok')
   })
 })
 

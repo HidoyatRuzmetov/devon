@@ -68,13 +68,20 @@ export class CircuitBreaker {
     return this.now() - this.openedAt >= this.options.resetTimeoutMs
   }
 
-  private recordSuccess(): void {
+  /** Records a successful call: resets the failure count and closes the breaker. Public so a caller
+   * whose dependency reports failure as a return value rather than a thrown exception (`@devon/ai`'s
+   * `runFeature`, which catches transport errors itself -- see `modules/ai/service.ts`) can still
+   * drive this breaker without wrapping every call in a synthetic throw/catch. */
+  succeed(): void {
     this.consecutiveFailures = 0
     this.lastSuccessAt = this.now()
     this.state = 'closed'
   }
 
-  private recordFailure(err: unknown): void {
+  /** Records a failed call. Trips the breaker to `open` once `failureThreshold` consecutive failures
+   * have been recorded (or immediately, on any failure while `half_open`). See `succeed()`'s doc
+   * comment for why this is public. */
+  fail(err: unknown): void {
     this.consecutiveFailures += 1
     this.lastFailureAt = this.now()
     this.lastError = err instanceof Error ? err.message.slice(0, 300) : String(err).slice(0, 300)
@@ -84,24 +91,33 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Runs `fn` if the breaker allows it; throws `CircuitOpenError` immediately (never calling `fn`)
-   * when it does not. A single probe is allowed through once `resetTimeoutMs` has passed while
-   * `open` -- its outcome alone decides whether the breaker closes or re-opens.
-   */
-  async execute<T>(fn: () => Promise<T>): Promise<T> {
+  /** Whether the breaker would allow a call through right now, transitioning `open` -> `half_open`
+   * exactly once the reset window has passed (the mutating half of `isCallAllowed()`, for callers
+   * that drive the breaker manually via `succeed()`/`fail()` instead of `execute()`). Throws
+   * `CircuitOpenError` when the call must NOT proceed. */
+  guard(): void {
     if (this.state === 'open') {
       if (this.now() - this.openedAt < this.options.resetTimeoutMs) {
         throw new CircuitOpenError(this.options.name)
       }
       this.state = 'half_open'
     }
+  }
+
+  /**
+   * Runs `fn` if the breaker allows it; throws `CircuitOpenError` immediately (never calling `fn`)
+   * when it does not. A single probe is allowed through once `resetTimeoutMs` has passed while
+   * `open` -- its outcome alone decides whether the breaker closes or re-opens. For a dependency that
+   * signals failure by throwing (ClamAV, Telegram, MinIO/S3 -- everything except `@devon/ai`).
+   */
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    this.guard()
     try {
       const result = await fn()
-      this.recordSuccess()
+      this.succeed()
       return result
     } catch (err) {
-      this.recordFailure(err)
+      this.fail(err)
       throw err
     }
   }
@@ -123,7 +139,9 @@ export class CircuitBreaker {
       lastSuccessAt: this.lastSuccessAt ? new Date(this.lastSuccessAt).toISOString() : null,
       lastFailureAt: this.lastFailureAt ? new Date(this.lastFailureAt).toISOString() : null,
       opensUntil:
-        this.state === 'open' ? new Date(this.openedAt + this.options.resetTimeoutMs).toISOString() : null,
+        this.state === 'open'
+          ? new Date(this.openedAt + this.options.resetTimeoutMs).toISOString()
+          : null,
     }
   }
 }

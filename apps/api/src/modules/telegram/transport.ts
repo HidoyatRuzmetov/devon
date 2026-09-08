@@ -12,6 +12,8 @@ import type { NotificationRow } from '../notifications/repo.js'
 import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
 import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
+import { telegram as telegramBreaker } from '../../lib/resilience/registry.js'
+import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
 
 let cachedBot: Bot | null = null
 let cachedToken: string | null = null
@@ -106,14 +108,30 @@ export async function sendTelegramNotification(
   const keyboard = buildActionKeyboard(notification, locale, url)
 
   try {
-    const sent = await withTimeout(
-      bot.api.sendMessage(chatId, text, keyboard ? { reply_markup: keyboard } : undefined),
-      8000,
+    const sent = await telegramBreaker.execute(() =>
+      withTimeout(
+        bot.api.sendMessage(chatId, text, keyboard ? { reply_markup: keyboard } : undefined),
+        8000,
+        'telegram sendMessage',
+      ),
     )
     return { ok: true, messageId: sent.message_id }
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    return { ok: false, error: sendErrorMessage(err) }
   }
+}
+
+/** H8.1 graceful degradation: "Telegram down -> inbox still works and queues" -- every caller of
+ * `sendTelegramNotification`/`sendVerificationCode` already treats a failed `SendResult` as
+ * retryable (`notifications/delivery.ts` records the failure on `notification_deliveries` and
+ * `jobs.ts`'s hourly `reminder.due` cron re-attempts it; nothing in the inbox/notification write path
+ * itself depends on the send succeeding). Once the breaker is open, `CircuitOpenError` short-circuits
+ * before ever calling `bot.api.sendMessage` -- so a sustained Telegram outage stops costing every
+ * pending notification a full 8s timeout and instead fails every one of them instantly, exactly the
+ * same documented, already-handled way. */
+function sendErrorMessage(err: unknown): string {
+  if (err instanceof CircuitOpenError) return 'telegram_unavailable'
+  return err instanceof Error ? err.message : String(err)
 }
 
 /** Inline buttons (TECH-SPEC §7: "inline buttons for RSVP, poll vote, mark done, snooze deadline").
@@ -173,10 +191,37 @@ export async function sendVerificationCode(
   const text = tb(locale, 'security.code', { code, minutes: validForMinutes })
 
   try {
-    const sent = await withTimeout(bot.api.sendMessage(status.chatId, text), 8000)
+    const sent = await telegramBreaker.execute(() =>
+      withTimeout(bot.api.sendMessage(status.chatId, text), 8000, 'telegram sendMessage'),
+    )
     return { ok: true, messageId: sent.message_id }
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    return { ok: false, error: sendErrorMessage(err) }
+  }
+}
+
+/** Read-only breaker status for the admin health page (`modules/admin/repo.ts`) -- never mutates. */
+export function isTelegramAvailable(): boolean {
+  return telegramBreaker.isCallAllowed()
+}
+
+/**
+ * Plain-text send to a chat id (no pointer/keyboard formatting), timeout- and circuit-breaker-bound
+ * exactly like `sendTelegramNotification`/`sendVerificationCode` above -- `notifications/jobs.ts`'s
+ * weekly department digest is the one caller, and previously called `bot.api.sendMessage` directly
+ * with neither (H8.1 gap: an unbounded call outside every other send path's protection). Never
+ * throws, same `SendResult` contract as the rest of this file.
+ */
+export async function sendPlainMessage(chatId: string, text: string): Promise<SendResult> {
+  const bot = getBot()
+  if (!bot) return { ok: false, error: 'telegram_not_configured' }
+  try {
+    const sent = await telegramBreaker.execute(() =>
+      withTimeout(bot.api.sendMessage(chatId, text), 8000, 'telegram sendMessage'),
+    )
+    return { ok: true, messageId: sent.message_id }
+  } catch (err) {
+    return { ok: false, error: sendErrorMessage(err) }
   }
 }
 
