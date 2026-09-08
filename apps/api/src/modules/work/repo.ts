@@ -5,7 +5,7 @@
 // function opens its own `withContext()` transaction, exactly like `apps/api/src/db/repo.ts`.
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { CardDTO, MemberSummary, SavedViewLayout } from './schemas.js'
 
 // --- row shapes returned by hand-written SQL (snake_case, as Postgres sends them) ------------------
@@ -185,6 +185,35 @@ export async function getCard(
     )
     return rows[0] ? toCardDTO(rows[0]) : null
   })
+}
+
+/**
+ * Is `cardId` a live card of `departmentId`, as this transaction is allowed to see it? (H1.2,
+ * object-level access control.)
+ *
+ * `can()` proves the caller may act on *a* card of their own department; RLS keeps another
+ * department's card rows out of their transaction. Neither says anything about a **child** write
+ * that carries a card id straight from the request body into an insert: the child row is stamped
+ * with the caller's own `department_id`, so RLS is satisfied and the insert succeeds even when the
+ * card it points at belongs to somebody else. That is the exact shape of an OWASP BOLA, and this is
+ * the predicate that closes it. Used inside the child write transactions themselves rather than in
+ * the handlers, so a new child route cannot forget it.
+ */
+async function cardIsVisible(tx: Tx, departmentId: string, cardId: string): Promise<boolean> {
+  const rows = await tx.raw<{ one: number }>(
+    sql`select 1 as one from app.cards
+        where id = ${cardId} and department_id = ${departmentId} and deleted_at is null`,
+  )
+  return rows.length > 0
+}
+
+/** The same predicate for a handler that needs to answer 404 before reading a card's children. */
+export async function cardExists(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+): Promise<boolean> {
+  return withContext(ctx, async (tx) => cardIsVisible(tx, departmentId, cardId))
 }
 
 export async function getChecklist(ctx: RequestContext, cardId: string) {
@@ -455,8 +484,9 @@ export async function addChecklistItem(
     dueAt?: string | null | undefined
     orderKey?: string | undefined
   },
-) {
+): Promise<string | null> {
   return withContext(ctx, async (tx) => {
+    if (!(await cardIsVisible(tx, departmentId, cardId))) return null
     const id = randomUUID()
     await tx.raw(
       sql`insert into app.card_checklist_items
@@ -529,8 +559,9 @@ export async function addComment(
   authorUserId: string,
   text: string,
   mentions: string[],
-) {
+): Promise<string | null> {
   return withContext(ctx, async (tx) => {
+    if (!(await cardIsVisible(tx, departmentId, cardId))) return null
     const id = randomUUID()
     await tx.raw(
       sql`insert into app.card_comments (id, department_id, card_id, author_user_id, body, mentions)

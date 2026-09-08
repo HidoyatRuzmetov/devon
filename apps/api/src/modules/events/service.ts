@@ -458,6 +458,13 @@ export async function upsertRsvp(
 
 export async function listRsvps(ctx: RequestContext, eventId: string): Promise<RsvpDto[]> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const rows = await repo.listRsvps(tx, eventId)
     return rows.map((r) => ({
       userId: r.user_id,
@@ -479,6 +486,13 @@ export async function listComments(
   eventId: string,
 ): Promise<CommentDto[]> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const rows = await repo.listComments(tx, eventId)
     return rows.map((r) => ({
       id: r.id,
@@ -579,6 +593,13 @@ export async function listCarpools(
   eventId: string,
 ): Promise<CarpoolDto[]> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const carpools = await repo.listCarpools(tx, eventId)
     const seatsByCarpool = await Promise.all(carpools.map((c) => repo.listCarpoolSeats(tx, c.id)))
     return carpools.map((c, i) => toCarpoolDto(c, seatsByCarpool[i]!, viewerUserId, isHead))
@@ -718,6 +739,13 @@ export async function listItems(
   eventId: string,
 ): Promise<ItemDto[]> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const rows = await repo.listItems(tx, eventId)
     return rows.map((r) => toItemDto(r, viewerUserId))
   })
@@ -835,6 +863,13 @@ export async function listPolls(
   eventId: string,
 ): Promise<PollDto[]> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const polls = await repo.listPolls(tx, eventId)
     const dtos: PollDto[] = []
     for (let i = 0; i < polls.length; i += 1) {
@@ -931,6 +966,13 @@ export async function voteOnPoll(
 
 export async function listPhotos(ctx: RequestContext, viewerUserId: string, eventId: string) {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const rows = await repo.listPhotos(tx, eventId)
     return rows.map((r) => ({
       id: r.id,
@@ -995,6 +1037,13 @@ export async function listFeedback(
   eventId: string,
 ): Promise<{ items: FeedbackDto[]; averageRating: number | null; myFeedback: FeedbackDto | null }> {
   return withContext(ctx, async (tx) => {
+    // H1.2 (object-level access control): every `add*` below already refuses an event the caller
+    // cannot see, but the `list*` children answered 200 with an empty array instead -- RLS emptied
+    // the child query, so nothing leaked, yet the endpoint still reported success for another
+    // department's event id and disagreed with its own parent route's 404. One missing predicate in
+    // a child query away from being a real leak; refused here instead, at the same place and with
+    // the same error as every write.
+    if (!(await repo.getEventRow(tx, eventId))) throw new EventNotFoundError()
     const rows = await repo.listFeedback(tx, eventId)
     const items: FeedbackDto[] = rows.map((r) => ({
       id: r.id,

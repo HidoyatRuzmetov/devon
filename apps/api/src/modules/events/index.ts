@@ -110,6 +110,19 @@ const photoIdParams = z.object({ eventId: z.string().uuid(), photoId: z.string()
 const listQuerySchema = z.object({ from: z.string().optional(), to: z.string().optional() })
 
 const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
+  // Every *write* handler below wraps its service call in `try { ... } catch (err) { if
+  // (!mapServiceError(err, reply)) throw err }`; the read handlers never did, because before H1.2
+  // they could not raise a domain error. They can now (a `list*` for an event the caller cannot see
+  // raises `EventNotFoundError`), and without this an uncaught one becomes a 500 logged as
+  // "unhandled error" -- the wrong status for the client and a false alarm for the operator (H1.13,
+  // H16.1). This plugin is registered with a prefix, so it is its own encapsulation context and this
+  // handler covers exactly the events routes; anything that is not one of the module's three typed
+  // errors is passed straight to the app-level handler, unchanged.
+  app.setErrorHandler((err, _req, reply) => {
+    if (mapServiceError(err, reply)) return
+    throw err
+  })
+
   const departmentChildSubject = (r: FastifyRequest) => ({
     kind: 'department_child' as const,
     departmentId: activeDepartmentId(r),

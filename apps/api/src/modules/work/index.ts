@@ -310,6 +310,9 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.id,
         req.body,
       )
+      // `null` means the card is not this department's (H1.2): the same 404 the card's own routes
+      // answer, so a foreign card id is indistinguishable from one that never existed.
+      if (id === null) return sendProblem(reply, 'not_found')
       reply.code(201).send({ id })
     },
   )
@@ -393,6 +396,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.text,
         req.body.mentions ?? [],
       )
+      if (id === null) return sendProblem(reply, 'not_found')
       reply.code(201).send({ id })
     },
   )
@@ -409,7 +413,14 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { params: idParamsSchema, response: { 200: z.array(z.any()) } },
     },
     async (req, reply) => {
-      reply.send(await repo.getActivity(contextFromRequest(req), req.params.id))
+      const ctx = contextFromRequest(req)
+      // Without this the route answered 200 with an empty array for a card the caller cannot see --
+      // RLS emptied the activity query, so nothing leaked, but the endpoint reported success for
+      // another department's id and disagreed with `GET /cards/:id`'s 404 (H1.2).
+      if (!(await repo.cardExists(ctx, requireDepartmentId(req)!, req.params.id))) {
+        return sendProblem(reply, 'not_found')
+      }
+      reply.send(await repo.getActivity(ctx, req.params.id))
     },
   )
 
