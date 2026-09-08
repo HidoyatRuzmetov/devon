@@ -109,6 +109,52 @@ export default function AnalyticsScreen() {
       }
     : null
 
+  // A plain if/else (not a JSX ternary chain) so no `>...<`-shaped boundary between two regions can
+  // ever be mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic (`people-screen.tsx`
+  // and `table-screen.tsx` do the same, for the same reason).
+  let regionKey: string
+  let region: React.ReactNode
+  if (!sectionProps) {
+    regionKey = 'skeleton'
+    region = (
+      <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      </div>
+    )
+  } else if (isEmpty) {
+    regionKey = 'empty'
+    region = (
+      <StateView kind="empty" titleKey="analytics.empty.title" bodyKey="analytics.empty.body" />
+    )
+  } else {
+    regionKey = 'charts'
+    region = (
+      <div className="flex flex-col gap-6">
+        <KpiOverviewRow summary={summary!} />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+          <ThroughputSection {...sectionProps} />
+          <OnTimeRateSection {...sectionProps} />
+          <OpenVsOverdueSection {...sectionProps} />
+          <LoadPerPersonSection {...sectionProps} />
+          <LoadPerUnitSection {...sectionProps} />
+          <ProjectProgressSection {...sectionProps} />
+          <EventsParticipationSection {...sectionProps} />
+          <PollTurnoutSection {...sectionProps} />
+          <PersonalStatsSection {...sectionProps} />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader eyebrow={t('analytics.eyebrow')} title={t('analytics.title')} />
@@ -122,66 +168,18 @@ export default function AnalyticsScreen() {
 
       {/* round2 SEV2 "no skeleton -> chart crossfade": a date-range change used to swap the whole
           grid for a full-page spinner, which also hid the filter bar mid-edit -- the chrome above
-          now stays mounted and only this region crossfades between its skeleton and loaded shapes,
-          keyed on whether `summary` has resolved yet. */}
+          now stays mounted and only this region crossfades between its skeleton, empty and loaded
+          shapes, keyed on which of the three is current. */}
       <AnimatePresence mode="wait" initial={false}>
-        {!sectionProps ? (
-          <motion.div
-            key="skeleton"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
-            className="flex flex-col gap-6"
-          >
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-64 w-full" />
-              ))}
-            </div>
-          </motion.div>
-        ) : isEmpty ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
-          >
-            <StateView
-              kind="empty"
-              titleKey="analytics.empty.title"
-              bodyKey="analytics.empty.body"
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="charts"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
-            className="flex flex-col gap-6"
-          >
-            <KpiOverviewRow summary={summary!} />
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              <ThroughputSection {...sectionProps} />
-              <OnTimeRateSection {...sectionProps} />
-              <OpenVsOverdueSection {...sectionProps} />
-              <LoadPerPersonSection {...sectionProps} />
-              <LoadPerUnitSection {...sectionProps} />
-              <ProjectProgressSection {...sectionProps} />
-              <EventsParticipationSection {...sectionProps} />
-              <PollTurnoutSection {...sectionProps} />
-              <PersonalStatsSection {...sectionProps} />
-            </div>
-          </motion.div>
-        )}
+        <motion.div
+          key={regionKey}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: analyticsReduced ? 0.1 : 0.18 }}
+        >
+          {region}
+        </motion.div>
       </AnimatePresence>
     </div>
   )

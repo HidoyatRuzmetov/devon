@@ -1,7 +1,9 @@
 // `/admin/health` -- queues, DB, storage, Telegram, AI endpoint latency, backups.
+import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatTime, formatNumber } from '@devon/i18n'
-import { Badge, Button, Stagger, StaggerItem, StateView } from '@devon/ui'
+import { Badge, Button, Stagger, StaggerItem, StateView, useReducedMotion } from '@devon/ui'
 import { fetchAdminHealth, type HealthCheck } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
@@ -61,11 +63,26 @@ function HealthRow({ labelKey, check }: { labelKey: string; check: HealthCheck }
 function HealthBody() {
   const t = useT()
   const locale = useLocale()
+  const reduced = useReducedMotion()
   const query = useQuery({
     queryKey: ['admin', 'health'],
     queryFn: fetchAdminHealth,
     refetchInterval: 30_000,
   })
+
+  // round2 SEV3 "health polls every 30s and nothing moves": a live console should breathe --
+  // a small dot pulses continuously (this screen is polling, always) and the whole card gets one
+  // soft sweep every time a poll actually lands a fresh answer (not on every render of this
+  // component, only when `dataUpdatedAt` itself moves).
+  const [sweepAt, setSweepAt] = React.useState(0)
+  const lastUpdatedAt = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => {
+    if (query.dataUpdatedAt === 0) return
+    if (lastUpdatedAt.current !== undefined && lastUpdatedAt.current !== query.dataUpdatedAt) {
+      setSweepAt(query.dataUpdatedAt)
+    }
+    lastUpdatedAt.current = query.dataUpdatedAt
+  }, [query.dataUpdatedAt])
 
   if (query.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (query.isError) {
@@ -84,7 +101,11 @@ function HealthBody() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <p className="text-small text-muted-foreground">
+        <p className="flex items-center gap-2 text-small text-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="size-1.5 shrink-0 rounded-full bg-success motion-safe:animate-pulse"
+          />
           {t('admin.console.health.checkedAt', {
             time: formatTime(new Date(h.checkedAt), locale),
           })}
@@ -93,7 +114,19 @@ function HealthBody() {
           {t('admin.console.health.refresh')}
         </Button>
       </div>
-      <section className="rounded-md border border-border bg-card p-6">
+      <section className="relative overflow-hidden rounded-md border border-border bg-card p-6">
+        <AnimatePresence>
+          {sweepAt ? (
+            <motion.span
+              key={sweepAt}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-success/10"
+              initial={{ opacity: reduced ? 0.5 : 0.7 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: reduced ? 0.2 : 0.8, ease: 'easeOut' }}
+            />
+          ) : null}
+        </AnimatePresence>
         <Stagger as="ul" className="divide-y divide-border">
           <HealthRow labelKey="admin.console.health.db" check={h.db} />
           <HealthRow labelKey="admin.console.health.queue" check={h.queue} />

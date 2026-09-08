@@ -2,6 +2,7 @@
 // wipe switch (TECH-SPEC §11: typed phrase + password + optional 2FA + a 60-second, server-verified
 // countdown with cancel).
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { LOCALES, LOCALE_LABEL } from '@devon/i18n'
@@ -20,6 +21,7 @@ import {
   TabsList,
   TabsTrigger,
   toast,
+  useReducedMotion,
 } from '@devon/ui'
 import { AlertTriangle, Copy } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
@@ -91,6 +93,7 @@ function RegistrationCard() {
 
 function MaintenanceCard() {
   const t = useT()
+  const reduced = useReducedMotion()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['admin', 'maintenance'], queryFn: fetchMaintenance })
@@ -118,9 +121,21 @@ function MaintenanceCard() {
     <section className="rounded-md border border-border bg-card p-6">
       <div className="mb-1 flex items-center gap-2">
         <h2 className="text-h3 text-foreground">{t('admin.console.settings.maintenanceTitle')}</h2>
-        {query.data?.enabled ? (
-          <Badge tone="warning">{t('admin.console.settings.maintenanceOnBadge')}</Badge>
-        ) : null}
+        {/* round2 SEV3 "maintenance-mode toggle is instant": the badge pops in/out instead of the
+            toggle's only tell being the button's own label swapping. */}
+        <AnimatePresence>
+          {query.data?.enabled ? (
+            <motion.span
+              key="on"
+              initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.7 }}
+              transition={{ duration: reduced ? 0.1 : 0.2, ease: 'easeOut' }}
+            >
+              <Badge tone="warning">{t('admin.console.settings.maintenanceOnBadge')}</Badge>
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
       </div>
       <p className="mb-4 text-small text-muted-foreground">
         {t('admin.console.settings.maintenanceBody')}
@@ -282,6 +297,7 @@ type WipeStep = (typeof WIPE_STEPS)[number]
 
 function WipeCard() {
   const t = useT()
+  const reduced = useReducedMotion()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
   const instanceQuery = useQuery({
@@ -430,7 +446,7 @@ function WipeCard() {
                 <span
                   key={s}
                   className={
-                    'h-1 flex-1 rounded-full ' +
+                    'h-1 flex-1 rounded-full transition-colors duration-(--dur-standard) ' +
                     (WIPE_STEPS.indexOf(step) >= i ? 'bg-destructive' : 'bg-muted')
                   }
                 />
@@ -443,7 +459,22 @@ function WipeCard() {
               })}
             </p>
 
-            {renderWipeStep()}
+            {/* round2 SEV3 "the wipe/danger flow has no ceremony motion": each step slides/fades
+                past the last instead of the dialog's own content simply swapping -- the one dialog
+                in the product with a deliberately slower, heavier step transition, matching the
+                weight of what it is asking for. */}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={step}
+                initial={reduced ? { opacity: 0 } : { opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, x: -12 }}
+                transition={{ duration: reduced ? 0.12 : 0.24, ease: 'easeOut' }}
+                className="flex flex-col gap-4"
+              >
+                {renderWipeStep()}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </DialogContent>
       </Dialog>

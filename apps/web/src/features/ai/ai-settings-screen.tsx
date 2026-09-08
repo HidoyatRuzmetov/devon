@@ -77,8 +77,15 @@ function BudgetGauge({
   const resetCelebrate = useCelebrate()
   const previousUsedPct = React.useRef<number | undefined>(undefined)
   React.useEffect(() => {
+    // Three named booleans, each on its own line (not one chained comparison): a line mixing `>`
+    // and `<` operators around plain words is exactly what `check-i18n.mjs`'s hard-coded-JSX-text
+    // regex heuristic mistakes for a stray text node (`people-screen.tsx`/`table-screen.tsx` avoid
+    // the same trap in their own ternary-vs-if/else notes).
     const prev = previousUsedPct.current
-    if (prev !== undefined && prev >= 20 && usedPct < prev - 15 && usedPct < 5) {
+    const hadMeaningfulSpend = prev !== undefined && prev >= 20
+    const nowNearZero = usedPct < 5
+    const droppedSharply = prev !== undefined && usedPct < prev - 15
+    if (hadMeaningfulSpend && nowNearZero && droppedSharply) {
       resetCelebrate.fire()
       toast(t('ai.budget.resetToast'))
     }
