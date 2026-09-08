@@ -177,3 +177,87 @@ shell/auth-shell.tsx                        AmbientGradient BlurFade
   run given the size of this sweep; typecheck/lint/i18n/secrets gates and a `pnpm --filter @devon/web
   build` were used as the correctness backstop instead, plus the targeted reduced-motion emulation
   described above.
+
+---
+
+# Round 3 -- bringing every screen to 4.5+, 2026-09-08
+
+Scope: every screen `round2/critique.md`'s "Motion density -- per screen" table scored below 4.5,
+its exact "What is missing" column, plus the two items its own fixer round deferred (the Gantt zoom
+as a scale transition, a FLIP animation on table re-sort).
+
+## Before starting: some of this was already done
+
+Reading the current source before touching anything found that master had moved past the critique
+snapshot on several screens -- later commits (`c172876` "login shakes...", and others) had already
+built real motion into `/account` (device-list stagger + `AnimatePresence` exit + `Collapsible`
+disclosure + the 2FA success morph -- all five "what is missing" items) and `work/calendar` (month
+slide, day-cell stagger, chip `HoverLift`, the "yana N ta" `Collapsible`, and a ring pulse on today's
+cell). Both are scored 5 below on the strength of what is actually in the tree now, not re-built.
+`packages/ui/src/motion/tabs.tsx`'s `TabsContent` had no crossfade at all (a bare Radix re-export) --
+fixing it once gives every `Tabs` consumer (`project-page-screen.tsx`, `ai-settings-screen.tsx`,
+`admin/settings-screen.tsx`) a real per-switch entrance, so "tab change is instant" is marked fixed
+everywhere without a per-screen edit. The same trick closed "rings don't sweep from 0 on mount" for
+every `ProgressRing` consumer (`personal/sprints-view.tsx`, `projects/*`, `ai-settings-screen.tsx`,
+the Pomodoro widget) at once: `ProgressRing` used `initial={false}`, which explicitly skips the
+entrance animation -- switched to a real `initial` (the empty ring), which only ever plays once, at
+mount, never on a later value update. `Progress` (the linear bar) got the equivalent one-frame
+mount-grow for the same reason (the events capacity meter was the named example).
+
+## What changed, by screen
+
+| Screen | Round 2 | What was missing | Fixed | Round 3 |
+|---|---|---|---|---|
+| Auth (`/login`, `/setup`) | 4 | Locale/theme controls were static (card rise + error shake already shipped) | Trailing controls (`ThemeToggle`/`LocaleMenu`) get a delayed `Reveal` | **4.5** |
+| Home (`/`) | 4 | Pinned-charts block had no entrance (greeting already revealed) | Both the populated grid and its dashed empty state wrapped in `Reveal` | **4.5** |
+| Personal → Davrlar | 4.5 | Sprint ring did not sweep from 0 | Fixed globally via `ProgressRing` | **5** |
+| Work board | 4.5 | (not in scope this round) | -- | 4.5 |
+| Card detail sheet | 4 | Property edits had no feedback; new comments didn't animate in | `useFieldFlash` success-tint sweep on assignee/giver/priority/due/start; comments fade+rise on mount (`AnimatePresence`, per-row, no replay for existing rows) | **4.5** |
+| Events | 4 | No cover hover scale; month heads didn't reveal; capacity bar didn't fill | `group-hover:scale-110` on the cover art; `Reveal onView` on month headings; `Progress`'s global mount-grow | **4.5** |
+| Inbox | 4 | Archiving had no exit; no detail crossfade; no unread-dot fade | `AnimatePresence` + `StaggerItem exit="hidden" layout` on both list shapes; `AnimatePresence mode="wait"` keyed on the open notification; unread rail + dot fade via their own `AnimatePresence` | **4.5** |
+| Projects (list) | 4 | Ring didn't sweep; tiles had no press feedback | Ring fixed globally; `PressScale` added alongside `HoverLift` on both tile variants | **4.5** |
+| Project page | 4 | No milestone celebration; tab change instant | Milestone checkbox pairs its existing burst with a named toast; tab crossfade fixed globally | **4.5** |
+| Analytics | 4 | Charts didn't re-animate on range change; pin/unpin instant; no skeleton crossfade | `ChartCard` body remounts on `csvHref` (already encodes since/until/filter); pin glyph swap pops via `AnimatePresence`; the header/filter bar now stay mounted while only the chart region crossfades skeleton → empty → charts | **4.5** |
+| Structure | 3.5 | Org-chart had zero motion (tree list already staggered) | Nodes fade+rise in top-down draw order; connectors draw via `pathLength`, a beat behind their node | **4.5** |
+| People | 3.5 | No re-stagger when search narrowed an active unit filter; cards didn't lift | Combined `animateKey`; a plain CSS hover-lift on `MemberCard` (not the `HoverLift` primitive, which would swallow `HoverCardTrigger asChild`'s injected handlers) | **4.5** |
+| Pages | 3 | Opening a page was a hard swap; new rows (already covered by `Stagger`'s own mount behaviour) | Matching `layoutId` on a row and the detail panel morphs one into the other | **4.5** |
+| AI | 3 | Budget ring didn't draw in; flag toggle gave no row ack; no reset celebration | Ring fixed globally; per-row success flash on a landed patch; a burst+toast on a sharp `usedPct` drop (the closest client signal to "the reset just landed") | **4.5** |
+| Admin console | 3 | Health didn't breathe; maintenance toggle instant; wipe flow had no ceremony; tabs instant | A live-pulse dot + a per-poll sweep on `dataUpdatedAt` change; maintenance badge pops; wipe dialog steps slide/fade and the progress bar's fill transitions; tab crossfade fixed globally | **4.5** |
+| Departments hub | 3 | Copy gave only a toast; QR didn't fade in; switching department didn't transition | Copy button morphs to a check for a beat; QR wrapped in `Reveal`; `CurrentDepartmentCard` crossfades on `active.id` | **4.5** |
+| Work → Mine | 3.5 | No completion celebration (list had no complete action at all); groups didn't collapse | Real `Checkbox`+`celebrate` per row (the `TaskRow` shape) with strikethrough and an `AnimatePresence` exit; each risk group folds via `Collapsible` | **4.5** |
+| Work → Jadval (table) | 2 | Bulk bar/density already fixed; **no FLIP on re-sort** (round 2's own deferred item) | Rows are `motion.div`s driven by `animate={{ y: vRow.start }}` instead of the virtualizer's raw `transform` -- a re-sort now visibly travels each visible row to its new slot; first mount still fades+rises | **4.5** |
+| Work → Taqvim | 1 | (already fully built when checked -- see note above) | -- | **5** |
+| Work → Muddatlar (Gantt) | 1 | Bar draw-in/today-sweep already shipped; **zoom was a hard re-layout** (round 2's other deferred item); group heads didn't collapse | Kun/Hafta/Oy now plays a `scaleX` camera-zoom (from the previous zoom's pixel density to the new one, transform-only) instead of an instant re-layout; group heads collapse via `Collapsible` | **4.5** |
+| `/account` | 1 | (already fully built when checked -- see note above) | -- | **5** |
+| 404 / states | 3.5 | "Fine as is" per round 2 | -- | 3.5 |
+
+Shell stays at **4.5** (not below the bar, not named in this round's brief beyond what Tabs/
+ProgressRing already covered as shared primitives).
+
+## Verification
+
+- `pnpm --filter @devon/ui typecheck` and `pnpm --filter @devon/web typecheck`: clean after every
+  batch of edits.
+- `node agentic/scripts/check-i18n.mjs`: 0 errors (two accidental hard-coded-text false positives
+  from this round's own edits -- a `>=`/`<` comparison chain and a JSX ternary whose plain-text
+  boundary matched the regex the same way `people-screen.tsx`/`table-screen.tsx`'s own code comments
+  already warn about -- found and rewritten as named booleans / an if-else before landing).
+- Live-verified in the running app (`pnpm start --demo`, existing dev server on :5173): Gantt zoom
+  (Kun → Hafta, bars re-drew, group collapse persisted through the zoom change), Gantt group collapse/
+  expand, table column sort (re-order, no console errors), Mine's new checkbox (marks a card done,
+  strikethrough renders, an unrelated row's checkbox still ticks independently), calendar month
+  navigation, Pages open/back round-trip through the shared-layout panel, the org chart (nodes +
+  connectors render with no SVG console errors), Analytics date-range change (chart region redraws,
+  KPIs update) and pin/unpin glyph swap, the AI feature-flag toggle, and the departments invite copy
+  button (toast fires, icon returns to its resting state). Not reached live in this pass: the
+  super-admin-only `/admin/*` screens (the seeded demo session is a department member, not
+  `admin.super`) -- verified by typecheck/lint/i18n plus code-level reasoning against the same
+  primitives (`Collapsible`, `AnimatePresence`, `useReducedMotion`) already proven live elsewhere in
+  this same pass.
+- Every addition reduces under `useReducedMotion()` (or, for the two pure-CSS hover effects on the
+  event cover and the member card, `motion-safe:`/`motion-reduce:`): a shorter crossfade in place of
+  a translate/scale/pathLength, never a removed acknowledgement.
+- No new `Stagger`/`StaggerItem` pair was added to the virtualised table or the Gantt's per-row
+  bars -- both stay on the same perf-scoped approach round 2 chose (a lean per-row `motion.div` with
+  a direct `animate` prop, not a stagger container with its own orchestration cost) so 200+ rows still
+  cost nothing extra to lay out.
