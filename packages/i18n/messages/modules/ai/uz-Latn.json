@@ -16,6 +16,7 @@
         "hard_stop": "Byudjet tugadi"
       },
       "spentOfCap": "Bu oy {cap} dan {spent} sarflandi",
+      "resetToast": "Oylik AI byudjeti yangilandi",
       "editLabel": "Oylik byudjet (UZS)",
       "save": "Byudjetni saqlash",
       "invalidAmount": "Toʻgʻri miqdor kiriting"

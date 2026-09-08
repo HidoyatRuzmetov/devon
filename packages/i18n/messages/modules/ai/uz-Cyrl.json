@@ -16,6 +16,7 @@
         "hard_stop": "Бюджет тугади"
       },
       "spentOfCap": "Бу ой {cap} дан {spent} сарфланди",
+      "resetToast": "Ойлик AI бюджети янгиланди",
       "editLabel": "Ойлик бюджет (UZS)",
       "save": "Бюджетни сақлаш",
       "invalidAmount": "Тўғри миқдор киритинг"

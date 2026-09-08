@@ -3,10 +3,12 @@
 // feature flags, head-editable), Usage (recent traces), Assistant (`assistant-panel.tsx`'s preview-
 // then-accept panel).
 import * as React from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useT, useLocale, formatDate, formatTime, formatUzs, formatNumber } from '@devon/i18n'
 import {
   Badge,
   Button,
+  Celebrate,
   PageHeader,
   ProgressRing,
   Stagger,
@@ -18,6 +20,8 @@ import {
   TabsList,
   TabsTrigger,
   toast,
+  useCelebrate,
+  useReducedMotion,
 } from '@devon/ui'
 import { BarChart3, Gauge, Sparkles } from 'lucide-react'
 import { useDepartment, useSession } from '../../lib/session.js'
@@ -66,19 +70,39 @@ function BudgetGauge({
         ? 'text-warning'
         : 'text-success'
 
+  // round2 SEV3 "no celebration when the budget resets": the API has no dedicated "reset" event to
+  // subscribe to, so this treats a large drop in `usedPct` between two renders (a department that had
+  // meaningfully spent its month, now back near zero) as the monthly reset actually landing -- never
+  // fires on first mount (nothing to compare against yet) or on a small in-month fluctuation.
+  const resetCelebrate = useCelebrate()
+  const previousUsedPct = React.useRef<number | undefined>(undefined)
+  React.useEffect(() => {
+    const prev = previousUsedPct.current
+    if (prev !== undefined && prev >= 20 && usedPct < prev - 15 && usedPct < 5) {
+      resetCelebrate.fire()
+      toast(t('ai.budget.resetToast'))
+    }
+    previousUsedPct.current = usedPct
+    // `resetCelebrate.fire`/`t` are stable enough for this one-shot comparison; re-running this on
+    // every render of either would re-arm the same transition it just fired for.
+  }, [usedPct]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="flex flex-wrap items-center gap-5 rounded-md border border-border bg-card p-4">
-      <ProgressRing
-        value={usedPct}
-        size={72}
-        strokeWidth={6}
-        toneClassName={ringClass}
-        label={t('ai.budget.title')}
-      >
-        <span className="text-small font-medium tabular-nums text-foreground">
-          {formatNumber(Math.round(Math.min(100, usedPct)), locale)}%
-        </span>
-      </ProgressRing>
+      <span className="relative inline-flex">
+        <ProgressRing
+          value={usedPct}
+          size={72}
+          strokeWidth={6}
+          toneClassName={ringClass}
+          label={t('ai.budget.title')}
+        >
+          <span className="text-small font-medium tabular-nums text-foreground">
+            {formatNumber(Math.round(Math.min(100, usedPct)), locale)}%
+          </span>
+        </ProgressRing>
+        <Celebrate play={resetCelebrate.play} onDone={resetCelebrate.onDone} radius={40} />
+      </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-small font-medium text-foreground">{t('ai.budget.title')}</h3>
@@ -107,6 +131,13 @@ function OverviewTab() {
     if (settingsQuery.data) setBudgetInput(String(settingsQuery.data.budgetUzsPerMonth))
   }, [settingsQuery.data])
 
+  // round2 SEV3 "toggling a flag gives only the Switch's own motion, no row acknowledgement": a
+  // per-row token, bumped once the patch actually lands (not on click, since a head's toggle can
+  // still fail the mutation) -- the row it belongs to briefly tints the same way a card-detail
+  // property flashes on a committed edit.
+  const [flashedFeature, setFlashedFeature] = React.useState<string | null>(null)
+  const flashReduced = useReducedMotion()
+
   if (settingsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (settingsQuery.isError) {
     return (
@@ -123,7 +154,10 @@ function OverviewTab() {
   function toggleFlag(feature: AiFeatureId, checked: boolean) {
     patchMutation.mutate(
       { flags: { [feature]: checked } },
-      { onError: () => toast(t('toast.saveError')) },
+      {
+        onSuccess: () => setFlashedFeature(feature),
+        onError: () => toast(t('toast.saveError')),
+      },
     )
   }
 
@@ -177,8 +211,23 @@ function OverviewTab() {
             <StaggerItem
               as="li"
               key={feature}
-              className="flex items-center justify-between gap-3 py-2.5"
+              className="relative flex items-center justify-between gap-3 py-2.5"
             >
+              <AnimatePresence>
+                {flashedFeature === feature ? (
+                  <motion.span
+                    key={`${feature}-flash`}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 rounded-sm bg-success/15"
+                    initial={{ opacity: 0.9 }}
+                    animate={{ opacity: 0 }}
+                    transition={{ duration: flashReduced ? 0.15 : 0.6, ease: 'easeOut' }}
+                    onAnimationComplete={() =>
+                      setFlashedFeature((cur) => (cur === feature ? null : cur))
+                    }
+                  />
+                ) : null}
+              </AnimatePresence>
               <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
                 {t(featureLabelKey(feature))}
               </label>
