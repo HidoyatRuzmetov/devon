@@ -31,7 +31,7 @@ pre-existing false-positive rule triaged under H1.15 below; this package added n
 | `c2753c6` | **H1.6, H16.1, H2.7 — the unfurler's socket is pinned to the address it approved (DNS rebinding); process-fatal handlers; 35 new tests** |
 | `c057cbe` | **H1.5, H1.10 — the maintenance error page gets its own CSP and header set** |
 
-Net: 47 files, +3 938 / −150. Unit tests: **226 → 309** in `@devon/api`, **98 → 106** in
+Net: 47 files, +4 217 / −150 (of which the evidence file itself is one). Unit tests: **226 → 309** in `@devon/api`, **98 → 106** in
 `@devon/contracts`, plus a new HTTP-level cross-department proof script (48 attempts).
 
 ---
