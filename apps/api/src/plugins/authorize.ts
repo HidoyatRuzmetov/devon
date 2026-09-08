@@ -29,6 +29,10 @@ declare module 'fastify' {
 export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Object.freeze([
   { method: 'GET', url: '/healthz' },
   { method: 'GET', url: '/readyz' },
+  // H15.1: Prometheus scrape endpoint (`modules/metrics.ts`) -- `{public:true}` bypasses the
+  // session-based `can()` check the same way `/healthz`/`/readyz` do, but the handler enforces its
+  // OWN loopback-only gate (`DEVON_METRICS_REMOTE`), exactly like `/api/v1/setup/:token` below.
+  { method: 'GET', url: '/metrics' },
   { method: 'GET', url: '/api/v1/openapi.json' },
   { method: 'GET', url: '/api/v1/instance' },
   { method: 'POST', url: '/api/v1/setup/:token' },
