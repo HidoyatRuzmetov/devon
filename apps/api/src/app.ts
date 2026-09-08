@@ -3,7 +3,9 @@
 // (test/vitest.config.ts). `src/server.ts` is the only caller that wires the real, Postgres-backed
 // `createRepo()` and `loadConfig(process.env)`.
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
+import compress from '@fastify/compress'
 import cookie from '@fastify/cookie'
+import etag from '@fastify/etag'
 import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import {
@@ -122,6 +124,22 @@ export async function buildApp(
     },
     transform: jsonSchemaTransform,
   })
+
+  // H2.5: an `ETag` computed from the actual response body on every GET (registered before
+  // `compress` below -- Fastify's `onSend` hooks run in registration order, so the hash is taken of
+  // the real payload, not of a particular request's negotiated encoding, which keeps the ETag stable
+  // across `Accept-Encoding` values for the same content). `Cache-Control: private, no-store` (the
+  // hook above) already stops a shared/browser HTTP cache from storing the response at all -- the
+  // ETag here is for a caller that keeps its own last-seen value and sends `If-None-Match` itself
+  // (TanStack Query's `meta`-driven revalidation, a Telegram Mini App poll, a CLI/script client), not
+  // for browser-cache reuse. `ifNoneMatch: true` (the default) makes the plugin answer a matching
+  // conditional GET with a bare `304` and no body -- exactly the bytes this item asks to save.
+  await app.register(etag)
+  // H2.1: brotli (preferred) or gzip on every compressible response over the plugin's own 1 KiB
+  // default threshold -- `@fastify/compress`'s built-in `compressible` check already skips images,
+  // video and already-compressed formats (avatars, uploaded attachments served by `storagePlugin`),
+  // so this only ever touches the JSON/HTML/text this API actually returns.
+  await app.register(compress, { global: true, encodings: ['br', 'gzip', 'deflate'] })
 
   await app.register(sessionPlugin)
   // Between session (so `req.actor` exists) and authorize (so a maintenance/paused-department deny
