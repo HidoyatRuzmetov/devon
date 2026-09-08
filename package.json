@@ -12,9 +12,16 @@
     "setup": "node setup.mjs",
     "start": "node scripts/start.mjs",
     "dev": "node scripts/start.mjs",
-    "security:scan": "semgrep --config p/owasp-top-ten --error --quiet . && trivy fs --scanners vuln,secret --severity HIGH,CRITICAL --exit-code 1 --quiet ."
+    "security:scan": "node tools/security/scan.mjs",
+    "perf:check": "node tools/perf/check.mjs",
+    "knip": "knip --config tools/knip/knip.jsonc",
+    "madge": "node tools/madge/check.mjs",
+    "arch:urls": "node tools/arch/no-hardcoded-urls.mjs",
+    "arch:check": "pnpm run madge && pnpm run arch:urls && pnpm run knip"
   },
   "devDependencies": {
+    "knip": "6.34.0",
+    "madge": "8.0.0",
     "turbo": "2.10.12"
   }
 }

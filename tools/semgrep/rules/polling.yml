@@ -1,0 +1,55 @@
+# HARDENING H2.6/H29.1 "Realtime via Centrifugo instead of polling". Targets TanStack Query's
+# `refetchInterval` (this codebase's actual polling idiom -- grep confirms no raw `setInterval(...
+# fetch...)` pattern is used anywhere) and a `setInterval` whose callback body itself calls the API
+# client, which would be the equivalent hand-rolled version of the same antipattern.
+#
+# `exclude` below is a REVIEWED, DOCUMENTED allowlist (not a blanket carve-out), same convention as
+# tools/arch/no-hardcoded-urls.mjs's ALLOWLIST: every one of these already exists today, already
+# justified in its own file (e.g. inbox/hooks.ts: "a lightweight poll -- there is no realtime push
+# transport in this epic"), and depends on Centrifugo wiring that is a separate epic's job
+# (EPIC-018 "Realtime polish" per docs/03-plan/TECH-SPEC.md §15) -- out of this package's edit scope
+# (ops-tooling touches infra/tools/docs/scripts, not apps/web/src). A NEW `refetchInterval` anywhere
+# else is exactly the violation this rule exists to catch.
+rules:
+  - id: devon-polling-instead-of-realtime
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: >-
+      Polling (`refetchInterval`) instead of a realtime subscription (HARDENING H2.6/H29.1). Use
+      Centrifugo (once EPIC-018 wires it for this surface) instead of a fixed-interval refetch. If
+      this is a deliberate, reviewed exception (no realtime transport for this surface yet), add it to
+      tools/semgrep/rules/polling.yml's own `exclude` list with the same justification style as the
+      existing entries, rather than suppressing this finding ad hoc.
+    pattern: refetchInterval:$MS
+    paths:
+      include:
+        - apps/web/src/**
+      exclude:
+        - "**/*.test.*"
+        - "**/*.spec.*"
+        - "**/test/**"
+        - apps/web/src/features/work/hooks.ts # board polling -- Centrifugo lands with EPIC-018
+        - apps/web/src/features/inbox/hooks.ts # "a lightweight poll -- there is no realtime push transport in this epic" (own comment)
+        - apps/web/src/features/admin/health-screen.tsx # admin health page self-refresh, not a per-user data feed
+        - apps/web/src/features/admin/settings-screen.tsx # wipe-countdown poll, inherently a short-lived local poll of sentinel state, not app data
+
+  - id: devon-hand-rolled-fetch-polling
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: >-
+      `setInterval` whose body calls the API client -- a hand-rolled version of the same polling
+      antipattern as `refetchInterval` (HARDENING H2.6/H29.1). Use TanStack Query's `refetchInterval`
+      at minimum (so it dedupes/pauses correctly), or a real realtime subscription.
+    patterns:
+      - pattern: |
+          setInterval(() => { ...; $API.$METHOD(...); ... }, $MS)
+      - metavariable-regex:
+          metavariable: $API
+          regex: ^(api|apiClient)$
+    paths:
+      include:
+        - apps/web/src/**
+      exclude:
+        - "**/*.test.*"
+        - "**/*.spec.*"
+        - "**/test/**"

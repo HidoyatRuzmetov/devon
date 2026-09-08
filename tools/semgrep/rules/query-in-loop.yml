@@ -1,0 +1,47 @@
+# HARDENING H3.1 / H29.1 "no query in a loop (Semgrep rule)" -- this repo's DB access goes through
+# `@devon/db`'s `withContext()` callback, whose transaction handle exposes `.raw(...)` for a real
+# query (apps/api/src/modules/*/repo.ts's own convention: "Postgres access ... through withContext()/
+# tx.raw() directly"). A `.raw(...)` call inside a loop body is almost always an N+1: the fix is a
+# single batched query (`where id = any($1)`, a join, or a `unnest`-based bulk write) outside the loop.
+rules:
+  - id: devon-query-in-loop
+    languages: [typescript, javascript]
+    severity: WARNING
+    message: >-
+      A `.raw(...)` database call inside a loop body -- likely N+1 (HARDENING H3.1/H29.1). Batch it:
+      one query with `where id = any($1)` (or a join) instead of one query per loop iteration.
+    patterns:
+      - pattern-either:
+          - pattern: |
+              for (...) {
+                ...
+                $TX.raw(...)
+                ...
+              }
+          - pattern: |
+              for (const $ITEM of $LIST) {
+                ...
+                $TX.raw(...)
+                ...
+              }
+          - pattern: |
+              while (...) {
+                ...
+                $TX.raw(...)
+                ...
+              }
+    paths:
+      include:
+        - apps/api/src/**
+        - packages/db/src/**
+      exclude:
+        - "**/*.test.*"
+        - "**/*.spec.*"
+        - "**/test/**"
+        - "**/seed/**" # bulk seed scripts intentionally loop with per-row inserts today (idempotent, one-time, dev/demo only) -- a separate concern from a hot request-path N+1
+        # --- reviewed while building this rule (ops-tooling package, 2026-09-08) -- REAL findings, left
+        #     in the codebase because fixing them means editing apps/api/src, out of this package's edit
+        #     scope. Listed in agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md's H29
+        #     section for a follow-up package; a NEW occurrence anywhere else still fails this gate.
+        - apps/api/src/modules/notifications/repo.ts
+        - apps/api/src/modules/pages/onboarding.ts

@@ -1,0 +1,41 @@
+# HARDENING H7.1 "no synchronous filesystem ... work in handlers". Scoped to apps/api/src/modules/**
+# (route/service code, one file per module -- e.g. modules/accounts/repo.ts) rather than all of
+# apps/api/src/: boot-time code (src/config.ts, src/module-loader.ts's readdirSync-based module
+# discovery, run once at process start before the server ever listens) legitimately uses sync fs and
+# is not a request handler -- flagging it would be a false positive this rule has no way to fix.
+rules:
+  - id: devon-sync-fs-in-handler-module
+    languages: [typescript, javascript]
+    severity: ERROR
+    message: >-
+      Synchronous filesystem call in an apps/api module (HARDENING H7.1) -- this blocks the whole
+      Fastify event loop for every in-flight request while it runs. Use the `node:fs/promises`
+      equivalent (or the existing storage plugin, for anything under STORAGE_LOCAL_DIR) instead.
+    pattern-either:
+      - pattern: fs.readFileSync(...)
+      - pattern: fs.writeFileSync(...)
+      - pattern: fs.existsSync(...)
+      - pattern: fs.readdirSync(...)
+      - pattern: fs.statSync(...)
+      - pattern: fs.appendFileSync(...)
+      - pattern: fs.unlinkSync(...)
+      - pattern: fs.mkdirSync(...)
+      - pattern: fs.copyFileSync(...)
+      - pattern: fs.renameSync(...)
+      - pattern: readFileSync(...)
+      - pattern: writeFileSync(...)
+      - pattern: existsSync(...)
+      - pattern: readdirSync(...)
+      - pattern: statSync(...)
+      - pattern: appendFileSync(...)
+      - pattern: unlinkSync(...)
+      - pattern: mkdirSync(...)
+      - pattern: copyFileSync(...)
+      - pattern: renameSync(...)
+    paths:
+      include:
+        - apps/api/src/modules/**
+      exclude:
+        - "**/*.test.*"
+        - "**/*.spec.*"
+        - "**/test/**"
