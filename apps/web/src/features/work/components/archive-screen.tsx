@@ -13,6 +13,9 @@ import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 
 export default function ArchiveScreen() {
+  // H4.1/H4.2: a per-person card list, opted into the compiler individually (`vite.config.ts`'s
+  // note) alongside this package's other long-list screens.
+  'use memo'
   const t = useT()
   const locale = useLocale()
   const { user } = useSession()

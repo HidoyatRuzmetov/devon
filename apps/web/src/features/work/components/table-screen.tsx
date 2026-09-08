@@ -159,6 +159,10 @@ function SortHeader({
 const MOBILE_ROW_HEIGHT = 64
 
 export default function TableScreen() {
+  // H4.1/H4.2: virtualised, up to 100 sorted/selectable rows re-rendering on every sort, filter,
+  // selection and bulk-action tick -- a measured hot spot, opted into the compiler individually
+  // (`vite.config.ts`'s note) rather than via a blanket `compiler: true`.
+  'use memo'
   const t = useT()
   const reducedMotion = useReducedMotion()
   const search = useSearchParams()
@@ -561,6 +565,10 @@ function TableRow({
   top: number
   height: number
 }) {
+  // H4.1/H4.2: one instance per visible virtualised row (up to ~20 on screen at once), re-rendering
+  // on every parent sort/selection tick even when this row's own card is unchanged -- a measured hot
+  // spot, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const locale = useLocale()
   const reduced = useReducedMotion()
@@ -744,6 +752,8 @@ function MobileTableRow({
   top: number
   height: number
 }) {
+  // H4.1/H4.2: same virtualised-row hot spot as `TableRow`, for the mobile layout.
+  'use memo'
   const t = useT()
   const reduced = useReducedMotion()
   const assignee = members.find((m) => m.userId === card.assigneeUserId)

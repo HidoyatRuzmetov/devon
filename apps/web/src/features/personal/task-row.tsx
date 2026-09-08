@@ -52,6 +52,9 @@ export function TaskRow({
   onAiSubtasks,
   aiSubtasksPending = false,
 }: TaskRowProps) {
+  // H4.1: one instance per nested personal task, recursively -- a measured hot spot for a deep
+  // sprint tree, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const [title, setTitle] = React.useState(node.title)
   React.useEffect(() => setTitle(node.title), [node.title])

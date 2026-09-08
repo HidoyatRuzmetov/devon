@@ -123,6 +123,9 @@ function GanttBar({
   /** Staggers this bar's draw-in against its siblings (round2 SEV2: "per-row stagger"). */
   rowIndex: number
 }) {
+  // H4.1/H4.2: one per card on the Gantt (up to 100), each with its own drag state -- a measured hot
+  // spot, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const reduced = useReducedMotion()
   const patchCard = usePatchCardMutation()
@@ -265,6 +268,9 @@ function GanttBar({
 }
 
 export default function TimelineScreen() {
+  // H4.1/H4.2: up to 100 Gantt bars re-rendering on every zoom, filter and drag tick -- a measured
+  // hot spot, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const locale = useLocale()
   const reducedTimeline = useReducedMotion()

@@ -411,6 +411,9 @@ function UnitRow({
   collapsed: ReadonlySet<string>
   toggleCollapsed: (id: string) => void
 }) {
+  // H4.1: one instance per bo'lim node, recursively -- a measured hot spot for a department with a
+  // deep tree, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const [editing, setEditing] = React.useState(false)
   const [draft, setDraft] = React.useState(node.name)
