@@ -4,11 +4,12 @@
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { FilterChip, Input, Stagger, StaggerItem, StateView } from '@devon/ui'
+import { FilterChip, Input, Stagger, StaggerItem, StateView, cn } from '@devon/ui'
 import { Search } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { useOnline } from '../../lib/use-online.js'
+import { useSearchParams } from '../../lib/router.js'
 import { ApiError } from '../../lib/api-client.js'
 import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.js'
 import { useMyDepartments } from './use-my-departments.js'
@@ -68,6 +69,14 @@ export default function PeopleScreen() {
   const departmentId = departments.activeDepartmentId
   const [query, setQuery] = React.useState('')
   const [unitFilter, setUnitFilter] = React.useState<string | null>(null)
+  // ui-blitz round3 #23: the hover card's "copy link" action writes `?member=<userId>` -- this reads
+  // it back, drops any unit filter that would hide that member, and scrolls/highlights their card
+  // once the directory has loaded. `consumedRef` makes this a one-shot effect (the param stays in the
+  // URL after landing, so a later re-render must not keep re-scrolling/re-clearing the filter).
+  const search = useSearchParams()
+  const highlightMemberId = search.get('member')
+  const [highlightedId, setHighlightedId] = React.useState<string | null>(null)
+  const consumedHighlightRef = React.useRef<string | null>(null)
 
   const membersQuery = useQuery({
     queryKey: ['structure', 'members', departmentId],
@@ -79,6 +88,26 @@ export default function PeopleScreen() {
     queryFn: () => fetchUnitsOverview(departmentId!),
     enabled: departmentId !== null,
   })
+
+  React.useEffect(() => {
+    if (!highlightMemberId || !membersQuery.data) return
+    if (consumedHighlightRef.current === highlightMemberId) return
+    const member = membersQuery.data.find((m) => m.userId === highlightMemberId)
+    if (!member) return
+    consumedHighlightRef.current = highlightMemberId
+    setUnitFilter((cur) => (cur !== null && cur !== member.unitId ? null : cur))
+    setQuery('')
+    const raf = requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-member-id="${CSS.escape(highlightMemberId)}"]`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setHighlightedId(highlightMemberId)
+      window.setTimeout(
+        () => setHighlightedId((cur) => (cur === highlightMemberId ? null : cur)),
+        2400,
+      )
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [highlightMemberId, membersQuery.data])
 
   if (forced) return <ForcedStateBlock kind={forced} />
   if (!online) {
@@ -172,7 +201,16 @@ export default function PeopleScreen() {
           <StaggerItem key={m.userId} className="h-full">
             {/* Already filtered to exactly this unit (the filter chip bar above names it) -- no
                 `onFilterByUnit` here, since re-applying the same filter would be a no-op action. */}
-            <MemberCard member={m} unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null} />
+            <div
+              data-member-id={m.userId}
+              className={cn(
+                'h-full rounded-md transition-shadow duration-(--dur-standard)',
+                highlightedId === m.userId &&
+                  'ring-2 ring-primary ring-offset-2 ring-offset-background',
+              )}
+            >
+              <MemberCard member={m} unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null} />
+            </div>
           </StaggerItem>
         ))}
       </Stagger>
@@ -194,11 +232,20 @@ export default function PeopleScreen() {
             >
               {group.members.map((m) => (
                 <StaggerItem key={m.userId} className="h-full">
-                  <MemberCard
-                    member={m}
-                    unit={group.unit}
-                    onFilterByUnit={group.unit ? setUnitFilter : undefined}
-                  />
+                  <div
+                    data-member-id={m.userId}
+                    className={cn(
+                      'h-full rounded-md transition-shadow duration-(--dur-standard)',
+                      highlightedId === m.userId &&
+                        'ring-2 ring-primary ring-offset-2 ring-offset-background',
+                    )}
+                  >
+                    <MemberCard
+                      member={m}
+                      unit={group.unit}
+                      onFilterByUnit={group.unit ? setUnitFilter : undefined}
+                    />
+                  </div>
                 </StaggerItem>
               ))}
             </Stagger>

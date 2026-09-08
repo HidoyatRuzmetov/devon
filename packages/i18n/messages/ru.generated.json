@@ -2217,7 +2217,10 @@
         "membership": "Членство",
         "unit": "Отдел",
         "openBoardColumn": "Открыть колонку на доске",
-        "filterByUnitAria": "Показать только «{unit}»"
+        "filterByUnitAria": "Показать только «{unit}»",
+        "copyLink": "Скопировать ссылку",
+        "copyLinkAria": "Скопировать ссылку на профиль {name}",
+        "linkCopied": "Ссылка скопирована"
       }
     },
     "common": {

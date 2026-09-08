@@ -97,7 +97,10 @@
         "membership": "Membership",
         "unit": "Unit",
         "openBoardColumn": "Open board column",
-        "filterByUnitAria": "View only «{unit}»"
+        "filterByUnitAria": "View only «{unit}»",
+        "copyLink": "Copy link",
+        "copyLinkAria": "Copy a link to {name}'s profile",
+        "linkCopied": "Link copied"
       }
     },
     "common": { "head": "Head", "member": "Member" }

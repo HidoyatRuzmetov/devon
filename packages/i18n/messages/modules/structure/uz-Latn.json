@@ -97,7 +97,10 @@
         "membership": "Aʼzolik",
         "unit": "Boʻlim",
         "openBoardColumn": "Doskadagi ustunini ochish",
-        "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish"
+        "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish",
+        "copyLink": "Havolani nusxalash",
+        "copyLinkAria": "{name} profiliga havolani nusxalash",
+        "linkCopied": "Havola nusxalandi"
       }
     },
     "common": { "head": "Boshligʻi", "member": "Aʼzo" }

@@ -392,9 +392,12 @@ export function TodayView({
                         )}
                         {task.estimateMin ? (
                           // ui-blitz round3 #21: same fix as `task-row.tsx` -- a translated unit
-                          // with a non-breaking space, not a bare prime mark.
+                          // with a non-breaking space (U+00A0, not a plain space that can wrap the
+                          // number away from its unit), not a bare prime mark.
                           <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-                            {task.estimateMin} {t('personal.duration.minutesShort')}
+                            {task.estimateMin}
+                            {' '}
+                            {t('personal.duration.minutesShort')}
                           </span>
                         ) : null}
                         <Button

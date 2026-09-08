@@ -2217,7 +2217,10 @@
         "membership": "Аъзолик",
         "unit": "Бўлим",
         "openBoardColumn": "Доскадаги устунини очиш",
-        "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш"
+        "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш",
+        "copyLink": "Ҳаволани нусхалаш",
+        "copyLinkAria": "{name} профилига ҳаволани нусхалаш",
+        "linkCopied": "Ҳавола нусхаланди"
       }
     },
     "common": {

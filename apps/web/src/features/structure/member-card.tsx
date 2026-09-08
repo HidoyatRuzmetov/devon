@@ -14,8 +14,9 @@ import {
   HoverCardContent,
   HoverCardTrigger,
   initialsFromName,
+  toast,
 } from '@devon/ui'
-import { KanbanSquare, Users } from 'lucide-react'
+import { KanbanSquare, Link as LinkIcon, Users } from 'lucide-react'
 import { avatarUrl } from '../../lib/avatar.js'
 import { navigate } from '../../lib/router.js'
 import type { Member, Unit } from './api.js'
@@ -161,17 +162,38 @@ export function MemberCard({
           </Badge>
         </div>
         {unitControl}
-        <Button
-          variant="secondary"
-          size="sm"
-          className="mt-3 w-full"
-          onClick={() =>
-            navigate(`/work?q=${encodeURIComponent(`assignee:"${member.givenName}"`)}`)
-          }
-        >
-          <KanbanSquare className="size-4" aria-hidden="true" />
-          {t('structure.people.hoverCard.openBoardColumn')}
-        </Button>
+        {/* ui-blitz round3 #23 ("one action only"): a second, real action -- there is no email or
+            Telegram handle on `Member` to build a genuine contact action from (the directory
+            deliberately does not expose that PII to every colleague; MODULE-GUIDE.md/CLAUDE.md keep
+            contact details out of surfaces like this), so the honest second action is a shareable
+            deep link into this exact profile (`people-screen.tsx` reads `?member=` back out and
+            scrolls/highlights the matching card), not a fabricated mailto/tg: link. */}
+        <div className="mt-3 flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={() =>
+              navigate(`/work?q=${encodeURIComponent(`assignee:"${member.givenName}"`)}`)
+            }
+          >
+            <KanbanSquare className="size-4" aria-hidden="true" />
+            {t('structure.people.hoverCard.openBoardColumn')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            aria-label={t('structure.people.hoverCard.copyLinkAria', { name: fullName(member) })}
+            onClick={() => {
+              const url = `${window.location.origin}/people?member=${encodeURIComponent(member.userId)}`
+              void navigator.clipboard
+                .writeText(url)
+                .then(() => toast(t('structure.people.hoverCard.linkCopied')))
+            }}
+          >
+            <LinkIcon className="size-4" aria-hidden="true" />
+          </Button>
+        </div>
       </HoverCardContent>
     </HoverCard>
   )
