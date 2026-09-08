@@ -48,16 +48,18 @@
 		reverse_proxy centrifugo:8000
 	}
 
-	# Everything else: the static SPA build (apps/web's `build` output, served from a mounted volume
-	# once that image exists). A live 503 from `api`/`web` (an app-level maintenance-mode response, or
-	# any other real 5xx) is left alone here -- the SPA already reads `GET /api/v1/instance`'s
-	# `maintenance` field and renders the real, super-admin-authored, four-locale message client-side,
-	# which this static fallback cannot know (it has no way to ask an api container that is up and
-	# answering). This block exists for the other case TECH-SPEC §11 names: "Caddy serves the same page
-	# if the API is down" -- `api`/`web` genuinely unreachable (container stopped, connection refused),
-	# where there is no JSON body, no SPA bundle and no live message to read at all.
+	# Everything else: the static SPA build, served by apps/web's own image (H17/H18: nginx-
+	# unprivileged on 8080 -- see apps/web/Dockerfile and infra/web/nginx.conf; not :80, since that
+	# image runs its server as a non-root user on an unprivileged port). A live 503 from `api`/`web`
+	# (an app-level maintenance-mode response, or any other real 5xx) is left alone here -- the SPA
+	# already reads `GET /api/v1/instance`'s `maintenance` field and renders the real, super-admin-
+	# authored, four-locale message client-side, which this static fallback cannot know (it has no way
+	# to ask an api container that is up and answering). This block exists for the other case
+	# TECH-SPEC §11 names: "Caddy serves the same page if the API is down" -- `api`/`web` genuinely
+	# unreachable (container stopped, connection refused), where there is no JSON body, no SPA bundle
+	# and no live message to read at all.
 	handle {
-		reverse_proxy web:80 {
+		reverse_proxy web:8080 {
 			lb_try_duration 2s
 		}
 	}

@@ -12,11 +12,14 @@
 # resolves the `@sha256:...` part. Re-pin with:
 #   docker buildx imagetools inspect <image>:<tag> | grep '^Digest:'
 #
-# `apps/api` / `apps/web` are not containerised yet -- they do not exist in this epic (EPIC-000 runs
-# them as local processes via `pnpm start`, per scripts/start.mjs). Their Dockerfiles and `api`/`web`/
-# `worker` Compose services land with the epic that ships a production image build (TECH-SPEC §13);
-# `caddy`'s upstream blocks below are written against those future service names so the Caddyfile does
-# not need to change again when they arrive.
+# This is the DEVELOPMENT compose file: `apps/api`/`apps/web` still run as local processes here via
+# `pnpm start` (scripts/start.mjs) -- deliberately; a developer's inner loop should not need a Docker
+# image rebuild per code change. Their Dockerfiles (`apps/api/Dockerfile`, `apps/api/Dockerfile.worker`,
+# `apps/web/Dockerfile`) and the `api`/`web`/`worker` Compose services that run them exist, but live in
+# `infra/docker-compose.prod.yml` (ops-tooling package, ledger 2026-09-08T06-45-00-05-00), a separate
+# file for a separate concern (H17/H18) -- see `docs/ops/DEPLOY.md`. `caddy`'s upstream blocks below
+# are written against those same service names so `infra/Caddyfile` is shared by both compose files
+# unchanged.
 name: devon
 
 x-logging: &default-logging
