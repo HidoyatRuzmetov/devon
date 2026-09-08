@@ -56,6 +56,22 @@ fi
 POSTGRES_IMAGE="$(postgres_image "$COMPOSE_FILE")"
 run_pg() { docker run --rm --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" "$@"; }
 
+# Encrypted backups (backup.sh's BACKUP_ENCRYPTION_PASSPHRASE path, H19.1) decrypt to a throwaway
+# plaintext file for the duration of this restore only.
+DECRYPTED=""
+RESTORE_SOURCE="$BACKUP_FILE"
+if [[ "$BACKUP_FILE" == *.gpg ]]; then
+  if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+    echo "[restore] FAIL: $BACKUP_FILE is encrypted but BACKUP_ENCRYPTION_PASSPHRASE is not set." >&2
+    exit 1
+  fi
+  DECRYPTED="$(mktemp "${TMPDIR:-/tmp}/devon-restore-XXXXXX.dump")"
+  gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+    --decrypt --output "$DECRYPTED" "$BACKUP_FILE"
+  RESTORE_SOURCE="$DECRYPTED"
+  trap '[ -n "$DECRYPTED" ] && { shred -u "$DECRYPTED" 2>/dev/null || rm -f "$DECRYPTED"; }' EXIT
+fi
+
 EXISTS="$(run_pg psql -h "$POSTGRES_HOST" -U postgres -tA -c "select 1 from pg_database where datname='$TARGET_DB'")"
 if [ "$EXISTS" != "1" ]; then
   echo "[restore] creating database '$TARGET_DB' on ${POSTGRES_HOST}"
@@ -64,6 +80,6 @@ fi
 
 echo "[restore] restoring $BACKUP_FILE into $TARGET_DB ..."
 docker run --rm -i --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" \
-  pg_restore -h "$POSTGRES_HOST" -U postgres -d "$TARGET_DB" --clean --if-exists --no-owner < "$BACKUP_FILE"
+  pg_restore -h "$POSTGRES_HOST" -U postgres -d "$TARGET_DB" --clean --if-exists --no-owner < "$RESTORE_SOURCE"
 
 echo "[restore] done. Target database: $TARGET_DB"
