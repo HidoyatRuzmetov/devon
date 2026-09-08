@@ -20,7 +20,7 @@ import {
 } from './repo.js'
 import { deliverNotification as deliver } from './delivery.js'
 import { listGroupsForKind } from '../telegram/repo.js'
-import { getBot } from '../telegram/transport.js'
+import { getBot, sendPlainMessage } from '../telegram/transport.js'
 import type { LocalizedText } from './schemas.js'
 
 const TZ = 'Asia/Tashkent'
@@ -144,10 +144,16 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     const total = Object.values(totals).reduce((a, b) => a + (b ?? 0), 0)
     if (total === 0) continue
     const text = `Haftalik xulosa / Weekly summary: ${summarizeCounts(totals, 'uz-Latn')}`
-    try {
-      await bot.api.sendMessage(group.chatId, text)
-    } catch (err) {
-      log.warn({ err, chatId: group.chatId }, 'notifications: weekly department digest send failed')
+    // H8.1: timeout- and circuit-breaker-bound (`sendPlainMessage`), same as every other Telegram
+    // send in this codebase -- previously called `bot.api.sendMessage` directly with neither, so a
+    // wedged socket here could hold this cron's single-threaded `for` loop open indefinitely and a
+    // sustained Telegram outage cost every department in the loop a full unbounded wait.
+    const result = await sendPlainMessage(group.chatId, text)
+    if (!result.ok) {
+      log.warn(
+        { error: result.error, chatId: group.chatId },
+        'notifications: weekly department digest send failed',
+      )
     }
   }
 }

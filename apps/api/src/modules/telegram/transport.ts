@@ -14,6 +14,7 @@ import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates
 import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
 import { telegram as telegramBreaker } from '../../lib/resilience/registry.js'
 import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
+import { withTimeout } from '../../lib/resilience/timeout.js'
 
 let cachedBot: Bot | null = null
 let cachedToken: string | null = null
@@ -186,13 +187,14 @@ export async function sendVerificationCode(
 
   const status = await getLinkStatus(userId)
   if (!status.linked || !status.chatId) return { ok: false, error: 'telegram_not_linked' }
+  const chatId = status.chatId // narrowed non-null here; re-read inside the closure below would not be
 
   const locale = await resolveLocale(userId)
   const text = tb(locale, 'security.code', { code, minutes: validForMinutes })
 
   try {
     const sent = await telegramBreaker.execute(() =>
-      withTimeout(bot.api.sendMessage(status.chatId, text), 8000, 'telegram sendMessage'),
+      withTimeout(bot.api.sendMessage(chatId, text), 8000, 'telegram sendMessage'),
     )
     return { ok: true, messageId: sent.message_id }
   } catch (err) {
@@ -223,13 +225,4 @@ export async function sendPlainMessage(chatId: string, text: string): Promise<Se
   } catch (err) {
     return { ok: false, error: sendErrorMessage(err) }
   }
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`telegram send timed out after ${ms}ms`)), ms),
-    ),
-  ])
 }
