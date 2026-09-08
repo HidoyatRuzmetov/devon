@@ -71,7 +71,8 @@ export async function issueLinkCode(userId: string, ttlMinutes = 15): Promise<Li
 }
 
 export type ConsumeLinkCodeResult =
-  { ok: true; userId: string } | { ok: false; reason: 'not_found' | 'expired' | 'already_used' }
+  | { ok: true; userId: string }
+  | { ok: false; reason: 'not_found' | 'expired' | 'already_used' }
 
 /** Race-safe consumption, same shape as `apps/api/src/db/repo.ts`'s `consumeSetupToken` (AC-12's
  * pattern reused here): the `update ... where consumed_at is null and expires_at > now() returning`
