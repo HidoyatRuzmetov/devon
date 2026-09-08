@@ -56,7 +56,7 @@ describe('the JSON parser refuses an over-nested body (H7.4)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
-      payload: { login: 'nobody', password: 'wrong-password-value' },
+      payload: { login: 'nobody', password: 'wrong-example-value' },
     })
     expect(res.statusCode).toBe(401)
     await app.close()

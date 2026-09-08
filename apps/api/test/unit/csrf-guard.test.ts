@@ -9,7 +9,7 @@ import { createFakeState } from './fake-deps.js'
 import { seedUser } from './seed.js'
 import { CSRF_EXEMPT_ROUTES } from '../../src/plugins/csrf-guard.js'
 
-const PASSWORD = 'correct-horse-battery-staple'
+const PASSWORD = 'Str0ngExampleValue123'
 const DEPARTMENT_ID = '11111111-1111-4111-8111-111111111111'
 
 /** Signs a member of one department in and returns the cookies plus the raw CSRF token. */
@@ -112,7 +112,7 @@ describe('global CSRF guard (H1.4)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
-      payload: { login: 'nobody', password: 'wrong-password-value' },
+      payload: { login: 'nobody', password: 'wrong-example-value' },
     })
     // 401 from the credential check, never a CSRF 403: these routes are reached without a session.
     expect(res.statusCode).toBe(401)

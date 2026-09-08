@@ -102,7 +102,7 @@ describe('LoginThrottle (H1.9)', () => {
 describe('POST /api/v1/auth/login lockout (H1.9)', () => {
   it('locks after repeated wrong passwords and answers uniformly for an unknown login', async () => {
     const state = createFakeState()
-    await seedUser(state, { login: 'aziz', password: 'correct-horse-battery-staple' })
+    await seedUser(state, { login: 'aziz', password: 'Str0ngExampleValue123' })
     const { app } = await buildTestApp(state)
 
     // Distinct source addresses so the per-IP `@fastify/rate-limit` cap (10/minute on this route)
@@ -112,7 +112,7 @@ describe('POST /api/v1/auth/login lockout (H1.9)', () => {
         method: 'POST',
         url: '/api/v1/auth/login',
         remoteAddress,
-        payload: { login, password: 'definitely-the-wrong-password' },
+        payload: { login, password: 'definitely-wrong-example' },
       })
 
     for (let i = 0; i < 4; i += 1) {

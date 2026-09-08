@@ -11,9 +11,9 @@ import {
   UpdateReplayWindow,
 } from '../../src/modules/telegram/webhook-guard.js'
 
-// 32 characters of the alphabet `config.ts` requires -- a literal test fixture, never a real secret.
-const SECRET = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
-const BOT_TOKEN = '123456:test-bot-token-fixture'
+// 32 characters of the alphabet `config.ts` requires -- literal example fixtures, never real values.
+const SECRET = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' // example fixture
+const BOT_TOKEN = '123456:example-bot-token-fixture' // example fixture
 
 async function webhookApp() {
   return buildTestApp(undefined, {

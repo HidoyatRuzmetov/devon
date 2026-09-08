@@ -7,6 +7,12 @@
 // this one; two purpose-strings can never collide).
 import { createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto'
 
+/** GCM's full 128-bit authentication tag (H1.15). Pinned explicitly on both halves rather than left
+ * to Node's default: without `authTagLength`, `decipher.setAuthTag()` accepts a 4-, 8-, 12-, 13-,
+ * 14-, 15- or 16-byte tag, so a stored ciphertext whose tag had been truncated to 4 bytes would
+ * still decrypt -- and a 32-bit tag is forgeable. With it pinned, anything but 16 bytes throws. */
+const AUTH_TAG_LENGTH = 16
+
 function deriveKey(csrfSecret: string): Buffer {
   return Buffer.from(hkdfSync('sha256', csrfSecret, '', 'devon.admin.sentinel_key_enc', 32))
 }
@@ -14,7 +20,7 @@ function deriveKey(csrfSecret: string): Buffer {
 export function encryptSecret(plain: string, csrfSecret: string): string {
   const key = deriveKey(csrfSecret)
   const iv = randomBytes(12)
-  const cipher = createCipheriv('aes-256-gcm', key, iv)
+  const cipher = createCipheriv('aes-256-gcm', key, iv, { authTagLength: AUTH_TAG_LENGTH })
   const ciphertext = Buffer.concat([cipher.update(plain, 'utf8'), cipher.final()])
   const tag = cipher.getAuthTag()
   return `${iv.toString('hex')}:${tag.toString('hex')}:${ciphertext.toString('hex')}`
@@ -24,7 +30,9 @@ export function decryptSecret(encoded: string, csrfSecret: string): string {
   const [ivHex, tagHex, dataHex] = encoded.split(':')
   if (!ivHex || !tagHex || !dataHex) throw new Error('malformed encrypted secret')
   const key = deriveKey(csrfSecret)
-  const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'))
+  const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(ivHex, 'hex'), {
+    authTagLength: AUTH_TAG_LENGTH,
+  })
   decipher.setAuthTag(Buffer.from(tagHex, 'hex'))
   return Buffer.concat([decipher.update(Buffer.from(dataHex, 'hex')), decipher.final()]).toString(
     'utf8',

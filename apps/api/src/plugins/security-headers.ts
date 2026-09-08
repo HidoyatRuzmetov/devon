@@ -114,8 +114,37 @@ export function isOriginAllowed(
   allowed: ReadonlySet<string>,
   isProduction: boolean,
 ): boolean {
-  if (allowed.has(origin)) return true
-  return !isProduction && isLoopbackOrigin(origin)
+  return resolveAllowedOrigin(origin, allowed, isProduction) !== null
+}
+
+/**
+ * The value to put in `Access-Control-Allow-Origin`, or `null` to send no CORS headers at all.
+ *
+ * Deliberately returns the matching entry **from the configured allow-list**, not the request's own
+ * `Origin` header, even though the two are equal by construction when a match is found: the byte
+ * sequence that leaves this process is one an operator configured, never one a caller sent. That
+ * also makes the "no user input reaches a CORS header" property visible to a static analyser
+ * (Semgrep's `javascript.express.security.cors-misconfiguration`), rather than something a reader
+ * has to reconstruct from the `has()` check three lines earlier.
+ */
+export function resolveAllowedOrigin(
+  origin: string,
+  allowed: ReadonlySet<string>,
+  isProduction: boolean,
+): string | null {
+  for (const configured of allowed) {
+    if (configured === origin) return configured
+  }
+  if (isProduction) return null
+  // Development only (see the note above): rebuilt from the parsed URL's own components rather than
+  // echoed, so what is emitted is a normalised origin this code constructed.
+  if (!isLoopbackOrigin(origin)) return null
+  try {
+    const { protocol, hostname, port } = new URL(origin)
+    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`
+  } catch {
+    return null
+  }
 }
 
 function applyStaticHeaders(reply: FastifyReply, isProduction: boolean, isHttps: boolean): void {
@@ -144,17 +173,25 @@ export default fp(async function securityHeadersPlugin(app: FastifyInstance) {
     applyStaticHeaders(reply, isProduction, req.protocol === 'https')
 
     const origin = req.headers.origin
-    const originAllowed =
-      typeof origin === 'string' &&
-      origin !== 'null' &&
-      isOriginAllowed(origin, allowedOrigins, isProduction)
+    const allowedOrigin =
+      typeof origin === 'string' && origin !== 'null'
+        ? resolveAllowedOrigin(origin, allowedOrigins, isProduction)
+        : null
+    const originAllowed = allowedOrigin !== null
 
     if (typeof origin === 'string') {
       // `Vary: Origin` even when the origin is refused: the answer genuinely differs per origin, and
       // a shared cache must never reuse one origin's response for another.
       reply.header('vary', 'origin')
-      if (originAllowed) {
-        reply.header('access-control-allow-origin', origin)
+      if (allowedOrigin !== null) {
+        // Triaged false positive. The rule fires on any data-flow from `req.headers.origin` into
+        // this header and cannot see the exact-match check `resolveAllowedOrigin` performs, which is
+        // the control the rule exists to demand: `allowedOrigin` is an entry of the operator's
+        // configured allow-list (or, outside production only, a loopback origin rebuilt from parsed
+        // URL components), never the caller's header echoed back, and never `*`.
+        // `test/unit/security-headers.test.ts` proves an unknown origin gets no CORS header at all.
+        // nosemgrep: javascript.express.security.cors-misconfiguration.cors-misconfiguration
+        reply.header('access-control-allow-origin', allowedOrigin)
         reply.header('access-control-allow-credentials', 'true')
       }
     }

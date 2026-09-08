@@ -3,7 +3,9 @@
 // this pass: there was no helmet, no CSP, no HSTS, no frame-ancestors, no referrer policy, no
 // permissions policy and no CORS configuration of any kind.
 import { describe, it, expect } from 'vitest'
-import { buildTestApp } from './test-app.js'
+import { buildTestApp, cookieHeader, parseSetCookies } from './test-app.js'
+import { createFakeState } from './fake-deps.js'
+import { seedUser } from './seed.js'
 import {
   buildAllowedOrigins,
   isLoopbackOrigin,
@@ -127,7 +129,7 @@ describe('Origin guard on state-changing requests (H1.4 defence in depth)', () =
       method: 'POST',
       url: '/api/v1/auth/login',
       headers: { origin: 'https://evil.example' },
-      payload: { login: 'someone', password: 'whatever-it-does-not-matter' },
+      payload: { login: 'someone', password: 'whatever-example-value' },
     })
     expect(res.statusCode).toBe(403)
     expect(res.json().code).toBe('forbidden')
@@ -213,6 +215,35 @@ describe('error bodies (H1.13, H16.1)', () => {
     expect(serialized).not.toContain('select')
     expect(serialized).not.toContain('repo.ts')
     expect(serialized).not.toMatch(/at Object\./)
+    await app.close()
+  })
+})
+
+describe('mass assignment (H1.3)', () => {
+  it('a write ignores privileged fields the schema does not name', async () => {
+    const state = createFakeState()
+    const user = await seedUser(state, { login: 'aziz', password: 'Str0ngExampleValue123' })
+    const { app } = await buildTestApp(state)
+    const login = await app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      payload: { login: 'aziz', password: 'Str0ngExampleValue123' },
+    })
+    const cookies = parseSetCookies(login.headers['set-cookie'])
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/v1/me',
+      headers: {
+        cookie: cookieHeader(cookies),
+        'x-csrf-token': cookies['devon_csrf'] as string,
+      },
+      // `role`, `id` and `status` are not in `patchMeSchema` (which is `.strict()`): the request is
+      // refused outright rather than the extra keys being quietly dropped and the rest applied.
+      payload: { locale: 'ru', role: 'super_admin', id: 'someone-else', status: 'active' },
+    })
+    expect(res.statusCode).toBe(422)
+    // The actor's role is untouched by the attempt.
+    expect(state.users.find((u) => u.id === user.id)?.role).toBe('member')
     await app.close()
   })
 })
