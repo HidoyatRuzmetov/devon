@@ -5,6 +5,7 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Me } from '../../lib/api-schemas.js'
 import * as api from './api.js'
+import type { EventDto, RsvpStatus } from './schemas.js'
 
 /** Every mutation below needs the signed-in user's CSRF token, read from the same cached `/me`
  * response the shell already holds (never a second network call) -- the identical pattern
@@ -79,13 +80,56 @@ export function useCancelEventMutation(eventId: string) {
   })
 }
 
+/** Patches `myRsvp` on every cached copy of this event -- the single `keys.detail(eventId)` entry
+ * `event-detail-dialog.tsx`/`RsvpPanel` read, and every `keys.list(range)` array `events-screen.tsx`
+ * (and any calendar-range query) holds, since `event-card.tsx` reads `event.myRsvp` straight off the
+ * list item. Returns the previous values so the caller can restore them on failure -- the same
+ * snapshot-then-restore shape `work/hooks.ts`'s `patchCardInCaches` already established for cards. */
+function patchMyRsvpInCaches(
+  qc: ReturnType<typeof useQueryClient>,
+  eventId: string,
+  myRsvp: EventDto['myRsvp'],
+) {
+  const detailKey = keys.detail(eventId)
+  const prevDetail = qc.getQueryData<EventDto>(detailKey)
+  if (prevDetail) qc.setQueryData<EventDto>(detailKey, { ...prevDetail, myRsvp })
+
+  const prevLists = qc.getQueriesData<{ items: EventDto[] }>({ queryKey: ['events', 'list'] })
+  for (const [key, data] of prevLists) {
+    if (!data) continue
+    qc.setQueryData(key, {
+      ...data,
+      items: data.items.map((e) => (e.id === eventId ? { ...e, myRsvp } : e)),
+    })
+  }
+  return { prevDetail, prevLists }
+}
+
+/** H5.1 "optimistic updates for ... RSVP; rollback on failure with toast" -- `myRsvp` updates the
+ * instant "Going"/"Not going" is submitted, everywhere it is shown (the detail panel, the card grid,
+ * the calendar), rather than only after the round trip; a failure restores every patched cache
+ * exactly (`onError`), and `onSettled` re-syncs with the server regardless of outcome so a
+ * concurrent RSVP change (a capacity limit flipping "yes" to "waitlist" server-side, say) is never
+ * masked by a stale optimistic value -- same reasoning `work/hooks.ts`'s own mutations document. */
 export function useRsvpMutation(eventId: string) {
   const csrfToken = useCsrfToken()
+  const qc = useQueryClient()
   const invalidate = useInvalidateEvent(eventId)
   return useMutation({
     mutationFn: (input: { status: string; guests: number; note?: string | undefined }) =>
       api.submitRsvp(eventId, input, csrfToken),
-    onSuccess: () => invalidate(keys.rsvps(eventId)),
+    onMutate: (input) =>
+      patchMyRsvpInCaches(qc, eventId, {
+        status: input.status as RsvpStatus,
+        guests: input.guests,
+        note: input.note ?? null,
+      }),
+    onError: (_err, _input, context) => {
+      if (context?.prevDetail) qc.setQueryData(keys.detail(eventId), context.prevDetail)
+      if (context?.prevLists)
+        for (const [key, data] of context.prevLists) qc.setQueryData(key, data)
+    },
+    onSettled: () => invalidate(keys.rsvps(eventId)),
   })
 }
 
