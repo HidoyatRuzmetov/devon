@@ -16,6 +16,7 @@ import {
   StateView,
   cn,
   initialsFromName,
+  normalizeForSearch,
 } from '@devon/ui'
 import { Search } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
@@ -31,7 +32,7 @@ import { personIdFromSearch, personPath } from '../people/routes.js'
 import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.js'
 import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
-import { MemberCard, fullName } from './member-card.js'
+import { MemberCard, formalName, fullName } from './member-card.js'
 
 type Group = { unit: Unit | null; label: string; members: Member[] }
 
@@ -72,10 +73,13 @@ function groupByUnit(units: Unit[], members: Member[]): Group[] {
   return groups
 }
 
+/** Both name orders and the job title, folded through the one Uzbek-aware normaliser this product
+ * uses everywhere (DESIGN.md §2.3) -- so "Karimova", "Nodira", "Gʻaniyev" and "G'aniyev" all find the
+ * same colleague, whichever order the head happens to think in. */
 function matchesQuery(m: Member, query: string): boolean {
   if (!query) return true
-  const haystack = `${fullName(m)} ${m.title ?? ''}`.toLocaleLowerCase()
-  return haystack.includes(query.toLocaleLowerCase())
+  const haystack = normalizeForSearch(`${fullName(m)} ${formalName(m)} ${m.title ?? ''}`)
+  return haystack.includes(normalizeForSearch(query))
 }
 
 export default function PeopleScreen() {

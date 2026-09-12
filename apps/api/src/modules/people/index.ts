@@ -30,6 +30,8 @@ import * as personRepo from './person-repo.js'
 import * as viewsRepo from './views-repo.js'
 import { peopleCsv } from './csv.js'
 import {
+  contactsQuerySchema,
+  contactsResponseSchema,
   createPeopleViewBodySchema,
   exportQuerySchema,
   indicatorsQuerySchema,
@@ -155,6 +157,27 @@ const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
         capacityCards: service.DEFAULT_WEEKLY_CARD_CAPACITY,
       }
     },
+  )
+
+  /** Telegram deep links for the rows on screen, so the table's "message" row action is a real
+   * message and not a link to a profile page (SPEC §4.3). One query for the whole cohort; a person
+   * who never linked (or unlinked) simply has no link and therefore no button. */
+  app.get(
+    '/contacts',
+    {
+      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      schema: {
+        querystring: contactsQuerySchema,
+        response: { 200: contactsResponseSchema },
+      },
+    },
+    async (req) => ({
+      contacts: await service.getContacts(
+        toDbContext(req),
+        activeDepartmentId(req),
+        splitList(req.query.ids),
+      ),
+    }),
   )
 
   // -- Saved views (SPEC §4.3) ---------------------------------------------------------------------

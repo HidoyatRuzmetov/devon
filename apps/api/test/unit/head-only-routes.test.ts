@@ -31,6 +31,9 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'PATCH /api/v1/people/views/:id',
   'DELETE /api/v1/people/views/:id',
   'GET /api/v1/people/export.csv',
+  // The Telegram deep links behind the table's "message" row action: a colleague's chat handle is a
+  // management fact (PERMISSIONS-AUDIT §4.13), not something the directory hands every member.
+  'GET /api/v1/people/contacts',
   // v1.1 SPEC §6: the person page. The subject *kind* below is what the boot-time probe resolves
   // (`params: {}` -> not 'me' -> head-only), which is the honest default; the same declaration
   // narrows to `{kind:'own_account'}` for the literal path `/people/me/...`, the one person page a

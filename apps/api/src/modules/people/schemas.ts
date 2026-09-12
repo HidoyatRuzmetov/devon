@@ -229,3 +229,18 @@ export const exportQuerySchema = z.object({
   /** Comma-separated user ids -- an export of the current selection rather than everyone. */
   ids: z.string().max(4000).optional(),
 })
+
+/** SPEC §4.3 row action "message via Telegram deep link". Head-only, batched for the whole cohort. */
+export const contactsQuerySchema = z.object({
+  /** Comma-separated user ids. Omitted = every active member of the department. */
+  ids: z.string().max(4000).optional(),
+})
+
+export const contactsResponseSchema = z.object({
+  contacts: z.array(
+    z.object({
+      userId: z.string(),
+      telegramDeepLink: z.string().nullable(),
+    }),
+  ),
+})

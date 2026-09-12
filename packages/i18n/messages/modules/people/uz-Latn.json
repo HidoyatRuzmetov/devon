@@ -94,7 +94,8 @@
       "bulk": {
         "selected": "{count} ta xodim tanlandi",
         "export": "Tanlanganlarni yuklab olish",
-        "clear": "Tanlovni bekor qilish"
+        "clear": "Tanlovni bekor qilish",
+        "assign": "Vazifa berish ({count})"
       },
       "action": {
         "assign": "{name}ga vazifa berish",
@@ -245,7 +246,9 @@
         "medium": "Oʻrtacha",
         "high": "Yuqori",
         "urgent": "Shoshilinch"
-      }
+      },
+      "doneMany": "{count} ta xodimga vazifa berildi",
+      "plusOthers": "yana {count} ta"
     },
     "person": {
       "back": "Roʻyxatga qaytish",

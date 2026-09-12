@@ -209,3 +209,21 @@ const activitySchema = z.object({ entries: z.array(activityEntrySchema) })
 export function fetchPersonActivity(userId: string): Promise<ActivityEntry[]> {
   return apiClient.get(`/api/v1/people/${userId}/activity`, activitySchema).then((r) => r.entries)
 }
+
+// -- Contacts (SPEC §4.3 row action "message via Telegram deep link") -------------------------------
+
+const contactsResponseSchema = z.object({
+  contacts: z.array(
+    z.object({
+      userId: z.string(),
+      telegramDeepLink: z.string().nullable(),
+    }),
+  ),
+})
+export type PersonContact = z.infer<typeof contactsResponseSchema>['contacts'][number]
+
+/** Head-only, and batched for the whole cohort -- the row action needs a real `tg://` link, not a
+ * boolean, and one request answers for every row on screen. */
+export function fetchPeopleContacts(): Promise<PersonContact[]> {
+  return apiClient.get('/api/v1/people/contacts', contactsResponseSchema).then((r) => r.contacts)
+}

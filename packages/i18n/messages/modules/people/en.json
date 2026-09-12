@@ -94,7 +94,8 @@
       "bulk": {
         "selected": "{count} people selected",
         "export": "Download the selection",
-        "clear": "Clear the selection"
+        "clear": "Clear the selection",
+        "assign": "Assign a task ({count})"
       },
       "action": {
         "assign": "Assign a task to {name}",
@@ -245,7 +246,9 @@
         "medium": "Medium",
         "high": "High",
         "urgent": "Urgent"
-      }
+      },
+      "doneMany": "Task given to {count} people",
+      "plusOthers": "+{count} more"
     },
     "person": {
       "back": "Back to the list",

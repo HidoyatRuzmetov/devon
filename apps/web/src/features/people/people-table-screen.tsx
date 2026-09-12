@@ -68,7 +68,7 @@ import { useDepartment } from '../../lib/session.js'
 import { navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { fetchMembers, type Member } from '../structure/api.js'
 import { createCard, fetchBoard, type Card } from '../work/api.js'
-import { fetchIndicators, peopleExportUrl } from './api.js'
+import { fetchIndicators, fetchPeopleContacts, peopleExportUrl } from './api.js'
 import {
   useCreateViewMutation,
   useCsrfToken,
@@ -89,7 +89,7 @@ import {
   matchesFilter,
   type CellValue,
 } from './table-model.js'
-import { personPath } from './routes.js'
+import { boardColumnPath, personPath } from './routes.js'
 
 type PersonRow = {
   member: Member
@@ -216,21 +216,35 @@ export default function PeopleTableScreen(): React.JSX.Element {
     queryFn: fetchBoard,
     enabled: departmentId !== null && permission.allowed,
   })
+  // One request for every row's Telegram deep link, so the "message" row action is a real message
+  // (SPEC §4.3). Head-only on the server; a person who never linked simply has no button.
+  const contactsQuery = useQuery({
+    queryKey: ['people', 'contacts', departmentId],
+    queryFn: fetchPeopleContacts,
+    enabled: departmentId !== null && permission.allowed,
+  })
 
   // --- row actions --------------------------------------------------------------------------------
-  const [assignTarget, setAssignTarget] = React.useState<PersonRow | null>(null)
+  const [assignTargets, setAssignTargets] = React.useState<readonly PersonRow[]>([])
   const [selection, setSelection] = React.useState<readonly string[]>([])
 
   const assignMutation = useMutation({
+    // One card per person: the bulk bar gives the same task to several desks, and each desk gets its
+    // own card with its own history, never one card shared between people (a shared card has no
+    // owner, which is the bug the board's giver/assignee pair exists to prevent).
     mutationFn: (input: QuickAssignSubmit) =>
-      createCard(
-        {
-          title: input.title,
-          assigneeUserId: input.assigneeUserId,
-          priority: input.priority,
-          dueAt: input.dueAt,
-        },
-        csrf,
+      Promise.all(
+        input.assigneeUserIds.map((assigneeUserId) =>
+          createCard(
+            {
+              title: input.title,
+              assigneeUserId,
+              priority: input.priority,
+              dueAt: input.dueAt,
+            },
+            csrf,
+          ),
+        ),
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['work', 'board'] })
@@ -310,6 +324,13 @@ export default function PeopleTableScreen(): React.JSX.Element {
   const cardsByUser = new Map<string, Card[]>(
     (boardQuery.data?.columns ?? []).map((column) => [column.member.userId, column.cards]),
   )
+  const telegramByUser = new Map<string, string>(
+    (contactsQuery.data ?? [])
+      .filter((contact): contact is typeof contact & { telegramDeepLink: string } =>
+        Boolean(contact.telegramDeepLink),
+      )
+      .map((contact) => [contact.userId, contact.telegramDeepLink]),
+  )
 
   const rows: PersonRow[] = members.map((member) => ({
     member,
@@ -336,8 +357,9 @@ export default function PeopleTableScreen(): React.JSX.Element {
       canAssign={canAssign.allowed}
       selection={selection}
       setSelection={setSelection}
-      assignTarget={assignTarget}
-      setAssignTarget={setAssignTarget}
+      telegramByUser={telegramByUser}
+      assignTargets={assignTargets}
+      setAssignTargets={setAssignTargets}
       assignPending={assignMutation.isPending}
       onAssign={async (input) => {
         await assignMutation.mutateAsync(input)
@@ -410,8 +432,10 @@ type PeopleTableProps = {
   canAssign: boolean
   selection: readonly string[]
   setSelection: (next: readonly string[]) => void
-  assignTarget: PersonRow | null
-  setAssignTarget: (next: PersonRow | null) => void
+  /** `userId` -> `tg://user?id=…`, only for the colleagues who have linked Telegram. */
+  telegramByUser: Map<string, string>
+  assignTargets: readonly PersonRow[]
+  setAssignTargets: (next: readonly PersonRow[]) => void
   assignPending: boolean
   onAssign(input: QuickAssignSubmit): Promise<void>
   onSelectView: (view: PeopleView | null) => void
@@ -669,7 +693,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
         locale={locale}
         t={t}
         canAssign={canAssign}
-        onAssign={(row) => props.setAssignTarget(row)}
+        onAssign={(row) => props.setAssignTargets([row])}
       />
     )
   } else {
@@ -797,7 +821,8 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                       row={entry.row}
                       t={t}
                       canAssign={canAssign}
-                      onAssign={() => props.setAssignTarget(entry.row)}
+                      onAssign={() => props.setAssignTargets([entry.row])}
+                      telegramDeepLink={props.telegramByUser.get(entry.row.member.userId)}
                     />
                   </td>
                 </StaggerItem>
@@ -898,6 +923,19 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
             <span className="text-small font-medium">
               {t('people.table.bulk.selected', { count: selection.length })}
             </span>
+            {canAssign ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  const chosen = rows.filter((row) => selection.includes(row.member.userId))
+                  if (chosen.length > 0) props.setAssignTargets(chosen)
+                }}
+              >
+                <UserPlus aria-hidden="true" className="size-4" />
+                {t('people.table.bulk.assign', { count: selection.length })}
+              </Button>
+            ) : null}
             {canExport ? (
               <Button asChild variant="secondary" size="sm">
                 <a href={exportUrl} rel="noopener">
@@ -916,19 +954,15 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       </div>
 
       <QuickAssignSheet
-        target={
-          props.assignTarget
-            ? {
-                userId: props.assignTarget.member.userId,
-                givenName: props.assignTarget.member.givenName,
-                familyName: props.assignTarget.member.familyName,
-                title: props.assignTarget.member.title,
-                avatarKey: props.assignTarget.member.avatarKey,
-              }
-            : null
-        }
+        targets={props.assignTargets.map((row) => ({
+          userId: row.member.userId,
+          givenName: row.member.givenName,
+          familyName: row.member.familyName,
+          title: row.member.title,
+          avatarKey: row.member.avatarKey,
+        }))}
         onOpenChange={(open) => {
-          if (!open) props.setAssignTarget(null)
+          if (!open) props.setAssignTargets([])
         }}
         onSubmit={props.onAssign}
         pending={props.assignPending}
@@ -1014,11 +1048,13 @@ function RowActions({
   t,
   canAssign,
   onAssign,
+  telegramDeepLink,
 }: {
   row: PersonRow
   t: Translate
   canAssign: boolean
   onAssign: () => void
+  telegramDeepLink: string | undefined
 }): React.JSX.Element {
   return (
     <span className="flex items-center justify-end gap-1">
@@ -1035,19 +1071,21 @@ function RowActions({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => navigate(`/work?person=${row.member.userId}`)}
+        onClick={() => navigate(boardColumnPath(row.member))}
         aria-label={t('people.table.action.board', { name: fullName(row.member) })}
       >
         <Table2 aria-hidden="true" className="size-4" />
       </Button>
-      {row.values['telegramLinked'] === true ? (
+      {telegramDeepLink ? (
         <Button
+          asChild
           variant="ghost"
           size="sm"
-          onClick={() => navigate(personPath(row.member.userId))}
           aria-label={t('people.table.action.message', { name: fullName(row.member) })}
         >
-          <Send aria-hidden="true" className="size-4" />
+          <a href={telegramDeepLink} rel="noopener noreferrer">
+            <Send aria-hidden="true" className="size-4" />
+          </a>
         </Button>
       ) : null}
     </span>

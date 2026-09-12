@@ -22,3 +22,17 @@ export function personIdFromSearch(search: URLSearchParams): string | null {
   const raw = search.get(PERSON_PARAM)
   return raw && raw.length > 0 ? raw : null
 }
+
+/**
+ * "Open board column" (SPEC §4.3 row action, §6 person-page action).
+ *
+ * The board is one column per person and reads exactly one search param, `q`, through the shared
+ * filter grammar (`features/work/components/board-screen.tsx`'s `findMemberMatches` resolves an
+ * `assignee:` token by matching it against each member's given *or* family name). So the honest deep
+ * link is that grammar with the surname in it -- not an invented `?person=<uuid>` the board has never
+ * read, which is what this used to send and which silently did nothing.
+ */
+export function boardColumnPath(person: { familyName: string; givenName: string }): string {
+  const needle = person.familyName.trim() || person.givenName.trim()
+  return `/work?q=${encodeURIComponent(`assignee:"${needle}"`)}`
+}

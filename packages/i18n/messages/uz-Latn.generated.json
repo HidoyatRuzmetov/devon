@@ -197,7 +197,8 @@
       "decisions": {
         "title": "Qaror kutmoqda",
         "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
-        "cta": "Doskani ochish"
+        "cta": "Doskani ochish",
+        "empty": "Sizdan kutilayotgan qaror yoʻq."
       },
       "overdue": {
         "title": "Kechikayotgan ishlar",
@@ -230,7 +231,14 @@
         "cta": "Xodimlar jadvali",
         "empty": "Hamma moslashuv qadamlarini yakunlagan."
       },
-      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud."
+      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud.",
+      "risk": {
+        "title": "Xavf ostida",
+        "meaning": "Ikki kun ichida muddati tugaydigan, hali bajarilmagan ishlar.",
+        "cta": "Doskani ochish",
+        "empty": "Yaqin ikki kunda xavf ostidagi ish yoʻq."
+      },
+      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi."
     }
   },
   "state": {
@@ -1916,10 +1924,25 @@
       "caption": "Xodimlar va tanlangan koʻrsatkichlar jadvali",
       "columns": {
         "action": "Ustunlar",
-        "heading": "Koʻrsatkichlarni tanlang"
+        "heading": "Koʻrsatkichlarni tanlang",
+        "cap": "Koʻpi bilan {max} ta ustun — undan kengi oʻqilmaydigan jadvalga aylanadi.",
+        "chosen": "Tanlangan ustunlar",
+        "moveUp": "«{name}» ustunini chapga surish",
+        "moveDown": "«{name}» ustunini oʻngga surish",
+        "group": {
+          "membership": "Maʼlumotnoma",
+          "cards": "Vazifalar",
+          "projects": "Loyihalar",
+          "events": "Tadbirlar",
+          "onboarding": "Moslashuv",
+          "activity": "Faollik",
+          "personal_aggregate": "Shaxsiy (faqat jamlanma)"
+        }
       },
       "column": {
-        "name": "Ism"
+        "name": "Ism",
+        "tasks": "Vazifalar",
+        "actions": "Amallar"
       },
       "empty": {
         "title": "Hozircha xodim yoʻq",
@@ -1928,6 +1951,104 @@
       "footer": "{count} ta xodim",
       "workload": {
         "value": "{open} / {capacity}"
+      },
+      "searchPlaceholder": "Ism, lavozim yoki boʻlim boʻyicha qidirish",
+      "footerTasks": "{count} ta ochiq vazifa",
+      "noTasks": "Ochiq vazifa yoʻq",
+      "moreTasks": "yana {count} ta",
+      "sortBy": "{name} boʻyicha saralash",
+      "filterBy": "{name} boʻyicha filtrlash",
+      "selectAll": "Barcha qatorlarni tanlash",
+      "selectRow": "{name} qatorini tanlash",
+      "export": "CSV yuklab olish",
+      "group": {
+        "none": "Boʻlimsiz"
+      },
+      "unitRole": {
+        "head": "Boʻlim boshligʻi",
+        "deputy": "Oʻrinbosar",
+        "member": "Xodim"
+      },
+      "density": {
+        "label": "Qator balandligi",
+        "comfortable": "Keng",
+        "compact": "Zich"
+      },
+      "groupBy": {
+        "label": "Guruhlash",
+        "unit": "Boʻlim boʻyicha",
+        "unitRole": "Roli boʻyicha",
+        "none": "Guruhlamaslik"
+      },
+      "filter": {
+        "operator": "Shart",
+        "value": "Qiymat",
+        "valuePlaceholder": "Qiymat kiriting",
+        "datePlaceholder": "YYYY-MM-DD",
+        "clear": "Tozalash",
+        "apply": "Qoʻllash",
+        "clearAll": "{count} ta filtrni tozalash",
+        "op": {
+          "gte": "Kamida",
+          "lte": "Koʻpi bilan",
+          "eq": "Teng",
+          "contains": "Ichida bor",
+          "in": "Roʻyxatda",
+          "before": "Shu sanadan oldin",
+          "after": "Shu sanadan keyin",
+          "empty": "Boʻsh",
+          "filled": "Toʻldirilgan"
+        }
+      },
+      "calc": {
+        "count": "Jami qator",
+        "filled": "Toʻldirilgan",
+        "avg": "Oʻrtacha",
+        "sum": "Yigʻindi",
+        "min": "Eng kichigi",
+        "max": "Eng kattasi"
+      },
+      "bulk": {
+        "selected": "{count} ta xodim tanlandi",
+        "export": "Tanlanganlarni yuklab olish",
+        "clear": "Tanlovni bekor qilish",
+        "assign": "Vazifa berish ({count})"
+      },
+      "action": {
+        "assign": "{name}ga vazifa berish",
+        "assignShort": "Vazifa berish",
+        "board": "{name}ning doskadagi ustuni",
+        "message": "{name}ga Telegram orqali yozish"
+      },
+      "views": {
+        "label": "Saqlangan koʻrinishlar",
+        "base": "Standart",
+        "menu": "«{name}» koʻrinishi amallari",
+        "isDefault": "Boʻlim uchun standart",
+        "makeDefault": "Boʻlim uchun standart qilish",
+        "share": "Boshqa boshliqlarga ochish",
+        "unshare": "Faqat oʻzimga qoldirish",
+        "delete": "Koʻrinishni oʻchirish",
+        "saveAs": "Yangi koʻrinish",
+        "saveAsHeading": "Shu jadvalni saqlash",
+        "namePlaceholder": "Koʻrinish nomi",
+        "shareLabel": "Boshqa boshliqlar ham koʻrsin",
+        "defaultLabel": "Boʻlim uchun standart boʻlsin",
+        "saveAsSubmit": "Saqlash",
+        "dirty": "Oʻzgartirildi",
+        "revert": "Qaytarish",
+        "saveOver": "Saqlash",
+        "saved": "«{name}» saqlandi",
+        "deleted": "«{name}» oʻchirildi"
+      },
+      "noResults": {
+        "title": "Hech kim topilmadi",
+        "body": "Filtrlar yoki qidiruv soʻzi juda tor. Ularni tozalab koʻring.",
+        "action": "Filtrlarni tozalash"
+      },
+      "denied": {
+        "body": "Xodimlar jadvali va undagi koʻrsatkichlar faqat boshqarma boshligʻiga koʻrinadi. Maʼlumotnomani ochishingiz mumkin.",
+        "action": "Maʼlumotnomani ochish"
       }
     },
     "indicator": {
@@ -2017,6 +2138,199 @@
         "hoursMinutes": "{hours} soat {minutes} daq",
         "yes": "Ha",
         "no": "Yoʻq"
+      }
+    },
+    "assign": {
+      "title": "Vazifa berish",
+      "subtitle": "Vazifa shu xodimga biriktiriladi, beruvchi esa siz boʻlasiz.",
+      "close": "Yopish",
+      "noTitle": "Lavozim koʻrsatilmagan",
+      "cancel": "Bekor qilish",
+      "submit": "Vazifani berish",
+      "done": "{name}ga vazifa berildi",
+      "field": {
+        "title": "Vazifa nomi",
+        "titleHint": "Qisqa va aniq yozing — xodim buni doskada koʻradi.",
+        "titleRequired": "Vazifa nomini kiriting.",
+        "titlePlaceholder": "Masalan: Hisobotni tayyorlash",
+        "due": "Muddati",
+        "duePlaceholder": "Muddat belgilanmagan",
+        "priority": "Muhimligi"
+      },
+      "priority": {
+        "none": "Belgilanmagan",
+        "low": "Past",
+        "medium": "Oʻrtacha",
+        "high": "Yuqori",
+        "urgent": "Shoshilinch"
+      },
+      "doneMany": "{count} ta xodimga vazifa berildi",
+      "plusOthers": "yana {count} ta"
+    },
+    "person": {
+      "back": "Roʻyxatga qaytish",
+      "you": "Siz",
+      "noTitle": "Lavozim koʻrsatilmagan",
+      "own": {
+        "title": "Mening profilim",
+        "description": "Ish boʻyicha koʻrsatkichlaringiz, vazifalaringiz va maʼlumotlaringiz."
+      },
+      "meta": {
+        "formalName": "Toʻliq ism",
+        "unit": "Boʻlim",
+        "noUnit": "Belgilanmagan",
+        "unitRole": "Boʻlimdagi roli",
+        "noUnitRole": "Belgilanmagan",
+        "joined": "Qoʻshilgan",
+        "lastActive": "Oxirgi faollik",
+        "never": "Hali kirmagan",
+        "telegram": "Telegram"
+      },
+      "action": {
+        "assign": "Vazifa berish",
+        "board": "Doskadagi ustuni",
+        "message": "Telegram orqali yozish"
+      },
+      "tab": {
+        "overview": "Umumiy",
+        "tasks": "Vazifalar",
+        "projects": "Loyihalar",
+        "events": "Tadbirlar",
+        "onboarding": "Moslashuv",
+        "fields": "Maydonlar",
+        "activity": "Faollik"
+      },
+      "chart": {
+        "week": "Hafta",
+        "done": "Bajarilgan",
+        "created": "Berilgan",
+        "onTimeRate": "Oʻz vaqtida, %",
+        "finished": "Yakunlangan",
+        "project": "Loyiha",
+        "open": "Ochiq",
+        "overdue": "Kechikkan",
+        "noProject": "Loyihasiz",
+        "throughput": {
+          "title": "Haftalik natija",
+          "question": "Har haftada nechta ish yakunlandi?",
+          "empty": "Soʻnggi 12 haftada yakunlangan ish yoʻq."
+        },
+        "onTime": {
+          "title": "Oʻz vaqtida bajarish",
+          "question": "Muddati bor ishlarning qanchasi vaqtida topshirildi?",
+          "empty": "Muddati belgilangan yakunlangan ish hali yoʻq."
+        },
+        "load": {
+          "title": "Loyihalar boʻyicha yuklama",
+          "question": "Hozirgi ochiq ishlar qaysi loyihalarga tegishli?",
+          "empty": "Ochiq ish yoʻq."
+        }
+      },
+      "risk": {
+        "title": "Xavf ostidagi ishlar",
+        "question": "Qaysi ishlar muddatiga ulgurmayapti?",
+        "empty": "Yaqin ikki kunda muddati tugaydigan ish yoʻq."
+      },
+      "tasks": {
+        "roleLabel": "Qaysi ishlar",
+        "statusLabel": "Holati",
+        "noDue": "Muddatsiz",
+        "role": {
+          "assignee": "Unga berilgan",
+          "giver": "U bergan"
+        },
+        "status": {
+          "active": "Ochiq",
+          "done": "Bajarilgan",
+          "all": "Hammasi"
+        },
+        "empty": {
+          "title": "Vazifa yoʻq",
+          "body": "Bu tanlov boʻyicha hech qanday vazifa topilmadi."
+        }
+      },
+      "projects": {
+        "owner": "Rahbar",
+        "member": "Ishtirokchi",
+        "progress": "{done} / {total} vazifa bajarilgan",
+        "progressAria": "{title} — bajarilgan qismi",
+        "target": "Rejadagi muddat: {date}",
+        "empty": {
+          "title": "Loyihalarda ishtirok etmaydi",
+          "body": "Bu xodim hozircha birorta faol loyihaga kiritilmagan."
+        }
+      },
+      "events": {
+        "rsvpRate": "Tadbirlarda ishtirok",
+        "polls": "Soʻrovnomalar",
+        "pollsValue": "{voted} / {total}",
+        "driver": "Haydovchi",
+        "passenger": "Yoʻlovchi",
+        "rsvp": {
+          "yes": "Boraman",
+          "no": "Bormayman",
+          "maybe": "Aniq emas",
+          "waitlist": "Navbatda"
+        },
+        "empty": {
+          "title": "Tadbirlarda qatnashmagan",
+          "body": "Soʻnggi ikki oyda birorta tadbirga javob bermagan."
+        }
+      },
+      "onboarding": {
+        "title": "Moslashuv qadamlari",
+        "note": "Bu qadamlar boʻlimga koʻrinadigan belgilardan olinadi. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi.",
+        "done": "Bajarildi",
+        "pending": "Kutilmoqda",
+        "step": {
+          "photo": "Surat qoʻshilgan",
+          "work": "Birinchi vazifa olingan",
+          "event": "Tadbirga yozilgan",
+          "telegram": "Telegram ulangan"
+        }
+      },
+      "fields": {
+        "required": "Majburiy",
+        "missing": "Toʻldirilmagan",
+        "missingCount": "{count} ta majburiy maydon toʻldirilmagan.",
+        "ask": "Toʻldirishni soʻrash",
+        "asked": "Soʻrov yuborildi",
+        "askFailed": "Soʻrovni yuborib boʻlmadi. Birozdan soʻng qayta urinib koʻring.",
+        "fillOwn": "Oʻzim toʻldiraman",
+        "empty": {
+          "title": "Maydonlar yaratilmagan",
+          "body": "Boshqarma boshligʻi «Maydonlar» boʻlimida xodimlar uchun maydon yaratishi mumkin."
+        },
+        "unavailable": {
+          "title": "Maydonlar hali ulanmagan",
+          "body": "Bu boʻlimda xodim maydonlari hozircha yoqilmagan."
+        }
+      },
+      "activity": {
+        "empty": {
+          "title": "Faollik yoʻq",
+          "body": "Bu xodimning ish boʻyicha harakatlari hali qayd etilmagan."
+        },
+        "kind": {
+          "created": "Vazifa yaratdi",
+          "status": "Vazifa holatini oʻzgartirdi",
+          "assigned": "Vazifani biriktirdi",
+          "due": "Muddatni oʻzgartirdi",
+          "checklist": "Nazorat roʻyxatini yangiladi",
+          "comment": "Izoh qoldirdi",
+          "card_assigned": "Vazifa oldi",
+          "event_rsvp": "Tadbirga javob berdi"
+        }
+      },
+      "denied": {
+        "title": "Bu sahifa sizga ochiq emas",
+        "body": "Xodimlarning shaxsiy sahifasini faqat boshqarma boshligʻi koʻradi. Oʻz sahifangizni ochishingiz mumkin.",
+        "action": "Mening profilim"
+      },
+      "missing": {
+        "title": "Xodim topilmadi",
+        "body": "Bu xodim boʻlimda faol emas yoki havola eskirgan.",
+        "action": "Xodimlar roʻyxati"
       }
     }
   },
@@ -2458,7 +2772,23 @@
         "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish",
         "copyLink": "Havolani nusxalash",
         "copyLinkAria": "{name} profiliga havolani nusxalash",
-        "linkCopied": "Havola nusxalandi"
+        "linkCopied": "Havola nusxalandi",
+        "openProfile": "Profilni ochish"
+      },
+      "openTable": "Koʻrsatkichlar jadvali",
+      "layout": {
+        "label": "Koʻrinish",
+        "cards": "Kartochkalar",
+        "table": "Jadval"
+      },
+      "table": {
+        "caption": "Boʻlim xodimlari roʻyxati",
+        "name": "Ism",
+        "unit": "Boʻlim",
+        "unitRole": "Boʻlimdagi roli",
+        "title": "Lavozim",
+        "noRole": "Belgilanmagan",
+        "noTitle": "Koʻrsatilmagan"
       }
     },
     "common": {

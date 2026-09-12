@@ -27,7 +27,20 @@ const ROLE_KEY = {
   member: 'structure.roles.roleLabel.member',
 } as const
 
+/**
+ * DESIGN.md §5: "Ism Familiya" in casual lists, "Familiya Ism Otasining ismi" in formal contexts.
+ * WALKTHROUGH-FINDINGS §6 caught the directory using the formal order while the board, the people
+ * table, the card detail and every mention chip use the casual one -- the same colleague read as two
+ * different people depending on the screen. A browsable staff list is a casual list, so this is the
+ * casual order and `formalName` below is kept for the places that really are a record.
+ */
 export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
+  return [m.givenName, m.familyName].filter(Boolean).join(' ')
+}
+
+/** The official order, for the one place on this card that is a personnel record rather than a
+ * list entry: the hover card's own headline (and the CSV export, which builds its own copy). */
+export function formalName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
   return [m.familyName, m.givenName, m.patronymic].filter(Boolean).join(' ')
 }
 
@@ -106,11 +119,19 @@ export function MemberCard({
             <p className="truncate text-caption text-muted-foreground">{member.title}</p>
           ) : null}
         </div>
-        {member.unitRole ? (
-          <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
-            {t(ROLE_KEY[member.unitRole])}
-          </Badge>
-        ) : null}
+        {/* WALKTHROUGH-FINDINGS §6: "you cannot tell who the head is" -- the boshqarma boshligʻi was
+            identifiable only by a free-text job title. The department role is the fact, so it is the
+            badge; the unit role stays beside it when the person also leads or sits in a boʻlim. */}
+        <span className="flex shrink-0 items-center gap-1.5">
+          {member.membershipRole === 'head' ? (
+            <Badge tone="info">{t('departments.members.roleHead')}</Badge>
+          ) : null}
+          {member.unitRole ? (
+            <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
+              {t(ROLE_KEY[member.unitRole])}
+            </Badge>
+          ) : null}
+        </span>
       </div>
     </Face>
   )
@@ -155,7 +176,7 @@ export function MemberCard({
             hueSeed={member.unitId ?? member.userId}
           />
           <div className="min-w-0">
-            <p className="truncate text-body font-medium text-foreground">{fullName(member)}</p>
+            <p className="truncate text-body font-medium text-foreground">{formalName(member)}</p>
             {member.title ? (
               <p className="truncate text-small text-muted-foreground">{member.title}</p>
             ) : null}

@@ -35,14 +35,18 @@ export type QuickAssignTarget = {
 }
 
 export type QuickAssignSubmit = {
-  assigneeUserId: string
+  /** One id from a row action, many from the bulk bar (SPEC §4.3 "Selection + bulk bar: assign task
+   * to many"). One shape, so the sheet and its caller never disagree about how many desks this
+   * lands on. */
+  assigneeUserIds: string[]
   title: string
   dueAt: string | null
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
 }
 
 export type QuickAssignSheetProps = {
-  target: QuickAssignTarget | null
+  /** The people this task is about to land on. Empty = the sheet is closed. */
+  targets: readonly QuickAssignTarget[]
   onOpenChange: (open: boolean) => void
   onSubmit(input: QuickAssignSubmit): Promise<void>
   pending: boolean
@@ -51,11 +55,13 @@ export type QuickAssignSheetProps = {
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const
 
 export function QuickAssignSheet({
-  target,
+  targets,
   onOpenChange,
   onSubmit,
   pending,
 }: QuickAssignSheetProps): React.JSX.Element {
+  const target = targets[0] ?? null
+  const extra = Math.max(targets.length - 1, 0)
   const t = useT()
   const locale = useLocale()
   const [title, setTitle] = React.useState('')
@@ -67,14 +73,14 @@ export function QuickAssignSheet({
   // A fresh sheet every time it opens: a title left over from the last person is how work ends up on
   // the wrong desk.
   React.useEffect(() => {
-    if (!target) return
+    if (targets.length === 0) return
     setTitle('')
     setDue(undefined)
     setPriority('none')
     setTouched(false)
     const id = window.setTimeout(() => titleRef.current?.focus(), 120)
     return () => window.clearTimeout(id)
-  }, [target])
+  }, [targets])
 
   const name = target ? `${target.givenName} ${target.familyName}`.trim() : ''
   const invalid = title.trim().length === 0
@@ -82,19 +88,23 @@ export function QuickAssignSheet({
   async function submit(event: React.FormEvent): Promise<void> {
     event.preventDefault()
     setTouched(true)
-    if (invalid || !target) return
+    if (invalid || targets.length === 0) return
     await onSubmit({
-      assigneeUserId: target.userId,
+      assigneeUserIds: targets.map((person) => person.userId),
       title: title.trim(),
       dueAt: due ? due.toISOString() : null,
       priority,
     })
-    toast.success(t('people.assign.done', { name }))
+    toast.success(
+      targets.length === 1
+        ? t('people.assign.done', { name })
+        : t('people.assign.doneMany', { count: targets.length }),
+    )
     onOpenChange(false)
   }
 
   return (
-    <Sheet open={target !== null} onOpenChange={onOpenChange} direction="right">
+    <Sheet open={targets.length > 0} onOpenChange={onOpenChange} direction="right">
       <SheetContent side="right" title={t('people.assign.title')}>
         <form onSubmit={submit} className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
@@ -126,6 +136,11 @@ export function QuickAssignSheet({
                   {target?.title ?? t('people.assign.noTitle')}
                 </span>
               </span>
+              {extra > 0 ? (
+                <span className="ml-auto shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-caption font-medium text-primary">
+                  {t('people.assign.plusOthers', { count: extra })}
+                </span>
+              ) : null}
             </div>
 
             <Field

@@ -251,3 +251,14 @@ export async function personActivity(
 ): Promise<personRepo.ActivityEntry[]> {
   return withContext(ctx, (tx) => personRepo.personActivity(tx, departmentId, userId, limit))
 }
+
+/** SPEC §4.3's "message via Telegram deep link" row action, for the whole cohort at once. Head-only
+ * at the route; this is the batched read behind it. */
+export async function getContacts(
+  ctx: RequestContext,
+  departmentId: string,
+  userIds: readonly string[],
+): Promise<personRepo.PersonContact[]> {
+  const ids = userIds.length > 0 ? userIds : await repo.activeMemberIds(ctx, departmentId)
+  return withContext(ctx, (tx) => personRepo.departmentContacts(tx, departmentId, ids))
+}

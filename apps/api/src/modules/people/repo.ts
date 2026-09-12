@@ -263,7 +263,10 @@ export async function directoryRows(
     left join app.unit_roles ur
       on ur.user_id = m.user_id and ur.department_id = m.department_id and ur.deleted_at is null
     left join app.units un on un.id = ur.unit_id and un.deleted_at is null
-    left join app.telegram_links tl on tl.user_id = m.user_id
+    -- unlinked_at is null: a person who unlinked their Telegram still has the row, and without
+    -- this predicate the directory reported them as linked forever (person-repo.ts's personHeader
+    -- had this predicate; this join did not).
+    left join app.telegram_links tl on tl.user_id = m.user_id and tl.unlinked_at is null
     left join lateral (
       select max(x.last_seen_at) as last_seen_at
       from app.sessions x

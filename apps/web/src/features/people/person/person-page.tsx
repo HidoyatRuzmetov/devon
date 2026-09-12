@@ -8,6 +8,7 @@
 //    minute count `app.focus_minutes_by_user` is physically limited to (I-1), and the Faollik tab is
 //    a union of work events, never an audit-log mirror.
 import * as React from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useLocale, useT, formatDate, formatRelativeTime } from '@devon/i18n'
 import { getIndicator, type IndicatorKey } from '@devon/contracts'
 import {
@@ -34,8 +35,16 @@ import { avatarUrl } from '../../../lib/avatar.js'
 import { ApiError } from '../../../lib/api-client.js'
 import { navigate } from '../../../lib/router.js'
 import { useSession } from '../../../lib/session.js'
+import { createCard } from '../../work/api.js'
 import type { PersonCard, PersonOverview } from '../api.js'
-import { usePersonActivityQuery, usePersonCardsQuery, usePersonOverviewQuery } from '../hooks.js'
+import {
+  useCsrfToken,
+  usePersonActivityQuery,
+  usePersonCardsQuery,
+  usePersonOverviewQuery,
+} from '../hooks.js'
+import { QuickAssignSheet, type QuickAssignSubmit } from '../components/quick-assign-sheet.js'
+import { boardColumnPath } from '../routes.js'
 import { formatIndicator } from '../format.js'
 import { LoadByProjectChart, OnTimeChart, ThroughputChart } from './person-charts.js'
 import { PersonFieldsTab } from './person-fields-tab.js'
@@ -63,6 +72,29 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
   const session = useSession()
   const overviewQuery = usePersonOverviewQuery(userId)
   const [tab, setTab] = React.useState('overview')
+  const [assignOpen, setAssignOpen] = React.useState(false)
+  const csrf = useCsrfToken()
+  const queryClient = useQueryClient()
+  const assignMutation = useMutation({
+    mutationFn: (input: QuickAssignSubmit) =>
+      Promise.all(
+        input.assigneeUserIds.map((assigneeUserId) =>
+          createCard(
+            {
+              title: input.title,
+              assigneeUserId,
+              priority: input.priority,
+              dueAt: input.dueAt,
+            },
+            csrf,
+          ),
+        ),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['work', 'board'] })
+      void queryClient.invalidateQueries({ queryKey: ['people'] })
+    },
+  })
 
   if (overviewQuery.isPending) {
     return (
@@ -124,7 +156,13 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
         </Button>
       ) : null}
 
-      <PersonHeaderCard data={data} t={t} locale={locale} isSelf={isSelf} />
+      <PersonHeaderCard
+        data={data}
+        t={t}
+        locale={locale}
+        isSelf={isSelf}
+        onAssign={() => setAssignOpen(true)}
+      />
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
@@ -171,6 +209,32 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
           <ActivityTab userId={userId} t={t} locale={locale} />
         </TabsContent>
       </Tabs>
+
+      {/* SPEC §6 "actions (head): assign a task". The same sheet the people table uses, so a task
+          given from a person page and a task given from a row are the same object with the same
+          fields -- and neither one navigates away to a board that never read the parameter. */}
+      <QuickAssignSheet
+        targets={
+          assignOpen
+            ? [
+                {
+                  userId: data.header.userId,
+                  givenName: data.header.givenName,
+                  familyName: data.header.familyName,
+                  title: data.header.title,
+                  avatarKey: data.header.avatarKey,
+                },
+              ]
+            : []
+        }
+        onOpenChange={(open) => {
+          if (!open) setAssignOpen(false)
+        }}
+        onSubmit={async (input) => {
+          await assignMutation.mutateAsync(input)
+        }}
+        pending={assignMutation.isPending}
+      />
     </div>
   )
 }
@@ -180,11 +244,13 @@ function PersonHeaderCard({
   t,
   locale,
   isSelf,
+  onAssign,
 }: {
   data: PersonOverview
   t: Translate
   locale: ReturnType<typeof useLocale>
   isSelf: boolean
+  onAssign: () => void
 }): React.JSX.Element {
   const header = data.header
   const name = `${header.givenName} ${header.familyName}`.trim()
@@ -254,15 +320,11 @@ function PersonHeaderCard({
 
       {data.canManage ? (
         <div className="flex flex-wrap gap-2 sm:flex-col">
-          <Button size="sm" onClick={() => navigate(`/work?assign=${header.userId}`)}>
+          <Button size="sm" onClick={onAssign}>
             <UserPlus aria-hidden="true" className="size-4" />
             {t('people.person.action.assign')}
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => navigate(`/work?person=${header.userId}`)}
-          >
+          <Button variant="secondary" size="sm" onClick={() => navigate(boardColumnPath(header))}>
             <Table2 aria-hidden="true" className="size-4" />
             {t('people.person.action.board')}
           </Button>

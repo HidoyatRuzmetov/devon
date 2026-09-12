@@ -650,3 +650,44 @@ export async function personOverview(
     return { header, throughput, onTime, load, risks, projects, events, polls, onboarding }
   })
 }
+
+export type PersonContact = {
+  userId: string
+  /** `tg://user?id=…`, built server-side so the raw chat id never crosses the wire (the same rule
+   * `personHeader` follows). `null` when this colleague has not linked Telegram, or unlinked it. */
+  telegramDeepLink: string | null
+}
+
+/**
+ * Head-only contact links for the whole department, in one query (I-14: never one per row).
+ *
+ * SPEC §4.3 asks the people table's row menu for "message via Telegram deep link". The table's
+ * `telegramLinked` indicator only says *whether* a link exists, which is the right thing for a
+ * boolean column and the wrong thing for an action -- a button that says "message" and then opens a
+ * profile page is a broken affordance. So the deep links come down once, for the rows already on
+ * screen, and a row whose value is `null` simply has no message button.
+ */
+export async function departmentContacts(
+  tx: Tx,
+  departmentId: string,
+  userIds: readonly string[],
+): Promise<PersonContact[]> {
+  if (userIds.length === 0) return []
+  const ids = sql.param([...userIds])
+  const rows = await tx.raw<{ user_id: string; chat_id: string | number | null }>(sql`
+    select m.user_id, tl.chat_id
+    from app.memberships m
+    left join app.telegram_links tl on tl.user_id = m.user_id and tl.unlinked_at is null
+    where m.department_id = ${departmentId}
+      and m.status = 'active'
+      and m.deleted_at is null
+      and m.user_id = any(${ids}::uuid[])
+  `)
+  return rows.map((row) => ({
+    userId: row.user_id,
+    telegramDeepLink:
+      row.chat_id === null || row.chat_id === undefined
+        ? null
+        : `tg://user?id=${String(row.chat_id)}`,
+  }))
+}
