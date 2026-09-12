@@ -50,15 +50,15 @@ Setup, so no developer credentials are involved (the local `devon-postgres` uses
 ```bash
 # throwaway pgvector on a spare port, compose superuser default, then the repo's own migrations
 docker run -d --name devon-pg-h18 -p 15999:5432 -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=devon_local_dev_root -e POSTGRES_DB=devon \
+  -e POSTGRES_PASSWORD=<throwaway-root> -e POSTGRES_DB=devon \
   pgvector/pgvector:0.8.6-pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
-MIGRATION_DATABASE_URL=postgres://postgres:devon_local_dev_root@127.0.0.1:15999/devon \
-  POSTGRES_MIGRATOR_PASSWORD=devon_local_dev_migrator POSTGRES_APP_PASSWORD=devon_local_dev_app \
+MIGRATION_DATABASE_URL=postgres://postgres:<throwaway-root>@127.0.0.1:15999/devon \
+  POSTGRES_MIGRATOR_PASSWORD=<throwaway-migrator> POSTGRES_APP_PASSWORD=<throwaway-app> \
   pnpm --filter @devon/db migrate:apply        # applied 25 migration(s)
 # image from THIS branch, built with hd/ops-tooling's Dockerfile (git show hd/ops-tooling:apps/api/Dockerfile)
 docker build -f <that Dockerfile> -t devon-api:h18-verify .
 docker run -d --name devon-api-h18-verify -p 13000:3000 -e NODE_ENV=development -e LOG_LEVEL=info \
-  -e DATABASE_URL=postgres://devon_app:devon_local_dev_app@host.docker.internal:15999/devon \
+  -e DATABASE_URL=postgres://devon_app:<throwaway-app>@host.docker.internal:15999/devon \
   -e CSRF_SECRET=<any> -e STORAGE_DRIVER=local -e CLAMAV_MODE=off <image>
 # wait for "Server listening", curl /healthz → 200, then:
 docker stop -t 30 devon-api-h18-verify; docker inspect -f '{{.State.ExitCode}}' devon-api-h18-verify; docker logs devon-api-h18-verify | tail -3
