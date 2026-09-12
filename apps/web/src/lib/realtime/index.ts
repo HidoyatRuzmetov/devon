@@ -32,3 +32,9 @@ export {
   type PresencePerson,
   type RealtimeConfig,
 } from './api.js'
+
+export {
+  useCardSignalSource,
+  useCardSignals,
+  type CardSignal,
+} from './signals-store.js'

@@ -313,9 +313,20 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = activeDepartmentId(req)
+      // The display name travels with the signal so a receiving board can render "Anvar is editing
+      // this" without a lookup per card -- and it is taken from the *session's* actor, never from
+      // the body, which is what makes "Anvar is editing this" unforgeable.
+      //
+      // A colleague's name inside their own department is not personal data this endpoint is
+      // disclosing (the board already shows it on every card), and it is the only field added: no
+      // avatar, no login, no contact detail (I-2).
       const delivered = await publish(boardChannel(departmentId), {
         type: `board.${req.body.kind}`,
-        payload: { cardId: req.body.cardId, userId: req.actor!.userId },
+        payload: {
+          cardId: req.body.cardId,
+          userId: req.actor!.userId,
+          name: req.actorUser ? personDisplayName(req.actorUser) : '',
+        },
         actorUserId: req.actor!.userId,
       })
       return reply.send({ delivered })
