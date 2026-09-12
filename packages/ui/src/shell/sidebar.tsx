@@ -189,6 +189,10 @@ function SidebarItem({
     <Link
       href={entry.route}
       aria-current={active ? 'page' : undefined}
+      // H5.2 "prefetch on hover/focus": a mouse hover and a keyboard tab-to-focus are the two ways a
+      // person reaches this link before actually activating it -- both warm the route's data.
+      onMouseEnter={entry.onPrefetch}
+      onFocus={entry.onPrefetch}
       className={cn(
         'relative flex min-h-9 min-w-0 items-center gap-3 rounded-sm px-3 text-body',
         'transition-colors duration-(--dur-micro) ease-out',

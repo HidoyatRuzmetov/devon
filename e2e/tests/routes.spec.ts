@@ -49,7 +49,7 @@ for (const route of routes) {
       ).toBeLessThanOrEqual(1)
     })
 
-    test('has zero serious/critical axe violations', async ({ page }) => {
+    test('@a11y has zero serious/critical axe violations', async ({ page }) => {
       await page.goto(route.path)
       if (route.heading) {
         await expect(page.getByText(message('uz-Latn', route.heading))).toBeVisible({

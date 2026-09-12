@@ -52,6 +52,9 @@ export function TaskRow({
   onAiSubtasks,
   aiSubtasksPending = false,
 }: TaskRowProps) {
+  // H4.1: one instance per nested personal task, recursively -- a measured hot spot for a deep
+  // sprint tree, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const [title, setTitle] = React.useState(node.title)
   React.useEffect(() => setTitle(node.title), [node.title])
@@ -155,8 +158,14 @@ export function TaskRow({
           <Link2 className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
         ) : null}
         {node.estimateMin ? (
+          // ui-blitz round3 #21: a bare mathematical prime mark ("30′") is an unlocalised,
+          // ambiguous stand-in for minutes -- the app already has a real, translated unit
+          // (`personal.duration.minutesShort`, used by `sprint-labels.ts`'s `formatTimeLeft`);
+          // U+00A0 keeps the number and its unit from wrapping apart, same convention as there.
           <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-            {node.estimateMin}′
+            {node.estimateMin}
+            {' '}
+            {t('personal.duration.minutesShort')}
           </span>
         ) : null}
 

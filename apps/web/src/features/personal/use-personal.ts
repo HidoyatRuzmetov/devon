@@ -2,7 +2,7 @@
 // token off the cached `/me` response (`useMeQuery()` -- the same cache the shell already populates,
 // never a second network call) and invalidates this feature's own query keys on success.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { useMeQuery } from '../../lib/session.js'
 import * as api from './api.js'
 import type {
@@ -19,6 +19,7 @@ import type {
   PatchTaskInput,
   ReorderTasksInput,
   RolloverSprintInput,
+  Task,
 } from './types.js'
 
 const KEYS = {
@@ -83,6 +84,18 @@ export function useTasksQuery() {
   return useQuery({ queryKey: KEYS.tasks, queryFn: api.fetchTasks })
 }
 
+// H5.1 ("optimistic updates for ... personal tasks; rollback on failure with toast"): this list is
+// the checklist/nested-task tree `task-row.tsx` renders in `sprints-view.tsx`, `tasks-view.tsx` and
+// `today-view.tsx` -- toggling a task done, renaming it, and Tab/Shift+Tab indent-reorder are the
+// single most frequent interactions in the whole personal workspace, and every one of them used to
+// wait a full round trip before the checkbox/strikethrough/indent visibly changed. Same
+// snapshot-and-`rollback()` shape as `work/hooks.ts`'s `patchCardInCaches` (this feature's own
+// established pattern for the identical problem).
+function snapshotTasks(qc: QueryClient): { rollback: () => void } {
+  const prev = qc.getQueryData<Task[]>(KEYS.tasks)
+  return { rollback: () => qc.setQueryData(KEYS.tasks, prev) }
+}
+
 export function useCreateTaskMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
@@ -98,7 +111,32 @@ export function usePatchTaskMutation() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: PatchTaskInput }) =>
       api.patchTask(id, input, csrf),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
+    onMutate: ({ id, input }) => {
+      const snapshot = snapshotTasks(qc)
+      qc.setQueryData<Task[]>(KEYS.tasks, (list) =>
+        list
+          ? list.map((task) =>
+              task.id === id
+                ? {
+                    ...task,
+                    ...input,
+                    // `PatchTaskInput.done` is the UI's boolean; the cached `Task` (server) shape is
+                    // `doneAt: string | null` -- map the one the caller actually sent, same
+                    // translation `api.patchTask` itself does server-side.
+                    ...(input.done !== undefined
+                      ? { doneAt: input.done ? new Date().toISOString() : null }
+                      : {}),
+                  }
+                : task,
+            )
+          : list,
+      )
+      return snapshot
+    },
+    onError: (_err, _vars, context) => context?.rollback(),
+    // A concurrent edit from another tab/device must never be permanently masked by a stale
+    // optimistic value -- refetch regardless of outcome, exactly like `work/hooks.ts`'s `onSettled`.
+    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
   })
 }
 
@@ -107,7 +145,30 @@ export function useDeleteTaskMutation() {
   const csrf = useCsrfToken()
   return useMutation({
     mutationFn: (id: string) => api.deleteTask(id, csrf),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
+    onMutate: (id) => {
+      const snapshot = snapshotTasks(qc)
+      // Deleting a parent implicitly removes its subtree server-side -- drop every descendant here
+      // too (walking `parentId`), so the optimistic tree matches what the refetch will show instead
+      // of the deleted parent's children reappearing as a visible flash of stale rows.
+      qc.setQueryData<Task[]>(KEYS.tasks, (list) => {
+        if (!list) return list
+        const toRemove = new Set([id])
+        let grew = true
+        while (grew) {
+          grew = false
+          for (const task of list) {
+            if (task.parentId && toRemove.has(task.parentId) && !toRemove.has(task.id)) {
+              toRemove.add(task.id)
+              grew = true
+            }
+          }
+        }
+        return list.filter((task) => !toRemove.has(task.id))
+      })
+      return snapshot
+    },
+    onError: (_err, _vars, context) => context?.rollback(),
+    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
   })
 }
 
@@ -116,7 +177,27 @@ export function useReorderTasksMutation() {
   const csrf = useCsrfToken()
   return useMutation({
     mutationFn: (input: ReorderTasksInput) => api.reorderTasks(input, csrf),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
+    onMutate: (input) => {
+      const snapshot = snapshotTasks(qc)
+      const byId = new Map(input.items.map((item) => [item.id, item]))
+      qc.setQueryData<Task[]>(KEYS.tasks, (list) =>
+        list
+          ? list.map((task) => {
+              const item = byId.get(task.id)
+              if (!item) return task
+              return {
+                ...task,
+                sort: item.sort,
+                ...(item.parentId !== undefined ? { parentId: item.parentId } : {}),
+                ...(item.sprintId !== undefined ? { sprintId: item.sprintId } : {}),
+              }
+            })
+          : list,
+      )
+      return snapshot
+    },
+    onError: (_err, _vars, context) => context?.rollback(),
+    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
   })
 }
 

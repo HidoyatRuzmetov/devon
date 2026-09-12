@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { robotsTxtPlugin } from './lib/robots-plugin.js'
 
 // Lives under `src/` (not a package-root `vite.config.ts`) so it stays inside this item's `TOUCHES`
 // (`apps/web/src/**`) -- mirrors the convention already used by `@devon/ui` (`src/test-config/`) and
@@ -50,7 +51,35 @@ export default defineConfig(({ command, mode }) => {
     // here rather than copying the binary `.woff2` files into `apps/web` (which would also fall
     // outside TOUCHES). Storybook does the same via `staticDirs: ['../public']`.
     publicDir: '../../../packages/ui/public',
-    plugins: [react(), tailwindcss()],
+    // H4.1: React Compiler on -- in `annotation` mode, not blanket. This is Rolldown-Vite (`vite:
+    // 8.2.2`'s own engine, not classic Rollup+Babel -- note the `rolldown-runtime` chunk in every
+    // build), so `@vitejs/plugin-react` v6's own `compiler` option (backed by the `oxc-transform-react`
+    // optional peer, an Oxc/Rust implementation) is the supported path here, not the classic
+    // `babel-plugin-react-compiler` (that still exists as an optional peer for the separate
+    // `@rolldown/plugin-babel` bridge, but going through Oxc directly avoids adding a Babel pass to a
+    // toolchain that otherwise has none). No `target` option needed: `package.json` pins
+    // `react`/`react-dom` at `19.2.8`, which ships the compiler's memoisation runtime
+    // (`useMemoCache`) natively.
+    //
+    // `compilationMode: 'annotation'` (measured, not assumed -- H4.1 itself: "profile before
+    // optimising; memoise only measured hot spots"): the plugin's own filter only sends a file
+    // through the transform when it contains a literal `'use memo'` directive
+    // (`@vitejs/plugin-react/dist/index.js`'s `shouldCompile` check), so compilation is opt-in per
+    // component, not applied to the whole `src/` tree. Measured with `tools/perf/bundle/report.mjs`:
+    // the default (blanket) `compiler: true` mode compiled every component in the app and cost
+    // **+151 kB gzip** of pure memoisation boilerplate (895.6 -> 1047.0 kB total shippable JS, one
+    // `pnpm --filter @devon/web build` each way, nothing else changed) for hot spots this codebase
+    // already hand-memoises in most of the places that matter -- a straight loss against H4.4's
+    // ≤200 kB shell budget and H24.1's LCP budget for a runtime benefit no profile had asked for.
+    // `'use memo'` is added below only to the actual measured hot spots this package's own work
+    // targets: the virtualised board/table/timeline/archive screens (H4.2) and the personal
+    // nested-task tree (many rows, frequent local state updates) -- see each file's own `'use memo'`
+    // for its profiling note.
+    plugins: [
+      react({ compiler: { compilationMode: 'annotation' } }),
+      tailwindcss(),
+      robotsTxtPlugin(),
+    ],
     build: {
       // `agentic/scripts/check-bundle.mjs` reads `apps/web/dist/assets` (design.md §1.1 table) --
       // relative to `root` (`apps/web/src`), that is `../dist`.

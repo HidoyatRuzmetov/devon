@@ -6,6 +6,30 @@
     <!-- No external font/CDN/analytics link here, ever (H8.2, this item's handoff: "every shell
          network request must be same-origin"). Self-hosted fonts are declared in
          @devon/ui/styles/fonts.css, imported from src/styles.css. -->
+    <!-- H6.2 "only critical faces preloaded": every screen's body copy is `--font-sans` ("Devon
+         Sans", `styles.css`'s `body{font-family}`) and most screens' largest text (the LCP
+         candidate on every empty/hero state, e.g. `home-screen.tsx`'s greeting `<h1>`) is
+         `--font-display` ("Devon Display") -- these two regular-weight faces are the ones the
+         browser needs before it can paint any real text, so they start downloading immediately,
+         in parallel with the JS bundle, instead of only after CSS is parsed and a matching glyph
+         is discovered. The five other faces (semibold/bold weights, mono) stay `font-display:
+         swap`-only (fonts.css) -- preloading every weight would just compete with these two for
+         the same early bandwidth budget for no first-paint benefit. -->
+    <link rel="preload" href="/fonts/sans-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link
+      rel="preload"
+      href="/fonts/display-regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <!-- H23.1: static, safe-by-default `noindex` -- this covers the instant before React mounts and
+         every route this SPA can render except the handful of public entry points, which
+         `src/lib/page-meta.ts` explicitly relaxes to `index, follow` once the router knows which
+         route is showing. `robots.txt` (served by `src/lib/robots-plugin.ts`) disallows the whole
+         app for crawlers regardless; this meta tag is the second, independent signal for a page that
+         somehow gets linked to directly. -->
+    <meta name="robots" content="noindex, nofollow" />
     <title>WorkPortal</title>
   </head>
   <body>

@@ -94,6 +94,18 @@ export function subscribePomodoro(listener: () => void): () => void {
   ensureTicking()
   return () => {
     listeners.delete(listener)
+    // H4.6/H11.1 ("timers cleared, no leaks across navigation"): `ensureTicking` started a 250ms
+    // `setInterval` the moment the *first* ever subscriber (any Pomodoro-showing screen) mounted,
+    // but until this line nothing ever paired it with a `clearInterval` -- once any component in the
+    // app had shown the Pomodoro panel even once, that interval ran forever, for the rest of the
+    // tab's life, even with zero listeners left (every screen that ever rendered the panel
+    // unmounted). Stopping it here when the last listener leaves, and letting a future subscriber's
+    // `ensureTicking()` restart it, keeps the real invariant ("ticking only while something is
+    // listening") instead of "ticking forever after the first listener".
+    if (listeners.size === 0 && tickHandle !== null) {
+      clearInterval(tickHandle)
+      tickHandle = null
+    }
   }
 }
 

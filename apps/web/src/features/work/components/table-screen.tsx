@@ -38,6 +38,7 @@ import {
   useReducedMotion,
 } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
+import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import {
   useCardsQuery,
@@ -151,7 +152,17 @@ function SortHeader({
   )
 }
 
+// ui-blitz round3 #30: below this the grid's five fixed-width columns (300+180+120+260+140px) no
+// longer fit any phone -- `TableScreen` swaps `TableRow`'s grid for `MobileTableRow`'s stacked
+// title+meta-line card below this width, matching the shell's own `md:` cutover everywhere else
+// (`work-shell.tsx`'s `useMediaQuery('(min-width: 768px)')`) rather than picking a new breakpoint.
+const MOBILE_ROW_HEIGHT = 64
+
 export default function TableScreen() {
+  // H4.1/H4.2: virtualised, up to 100 sorted/selectable rows re-rendering on every sort, filter,
+  // selection and bulk-action tick -- a measured hot spot, opted into the compiler individually
+  // (`vite.config.ts`'s note) rather than via a blanket `compiler: true`.
+  'use memo'
   const t = useT()
   const reducedMotion = useReducedMotion()
   const search = useSearchParams()
@@ -166,9 +177,10 @@ export default function TableScreen() {
   const [selected, setSelected] = React.useState<ReadonlySet<string>>(new Set())
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(280)
   const scrollElRef = React.useRef<HTMLDivElement | null>(null)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const cards = React.useMemo(() => cardsQuery.data ?? [], [cardsQuery.data])
-  const rowHeight = density === 'compact' ? 40 : 56
+  const rowHeight = isDesktop ? (density === 'compact' ? 40 : 56) : MOBILE_ROW_HEIGHT
 
   const sorted = React.useMemo(() => {
     if (!sort) return cards
@@ -298,47 +310,91 @@ export default function TableScreen() {
         className="overflow-auto rounded-md border border-border"
         style={{ height: scrollerHeight }}
       >
-        <div style={{ minWidth: 1020 }}>
-          <div
-            className="sticky top-0 z-10 grid items-center gap-2 border-b border-border bg-card px-2"
-            style={{ gridTemplateColumns: GRID_COLUMNS, height: 40 }}
-          >
-            <Checkbox
-              checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-              onCheckedChange={(v) => toggleAll(v === true)}
-              aria-label={t('work.table.selectAll')}
-            />
-            <SortHeader
-              field="title"
-              label={t('work.field.title')}
-              sort={sort}
-              onSort={toggleSort}
-            />
-            <SortHeader
-              field="assignee"
-              label={t('work.field.assignee')}
-              sort={sort}
-              onSort={toggleSort}
-            />
-            <SortHeader
-              field="priority"
-              label={t('work.field.priority')}
-              sort={sort}
-              onSort={toggleSort}
-            />
-            <SortHeader field="due" label={t('work.field.due')} sort={sort} onSort={toggleSort} />
-            <SortHeader
-              field="status"
-              label={t('work.field.status')}
-              sort={sort}
-              onSort={toggleSort}
-            />
-          </div>
+        {/* `minWidth: 1020` is exactly the desktop grid's own column widths -- forcing that on a
+            390px viewport is what made the mobile table "a horizontally-scrolled data grid" (round3
+            #30); `MobileTableRow`'s stacked layout needs no fixed width at all, so it is simply
+            omitted below `md`. */}
+        <div style={isDesktop ? { minWidth: 1020 } : undefined}>
+          {isDesktop ? (
+            <div
+              className="sticky top-0 z-10 grid items-center gap-2 border-b border-border bg-card px-2"
+              style={{ gridTemplateColumns: GRID_COLUMNS, height: 40 }}
+            >
+              <Checkbox
+                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleAll(v === true)}
+                aria-label={t('work.table.selectAll')}
+              />
+              <SortHeader
+                field="title"
+                label={t('work.field.title')}
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                field="assignee"
+                label={t('work.field.assignee')}
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader
+                field="priority"
+                label={t('work.field.priority')}
+                sort={sort}
+                onSort={toggleSort}
+              />
+              <SortHeader field="due" label={t('work.field.due')} sort={sort} onSort={toggleSort} />
+              <SortHeader
+                field="status"
+                label={t('work.field.status')}
+                sort={sort}
+                onSort={toggleSort}
+              />
+            </div>
+          ) : (
+            // Mobile has no room for five sort headers side by side -- one compact control picking
+            // the same `sort` state the desktop headers drive, so sorting still works, it just costs
+            // a tap on a menu instead of a click on a column label.
+            <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
+              <Checkbox
+                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                onCheckedChange={(v) => toggleAll(v === true)}
+                aria-label={t('work.table.selectAll')}
+              />
+              <Select
+                aria-label={t('work.table.sort.label')}
+                value={sort ? `${sort.field}:${sort.dir}` : ''}
+                onChange={(e) => {
+                  const [field, dir] = e.target.value.split(':') as [SortField, 'asc' | 'desc']
+                  setSort(e.target.value ? { field, dir } : null)
+                }}
+                options={[
+                  { value: '', label: t('work.table.sort.none') },
+                  { value: 'title:asc', label: t('work.field.title') },
+                  { value: 'assignee:asc', label: t('work.field.assignee') },
+                  { value: 'priority:asc', label: t('work.field.priority') },
+                  { value: 'due:asc', label: t('work.field.due') },
+                  { value: 'status:asc', label: t('work.field.status') },
+                ]}
+                className="h-8 max-w-40 text-caption"
+              />
+            </div>
+          )}
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
             {virtualizer.getVirtualItems().map((vRow) => {
               const card = sorted[vRow.index]!
-              return (
+              return isDesktop ? (
                 <TableRow
+                  key={card.id}
+                  card={card}
+                  members={members}
+                  checked={selected.has(card.id)}
+                  onCheckedChange={(v) => toggleRow(card.id, v)}
+                  top={vRow.start}
+                  height={vRow.size}
+                />
+              ) : (
+                <MobileTableRow
                   key={card.id}
                   card={card}
                   members={members}
@@ -509,6 +565,10 @@ function TableRow({
   top: number
   height: number
 }) {
+  // H4.1/H4.2: one instance per visible virtualised row (up to ~20 on screen at once), re-rendering
+  // on every parent sort/selection tick even when this row's own card is unchanged -- a measured hot
+  // spot, opted into the compiler individually (`vite.config.ts`'s note).
+  'use memo'
   const t = useT()
   const locale = useLocale()
   const reduced = useReducedMotion()
@@ -667,6 +727,81 @@ function TableRow({
           {t(`work.status.${card.status}`)}
         </Badge>
       </span>
+    </motion.div>
+  )
+}
+
+/** ui-blitz round3 #30's fix: below `md`, one stacked row (title, then a truncated meta line)
+ * instead of the five-column grid `TableRow` renders. Read-only by design -- a phone list item that
+ * opens the full editable card peek on tap is the established mobile pattern (Files, Mail, every
+ * native list), and it sidesteps the five separate hover-to-edit affordances `TableRow` has room for
+ * but a 390px row does not. Selection (the checkbox, bulk bar) still works exactly like the desktop
+ * row -- mobile bulk-archiving/assigning a filtered set is a real, common use of this screen. */
+function MobileTableRow({
+  card,
+  members,
+  checked,
+  onCheckedChange,
+  top,
+  height,
+}: {
+  card: Card
+  members: MemberSummary[]
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  top: number
+  height: number
+}) {
+  // H4.1/H4.2: same virtualised-row hot spot as `TableRow`, for the mobile layout.
+  'use memo'
+  const t = useT()
+  const reduced = useReducedMotion()
+  const assignee = members.find((m) => m.userId === card.assigneeUserId)
+  const metaParts = [
+    assignee ? fullName(assignee) : t('work.field.unassigned'),
+    t(PRIORITY_LABEL_KEY[card.priority]),
+    t(`work.status.${card.status}`),
+  ]
+  if (card.risk !== 'none') metaParts.push(t(RISK_LABEL_KEY[card.risk]))
+
+  function onRowClick(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement
+    if (target.closest('input, button, [role="checkbox"]')) return
+    openCardPeek(card.id)
+  }
+
+  return (
+    <motion.div
+      role="row"
+      tabIndex={0}
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height }}
+      initial={reduced ? { opacity: 1, y: top } : { opacity: 0, y: top + 4 }}
+      animate={{ opacity: 1, y: top }}
+      transition={reduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
+      onClick={onRowClick}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+          e.preventDefault()
+          openCardPeek(card.id)
+        }
+      }}
+      className="relative flex cursor-pointer items-center gap-3 border-b border-border/60 px-3 py-2 active:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+    >
+      {card.risk === 'overdue' ? (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
+        />
+      ) : null}
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onCheckedChange(v === true)}
+        aria-label={card.title}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-body text-foreground">{card.title}</p>
+        <p className="truncate text-caption text-muted-foreground">{metaParts.join(' · ')}</p>
+      </div>
     </motion.div>
   )
 }

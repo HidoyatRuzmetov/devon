@@ -2216,7 +2216,11 @@
       "hoverCard": {
         "membership": "Membership",
         "unit": "Unit",
-        "openBoardColumn": "Open board column"
+        "openBoardColumn": "Open board column",
+        "filterByUnitAria": "View only «{unit}»",
+        "copyLink": "Copy link",
+        "copyLinkAria": "Copy a link to {name}'s profile",
+        "linkCopied": "Link copied"
       }
     },
     "common": {
@@ -2431,6 +2435,10 @@
         "label": "Density",
         "compact": "Compact",
         "comfortable": "Comfortable"
+      },
+      "sort": {
+        "label": "Sort",
+        "none": "Unsorted"
       },
       "bulk": {
         "selectedCount": "{count} selected",

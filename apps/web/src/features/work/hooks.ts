@@ -45,6 +45,12 @@ export function useBoardQuery(): UseQueryResult<Board, Error> {
   return useQuery({ queryKey: BOARD_KEY, queryFn: api.fetchBoard, refetchInterval: BOARD_POLL_MS })
 }
 
+/** H5.2 "prefetch on hover/focus" -- `nav.ts` calls this on the "Ishlar" sidebar entry's hover/
+ * focus, warming the exact cache entry `useBoardQuery` reads on mount. */
+export function prefetchBoard(qc: QueryClient): Promise<unknown> {
+  return qc.prefetchQuery({ queryKey: BOARD_KEY, queryFn: api.fetchBoard })
+}
+
 export function useCardsQuery(query: api.CardListQuery): UseQueryResult<Card[], Error> {
   return useQuery({
     queryKey: [...CARDS_KEY, query],

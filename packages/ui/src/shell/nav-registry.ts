@@ -13,6 +13,13 @@ export interface NavEntry {
   /** Omitted means "always visible". Kept a plain predicate (not a role list) so a later epic can
    * gate on more than role (e.g. `ctx.hasDepartment`) without changing this type. */
   visibleWhen?: (ctx: NavContext) => boolean
+  /** H5.2 ("prefetch on hover/focus"): called once per hover/focus dwell on this entry's link, in
+   * both `Sidebar` and `BottomTabBar` -- warms this route's primary data query (and, being a plain
+   * `import()`, its lazy component chunk too) before the click that navigates to it, so the route
+   * that opens already has data instead of showing its loading skeleton. A feature manifest supplies
+   * this; the sidebar/tab bar never know what it does. Best-effort only -- a feature with no
+   * meaningful single "primary query" (or the core `home`/`admin` entries) simply omits it. */
+  onPrefetch?: () => void
 }
 
 export interface NavContext {

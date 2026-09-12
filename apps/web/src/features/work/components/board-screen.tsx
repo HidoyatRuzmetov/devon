@@ -64,6 +64,10 @@ function findMemberMatches(
 }
 
 function BoardScreenInner() {
+  // H4.1: a measured hot spot (`vite.config.ts`'s own note) -- up to ~27 columns of drag-and-drop
+  // cards re-rendering on every filter keystroke, drag frame, and poll tick; opted into the React
+  // Compiler individually rather than via a blanket `compiler: true`.
+  'use memo'
   const t = useT()
   const { department, departmentId } = useDepartment()
   const { user } = useSession()

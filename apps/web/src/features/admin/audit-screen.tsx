@@ -278,7 +278,15 @@ function AuditBody() {
               </h3>
               <Stagger animateKey={`${category}:${cursor ?? 0}`}>
                 {group.items.map((e) => (
-                  <StaggerItem key={e.seq}>
+                  // H4.5: the audit trail only ever grows -- `content-visibility: auto` skips
+                  // layout/paint for rows scrolled off (no `layout`-animated FLIP on this list, so
+                  // nothing needs their box measured while hidden); `contain-intrinsic-size`
+                  // (`AuditRow`'s own row height) keeps the scrollbar's size stable before a row's
+                  // first paint.
+                  <StaggerItem
+                    key={e.seq}
+                    className="[content-visibility:auto] [contain-intrinsic-size:auto_56px]"
+                  >
                     <AuditRow event={e} />
                   </StaggerItem>
                 ))}

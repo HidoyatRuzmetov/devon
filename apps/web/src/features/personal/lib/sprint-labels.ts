@@ -47,11 +47,17 @@ export function formatTimeLeft(
   const days = Math.floor(totalMinutes / 1440)
   const hours = Math.floor((totalMinutes % 1440) / 60)
   const minutes = totalMinutes % 60
+  // ui-blitz round3 #21: a number glued straight to its unit ("34daq") reads as one broken token,
+  // not two related ones -- every other number-plus-unit in the app (`formatNumber`,
+  // `numberFlowLocale`) separates with U+00A0 (a non-breaking space, so the pair still can't wrap
+  // apart mid-line) rather than a plain space or none at all; this is that same convention, just
+  // never applied here when this file was written.
+  const NBSP = ' '
   if (days > 0) {
-    return `${days}${t('personal.duration.daysShort')} ${hours}${t('personal.duration.hoursShort')}`
+    return `${days}${NBSP}${t('personal.duration.daysShort')} ${hours}${NBSP}${t('personal.duration.hoursShort')}`
   }
   if (hours > 0) {
-    return `${hours}${t('personal.duration.hoursShort')} ${minutes}${t('personal.duration.minutesShort')}`
+    return `${hours}${NBSP}${t('personal.duration.hoursShort')} ${minutes}${NBSP}${t('personal.duration.minutesShort')}`
   }
-  return `${minutes}${t('personal.duration.minutesShort')}`
+  return `${minutes}${NBSP}${t('personal.duration.minutesShort')}`
 }

@@ -96,7 +96,11 @@
       "hoverCard": {
         "membership": "Членство",
         "unit": "Отдел",
-        "openBoardColumn": "Открыть колонку на доске"
+        "openBoardColumn": "Открыть колонку на доске",
+        "filterByUnitAria": "Показать только «{unit}»",
+        "copyLink": "Скопировать ссылку",
+        "copyLinkAria": "Скопировать ссылку на профиль {name}",
+        "linkCopied": "Ссылка скопирована"
       }
     },
     "common": { "head": "Руководитель", "member": "Участник" }
