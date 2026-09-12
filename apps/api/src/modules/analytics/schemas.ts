@@ -40,7 +40,10 @@ export const summaryQuerySchema = z.object({
 })
 export type SummaryQuery = z.infer<typeof summaryQuerySchema>
 
-const weekPointSchema = z.object({ weekStart: isoDate, count: z.number().int() })
+const weekPointSchema = z.object({
+  weekStart: isoDate,
+  count: z.number().int(),
+})
 const onTimePointSchema = z.object({
   weekStart: isoDate,
   dueCount: z.number().int(),

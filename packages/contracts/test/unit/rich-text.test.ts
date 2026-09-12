@@ -15,7 +15,13 @@ function doc(...content: unknown[]) {
 function linked(href: string) {
   return doc({
     type: 'paragraph',
-    content: [{ type: 'text', text: 'click me', marks: [{ type: 'link', attrs: { href } }] }],
+    content: [
+      {
+        type: 'text',
+        text: 'click me',
+        marks: [{ type: 'link', attrs: { href } }],
+      },
+    ],
   })
 }
 
@@ -70,7 +76,11 @@ describe('isSafeUrl (H1.6)', () => {
 describe('richTextDocSchema (H1.5)', () => {
   it('accepts a document made of allow-listed nodes and marks', () => {
     const value = doc(
-      { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Reja' }] },
+      {
+        type: 'heading',
+        attrs: { level: 1 },
+        content: [{ type: 'text', text: 'Reja' }],
+      },
       {
         type: 'paragraph',
         content: [{ type: 'text', text: 'bold', marks: [{ type: 'bold' }] }],
@@ -85,7 +95,11 @@ describe('richTextDocSchema (H1.5)', () => {
           },
         ],
       },
-      { type: 'callout', attrs: { tone: 'info' }, content: [{ type: 'paragraph' }] },
+      {
+        type: 'callout',
+        attrs: { tone: 'info' },
+        content: [{ type: 'paragraph' }],
+      },
       {
         type: 'paragraph',
         content: [{ type: 'mention', attrs: { id: 'u1', label: 'Aziz' } }],
@@ -130,12 +144,18 @@ describe('richTextDocSchema (H1.5)', () => {
   })
 
   it('refuses an oversized attribute value', () => {
-    const value = doc({ type: 'paragraph', attrs: { title: 'x'.repeat(4096) } })
+    const value = doc({
+      type: 'paragraph',
+      attrs: { title: 'x'.repeat(4096) },
+    })
     expect(richTextDocSchema.safeParse(value).success).toBe(false)
   })
 
   it('refuses a document over the serialized ceiling', () => {
-    const value = doc({ type: 'paragraph', content: [{ type: 'text', text: 'a'.repeat(19_000) }] })
+    const value = doc({
+      type: 'paragraph',
+      content: [{ type: 'text', text: 'a'.repeat(19_000) }],
+    })
     const many = doc(...Array.from({ length: 200 }, () => value.content[0]))
     expect(richTextDocSchema.safeParse(many).success).toBe(false)
   })

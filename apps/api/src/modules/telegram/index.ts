@@ -76,7 +76,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'read',
-          subject: (r) => ({ kind: 'personal', ownerUserId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'personal',
+            ownerUserId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { response: { 200: linkStatusSchema } },
@@ -99,7 +102,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'create',
-          subject: (r) => ({ kind: 'personal', ownerUserId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'personal',
+            ownerUserId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { response: { 200: linkCodeSchema } },
@@ -112,12 +118,20 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       let qrDataUrl: string | null = null
       if (deepLink) {
         try {
-          qrDataUrl = await QRCode.toDataURL(deepLink, { margin: 1, width: 240 })
+          qrDataUrl = await QRCode.toDataURL(deepLink, {
+            margin: 1,
+            width: 240,
+          })
         } catch {
           qrDataUrl = null // QR is a convenience; the code and deep link above are always usable without it.
         }
       }
-      reply.send({ code, deepLink, expiresAt: expiresAt.toISOString(), qrDataUrl })
+      reply.send({
+        code,
+        deepLink,
+        expiresAt: expiresAt.toISOString(),
+        qrDataUrl,
+      })
     },
   )
 
@@ -127,7 +141,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'delete',
-          subject: (r) => ({ kind: 'personal', ownerUserId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'personal',
+            ownerUserId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { response: { 204: z.void() } },
@@ -220,7 +237,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
       schema: {
-        params: z.object({ departmentId: z.string().uuid(), groupId: z.string().uuid() }),
+        params: z.object({
+          departmentId: z.string().uuid(),
+          groupId: z.string().uuid(),
+        }),
         body: putGroupKindsSchema,
         response: { 204: z.void() },
       },
@@ -246,7 +266,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       },
       schema: {
-        params: z.object({ departmentId: z.string().uuid(), groupId: z.string().uuid() }),
+        params: z.object({
+          departmentId: z.string().uuid(),
+          groupId: z.string().uuid(),
+        }),
         response: { 204: z.void() },
       },
     },
@@ -266,7 +289,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'update',
-          subject: (r) => ({ kind: 'personal', ownerUserId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'personal',
+            ownerUserId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { body: muteBodySchema, response: { 204: z.void() } },
@@ -293,7 +319,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         // bot is far below this; anything above it is someone else's traffic.
         rateLimit: { max: 120, timeWindow: '1 minute' },
       },
-      schema: { params: webhookParamsSchema, body: z.record(z.string(), z.unknown()) },
+      schema: {
+        params: webhookParamsSchema,
+        body: z.record(z.string(), z.unknown()),
+      },
     },
     async (req, reply) => {
       const expected = readWebhookSecret(app)
@@ -376,7 +405,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
 
 function startPolling(
   bot: NonNullable<ReturnType<typeof getBot>>,
-  log: { info: (o: unknown, m?: string) => void; error: (o: unknown, m?: string) => void },
+  log: {
+    info: (o: unknown, m?: string) => void
+    error: (o: unknown, m?: string) => void
+  },
 ): { stop(): Promise<void> } {
   // Fire-and-forget: `bot.start()` resolves only once polling stops, so this must not be awaited by
   // the caller (MODULE-GUIDE.md's own "no query in a loop"-style caution generalises: never await an

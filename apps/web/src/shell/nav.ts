@@ -65,12 +65,37 @@ export const NAV_ENTRIES: readonly NavEntry[] = requireDepartmentFor([
 export const NAV_GROUPS: readonly NavGroup[] = [
   // No heading: the top of a sidebar never needs one to be understood.
   { id: 'top', entryIds: ['home', 'inbox'] },
-  { id: 'work', labelKey: 'shell.nav.group.work', entryIds: ['work', 'projects', 'personal'] },
-  { id: 'team', labelKey: 'shell.nav.group.team', entryIds: ['events', 'people', 'structure'] },
+  {
+    id: 'work',
+    labelKey: 'shell.nav.group.work',
+    entryIds: ['work', 'projects', 'personal'],
+  },
+  {
+    id: 'team',
+    labelKey: 'shell.nav.group.team',
+    entryIds: ['events', 'people', 'structure'],
+  },
   {
     id: 'knowledge',
     labelKey: 'shell.nav.group.knowledge',
     entryIds: ['pages', 'analytics', 'ai'],
+  },
+  /**
+   * v1.1 SPEC §3.1 -- **Boshqaruv**: the boshqarma boshlig'i's half of the product. This is the
+   * structural answer to CTO finding #2 ("the head's product is the member's product with more
+   * buttons"): the head does not get extra buttons scattered through the working screens, they get a
+   * group of their own, and a xodim never sees that the group exists.
+   *
+   * Every entry in it declares a head-only action, so the group disappears for a member through the
+   * same `can()` the server's route uses -- `Sidebar` renders nothing for a group whose entries all
+   * resolved away. The ids listed here that no manifest claims yet (`workload`, `goals`, `fields`,
+   * `automations`) are the destinations SPEC §7 builds; naming them now means those packages add one
+   * sidebar entry to their own manifest and land in the right group with no edit to this file.
+   */
+  {
+    id: 'manage-head',
+    labelKey: 'shell.nav.group.manageHead',
+    entryIds: ['people-table', 'workload', 'goals', 'fields', 'automations', 'department-settings'],
   },
   {
     id: 'manage',

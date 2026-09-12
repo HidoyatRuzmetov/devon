@@ -33,7 +33,10 @@ beforeAll(async () => {
   server = h.server
   baseUrl = server.baseUrl
 
-  dept = await seedDepartment(db, { name: 'Matrix dept', slug: `matrix-${randomUUID()}` })
+  dept = await seedDepartment(db, {
+    name: 'Matrix dept',
+    slug: `matrix-${randomUUID()}`,
+  })
   const headUser = await seedMember(db, dept.id, { role: 'head' })
   const memberUser = await seedMember(db, dept.id, { role: 'member' })
   memberUserId = memberUser.id
@@ -51,10 +54,22 @@ const get = (path: string, session: Session) =>
 
 describe('head-only reads: a member gets 403, the head gets 200', () => {
   const headOnlyReads: { name: string; path: string }[] = [
-    { name: 'people indicators (SPEC §4.2)', path: '/api/v1/people/indicators' },
-    { name: 'people indicator registry', path: '/api/v1/people/indicators/registry' },
-    { name: 'onboarding templates (D4c)', path: '/api/v1/pages/onboarding/templates' },
-    { name: 'per-person analytics CSV (D3b)', path: '/api/v1/analytics/export.csv?chart=loadPerPerson' },
+    {
+      name: 'people indicators (SPEC §4.2)',
+      path: '/api/v1/people/indicators',
+    },
+    {
+      name: 'people indicator registry',
+      path: '/api/v1/people/indicators/registry',
+    },
+    {
+      name: 'onboarding templates (D4c)',
+      path: '/api/v1/pages/onboarding/templates',
+    },
+    {
+      name: 'per-person analytics CSV (D3b)',
+      path: '/api/v1/analytics/export.csv?chart=loadPerPerson',
+    },
   ]
 
   it.each(headOnlyReads)('$name -- member is refused', async ({ path }) => {
@@ -85,7 +100,10 @@ describe('list endpoints omit head-only fields for a member (D2, D3)', () => {
     expect(asMember).not.toHaveProperty('usedPct')
     expect(asMember).not.toHaveProperty('budgetStatus')
 
-    const asHead = (await (await get('/api/v1/ai/settings', head)).json()) as Record<string, unknown>
+    const asHead = (await (await get('/api/v1/ai/settings', head)).json()) as Record<
+      string,
+      unknown
+    >
     expect(asHead).toHaveProperty('budgetUzsPerMonth')
     expect(asHead).toHaveProperty('spentUzsThisMonth')
   })
@@ -219,7 +237,7 @@ describe('owner-set writes: a bystander cannot touch a colleague’s card (D6)',
 })
 
 describe('projects and pages: owner or head (D4, D5)', () => {
-  it("a member cannot appoint somebody else the owner of a project they create (D5b)", async () => {
+  it('a member cannot appoint somebody else the owner of a project they create (D5b)', async () => {
     const res = await fetch(`${baseUrl}/api/v1/projects`, {
       method: 'POST',
       headers: member.headers,
@@ -273,7 +291,10 @@ describe('projects and pages: owner or head (D4, D5)', () => {
     const edit = await fetch(`${baseUrl}/api/v1/pages/${page.id}`, {
       method: 'PATCH',
       headers: member.headers,
-      body: JSON.stringify({ title: 'a wiki is collaborative', version: page.version }),
+      body: JSON.stringify({
+        title: 'a wiki is collaborative',
+        version: page.version,
+      }),
     })
     expect(edit.status).toBe(200)
 
@@ -288,7 +309,10 @@ describe('projects and pages: owner or head (D4, D5)', () => {
 
 describe('SPEC §2.3 -- the department switcher', () => {
   it('refuses a department the caller is not a member of', async () => {
-    const other = await seedDepartment(db, { name: 'Not mine', slug: `nm-${randomUUID()}` })
+    const other = await seedDepartment(db, {
+      name: 'Not mine',
+      slug: `nm-${randomUUID()}`,
+    })
     const res = await fetch(`${baseUrl}/api/v1/me/active-department`, {
       method: 'POST',
       headers: member.headers,

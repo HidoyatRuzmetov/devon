@@ -146,7 +146,10 @@ const WEEKDAY_WORDS: ReadonlyArray<{ dow: number; words: readonly string[] }> = 
   { dow: 4, words: ['thursday', 'thu', 'payshanba', 'pa', 'четверг', 'чт'] },
   { dow: 5, words: ['friday', 'fri', 'juma', 'ju', 'пятница', 'пт'] },
   { dow: 6, words: ['saturday', 'sat', 'shanba', 'sh', 'суббота', 'сб'] },
-  { dow: 0, words: ['sunday', 'sun', 'yakshanba', 'ya', 'воскресенье', 'вс'] },
+  {
+    dow: 0,
+    words: ['sunday', 'sun', 'yakshanba', 'ya', 'воскресенье', 'вс'],
+  },
 ]
 
 const TODAY_WORDS = new Set(['today', 'bugun', 'сегодня'])

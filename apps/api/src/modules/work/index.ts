@@ -35,13 +35,19 @@ import {
 } from './schemas.js'
 
 function departmentChildSubject(departmentId: string | null) {
-  return { kind: 'department_child' as const, departmentId: departmentId ?? '' }
+  return {
+    kind: 'department_child' as const,
+    departmentId: departmentId ?? '',
+  }
 }
 
 /** v1.1 SPEC §2.2 (D6d): the department's label vocabulary is head-shaped -- one shared set of names
  * everyone files work under, not something any member may add to. */
 function departmentManagedSubject(departmentId: string | null) {
-  return { kind: 'department_managed' as const, departmentId: departmentId ?? '' }
+  return {
+    kind: 'department_managed' as const,
+    departmentId: departmentId ?? '',
+  }
 }
 
 /**
@@ -133,7 +139,13 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      if (!departmentId) return reply.send({ members: [], columns: [], unassigned: [], labels: [] })
+      if (!departmentId)
+        return reply.send({
+          members: [],
+          columns: [],
+          unassigned: [],
+          labels: [],
+        })
       const ctx = contextFromRequest(req)
       const [members, cards, labels] = await Promise.all([
         repo.getMembers(ctx, departmentId),
@@ -158,7 +170,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         member,
         cards: withCanEdit(byAssignee.get(member.userId) ?? [], me, isHead),
       }))
-      reply.send({ members, columns, unassigned: withCanEdit(unassigned, me, isHead), labels })
+      reply.send({
+        members,
+        columns,
+        unassigned: withCanEdit(unassigned, me, isHead),
+        labels,
+      })
     },
   )
 
@@ -171,7 +188,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { querystring: cardListQuerySchema, response: { 200: cardListSchema } },
+      schema: {
+        querystring: cardListQuerySchema,
+        response: { 200: cardListSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
@@ -230,7 +250,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: createCardBodySchema, response: { 201: cardDetailSchema } },
+      schema: {
+        body: createCardBodySchema,
+        response: { 201: cardDetailSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -456,12 +479,20 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { params: cardChecklistParamsSchema, response: { 204: z.undefined() } },
+      schema: {
+        params: cardChecklistParamsSchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
-      const deleteItemOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      const deleteItemOwnership = await requireCardOwnership(
+        req,
+        reply,
+        departmentId,
+        req.params.id,
+      )
       if (!deleteItemOwnership.ok) return
       const ok = await repo.deleteChecklistItem(
         contextFromRequest(req),
@@ -553,7 +584,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: createLabelBodySchema, response: { 201: labelListSchema.element } },
+      schema: {
+        body: createLabelBodySchema,
+        response: { 201: labelListSchema.element },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -597,7 +631,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: createSavedViewBodySchema, response: { 201: savedViewListSchema.element } },
+      schema: {
+        body: createSavedViewBodySchema,
+        response: { 201: savedViewListSchema.element },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return

@@ -81,14 +81,19 @@ function featureRunSubject(req: FastifyRequest): Subject {
   if (params.feature === 'plan_sprint') {
     return { kind: 'personal', ownerUserId: req.actor?.userId ?? '' }
   }
-  return { kind: 'department_child', departmentId: req.actor?.departmentId ?? '' }
+  return {
+    kind: 'department_child',
+    departmentId: req.actor?.departmentId ?? '',
+  }
 }
 
 const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/settings',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { response: { 200: aiSettingsSchema } },
     },
     async (req) => {
@@ -108,7 +113,10 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     '/settings',
     {
       config: { permission: { action: 'update', subject: departmentSubject } },
-      schema: { body: patchAiSettingsBodySchema, response: { 200: aiSettingsSchema } },
+      schema: {
+        body: patchAiSettingsBodySchema,
+        response: { 200: aiSettingsSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -120,16 +128,26 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/usage',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { querystring: usageQuerySchema, response: { 200: usageListResponseSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        querystring: usageQuerySchema,
+        response: { 200: usageListResponseSchema },
+      },
     },
     async (req) => {
       // D2b: who asked the AI what, how often and at what cost is surveillance-grade. A member sees
       // their own runs (useful self-awareness); the head sees the department's.
       const departmentId = activeDepartmentId(req)
-      const traces = await service.listUsage(toDbContext(req), departmentId, req.query.limit ?? 50, {
-        onlyUserId: isHeadOf(req.actor, departmentId) ? null : (req.actor?.userId ?? ''),
-      })
+      const traces = await service.listUsage(
+        toDbContext(req),
+        departmentId,
+        req.query.limit ?? 50,
+        {
+          onlyUserId: isHeadOf(req.actor, departmentId) ? null : (req.actor?.userId ?? ''),
+        },
+      )
       return { traces }
     },
   )

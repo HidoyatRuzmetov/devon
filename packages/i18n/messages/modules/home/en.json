@@ -40,6 +40,46 @@
         "focusQuestion": "How much focused time did you get this week?"
       },
       "sectionTiles": "Today"
+    },
+    "head": {
+      "section": "Management view",
+      "decisions": {
+        "title": "Waiting on you",
+        "meaning": "Tasks you handed out that are past their due date.",
+        "cta": "Open the board"
+      },
+      "overdue": {
+        "title": "Running late",
+        "meaning": "The five people with the most overdue work. Click a name for the table.",
+        "cta": "People table",
+        "empty": "Nothing overdue. The department is keeping to its dates."
+      },
+      "load": {
+        "title": "Load this week",
+        "meaning": "Open tasks against each person's weekly capacity.",
+        "cta": "See the load",
+        "empty": "No open tasks yet."
+      },
+      "projects": {
+        "title": "Projects",
+        "meaning": "The projects furthest behind come first.",
+        "cta": "Projects",
+        "empty": "No active projects.",
+        "progressAria": "{title} — progress"
+      },
+      "events": {
+        "title": "Coming up",
+        "meaning": "The next seven days of events, with how many said yes.",
+        "cta": "Events",
+        "empty": "Nothing scheduled in the next seven days."
+      },
+      "onboarding": {
+        "title": "New colleagues",
+        "meaning": "People who have not finished their first steps.",
+        "cta": "People table",
+        "empty": "Everyone has finished onboarding."
+      },
+      "indicatorsNote": "{count} indicators are available for the table and person pages."
     }
   }
 }

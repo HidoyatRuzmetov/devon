@@ -95,7 +95,10 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
             departmentChildSubject((r.params as { departmentId: string }).departmentId),
         },
       },
-      schema: { params: departmentParamsSchema, response: { 200: unitsOverviewSchema } },
+      schema: {
+        params: departmentParamsSchema,
+        response: { 200: unitsOverviewSchema },
+      },
     },
     async (req, reply) =>
       guarded(reply, async () => {
@@ -201,7 +204,10 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
             departmentManagedSubject((r.params as { departmentId: string }).departmentId),
         },
       },
-      schema: { params: unitParamsSchema, response: { 200: deletedUnitSchema } },
+      schema: {
+        params: unitParamsSchema,
+        response: { 200: deletedUnitSchema },
+      },
     },
     async (req, reply) =>
       guarded(reply, () => {
@@ -254,7 +260,10 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
             departmentChildSubject((r.params as { departmentId: string }).departmentId),
         },
       },
-      schema: { params: departmentParamsSchema, response: { 200: unitRolesListSchema } },
+      schema: {
+        params: departmentParamsSchema,
+        response: { 200: unitRolesListSchema },
+      },
     },
     async (req, reply) =>
       guarded(reply, () => repo.listUnitRoles(actorCtx(req), req.params.departmentId)),
@@ -332,7 +341,10 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
             departmentChildSubject((r.params as { departmentId: string }).departmentId),
         },
       },
-      schema: { params: departmentParamsSchema, response: { 200: membersListSchema } },
+      schema: {
+        params: departmentParamsSchema,
+        response: { 200: membersListSchema },
+      },
     },
     async (req, reply) =>
       guarded(reply, () => repo.listMembers(actorCtx(req), req.params.departmentId)),

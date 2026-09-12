@@ -28,6 +28,8 @@ import {
 } from '@devon/ui'
 import { ArrowRight, CalendarDays, Check, Gavel, ListTodo } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
+import { useIsHead } from '../../lib/can.js'
+import { HeadDashboard } from './head-dashboard.js'
 import { useDepartment, useInstanceQuery, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
@@ -202,7 +204,10 @@ function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
                 ) : null}
               </h3>
               <p className="text-small tabular-nums text-muted-foreground">
-                {t('home.dashboard.onboarding.body', { done, total: items.length })}
+                {t('home.dashboard.onboarding.body', {
+                  done,
+                  total: items.length,
+                })}
               </p>
               <Progress
                 value={(done / items.length) * 100}
@@ -324,7 +329,10 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => overviewQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => overviewQuery.refetch(),
+        }}
       />
     )
   }
@@ -389,7 +397,9 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
                 titleKey="home.dashboard.needsMyDecision.title"
                 value={p.givenOverdueCount}
                 bodyKey="home.dashboard.needsMyDecision.body"
-                bodyParams={{ count: formatNumber(p.givenOverdueCount, locale) }}
+                bodyParams={{
+                  count: formatNumber(p.givenOverdueCount, locale),
+                }}
                 ctaKey="home.dashboard.dueFromMe.cta"
                 onCta={() => navigate('/work')}
                 tone="attention"
@@ -453,6 +463,7 @@ export default function HomeScreen() {
   const instanceQuery = useInstanceQuery()
   const openPalette = useOpenPalette()
   const { departmentId } = useDepartment()
+  const isHead = useIsHead()
 
   const settled = !meQuery.isPending && !instanceQuery.isPending
   const user = meQuery.data?.user ?? null
@@ -476,7 +487,10 @@ export default function HomeScreen() {
         kind="offline"
         titleKey="state.offline.banner"
         bodyKey="state.offline.empty"
-        action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => window.location.reload(),
+        }}
       />
     )
   }
@@ -545,7 +559,12 @@ export default function HomeScreen() {
       {/* DESIGN.md v2: the ambient gradient lives on auth and the hub only. Home is the hub. */}
       <HubAmbientWash />
       {header}
-      <Dashboard hasAvatar={Boolean(user.avatarKey)} />
+      {/* v1.1 SPEC §3.2 -- the one place in the product that branches on the role itself rather than
+          on an action: which *product* this person opens. A boshqarma boshlig'i gets a management
+          dashboard (people, load, risk, decisions); a xodim keeps the working view (due from me,
+          needs my decision, around me, sprint, focus). Both are fed by endpoints the viewer is
+          allowed to call, so neither is a client-side illusion. */}
+      {isHead ? <HeadDashboard /> : <Dashboard hasAvatar={Boolean(user.avatarKey)} />}
     </div>
   )
 }

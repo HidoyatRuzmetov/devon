@@ -29,7 +29,9 @@ describe('can() -- not authenticated', () => {
 describe('can() -- P1: instance is super_admin && !viewAs only', () => {
   it('allows a super_admin with no viewAs', () => {
     const a = actor({ role: 'super_admin', viewAs: null })
-    expect(can(a, 'administer', { kind: 'instance' })).toEqual({ allowed: true })
+    expect(can(a, 'administer', { kind: 'instance' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('denies a head', () => {
@@ -63,12 +65,16 @@ describe('can() -- P1: instance is super_admin && !viewAs only', () => {
 describe('can() -- instance_exit_view_as: super_admin only, but never blocked by viewAs itself', () => {
   it('allows a super_admin who is currently viewing-as a department to exit it', () => {
     const a = actor({ role: 'super_admin', viewAs: { departmentId: 'd-1' } })
-    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({ allowed: true })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('allows a super_admin with no viewAs (idempotent stop)', () => {
     const a = actor({ role: 'super_admin', viewAs: null })
-    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({ allowed: true })
+    expect(can(a, 'administer', { kind: 'instance_exit_view_as' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('denies a head', () => {
@@ -91,7 +97,9 @@ describe('can() -- instance_exit_view_as: super_admin only, but never blocked by
 describe('can() -- P2: personal is owner-only, no exceptions ever', () => {
   it('allows the owner', () => {
     const a = actor({ userId: 'u-1' })
-    expect(can(a, 'read', { kind: 'personal', ownerUserId: 'u-1' })).toEqual({ allowed: true })
+    expect(can(a, 'read', { kind: 'personal', ownerUserId: 'u-1' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('denies a super_admin who is not the owner -- no super_admin exception', () => {
@@ -140,7 +148,9 @@ describe('can() -- P2: personal is owner-only, no exceptions ever', () => {
 describe('can() -- own_account mirrors owner-only', () => {
   it('allows the account holder', () => {
     const a = actor({ userId: 'u-1' })
-    expect(can(a, 'update', { kind: 'own_account', userId: 'u-1' })).toEqual({ allowed: true })
+    expect(can(a, 'update', { kind: 'own_account', userId: 'u-1' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('denies anyone else', () => {
@@ -317,7 +327,12 @@ describe('privilege-escalation ladder (H1.16)', () => {
   it('rung 3 -- an instance-wide role claim never substitutes for a membership', () => {
     // A `super_admin` with no membership in `d-a` cannot write to it; the top of the ladder is not
     // a shortcut into a department's data (I-8a: the only cross-department lens is read-only).
-    expect(can(superAdmin, 'update', { kind: 'department_child', departmentId: 'd-a' })).toEqual({
+    expect(
+      can(superAdmin, 'update', {
+        kind: 'department_child',
+        departmentId: 'd-a',
+      }),
+    ).toEqual({
       allowed: false,
       reason: 'not_a_member',
     })
@@ -371,7 +386,12 @@ describe('object-level access: the same request with another department’s id (
     // `plugins/session.ts` builds `Actor.memberships` from `listActiveMembershipsForUser`, so a
     // removed member's id simply is not there -- asserted here so a future change that starts
     // passing inactive rows into `Actor` fails this test rather than silently re-granting access.
-    const removed = actor({ userId: 'u-ex', role: 'member', memberships: [], departmentId: 'd-a' })
+    const removed = actor({
+      userId: 'u-ex',
+      role: 'member',
+      memberships: [],
+      departmentId: 'd-a',
+    })
     expect(can(removed, 'read', { kind: 'department', departmentId: 'd-a' })).toEqual({
       allowed: false,
       reason: 'not_a_member',
@@ -395,22 +415,39 @@ describe("can() -- P8: department_managed is the head's own row, reads included"
 
   it('allows the head for every action', () => {
     for (const action of ['read', 'create', 'update', 'archive', 'delete'] as const) {
-      expect(can(headActor, action, { kind: 'department_managed', departmentId: 'd-a' })).toEqual({
+      expect(
+        can(headActor, action, {
+          kind: 'department_managed',
+          departmentId: 'd-a',
+        }),
+      ).toEqual({
         allowed: true,
       })
     }
   })
 
   it('denies a member even a read -- this is the difference from `department`', () => {
-    expect(can(memberActor, 'read', { kind: 'department_managed', departmentId: 'd-a' })).toEqual({
+    expect(
+      can(memberActor, 'read', {
+        kind: 'department_managed',
+        departmentId: 'd-a',
+      }),
+    ).toEqual({
       allowed: false,
       reason: 'not_head',
     })
   })
 
   it('denies a non-member with not_a_member, not not_head', () => {
-    const outsider = actor({ memberships: [{ departmentId: 'd-b', role: 'head' }] })
-    expect(can(outsider, 'read', { kind: 'department_managed', departmentId: 'd-a' })).toEqual({
+    const outsider = actor({
+      memberships: [{ departmentId: 'd-b', role: 'head' }],
+    })
+    expect(
+      can(outsider, 'read', {
+        kind: 'department_managed',
+        departmentId: 'd-a',
+      }),
+    ).toEqual({
       allowed: false,
       reason: 'not_a_member',
     })
@@ -425,7 +462,12 @@ describe("can() -- P8: department_managed is the head's own row, reads included"
     expect(can(viewer, 'read', { kind: 'department_managed', departmentId: 'd-a' })).toEqual({
       allowed: true,
     })
-    expect(can(viewer, 'update', { kind: 'department_managed', departmentId: 'd-a' })).toEqual({
+    expect(
+      can(viewer, 'update', {
+        kind: 'department_managed',
+        departmentId: 'd-a',
+      }),
+    ).toEqual({
       allowed: false,
       reason: 'read_only_view_as',
     })
@@ -469,7 +511,10 @@ describe('can() -- P9: owned reads like department_child and writes like an owne
   })
 
   it('a bystander may not write, and the reason is not_owner', () => {
-    expect(can(bystander, 'update', subject)).toEqual({ allowed: false, reason: 'not_owner' })
+    expect(can(bystander, 'update', subject)).toEqual({
+      allowed: false,
+      reason: 'not_owner',
+    })
   })
 
   it('the head may write regardless of the owner set', () => {
@@ -477,8 +522,13 @@ describe('can() -- P9: owned reads like department_child and writes like an owne
   })
 
   it('a non-member is denied even the read', () => {
-    const outsider = actor({ memberships: [{ departmentId: 'd-b', role: 'head' }] })
-    expect(can(outsider, 'read', subject)).toEqual({ allowed: false, reason: 'not_a_member' })
+    const outsider = actor({
+      memberships: [{ departmentId: 'd-b', role: 'head' }],
+    })
+    expect(can(outsider, 'read', subject)).toEqual({
+      allowed: false,
+      reason: 'not_a_member',
+    })
   })
 
   it('a super admin under view-as reads and never writes', () => {
@@ -497,7 +547,9 @@ describe('can() -- P9: owned reads like department_child and writes like an owne
 
 describe('can() -- P10: authenticated is every signed-in session, and nothing else', () => {
   it('allows any actor', () => {
-    expect(can(actor(), 'read', { kind: 'authenticated' })).toEqual({ allowed: true })
+    expect(can(actor(), 'read', { kind: 'authenticated' })).toEqual({
+      allowed: true,
+    })
   })
 
   it('denies an anonymous visitor', () => {

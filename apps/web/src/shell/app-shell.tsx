@@ -44,6 +44,8 @@ import {
   useLogoutMutation,
   useMeQuery,
 } from '../lib/session.js'
+import { canAction, isAppActionId } from '@devon/contracts'
+import { useActor } from '../lib/can.js'
 import { useOnline } from '../lib/use-online.js'
 import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.js'
 import { useMediaQuery } from '../lib/use-media-query.js'
@@ -109,7 +111,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // round2 SEV2: a super_admin with no department membership still saw all nine department-scoped
   // sidebar entries -- `nav.ts`'s `requireDepartmentFor` is the gate, this is where the fact comes
   // from (the same `memberships` the department switcher itself reads).
-  const navCtx = { role, isDemo, hasDepartment: memberships.length > 0 }
+  // v1.1 SPEC §3.1: the sidebar's head/member split is resolved by the same `can()` the server's
+  // routes declare, through each entry's `action` id. `departmentRole` is the per-department
+  // authority (`useDepartment()`), never `role` -- which is the instance-wide role and is `member`
+  // for every real boshqarma boshlig'i (I-8b). PERMISSIONS-AUDIT §3.1 found every existing nav gate
+  // reading the wrong one of the two.
+  const actor = useActor()
+  const navCan = React.useCallback(
+    (action: string) =>
+      isAppActionId(action)
+        ? canAction(actor, action, {
+            departmentId: department?.departmentId ?? null,
+          }).allowed
+        : false,
+    [actor, department?.departmentId],
+  )
+  const navCtx = {
+    role,
+    departmentRole: department?.role ?? null,
+    can: navCan,
+    isDemo,
+    hasDepartment: memberships.length > 0,
+  }
   const visibleEntries = resolveNavEntries(NAV_ENTRIES, navCtx)
   const inboxCount = counts['inbox'] ?? 0
 
@@ -159,7 +182,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     })
   }
 
-  const localeOptions = LOCALES.map((value) => ({ value, autonym: LOCALE_LABEL[value] }))
+  const localeOptions = LOCALES.map((value) => ({
+    value,
+    autonym: LOCALE_LABEL[value],
+  }))
   const themeOptions = THEME_ORDER.map((value) => ({
     value,
     label: t(

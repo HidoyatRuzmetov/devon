@@ -26,7 +26,10 @@ beforeAll(async () => {
   server = h.server
   baseUrl = server.baseUrl
 
-  const dept = await seedDepartment(db, { name: 'Validation dept', slug: `val-${randomUUID()}` })
+  const dept = await seedDepartment(db, {
+    name: 'Validation dept',
+    slug: `val-${randomUUID()}`,
+  })
   const user = await seedMember(db, dept.id, { role: 'head' })
   actor = await loginAs(baseUrl, user.login)
 }, 180_000)
@@ -235,7 +238,9 @@ describe('url / SSRF (link unfurl, H1.6 + H1.7 "SSRF-safe: no private ranges")',
       body: JSON.stringify({ url }),
     })
     expect(res.status).toBe(422)
-    const body = (await res.json()) as { errors?: { path: string; code: string }[] }
+    const body = (await res.json()) as {
+      errors?: { path: string; code: string }[]
+    }
     expect(body.errors?.[0]?.code).toBe('unsafe_url')
   })
 

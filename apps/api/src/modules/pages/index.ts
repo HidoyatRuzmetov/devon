@@ -30,7 +30,10 @@ import {
 import type { OnboardingItem, OnboardingTemplateRow, PageRow, PageVersionRow } from './repo.js'
 
 const idParamsSchema = z.object({ id: z.string().uuid() })
-const pageVersionParamsSchema = z.object({ id: z.string().uuid(), versionId: z.string().uuid() })
+const pageVersionParamsSchema = z.object({
+  id: z.string().uuid(),
+  versionId: z.string().uuid(),
+})
 const listQuerySchema = z.object({ kind: pageKindSchema.optional() })
 
 function activeDepartmentId(req: FastifyRequest): string {
@@ -137,8 +140,13 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { querystring: listQuerySchema, response: { 200: pageSummaryListSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        querystring: listQuerySchema,
+        response: { 200: pageSummaryListSchema },
+      },
     },
     async (req) => {
       const rows = await repo.listPages(activeDepartmentId(req), ctxFrom(req), req.query.kind)
@@ -158,7 +166,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { params: idParamsSchema, response: { 200: pageSchema } },
     },
     async (req, reply) => {
@@ -171,7 +181,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/',
     {
-      config: { permission: { action: 'create', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'create', subject: departmentChildSubject },
+      },
       schema: { body: createPageBodySchema, response: { 201: pageSchema } },
     },
     async (req, reply) => {
@@ -189,8 +201,14 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/:id',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
-      schema: { params: idParamsSchema, body: patchPageBodySchema, response: { 200: pageSchema } },
+      config: {
+        permission: { action: 'update', subject: departmentChildSubject },
+      },
+      schema: {
+        params: idParamsSchema,
+        body: patchPageBodySchema,
+        response: { 200: pageSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -210,7 +228,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     '/:id',
     {
-      config: { permission: { action: 'delete', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'delete', subject: departmentChildSubject },
+      },
       schema: { params: idParamsSchema },
     },
     async (req, reply) => {
@@ -227,8 +247,13 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id/versions',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { params: idParamsSchema, response: { 200: pageVersionListSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        params: idParamsSchema,
+        response: { 200: pageVersionListSchema },
+      },
     },
     async (req, reply) => {
       // H1.2: the version list is scoped by `department_id`, so another department's page id
@@ -250,8 +275,13 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id/versions/:versionId',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { params: pageVersionParamsSchema, response: { 200: pageVersionSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        params: pageVersionParamsSchema,
+        response: { 200: pageVersionSchema },
+      },
     },
     async (req, reply) => {
       const row = await repo.getVersion(
@@ -268,7 +298,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/:id/versions/restore',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentChildSubject },
+      },
       schema: {
         params: idParamsSchema,
         body: restoreVersionBodySchema,
@@ -296,7 +328,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/onboarding/templates',
     {
-      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentManagedSubject },
+      },
       schema: { response: { 200: onboardingTemplateListSchema } },
     },
     async (req) => {
@@ -308,7 +342,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/onboarding/templates',
     {
-      config: { permission: { action: 'create', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'create', subject: departmentManagedSubject },
+      },
       schema: {
         body: createOnboardingTemplateBodySchema,
         response: { 201: onboardingTemplateSchema },
@@ -329,7 +365,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/onboarding/templates/:id',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: {
         params: idParamsSchema,
         body: patchOnboardingTemplateBodySchema,
@@ -353,7 +391,9 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     '/onboarding/templates/:id',
     {
-      config: { permission: { action: 'delete', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'delete', subject: departmentManagedSubject },
+      },
       schema: { params: idParamsSchema },
     },
     async (req, reply) => {

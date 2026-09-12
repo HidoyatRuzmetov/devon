@@ -40,6 +40,46 @@
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
       "sectionTiles": "Bugungi holat"
+    },
+    "head": {
+      "section": "Boshqaruv koʻrinishi",
+      "decisions": {
+        "title": "Qaror kutmoqda",
+        "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
+        "cta": "Doskani ochish"
+      },
+      "overdue": {
+        "title": "Kechikayotgan ishlar",
+        "meaning": "Eng koʻp kechikkan besh xodim. Ismni bosing — jadvalga oʻtasiz.",
+        "cta": "Xodimlar jadvali",
+        "empty": "Kechikkan vazifa yoʻq. Boʻlim muddatlarga ulgurmoqda."
+      },
+      "load": {
+        "title": "Bu hafta yuklama",
+        "meaning": "Ochiq vazifalarning haftalik imkoniyatga nisbati.",
+        "cta": "Yuklamani koʻrish",
+        "empty": "Hozircha ochiq vazifa yoʻq."
+      },
+      "projects": {
+        "title": "Loyihalar",
+        "meaning": "Eng orqada qolgan loyihalar birinchi turadi.",
+        "cta": "Loyihalar",
+        "empty": "Faol loyiha yoʻq.",
+        "progressAria": "{title} — bajarilgan qismi"
+      },
+      "events": {
+        "title": "Yaqin tadbirlar",
+        "meaning": "Yetti kun ichidagi tadbirlar va roziligini bildirganlar soni.",
+        "cta": "Tadbirlar",
+        "empty": "Yaqin kunlarda tadbir rejalashtirilmagan."
+      },
+      "onboarding": {
+        "title": "Yangi xodimlar",
+        "meaning": "Moslashuv qadamlarini tugatmaganlar.",
+        "cta": "Xodimlar jadvali",
+        "empty": "Hamma moslashuv qadamlarini yakunlagan."
+      },
+      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud."
     }
   }
 }

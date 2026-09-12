@@ -7,7 +7,8 @@
         "work": "Ish",
         "team": "Jamoa",
         "knowledge": "Bilim",
-        "manage": "Boshqaruv"
+        "manage": "Tizim",
+        "manageHead": "Boshqaruv"
       },
       "aria": "Asosiy boʻlimlar",
       "primary": "Asosiy menyu",
@@ -189,6 +190,46 @@
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
       "sectionTiles": "Bugungi holat"
+    },
+    "head": {
+      "section": "Boshqaruv koʻrinishi",
+      "decisions": {
+        "title": "Qaror kutmoqda",
+        "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
+        "cta": "Doskani ochish"
+      },
+      "overdue": {
+        "title": "Kechikayotgan ishlar",
+        "meaning": "Eng koʻp kechikkan besh xodim. Ismni bosing — jadvalga oʻtasiz.",
+        "cta": "Xodimlar jadvali",
+        "empty": "Kechikkan vazifa yoʻq. Boʻlim muddatlarga ulgurmoqda."
+      },
+      "load": {
+        "title": "Bu hafta yuklama",
+        "meaning": "Ochiq vazifalarning haftalik imkoniyatga nisbati.",
+        "cta": "Yuklamani koʻrish",
+        "empty": "Hozircha ochiq vazifa yoʻq."
+      },
+      "projects": {
+        "title": "Loyihalar",
+        "meaning": "Eng orqada qolgan loyihalar birinchi turadi.",
+        "cta": "Loyihalar",
+        "empty": "Faol loyiha yoʻq.",
+        "progressAria": "{title} — bajarilgan qismi"
+      },
+      "events": {
+        "title": "Yaqin tadbirlar",
+        "meaning": "Yetti kun ichidagi tadbirlar va roziligini bildirganlar soni.",
+        "cta": "Tadbirlar",
+        "empty": "Yaqin kunlarda tadbir rejalashtirilmagan."
+      },
+      "onboarding": {
+        "title": "Yangi xodimlar",
+        "meaning": "Moslashuv qadamlarini tugatmaganlar.",
+        "cta": "Xodimlar jadvali",
+        "empty": "Hamma moslashuv qadamlarini yakunlagan."
+      },
+      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud."
     }
   },
   "state": {
@@ -1780,6 +1821,118 @@
       "save": "Saqlash",
       "saved": "Saqlandi",
       "removeItem": "Bandni oʻchirish"
+    }
+  },
+  "people": {
+    "table": {
+      "title": "Xodimlar jadvali",
+      "nav": "Xodimlar jadvali",
+      "description": "Boʻlim xodimlari va ularning koʻrsatkichlari bitta jadvalda.",
+      "caption": "Xodimlar va tanlangan koʻrsatkichlar jadvali",
+      "columns": {
+        "action": "Ustunlar",
+        "heading": "Koʻrsatkichlarni tanlang"
+      },
+      "column": {
+        "name": "Ism"
+      },
+      "empty": {
+        "title": "Hozircha xodim yoʻq",
+        "body": "Boʻlimga birinchi xodim qoʻshilganda jadval shu yerda toʻlib boradi."
+      },
+      "footer": "{count} ta xodim",
+      "workload": {
+        "value": "{open} / {capacity}"
+      }
+    },
+    "indicator": {
+      "openCards": {
+        "label": "Ochiq vazifalar",
+        "description": "Hozir bajarilayotgan vazifalar soni"
+      },
+      "overdueCards": {
+        "label": "Kechikkan",
+        "description": "Muddati oʻtib ketgan ochiq vazifalar"
+      },
+      "dueThisWeek": {
+        "label": "Shu haftada",
+        "description": "Yetti kun ichida muddati tugaydigan vazifalar"
+      },
+      "doneLast30d": {
+        "label": "30 kunda bajarilgan",
+        "description": "Soʻnggi 30 kunda yakunlangan vazifalar"
+      },
+      "onTimeRate90d": {
+        "label": "Oʻz vaqtida",
+        "description": "Soʻnggi 90 kunda muddatida yakunlangan vazifalar ulushi"
+      },
+      "workloadHours": {
+        "label": "Yuklama (soat)",
+        "description": "Shu haftaga rejalashtirilgan soatlar — vaqt baholari yoqilganda"
+      },
+      "workloadPct": {
+        "label": "Yuklama",
+        "description": "Ochiq vazifalarning haftalik imkoniyatga nisbati"
+      },
+      "cardsGivenOpen": {
+        "label": "Berilgan vazifalar",
+        "description": "Bu xodim bergan va hali ochiq vazifalar"
+      },
+      "projects": {
+        "label": "Loyihalar",
+        "description": "Ishtirok etayotgan faol loyihalar"
+      },
+      "projectsOwned": {
+        "label": "Rahbarlik qilmoqda",
+        "description": "Egasi sifatida yuritayotgan loyihalari"
+      },
+      "eventsRsvpRate90d": {
+        "label": "Tadbirlarda ishtirok",
+        "description": "Soʻnggi 90 kundagi tadbirlarda qatnashish ulushi"
+      },
+      "pollsTurnout": {
+        "label": "Soʻrovnomalar",
+        "description": "Ovoz bergan soʻrovnomalari ulushi"
+      },
+      "focusMinutes7d": {
+        "label": "Diqqat vaqti",
+        "description": "Soʻnggi yetti kundagi jamlangan fokus daqiqalari. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi."
+      },
+      "lastActiveAt": {
+        "label": "Oxirgi faollik",
+        "description": "Tizimda oxirgi marta koʻringan vaqti"
+      },
+      "onboardingPct": {
+        "label": "Moslashuv",
+        "description": "Yangi xodimning boshlangʻich qadamlari qay darajada bajarilgani"
+      },
+      "unit": {
+        "label": "Boʻlim",
+        "description": "Xodim biriktirilgan boʻlim"
+      },
+      "unitRole": {
+        "label": "Boʻlimdagi roli",
+        "description": "Boʻlim ichidagi lavozim belgisi"
+      },
+      "title": {
+        "label": "Lavozim",
+        "description": "Xodimning lavozimi"
+      },
+      "joinedAt": {
+        "label": "Qoʻshilgan sana",
+        "description": "Boʻlimga qoʻshilgan sana"
+      },
+      "telegramLinked": {
+        "label": "Telegram",
+        "description": "Telegram hisobi ulanganmi"
+      },
+      "value": {
+        "minutes": "{minutes} daq",
+        "hours": "{hours} soat",
+        "hoursMinutes": "{hours} soat {minutes} daq",
+        "yes": "Ha",
+        "no": "Yoʻq"
+      }
     }
   },
   "personal": {

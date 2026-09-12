@@ -13,6 +13,7 @@ import {
   isAppActionId,
   type ActionSubjectKind,
   type AppActionId,
+  type AppActionSpec,
 } from '../../src/app-actions.js'
 import type { Action, Actor } from '../../src/permissions.js'
 
@@ -111,7 +112,9 @@ describe('APP_ACTIONS -- registry shape', () => {
   })
 
   it('only structure and telegram actions declare a widener, and unit deletion never does', () => {
-    const widened = APP_ACTION_IDS.filter((id) => APP_ACTIONS[id].widenedBy)
+    const widened = APP_ACTION_IDS.filter(
+      (id) => (APP_ACTIONS[id] as AppActionSpec).widenedBy !== undefined,
+    )
     expect(widened.sort()).toEqual(
       [
         'inbox.telegram.group.connect',
@@ -121,7 +124,7 @@ describe('APP_ACTIONS -- registry shape', () => {
         'structure.unitRole.assignSelf',
       ].sort(),
     )
-    expect(APP_ACTIONS['structure.unit.delete'].widenedBy).toBeUndefined()
+    expect((APP_ACTIONS['structure.unit.delete'] as AppActionSpec).widenedBy).toBeUndefined()
   })
 })
 
@@ -161,7 +164,10 @@ describe('canAction() -- every action, every role', () => {
     const spec = APP_ACTIONS[id]
     const decision = canAction(superAdmin(DEPT), id, { departmentId: DEPT })
     if (spec.subject === 'instance') {
-      expect(decision).toEqual({ allowed: false, reason: 'read_only_view_as' })
+      expect(decision).toEqual({
+        allowed: false,
+        reason: 'read_only_view_as',
+      })
       return
     }
     if (spec.subject === 'personal' || spec.subject === 'own_account') {
@@ -236,11 +242,17 @@ describe('canAction() -- owned actions with a real owner set', () => {
 
   it('an empty owner set denies every member but the head', () => {
     expect(
-      canAction(member(), 'pages.delete', { departmentId: DEPT, ownerUserIds: [] }),
+      canAction(member(), 'pages.delete', {
+        departmentId: DEPT,
+        ownerUserIds: [],
+      }),
     ).toEqual({ allowed: false, reason: 'not_owner' })
-    expect(allowsAction(head(), 'pages.delete', { departmentId: DEPT, ownerUserIds: [] })).toBe(
-      true,
-    )
+    expect(
+      allowsAction(head(), 'pages.delete', {
+        departmentId: DEPT,
+        ownerUserIds: [],
+      }),
+    ).toBe(true)
   })
 })
 
@@ -271,7 +283,11 @@ describe('canAction() -- department switches widen a member, never narrow a head
   })
 
   it('connecting a Telegram group honours who_can_connect_telegram_group (D9)', () => {
-    expect(canAction(member(), 'inbox.telegram.group.connect', { departmentId: DEPT })).toEqual({
+    expect(
+      canAction(member(), 'inbox.telegram.group.connect', {
+        departmentId: DEPT,
+      }),
+    ).toEqual({
       allowed: false,
       reason: 'not_head',
     })
@@ -310,23 +326,33 @@ describe('canAction() -- personal workspace has no head exception (I-1)', () => 
   })
 
   it('but the head may see the aggregate focus minutes on a person page', () => {
-    expect(allowsAction(head(), 'personal.focus.readAggregate', { departmentId: DEPT })).toBe(true)
-    expect(allowsAction(member(), 'personal.focus.readAggregate', { departmentId: DEPT })).toBe(
-      false,
-    )
+    expect(
+      allowsAction(head(), 'personal.focus.readAggregate', {
+        departmentId: DEPT,
+      }),
+    ).toBe(true)
+    expect(
+      allowsAction(member(), 'personal.focus.readAggregate', {
+        departmentId: DEPT,
+      }),
+    ).toBe(false)
   })
 })
 
 describe("canAction() -- a member's own person page vs somebody else's", () => {
   it('a member may read their own', () => {
     expect(
-      allowsAction(member(), 'people.person.readOwn', { subjectUserId: 'u-member' }),
+      allowsAction(member(), 'people.person.readOwn', {
+        subjectUserId: 'u-member',
+      }),
     ).toBe(true)
   })
 
   it("a member may not read a colleague's", () => {
     expect(
-      canAction(member(), 'people.person.readOwn', { subjectUserId: 'u-other' }),
+      canAction(member(), 'people.person.readOwn', {
+        subjectUserId: 'u-other',
+      }),
     ).toEqual({ allowed: false, reason: 'not_owner' })
     expect(canAction(member(), 'people.person.read', { departmentId: DEPT })).toEqual({
       allowed: false,

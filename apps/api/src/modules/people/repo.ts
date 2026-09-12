@@ -13,7 +13,9 @@ function emptyNumbers(): UserNumbers {
   return new Map<string, number>()
 }
 
-function toNumberMap(rows: readonly { user_id: string; value: string | number | null }[]): UserNumbers {
+function toNumberMap(
+  rows: readonly { user_id: string; value: string | number | null }[],
+): UserNumbers {
   const map = emptyNumbers()
   for (const row of rows) map.set(row.user_id, Number(row.value ?? 0))
   return map
@@ -107,7 +109,10 @@ export async function cardIndicators(
     dueThisWeek.set(row.user_id, Number(row.due_this_week))
     doneLast30d.set(row.user_id, Number(row.done_last_30d))
     const due = Number(row.due_last_90d)
-    onTimeRate90d.set(row.user_id, due === 0 ? 100 : Math.round((Number(row.on_time_last_90d) / due) * 100))
+    onTimeRate90d.set(
+      row.user_id,
+      due === 0 ? 100 : Math.round((Number(row.on_time_last_90d) / due) * 100),
+    )
   }
   return {
     openCards,
@@ -119,7 +124,10 @@ export async function cardIndicators(
   }
 }
 
-export type ProjectIndicators = { projects: UserNumbers; projectsOwned: UserNumbers }
+export type ProjectIndicators = {
+  projects: UserNumbers
+  projectsOwned: UserNumbers
+}
 
 /** Membership of a project is an array column, so this unnests once for the whole department rather
  * than running `= any(members)` per person. */
@@ -150,7 +158,10 @@ export async function projectIndicators(
   return { projects: toNumberMap(rows), projectsOwned: toNumberMap(owned) }
 }
 
-export type EventIndicators = { eventsRsvpRate90d: UserNumbers; pollsTurnout: UserNumbers }
+export type EventIndicators = {
+  eventsRsvpRate90d: UserNumbers
+  pollsTurnout: UserNumbers
+}
 
 /** Participation as a percentage of what there was to participate in: the denominator is the
  * department's own count of events (and polls) in the window, computed once, not per person. */

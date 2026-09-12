@@ -47,7 +47,10 @@ const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
 const AVATAR_VARIANT_MAX_BYTES = 2 * 1024 * 1024
 
 const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
-  const ownAccount = (userId: string) => ({ kind: 'own_account' as const, userId })
+  const ownAccount = (userId: string) => ({
+    kind: 'own_account' as const,
+    userId,
+  })
 
   function auditCtx(req: FastifyRequest) {
     return {
@@ -85,7 +88,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         permission: { public: true },
         rateLimit: { max: 10, timeWindow: '1 minute' },
       },
-      schema: { body: registerBodySchema, response: { 201: registerResultSchema } },
+      schema: {
+        body: registerBodySchema,
+        response: { 201: registerResultSchema },
+      },
     },
     async (req, reply) => {
       let user
@@ -109,7 +115,12 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/sessions',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: sessionListSchema } },
     },
     async (req, reply) => {
@@ -133,7 +144,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/sessions/:id/revoke',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: { params: sessionIdParamsSchema },
     },
@@ -153,14 +167,20 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/sessions/revoke-all',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.revokeAllSessions(req.actor!.userId, auditCtx(req))
       reply.setCookie(app.devonConfig.SESSION_COOKIE_NAME, '', expiredSessionCookieOptions())
-      reply.setCookie(CSRF_COOKIE_NAME, '', { ...expiredSessionCookieOptions(), httpOnly: false })
+      reply.setCookie(CSRF_COOKIE_NAME, '', {
+        ...expiredSessionCookieOptions(),
+        httpOnly: false,
+      })
       reply.code(204).send()
     },
   )
@@ -168,7 +188,12 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/2fa',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: accountStatusMessageSchema } },
     },
     async (req, reply) => {
@@ -181,7 +206,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/2fa/totp/enroll',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: { response: { 200: totpEnrollResultSchema } },
     },
@@ -200,9 +228,15 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/2fa/totp/verify',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
-      schema: { body: totpVerifyBodySchema, response: { 200: totpVerifyResultSchema } },
+      schema: {
+        body: totpVerifyBodySchema,
+        response: { 200: totpVerifyResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -213,7 +247,9 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         auditCtx(req),
       )
       if (!result.ok) {
-        sendProblem(reply, 'validation_failed', { errors: [{ path: 'code', code: 'invalid' }] })
+        sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'code', code: 'invalid' }],
+        })
         return
       }
       reply.send({ recoveryCodes: result.recoveryCodes })
@@ -224,7 +260,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/2fa/disable',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: { body: totpDisableBodySchema },
     },
@@ -285,7 +324,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/password/change',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
         // H1.9: verifies `currentPassword`, so it is a credential-guessing surface like login.
         rateLimit: { max: 10, timeWindow: '1 minute' },
       },
@@ -311,11 +353,17 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/:userId/reset-password',
     {
       config: {
-        permission: { action: 'administer', subject: () => ({ kind: 'instance' as const }) },
+        permission: {
+          action: 'administer',
+          subject: () => ({ kind: 'instance' as const }),
+        },
         // H1.9: mints a temporary password; bounded even for a super admin.
         rateLimit: { max: 20, timeWindow: '1 minute' },
       },
-      schema: { params: userIdParamsSchema, response: { 200: resetPasswordResultSchema } },
+      schema: {
+        params: userIdParamsSchema,
+        response: { 200: resetPasswordResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -329,7 +377,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/delete',
     {
       config: {
-        permission: { action: 'delete', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'delete',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: { response: { 200: deleteAccountResultSchema } },
     },
@@ -344,7 +395,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/delete/cancel',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
     },
     async (req, reply) => {
@@ -361,7 +415,12 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/delete/status',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: deleteAccountResultSchema.nullable() } },
     },
     async (req, reply) => {
@@ -379,15 +438,23 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/avatar/upload-url',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
         rateLimit: { max: 20, timeWindow: '1 minute' },
       },
-      schema: { body: avatarUploadUrlBodySchema, response: { 200: avatarUploadUrlResultSchema } },
+      schema: {
+        body: avatarUploadUrlBodySchema,
+        response: { 200: avatarUploadUrlResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       if (req.body.size > app.storage.maxUploadBytes) {
-        sendProblem(reply, 'validation_failed', { errors: [{ path: 'size', code: 'too_large' }] })
+        sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'size', code: 'too_large' }],
+        })
         return
       }
       const { upload, presigned } = await requestAvatarUpload(
@@ -410,10 +477,16 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/avatar',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
         rateLimit: { max: 20, timeWindow: '1 minute' },
       },
-      schema: { body: avatarFinalizeBodySchema, response: { 200: avatarResultSchema } },
+      schema: {
+        body: avatarFinalizeBodySchema,
+        response: { 200: avatarResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -434,12 +507,16 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
           sendProblem(reply, 'gone')
           return
         case 'rejected':
-          sendProblem(reply, 'validation_failed', { errors: [{ path: 'file', code: result.code }] })
+          sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'file', code: result.code }],
+          })
           return
         case 'infected':
           // The signature name stays in the audit row and the server log; a Problem body carries
           // fixed sentences and machine codes only (design.md §1.5).
-          sendProblem(reply, 'validation_failed', { errors: [{ path: 'file', code: 'infected' }] })
+          sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'file', code: 'infected' }],
+          })
           return
         case 'scanner_unavailable':
           // 503: the scanner is down and the upload was discarded rather than let through unscanned
@@ -454,7 +531,10 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/avatar',
     {
       config: {
-        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'update',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
     },
     async (req, reply) => {
@@ -478,14 +558,19 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         // "any authenticated session". The behaviour is right -- a colleague's avatar is deliberately
         // visible to the whole team, and per-request department resolution for a 64x64 PNG would be
         // absurd -- so the subject now says that out loud instead of pretending to be stricter.
-        permission: { action: 'read', subject: () => ({ kind: 'authenticated' as const }) },
+        permission: {
+          action: 'read',
+          subject: () => ({ kind: 'authenticated' as const }),
+        },
       },
       schema: { params: avatarImageParamsSchema },
     },
     async (req, reply) => {
       const { userId, uploadId, size } = req.params
       const key = avatarVariantKey(avatarKeyPrefix(userId, uploadId), Number(size))
-      const bytes = await app.storage.store.get(key, { maxBytes: AVATAR_VARIANT_MAX_BYTES })
+      const bytes = await app.storage.store.get(key, {
+        maxBytes: AVATAR_VARIANT_MAX_BYTES,
+      })
       if (!bytes) {
         sendProblem(reply, 'not_found')
         return

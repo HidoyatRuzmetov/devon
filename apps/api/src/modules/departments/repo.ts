@@ -98,7 +98,10 @@ export async function createDepartmentRequest(
       subjectType: 'department_request',
       subjectId: id,
     })
-    tx.emit({ type: 'departments.request.created', payload: { requestId: id, requesterUserId } })
+    tx.emit({
+      type: 'departments.request.created',
+      payload: { requestId: id, requesterUserId },
+    })
     return id
   })
 }
@@ -205,7 +208,11 @@ export async function listOwnDepartmentRequests(userId: string): Promise<Departm
   )
 }
 
-export type ApprovalResult = { departmentId: string; joinKey: string; joinPassword: string }
+export type ApprovalResult = {
+  departmentId: string
+  joinKey: string
+  joinPassword: string
+}
 
 export async function approveDepartmentRequest(
   requestId: string,
@@ -533,7 +540,11 @@ export async function requestDepartmentDeletion(
 export async function getInvite(
   departmentId: string,
   userId: string,
-): Promise<{ joinKey: string | null; joinRequiresApproval: boolean; hasPassword: boolean } | null> {
+): Promise<{
+  joinKey: string | null
+  joinRequiresApproval: boolean
+  hasPassword: boolean
+} | null> {
   return withContext(
     deptCtx(
       {
@@ -737,7 +748,9 @@ export async function joinByKeyAndPassword(
       return { ok: false, reason: 'invalid' }
     }
 
-    const existing = await tx.raw<{ status: 'active' | 'pending_approval' | 'removed' }>(
+    const existing = await tx.raw<{
+      status: 'active' | 'pending_approval' | 'removed'
+    }>(
       sql`select status from app.memberships
           where department_id = ${dept.id} and user_id = ${userId} and deleted_at is null`,
     )

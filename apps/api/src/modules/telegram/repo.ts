@@ -59,17 +59,19 @@ export type LinkCode = { code: string; expiresAt: Date }
  * head's choice was inert. This is the reader. Defaults to `'everyone'` (TECH-SPEC §2.3) when the
  * key is absent, and tolerates the snake_case spelling the same way `structure/repo.ts` does.
  */
-export async function readWhoCanConnectGroup(
-  departmentId: string,
-): Promise<'everyone' | 'head'> {
+export async function readWhoCanConnectGroup(departmentId: string): Promise<'everyone' | 'head'> {
   return withContext(
-    toRequestContext(systemAuditCtx(null), { departmentId, actorRole: 'super_admin' }),
+    toRequestContext(systemAuditCtx(null), {
+      departmentId,
+      actorRole: 'super_admin',
+    }),
     async (tx) => {
       const rows = await tx.raw<{ settings: unknown }>(
         sql`select settings from app.departments where id = ${departmentId} and deleted_at is null`,
       )
       const settings = (rows[0]?.settings ?? {}) as Record<string, unknown>
-      const value = settings['whoCanConnectTelegramGroup'] ?? settings['who_can_connect_telegram_group']
+      const value =
+        settings['whoCanConnectTelegramGroup'] ?? settings['who_can_connect_telegram_group']
       return value === 'head' ? 'head' : 'everyone'
     },
   )
@@ -106,7 +108,11 @@ export async function consumeLinkCode(
   locale: string,
 ): Promise<ConsumeLinkCodeResult> {
   return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    const rows = await tx.raw<{ id: string; user_id: string; expires_at: Date }>(sql`
+    const rows = await tx.raw<{
+      id: string
+      user_id: string
+      expires_at: Date
+    }>(sql`
       select id, user_id, expires_at from app.telegram_link_codes where code = ${code}
     `)
     const row = rows[0]
@@ -127,7 +133,11 @@ export async function consumeLinkCode(
         chat_id = excluded.chat_id, linked_at = now(), link_code_used = excluded.link_code_used,
         locale_at_link = excluded.locale_at_link, unlinked_at = null
     `)
-    tx.audit({ action: 'telegram.linked', subjectType: 'telegram_link', subjectId: row.user_id })
+    tx.audit({
+      action: 'telegram.linked',
+      subjectType: 'telegram_link',
+      subjectId: row.user_id,
+    })
     return { ok: true, userId: row.user_id }
   })
 }
@@ -141,12 +151,22 @@ export type LinkStatus = {
 
 export async function getLinkStatus(userId: string): Promise<LinkStatus> {
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
-    const rows = await tx.raw<{ chat_id: string; linked_at: Date; muted_until: Date | null }>(sql`
+    const rows = await tx.raw<{
+      chat_id: string
+      linked_at: Date
+      muted_until: Date | null
+    }>(sql`
       select chat_id, linked_at, muted_until from app.telegram_links
       where user_id = ${userId} and unlinked_at is null
     `)
     const row = rows[0]
-    if (!row) return { linked: false, chatId: null, linkedAt: null, mutedUntil: null }
+    if (!row)
+      return {
+        linked: false,
+        chatId: null,
+        linkedAt: null,
+        mutedUntil: null,
+      }
     return {
       linked: true,
       chatId: row.chat_id,
@@ -161,7 +181,11 @@ export async function unlink(ctx: AuditCtx, userId: string): Promise<void> {
     await tx.raw(
       sql`update app.telegram_links set unlinked_at = now() where user_id = ${userId} and unlinked_at is null`,
     )
-    tx.audit({ action: 'telegram.unlinked', subjectType: 'telegram_link', subjectId: userId })
+    tx.audit({
+      action: 'telegram.unlinked',
+      subjectType: 'telegram_link',
+      subjectId: userId,
+    })
   })
 }
 
@@ -204,7 +228,10 @@ export type ResolvedByChat = { userId: string; locale: string | null }
  * classifying this table `global`). */
 export async function resolveUserByChatId(chatId: string): Promise<ResolvedByChat | null> {
   return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    const rows = await tx.raw<{ user_id: string; locale_at_link: string | null }>(sql`
+    const rows = await tx.raw<{
+      user_id: string
+      locale_at_link: string | null
+    }>(sql`
       select user_id, locale_at_link from app.telegram_links
       where chat_id = ${chatId}::bigint and unlinked_at is null
     `)
@@ -247,7 +274,11 @@ export async function consumeGroupConnectCode(
   connectedBy: string | null,
 ): Promise<ConsumeGroupCodeResult> {
   return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    const rows = await tx.raw<{ id: string; department_id: string; expires_at: Date }>(sql`
+    const rows = await tx.raw<{
+      id: string
+      department_id: string
+      expires_at: Date
+    }>(sql`
       select id, department_id, expires_at from app.telegram_group_connect_codes where code = ${code}
     `)
     const row = rows[0]
@@ -302,7 +333,10 @@ export type GroupRow = {
 
 export async function listGroupsForDepartment(departmentId: string): Promise<GroupRow[]> {
   return withContext(
-    toRequestContext(systemAuditCtx(null), { departmentId, actorRole: 'super_admin' }),
+    toRequestContext(systemAuditCtx(null), {
+      departmentId,
+      actorRole: 'super_admin',
+    }),
     async (tx) => {
       const rows = await tx.raw<{
         id: string
@@ -330,7 +364,10 @@ export type ResolvedGroup = { departmentId: string; kinds: GroupKind[] }
 
 export async function resolveGroupByChatId(chatId: string): Promise<ResolvedGroup | null> {
   return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    const rows = await tx.raw<{ department_id: string; kinds: GroupKind[] }>(sql`
+    const rows = await tx.raw<{
+      department_id: string
+      kinds: GroupKind[]
+    }>(sql`
       select department_id, kinds from app.telegram_groups where chat_id = ${chatId}::bigint and disconnected_at is null
     `)
     const row = rows[0]
@@ -403,6 +440,9 @@ export async function listGroupsForKind(
       select chat_id, department_id from app.telegram_groups
       where disconnected_at is null and ${kind} = any(kinds)
     `)
-    return rows.map((r) => ({ chatId: r.chat_id, departmentId: r.department_id }))
+    return rows.map((r) => ({
+      chatId: r.chat_id,
+      departmentId: r.department_id,
+    }))
   })
 }

@@ -113,7 +113,9 @@ describe('matchesFilterQuery', () => {
   })
 
   it('resolves a bare name token via resolveUserIds', () => {
-    const ctx = { resolveUserIds: (t: string) => (t === 'nodira' ? ['user-nodira'] : []) }
+    const ctx = {
+      resolveUserIds: (t: string) => (t === 'nodira' ? ['user-nodira'] : []),
+    }
     expect(cardMatchesFilterText(base, 'assignee:nodira', ctx)).toBe(true)
     expect(cardMatchesFilterText(base, 'giver:nodira', ctx)).toBe(false)
   })

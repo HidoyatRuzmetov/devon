@@ -58,12 +58,7 @@ export type FieldDef = {
   archivedAt: string | null
 }
 
-export type FieldValue =
-  | string
-  | number
-  | boolean
-  | readonly string[]
-  | null
+export type FieldValue = string | number | boolean | readonly string[] | null
 
 export type FieldValueRecord = {
   defId: string

@@ -33,7 +33,9 @@ import type { PersonalOverview, PinnedChartRow, SavedFilterRow, SummaryResult } 
 import { isHeadOf } from '../../lib/actor.js'
 
 const idParamsSchema = z.object({ id: z.string().uuid() })
-const exportQuerySchema = summaryQuerySchema.extend({ chart: analyticsChartKeySchema })
+const exportQuerySchema = summaryQuerySchema.extend({
+  chart: analyticsChartKeySchema,
+})
 
 function activeDepartmentId(req: FastifyRequest): string {
   return req.actor?.viewAs?.departmentId ?? req.actor?.departmentId ?? ''
@@ -84,7 +86,10 @@ function personalToDto(overview: PersonalOverview) {
  * of colleagues. The head gets the whole list. */
 function narrowPersonAxis(summary: SummaryResult, isHead: boolean, userId: string): SummaryResult {
   if (isHead) return summary
-  return { ...summary, loadPerPerson: summary.loadPerPerson.filter((p) => p.userId === userId) }
+  return {
+    ...summary,
+    loadPerPerson: summary.loadPerPerson.filter((p) => p.userId === userId),
+  }
 }
 
 function summaryToDto(summary: SummaryResult) {
@@ -124,8 +129,13 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/summary',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { querystring: summaryQuerySchema, response: { 200: analyticsSummarySchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        querystring: summaryQuerySchema,
+        response: { 200: analyticsSummarySchema },
+      },
     },
     async (req) => {
       const departmentId = activeDepartmentId(req)
@@ -144,7 +154,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/personal',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { response: { 200: analyticsSummarySchema.shape.personal } },
     },
     async (req) => {
@@ -160,7 +172,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/export.csv',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { querystring: exportQuerySchema },
     },
     async (req, reply) => {
@@ -196,7 +210,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/saved-filters',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { response: { 200: savedFilterListSchema } },
     },
     async (req) => {
@@ -212,8 +228,13 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/saved-filters',
     {
-      config: { permission: { action: 'create', subject: departmentChildSubject } },
-      schema: { body: createSavedFilterBodySchema, response: { 201: savedFilterSchema } },
+      config: {
+        permission: { action: 'create', subject: departmentChildSubject },
+      },
+      schema: {
+        body: createSavedFilterBodySchema,
+        response: { 201: savedFilterSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -230,7 +251,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/saved-filters/:id',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentChildSubject },
+      },
       schema: {
         params: idParamsSchema,
         body: patchSavedFilterBodySchema,
@@ -255,7 +278,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     '/saved-filters/:id',
     {
-      config: { permission: { action: 'delete', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'delete', subject: departmentChildSubject },
+      },
       schema: { params: idParamsSchema },
     },
     async (req, reply) => {
@@ -276,7 +301,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/pins',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { response: { 200: pinnedChartListSchema } },
     },
     async (req) => {
@@ -292,8 +319,13 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/pins',
     {
-      config: { permission: { action: 'create', subject: departmentChildSubject } },
-      schema: { body: createPinBodySchema, response: { 201: pinnedChartSchema } },
+      config: {
+        permission: { action: 'create', subject: departmentChildSubject },
+      },
+      schema: {
+        body: createPinBodySchema,
+        response: { 201: pinnedChartSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -310,7 +342,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     '/pins/:id',
     {
-      config: { permission: { action: 'delete', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'delete', subject: departmentChildSubject },
+      },
       schema: { params: idParamsSchema },
     },
     async (req, reply) => {
@@ -329,7 +363,9 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/pins/reorder',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentChildSubject },
+      },
       schema: {
         body: reorderPinsBodySchema,
         response: { 200: z.object({ updated: z.number().int() }) },

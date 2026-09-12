@@ -119,9 +119,7 @@ async function compute(
     const needOnboarding = wants(keys, 'onboardingPct')
 
     const [cards, projects, events, directory, focus, started] = await Promise.all([
-      needCards
-        ? repo.cardIndicators(tx, departmentId, userIds)
-        : Promise.resolve(null),
+      needCards ? repo.cardIndicators(tx, departmentId, userIds) : Promise.resolve(null),
       needProjects ? repo.projectIndicators(tx, departmentId, userIds) : Promise.resolve(null),
       needEvents ? repo.eventIndicators(tx, departmentId, userIds) : Promise.resolve(null),
       needDirectory ? repo.directoryRows(tx, departmentId, userIds) : Promise.resolve(null),
@@ -180,7 +178,10 @@ async function compute(
         ]
         const done = steps.filter(Boolean).length
         const hasRun = started?.has(userId) ?? false
-        set('onboardingPct', hasRun || done < steps.length ? Math.round((done / steps.length) * 100) : 100)
+        set(
+          'onboardingPct',
+          hasRun || done < steps.length ? Math.round((done / steps.length) * 100) : 100,
+        )
       }
       return { userId, values }
     })

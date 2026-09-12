@@ -64,9 +64,7 @@ describe('the checked-in head-only route allow-list', () => {
 
   it('the personal workspace is owner-only on every one of its routes (I-1)', async () => {
     const { app } = await buildTestApp()
-    const personalRoutes = app.routePermissions.filter((r) =>
-      r.url.startsWith('/api/v1/personal'),
-    )
+    const personalRoutes = app.routePermissions.filter((r) => r.url.startsWith('/api/v1/personal'))
     expect(personalRoutes.length).toBeGreaterThan(0)
     for (const route of personalRoutes) expect(route.subjectKind).toBe('personal')
     await app.close()

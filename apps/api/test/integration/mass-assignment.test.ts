@@ -33,8 +33,14 @@ beforeAll(async () => {
   server = h.server
   baseUrl = server.baseUrl
 
-  dept = await seedDepartment(db, { name: 'MA dept', slug: `ma-${randomUUID()}` })
-  deptOther = await seedDepartment(db, { name: 'MA other dept', slug: `ma-other-${randomUUID()}` })
+  dept = await seedDepartment(db, {
+    name: 'MA dept',
+    slug: `ma-${randomUUID()}`,
+  })
+  deptOther = await seedDepartment(db, {
+    name: 'MA other dept',
+    slug: `ma-other-${randomUUID()}`,
+  })
   const actorUser = await seedMember(db, dept.id, { role: 'member' })
   const victimUser = await seedMember(db, deptOther.id, { role: 'head' })
   victim = { id: victimUser.id }
@@ -109,8 +115,13 @@ describe('cards: spoofed identity/ownership/state fields never take effect', () 
     // Department isolation actually holds: the card only shows up on the actor's own board, proving
     // the spoofed `departmentId: deptOther.id` never routed it into the other department.
     const board = (await (
-      await fetch(`${baseUrl}/api/v1/board`, { headers: { cookie: actor.cookie } })
-    ).json()) as { columns: { cards: { id: string }[] }[]; unassigned: { id: string }[] }
+      await fetch(`${baseUrl}/api/v1/board`, {
+        headers: { cookie: actor.cookie },
+      })
+    ).json()) as {
+      columns: { cards: { id: string }[] }[]
+      unassigned: { id: string }[]
+    }
     const ids = [
       ...board.columns.flatMap((c) => c.cards.map((x) => x.id)),
       ...board.unassigned.map((x) => x.id),
@@ -128,7 +139,10 @@ describe('cards: spoofed identity/ownership/state fields never take effect', () 
     const res = await fetch(`${baseUrl}/api/v1/cards`, {
       method: 'POST',
       headers: actor.headers,
-      body: JSON.stringify({ title: 'cross-dept assignee probe', assigneeUserId: victim.id }),
+      body: JSON.stringify({
+        title: 'cross-dept assignee probe',
+        assigneeUserId: victim.id,
+      }),
     })
     expect(res.status).not.toBe(201)
   })
@@ -137,7 +151,9 @@ describe('cards: spoofed identity/ownership/state fields never take effect', () 
 describe('projects: spoofed identity fields are inert (non-strict schema, silently stripped)', () => {
   it('departmentId/id/createdByUserId in the body never reroute or reattribute the project', async () => {
     const templates = (await (
-      await fetch(`${baseUrl}/api/v1/projects/templates`, { headers: { cookie: actor.cookie } })
+      await fetch(`${baseUrl}/api/v1/projects/templates`, {
+        headers: { cookie: actor.cookie },
+      })
     ).json()) as { key: string }[]
     const spoofedId = randomUUID()
     const res = await fetch(`${baseUrl}/api/v1/projects`, {
@@ -188,7 +204,10 @@ describe('structure units: an unrecognised departmentId in the body 400s (.stric
     const res = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units`, {
       method: 'POST',
       headers: actor.headers, // actor is only a `member`; enable structure edit first as the head would
-      body: JSON.stringify({ name: 'spoofed unit', departmentId: deptOther.id }),
+      body: JSON.stringify({
+        name: 'spoofed unit',
+        departmentId: deptOther.id,
+      }),
     })
     expect(res.status).toBe(422)
   })

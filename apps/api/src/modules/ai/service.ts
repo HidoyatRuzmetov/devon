@@ -71,7 +71,10 @@ export function recordAiRunMetrics(
     completionTokens: number
   },
 ): void {
-  aiRequestDuration.observe(meta.latencyMs / 1000, { feature, status: meta.status })
+  aiRequestDuration.observe(meta.latencyMs / 1000, {
+    feature,
+    status: meta.status,
+  })
   aiCostUzsTotal.inc({ feature }, meta.costUzs)
   aiTokensTotal.inc({ feature, kind: 'prompt' }, meta.promptTokens)
   aiTokensTotal.inc({ feature, kind: 'completion' }, meta.completionTokens)

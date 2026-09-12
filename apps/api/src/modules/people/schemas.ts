@@ -63,7 +63,9 @@ export const indicatorSpecSchema = z.object({
   polarity: z.enum(['higher_better', 'lower_better']).nullable(),
 })
 
-export const registryResponseSchema = z.object({ indicators: z.array(indicatorSpecSchema) })
+export const registryResponseSchema = z.object({
+  indicators: z.array(indicatorSpecSchema),
+})
 
 /** The registry, flattened for the wire (`defaultColumn` defaults to false rather than being
  * optional, so the client renders one shape). */

@@ -52,10 +52,7 @@ export type ActionSubjectKind =
  * SPEC §2.2: `allowStructureEdit` defaults to **off** (the CTO's finding overrides TECH-SPEC §2.3);
  * `allowSelfAssign` stays on; `whoCanConnectTelegramGroup` defaults to `'everyone'`. Deleting or
  * archiving a bo'lim is head-only regardless of any switch, so it carries no `widenedBy`. */
-export type ActionWidener =
-  | 'allowStructureEdit'
-  | 'allowSelfAssign'
-  | 'whoCanConnectTelegramGroup'
+export type ActionWidener = 'allowStructureEdit' | 'allowSelfAssign' | 'whoCanConnectTelegramGroup'
 
 export type AppActionSpec = {
   readonly area: FeatureAreaId
@@ -73,41 +70,105 @@ export type AppActionSpec = {
  */
 export const APP_ACTIONS = {
   // --- accounts (audit §4.1) ---------------------------------------------------------------------
-  'accounts.profile.read': { area: 'accounts', action: 'read', subject: 'own_account' },
-  'accounts.profile.edit': { area: 'accounts', action: 'update', subject: 'own_account' },
-  'accounts.security.manage': { area: 'accounts', action: 'update', subject: 'own_account' },
-  'accounts.delete.own': { area: 'accounts', action: 'delete', subject: 'own_account' },
-  'accounts.avatar.read': { area: 'accounts', action: 'read', subject: 'authenticated' },
+  'accounts.profile.read': {
+    area: 'accounts',
+    action: 'read',
+    subject: 'own_account',
+  },
+  'accounts.profile.edit': {
+    area: 'accounts',
+    action: 'update',
+    subject: 'own_account',
+  },
+  'accounts.security.manage': {
+    area: 'accounts',
+    action: 'update',
+    subject: 'own_account',
+  },
+  'accounts.delete.own': {
+    area: 'accounts',
+    action: 'delete',
+    subject: 'own_account',
+  },
+  'accounts.avatar.read': {
+    area: 'accounts',
+    action: 'read',
+    subject: 'authenticated',
+  },
   /** A colleague directory is what a department is: name, photo, title, bo'lim, unit role. */
-  'accounts.directory.read': { area: 'accounts', action: 'read', subject: 'department_child' },
+  'accounts.directory.read': {
+    area: 'accounts',
+    action: 'read',
+    subject: 'department_child',
+  },
   /** SPEC §2.2: a head may reset a member's password (temporary password + forced change, audited). */
   'accounts.password.resetMember': {
     area: 'accounts',
     action: 'update',
     subject: 'department_managed',
   },
-  'accounts.password.resetAny': { area: 'accounts', action: 'administer', subject: 'instance' },
+  'accounts.password.resetAny': {
+    area: 'accounts',
+    action: 'administer',
+    subject: 'instance',
+  },
 
   // --- departments (audit §4.2, SPEC §2.3) -------------------------------------------------------
-  'departments.request.create': { area: 'departments', action: 'create', subject: 'own_account' },
-  'departments.request.decide': { area: 'departments', action: 'administer', subject: 'instance' },
-  'departments.profile.read': { area: 'departments', action: 'read', subject: 'department' },
-  'departments.settings.read': { area: 'departments', action: 'read', subject: 'department' },
-  'departments.settings.edit': { area: 'departments', action: 'update', subject: 'department' },
+  'departments.request.create': {
+    area: 'departments',
+    action: 'create',
+    subject: 'own_account',
+  },
+  'departments.request.decide': {
+    area: 'departments',
+    action: 'administer',
+    subject: 'instance',
+  },
+  'departments.profile.read': {
+    area: 'departments',
+    action: 'read',
+    subject: 'department',
+  },
+  'departments.settings.read': {
+    area: 'departments',
+    action: 'read',
+    subject: 'department',
+  },
+  'departments.settings.edit': {
+    area: 'departments',
+    action: 'update',
+    subject: 'department',
+  },
   'departments.invite.read': {
     area: 'departments',
     action: 'read',
     subject: 'department_managed',
   },
-  'departments.invite.rotate': { area: 'departments', action: 'update', subject: 'department' },
-  'departments.members.read': { area: 'departments', action: 'read', subject: 'department' },
-  'departments.members.remove': { area: 'departments', action: 'update', subject: 'department' },
+  'departments.invite.rotate': {
+    area: 'departments',
+    action: 'update',
+    subject: 'department',
+  },
+  'departments.members.read': {
+    area: 'departments',
+    action: 'read',
+    subject: 'department',
+  },
+  'departments.members.remove': {
+    area: 'departments',
+    action: 'update',
+    subject: 'department',
+  },
   'departments.headship.transfer': {
     area: 'departments',
     action: 'update',
     subject: 'department',
   },
-  'departments.leave': { area: 'departments', action: 'delete', subject: 'department_child' },
+  'departments.leave': {
+    area: 'departments',
+    action: 'delete',
+    subject: 'department_child',
+  },
   'departments.deletion.request': {
     area: 'departments',
     action: 'update',
@@ -125,13 +186,29 @@ export const APP_ACTIONS = {
     subject: 'department_managed',
   },
   /** SPEC §2.3: `POST /me/active-department`. Anyone may switch between their own memberships. */
-  'departments.switch': { area: 'departments', action: 'update', subject: 'own_account' },
+  'departments.switch': {
+    area: 'departments',
+    action: 'update',
+    subject: 'own_account',
+  },
   /** Imkoniyatlar (ClickApps) switches: members see them read-only, the head flips them. */
-  'departments.features.read': { area: 'departments', action: 'read', subject: 'department' },
-  'departments.features.edit': { area: 'departments', action: 'update', subject: 'department' },
+  'departments.features.read': {
+    area: 'departments',
+    action: 'read',
+    subject: 'department',
+  },
+  'departments.features.edit': {
+    area: 'departments',
+    action: 'update',
+    subject: 'department',
+  },
 
   // --- structure (audit §4.3) --------------------------------------------------------------------
-  'structure.read': { area: 'structure', action: 'read', subject: 'department_child' },
+  'structure.read': {
+    area: 'structure',
+    action: 'read',
+    subject: 'department_child',
+  },
   'structure.unit.create': {
     area: 'structure',
     action: 'create',
@@ -152,8 +229,16 @@ export const APP_ACTIONS = {
   },
   /** SPEC §2.2: deleting or archiving a bo'lim is head-only regardless of the switch -- deleting a
    * unit rewrites everyone's home. No `widenedBy` here, deliberately. */
-  'structure.unit.delete': { area: 'structure', action: 'delete', subject: 'department_managed' },
-  'structure.unit.restore': { area: 'structure', action: 'update', subject: 'department_managed' },
+  'structure.unit.delete': {
+    area: 'structure',
+    action: 'delete',
+    subject: 'department_managed',
+  },
+  'structure.unit.restore': {
+    area: 'structure',
+    action: 'update',
+    subject: 'department_managed',
+  },
   'structure.unitRole.assignSelf': {
     area: 'structure',
     action: 'create',
@@ -165,7 +250,11 @@ export const APP_ACTIONS = {
     action: 'create',
     subject: 'department_managed',
   },
-  'structure.unitRole.removeSelf': { area: 'structure', action: 'delete', subject: 'owned' },
+  'structure.unitRole.removeSelf': {
+    area: 'structure',
+    action: 'delete',
+    subject: 'owned',
+  },
   'structure.unitRole.removeOther': {
     area: 'structure',
     action: 'delete',
@@ -173,19 +262,43 @@ export const APP_ACTIONS = {
   },
 
   // --- work (audit §4.4) -------------------------------------------------------------------------
-  'work.board.read': { area: 'work', action: 'read', subject: 'department_child' },
-  'work.card.create': { area: 'work', action: 'create', subject: 'department_child' },
+  'work.board.read': {
+    area: 'work',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'work.card.create': {
+    area: 'work',
+    action: 'create',
+    subject: 'department_child',
+  },
   'work.card.edit': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.move': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.reassign': { area: 'work', action: 'update', subject: 'owned' },
   'work.card.archive': { area: 'work', action: 'archive', subject: 'owned' },
   'work.card.restore': { area: 'work', action: 'update', subject: 'owned' },
-  'work.card.checklist.edit': { area: 'work', action: 'update', subject: 'owned' },
-  'work.card.comment': { area: 'work', action: 'create', subject: 'department_child' },
+  'work.card.checklist.edit': {
+    area: 'work',
+    action: 'update',
+    subject: 'owned',
+  },
+  'work.card.comment': {
+    area: 'work',
+    action: 'create',
+    subject: 'department_child',
+  },
   'work.card.watcher.add': { area: 'work', action: 'update', subject: 'owned' },
   /** A shared vocabulary is a head decision (audit §4.4). */
-  'work.label.manage': { area: 'work', action: 'create', subject: 'department_managed' },
-  'work.view.save': { area: 'work', action: 'create', subject: 'department_child' },
+  'work.label.manage': {
+    area: 'work',
+    action: 'create',
+    subject: 'department_managed',
+  },
+  'work.view.save': {
+    area: 'work',
+    action: 'create',
+    subject: 'department_child',
+  },
   /** Making a saved view the department default is a management act (SPEC §4.3). */
   'work.view.setDepartmentDefault': {
     area: 'work',
@@ -194,32 +307,92 @@ export const APP_ACTIONS = {
   },
   'work.estimate.edit': { area: 'work', action: 'update', subject: 'owned' },
   /** SPEC §2.2: the workload view is head-only. A member sees their own load on Home. */
-  'work.workload.read': { area: 'work', action: 'read', subject: 'department_managed' },
+  'work.workload.read': {
+    area: 'work',
+    action: 'read',
+    subject: 'department_managed',
+  },
 
   // --- projects (audit §4.5) ---------------------------------------------------------------------
-  'projects.read': { area: 'projects', action: 'read', subject: 'department_child' },
-  'projects.create': { area: 'projects', action: 'create', subject: 'department_child' },
+  'projects.read': {
+    area: 'projects',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'projects.create': {
+    area: 'projects',
+    action: 'create',
+    subject: 'department_child',
+  },
   'projects.edit': { area: 'projects', action: 'update', subject: 'owned' },
-  'projects.milestone.edit': { area: 'projects', action: 'update', subject: 'owned' },
-  'projects.members.edit': { area: 'projects', action: 'update', subject: 'owned' },
+  'projects.milestone.edit': {
+    area: 'projects',
+    action: 'update',
+    subject: 'owned',
+  },
+  'projects.members.edit': {
+    area: 'projects',
+    action: 'update',
+    subject: 'owned',
+  },
   /** Appointing someone to lead is a management act (audit §4.5). */
-  'projects.owner.set': { area: 'projects', action: 'update', subject: 'department_managed' },
-  'projects.archive': { area: 'projects', action: 'archive', subject: 'department_managed' },
-  'projects.template.manage': { area: 'projects', action: 'update', subject: 'department_managed' },
+  'projects.owner.set': {
+    area: 'projects',
+    action: 'update',
+    subject: 'department_managed',
+  },
+  'projects.archive': {
+    area: 'projects',
+    action: 'archive',
+    subject: 'department_managed',
+  },
+  'projects.template.manage': {
+    area: 'projects',
+    action: 'update',
+    subject: 'department_managed',
+  },
 
   // --- events (audit §4.6 -- already correct in code, declared here for the client) ---------------
-  'events.read': { area: 'events', action: 'read', subject: 'department_child' },
-  'events.create': { area: 'events', action: 'create', subject: 'department_child' },
+  'events.read': {
+    area: 'events',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'events.create': {
+    area: 'events',
+    action: 'create',
+    subject: 'department_child',
+  },
   'events.edit': { area: 'events', action: 'update', subject: 'owned' },
   'events.cancel': { area: 'events', action: 'update', subject: 'owned' },
-  'events.rsvp': { area: 'events', action: 'update', subject: 'department_child' },
-  'events.participate': { area: 'events', action: 'create', subject: 'department_child' },
-  'events.comment.delete': { area: 'events', action: 'delete', subject: 'owned' },
+  'events.rsvp': {
+    area: 'events',
+    action: 'update',
+    subject: 'department_child',
+  },
+  'events.participate': {
+    area: 'events',
+    action: 'create',
+    subject: 'department_child',
+  },
+  'events.comment.delete': {
+    area: 'events',
+    action: 'delete',
+    subject: 'owned',
+  },
   'events.photo.delete': { area: 'events', action: 'delete', subject: 'owned' },
 
   // --- personal (audit §4.7, I-1) ----------------------------------------------------------------
-  'personal.workspace.read': { area: 'personal', action: 'read', subject: 'personal' },
-  'personal.workspace.edit': { area: 'personal', action: 'update', subject: 'personal' },
+  'personal.workspace.read': {
+    area: 'personal',
+    action: 'read',
+    subject: 'personal',
+  },
+  'personal.workspace.edit': {
+    area: 'personal',
+    action: 'update',
+    subject: 'personal',
+  },
   /** Aggregate focus minutes only -- never content, never a note, never a canvas (I-1). */
   'personal.focus.readAggregate': {
     area: 'personal',
@@ -235,25 +408,61 @@ export const APP_ACTIONS = {
     action: 'read',
     subject: 'department_child',
   },
-  'inbox.departmentSettings.edit': { area: 'inbox', action: 'update', subject: 'department' },
-  'inbox.telegram.linkOwn': { area: 'inbox', action: 'update', subject: 'personal' },
+  'inbox.departmentSettings.edit': {
+    area: 'inbox',
+    action: 'update',
+    subject: 'department',
+  },
+  'inbox.telegram.linkOwn': {
+    area: 'inbox',
+    action: 'update',
+    subject: 'personal',
+  },
   /** D8: a group chat id is an operational credential. */
-  'inbox.telegram.groups.read': { area: 'inbox', action: 'read', subject: 'department_managed' },
+  'inbox.telegram.groups.read': {
+    area: 'inbox',
+    action: 'read',
+    subject: 'department_managed',
+  },
   'inbox.telegram.group.connect': {
     area: 'inbox',
     action: 'create',
     subject: 'department_managed',
     widenedBy: 'whoCanConnectTelegramGroup',
   },
-  'inbox.telegram.group.manage': { area: 'inbox', action: 'update', subject: 'department' },
-  'inbox.telegram.broadcast': { area: 'inbox', action: 'create', subject: 'department_managed' },
+  'inbox.telegram.group.manage': {
+    area: 'inbox',
+    action: 'update',
+    subject: 'department',
+  },
+  'inbox.telegram.broadcast': {
+    area: 'inbox',
+    action: 'create',
+    subject: 'department_managed',
+  },
 
   // --- analytics (audit §4.9) --------------------------------------------------------------------
-  'analytics.department.read': { area: 'analytics', action: 'read', subject: 'department_child' },
-  'analytics.personal.read': { area: 'analytics', action: 'read', subject: 'department_child' },
+  'analytics.department.read': {
+    area: 'analytics',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'analytics.personal.read': {
+    area: 'analytics',
+    action: 'read',
+    subject: 'department_child',
+  },
   /** SEV1 change: a per-person load chart in a ministry reads as a public reprimand. */
-  'analytics.perPerson.read': { area: 'analytics', action: 'read', subject: 'department_managed' },
-  'analytics.export': { area: 'analytics', action: 'read', subject: 'department_child' },
+  'analytics.perPerson.read': {
+    area: 'analytics',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'analytics.export': {
+    area: 'analytics',
+    action: 'read',
+    subject: 'department_child',
+  },
   'analytics.export.perPerson': {
     area: 'analytics',
     action: 'read',
@@ -264,56 +473,168 @@ export const APP_ACTIONS = {
     action: 'create',
     subject: 'department_child',
   },
-  'analytics.pins.manage': { area: 'analytics', action: 'create', subject: 'department_child' },
-  'analytics.narrative.read': { area: 'analytics', action: 'read', subject: 'department_managed' },
+  'analytics.pins.manage': {
+    area: 'analytics',
+    action: 'create',
+    subject: 'department_child',
+  },
+  'analytics.narrative.read': {
+    area: 'analytics',
+    action: 'read',
+    subject: 'department_managed',
+  },
 
   // --- pages (audit §4.10) -----------------------------------------------------------------------
   'pages.read': { area: 'pages', action: 'read', subject: 'department_child' },
-  'pages.create': { area: 'pages', action: 'create', subject: 'department_child' },
+  'pages.create': {
+    area: 'pages',
+    action: 'create',
+    subject: 'department_child',
+  },
   /** A wiki works because editing is open; version history is the safety net. */
-  'pages.edit': { area: 'pages', action: 'update', subject: 'department_child' },
+  'pages.edit': {
+    area: 'pages',
+    action: 'update',
+    subject: 'department_child',
+  },
   'pages.delete': { area: 'pages', action: 'delete', subject: 'owned' },
-  'pages.version.restore': { area: 'pages', action: 'update', subject: 'owned' },
+  'pages.version.restore': {
+    area: 'pages',
+    action: 'update',
+    subject: 'owned',
+  },
   'pages.onboarding.template.manage': {
     area: 'pages',
     action: 'update',
     subject: 'department_managed',
   },
-  'pages.onboarding.own.complete': { area: 'pages', action: 'update', subject: 'own_account' },
+  'pages.onboarding.own.complete': {
+    area: 'pages',
+    action: 'update',
+    subject: 'own_account',
+  },
 
   // --- ai (audit §4.11, SPEC §8) -----------------------------------------------------------------
-  'ai.feature.run': { area: 'ai', action: 'create', subject: 'department_child' },
-  'ai.features.read': { area: 'ai', action: 'read', subject: 'department_child' },
+  'ai.feature.run': {
+    area: 'ai',
+    action: 'create',
+    subject: 'department_child',
+  },
+  'ai.features.read': {
+    area: 'ai',
+    action: 'read',
+    subject: 'department_child',
+  },
   /** SEV1 change: a money figure for the department is the head's. */
-  'ai.budget.read': { area: 'ai', action: 'read', subject: 'department_managed' },
+  'ai.budget.read': {
+    area: 'ai',
+    action: 'read',
+    subject: 'department_managed',
+  },
   'ai.settings.edit': { area: 'ai', action: 'update', subject: 'department' },
-  'ai.usage.readOwn': { area: 'ai', action: 'read', subject: 'department_child' },
+  'ai.usage.readOwn': {
+    area: 'ai',
+    action: 'read',
+    subject: 'department_child',
+  },
   /** SEV1 change: who asked the AI what, how often, is surveillance-grade. */
-  'ai.usage.readAll': { area: 'ai', action: 'read', subject: 'department_managed' },
+  'ai.usage.readAll': {
+    area: 'ai',
+    action: 'read',
+    subject: 'department_managed',
+  },
 
   // --- people (SPEC §4, §6 -- the v1.1 surfaces) --------------------------------------------------
-  'people.directory.read': { area: 'people', action: 'read', subject: 'department_child' },
-  'people.table.read': { area: 'people', action: 'read', subject: 'department_managed' },
-  'people.indicators.read': { area: 'people', action: 'read', subject: 'department_managed' },
-  'people.person.read': { area: 'people', action: 'read', subject: 'department_managed' },
-  'people.person.readOwn': { area: 'people', action: 'read', subject: 'own_account' },
-  'people.assignTask': { area: 'people', action: 'create', subject: 'department_child' },
-  'people.export': { area: 'people', action: 'read', subject: 'department_managed' },
+  'people.directory.read': {
+    area: 'people',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'people.table.read': {
+    area: 'people',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'people.indicators.read': {
+    area: 'people',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'people.person.read': {
+    area: 'people',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'people.person.readOwn': {
+    area: 'people',
+    action: 'read',
+    subject: 'own_account',
+  },
+  'people.assignTask': {
+    area: 'people',
+    action: 'create',
+    subject: 'department_child',
+  },
+  'people.export': {
+    area: 'people',
+    action: 'read',
+    subject: 'department_managed',
+  },
 
   // --- custom fields (SPEC §5) -------------------------------------------------------------------
-  'fields.definition.read': { area: 'fields', action: 'read', subject: 'department_child' },
-  'fields.definition.manage': { area: 'fields', action: 'update', subject: 'department_managed' },
-  'fields.notifyToFill': { area: 'fields', action: 'create', subject: 'department_managed' },
-  'fields.value.editOwn': { area: 'fields', action: 'update', subject: 'own_account' },
+  'fields.definition.read': {
+    area: 'fields',
+    action: 'read',
+    subject: 'department_child',
+  },
+  'fields.definition.manage': {
+    area: 'fields',
+    action: 'update',
+    subject: 'department_managed',
+  },
+  'fields.notifyToFill': {
+    area: 'fields',
+    action: 'create',
+    subject: 'department_managed',
+  },
+  'fields.value.editOwn': {
+    area: 'fields',
+    action: 'update',
+    subject: 'own_account',
+  },
   /** "Where they studied" is HR-shaped data (audit §4.13). */
-  'fields.value.readOthers': { area: 'fields', action: 'read', subject: 'department_managed' },
-  'fields.value.editOnCard': { area: 'fields', action: 'update', subject: 'owned' },
+  'fields.value.readOthers': {
+    area: 'fields',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'fields.value.editOnCard': {
+    area: 'fields',
+    action: 'update',
+    subject: 'owned',
+  },
 
   // --- goals and automations (SPEC §7) -----------------------------------------------------------
-  'goals.read': { area: 'goals', action: 'read', subject: 'department_managed' },
-  'goals.manage': { area: 'goals', action: 'update', subject: 'department_managed' },
-  'automations.read': { area: 'automations', action: 'read', subject: 'department_managed' },
-  'automations.manage': { area: 'automations', action: 'update', subject: 'department_managed' },
+  'goals.read': {
+    area: 'goals',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'goals.manage': {
+    area: 'goals',
+    action: 'update',
+    subject: 'department_managed',
+  },
+  'automations.read': {
+    area: 'automations',
+    action: 'read',
+    subject: 'department_managed',
+  },
+  'automations.manage': {
+    area: 'automations',
+    action: 'update',
+    subject: 'department_managed',
+  },
 
   // --- admin (audit §4.12) -----------------------------------------------------------------------
   'admin.console': { area: 'admin', action: 'administer', subject: 'instance' },
@@ -380,11 +701,7 @@ function widened(spec: AppActionSpec, settings: ActionSettings | null | undefine
  *    loaded the row), so the object question is always answered exactly. A client rendering a button
  *    for a specific card passes `ownerUserIds` and gets the exact answer too.
  */
-export function canAction(
-  actor: Actor | null,
-  id: AppActionId,
-  ctx: ActionContext = {},
-): Decision {
+export function canAction(actor: Actor | null, id: AppActionId, ctx: ActionContext = {}): Decision {
   const spec: AppActionSpec = APP_ACTIONS[id]
   const departmentId = ctx.departmentId ?? actor?.departmentId ?? ''
   const subjectUserId = ctx.subjectUserId ?? actor?.userId ?? ''
@@ -410,7 +727,11 @@ export function canAction(
       subject = { kind: 'own_account', userId: subjectUserId }
       break
     case 'owned':
-      subject = { kind: 'owned', departmentId, ownerUserIds: ctx.ownerUserIds ?? [] }
+      subject = {
+        kind: 'owned',
+        departmentId,
+        ownerUserIds: ctx.ownerUserIds ?? [],
+      }
       break
     case 'department':
       subject = { kind: 'department', departmentId }

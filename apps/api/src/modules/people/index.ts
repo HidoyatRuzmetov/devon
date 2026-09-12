@@ -13,7 +13,11 @@ import { isIndicatorKey, type IndicatorKey } from '@devon/contracts'
 import { contextDepartmentRole } from '../../lib/actor.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import * as service from './service.js'
-import { indicatorsQuerySchema, indicatorsResponseSchema, registryResponseSchema } from './schemas.js'
+import {
+  indicatorsQuerySchema,
+  indicatorsResponseSchema,
+  registryResponseSchema,
+} from './schemas.js'
 import { INDICATOR_REGISTRY_DTO } from './schemas.js'
 
 function activeDepartmentId(req: FastifyRequest): string {
@@ -40,7 +44,14 @@ function toDbContext(req: FastifyRequest): RequestContext {
  * omitting `ids` means every active member, omitting `keys` means the whole registry. */
 function splitList(raw: string | undefined): string[] {
   if (!raw) return []
-  return [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))]
+  return [
+    ...new Set(
+      raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ]
 }
 
 const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -54,7 +65,9 @@ const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/indicators/registry',
     {
-      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentManagedSubject },
+      },
       schema: { response: { 200: registryResponseSchema } },
     },
     async () => ({ indicators: INDICATOR_REGISTRY_DTO }),
@@ -63,8 +76,13 @@ const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/indicators',
     {
-      config: { permission: { action: 'read', subject: departmentManagedSubject } },
-      schema: { querystring: indicatorsQuerySchema, response: { 200: indicatorsResponseSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentManagedSubject },
+      },
+      schema: {
+        querystring: indicatorsQuerySchema,
+        response: { 200: indicatorsResponseSchema },
+      },
     },
     async (req) => {
       const departmentId = activeDepartmentId(req)
@@ -84,7 +102,9 @@ const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
             Object.entries(person.values).map(
               ([key, value]): [string, string | number | boolean | string[] | null] => [
                 key,
-                Array.isArray(value) ? [...value] : ((value ?? null) as string | number | boolean | null),
+                Array.isArray(value)
+                  ? [...value]
+                  : ((value ?? null) as string | number | boolean | null),
               ],
             ),
           ),

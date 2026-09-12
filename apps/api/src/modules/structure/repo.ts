@@ -73,7 +73,10 @@ function toUnitDto(r: UnitRow) {
 
 type DepartmentSettingsRow = { settings: unknown }
 
-export type DepartmentSettings = { allowSelfAssign: boolean; allowStructureEdit: boolean }
+export type DepartmentSettings = {
+  allowSelfAssign: boolean
+  allowStructureEdit: boolean
+}
 
 /**
  * D1 (SEV1), fixed. `departments/repo.ts`'s `updateDepartmentSettings` persists the settings jsonb
@@ -108,18 +111,30 @@ function readSettings(raw: unknown): DepartmentSettings {
 // this runs under the additive self-read policies `migrations/0200_structure.sql` documents at
 // length, never under a chosen `departmentId` GUC.
 
-export type MyDepartment = { departmentId: string; name: string; role: 'head' | 'member' }
+export type MyDepartment = {
+  departmentId: string
+  name: string
+  role: 'head' | 'member'
+}
 
 export async function myDepartments(actor: ActorCtx): Promise<MyDepartment[]> {
   return withContext(deptRequestContext(actor, null), async (tx) => {
-    const rows = await tx.raw<{ department_id: string; name: string; role: 'head' | 'member' }>(sql`
+    const rows = await tx.raw<{
+      department_id: string
+      name: string
+      role: 'head' | 'member'
+    }>(sql`
       select d.id as department_id, d.name, m.role
       from app.memberships m
       join app.departments d on d.id = m.department_id
       where m.user_id = ${actor.userId} and m.status = 'active' and d.deleted_at is null
       order by d.name
     `)
-    return rows.map((r) => ({ departmentId: r.department_id, name: r.name, role: r.role }))
+    return rows.map((r) => ({
+      departmentId: r.department_id,
+      name: r.name,
+      role: r.role,
+    }))
   })
 }
 
@@ -146,7 +161,10 @@ export async function getUnitsOverview(
       where department_id = ${departmentId} and deleted_at is null
       order by parent_unit_id nulls first, sort, name
     `)
-    return { units: unitRows.map(toUnitDto), settings: readSettings(deptRows[0].settings) }
+    return {
+      units: unitRows.map(toUnitDto),
+      settings: readSettings(deptRows[0].settings),
+    }
   })
 }
 
@@ -224,7 +242,11 @@ export async function createUnit(
     tx.emit({
       type: 'structure.unit.created',
       departmentId,
-      payload: { unitId: unit.id, name: unit.name, parentUnitId: unit.parent_unit_id },
+      payload: {
+        unitId: unit.id,
+        name: unit.name,
+        parentUnitId: unit.parent_unit_id,
+      },
     })
 
     return toUnitDto(unit)
@@ -364,7 +386,10 @@ export async function reorderUnits(
     tx.emit({
       type: 'structure.unit.reordered',
       departmentId,
-      payload: { parentUnitId: body.parentUnitId, orderedUnitIds: body.orderedUnitIds },
+      payload: {
+        parentUnitId: body.parentUnitId,
+        orderedUnitIds: body.orderedUnitIds,
+      },
     })
   })
 }
@@ -409,7 +434,11 @@ export async function deleteUnit(
       departmentId,
       before: { name: unit.name },
     })
-    tx.emit({ type: 'structure.unit.deleted', departmentId, payload: { unitId } })
+    tx.emit({
+      type: 'structure.unit.deleted',
+      departmentId,
+      payload: { unitId },
+    })
 
     return { deletedAt: deletedAt.toISOString() }
   })
@@ -462,7 +491,11 @@ export async function restoreUnit(
       departmentId,
       after: { name: rows[0].name },
     })
-    tx.emit({ type: 'structure.unit.restored', departmentId, payload: { unitId } })
+    tx.emit({
+      type: 'structure.unit.restored',
+      departmentId,
+      payload: { unitId },
+    })
 
     return toUnitDto({ ...rows[0], version: rows[0].version + 1 })
   })

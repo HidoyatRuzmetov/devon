@@ -11,6 +11,7 @@ import {
   fetchReadyz,
   logout as apiLogout,
   patchMe,
+  setActiveDepartment,
 } from './api-client.js'
 import type { InstancePublic, Me, Readyz } from './api-schemas.js'
 import { persistLocale } from './locale-boot.js'
@@ -124,18 +125,25 @@ function storeDepartmentId(id: string | null): void {
   }
 }
 
-export type Department = { departmentId: string; name: string; role: 'head' | 'member' }
+export type Department = {
+  departmentId: string
+  name: string
+  role: 'head' | 'member'
+}
 
 export type UseDepartmentResult = {
   /** `null` until memberships load, or for a user with none yet. */
   department: Department | null
   departmentId: string | null
   memberships: readonly Department[]
-  /** Switcher stub (MODULE-GUIDE.md "Web features"): sets the active department client-side only --
-   * there is no server endpoint yet for "which department is this request acting for" (that arrives
-   * with the epic that needs more than one). A feature building real department-switching UI reads
-   * `memberships` and calls this; nothing else needs to change when the server-backed version lands. */
+  /** v1.1 SPEC §2.3: calls `POST /me/active-department`, which sets the signed `devon_dept` cookie
+   * the server resolves `actor.departmentId` from, then invalidates every cached query so the whole
+   * app re-reads in the new department. The local copy updates first so the switcher's check mark
+   * moves immediately; a failed request falls back to whatever the server still says on `/me`. */
   setDepartmentId(id: string | null): void
+  /** True while the switch is in flight -- the switcher disables itself rather than letting two
+   * departments race. */
+  isSwitching: boolean
 }
 
 /** Resolution order: the server's `activeDepartmentId` (once a later epic populates it) → this
@@ -145,17 +153,44 @@ export function useDepartment(): UseDepartmentResult {
   const { memberships } = useSession()
   const [override, setOverride] = React.useState<string | null>(readStoredDepartmentId)
   const meQuery = useMeQuery()
+  const queryClient = useQueryClient()
 
   const serverActiveId = meQuery.data?.activeDepartmentId ?? null
   const overrideIsValid = override !== null && memberships.some((m) => m.departmentId === override)
+  // The server's answer wins: since v1.1 it is a real per-request decision (the signed `devon_dept`
+  // cookie), not a placeholder. The local override only bridges the moment between clicking the
+  // switcher and the response landing, and only for a department the user actually belongs to.
   const departmentId =
     serverActiveId ?? (overrideIsValid ? override : (memberships[0]?.departmentId ?? null))
   const department = memberships.find((m) => m.departmentId === departmentId) ?? null
 
-  const setDepartmentId = React.useCallback((id: string | null) => {
-    setOverride(id)
-    storeDepartmentId(id)
-  }, [])
+  const switchMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const me = queryClient.getQueryData<Me | null>(['me'])
+      if (!me) return null
+      return setActiveDepartment(id, me.csrfToken)
+    },
+    onSuccess: (updated) => {
+      if (updated) queryClient.setQueryData(['me'], updated)
+      // Every department-scoped query in the cache is now about the wrong department.
+      void queryClient.invalidateQueries()
+    },
+  })
 
-  return { department, departmentId, memberships, setDepartmentId }
+  const setDepartmentId = React.useCallback(
+    (id: string | null) => {
+      setOverride(id)
+      storeDepartmentId(id)
+      if (id) switchMutation.mutate(id)
+    },
+    [switchMutation],
+  )
+
+  return {
+    department,
+    departmentId,
+    memberships,
+    setDepartmentId,
+    isSwitching: switchMutation.isPending,
+  }
 }

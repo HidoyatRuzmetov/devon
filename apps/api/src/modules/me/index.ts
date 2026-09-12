@@ -65,7 +65,10 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'read',
-          subject: (r) => ({ kind: 'own_account', userId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'own_account',
+            userId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { response: { 200: meSchema } },
@@ -95,7 +98,10 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'update',
-          subject: (r) => ({ kind: 'own_account', userId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'own_account',
+            userId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: { body: patchMeSchema, response: { 200: meSchema } },
@@ -139,7 +145,10 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'update',
-          subject: (r) => ({ kind: 'own_account', userId: r.actor?.userId ?? '' }),
+          subject: (r) => ({
+            kind: 'own_account',
+            userId: r.actor?.userId ?? '',
+          }),
         },
       },
       schema: {

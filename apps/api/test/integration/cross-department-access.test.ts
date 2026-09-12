@@ -43,8 +43,14 @@ beforeAll(async () => {
   server = h.server
   baseUrl = server.baseUrl
 
-  deptA = await seedDepartment(db, { name: 'Raqamli xizmatlar', slug: `dept-a-${randomUUID()}` })
-  deptB = await seedDepartment(db, { name: 'Boshqa boshqarma', slug: `dept-b-${randomUUID()}` })
+  deptA = await seedDepartment(db, {
+    name: 'Raqamli xizmatlar',
+    slug: `dept-a-${randomUUID()}`,
+  })
+  deptB = await seedDepartment(db, {
+    name: 'Boshqa boshqarma',
+    slug: `dept-b-${randomUUID()}`,
+  })
 
   const aHeadUser = await seedMember(db, deptA.id, { role: 'head' })
   const bHeadUser = await seedMember(db, deptB.id, { role: 'head' })
@@ -91,7 +97,9 @@ describe('cards (work module) -- department_child, actor-context scoped', () => 
   })
 
   it("the other department's board never lists the card", async () => {
-    const res = await fetch(`${baseUrl}/api/v1/board`, { headers: { cookie: bHead.cookie } })
+    const res = await fetch(`${baseUrl}/api/v1/board`, {
+      headers: { cookie: bHead.cookie },
+    })
     const board = (await res.json()) as {
       columns: { cards: { id: string }[] }[]
       unassigned: { id: string }[]
@@ -133,7 +141,9 @@ describe('projects (work module) -- department_child, actor-context scoped', () 
 
   beforeAll(async () => {
     const templates = (await (
-      await fetch(`${baseUrl}/api/v1/projects/templates`, { headers: { cookie: aHead.cookie } })
+      await fetch(`${baseUrl}/api/v1/projects/templates`, {
+        headers: { cookie: aHead.cookie },
+      })
     ).json()) as { key: string }[]
     const res = await fetch(`${baseUrl}/api/v1/projects/from-template`, {
       method: 'POST',
@@ -145,7 +155,10 @@ describe('projects (work module) -- department_child, actor-context scoped', () 
       }),
     })
     expect(res.status).toBe(201)
-    const project = (await res.json()) as { id: string; milestones: { id: string }[] }
+    const project = (await res.json()) as {
+      id: string
+      milestones: { id: string }[]
+    }
     projectId = project.id
     milestoneId = project.milestones[0]!.id
   })
@@ -288,7 +301,9 @@ describe('pages -- department_child, actor-context scoped', () => {
   })
 
   it("does not appear in the other department's page list", async () => {
-    const res = await fetch(`${baseUrl}/api/v1/pages`, { headers: { cookie: bHead.cookie } })
+    const res = await fetch(`${baseUrl}/api/v1/pages`, {
+      headers: { cookie: bHead.cookie },
+    })
     const list = (await res.json()) as { id: string }[]
     expect(list.map((p) => p.id)).not.toContain(pageId)
   })
@@ -364,7 +379,10 @@ describe("memberships -- the :departmentId in the URL is the actor's own, the :u
   it("dept A's head cannot transfer dept A's headship to a userId that belongs to dept B", async () => {
     const res = await fetch(
       `${baseUrl}/api/v1/departments/${deptA.id}/members/${bHeadUserId}/transfer-headship`,
-      { method: 'POST', headers: { cookie: aHead.cookie, 'x-csrf-token': aHead.csrf } },
+      {
+        method: 'POST',
+        headers: { cookie: aHead.cookie, 'x-csrf-token': aHead.csrf },
+      },
     )
     expect(res.status).toBe(409)
   })
@@ -390,9 +408,14 @@ describe("AI settings (H1.2/H25.1) -- subject built from the actor's own departm
   })
 
   it("a department's own head sees only its own AI budget, never the other department's", async () => {
-    const res = await fetch(`${baseUrl}/api/v1/ai/settings`, { headers: { cookie: aHead.cookie } })
+    const res = await fetch(`${baseUrl}/api/v1/ai/settings`, {
+      headers: { cookie: aHead.cookie },
+    })
     expect(res.status).toBe(200)
-    const settings = (await res.json()) as { departmentId: string; budgetUzsPerMonth: number }
+    const settings = (await res.json()) as {
+      departmentId: string
+      budgetUzsPerMonth: number
+    }
     expect(settings.departmentId).toBe(deptA.id)
     expect(settings.budgetUzsPerMonth).toBe(999000)
   })
@@ -416,21 +439,18 @@ describe("AI settings (H1.2/H25.1) -- subject built from the actor's own departm
   // `RequestContext.departmentRole`) and re-creates `ai_department_settings_write` to read it, and the
   // AI module now passes the actor's *membership* role via `lib/actor.ts`'s `contextDepartmentRole()`.
   // The database boundary and `can()` now derive "is this the head?" from the same source.
-  it(
-    "a fresh department's own head can read (and lazily initialise) its AI settings on first visit",
-    async () => {
-      const freshDept = await seedDepartment(db, {
-        name: 'Fresh AI dept',
-        slug: `dept-ai-${randomUUID()}`,
-      })
-      const freshHeadUser = await seedMember(db, freshDept.id, { role: 'head' })
-      const freshHead = await loginAs(baseUrl, freshHeadUser.login)
-      const res = await fetch(`${baseUrl}/api/v1/ai/settings`, {
-        headers: { cookie: freshHead.cookie },
-      })
-      expect(res.status).toBe(200)
-    },
-  )
+  it("a fresh department's own head can read (and lazily initialise) its AI settings on first visit", async () => {
+    const freshDept = await seedDepartment(db, {
+      name: 'Fresh AI dept',
+      slug: `dept-ai-${randomUUID()}`,
+    })
+    const freshHeadUser = await seedMember(db, freshDept.id, { role: 'head' })
+    const freshHead = await loginAs(baseUrl, freshHeadUser.login)
+    const res = await fetch(`${baseUrl}/api/v1/ai/settings`, {
+      headers: { cookie: freshHead.cookie },
+    })
+    expect(res.status).toBe(200)
+  })
 })
 
 describe('personal tasks -- owner-only, not department scoped at all', () => {

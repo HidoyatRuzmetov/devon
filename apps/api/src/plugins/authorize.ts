@@ -24,7 +24,12 @@ declare module 'fastify' {
      * and compares it with a checked-in allow-list, so moving a route onto (or off) the head-only
      * subject is a visible diff in a test file -- the same mechanism `PUBLIC_ROUTES` already gives
      * for public routes, applied to the other end of the matrix. */
-    routePermissions: { method: string; url: string; action: Action; subjectKind: string }[]
+    routePermissions: {
+      method: string
+      url: string
+      action: Action
+      subjectKind: string
+    }[]
   }
 }
 
@@ -94,7 +99,10 @@ export async function denyForSubject(
         ip: requestIp(req),
         userAgent: requestUserAgent(req),
       },
-      { route: `${req.method} ${req.routeOptions.url ?? req.url}`, reason: decision.reason },
+      {
+        route: `${req.method} ${req.routeOptions.url ?? req.url}`,
+        reason: decision.reason,
+      },
     )
   }
   return false
@@ -107,7 +115,13 @@ export async function denyForSubject(
  * permission decision. */
 function resolveSubjectKind(subject: (req: FastifyRequest) => Subject): string {
   try {
-    const stub = { params: {}, query: {}, actor: null, headers: {}, cookies: {} }
+    const stub = {
+      params: {},
+      query: {},
+      actor: null,
+      headers: {},
+      cookies: {},
+    }
     return subject(stub as unknown as FastifyRequest).kind
   } catch {
     return 'unknown'
@@ -120,7 +134,13 @@ export default fp(async function authorizePlugin(app: FastifyInstance) {
 
   app.addHook('onRoute', (routeOptions) => {
     const config = routeOptions.config as
-      | { permission?: { public?: true; action?: Action; subject?: (req: FastifyRequest) => Subject } }
+      | {
+          permission?: {
+            public?: true
+            action?: Action
+            subject?: (req: FastifyRequest) => Subject
+          }
+        }
       | undefined
     if (!config || !('permission' in config) || config.permission === undefined) {
       throw new Error(
@@ -129,12 +149,13 @@ export default fp(async function authorizePlugin(app: FastifyInstance) {
           `server refuses to boot).`,
       )
     }
-    const methods = Array.isArray(routeOptions.method)
-      ? routeOptions.method
-      : [routeOptions.method]
+    const methods = Array.isArray(routeOptions.method) ? routeOptions.method : [routeOptions.method]
     if (config.permission.public) {
       for (const method of methods) {
-        app.publicRoutes.push({ method: method as string, url: routeOptions.url })
+        app.publicRoutes.push({
+          method: method as string,
+          url: routeOptions.url,
+        })
       }
       return
     }

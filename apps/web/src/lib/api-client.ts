@@ -123,7 +123,10 @@ async function del<T>(
 ): Promise<T | void> {
   const schema = typeof schemaOrCsrfToken === 'string' ? undefined : schemaOrCsrfToken
   const csrfToken = schema ? maybeCsrfToken : (schemaOrCsrfToken as string | undefined)
-  const res = await raw(path, { method: 'DELETE', headers: csrfHeaders(csrfToken) })
+  const res = await raw(path, {
+    method: 'DELETE',
+    headers: csrfHeaders(csrfToken),
+  })
   if (!res.ok) await parseErrorAndThrow(res)
   if (!schema) return
   if (res.status === 204) return undefined as T
@@ -210,6 +213,12 @@ export function patchMe(
   csrfToken: string,
 ): Promise<Me> {
   return send('/api/v1/me', 'PATCH', patch, meSchema, csrfToken)
+}
+
+/** v1.1 SPEC §2.3: the department switcher. The server sets a signed `devon_dept` cookie and answers
+ * with the updated `/me`, so the caller can seed the cache before invalidating everything else. */
+export function setActiveDepartment(departmentId: string, csrfToken: string): Promise<Me> {
+  return send('/api/v1/me/active-department', 'POST', { departmentId }, meSchema, csrfToken)
 }
 
 const voidSchema = z.void()

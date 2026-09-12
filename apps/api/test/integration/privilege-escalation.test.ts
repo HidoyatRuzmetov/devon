@@ -34,11 +34,16 @@ beforeAll(async () => {
   server = h.server
   baseUrl = server.baseUrl
 
-  dept = await seedDepartment(db, { name: 'Escalation dept', slug: `esc-${randomUUID()}` })
+  dept = await seedDepartment(db, {
+    name: 'Escalation dept',
+    slug: `esc-${randomUUID()}`,
+  })
   const headUser = await seedMember(db, dept.id, { role: 'head' })
   const memberUser = await seedMember(db, dept.id, { role: 'member' })
   // I-8b: a real super_admin is never also a department member.
-  const superAdminUser = await seedBareUser(db, { instanceRole: 'super_admin' })
+  const superAdminUser = await seedBareUser(db, {
+    instanceRole: 'super_admin',
+  })
 
   head = await loginAs(baseUrl, headUser.login)
   member = await loginAs(baseUrl, memberUser.login)
@@ -112,52 +117,49 @@ describe('member -> head: department-head-only actions reject a plain member (ow
   // `readSettings` now reads the writer's key (keeping the snake_case spelling as a fallback) and
   // defaults `allowStructureEdit` to **off** (v1.1 SPEC §2.2), and unit delete/restore moved to
   // `{kind:'department_managed'}` so no switch can ever open them.
-  it(
-    'a plain member cannot patch/delete a structure unit once a head disables member self-service',
-    async () => {
-      const disable = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/settings`, {
-        method: 'PATCH',
-        headers: head.headers,
-        body: JSON.stringify({ allowStructureEdit: false }),
-      })
-      expect(disable.status).toBe(204)
+  it('a plain member cannot patch/delete a structure unit once a head disables member self-service', async () => {
+    const disable = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/settings`, {
+      method: 'PATCH',
+      headers: head.headers,
+      body: JSON.stringify({ allowStructureEdit: false }),
+    })
+    expect(disable.status).toBe(204)
 
-      const createAsMember = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units`, {
-        method: 'POST',
+    const createAsMember = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units`, {
+      method: 'POST',
+      headers: member.headers,
+      body: JSON.stringify({ name: 'member-created unit' }),
+    })
+    expect(createAsMember.status).toBe(403)
+
+    const createAsHead = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units`, {
+      method: 'POST',
+      headers: head.headers,
+      body: JSON.stringify({ name: 'head-created unit' }),
+    })
+    expect(createAsHead.status).toBe(201)
+    const unit = (await createAsHead.json()) as { id: string; version: number }
+
+    const patchAsMember = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units/${unit.id}`, {
+      method: 'PATCH',
+      headers: member.headers,
+      body: JSON.stringify({
+        name: 'renamed by member',
+        version: unit.version,
+      }),
+    })
+    expect(patchAsMember.status).toBe(403)
+
+    const deleteAsMember = await fetch(
+      `${baseUrl}/api/v1/departments/${dept.id}/units/${unit.id}`,
+      {
+        method: 'DELETE',
         headers: member.headers,
-        body: JSON.stringify({ name: 'member-created unit' }),
-      })
-      expect(createAsMember.status).toBe(403)
-
-      const createAsHead = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/units`, {
-        method: 'POST',
-        headers: head.headers,
-        body: JSON.stringify({ name: 'head-created unit' }),
-      })
-      expect(createAsHead.status).toBe(201)
-      const unit = (await createAsHead.json()) as { id: string; version: number }
-
-      const patchAsMember = await fetch(
-        `${baseUrl}/api/v1/departments/${dept.id}/units/${unit.id}`,
-        {
-          method: 'PATCH',
-          headers: member.headers,
-          body: JSON.stringify({ name: 'renamed by member', version: unit.version }),
-        },
-      )
-      expect(patchAsMember.status).toBe(403)
-
-      const deleteAsMember = await fetch(
-        `${baseUrl}/api/v1/departments/${dept.id}/units/${unit.id}`,
-        {
-          method: 'DELETE',
-          headers: member.headers,
-          body: '{}', // a `content-type: application/json` header needs a body, even an empty one
-        },
-      )
-      expect(deleteAsMember.status).toBe(403)
-    },
-  )
+        body: '{}', // a `content-type: application/json` header needs a body, even an empty one
+      },
+    )
+    expect(deleteAsMember.status).toBe(403)
+  })
 })
 
 describe('head -> super_admin: instance-only admin routes reject a department head', () => {
@@ -182,8 +184,16 @@ describe('head -> super_admin: instance-only admin routes reject a department he
       path: `/api/v1/admin/departments/${randomUUID()}/pause`,
       body: { reason: 'x' },
     },
-    { method: 'PATCH', path: '/api/v1/admin/maintenance', body: { enabled: true, message: null } },
-    { method: 'PATCH', path: '/api/v1/admin/registration', body: { open: false } },
+    {
+      method: 'PATCH',
+      path: '/api/v1/admin/maintenance',
+      body: { enabled: true, message: null },
+    },
+    {
+      method: 'PATCH',
+      path: '/api/v1/admin/registration',
+      body: { open: false },
+    },
     {
       method: 'POST',
       path: '/api/v1/admin/wipe/start',

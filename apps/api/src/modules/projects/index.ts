@@ -24,7 +24,10 @@ import {
 } from './schemas.js'
 
 function departmentChildSubject(departmentId: string | null) {
-  return { kind: 'department_child' as const, departmentId: departmentId ?? '' }
+  return {
+    kind: 'department_child' as const,
+    departmentId: departmentId ?? '',
+  }
 }
 
 /**
@@ -136,7 +139,10 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: createFromTemplateBodySchema, response: { 201: projectSchema } },
+      schema: {
+        body: createFromTemplateBodySchema,
+        response: { 201: projectSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -174,7 +180,10 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: createProjectBodySchema, response: { 201: projectSchema } },
+      schema: {
+        body: createProjectBodySchema,
+        response: { 201: projectSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -189,7 +198,10 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         status: req.body.status,
         startOn: req.body.startOn,
         targetOn: req.body.targetOn,
-        milestones: req.body.milestones?.map((m) => ({ title: m.title, dueOn: m.dueOn })),
+        milestones: req.body.milestones?.map((m) => ({
+          title: m.title,
+          dueOn: m.dueOn,
+        })),
       })
       reply.code(201).send(project)
     },

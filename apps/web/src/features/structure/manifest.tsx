@@ -12,12 +12,35 @@ const PeopleScreen = React.lazy(() => import('./people-screen.js'))
 const manifest: FeatureManifest = {
   name: 'structure',
   routes: [
-    { path: '/structure', component: StructureScreen, titleKey: 'structure.units.title' },
-    { path: '/people', component: PeopleScreen, titleKey: 'structure.people.title' },
+    {
+      path: '/structure',
+      component: StructureScreen,
+      titleKey: 'structure.units.title',
+    },
+    {
+      path: '/people',
+      component: PeopleScreen,
+      titleKey: 'structure.people.title',
+    },
   ],
   sidebar: [
-    { id: 'structure', labelKey: 'structure.nav.units', icon: Network, route: '/structure' },
-    { id: 'people', labelKey: 'structure.nav.people', icon: Users, route: '/people' },
+    // Both stay visible to every member: knowing who sits where is everyday knowledge (SPEC §2.2).
+    // What a member does not get is the *editing* -- `structure-screen.tsx` hides those affordances
+    // through `useCan('structure.unit.edit')`, and the server refuses them regardless.
+    {
+      id: 'structure',
+      labelKey: 'structure.nav.units',
+      icon: Network,
+      route: '/structure',
+      action: 'structure.read',
+    },
+    {
+      id: 'people',
+      labelKey: 'structure.nav.people',
+      icon: Users,
+      route: '/people',
+      action: 'people.directory.read',
+    },
   ],
   commands: [],
 }

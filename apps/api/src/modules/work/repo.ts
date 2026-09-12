@@ -406,7 +406,10 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
       subjectType: 'card',
       subjectId: id,
       departmentId: input.departmentId,
-      after: { title: input.title, assigneeUserId: input.assigneeUserId ?? null },
+      after: {
+        title: input.title,
+        assigneeUserId: input.assigneeUserId ?? null,
+      },
     })
     tx.emit({
       type: 'work.card.created',
@@ -649,7 +652,12 @@ export async function createLabel(
     await tx.raw(
       sql`insert into app.labels (id, department_id, name, colour) values (${id}, ${departmentId}, ${name}, ${colour})`,
     )
-    tx.audit({ action: 'work.label_created', subjectType: 'label', subjectId: id, departmentId })
+    tx.audit({
+      action: 'work.label_created',
+      subjectType: 'label',
+      subjectId: id,
+      departmentId,
+    })
     return { id, name, colour }
   })
 }
@@ -688,7 +696,12 @@ export async function createSavedView(
   ctx: RequestContext,
   departmentId: string,
   ownerUserId: string,
-  input: { name: string; filter: string; layout: SavedViewLayout; shared?: boolean | undefined },
+  input: {
+    name: string
+    filter: string
+    layout: SavedViewLayout
+    shared?: boolean | undefined
+  },
 ) {
   return withContext(ctx, async (tx) => {
     const id = randomUUID()
@@ -756,7 +769,12 @@ export async function restoreCard(
       sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
           values (${randomUUID()}, ${departmentId}, ${cardId}, ${actorUserId}, 'status', ${JSON.stringify({ to: 'active', restored: true })}::jsonb)`,
     )
-    tx.audit({ action: 'work.card_restored', subjectType: 'card', subjectId: cardId, departmentId })
+    tx.audit({
+      action: 'work.card_restored',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+    })
     return true
   })
 }
