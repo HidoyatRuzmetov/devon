@@ -53,6 +53,12 @@ and a password. Four locales, uz-Latn default. No ministry layer, no HR, no docu
 - **`mcp__playwright__*`** — deterministic, replayable browser capture for evidence that must be
   identical every cycle, and for sequences that belong in `e2e/`. Runs `--isolated`, so parallel
   worktrees do not fight over a browser profile.
+- **`higgsfield-video-explainer` skill** (`.claude/skills/`, CLI `@higgsfield/cli@1.1.24` global) — narrated
+  explainer video built from 10-second blocks, for the management/intro demo only. Needs `higgsfield
+  auth login` (browser OAuth, paid credits). It uploads prompts and any supplied frames to
+  Higgsfield's cloud, so use invented or already-public demo data, never a real department's screen.
+  The other eight higgsfield skills (brandkit, product shots, games, websites, thumbnails, soul-id,
+  cards, generate) are deliberately not installed — irrelevant here and pure context cost.
 - **Registered but deliberately disabled** in `.claude/settings.json`: `semgrep@semgrep-marketplace`
   (authenticates to `semgrep.dev` and uploads scanned code — an unresolved data-egress question for a
   government codebase) and `security-guidance@claude-plugins-official` (adds `Stop` + `SubagentStop`
