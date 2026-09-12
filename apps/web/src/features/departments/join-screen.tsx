@@ -52,6 +52,16 @@ export default function JoinScreen() {
             outcome === 'success' ? 'departments.join.success' : 'departments.join.pendingApproval',
           )}
         </h1>
+        {/* v1.1 SPEC §2.2: "pending" used to be a bare heading, which reads as a dead end. Say what
+            actually happens next -- the head has an inbox item (and a Telegram message) about this
+            request right now, and the joiner will be told either way. */}
+        <p className="text-small text-muted-foreground">
+          {t(
+            outcome === 'success'
+              ? 'departments.join.successBody'
+              : 'departments.join.pendingApprovalBody',
+          )}
+        </p>
         <Button onClick={() => navigate('/departments')}>{t('departments.title')}</Button>
       </BlurFade>
     )
@@ -72,6 +82,14 @@ export default function JoinScreen() {
           {previewQuery.data ? (
             <p className="text-small text-muted-foreground">
               {t('departments.join.byLink.body', { name: previewQuery.data.name })}
+            </p>
+          ) : null}
+          {/* Told before the password is typed, not after: "you are in" and "you are in a queue"
+              are different enough outcomes that nobody should discover which one applies by
+              submitting. */}
+          {previewQuery.data?.joinRequiresApproval ? (
+            <p className="text-small text-attention-foreground">
+              {t('departments.join.approvalNotice')}
             </p>
           ) : null}
         </div>

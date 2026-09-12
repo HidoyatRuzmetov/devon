@@ -116,7 +116,10 @@
       "success": "Boʻlimga qoʻshildingiz",
       "pendingApproval": "Soʻrovingiz boshliq tomonidan tasdiqlanishi kerak",
       "invalidKeyOrPassword": "Kalit yoki parol notoʻgʻri",
-      "rateLimited": "Juda koʻp urinish. Birozdan soʻng qayta urinib koʻring."
+      "rateLimited": "Juda koʻp urinish. Birozdan soʻng qayta urinib koʻring.",
+      "pendingApprovalBody": "Boʻlim boshligʻiga xabar yuborildi. U tasdiqlagach, bildirishnoma olasiz va ish boshlashingiz mumkin.",
+      "approvalNotice": "Bu boʻlimga qoʻshilish boshliq tasdigʻini talab qiladi.",
+      "successBody": "Endi boʻlim ishlariga kirishingiz mumkin."
     },
     "members": {
       "title": "Aʼzolar",

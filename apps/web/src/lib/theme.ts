@@ -48,7 +48,13 @@ function readStoredTheme(): string | null {
 
 export function bootTheme(): void {
   const stored = readStoredTheme()
-  current = stored === 'light' || stored === 'dark' ? stored : 'system'
+  // v1.1 (WALKTHROUGH-FINDINGS §5.5): a first visit with nothing stored resolves to **light**, not
+  // to `system`. DESIGN.md §1's warm-paper light theme is the product's own look, and the machines
+  // this runs on are frequently set to dark by whoever installed them -- so the first impression was
+  // a dark login screen nobody chose. `system` remains a first-class option in the theme toggle; it
+  // is simply no longer what "I have not decided" means.
+  current =
+    stored === 'light' || stored === 'dark' || stored === 'system' ? (stored as ThemePreference) : 'light'
   apply(current)
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (current === 'system') apply(current)

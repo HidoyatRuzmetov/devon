@@ -259,6 +259,13 @@ export function verifyTwoFactorLogin(input: {
   return send('/api/v1/accounts/2fa/login-verify', 'POST', input, voidSchema)
 }
 
+/** v1.1 SPEC §2.2: "Parolni tiklashni soʻrash" from the login screen. Answers 202 whether or not the
+ * login exists -- deliberately, so this can never be used to enumerate a ministry's staff (see the
+ * route's own comment in `apps/api/src/modules/accounts/index.ts`). Pre-session, so no CSRF token. */
+export function requestPasswordReset(login: string): Promise<void> {
+  return send('/api/v1/accounts/password-reset-request', 'POST', { login }, voidSchema)
+}
+
 /** `GET /readyz` answers 200 *or* 503 with the identical `{db, valkey, migrations}` body either way
  * (design.md §1.7) -- 503 here is a valid readiness report, not an RFC 9457 `Problem`, so this
  * deliberately does not go through `get()` (which would treat the 503 as an `ApiError` and discard

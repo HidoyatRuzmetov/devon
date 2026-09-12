@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Eye, EyeOff, Send } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { Button, IconButton, Input } from '@devon/ui'
-import { login as apiLogin, verifyTwoFactorLogin } from '../lib/api-client.js'
+import { login as apiLogin, requestPasswordReset, verifyTwoFactorLogin } from '../lib/api-client.js'
 import { useForcedState } from '../lib/forced-state.js'
 import { useOnline } from '../lib/use-online.js'
 import { Link, navigate, useSearchParams } from '../lib/router.js'
@@ -47,11 +47,15 @@ export function LoginRoute() {
   const [failed, setFailed] = React.useState(false)
   const [shake, setShake] = React.useState(false)
   // `/login` also carries the "I forgot my password" moment inline (no separate route: `app.tsx`'s
-  // `AUTH_ROUTES` is a fixed list this item does not own -- see NOTES) -- TECH-SPEC §2.1: "by the
-  // super admin ... or, if Telegram is linked, a one-time code sent by the bot. No email reset unless
-  // SMTP is configured." There is no self-service endpoint yet either way, so this view tells a
-  // signed-out visitor exactly who to ask rather than a form that would call nothing.
+  // `AUTH_ROUTES` is a fixed list this item does not own -- see NOTES).
+  //
+  // v1.1 (SPEC §2.2, WALKTHROUGH-FINDINGS §2.5): this used to be a dead end. It said "ask your
+  // boshqarma boshligʻi" while the head had no way to reset anything -- the reset route was
+  // super-admin-only -- so every forgotten password in every department escalated to the single
+  // ministry super admin. Now the head *can* reset (`POST /departments/:id/members/:userId/
+  // reset-password`) and this screen is the one click that tells them there is someone waiting.
   const [view, setView] = React.useState<'login' | 'forgot'>('login')
+  const [requested, setRequested] = React.useState(false)
   const passwordFieldId = React.useId()
   // EPIC-001: set once the password step comes back `requires2fa: true` -- the form then swaps to a
   // single code field, submitted against the same `challengeToken` until it succeeds.
@@ -88,6 +92,15 @@ export function LoginRoute() {
     },
   })
 
+  // Deliberately uninformative on purpose: the endpoint answers 202 whether or not the login matched
+  // anybody, and so does this screen, so it can never be used to find out who works here. It is rate
+  // limited server-side and deduped to one open request per person per day.
+  const askHead = useMutation({
+    mutationFn: () => requestPasswordReset(identifier.trim()),
+    onSuccess: () => setRequested(true),
+    onError: () => setRequested(true),
+  })
+
   if (forced) return <ForcedStateBlock kind={forced} />
 
   function handleSubmit(e: React.FormEvent): void {
@@ -107,12 +120,59 @@ export function LoginRoute() {
           <h1 className="text-h2 text-foreground">{t('login.forgot.title')}</h1>
           <p className="text-small text-muted-foreground">{t('login.forgot.body')}</p>
         </div>
-        <div className="flex items-start gap-3 rounded-md border border-border bg-muted p-4">
-          <Send className="mt-0.5 size-4.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <p className="text-small text-foreground">{t('login.forgot.telegram')}</p>
-        </div>
+
+        {requested ? (
+          <div
+            role="status"
+            className="flex items-start gap-3 rounded-md border border-border bg-muted p-4"
+          >
+            <Send className="mt-0.5 size-4.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <p className="text-small text-foreground">{t('login.forgot.sent')}</p>
+          </div>
+        ) : (
+          <form
+            className="flex flex-col gap-4"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (online && identifier.trim() && !askHead.isPending) askHead.mutate()
+            }}
+          >
+            <label className="flex flex-col gap-1.5">
+              <span data-shell-label className="text-small text-foreground">
+                {t('login.forgot.loginLabel')}
+              </span>
+              <Input
+                name="forgot-identifier"
+                autoComplete="username"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              />
+            </label>
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              loading={askHead.isPending}
+              disabled={!online || identifier.trim().length === 0}
+            >
+              {t('login.forgot.askHead')}
+            </Button>
+            <p className="text-small text-muted-foreground">{t('login.forgot.telegram')}</p>
+          </form>
+        )}
+
         <p className="text-small text-muted-foreground">{t('login.forgot.admin')}</p>
-        <Button type="button" variant="secondary" size="lg" onClick={() => setView('login')}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          onClick={() => {
+            setRequested(false)
+            setView('login')
+          }}
+        >
           {t('accounts.login2fa.back')}
         </Button>
       </div>

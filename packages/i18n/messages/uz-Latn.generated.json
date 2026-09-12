@@ -276,9 +276,12 @@
     "forgot": {
       "link": "Parolni unutdingizmi?",
       "title": "Parolni tiklash",
-      "body": "Bu yerda parolni oʻzingiz tiklay olmaysiz — ikki yoʻldan biri ishlaydi:",
-      "telegram": "Telegram ulangan boʻlsa, bot sizga bir martalik kod yuboradi.",
-      "admin": "Aks holda, boʻlim boshligʻiga yoki tizim administratoriga murojaat qiling — ular parolingizni tiklab beradi."
+      "body": "Parolni oʻzingiz tiklay olmaysiz — boʻlim boshligʻingiz sizga vaqtinchalik parol beradi.",
+      "loginLabel": "Loginingiz",
+      "askHead": "Parolni tiklashni soʻrash",
+      "sent": "Soʻrovingiz yuborildi. Boʻlim boshligʻingiz sizga vaqtinchalik parol beradi — undan keyin darhol yangi parol oʻrnating.",
+      "telegram": "Telegram ulangan boʻlsa, boshliq bergan parol bot orqali ham keladi.",
+      "admin": "Agar siz boʻlim boshligʻi boʻlsangiz, tizim administratoriga murojaat qiling."
     }
   },
   "setup": {
@@ -1295,7 +1298,10 @@
       "success": "Boʻlimga qoʻshildingiz",
       "pendingApproval": "Soʻrovingiz boshliq tomonidan tasdiqlanishi kerak",
       "invalidKeyOrPassword": "Kalit yoki parol notoʻgʻri",
-      "rateLimited": "Juda koʻp urinish. Birozdan soʻng qayta urinib koʻring."
+      "rateLimited": "Juda koʻp urinish. Birozdan soʻng qayta urinib koʻring.",
+      "pendingApprovalBody": "Boʻlim boshligʻiga xabar yuborildi. U tasdiqlagach, bildirishnoma olasiz va ish boshlashingiz mumkin.",
+      "approvalNotice": "Bu boʻlimga qoʻshilish boshliq tasdigʻini talab qiladi.",
+      "successBody": "Endi boʻlim ishlariga kirishingiz mumkin."
     },
     "members": {
       "title": "Aʼzolar",

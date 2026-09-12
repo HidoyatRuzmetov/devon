@@ -193,11 +193,14 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "forgot": {
-      "link": "Forgot password?",
-      "title": "Reset password",
-      "body": "You can't reset your password here yourself — one of two paths applies:",
-      "telegram": "If Telegram is linked, the bot will send you a one-time code.",
-      "admin": "Otherwise, ask your department head or the super admin — they can reset it for you."
+      "link": "Forgot your password?",
+      "title": "Password recovery",
+      "body": "You cannot reset it yourself — your department head issues a temporary password.",
+      "loginLabel": "Your login",
+      "askHead": "Ask my head to reset it",
+      "sent": "Your request was sent. Your department head will issue a temporary password — set a new one as soon as you sign in.",
+      "telegram": "If Telegram is linked, the password also arrives through the bot.",
+      "admin": "If you are the department head yourself, ask the system administrator."
     }
   },
   "setup": {

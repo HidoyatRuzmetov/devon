@@ -116,7 +116,10 @@
       "success": "You've joined the department",
       "pendingApproval": "Your request is waiting for the head's approval",
       "invalidKeyOrPassword": "Invalid key or password",
-      "rateLimited": "Too many attempts. Try again in a moment."
+      "rateLimited": "Too many attempts. Try again in a moment.",
+      "pendingApprovalBody": "The department head has been notified. You will get a notification once they approve, and can start work then.",
+      "approvalNotice": "Joining this department needs the head’s approval.",
+      "successBody": "The department’s work is open to you now."
     },
     "members": {
       "title": "Members",

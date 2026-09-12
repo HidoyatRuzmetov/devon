@@ -22,11 +22,16 @@ function readCookieLocale(): string | null {
 
 /** Called once, before the first render (`main.tsx`). */
 export function bootLocale(): void {
+  // v1.1 (WALKTHROUGH-FINDINGS §5.5): the browser's own language is deliberately NOT consulted any
+  // more. A ministry workstation is very often an English or Russian Windows install, so the first
+  // screen a civil servant ever saw was in English -- and the first screen is a login form, where
+  // there is no signed-in preference to fall back on yet. uz-Latn is the product's language; a
+  // person who wants another one picks it from the locale menu once and it is remembered (stored
+  // locale / `wp_locale` cookie, both still honoured above, and the signed-in user record wins over
+  // both in `reconcileLocaleWithUser`).
   const resolved = resolveLocale({
     stored: readStoredLocale() ?? readCookieLocale(),
-    // There is no server request in a pure SPA to read `Accept-Language` from; `navigator.language`
-    // is the client-side equivalent the resolution order's third tier stands in for.
-    header: typeof navigator === 'undefined' ? null : navigator.language,
+    header: null,
   })
   setLocale(resolved)
 }
