@@ -19,6 +19,12 @@ declare module 'fastify' {
      * `{ public: true }` -- this is what `test/unit/public-routes.test.ts` walks to prove
      * `PUBLIC_ROUTES` (design.md §1.7/§3.4) is exactly right, rather than trusting the constant alone. */
     publicRoutes: { method: string; url: string }[]
+    /** v1.1 SPEC §2 (PERMISSIONS-AUDIT Step 1.4): one entry per authenticated route, carrying the
+     * subject **kind** its declaration resolves to. `test/unit/head-only-routes.test.ts` walks this
+     * and compares it with a checked-in allow-list, so moving a route onto (or off) the head-only
+     * subject is a visible diff in a test file -- the same mechanism `PUBLIC_ROUTES` already gives
+     * for public routes, applied to the other end of the matrix. */
+    routePermissions: { method: string; url: string; action: Action; subjectKind: string }[]
   }
 }
 
@@ -94,11 +100,28 @@ export async function denyForSubject(
   return false
 }
 
+/** Resolves a route's declared subject kind at registration time by calling its `subject()` builder
+ * with a minimal stub request. Every builder in this codebase reads only `req.params` and
+ * `req.actor` (both present here), so this is exact rather than a guess -- and anything that throws
+ * is recorded as `'unknown'` instead of breaking boot, because this table is diagnostics, never a
+ * permission decision. */
+function resolveSubjectKind(subject: (req: FastifyRequest) => Subject): string {
+  try {
+    const stub = { params: {}, query: {}, actor: null, headers: {}, cookies: {} }
+    return subject(stub as unknown as FastifyRequest).kind
+  } catch {
+    return 'unknown'
+  }
+}
+
 export default fp(async function authorizePlugin(app: FastifyInstance) {
   app.decorate('publicRoutes', [])
+  app.decorate('routePermissions', [])
 
   app.addHook('onRoute', (routeOptions) => {
-    const config = routeOptions.config as { permission?: { public?: true } } | undefined
+    const config = routeOptions.config as
+      | { permission?: { public?: true; action?: Action; subject?: (req: FastifyRequest) => Subject } }
+      | undefined
     if (!config || !('permission' in config) || config.permission === undefined) {
       throw new Error(
         `Route ${routeOptions.method as string} ${routeOptions.url} is missing config.permission ` +
@@ -106,13 +129,27 @@ export default fp(async function authorizePlugin(app: FastifyInstance) {
           `server refuses to boot).`,
       )
     }
+    const methods = Array.isArray(routeOptions.method)
+      ? routeOptions.method
+      : [routeOptions.method]
     if (config.permission.public) {
-      const methods = Array.isArray(routeOptions.method)
-        ? routeOptions.method
-        : [routeOptions.method]
       for (const method of methods) {
         app.publicRoutes.push({ method: method as string, url: routeOptions.url })
       }
+      return
+    }
+    const declared = config.permission as {
+      action: Action
+      subject: (req: FastifyRequest) => Subject
+    }
+    const subjectKind = resolveSubjectKind(declared.subject)
+    for (const method of methods) {
+      app.routePermissions.push({
+        method: method as string,
+        url: routeOptions.url,
+        action: declared.action,
+        subjectKind,
+      })
     }
   })
 

@@ -171,7 +171,7 @@ export async function eventIndicators(
           and e.starts_at >= now() - interval '90 days'
           and e.starts_at < now())                                         as events,
       (select count(*) from app.polls p
-        where p.department_id = ${departmentId} and p.deleted_at is null)   as polls
+        where p.department_id = ${departmentId})                            as polls
   `)
   const eventTotal = Number(totals[0]?.events ?? 0)
   const pollTotal = Number(totals[0]?.polls ?? 0)

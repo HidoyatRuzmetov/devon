@@ -145,7 +145,7 @@ export async function getSettingsWithUsage(
 ): Promise<AiSettingsDto> {
   return withContext(ctx, async (tx) => {
     const [settings, spent] = await Promise.all([
-      repo.getSettings(tx, departmentId),
+      repo.getSettings(tx, departmentId, isHead),
       repo.spentThisMonthUzs(tx, departmentId),
     ])
     const dto = settingsToDto(settings, spent, isAiAvailable())

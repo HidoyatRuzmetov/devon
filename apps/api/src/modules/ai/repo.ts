@@ -23,12 +23,28 @@ export type AiSettingsRow = {
  * 0`, which `@devon/ai`'s `checkBudget` treats as an implicit hard stop) rather than a special-cased
  * "not configured yet" shape the caller would have to branch on separately.
  */
-export async function getSettings(tx: Tx, departmentId: string): Promise<AiSettingsRow> {
+export async function getSettings(
+  tx: Tx,
+  departmentId: string,
+  /** v1.1: only a head may CREATE the row (`ai_department_settings_write`, migration 0904 -- and the
+   * matrix, which says budget and flags are the head's). A member reading a department that has never
+   * touched its AI settings gets the same defaults in memory instead of a 500 from an RLS-refused
+   * insert: the read is not the place to discover that nobody has configured anything yet. */
+  mayInitialise = true,
+): Promise<AiSettingsRow> {
   const existing = await tx.raw<AiSettingsRow>(sql`
     select department_id, budget_uzs_per_month, soft_cap_pct, flags
     from app.ai_department_settings where department_id = ${departmentId}
   `)
   if (existing[0]) return existing[0]
+  if (!mayInitialise) {
+    return {
+      department_id: departmentId,
+      budget_uzs_per_month: 0,
+      soft_cap_pct: 80,
+      flags: {},
+    } as AiSettingsRow
+  }
 
   const inserted = await tx.raw<AiSettingsRow>(sql`
     insert into app.ai_department_settings (department_id) values (${departmentId})
