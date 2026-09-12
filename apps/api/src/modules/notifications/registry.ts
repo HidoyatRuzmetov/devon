@@ -757,6 +757,40 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     notify: false,
     why: 'A Telegram inline button (done / snooze / RSVP) already answered the person in the chat they pressed it in; it exists for the audit trail and for the module that owns the subject to react to.',
   },
+
+  // --- realtime + calendar + push (EPIC-018/EPIC-019, v1.1 SPEC §10) ---------------------------------
+  // Every one of these is a *live* or *personal* event. The realtime module subscribes to the same
+  // outbox rows and turns them into a publication on the right Centrifugo channel, which is where
+  // the person is already looking; an inbox row on top of that would be the notification-about-a-
+  // notification this table already refuses one line above.
+  'realtime.canvas.shared': {
+    notify: false,
+    why: "The canvas appears on the project or event page the moment it is shared, live, for everyone already looking at it -- and the owner shares it *while talking to* those people. An inbox row would arrive after the conversation it belongs to.",
+  },
+  'realtime.canvas.share_revoked': {
+    notify: false,
+    why: 'Watchers are told on the channel itself (`realtime.channel.closed`) and the board simply closes; telling them again in the inbox would make taking a canvas back feel like an accusation.',
+  },
+  'calendar.feed.created': {
+    notify: false,
+    why: 'A person creating their own calendar subscription is looking at the screen that confirms it; it is audited, and the inbox is for what other people did.',
+  },
+  'calendar.feed.rotated': {
+    notify: false,
+    why: 'Same: the person pressed the button. (Audited, because a rotated feed URL is a revoked credential and that belongs in the trail.)',
+  },
+  'calendar.feed.revoked': {
+    notify: false,
+    why: 'Same as `calendar.feed.rotated`.',
+  },
+  'push.subscription.created': {
+    notify: false,
+    why: 'The browser just asked this person for permission and they granted it; the confirmation is the toast on that screen, not an inbox row.',
+  },
+  'push.subscription.removed': {
+    notify: false,
+    why: 'Same: a person turning notifications off on one device does not need a notification about it.',
+  },
 })
 
 // --- builders used by more than one entry -----------------------------------------------------------

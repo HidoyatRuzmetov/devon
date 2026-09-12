@@ -68,6 +68,23 @@ export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Obj
   // whatever it finds (never an account-existence oracle), is rate limited per IP, and dedupes to
   // one open request per person per day; the only effect it can have is an inbox item for the head.
   { method: 'POST', url: '/api/v1/accounts/password-reset-request' },
+  // v1.1 SPEC §10 / EPIC-019 calendar module. A calendar application -- Google Calendar's "from
+  // URL", Outlook's "subscribe from web", Apple Calendar, Thunderbird, DAVx5 -- carries no session
+  // cookie and never will; the URL secret IS the credential. Every one of these routes resolves a
+  // 256-bit CSPRNG secret through `app.calendar_feed_resolve` and answers a bare 404 for an unknown,
+  // rotated or revoked one (no oracle), and every one of them is read-only: the two write verbs
+  // below exist only so a write-capable CalDAV client is told "read-only calendar" instead of
+  // "server broken".
+  { method: 'GET', url: '/api/v1/calendar/feed/:secret' },
+  { method: 'OPTIONS', url: '/api/v1/caldav/*' },
+  { method: 'PROPFIND', url: '/api/v1/caldav/:secret/' },
+  { method: 'PROPFIND', url: '/api/v1/caldav/:secret/calendar/' },
+  { method: 'REPORT', url: '/api/v1/caldav/:secret/calendar/' },
+  { method: 'GET', url: '/api/v1/caldav/:secret/calendar/:resource' },
+  { method: 'PUT', url: '/api/v1/caldav/:secret/calendar/' },
+  { method: 'PUT', url: '/api/v1/caldav/:secret/calendar/:resource' },
+  { method: 'DELETE', url: '/api/v1/caldav/:secret/calendar/' },
+  { method: 'DELETE', url: '/api/v1/caldav/:secret/calendar/:resource' },
 ])
 
 /**
