@@ -19,6 +19,22 @@ import {
 } from '../fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
+/** Every Imkoniyatlar switch key, on. Mirrors `FEATURE_KEYS` in `packages/contracts/src/
+ * features.ts` -- see the comment at the call site for why it is mirrored rather than imported. */
+const DEMO_FEATURES: Readonly<Record<string, boolean>> = Object.freeze({
+  custom_fields: true,
+  person_fields: true,
+  estimates: true,
+  workload: true,
+  dependencies: true,
+  recurring: true,
+  templates: true,
+  goals: true,
+  focus_list: true,
+  automations: true,
+  reminders: true,
+})
+
 export const order = 0
 
 export async function seed(ctx: SeedModuleContext): Promise<number> {
@@ -76,6 +92,21 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
       name: DEMO_DEPARTMENT.name,
       slug: DEMO_DEPARTMENT.slug,
       localeDefault: DEMO_DEPARTMENT.localeDefault,
+      // v1.1 SPEC 7: "the demo department has them all on". A demo is a tour -- every switch off by
+      // default is right for a real boshqarma discovering the product, and wrong for the one
+      // instance whose job is to show what the product can do.
+      //
+      // Written out here rather than imported from `packages/contracts/src/features.ts`'s
+      // `allFeaturesOn()`: `@devon/db` deliberately does not depend on `@devon/contracts` (the same
+      // one-way rule that makes `context.ts` re-declare the `Role` union). The registry stays the
+      // single source of truth for what a switch *means* and what its default is; this is the demo
+      // instance saying "yes" to each, and `packages/contracts/test/unit/features.test.ts` asserts
+      // the two key sets still agree.
+      features: DEMO_FEATURES,
+      // SPEC 2.2: new departments now require approval to join (migration 0102 flipped the default),
+      // but the demo department deliberately does not -- a demo join has to stay one step. Set
+      // explicitly, in both directions, so neither default can quietly change what a demo does.
+      joinRequiresApproval: false,
     })
     .onConflictDoNothing()
     .returning({ id: schema.departments.id })

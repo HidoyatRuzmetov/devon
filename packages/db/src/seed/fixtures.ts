@@ -53,7 +53,7 @@ export const DEMO_SUPER_ADMIN: DemoSuperAdminFixture = {
   id: demoId('user.super_admin'),
   login: 'admin.super',
   givenName: 'Sanjar',
-  familyName: "Ne'matov",
+  familyName: 'Neʼmatov',
   title: 'Super administrator',
 }
 

@@ -15,6 +15,7 @@
 import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/events.js'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
+import { WORK_DEMO_USERS } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
@@ -23,6 +24,13 @@ export const order = 400
 const DEPT = DEMO_DEPARTMENT.id
 const HEAD = DEMO_USERS.find((u) => u.role === 'head')!.id
 const MEMBER = DEMO_USERS.find((u) => u.role === 'member')!.id
+// v1.1 seed scrub (SPEC 12): the volleyball tournament used to have `capacity: 1`, which is how the
+// waitlist path got demonstrated with only two seeded users -- and which read, on screen, as a
+// volleyball tournament with one seat. The wider roster (`work-fixtures.ts`, 14 more colleagues)
+// exists now, so the capacity is a believable 12 and eleven of them fill it for real; the member
+// still lands on the waitlist, so the mechanism is demonstrated by the same data that looks right.
+const VOLLEYBALL_CAPACITY = 12
+const VOLLEYBALL_ATTENDEE_IDS = WORK_DEMO_USERS.slice(0, VOLLEYBALL_CAPACITY - 1).map((u) => u.id)
 
 // 2026-09-06 is "today" in the demo dataset (TASKS.md EPIC-008: "believable dates around 2026-09").
 const PICNIC_ID = demoId('event.picnic')
@@ -37,7 +45,7 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
     departmentId: DEPT,
     title: 'Kuz faslidagi jamoaviy piknik',
     description:
-      'Boʻlimning kuzgi jamoaviy piknigi -- Chorvoq boʻyida, mashvatlar va sport oʻyinlari bilan. Aniq sana ovoz berish orqali tanlanadi.',
+      'Boʻlimning kuzgi jamoaviy piknigi — Chorvoq boʻyida, suhbatlar va sport oʻyinlari bilan. Aniq sana ovoz berish orqali tanlanadi.',
     category: 'social',
     illustrationKey: 'picnic',
     startsAt: new Date('2026-09-20T09:00:00+05:00'),
@@ -47,7 +55,7 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
     capacity: 30,
     waitlistEnabled: true,
     rsvpDeadline: new Date('2026-09-18T18:00:00+05:00'),
-    costNote: 'Transport boʻlim hisobidan, ovqat -- ishtirokchilardan',
+    costNote: 'Transport boʻlim hisobidan, ovqat — ishtirokchilardan',
     reminderOffsetsMinutes: [1440, 60],
     organizerUserId: HEAD,
     status: 'open',
@@ -63,7 +71,7 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
     startsAt: new Date('2026-09-13T18:00:00+05:00'),
     endsAt: new Date('2026-09-13T20:00:00+05:00'),
     place: 'Vazirlik sport zali',
-    capacity: 1,
+    capacity: VOLLEYBALL_CAPACITY,
     waitlistEnabled: true,
     rsvpDeadline: new Date('2026-09-12T12:00:00+05:00'),
     reminderOffsetsMinutes: [1440, 60],
@@ -90,7 +98,7 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
     id: VOLUNTEERING_ID,
     departmentId: DEPT,
     title: 'Koʻngillilar kuni: bogʻ ekish',
-    description: 'Shahar bogʻida koʻchat ekish aksiyasi -- boʻlim jamoasi ishtirokida.',
+    description: 'Shahar bogʻida koʻchat ekish aksiyasi — boʻlim jamoasi ishtirokida.',
     category: 'volunteering',
     illustrationKey: 'volunteering',
     startsAt: new Date('2026-08-22T08:00:00+05:00'),
@@ -105,7 +113,7 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
     departmentId: DEPT,
     title: 'Excel boʻyicha amaliy trening',
     description:
-      "Boshqaruv hisobotlari uchun Excel'da chuqurlashtirilgan trening, ichki tortishmalar bilan.",
+      'Boshqaruv hisobotlari uchun Excel dasturida chuqurlashtirilgan trening, amaliy mashqlar bilan.',
     category: 'training',
     illustrationKey: 'training',
     startsAt: new Date('2026-09-27T10:00:00+05:00'),
@@ -120,9 +128,10 @@ const EVENT_ROWS: (typeof schema.events.$inferInsert)[] = [
   },
 ]
 
-// Picnic: both colleagues RSVP yes, the head brings guests (family event). Volleyball: capacity is 1
-// -- the head's RSVP fills it, the member's lands on the waitlist, demonstrating the exact mechanism
-// `apps/api/src/modules/events/service.ts` enforces.
+// Picnic: both colleagues RSVP yes, the head brings guests (family event). Volleyball: the head plus
+// eleven colleagues fill all twelve seats, so the member's RSVP lands on the waitlist -- the exact
+// mechanism `apps/api/src/modules/events/service.ts` enforces, demonstrated with a believable number
+// of people rather than a one-seat tournament.
 const RSVP_ROWS: (typeof schema.eventRsvps.$inferInsert)[] = [
   {
     id: demoId('rsvp.picnic.head'),
@@ -149,6 +158,14 @@ const RSVP_ROWS: (typeof schema.eventRsvps.$inferInsert)[] = [
     status: 'yes',
     guests: 0,
   },
+  ...VOLLEYBALL_ATTENDEE_IDS.map((userId, index) => ({
+    id: demoId(`rsvp.volleyball.attendee.${index}`),
+    departmentId: DEPT,
+    eventId: VOLLEYBALL_ID,
+    userId,
+    status: 'yes' as const,
+    guests: 0,
+  })),
   {
     id: demoId('rsvp.volleyball.member'),
     departmentId: DEPT,
@@ -193,7 +210,7 @@ const CARPOOL_ROWS: (typeof schema.carpools.$inferInsert)[] = [
     seats: 3,
     departurePlace: 'Boʻlim binosi oldi',
     departureAt: new Date('2026-09-20T08:15:00+05:00'),
-    note: 'Yoʻlda bitta toʻxtash boʻladi -- yoqilgʻi quyish uchun.',
+    note: 'Yoʻlda bitta toʻxtash boʻladi — yoqilgʻi quyish uchun.',
   },
 ]
 

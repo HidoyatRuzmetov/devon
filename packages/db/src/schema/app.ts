@@ -125,6 +125,14 @@ export const departments = appSchema.table(
     localeDefault: text('locale_default').notNull().default('uz-Latn'),
     timezone: text('timezone').notNull().default('Asia/Tashkent'),
     settings: jsonb('settings').notNull().default({}),
+    // v1.1 (migration 0102): the Imkoniyatlar switch map -- `{}` means "every switch at its
+    // registry default" (`packages/contracts/src/features.ts`). Stored overrides only, never a
+    // materialised copy of the defaults, so adding a switch needs no migration.
+    features: jsonb('features').notNull().default({}),
+    // Mirrors `join_requires_approval`, added by migration 0100 and defaulted to TRUE by 0102.
+    // Declared here so the demo seed can set it explicitly in either direction rather than
+    // inheriting whatever the current default happens to be.
+    joinRequiresApproval: boolean('join_requires_approval').notNull().default(true),
     status: departmentStatusEnum('status').notNull().default('active'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

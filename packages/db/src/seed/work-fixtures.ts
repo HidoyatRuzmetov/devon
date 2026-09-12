@@ -116,7 +116,7 @@ export const WORK_DEMO_USERS: readonly WorkDemoUser[] = [
     login: 'shahnoza.nematova',
     givenName: 'Shahnoza',
     patronymic: 'Qahramonovna',
-    familyName: "Ne'matova",
+    familyName: 'Neʼmatova',
     title: 'Matbuot kotibi',
   },
   {

@@ -19,6 +19,7 @@
     "audit:prove": "tsx test/audit-prove.ts",
     "seed:demo": "tsx src/seed/cli-demo.ts",
     "seed:reset": "tsx src/seed/cli-reset.ts",
+    "seed:purge-leftovers": "tsx src/seed/cli-purge-leftovers.ts",
     "seed:demo:matrix": "tsx src/seed/cli-matrix.ts",
     "counts": "tsx src/seed/cli-counts.ts",
     "test:seed-idempotence": "vitest run test/seed.idempotence.test.ts"
