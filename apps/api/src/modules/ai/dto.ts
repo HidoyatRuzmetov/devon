@@ -4,17 +4,35 @@ import { checkBudget } from '@devon/ai'
 import type { AiSettingsDto, TraceDto } from './schemas.js'
 import type { AiSettingsRow, TraceRow } from './repo.js'
 
-export function settingsToDto(row: AiSettingsRow, spentUzsThisMonth: number): AiSettingsDto {
+/** H8.1 graceful degradation: `available` is the `ai` circuit breaker's read-only state (see
+ * `service.ts`'s `isAiAvailable()`) -- true almost always, false only after GLM has failed repeatedly
+ * and recently. While `false`, every flag in the response is forced to `false` regardless of what the
+ * department head actually configured: the underlying row is untouched (a PATCH still writes and
+ * reads back the real values once AI recovers), but every screen that gates an AI entry point on
+ * `settings.flags[feature] === true` (`ai-settings-screen.tsx`, `assistant-panel.tsx`,
+ * `card-detail.tsx`, `quick-add-bar.tsx`, `project-page-screen.tsx`) already exists and already reads
+ * this exact field -- so "AI off -> features hide and say so" (H8.1) falls out of this one change
+ * with no edit to any of those files. */
+export function settingsToDto(
+  row: AiSettingsRow,
+  spentUzsThisMonth: number,
+  available: boolean,
+): AiSettingsDto {
   const budget = checkBudget(spentUzsThisMonth, row.budget_uzs_per_month, row.soft_cap_pct)
+  const flags = available
+    ? row.flags
+    : Object.fromEntries(Object.keys(row.flags).map((key) => [key, false]))
   return {
     departmentId: row.department_id,
     budgetUzsPerMonth: row.budget_uzs_per_month,
     softCapPct: row.soft_cap_pct,
-    flags: row.flags,
+    flags,
     spentUzsThisMonth,
     remainingUzs: budget.remainingUzs,
     budgetStatus: budget.status,
     usedPct: budget.usedPct,
+    available,
+    unavailableReason: available ? null : 'circuit_open',
   }
 }
 

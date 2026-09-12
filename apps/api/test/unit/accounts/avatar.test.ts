@@ -6,14 +6,22 @@
 // `buildApp()`'s test seam so the infected/unavailable paths need no clamd.
 import { existsSync } from 'node:fs'
 import sharp from 'sharp'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { ScannerUnavailable, type MalwareScanner } from '../../../src/lib/storage/clamav.js'
 import type { LocalStore } from '../../../src/lib/storage/local-store.js'
+import { __resetAllCircuitsForTests } from '../../../src/lib/resilience/registry.js'
 import { createFakeState, type FakeState } from '../fake-deps.js'
 import { seedUser } from '../seed.js'
 import { buildTestApp, cookieHeader, parseSetCookies } from '../test-app.js'
 
 const PASSWORD = 'Str0ngExampleValue123'
+
+// The `clamav` circuit breaker (`lib/resilience/registry.ts`) is a process-wide singleton -- without
+// this, a `downScanner` test earlier in this file could leave it consuming the very failure budget a
+// later test relies on being fresh (H8.1's breaker is deliberately global per process, not per test).
+afterEach(() => {
+  __resetAllCircuitsForTests()
+})
 
 type App = Awaited<ReturnType<typeof buildTestApp>>['app']
 
@@ -419,7 +427,11 @@ describe('ClamAV before visibility', () => {
     await app.close()
   })
 
-  it('a scanner outage fails closed: 503, object deleted, nothing becomes visible', async () => {
+  // H8.1 graceful degradation: an outage is "not yet scanned", not "rejected" -- the upload stays
+  // `pending` with its bytes intact (queued for the retry worker or a later client retry) instead of
+  // being deleted on the very first failed attempt, the way it used to be. Nothing becomes visible
+  // either way: `avatarKey` stays null, and only a *clean* scan can ever change that.
+  it('a scanner outage: 503, upload left pending with its bytes intact, nothing becomes visible', async () => {
     const { app, auth, state } = await setup(downScanner)
     const png = await samplePng()
     const store = app.storage.store as LocalStore
@@ -431,9 +443,66 @@ describe('ClamAV before visibility', () => {
     const res = await finalize(app, auth, presigned.uploadId)
     expect(res.statusCode).toBe(503)
     expect(res.json().code).toBe('maintenance')
-    expect(state.uploads[0]!.status).toBe('scan_failed')
+    expect(state.uploads[0]!.status).toBe('pending')
     expect(state.users[0]!.avatarKey).toBeNull()
-    expect(existsSync(store.pathFor(state.uploads[0]!.key))).toBe(false)
+    expect(existsSync(store.pathFor(state.uploads[0]!.key))).toBe(true)
+    await app.close()
+  })
+
+  it('retrying the same finalize call once the scanner recovers finishes the upload', async () => {
+    const { app, auth, state, user } = await setup(downScanner)
+    const png = await samplePng()
+    const presigned = (
+      await requestUrl(app, auth, { contentType: 'image/png', size: png.length })
+    ).json()
+    await putBytes(app, auth, presigned, png)
+
+    const down = await finalize(app, auth, presigned.uploadId)
+    expect(down.statusCode).toBe(503)
+    expect(state.uploads[0]!.status).toBe('pending')
+
+    // ClamAV comes back: swap the storage plugin's scanner for a clean one (the same test seam
+    // `setup()` uses) and retry the exact same request the client already knows how to repeat.
+    app.storage.scanner = {
+      mode: 'clamd',
+      async scan() {
+        return { verdict: 'clean' as const }
+      },
+      async ping() {
+        return true
+      },
+    }
+    const recovered = await finalize(app, auth, presigned.uploadId)
+    expect(recovered.statusCode).toBe(200)
+    expect(state.uploads[0]!.status).toBe('finalized')
+    expect(state.users[0]!.avatarKey).toBe(`avatars/${user.id}/${presigned.uploadId}`)
+    await app.close()
+  })
+
+  it('retryPendingScans (the background worker) finalizes a pending upload once ClamAV recovers', async () => {
+    const { app, auth, state } = await setup(downScanner)
+    const png = await samplePng()
+    const presigned = (
+      await requestUrl(app, auth, { contentType: 'image/png', size: png.length })
+    ).json()
+    await putBytes(app, auth, presigned, png)
+    expect((await finalize(app, auth, presigned.uploadId)).statusCode).toBe(503)
+    expect(state.uploads[0]!.status).toBe('pending')
+
+    app.storage.scanner = {
+      mode: 'clamd',
+      async scan() {
+        return { verdict: 'clean' as const }
+      },
+      async ping() {
+        return true
+      },
+    }
+    const { retryPendingScans } = await import('../../../src/modules/accounts/avatar-service.js')
+    const summary = await retryPendingScans(app)
+    expect(summary).toMatchObject({ checked: 1, finalized: 1, stillPending: 0 })
+    expect(state.uploads[0]!.status).toBe('finalized')
+    expect(state.users[0]!.avatarKey).not.toBeNull()
     await app.close()
   })
 })

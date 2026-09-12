@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { createFakeState } from './fake-deps.js'
 import { seedUser } from './seed.js'
 import { buildTestApp } from './test-app.js'
+import { ai as aiBreaker, __resetAllCircuitsForTests } from '../../src/lib/resilience/registry.js'
 
 describe('GET /healthz', () => {
   it('is public and always 200', async () => {
@@ -14,6 +15,10 @@ describe('GET /healthz', () => {
 })
 
 describe('GET /readyz', () => {
+  afterEach(() => {
+    __resetAllCircuitsForTests()
+  })
+
   it('is 200 when the db and migrations checks pass', async () => {
     const { app } = await buildTestApp()
     const res = await app.inject({ method: 'GET', url: '/readyz' })
@@ -27,6 +32,28 @@ describe('GET /readyz', () => {
     const res = await app.inject({ method: 'GET', url: '/readyz' })
     expect(res.statusCode).toBe(503)
     expect(res.json().db).toBe(false)
+  })
+
+  it("H13.1: reports each optional dependency's circuit state, all closed by default", async () => {
+    const { app } = await buildTestApp()
+    const res = await app.inject({ method: 'GET', url: '/readyz' })
+    expect(res.json().circuits).toEqual({
+      ai: 'closed',
+      telegram: 'closed',
+      clamav: 'closed',
+      storage: 'closed',
+    })
+  })
+
+  it('H13.1: an open AI circuit is reflected without affecting the 200 status or other checks', async () => {
+    for (let i = 0; i < 10; i++) aiBreaker.fail(new Error('provider_error'))
+    const { app } = await buildTestApp()
+    const res = await app.inject({ method: 'GET', url: '/readyz' })
+    // AI being down is a graceful-degradation case (H8.1), never a readiness failure -- this
+    // instance can still serve every core request with the AI breaker open.
+    expect(res.statusCode).toBe(200)
+    expect(res.json().circuits.ai).toBe('open')
+    expect(res.json().circuits.telegram).toBe('closed')
   })
 })
 

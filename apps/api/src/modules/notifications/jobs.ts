@@ -20,13 +20,26 @@ import {
 } from './repo.js'
 import { deliverNotification as deliver } from './delivery.js'
 import { listGroupsForKind } from '../telegram/repo.js'
-import { getBot } from '../telegram/transport.js'
+import { getBot, sendPlainMessage } from '../telegram/transport.js'
 import type { LocalizedText } from './schemas.js'
+import { queueDeadLetterGauge, queuePendingGauge } from '../../lib/metrics.js'
 
 const TZ = 'Asia/Tashkent'
 const QUEUE_REMINDER_DUE = 'notifications.reminder.due'
 const QUEUE_DIGEST_PERSONAL = 'notifications.digest.personal'
 const QUEUE_DIGEST_DEPARTMENT = 'notifications.digest.department'
+// H13.1 "dead-letter queue for failed jobs with an admin view": a job that exhausts `RETRY_LIMIT`
+// attempts is copied here by pg-boss itself (the `deadLetter` queue option below, enforced in
+// Postgres -- see `plans.js`'s `dlq_jobs` CTE), NOT re-processed automatically. Deliberately never
+// `boss.work()`'d (a worked queue drains itself, which would defeat the point of a dead-letter queue
+// existing for inspection) -- `devon_queue_dead_letter` (H15.1 "queue metrics", polled below) and a
+// direct `select * from pgboss.job where name = '...'` are the "admin view" until a UI card exists
+// for it (the console's health page schema/i18n strings are outside this package's file scope --
+// see this item's report).
+const QUEUE_DEAD_LETTER = 'notifications.dead-letter'
+const RETRY_LIMIT = 5
+const RETRY_DELAY_SECONDS = 60
+const QUEUE_METRICS_POLL_MS = 60_000
 
 const REASON_LABEL: Record<string, LocalizedText> = {
   assigned: { 'uz-Latn': 'topshiriq', 'uz-Cyrl': 'топшириқ', ru: 'задача', en: 'assigned' },
@@ -144,15 +157,44 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     const total = Object.values(totals).reduce((a, b) => a + (b ?? 0), 0)
     if (total === 0) continue
     const text = `Haftalik xulosa / Weekly summary: ${summarizeCounts(totals, 'uz-Latn')}`
-    try {
-      await bot.api.sendMessage(group.chatId, text)
-    } catch (err) {
-      log.warn({ err, chatId: group.chatId }, 'notifications: weekly department digest send failed')
+    // H8.1: timeout- and circuit-breaker-bound (`sendPlainMessage`), same as every other Telegram
+    // send in this codebase -- previously called `bot.api.sendMessage` directly with neither, so a
+    // wedged socket here could hold this cron's single-threaded `for` loop open indefinitely and a
+    // sustained Telegram outage cost every department in the loop a full unbounded wait.
+    const result = await sendPlainMessage(group.chatId, text)
+    if (!result.ok) {
+      log.warn(
+        { error: result.error, chatId: group.chatId },
+        'notifications: weekly department digest send failed',
+      )
     }
   }
 }
 
 export type JobRunnerHandle = { stop(): Promise<void> }
+
+/**
+ * Starts pg-boss and schedules the three crons above. Guarded by the caller (`index.ts`): never
+ * started under `NODE_ENV=test` (the `unit` gate has no Postgres, MODULE-GUIDE.md's own "fast gate
+ * never touches Docker" invariant), and any construction/start failure is caught and logged, not
+ * thrown -- a job scheduler that cannot reach Postgres yet must never fail the whole API's boot.
+ */
+/** H15.1 "queue metrics": one bounded gauge sample per queue (a small, fixed set -- three real
+ * queues plus the dead-letter queue, never one series per job) into the Prometheus registry. Errors
+ * are swallowed -- a metrics poll must never be the reason a job scheduler looks unhealthy. */
+async function pollQueueMetrics(boss: PgBoss): Promise<void> {
+  try {
+    for (const name of [QUEUE_REMINDER_DUE, QUEUE_DIGEST_PERSONAL, QUEUE_DIGEST_DEPARTMENT]) {
+      const queue = await boss.getQueue(name)
+      queuePendingGauge.set(queue?.queuedCount ?? 0, { queue: name })
+    }
+    const dlq = await boss.getQueue(QUEUE_DEAD_LETTER)
+    queueDeadLetterGauge.set(dlq?.queuedCount ?? 0, { queue: 'notifications' })
+  } catch {
+    // A transient Postgres hiccup here must not crash the job runner or spam the error log the same
+    // way an actual job failure would -- the next poll (60s later) tries again.
+  }
+}
 
 /**
  * Starts pg-boss and schedules the three crons above. Guarded by the caller (`index.ts`): never
@@ -171,9 +213,19 @@ export async function startJobRunner(
     )
     await boss.start()
 
-    await boss.createQueue(QUEUE_REMINDER_DUE).catch(() => {})
-    await boss.createQueue(QUEUE_DIGEST_PERSONAL).catch(() => {})
-    await boss.createQueue(QUEUE_DIGEST_DEPARTMENT).catch(() => {})
+    // H13.1 "dead-letter queue for failed jobs": created first (a queue's `deadLetter` option must
+    // name an already-existing queue -- `attorney.js`'s own assertion) and never `.work()`'d -- see
+    // this constant's header comment.
+    await boss.createQueue(QUEUE_DEAD_LETTER).catch(() => {})
+    const retryPolicy = {
+      retryLimit: RETRY_LIMIT,
+      retryDelay: RETRY_DELAY_SECONDS,
+      retryBackoff: true,
+      deadLetter: QUEUE_DEAD_LETTER,
+    }
+    await boss.createQueue(QUEUE_REMINDER_DUE, retryPolicy).catch(() => {})
+    await boss.createQueue(QUEUE_DIGEST_PERSONAL, retryPolicy).catch(() => {})
+    await boss.createQueue(QUEUE_DIGEST_DEPARTMENT, retryPolicy).catch(() => {})
 
     await boss.work(QUEUE_REMINDER_DUE, async () => {
       await runReminderDue(log)
@@ -189,10 +241,23 @@ export async function startJobRunner(
     await boss.schedule(QUEUE_DIGEST_PERSONAL, '30 8 * * *', null, { tz: TZ })
     await boss.schedule(QUEUE_DIGEST_DEPARTMENT, '0 18 * * 5', null, { tz: TZ })
 
+    // H15.1 "queue metrics": same started-here-only, cleared-on-stop shape as
+    // `accounts/scan-retry-worker.ts` (H11.1 "timers cleared") -- one interval, never left running
+    // past this handle's `stop()`.
+    void pollQueueMetrics(boss) // one sample immediately, so a fresh boot's /metrics isn't empty
+    const metricsTimer = setInterval(() => void pollQueueMetrics(boss), QUEUE_METRICS_POLL_MS)
+    metricsTimer.unref() // never itself the reason the process stays alive
+
     log.info(
+      { retryLimit: RETRY_LIMIT, deadLetterQueue: QUEUE_DEAD_LETTER },
       'notifications: pg-boss job runner started (reminder.due hourly, digest.personal 08:30, digest.department Fri 18:00, Asia/Tashkent)',
     )
-    return { stop: () => boss.stop({ graceful: true }) }
+    return {
+      stop: async () => {
+        clearInterval(metricsTimer)
+        await boss.stop({ graceful: true })
+      },
+    }
   } catch (err) {
     log.error(
       { err },

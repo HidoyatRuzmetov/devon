@@ -112,8 +112,22 @@ export const adminInstanceSchema = z.object({
   userCount: z.number().int(),
 })
 
+/** H13.1 "readiness endpoints reflect [dependency] behaviour": one breaker's state as seen by a
+ * monitoring system that only reaches `/readyz` (not the authenticated admin console) -- see
+ * `modules/health.ts`'s own comment for why these never affect the 200/503 status this response is
+ * sent with. */
+const circuitStateSchema = z.enum(['closed', 'open', 'half_open'])
 export const readyzSchema = z.object({
   db: z.boolean(),
   valkey: z.boolean(),
   migrations: z.boolean(),
+  // AI/Telegram/ClamAV/MinIO are all optional, graceful-degradation dependencies (H8.1) -- their
+  // circuit state is informational, not a readiness gate, so it is reported alongside `db`/
+  // `migrations` rather than folded into the boolean `ok`/503 decision.
+  circuits: z.object({
+    ai: circuitStateSchema,
+    telegram: circuitStateSchema,
+    clamav: circuitStateSchema,
+    storage: circuitStateSchema,
+  }),
 })

@@ -39,3 +39,19 @@ export class AiInputValidationError extends Error {
     this.name = 'AiInputValidationError'
   }
 }
+
+/** H8.1 graceful degradation: the `ai` circuit breaker (`lib/resilience/registry.ts`) is currently
+ * open after repeated GLM failures. Thrown *before* the provider is ever called (no trace, no budget
+ * spent, no waiting out a timeout that is certain to fail) -- mapped to the same 503 `maintenance`
+ * problem the ClamAV-outage path already uses, and to `GET /ai/settings`'s `available: false` so
+ * every feature button hides itself (the web layer already gates every AI entry point on
+ * `settings.flags[feature] === true` -- `dto.ts` reports every flag as `false` while this is true,
+ * without touching a single frontend file outside this module). Deliberately NOT raised for "no
+ * AI_API_KEY configured": that is the documented mock-provider fallback (TECH-SPEC §8, `@devon/ai`'s
+ * `createProvider`), a working (if fake) AI, not an outage. */
+export class AiUnavailableError extends Error {
+  constructor(public readonly reason: 'circuit_open') {
+    super('The AI provider has failed repeatedly; temporarily circuit-broken')
+    this.name = 'AiUnavailableError'
+  }
+}

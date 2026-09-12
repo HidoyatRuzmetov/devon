@@ -2,7 +2,7 @@
 // (never reads `process.env` itself) so a test can inject an in-memory fake and never touch Postgres
 // (test/vitest.config.ts). `src/server.ts` is the only caller that wires the real, Postgres-backed
 // `createRepo()` and `loadConfig(process.env)`.
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
+import Fastify, { LogController, type FastifyError, type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
@@ -19,6 +19,8 @@ import authorizePlugin from './plugins/authorize.js'
 import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
+import metricsRoutes from './modules/metrics.js'
+import observabilityPlugin from './plugins/observability.js'
 import { loadApiModules } from './module-loader.js'
 // EPIC-013 (admin module, TECH-SPEC §11 "pause switch" + §10 "pause a department"): the only other
 // line this module needs outside its own folder, same precedent as `PUBLIC_ROUTES` in
@@ -49,6 +51,13 @@ export async function buildApp(
     // Keep the route table exactly the OpenAPI path table in design.md §1.7 -- an auto-added HEAD
     // sibling for every GET would otherwise need its own, redundant `PUBLIC_ROUTES` entries.
     exposeHeadRoutes: false,
+    // H15.1: `plugins/observability.ts`'s `onResponse` hook is this app's one structured access-log
+    // line per request (request/user/department ids, route, status, duration) -- Fastify's own
+    // default "incoming request"/"request completed" pair would otherwise double every request's log
+    // volume with a line carrying none of that context. `logController` (not the top-level
+    // `disableRequestLogging` option, deprecated as of fastify@5.12.3, removed in fastify@6) is the
+    // currently-supported way to ask for this.
+    logController: new LogController({ disableRequestLogging: true }),
   }).withTypeProvider<ZodTypeProvider>()
 
   app.setValidatorCompiler(validatorCompiler)
@@ -136,6 +145,11 @@ export async function buildApp(
 
   await app.register(healthRoutes)
   await app.register(openapiRoutes)
+  await app.register(metricsRoutes)
+  // H15.1: structured per-request logs (request/user/department ids, latency), the HTTP latency
+  // histogram, and the slow-request log -- registered after every plugin above so its `onResponse`
+  // hook runs with `req.actor` already resolved (`sessionPlugin`) and sees the final route/status.
+  await app.register(observabilityPlugin)
 
   // Every domain module under `src/modules/<name>/index.ts` -- discovered, not listed here, so a new
   // module never requires an edit to this file (MODULE-GUIDE.md "API modules"). `app.register()`

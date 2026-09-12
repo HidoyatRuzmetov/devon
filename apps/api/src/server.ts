@@ -1,13 +1,14 @@
 // Process entry point. The only file in this package allowed to read `process.env` or open a real
 // database connection -- everything else takes `Config`/`Deps` as parameters (see `src/app.ts`).
-import { closePool, startEventsWorker } from '@devon/db'
+import { startEventsWorker } from '@devon/db'
 import { loadConfig } from './config.js'
 import { buildApp } from './app.js'
 import { createRepo } from './db/repo.js'
 import { printSetupUrlIfNeeded } from './bootstrap/print-setup-url.js'
-import { registerGracefulShutdown } from './bootstrap/graceful-shutdown.js'
 import { startEventReminderWorker } from './modules/events/reminder-worker.js'
 import { startUploadSweeper } from './modules/accounts/upload-sweeper.js'
+import { startScanRetryWorker } from './modules/accounts/scan-retry-worker.js'
+import { registerGracefulShutdown } from './plugins/shutdown.js'
 
 async function main(): Promise<void> {
   const config = loadConfig(process.env)
@@ -31,27 +32,29 @@ async function main(): Promise<void> {
   const uploadSweeper = startUploadSweeper(app, {
     onError: (err) => app.log.error(err, 'upload retention sweep failed'),
   })
+  // H8.1: recovers avatar uploads a ClamAV outage left `pending` well before their 10-minute window
+  // expires (see `scan-retry-worker.ts`'s header) -- same start-here-only rule as the three workers
+  // above.
+  const scanRetryWorker = startScanRetryWorker(app, {
+    onError: (err) => app.log.error(err, 'avatar scan retry pass failed'),
+  })
   app.addHook('onClose', async () => {
     outboxWorker.stop()
     reminderWorker.stop()
     uploadSweeper.stop()
+    scanRetryWorker.stop()
   })
 
-  // H18.1 / H13.1 graceful shutdown: SIGTERM (`docker stop`, a Compose rolling restart) and SIGINT
-  // (Ctrl+C) run `app.close()` -- in-flight requests finish, the `onClose` hooks above and the ones the
-  // modules register (pg-boss graceful stop, storage close) run -- then the pool is ended and the
-  // process exits 0. A close that has not finished after 25 s is force-exited (1), inside the 30 s
-  // `stop_grace_period` of infra/docker-compose.prod.yml. Without this, Node's default SIGTERM
-  // disposition killed the process instantly (exit 143) and none of those hooks ever ran -- found
-  // while building apps/api/Dockerfile (see its CMD comment). The pool is ended here, not in a hook,
-  // because this file is the only one that owns the real connection (header).
-  registerGracefulShutdown({
-    log: app.log,
-    close: async () => {
-      await app.close()
-      await closePool()
-    },
-  })
+  // H18.1 / H13.1 graceful shutdown: SIGTERM (`docker stop`, a Compose rolling restart, a supervisor
+  // restart) and SIGINT (Ctrl+C in a foreground dev run) run `app.close()` -- in-flight requests
+  // finish, the `onClose` hooks above and the ones the modules register (pg-boss graceful stop,
+  // storage close, Telegram long-poll stop) run -- then the pool is ended and the process exits 0. A
+  // close that has not finished after 25 s is force-exited (1), inside the 30 s `stop_grace_period` of
+  // infra/docker-compose.prod.yml. Without this, Node's default SIGTERM disposition killed the process
+  // instantly (exit 143) and none of those hooks ever ran -- found while building apps/api/Dockerfile
+  // (see its CMD comment). `plugins/shutdown.ts` binds the drain in `bootstrap/graceful-shutdown.ts`
+  // to this app and to `@devon/db`'s module-private pool; see both headers.
+  registerGracefulShutdown(app)
 
   await app.listen({ port: config.API_PORT, host: '0.0.0.0' })
 }

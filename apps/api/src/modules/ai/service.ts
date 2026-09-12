@@ -8,11 +8,15 @@ import type { AiProvider } from '@devon/ai'
 import * as repo from './repo.js'
 import { settingsToDto, traceToDto } from './dto.js'
 import type { AiSettingsDto, TraceDto } from './schemas.js'
+import { ai as aiBreaker } from '../../lib/resilience/registry.js'
+import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
+import { aiCostUzsTotal, aiRequestDuration, aiTokensTotal } from '../../lib/metrics.js'
 import {
   AiBudgetExceededError,
   AiFeatureDisabledError,
   AiInputValidationError,
   AiRunFailedError,
+  AiUnavailableError,
 } from './errors.js'
 
 // Built once per process, exactly like `apps/api/src/deps.ts`'s real implementation is constructed
@@ -32,6 +36,53 @@ export function __setProviderForTests(provider: AiProvider | null): void {
   cachedProvider = provider
 }
 
+/**
+ * Pure classifier, exported for unit testing without a real provider or database (H8.1): decides
+ * whether a `runFeature()` outcome should drive the `ai` circuit breaker towards `succeed()`,
+ * `fail()`, or leave it untouched. Extracted out of `runFeatureForActor` specifically so this decision
+ * -- "which outcomes count as a GLM *outage* signal vs. a model-quality or caller-input problem" --
+ * has its own name and its own tests, rather than being buried in a long function only exercisable via
+ * a full HTTP request against a real Postgres.
+ */
+export function classifyAiOutcomeForBreaker(result: {
+  meta: { status: string } | null
+}): 'succeed' | 'fail' | 'neutral' {
+  if (result.meta === null) return 'neutral' // caller input never reached the provider
+  return result.meta.status === 'provider_error' ? 'fail' : 'succeed'
+}
+
+/**
+ * H15.1 "AI latency/cost": records one call's numbers into the three AI metrics, exported (like
+ * `classifyAiOutcomeForBreaker` above) so the recording itself -- which labels, which fields --
+ * has a unit test that never needs a real provider or database. Called for every call that actually
+ * reached the provider (non-null `meta`), whether the provider's own answer was `ok` or a
+ * `provider_error` -- a failed call still spent real wall-clock time and sometimes real tokens, both
+ * of which belong in these numbers the same way a failed HTTP request still counts toward
+ * `devon_http_request_duration_seconds` (`plugins/observability.ts`).
+ */
+export function recordAiRunMetrics(
+  feature: string,
+  meta: {
+    status: string
+    latencyMs: number
+    costUzs: number
+    promptTokens: number
+    completionTokens: number
+  },
+): void {
+  aiRequestDuration.observe(meta.latencyMs / 1000, { feature, status: meta.status })
+  aiCostUzsTotal.inc({ feature }, meta.costUzs)
+  aiTokensTotal.inc({ feature, kind: 'prompt' }, meta.promptTokens)
+  aiTokensTotal.inc({ feature, kind: 'completion' }, meta.completionTokens)
+}
+
+/** H8.1: whether a call right now would actually reach the provider, or fail fast against the open
+ * `ai` circuit breaker. Read-only (never trips/resets the breaker itself) so `GET /ai/settings` can
+ * poll it as often as the web layer likes. */
+export function isAiAvailable(): boolean {
+  return aiBreaker.isCallAllowed()
+}
+
 export async function getSettingsWithUsage(
   ctx: RequestContext,
   departmentId: string,
@@ -41,7 +92,7 @@ export async function getSettingsWithUsage(
       repo.getSettings(tx, departmentId),
       repo.spentThisMonthUzs(tx, departmentId),
     ])
-    return settingsToDto(settings, spent)
+    return settingsToDto(settings, spent, isAiAvailable())
   })
 }
 
@@ -67,7 +118,7 @@ export async function patchSettings(
       after,
     })
     const spent = await repo.spentThisMonthUzs(tx, departmentId)
-    return settingsToDto(after, spent)
+    return settingsToDto(after, spent, isAiAvailable())
   })
 }
 
@@ -131,9 +182,25 @@ export async function runFeatureForActor(
   if (budget.status === 'hard_stop') {
     throw new AiBudgetExceededError()
   }
+  // H8.1: the breaker is open (repeated recent GLM failures) -- fail fast, before spending a
+  // guaranteed-to-time-out network round trip on a call that has already shown it will not succeed.
+  // `getSettingsWithUsage` already reports this on every read via `available`/effective `flags`, so a
+  // client polling settings sees the feature disappear at the same moment this would start rejecting
+  // its calls. `guard()` (not the read-only `isAiAvailable()`) because this is the one call site that
+  // is actually allowed to spend the single half-open probe once the reset window has passed.
+  try {
+    aiBreaker.guard()
+  } catch (err) {
+    if (err instanceof CircuitOpenError) throw new AiUnavailableError('circuit_open')
+    throw err
+  }
 
   // Step 2: the actual provider call, deliberately OUTSIDE any transaction -- an OpenAI-compatible
   // HTTP round trip has no business holding a Postgres connection/transaction open for its duration.
+  // `@devon/ai`'s `run()` (`gateway.ts`) catches a transport failure itself and returns
+  // `{ok:false, meta:{status:'provider_error', ...}}` rather than throwing, so the breaker cannot be
+  // driven by `execute()`'s catch here -- `succeed()`/`fail()` are called explicitly below, based on
+  // the returned outcome, once it is known (H8.1: circuit breaker for AI).
   const result = await runAiFeature({
     provider,
     config: aiConfig,
@@ -144,10 +211,17 @@ export async function runFeatureForActor(
     input: params.input,
   })
 
+  const verdict = classifyAiOutcomeForBreaker(result)
+  if (verdict === 'fail') aiBreaker.fail(new Error(result.ok ? 'provider_error' : result.error))
+  else if (verdict === 'succeed') aiBreaker.succeed()
+
   if (result.meta === null) {
-    // Input failed the feature's own schema before any provider call -- no trace, no budget spent.
+    // Input failed the feature's own schema before any provider call was made -- no trace, no budget
+    // spent, and no signal either way about whether GLM itself is reachable.
     throw new AiInputValidationError(result.error)
   }
+
+  recordAiRunMetrics(params.feature, result.meta)
 
   // Step 3: record what happened -- in its OWN transaction, committed unconditionally, so a call that
   // spent real tokens but still failed schema validation (or came back empty even after the retry)

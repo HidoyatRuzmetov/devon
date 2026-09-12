@@ -2,6 +2,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { readyzSchema } from '../schemas.js'
+import { circuitSnapshots } from '../lib/resilience/registry.js'
 
 const healthRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
@@ -30,7 +31,23 @@ const healthRoutes: FastifyPluginAsyncZod = async (app) => {
       // epic", not a claim that a Valkey connection was checked.
       const valkey = true
       const ok = db && migrations && valkey
-      reply.code(ok ? 200 : 503).send({ db, valkey, migrations })
+      // H13.1 "readiness endpoints reflect [dependency] behaviour": AI/Telegram/ClamAV/MinIO are all
+      // optional, graceful-degradation dependencies (H8.1) -- reported here for a monitoring system
+      // that only reaches this unauthenticated endpoint, but deliberately NEVER folded into `ok`/the
+      // status code above: this instance is fully able to serve every core request (board, events,
+      // inbox) with any or all of these open, which is the entire point of H8.1's degradation paths.
+      const snapshots = circuitSnapshots()
+      reply.code(ok ? 200 : 503).send({
+        db,
+        valkey,
+        migrations,
+        circuits: {
+          ai: snapshots.ai.state,
+          telegram: snapshots.telegram.state,
+          clamav: snapshots.clamav.state,
+          storage: snapshots.storage.state,
+        },
+      })
     },
   )
 }

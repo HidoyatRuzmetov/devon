@@ -21,6 +21,7 @@ import {
   AiFeatureDisabledError,
   AiInputValidationError,
   AiRunFailedError,
+  AiUnavailableError,
 } from './errors.js'
 import * as service from './service.js'
 import {
@@ -157,6 +158,10 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         }
         if (err instanceof AiRunFailedError) {
           return sendProblem(reply, 'internal')
+        }
+        if (err instanceof AiUnavailableError) {
+          // Same 503 "try again later" shape the ClamAV-outage path uses (H8.1 graceful degradation).
+          return sendProblem(reply, 'maintenance')
         }
         throw err
       }

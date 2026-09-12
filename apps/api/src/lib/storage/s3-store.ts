@@ -20,6 +20,7 @@ import {
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { assertObjectKey, ObjectTooLarge, type ObjectStore } from './object-store.js'
+import { storage as storageBreaker } from '../resilience/registry.js'
 
 export type S3StoreOptions = {
   endpoint: string
@@ -60,17 +61,20 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
 
   // Memoised so the bucket probe happens once per process, and reset on failure so a MinIO that was
   // down at boot is retried on the next upload instead of being wedged into a permanent error.
+  // H8.1: wrapped in the `storage` circuit breaker -- a HeadBucket 404 (bucket not created yet) is
+  // handled here and is not itself a MinIO-outage signal, so it must not reach the breaker as a
+  // thrown error; only a genuine failure of either call does.
   let bucketReady: Promise<void> | null = null
   function ensureBucket(): Promise<void> {
     if (!bucketReady) {
-      bucketReady = (async () => {
+      bucketReady = storageBreaker.execute(async () => {
         try {
           await client.send(new HeadBucketCommand({ Bucket: bucket }), { abortSignal: signal() })
         } catch (err) {
           if (!isNotFound(err)) throw err
           await client.send(new CreateBucketCommand({ Bucket: bucket }), { abortSignal: signal() })
         }
-      })()
+      })
       bucketReady.catch(() => {
         bucketReady = null
       })
@@ -114,43 +118,59 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
       )
     },
 
+    // H8.1: every network call below is wrapped in the `storage` circuit breaker -- `isNotFound` is
+    // handled *inside* the wrapped function (returning `null`, not throwing) precisely so an ordinary
+    // "no such object" answer never counts as a MinIO-outage failure; only a genuine transport/HTTP
+    // error does. A confirmed outage then fails every subsequent call immediately rather than each
+    // one separately waiting out `timeoutMs`.
     async head(key) {
       assertObjectKey(key)
-      try {
-        const res = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }), {
-          abortSignal: signal(),
-        })
-        return { size: res.ContentLength ?? 0, contentType: res.ContentType ?? null }
-      } catch (err) {
-        if (isNotFound(err)) return null
-        throw err
-      }
+      return storageBreaker.execute(async () => {
+        try {
+          const res = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }), {
+            abortSignal: signal(),
+          })
+          return { size: res.ContentLength ?? 0, contentType: res.ContentType ?? null }
+        } catch (err) {
+          if (isNotFound(err)) return null
+          throw err
+        }
+      })
     },
 
     async get(key, { maxBytes }) {
       const head = await store.head(key)
       if (!head) return null
       if (head.size > maxBytes) throw new ObjectTooLarge(key, head.size, maxBytes)
-      try {
-        const res = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }), {
-          abortSignal: signal(),
-        })
-        if (!res.Body) return null
-        const bytes = await res.Body.transformToByteArray()
-        if (bytes.byteLength > maxBytes) throw new ObjectTooLarge(key, bytes.byteLength, maxBytes)
-        return Buffer.from(bytes)
-      } catch (err) {
-        if (isNotFound(err)) return null
-        throw err
-      }
+      // `ObjectTooLarge` is deliberately checked OUTSIDE `storageBreaker.execute()` below (both
+      // above, on the declared `Content-Length`, and again here on the actual byte count): it is the
+      // caller's own size limit being exceeded, never a MinIO-outage signal, and must never trip the
+      // breaker the way a real transport failure does.
+      const bytes = await storageBreaker.execute(async () => {
+        try {
+          const res = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }), {
+            abortSignal: signal(),
+          })
+          if (!res.Body) return null
+          return Buffer.from(await res.Body.transformToByteArray())
+        } catch (err) {
+          if (isNotFound(err)) return null
+          throw err
+        }
+      })
+      if (bytes && bytes.byteLength > maxBytes)
+        throw new ObjectTooLarge(key, bytes.byteLength, maxBytes)
+      return bytes
     },
 
     async put(key, body, contentType) {
       assertObjectKey(key)
       await ensureBucket()
-      await client.send(
-        new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
-        { abortSignal: signal() },
+      await storageBreaker.execute(() =>
+        client.send(
+          new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+          { abortSignal: signal() },
+        ),
       )
     },
 
@@ -163,12 +183,14 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
       for (let i = 0; i < keys.length; i += 1000) chunks.push(keys.slice(i, i + 1000))
       await Promise.all(
         chunks.map((chunk) =>
-          client.send(
-            new DeleteObjectsCommand({
-              Bucket: bucket,
-              Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
-            }),
-            { abortSignal: signal() },
+          storageBreaker.execute(() =>
+            client.send(
+              new DeleteObjectsCommand({
+                Bucket: bucket,
+                Delete: { Objects: chunk.map((Key) => ({ Key })), Quiet: true },
+              }),
+              { abortSignal: signal() },
+            ),
           ),
         ),
       )

@@ -335,6 +335,16 @@ export function createFakeDeps(state: FakeState): Deps {
       return due.map((u) => ({ id: u.id, userId: u.userId, key: u.key }))
     },
 
+    async listPendingAvatarUploads(limit) {
+      const now = Date.now()
+      return state.uploads
+        .filter(
+          (u) => u.status === 'pending' && u.purpose === 'avatar' && u.expiresAt.getTime() > now,
+        )
+        .slice(0, limit)
+        .map((u) => ({ id: u.id, userId: u.userId }))
+    },
+
     async recordAccessDenied(ctx: AuditCtx, info) {
       state.auditEvents.push({
         action: 'access.denied',

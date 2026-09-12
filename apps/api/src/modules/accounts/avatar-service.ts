@@ -9,12 +9,19 @@
 // "ClamAV before visibility": nothing an upload contains is ever readable by anyone (not even its
 // owner) until step 2 has run to completion -- the original object is written under a random key
 // nobody is given a GET for, and only the *derived* WebP variants are ever served
-// (`GET /accounts/avatar/:userId/:uploadId/:size`). Every non-happy path deletes the original and
-// records why on the `app.uploads` row; a scanner outage fails closed (H8.1), it never lets a file
-// through unscanned.
+// (`GET /accounts/avatar/:userId/:uploadId/:size`). Every non-happy path (rejected, infected)
+// deletes the original and records why on the `app.uploads` row -- except a scanner *outage*
+// (H8.1), which is not "reject the file", it is "we do not know yet": the upload is left `pending`
+// with its bytes intact and `scan-retry-worker.ts` retries it every 30s until either ClamAV answers
+// (finalizes or rejects, same as any other request) or the upload's own `expires_at` passes (the
+// existing hourly `upload-sweeper.ts` deletes it then, same fail-closed outcome as before, just not
+// on the very first outage). The security invariant is unchanged either way: nothing becomes visible
+// before a clean verdict actually arrives.
 import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
 import { ScannerUnavailable } from '../../lib/storage/clamav.js'
+import { clamav as clamavBreaker } from '../../lib/resilience/registry.js'
+import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
 import {
   AVATAR_SIZES,
   InvalidImage,
@@ -54,7 +61,11 @@ export type AvatarFinalizeResult =
   | { ok: false; reason: 'rejected'; code: RejectCode }
   /** ClamAV matched a signature. The object is already gone. */
   | { ok: false; reason: 'infected'; signature: string }
-  /** ClamAV could not be reached or errored. The object is already gone (fail closed). */
+  /** H8.1: ClamAV could not be reached, the `clamav` circuit breaker is open, or it errored. The
+   * upload stays `pending` and its bytes are kept (never marked `rejected`/deleted here) --
+   * `scan-retry-worker.ts` retries it automatically; the caller may also just call this endpoint
+   * again later with the same `uploadId`. Only a `pending` row that reaches its own `expires_at`
+   * without ever getting a clean verdict is deleted, by the existing hourly sweep. */
   | { ok: false; reason: 'scanner_unavailable' }
 
 /** Every object an avatar prefix can own -- the three served variants plus the original, which is
@@ -138,9 +149,13 @@ export async function finalizeAvatar(
   if (!sniffed) return reject('not_an_image')
   if (sniffed !== upload.mime) return reject('mime_mismatch')
 
-  // ClamAV before anything decodes the bytes (TECH-SPEC §6). A scanner outage is "not clean".
+  // ClamAV before anything decodes the bytes (TECH-SPEC §6). H8.1: wrapped in the `clamav` circuit
+  // breaker -- while it is open (clamd has failed repeatedly and recently), this throws
+  // `CircuitOpenError` immediately instead of waiting out `CLAMAV_TIMEOUT_MS` (20s by default) on a
+  // call already known to fail, which matters a lot to `scan-retry-worker.ts` retrying many uploads.
+  // The catch below treats it exactly like `ScannerUnavailable` -- both mean "no verdict available".
   try {
-    const verdict = await scanner.scan(bytes)
+    const verdict = await clamavBreaker.execute(() => scanner.scan(bytes))
     if (verdict.verdict === 'infected') {
       await app.devon.markUpload(
         upload.id,
@@ -156,15 +171,15 @@ export async function finalizeAvatar(
       return { ok: false, reason: 'infected', signature: verdict.signature }
     }
   } catch (err) {
-    if (!(err instanceof ScannerUnavailable)) throw err
-    await app.devon.markUpload(
-      upload.id,
-      user.id,
-      { status: 'scan_failed', error: 'scanner_unavailable' },
-      ctx,
-    )
-    await removeQuietly(app, [upload.key])
-    app.log.error({ err, uploadId: upload.id }, 'storage: ClamAV unavailable, upload discarded')
+    if (!(err instanceof ScannerUnavailable) && !(err instanceof CircuitOpenError)) throw err
+    // H8.1 graceful degradation: an outage is "not yet scanned", not "rejected" -- the row stays
+    // `pending` and its bytes are kept so `scan-retry-worker.ts` (or a client simply calling this
+    // endpoint again) can finish the job once ClamAV is back, without asking the user to re-upload.
+    // A `pending` upload that never gets a clean verdict before `expires_at` is still deleted by the
+    // existing hourly sweep (`upload-sweeper.ts`) -- the fail-closed guarantee ("never visible
+    // unscanned") is unchanged, only *when* an unrecovered outage gives up has moved from
+    // immediately to the upload's normal 10-minute window.
+    app.log.warn({ err, uploadId: upload.id }, 'storage: ClamAV unavailable, upload left pending')
     return { ok: false, reason: 'scanner_unavailable' }
   }
 
@@ -220,4 +235,65 @@ export async function sweepExpiredUploads(app: FastifyInstance, limit = 200): Pr
       expired.map((u) => u.key),
     )
   return expired.length
+}
+
+function scanRetryAuditCtx(): AuditCtx {
+  return {
+    requestId: `avatar-scan-retry-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    userId: null,
+    actorRole: null,
+    actingForUserId: null,
+    ip: '127.0.0.1',
+    userAgent: 'devon-accounts/scan-retry-worker',
+  }
+}
+
+export type ScanRetrySummary = {
+  checked: number
+  finalized: number
+  /** Still no clean verdict (ClamAV still down, or its bytes have not landed yet) -- tried again
+   * next tick, until `expires_at` passes and the hourly sweep removes it. */
+  stillPending: number
+  /** Anything else `finalizeAvatar` can return (`rejected`, `infected`, `not_uploaded`, `expired`,
+   * `consumed`) -- resolved, one way or the other, so no longer this worker's concern. */
+  resolvedOtherwise: number
+}
+
+/**
+ * H8.1 graceful degradation: re-attempts `finalizeAvatar` for every upload the ClamAV-outage path
+ * above left `pending` (and, harmlessly, for one whose bytes have simply not arrived yet -- that
+ * re-check is exactly as cheap as the one `finalizeAvatar` already does on every call). Run on its
+ * own short interval (`scan-retry-worker.ts`, 30s -- far tighter than the hourly expiry sweep) so an
+ * upload recovers automatically well inside its 10-minute presigned-URL window whenever ClamAV comes
+ * back, instead of only ever being cleaned up by the sweep once it expires. Never throws: one upload
+ * failing in a way this function was not expecting is logged and skipped, never lets the rest of the
+ * batch go unretried.
+ */
+export async function retryPendingScans(
+  app: FastifyInstance,
+  limit = 25,
+): Promise<ScanRetrySummary> {
+  // Skip the whole batch while the breaker is confirmed open -- otherwise every pending upload would
+  // pay the same doomed attempt on every 30s tick during a sustained outage for no benefit.
+  if (!clamavBreaker.isCallAllowed()) {
+    return { checked: 0, finalized: 0, stillPending: 0, resolvedOtherwise: 0 }
+  }
+
+  const pending = await app.devon.listPendingAvatarUploads(limit)
+  let finalized = 0
+  let stillPending = 0
+  let resolvedOtherwise = 0
+  for (const { id, userId } of pending) {
+    const user = await app.devon.findUserById(userId)
+    if (!user) continue // the account was deleted since; the hourly sweep still cleans up its row
+    try {
+      const result = await finalizeAvatar(app, user, id, scanRetryAuditCtx())
+      if (result.ok) finalized += 1
+      else if (result.reason === 'scanner_unavailable') stillPending += 1
+      else resolvedOtherwise += 1
+    } catch (err) {
+      app.log.warn({ err, uploadId: id }, 'storage: scan retry failed for one upload, continuing')
+    }
+  }
+  return { checked: pending.length, finalized, stillPending, resolvedOtherwise }
 }

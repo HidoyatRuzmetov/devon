@@ -60,6 +60,13 @@ export const aiSettingsSchema = z.object({
   remainingUzs: z.number().int().min(0),
   budgetStatus: z.enum(['ok', 'soft_cap', 'hard_stop']),
   usedPct: z.number().min(0),
+  // H8.1 graceful degradation (additive field, backward compatible -- see `errors.ts`'s
+  // `AiUnavailableError` doc comment). `flags` above is already forced all-`false` whenever this is
+  // `false`, so a web client that has never heard of this field still hides every AI entry point
+  // correctly; a client that *does* read it can show a clearer "AI is temporarily unavailable" hint
+  // instead of just a disabled button.
+  available: z.boolean(),
+  unavailableReason: z.enum(['circuit_open']).nullable(),
 })
 export type AiSettingsDto = z.infer<typeof aiSettingsSchema>
 

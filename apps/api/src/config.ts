@@ -25,6 +25,17 @@ const configSchema = z
     // setup where the operator genuinely cannot reach the API from 127.0.0.1 -- never the default.
     DEVON_SETUP_REMOTE: z.coerce.boolean().default(false),
     LOG_LEVEL: z.string().default('info'),
+    // --- observability (H15.1) -----------------------------------------------------------------
+    // A request whose handler took at least this long gets its own `warn`-level "slow request" log
+    // line (in ADDITION to the normal structured completion line every request gets) -- cheap enough
+    // to leave on always, unlike a profiler.
+    SLOW_REQUEST_MS: z.coerce.number().int().positive().default(1000),
+    // `/metrics` (Prometheus text exposition) is loopback-gated by default, same posture as
+    // `/api/v1/setup/:token` (`modules/setup/index.ts`) -- a real deployment's Prometheus scraper runs
+    // on the same host (or reaches it through Caddy, which the compose file can restrict to its own
+    // network) rather than needing this opened to the world. '1' only for a container/VM setup where
+    // the operator genuinely cannot reach the API from 127.0.0.1.
+    DEVON_METRICS_REMOTE: z.coerce.boolean().default(false),
 
     // --- storage plugin (TECH-SPEC §6 `storage`; EPIC-001 photo upload) -------------------------
     // `local`: objects are files under STORAGE_LOCAL_DIR and "presigned" URLs are the API's own signed

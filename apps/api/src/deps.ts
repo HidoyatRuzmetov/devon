@@ -147,6 +147,12 @@ export type Deps = {
     before: Date,
     limit: number,
   ): Promise<Array<{ id: string; userId: string; key: string }>>
+  /** H8.1 (`scan-retry-worker.ts`): every still-`pending`, not-yet-expired avatar upload, oldest
+   * first, up to `limit` -- the retry worker re-attempts `finalizeAvatar` for each so an upload that
+   * was left `pending` by a ClamAV outage (`avatar-service.ts`'s `ScannerUnavailable` catch) gets
+   * scanned and finalised automatically once ClamAV recovers, without the user re-uploading. Cross-
+   * user by design, same as `expirePendingUploads` above. */
+  listPendingAvatarUploads(limit: number): Promise<Array<{ id: string; userId: string }>>
 
   verifyAuditChain(): Promise<ChainVerification>
   checkDbReady(): Promise<boolean>

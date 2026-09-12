@@ -39,6 +39,8 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     CLAMAV_HOST: '127.0.0.1',
     CLAMAV_PORT: 3310,
     CLAMAV_TIMEOUT_MS: 20_000,
+    SLOW_REQUEST_MS: 1000,
+    DEVON_METRICS_REMOTE: false,
     ...overrides,
   }
 }
