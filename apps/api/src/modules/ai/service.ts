@@ -2,6 +2,7 @@
 // split as the events module's `service.ts`/`repo.ts`), and is the one place `@devon/ai`'s gateway is
 // ever called from -- `index.ts`'s route handlers only ever call functions here, never `repo.ts` or
 // `@devon/ai` directly.
+import { createHash } from 'node:crypto'
 import { withContext, type RequestContext } from '@devon/db'
 import { checkBudget, createProvider, loadAiConfig, runFeature as runAiFeature } from '@devon/ai'
 import type { AiProvider } from '@devon/ai'
@@ -83,6 +84,59 @@ export function isAiAvailable(): boolean {
   return aiBreaker.isCallAllowed()
 }
 
+// H27.1 "AI calls cached by prompt hash where deterministic" + "no repeated processing of unchanged
+// data": an identical (department, feature, input) call within `CACHE_TTL_MS` is served from this
+// cache instead of a real GLM round trip -- no tokens billed, no new trace row. In-process, not
+// Valkey: this build runs one API process per TECH-SPEC's single-server decision (the same tradeoff
+// `modules/admin/availability-gate.ts`'s in-process cache already documents), so there is no second
+// process a Valkey layer would need to stay consistent with. Bounded (`CACHE_MAX_ENTRIES`) so it can
+// never grow unbounded (H11.1 "bounded ... caches") -- a duplicate call is almost always a double
+// submit or a retry arriving within seconds, not a legitimate reason to keep every distinct input a
+// department has ever sent.
+const CACHE_TTL_MS = 5 * 60_000
+const CACHE_MAX_ENTRIES = 200
+type CacheEntry = { outcome: RunFeatureOutcome; expiresAt: number }
+const resultCache = new Map<string, CacheEntry>()
+
+function cacheKeyFor(
+  departmentId: string,
+  feature: string,
+  input: Record<string, unknown>,
+): string {
+  const hash = createHash('sha256')
+    .update(`${departmentId}:${feature}:${JSON.stringify(input)}`)
+    .digest('hex')
+  return hash
+}
+
+function getCached(key: string): RunFeatureOutcome | null {
+  const entry = resultCache.get(key)
+  if (!entry) return null
+  if (entry.expiresAt < Date.now()) {
+    resultCache.delete(key)
+    return null
+  }
+  // Refresh recency (Map preserves insertion order; delete+set moves this key to the end) so the
+  // bound below evicts the truly-least-recently-used entry, not an arbitrary one.
+  resultCache.delete(key)
+  resultCache.set(key, entry)
+  return entry.outcome
+}
+
+function setCached(key: string, outcome: RunFeatureOutcome): void {
+  resultCache.set(key, { outcome, expiresAt: Date.now() + CACHE_TTL_MS })
+  while (resultCache.size > CACHE_MAX_ENTRIES) {
+    const oldestKey = resultCache.keys().next().value
+    if (oldestKey === undefined) break
+    resultCache.delete(oldestKey)
+  }
+}
+
+/** Test-only seam, same precedent as `__setProviderForTests` above. */
+export function __clearCacheForTests(): void {
+  resultCache.clear()
+}
+
 export async function getSettingsWithUsage(
   ctx: RequestContext,
   departmentId: string,
@@ -151,6 +205,7 @@ export type RunFeatureOutcome = {
     costUzs: number
     latencyMs: number
     retried: boolean
+    cached?: boolean
   }
 }
 
@@ -178,6 +233,18 @@ export async function runFeatureForActor(
   if (settings.flags[params.feature] !== true) {
     throw new AiFeatureDisabledError()
   }
+
+  // H27.1: an identical call for this department+feature+input within the last `CACHE_TTL_MS` is
+  // served from cache -- still gated by the feature flag above (a feature disabled after the cached
+  // response was recorded must not keep serving it), but *not* by the budget check below: a cache hit
+  // spends no new tokens, so it must never be blocked by (or count against) the budget that exists to
+  // limit real spend.
+  const cacheKey = cacheKeyFor(params.departmentId, params.feature, params.input)
+  const cached = getCached(cacheKey)
+  if (cached) {
+    return { ...cached, meta: { ...cached.meta, cached: true } }
+  }
+
   const budget = checkBudget(spent, settings.budget_uzs_per_month, settings.soft_cap_pct)
   if (budget.status === 'hard_stop') {
     throw new AiBudgetExceededError()
@@ -260,7 +327,7 @@ export async function runFeatureForActor(
     throw new AiRunFailedError(result.error)
   }
 
-  return {
+  const outcome: RunFeatureOutcome = {
     data: result.data as Record<string, unknown>,
     meta: {
       feature: params.feature,
@@ -273,4 +340,8 @@ export async function runFeatureForActor(
       retried: result.meta.retried,
     },
   }
+  // Only a real, successful (non-empty-cost) call is worth caching -- `result.ok` above already
+  // guarded this path, so every reachable return here is one a repeat of the same input should reuse.
+  setCached(cacheKey, outcome)
+  return outcome
 }

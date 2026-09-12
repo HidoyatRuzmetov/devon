@@ -64,7 +64,12 @@ export async function runOnboardingForNewcomer(
     if (newcomerItems.length === 0) continue
 
     try {
+      // Each template runs in its own transaction, one at a time, on purpose: a failure applying one
+      // template (caught below) must never roll back a template that already succeeded, and there
+      // are at most a handful of templates per department -- reviewed exception to H3.1/H29.1.
+      // nosemgrep: query-in-loop
       await withContext(systemContext(departmentId, userId), async (tx) => {
+        // nosemgrep: query-in-loop -- see the outer withContext's comment above.
         const claimed = await tx.raw<{ id: string }>(sql`
           insert into app.onboarding_runs (department_id, template_id, user_id, created_task_count)
           values (${departmentId}, ${template.id}, ${userId}, ${newcomerItems.length})
@@ -78,6 +83,7 @@ export async function runOnboardingForNewcomer(
         const valueRows = newcomerItems.map(
           (item, sort) => sql`(${userId}::uuid, ${item.text}::text, ${sort}::int)`,
         )
+        // nosemgrep: query-in-loop -- see the outer withContext's comment above.
         await tx.raw(sql`
           insert into app.personal_tasks (user_id, title, sort)
           select v.user_id, v.title, v.sort from (values ${sql.join(valueRows, sql.raw(', '))})

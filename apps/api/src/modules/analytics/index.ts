@@ -9,6 +9,7 @@ import type { FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
+import { singleFlight } from '../../lib/single-flight.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
 import { registerRecomputeSubscription, startAnalyticsRecomputeWorker } from './aggregate.js'
@@ -117,11 +118,14 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { querystring: summaryQuerySchema, response: { 200: analyticsSummarySchema } },
     },
     async (req) => {
-      const summary = await repo.getSummary(
-        activeDepartmentId(req),
-        req.actor!.userId,
-        ctxFrom(req),
-        req.query,
+      const departmentId = activeDepartmentId(req)
+      const userId = req.actor!.userId
+      // H9.1 stampede protection: several people opening /analytics at the same moment (a Monday
+      // standup, a dashboard TV) with the same department/filter/date-range coalesce into one
+      // underlying `getSummary` computation instead of each re-running the same aggregate queries.
+      const summary = await singleFlight(
+        `analytics.summary:${departmentId}:${userId}:${req.query.filter ?? ''}:${req.query.since ?? ''}:${req.query.until ?? ''}`,
+        () => repo.getSummary(departmentId, userId, ctxFrom(req), req.query),
       )
       return summaryToDto(summary)
     },
@@ -134,10 +138,10 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: analyticsSummarySchema.shape.personal } },
     },
     async (req) => {
-      const overview = await repo.getPersonalOverview(
-        activeDepartmentId(req),
-        req.actor!.userId,
-        ctxFrom(req),
+      const departmentId = activeDepartmentId(req)
+      const userId = req.actor!.userId
+      const overview = await singleFlight(`analytics.personal:${departmentId}:${userId}`, () =>
+        repo.getPersonalOverview(departmentId, userId, ctxFrom(req)),
       )
       return personalToDto(overview)
     },
@@ -150,11 +154,14 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { querystring: exportQuerySchema },
     },
     async (req, reply) => {
-      const summary = await repo.getSummary(
-        activeDepartmentId(req),
-        req.actor!.userId,
-        ctxFrom(req),
-        req.query,
+      const departmentId = activeDepartmentId(req)
+      const userId = req.actor!.userId
+      // Same cache key/shape as `GET /summary` above -- a CSV export for the same
+      // department/filter/date-range as a concurrent JSON summary request reuses that one
+      // computation instead of running it again.
+      const summary = await singleFlight(
+        `analytics.summary:${departmentId}:${userId}:${req.query.filter ?? ''}:${req.query.since ?? ''}:${req.query.until ?? ''}`,
+        () => repo.getSummary(departmentId, userId, ctxFrom(req), req.query),
       )
       const csv = summaryChartToCsv(req.query.chart, summary)
       reply

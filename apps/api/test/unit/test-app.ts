@@ -41,6 +41,9 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     CLAMAV_TIMEOUT_MS: 20_000,
     SLOW_REQUEST_MS: 1000,
     DEVON_METRICS_REMOTE: false,
+    HTTP_BODY_LIMIT_BYTES: 1 * 1024 * 1024,
+    JSON_MAX_DEPTH: 16,
+    AI_MAX_INPUT_BYTES: 32 * 1024,
     ...overrides,
   }
 }

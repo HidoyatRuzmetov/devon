@@ -10,7 +10,7 @@
 // a stand-in for it.
 import { randomBytes, randomUUID } from 'node:crypto'
 import { and, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
-import { schema, withContext, type Tx } from '@devon/db'
+import { normalizeUz, schema, withContext, type Tx } from '@devon/db'
 import { verifyPassword } from '../../lib/password.js'
 import { verifyTotp } from '../accounts/totp.js'
 import { decryptSecret as decryptAccountSecret } from '../accounts/crypto.js'
@@ -294,11 +294,20 @@ export async function searchUsers(input: {
     if (input.role) conditions.push(eq(schema.users.role, input.role))
     if (input.query) {
       const q = `%${input.query}%`
+      // H3.4/H14.1: the name half of this search matches through `app.normalize_uz()` (folds ʻ/ʼ/
+      // apostrophe variants and Cyrillic->Latin -- migrations/0006_normalize_uz.sql) so "Off Nazarov"
+      // finds "Oʻzbekov" and a Cyrillic-typed "Абдуллаев" finds a Latin-stored "Abdullayev" -- and so
+      // this is the same expression `users_name_trgm_idx` (a GIN trigram index already on
+      // `app.normalize_uz(given_name || ' ' || family_name)`) actually indexes; before this, the
+      // query ILIKE'd the raw columns directly, so that index existed but was never usable by this
+      // query (a plain `ilike(given_name, ...)` cannot use an index on a *different* expression).
+      // `normalizeUz()` (the TS mirror, `@devon/db`) folds the search term the same way so both sides
+      // of the comparison agree. `login` (an ASCII username, not Uzbek free text) stays a plain ILIKE.
+      const normalizedQ = `%${normalizeUz(input.query)}%`
       conditions.push(
         or(
           ilike(schema.users.login, q),
-          ilike(schema.users.givenName, q),
-          ilike(schema.users.familyName, q),
+          sql`app.normalize_uz(${schema.users.givenName} || ' ' || ${schema.users.familyName}) ilike ${normalizedQ}`,
         )!,
       )
     }
@@ -928,11 +937,9 @@ export async function getSystemHealth(): Promise<{
       const entries = await readdir(dir)
       if (entries.length === 0)
         return { status: 'degraded', detail: { code: 'backups.none' }, latencyMs: null }
-      let newest = 0
-      for (const entry of entries) {
-        const s = await stat(join(dir, entry))
-        if (s.mtimeMs > newest) newest = s.mtimeMs
-      }
+      // H3.1: stat every backup file entry independently in parallel, not one at a time.
+      const stats = await Promise.all(entries.map((entry) => stat(join(dir, entry))))
+      const newest = stats.reduce((max, s) => Math.max(max, s.mtimeMs), 0)
       const ageHours = (Date.now() - newest) / 3_600_000
       return {
         status: ageHours > 48 ? 'degraded' : 'ok',

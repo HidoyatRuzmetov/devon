@@ -84,6 +84,9 @@ export async function processDueReminders(limit = 50): Promise<ReminderScanResul
   const due = await scanDueJobs(limit)
   let processed = 0
   for (let i = 0; i < due.length; i += 1) {
+    // See this function's own doc comment above (bounded, infrequent worker batch; deliberately
+    // sequential so no two jobs' transactions ever overlap in one tick).
+    // nosemgrep: query-in-loop
     const fired = await processDueJob(due[i]!)
     if (fired) processed += 1
   }

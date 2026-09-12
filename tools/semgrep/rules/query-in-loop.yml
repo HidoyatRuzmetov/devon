@@ -1,9 +1,87 @@
-# HARDENING H3.1 / H29.1 "no query in a loop (Semgrep rule)" -- this repo's DB access goes through
-# `@devon/db`'s `withContext()` callback, whose transaction handle exposes `.raw(...)` for a real
-# query (apps/api/src/modules/*/repo.ts's own convention: "Postgres access ... through withContext()/
-# tx.raw() directly"). A `.raw(...)` call inside a loop body is almost always an N+1: the fix is a
-# single batched query (`where id = any($1)`, a join, or a `unnest`-based bulk write) outside the loop.
+## HARDENING H3.1 / H29.1 — "no query in a loop". Backed by TECH-SPEC §16's own rule ("no query in a
+## loop") and the codebase's own established convention (see e.g. `apps/api/src/modules/events/repo.ts`
+## `insertPollOptions`'s comment: "Independent rows for the same brand-new poll -- Promise.all, not a
+## for-of loop with an await inside it").
+##
+## MERGE NOTE (hardening integration, 2026-09-12): two packages wrote a rule for this item in parallel
+## -- the api-data package's `await`-shape heuristic (id `query-in-loop`, which the 26 reviewed
+## `// nosemgrep: query-in-loop` annotations already in apps/api/src bind to) and the ops-tooling
+## package's `.raw(...)`-specific N+1 rule (id `devon-query-in-loop`) plus a third, weaker copy of the
+## await heuristic (`await-in-loop.yml`, id `devon-await-in-for-loop`). Both surviving rules live here,
+## in one file named for the item; the weaker duplicate was folded into the first rule below (it
+## contributed the wider `paths.include` and the `Promise.all`/`allSettled` exclusions) rather than
+## kept as a third rule that would re-report all 26 already-reviewed sites under an id none of their
+## suppression comments name.
+##
+## Heuristic (rule 1): any `await` inside a `for`/`for-of`/`for-in`/`while` loop body is a
+## query-in-loop candidate — in this codebase almost every DB call, HTTP call and job-queue publish is
+## `await`ed, and the fix is always the same shape (`Promise.all` over independent items, a single
+## batched/relational query, or a bulk insert/update). A loop that is awaiting something with a
+## genuine, unavoidable sequential dependency (e.g. a retry-with-backoff sleep, or writes that must be
+## strictly ordered) is the rare, reviewed exception — suppress those with a
+## `// nosemgrep: query-in-loop` comment on the `await` line explaining why the iteration cannot run
+## independently, not by weakening this rule.
 rules:
+  - id: query-in-loop
+    languages: [typescript, ts]
+    severity: WARNING
+    message: >-
+      Await inside a loop body (H3.1/H29.1 "no query in a loop"). If each iteration is independent,
+      batch with Promise.all(items.map(...)), a single relational/batched query, or a bulk
+      insert/update instead of awaiting one at a time. If the sequence is genuinely required (retry
+      backoff, strictly-ordered writes), suppress with a `// nosemgrep: query-in-loop` comment
+      explaining why.
+    patterns:
+      - pattern: await $X
+      - pattern-either:
+          - pattern-inside: |
+              for (...) { ... }
+          - pattern-inside: |
+              for (const $I of $ITER) { ... }
+          - pattern-inside: |
+              for (let $I of $ITER) { ... }
+          - pattern-inside: |
+              for ($I in $OBJ) { ... }
+          - pattern-inside: |
+              while (...) { ... }
+      # Exclude awaits that live inside a callback passed to an array method (typically
+      # `items.map(async (x) => { await ... })` fed to `Promise.all`, which runs concurrently and is
+      # the *fix*, not the problem) -- scoped to the callback itself (not the whole enclosing
+      # function, which would otherwise swallow every await in the file) so only an await directly in
+      # the loop's own scope counts.
+      - pattern-not-inside: $ARR.$METHOD(async ($X) => { ... })
+      - pattern-not-inside: $ARR.$METHOD(async ($X) => $Y)
+      - pattern-not-inside: $ARR.$METHOD(async function ($X) { ... })
+      # From the ops-tooling copy: `await Promise.all(...)`/`allSettled(...)` *is* the batching fix, so
+      # a loop whose await targets one of those is not a violation.
+      - pattern-not: await Promise.all(...)
+      - pattern-not: await Promise.allSettled(...)
+      # Semgrep's native `// nosemgrep: query-in-loop` line-comment suppression (built in, needs no
+      # extra pattern here) is the escape hatch for a genuinely required sequential await.
+    paths:
+      include:
+        - "**/apps/api/src/**"
+        - "**/apps/web/src/**"
+        - "**/packages/*/src/**"
+      exclude:
+        - "**/*.test.ts"
+        - "**/*.spec.ts"
+        - "**/test/**"
+        # Seed fixtures (`pnpm --filter @devon/db seed`) run once at demo boot over a fixed, tiny
+        # cardinality (a handful of demo departments/users) -- never a production request path -- and
+        # most of their loops switch RLS session context per iteration (`asUser`/`asDepartment`,
+        # `set_config`), which by construction cannot be folded into one query across iterations
+        # (H3.1 is about batching *independent* reads/writes, not ones that each need a different
+        # tenancy context). Reviewed once here rather than annotating every line individually.
+        - "**/packages/db/src/seed/**"
+
+  # Rule 2 (ops-tooling package): this repo's DB access goes through `@devon/db`'s `withContext()`
+  # callback, whose transaction handle exposes `.raw(...)` for a real query (apps/api/src/modules/*/
+  # repo.ts's own convention: "Postgres access ... through withContext()/tx.raw() directly"). A
+  # `.raw(...)` call inside a loop body is almost always an N+1: the fix is a single batched query
+  # (`where id = any($1)`, a join, or a `unnest`-based bulk write) outside the loop. Narrower and more
+  # specific than rule 1, so it survives as its own id: it still fires on a `.raw()` in a loop whose
+  # `await` was suppressed as a reviewed sequential dependency.
   - id: devon-query-in-loop
     languages: [typescript, javascript]
     severity: WARNING
@@ -39,9 +117,12 @@ rules:
         - "**/*.spec.*"
         - "**/test/**"
         - "**/seed/**" # bulk seed scripts intentionally loop with per-row inserts today (idempotent, one-time, dev/demo only) -- a separate concern from a hot request-path N+1
-        # --- reviewed while building this rule (ops-tooling package, 2026-09-08) -- REAL findings, left
-        #     in the codebase because fixing them means editing apps/api/src, out of this package's edit
-        #     scope. Listed in agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md's H29
-        #     section for a follow-up package; a NEW occurrence anywhere else still fails this gate.
-        - apps/api/src/modules/notifications/repo.ts
+        # `apps/api/src/modules/notifications/repo.ts` was on this exclude list as a REAL finding when
+        # the ops-tooling package wrote this rule; the api-data package has since folded that loop into
+        # one bulk `values (...)` upsert (see its `for (const reason of REASONS)` loop, which now only
+        # builds `valueRows`), so the exclusion is gone and the file is checked like any other.
+        # `pages/onboarding.ts` still issues one `.raw()` per template inside `withContext` -- reviewed
+        # and annotated there with `// nosemgrep: query-in-loop` (each iteration writes under a
+        # different RLS/user context), which suppresses rule 1 but not this id, so it stays excluded
+        # here until that loop is restructured.
         - apps/api/src/modules/pages/onboarding.ts

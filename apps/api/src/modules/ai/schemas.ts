@@ -39,6 +39,11 @@ const runMetaSchema = z.object({
   costUzs: z.number().int(),
   latencyMs: z.number().int(),
   retried: z.boolean(),
+  // H27.1 "AI calls cached by prompt hash where deterministic": true when this response was served
+  // from `service.ts`'s short-TTL identical-input cache instead of a real provider call (no tokens
+  // spent, no new trace row). Optional/additive so an older client that has never seen this field
+  // simply ignores it -- never required, never breaks a client built before it existed.
+  cached: z.boolean().optional(),
 })
 
 export type RunFeatureResponse = z.infer<typeof runFeatureResponseSchema>

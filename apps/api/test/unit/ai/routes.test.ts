@@ -136,4 +136,24 @@ describe('POST /api/v1/ai/features/:feature/run', () => {
     expect(res.statusCode).toBe(422)
     await app.close()
   })
+
+  // H7.4 "AI input length": checked in the route's own `preValidation` (index.ts), ahead of both
+  // schema validation and the permission preHandler -- proven here by asserting the 422 fires for a
+  // completely unauthenticated caller too, exactly like the app-wide JSON-depth/body-size limits.
+  it('rejects an oversized input before authentication or permission checks even run', async () => {
+    const { app } = await buildTestApp()
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/ai/features/translate/run',
+      // Default AI_MAX_INPUT_BYTES is 32 KiB; comfortably over that, well under the app-wide
+      // HTTP_BODY_LIMIT_BYTES (1 MiB) so this exercises the AI-specific limit, not the generic one.
+      payload: { input: { text: 'x'.repeat(64 * 1024) } },
+    })
+    expect(res.statusCode).toBe(422)
+    expect(res.json()).toMatchObject({
+      code: 'validation_failed',
+      errors: [{ path: 'input', code: 'too_large' }],
+    })
+    await app.close()
+  })
 })

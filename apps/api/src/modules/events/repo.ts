@@ -719,6 +719,20 @@ export async function replacePollVotes(
     idFor: (optionId: string) => string
   },
 ): Promise<void> {
+  // H10.1: this is a delete-then-insert "replace", not a single atomic statement -- two concurrent
+  // votes from the *same* voter (a double-click, two open tabs) could otherwise interleave (both
+  // deletes see the pre-vote state, both inserts land) and leave votes for two different option sets
+  // instead of the second call's choice winning outright. `pg_advisory_xact_lock` serialises calls for
+  // the same (poll, voter) pair for the lifetime of this transaction only (released automatically at
+  // commit/rollback, never held past `withContext`'s own transaction) -- it does not protect against
+  // two *different* voters, which the partial unique indexes on `app.poll_votes`
+  // (`0902_poll_votes_idempotency.sql`) already handle without any lock.
+  const lockKey =
+    'userId' in input.identity
+      ? `${input.pollId}:u:${input.identity.userId}`
+      : `${input.pollId}:v:${input.identity.voterHash}`
+  await tx.raw(sql`select pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`)
+
   if ('userId' in input.identity) {
     await tx.raw(
       sql`delete from app.poll_votes where poll_id = ${input.pollId} and user_id = ${input.identity.userId}`,

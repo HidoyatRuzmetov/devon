@@ -76,6 +76,41 @@ async function getProgress(
   )
 }
 
+const EMPTY_PROGRESS: ProgressRow = {
+  objective_total: 0,
+  objective_done: 0,
+  subjective_total: 0,
+  subjective_done: 0,
+}
+
+/** H3.1: the batched form of `getProgress` for a whole page of projects -- one `group by project_id`
+ * query instead of one query per project (the N+1 `listProjects` used to run). Projects with zero
+ * cards simply have no row in the result and fall back to `EMPTY_PROGRESS`. */
+async function getProgressBatch(
+  tx: { raw<R>(q: SQL): Promise<R[]> },
+  projectIds: readonly string[],
+): Promise<Map<string, ProgressRow>> {
+  if (projectIds.length === 0) return new Map()
+  // Parameterised `in (...)` list (H1.7: never string-concatenated SQL), not one query per project.
+  const idList = sql.join(
+    projectIds.map((id) => sql`${id}`),
+    sql`, `,
+  )
+  const rows = await tx.raw<ProgressRow & { project_id: string }>(
+    sql`select
+          project_id,
+          count(*) filter (where project_scope = 'objective') as objective_total,
+          count(*) filter (where project_scope = 'objective' and status = 'done') as objective_done,
+          count(*) filter (where project_scope = 'subjective') as subjective_total,
+          count(*) filter (where project_scope = 'subjective' and status = 'done') as subjective_done
+        from app.cards
+        where project_id in (${idList})
+          and deleted_at is null
+        group by project_id`,
+  )
+  return new Map(rows.map((r) => [r.project_id, r]))
+}
+
 export async function listProjects(
   ctx: RequestContext,
   departmentId: string,
@@ -88,11 +123,13 @@ export async function listProjects(
           where department_id = ${departmentId} and deleted_at is null
           order by (status = 'active') desc, created_at desc`,
     )
-    const out: ProjectDTO[] = []
-    for (const row of rows) {
-      out.push(toProjectDTO(row, await getProgress(tx, row.id)))
-    }
-    return out
+    // H3.1: one batched `group by project_id` query for every project's progress instead of an
+    // N+1 `getProgress` per row.
+    const progressByProject = await getProgressBatch(
+      tx,
+      rows.map((r) => r.id),
+    )
+    return rows.map((row) => toProjectDTO(row, progressByProject.get(row.id) ?? EMPTY_PROGRESS))
   })
 }
 

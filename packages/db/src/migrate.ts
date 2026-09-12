@@ -89,12 +89,17 @@ export async function applyMigrations(
         continue
       }
       const sql = substituteVars(file.sql, vars)
+      // nosemgrep: query-in-loop -- see this loop's comment above (strictly ordered migrations).
       await client.query('begin')
       try {
+        // nosemgrep: query-in-loop -- same transaction as 'begin' above; strictly ordered.
         await client.query(sql)
+        // nosemgrep: query-in-loop -- same transaction as 'begin' above; strictly ordered.
         await client.query('insert into app._migrations (name) values ($1)', [file.name])
+        // nosemgrep: query-in-loop -- same transaction as 'begin' above; strictly ordered.
         await client.query('commit')
       } catch (err) {
+        // nosemgrep: query-in-loop -- rollback of the same per-migration transaction.
         await client.query('rollback').catch(() => {})
         throw new Error(`migration ${file.name} failed: ${(err as Error).message}`, { cause: err })
       }

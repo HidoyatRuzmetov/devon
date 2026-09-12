@@ -388,16 +388,18 @@ export async function putPrefs(
   }[],
 ): Promise<PrefRow[]> {
   await withContext(toRequestContext(ctx, { userId }), async (tx) => {
-    // Plain indexed loop, not for-of (TECH-SPEC §16's lint rule only flags for-of bodies -- see
-    // `jobs.ts`'s header comment for the fuller reasoning this file reuses): each row is independent,
-    // written one at a time so the pref rows a single PUT touches land in a predictable order inside
-    // the one transaction, same as `demo.ts`'s own sequential seed-module loop.
-    for (let i = 0; i < items.length; i += 1) {
-      const item = items[i]!
-      const digestMode = item.digestMode ?? defaultPref(item.reason, item.channel).digestMode
+    if (items.length > 0) {
+      // H3.1/H3.2: one multi-row upsert (a VALUES list joined against the target table -- the same
+      // shape `pages/onboarding.ts` and `personal/repo.ts`'s `reorderTasks` already use for a batch)
+      // instead of one `insert ... on conflict` per item.
+      const valueRows = items.map((item) => {
+        const digestMode = item.digestMode ?? defaultPref(item.reason, item.channel).digestMode
+        return sql`(${userId}::uuid, ${item.reason}::app.notification_reason, ${item.channel}::app.notification_channel, ${item.enabled}::boolean, ${digestMode}::app.notification_digest_mode)`
+      })
       await tx.raw(sql`
         insert into app.notification_prefs (user_id, reason, channel, enabled, digest_mode)
-        values (${userId}, ${item.reason}, ${item.channel}, ${item.enabled}, ${digestMode})
+        select * from (values ${sql.join(valueRows, sql.raw(', '))})
+          as v(user_id, reason, channel, enabled, digest_mode)
         on conflict (user_id, reason, channel)
         do update set enabled = excluded.enabled, digest_mode = excluded.digest_mode, updated_at = now()
       `)

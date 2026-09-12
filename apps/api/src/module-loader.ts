@@ -46,24 +46,29 @@ export async function loadApiModules(dir: string = DEFAULT_MODULES_DIR): Promise
     .map((entry) => entry.name)
     .sort((a, b) => a.localeCompare(b))
 
-  const modules: ApiModule[] = []
-  for (const name of names) {
-    // A `.js` specifier that resolves to a sibling `.ts` file at runtime -- the same convention every
-    // static import in this codebase already relies on under `tsx`/vitest in dev and test, and that
-    // resolves to the real compiled `.js` once `tsc` has run for `node dist/server.js` in production.
-    // `@vite-ignore`: vitest runs this file through Vite, which otherwise refuses to statically analyse
-    // a template-literal specifier (it wants a glob for that) -- this is a plain runtime `import()`,
-    // not something that needs Vite's module graph.
-    const imported = (await import(/* @vite-ignore */ `./modules/${name}/index.js`)) as {
-      default?: FastifyPluginAsyncZod
-      prefix?: string
-    }
-    if (!imported.default) {
-      throw new Error(
-        `api module loader: "src/modules/${name}/index.ts" has no default export (expected a Fastify plugin)`,
-      )
-    }
-    modules.push({ name, plugin: imported.default, prefix: imported.prefix ?? '' })
-  }
-  return modules
+  // H3.1/H7.1: every module's dynamic import is independent of every other's -- load them in
+  // parallel (boot-time cost, not per-request, but still "no await in a loop" per TECH-SPEC §16).
+  // `names` is already the sorted, deterministic order; `Promise.all` preserves that order in the
+  // returned array regardless of which import settles first, so registration order in `app.ts` is
+  // unaffected.
+  return Promise.all(
+    names.map(async (name) => {
+      // A `.js` specifier that resolves to a sibling `.ts` file at runtime -- the same convention every
+      // static import in this codebase already relies on under `tsx`/vitest in dev and test, and that
+      // resolves to the real compiled `.js` once `tsc` has run for `node dist/server.js` in production.
+      // `@vite-ignore`: vitest runs this file through Vite, which otherwise refuses to statically
+      // analyse a template-literal specifier (it wants a glob for that) -- this is a plain runtime
+      // `import()`, not something that needs Vite's module graph.
+      const imported = (await import(/* @vite-ignore */ `./modules/${name}/index.js`)) as {
+        default?: FastifyPluginAsyncZod
+        prefix?: string
+      }
+      if (!imported.default) {
+        throw new Error(
+          `api module loader: "src/modules/${name}/index.ts" has no default export (expected a Fastify plugin)`,
+        )
+      }
+      return { name, plugin: imported.default, prefix: imported.prefix ?? '' }
+    }),
+  )
 }

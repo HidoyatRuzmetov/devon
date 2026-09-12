@@ -68,6 +68,36 @@ const configSchema = z
     CLAMAV_HOST: z.string().min(1).default('127.0.0.1'),
     CLAMAV_PORT: z.coerce.number().int().positive().default(3310),
     CLAMAV_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
+
+    // --- request body/JSON/AI-input limits (H7.4) ----------------------------------------------
+    // Fastify's own undocumented-but-real default (`bodyLimit`) is already 1 MiB, so this does not
+    // change behaviour today -- it makes the limit an explicit, reviewed, env-overridable number
+    // (TECH-SPEC §16 "pin exact versions"/"tokens only" posture: no implicit defaults for a security
+    // boundary) instead of "whatever this Fastify version happens to default to".
+    HTTP_BODY_LIMIT_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(1 * 1024 * 1024),
+    // A legitimate card/comment/checklist body never nests more than a handful of levels deep
+    // (TECH-SPEC §3's JSON columns -- `description`, `links`, `recurrence` -- are shallow, editor-
+    // authored documents); an attacker-crafted deeply-nested JSON body (`[[[[[...]]]]]`) costs the
+    // JSON parser and every recursive validator/serializer that walks it far more CPU per byte than
+    // a flat one of the same size, so depth is bounded independently of `HTTP_BODY_LIMIT_BYTES`.
+    JSON_MAX_DEPTH: z.coerce.number().int().positive().default(16),
+    // The AI gateway's `input` (`modules/ai/schemas.ts`'s `runFeatureBodySchema`) is a free-form
+    // record whose per-feature shape is validated *inside* `@devon/ai`'s `runFeature()` -- but that
+    // per-feature validation happens after this input has already been JSON-parsed, hashed for the
+    // cache key, and is about to be spent as provider tokens. This is the outer, feature-agnostic
+    // ceiling: large enough for a real quick-add phrase, a sprint's worth of card titles, or a
+    // comment thread to summarise, small enough that a request cannot turn into an unbounded GLM
+    // bill or a multi-megabyte prompt (H27.1's "no repeated processing of unchanged data" begins
+    // with "bounded processing of any single request").
+    AI_MAX_INPUT_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(32 * 1024),
   })
   .superRefine((cfg, ctx) => {
     if (cfg.STORAGE_DRIVER === 's3') {
