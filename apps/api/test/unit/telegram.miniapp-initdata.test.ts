@@ -78,7 +78,9 @@ describe('verifyInitData — the happy path', () => {
   })
 
   it('carries the deep-link start parameter the bot buttons use', () => {
-    const result = verifyInitData(valid({ start_param: 'card_9f2a' }), SAMPLE_BOT_TOKEN, { now: NOW })
+    const result = verifyInitData(valid({ start_param: 'card_9f2a' }), SAMPLE_BOT_TOKEN, {
+      now: NOW,
+    })
     expect(result.ok && result.data.startParam).toBe('card_9f2a')
   })
 
@@ -143,7 +145,10 @@ describe('verifyInitData — every way in is closed', () => {
 
   it('refuses an empty, absent or whitespace payload', () => {
     for (const bad of [null, undefined, '', '   ']) {
-      expect(verifyInitData(bad, SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({ ok: false, reason: 'missing' })
+      expect(verifyInitData(bad, SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({
+        ok: false,
+        reason: 'missing',
+      })
     }
   })
 
@@ -169,7 +174,9 @@ describe('verifyInitData — every way in is closed', () => {
 describe('verifyInitData — replay and clocks', () => {
   it('accepts a payload right at the freshness boundary and refuses one past it', () => {
     const atEdge = String(Math.floor(NOW.getTime() / 1000) - INIT_DATA_MAX_AGE_SECONDS)
-    expect(verifyInitData(valid({ auth_date: atEdge }), SAMPLE_BOT_TOKEN, { now: NOW }).ok).toBe(true)
+    expect(verifyInitData(valid({ auth_date: atEdge }), SAMPLE_BOT_TOKEN, { now: NOW }).ok).toBe(
+      true,
+    )
 
     const pastEdge = String(Math.floor(NOW.getTime() / 1000) - INIT_DATA_MAX_AGE_SECONDS - 1)
     expect(verifyInitData(valid({ auth_date: pastEdge }), SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({
@@ -180,17 +187,19 @@ describe('verifyInitData — replay and clocks', () => {
 
   it('refuses yesterday’s captured launch even though its signature is genuine', () => {
     const yesterday = String(Math.floor(NOW.getTime() / 1000) - 24 * 60 * 60)
-    expect(verifyInitData(valid({ auth_date: yesterday }), SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({
-      ok: false,
-      reason: 'expired',
-    })
+    expect(verifyInitData(valid({ auth_date: yesterday }), SAMPLE_BOT_TOKEN, { now: NOW })).toEqual(
+      {
+        ok: false,
+        reason: 'expired',
+      },
+    )
   })
 
   it('tolerates a minute of clock skew but refuses a payload from the future', () => {
     const slightlyAhead = String(Math.floor(NOW.getTime() / 1000) + 30)
-    expect(verifyInitData(valid({ auth_date: slightlyAhead }), SAMPLE_BOT_TOKEN, { now: NOW }).ok).toBe(
-      true,
-    )
+    expect(
+      verifyInitData(valid({ auth_date: slightlyAhead }), SAMPLE_BOT_TOKEN, { now: NOW }).ok,
+    ).toBe(true)
     const wayAhead = String(Math.floor(NOW.getTime() / 1000) + 3600)
     expect(verifyInitData(valid({ auth_date: wayAhead }), SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({
       ok: false,
@@ -204,7 +213,9 @@ describe('verifyInitData — replay and clocks', () => {
       ok: false,
       reason: 'expired',
     })
-    expect(verifyInitData(valid({ auth_date: 'yesterday' }), SAMPLE_BOT_TOKEN, { now: NOW })).toEqual({
+    expect(
+      verifyInitData(valid({ auth_date: 'yesterday' }), SAMPLE_BOT_TOKEN, { now: NOW }),
+    ).toEqual({
       ok: false,
       reason: 'expired',
     })
