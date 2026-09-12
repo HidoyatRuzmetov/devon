@@ -103,31 +103,28 @@ describe('cards (work module) -- department_child, actor-context scoped', () => 
     expect(allIds).not.toContain(cardId)
   })
 
-  // BUG (H1.2): confirmed. `work/repo.ts`'s `addChecklistItem` and `addComment` insert
-  // `(department_id, card_id) = (actor's own department, :cardId from the URL)` directly, with no
-  // query first confirming the card actually belongs to that department (every other card sub-route --
-  // patch, archive, label, watcher -- does that check; these two do not). A member of a *different*
-  // department can attach a checklist item or comment row to *any* card id, cross-tenant, getting 201
-  // instead of the 404 every sibling route returns. `it.fails` keeps the suite green while this stands
-  // as a live regression probe -- see `tests.md` for the exact lines and the fix shape (add the same
-  // `where department_id = $1 and id = $2` existence check `patchCard` already does, before insert).
-  it.fails(
-    'a different department cannot add a checklist item or comment to the card',
-    async () => {
-      const checklist = await fetch(`${baseUrl}/api/v1/cards/${cardId}/checklist`, {
-        method: 'POST',
-        headers: bHead.headers,
-        body: JSON.stringify({ text: 'pwned' }),
-      })
-      expect(checklist.status).toBe(404)
-      const comment = await fetch(`${baseUrl}/api/v1/cards/${cardId}/comments`, {
-        method: 'POST',
-        headers: bHead.headers,
-        body: JSON.stringify({ text: 'pwned' }),
-      })
-      expect(comment.status).toBe(404)
-    },
-  )
+  // H1.2 (was `it.fails`, fixed by the security hardening package): `work/repo.ts`'s
+  // `addChecklistItem` and `addComment` used to insert `(department_id, card_id) = (actor's own
+  // department, :cardId from the URL)` directly, with no query first confirming the card actually
+  // belongs to that department (every other card sub-route -- patch, archive, label, watcher -- did
+  // that check; these two did not), so a member of a *different* department could attach a checklist
+  // item or comment row to *any* card id, cross-tenant, and get 201 where every sibling route returns
+  // 404. The cross-department object-id refusal (H1.2/H1.11/H1.16) closed it; this now asserts the
+  // fix rather than documenting the hole.
+  it('a different department cannot add a checklist item or comment to the card', async () => {
+    const checklist = await fetch(`${baseUrl}/api/v1/cards/${cardId}/checklist`, {
+      method: 'POST',
+      headers: bHead.headers,
+      body: JSON.stringify({ text: 'pwned' }),
+    })
+    expect(checklist.status).toBe(404)
+    const comment = await fetch(`${baseUrl}/api/v1/cards/${cardId}/comments`, {
+      method: 'POST',
+      headers: bHead.headers,
+      body: JSON.stringify({ text: 'pwned' }),
+    })
+    expect(comment.status).toBe(404)
+  })
 })
 
 describe('projects (work module) -- department_child, actor-context scoped', () => {

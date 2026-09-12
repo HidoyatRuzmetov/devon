@@ -48,18 +48,15 @@ describe('no enumeration: login response is uniform whether the account exists o
   })
 })
 
-describe('BUG (H1.9): rate-limit-exceeded is not surfaced as 429 -- it becomes a generic 500', () => {
-  // `apps/api/src/app.ts`'s global `setErrorHandler` only special-cases `err.validation` and
-  // `FST_ERR_CTP_BODY_TOO_LARGE`; `@fastify/rate-limit`'s own thrown error (a plain `Error` with
-  // `.statusCode = 429`, no `.validation`) falls through to the handler's final branch, which
-  // unconditionally replies `500` with `code: 'internal'` -- so a client that is actually being
-  // correctly throttled sees "Internal Server Error", never "Too Many Requests", and `rate_limited`
-  // (a real entry in `PROBLEM_CODES`, `packages/contracts/src/problem.ts`) is never reachable from
-  // this code path. `it.fails` keeps this suite green while this stands as a live probe: the moment
-  // the error handler special-cases a `statusCode`-bearing error (or `@fastify/rate-limit` is given
-  // its own `errorResponseBuilder`), this assertion will start passing and Vitest will report the
-  // `it.fails` itself as a failure -- the signal to flip it back to a plain `it`.
-  it.fails('POST /accounts/register past its 10/minute limit responds 429, not 500', async () => {
+describe('H1.9: rate-limit-exceeded is surfaced as 429, not as a generic 500', () => {
+  // Was `it.fails`: `apps/api/src/app.ts`'s global `setErrorHandler` used to special-case only
+  // `err.validation` and `FST_ERR_CTP_BODY_TOO_LARGE`, so `@fastify/rate-limit`'s own thrown error (a
+  // plain `Error` with `.statusCode = 429`, no `.validation`) fell through to the final branch and was
+  // answered `500 internal` -- a correctly throttled client was told the server had failed, and
+  // `rate_limited` (a real entry in `PROBLEM_CODES`, `packages/contracts/src/problem.ts`) was
+  // unreachable from this path. The security hardening package added the "every other transport-level
+  // 4xx keeps its own status" branch to that handler, so this is now a plain assertion of the fix.
+  it('POST /accounts/register past its 10/minute limit responds 429, not 500', async () => {
     let last: Response | undefined
     for (let i = 0; i < 14; i += 1) {
       last = await fetch(`${baseUrl}/api/v1/accounts/register`, {
