@@ -16,7 +16,10 @@ test('@smoke locale switch on /login is exactly 2 clicks and updates every visib
 
   await expect(page.getByRole('heading', { name: 'Вход в систему' })).toBeVisible()
   await expect(page.getByText('Логин или эл. почта')).toBeVisible()
-  await expect(page.getByText('Пароль')).toBeVisible()
+  // `exact: true` -- a case-insensitive substring match also resolves the "Забыли пароль?" link,
+  // making this locator ambiguous (found running this suite for real, unrelated to this test's own
+  // assertion: not a locale-switch regression, just a pre-existing `getByText` looseness).
+  await expect(page.getByText('Пароль', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Войти' })).toBeVisible()
 })
 
