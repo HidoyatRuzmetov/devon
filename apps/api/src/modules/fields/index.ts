@@ -23,7 +23,12 @@ import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { RequestContext } from '@devon/db'
-import { FIELD_CAPS, type FieldAppliesTo, type FieldOption } from '@devon/contracts'
+import {
+  FIELD_CAPS,
+  type FieldAppliesTo,
+  type FieldOption,
+  type FieldValue,
+} from '@devon/contracts'
 import { contextDepartmentRole, isHeadOf } from '../../lib/actor.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -67,7 +72,14 @@ function toDbContext(req: FastifyRequest): RequestContext {
 
 function splitList(raw: string | undefined): string[] {
   if (!raw) return []
-  return [...new Set(raw.split(',').map((s) => s.trim()).filter(Boolean))]
+  return [
+    ...new Set(
+      raw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ]
 }
 
 /** Every domain error this module can raise, mapped to the exact Problem the rest of the API uses.
@@ -83,9 +95,13 @@ function replyForError(reply: FastifyReply, err: unknown): boolean {
     return true
   }
   if (err instanceof FieldRefusedError) {
-    sendProblem(reply, err.code === 'cap_reached' || err.code === 'duplicate_key' ? 'conflict' : 'validation_failed', {
-      errors: [{ path: err.path, code: err.code }],
-    })
+    sendProblem(
+      reply,
+      err.code === 'cap_reached' || err.code === 'duplicate_key' ? 'conflict' : 'validation_failed',
+      {
+        errors: [{ path: err.path, code: err.code }],
+      },
+    )
     return true
   }
   return false
@@ -122,9 +138,7 @@ function compactOptions(
 /** `FieldValue` allows a `readonly string[]` (a multi-select answer); the wire schema is a plain
  * array. This copy is the one place the two meet -- the same shape `modules/people/index.ts` uses for
  * its list indicators. */
-function wireValue(
-  value: import('@devon/contracts').FieldValue,
-): string | number | boolean | string[] | null {
+function wireValue(value: FieldValue): string | number | boolean | string[] | null {
   return Array.isArray(value) ? [...value] : ((value ?? null) as string | number | boolean | null)
 }
 
@@ -238,20 +252,14 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
               ? { options: compactOptions(req.body.options) }
               : {}),
             ...(req.body.required !== undefined ? { required: req.body.required } : {}),
-            ...(req.body.defaultValue !== undefined
-              ? { defaultValue: req.body.defaultValue }
-              : {}),
+            ...(req.body.defaultValue !== undefined ? { defaultValue: req.body.defaultValue } : {}),
             ...(req.body.showInTable !== undefined ? { showInTable: req.body.showInTable } : {}),
             ...(req.body.showOnCardTile !== undefined
               ? { showOnCardTile: req.body.showOnCardTile }
               : {}),
-            ...(req.body.selfEditable !== undefined
-              ? { selfEditable: req.body.selfEditable }
-              : {}),
+            ...(req.body.selfEditable !== undefined ? { selfEditable: req.body.selfEditable } : {}),
             ...(req.body.visibleTo !== undefined ? { visibleTo: req.body.visibleTo } : {}),
-            ...(req.body.reminderDays !== undefined
-              ? { reminderDays: req.body.reminderDays }
-              : {}),
+            ...(req.body.reminderDays !== undefined ? { reminderDays: req.body.reminderDays } : {}),
           },
         })
         return { def: wireDef(def) }

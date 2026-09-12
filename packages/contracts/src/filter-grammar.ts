@@ -319,7 +319,10 @@ function fieldMatches(
   if (clause.empty) return missing
   if (missing) return false
 
-  const needle = clause.value.trim().toLowerCase().replace(/[ʻʼ‘’]/g, "'")
+  const needle = clause.value
+    .trim()
+    .toLowerCase()
+    .replace(/[ʻʼ‘’]/g, "'")
 
   if (typeof value === 'boolean') {
     if (TRUE_WORDS.has(needle)) return value
@@ -327,9 +330,18 @@ function fieldMatches(
     return false
   }
   if (Array.isArray(value)) {
-    return value.some((v) => String(v).toLowerCase().replace(/[ʻʼ‘’]/g, "'") === needle)
+    return value.some(
+      (v) =>
+        String(v)
+          .toLowerCase()
+          .replace(/[ʻʼ‘’]/g, "'") === needle,
+    )
   }
-  return String(value).toLowerCase().replace(/[ʻʼ‘’]/g, "'") === needle
+  return (
+    String(value)
+      .toLowerCase()
+      .replace(/[ʻʼ‘’]/g, "'") === needle
+  )
 }
 
 /** Pure, synchronous evaluator -- no I/O, so it runs identically for an optimistic client-side update

@@ -471,6 +471,9 @@ export const FIELD_EMPTY_WORDS: readonly string[] = [
 ]
 
 export function isFieldEmptyWord(value: string): boolean {
-  const v = value.trim().toLowerCase().replace(/[ʻʼ‘’]/g, "'")
+  const v = value
+    .trim()
+    .toLowerCase()
+    .replace(/[ʻʼ‘’]/g, "'")
   return FIELD_EMPTY_WORDS.some((w) => w.toLowerCase().replace(/[ʻʼ]/g, "'") === v)
 }

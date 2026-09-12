@@ -5,6 +5,7 @@ import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import {
+  ClipboardList,
   Image as ImageIcon,
   KeyRound,
   Monitor,
@@ -51,6 +52,7 @@ import {
   type AvatarUploadStage,
   type SessionView,
 } from './api.js'
+import { MyFieldsSection } from '../fields/components/my-fields-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
 
@@ -654,7 +656,13 @@ interface SubNavItem {
 const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNavItem[] }> = [
   {
     headingKey: 'accounts.settings.profile',
-    items: [{ id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon }],
+    items: [
+      { id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon },
+      // v1.1 SPEC §5: the boshqarma's own columns about this person. `id: 'fields'` is deliberate --
+      // it is the anchor `/account#fields` that a fill request's inbox row and its Telegram
+      // "Toʻldirish" button both open.
+      { id: 'fields', labelKey: 'fields.my.title', icon: ClipboardList },
+    ],
   },
   {
     headingKey: 'accounts.settings.security',
@@ -741,6 +749,7 @@ export default function AccountSettingsScreen() {
         <SettingsSubNav className="lg:hidden" flat />
         <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
           <PhotoSection />
+          <MyFieldsSection />
           <SessionsSection />
           <TwoFactorSection />
           <PasswordSection />

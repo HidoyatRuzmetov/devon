@@ -143,7 +143,9 @@ export async function insertDef(tx: Tx, input: InsertDef): Promise<DefRow> {
   return rows[0]!
 }
 
-export type DefPatch = Partial<Omit<InsertDef, 'departmentId' | 'appliesTo' | 'key' | 'createdByUserId'>>
+export type DefPatch = Partial<
+  Omit<InsertDef, 'departmentId' | 'appliesTo' | 'key' | 'createdByUserId'>
+>
 
 export async function updateDef(
   tx: Tx,
@@ -279,10 +281,7 @@ export type UpsertValue = {
   updatedByUserId: string
 }
 
-export async function upsertValue(
-  tx: Tx,
-  input: UpsertValue,
-): Promise<Omit<ValueRow, 'key'>> {
+export async function upsertValue(tx: Tx, input: UpsertValue): Promise<Omit<ValueRow, 'key'>> {
   const rows = await tx.raw<Omit<ValueRow, 'key'>>(sql`
     insert into app.field_values (
       department_id, def_id, subject_type, subject_id, subject_user_id, head_only, value,
@@ -497,9 +496,9 @@ export async function openRequestsFor(
 
 /** Every department that has at least one open request older than its definition's own reminder
  * window -- the reminder sweep's worklist, one query for the whole instance. */
-export async function departmentsNeedingReminders(tx: Tx): Promise<
-  { department_id: string; def_id: string; reminder_days: number }[]
-> {
+export async function departmentsNeedingReminders(
+  tx: Tx,
+): Promise<{ department_id: string; def_id: string; reminder_days: number }[]> {
   return tx.raw<{ department_id: string; def_id: string; reminder_days: number }>(sql`
     select r.department_id, r.def_id, d.reminder_days
     from app.field_requests r

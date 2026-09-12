@@ -175,10 +175,7 @@ function buildActionKeyboard(
     // v1.1 SPEC §5: a fill request is an individual message (never a group) whose one button says
     // what it actually does -- "Toʻldirish", not the generic "Ochish" -- and opens the person's own
     // profile at its fields section.
-    kb.url(
-      tb(locale, notification.reason === 'field_request' ? 'button.fill' : 'button.open'),
-      url,
-    )
+    kb.url(tb(locale, notification.reason === 'field_request' ? 'button.fill' : 'button.open'), url)
     any = true
   }
   return any ? kb : null

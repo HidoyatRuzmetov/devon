@@ -77,9 +77,7 @@ export const updateDefSchema = createDefSchema
   .partial()
   .strict()
 
-export const reorderSchema = z
-  .object({ ids: z.array(z.string().uuid()).min(1).max(50) })
-  .strict()
+export const reorderSchema = z.object({ ids: z.array(z.string().uuid()).min(1).max(50) }).strict()
 
 export const defParamsSchema = z.object({ id: z.string().uuid() })
 
@@ -165,9 +163,7 @@ export const setValueSchema = z
   })
   .strict()
 
-export const setManySchema = z
-  .object({ items: z.array(setValueSchema).min(1).max(50) })
-  .strict()
+export const setManySchema = z.object({ items: z.array(setValueSchema).min(1).max(50) }).strict()
 
 export const notifyResponseSchema = z.object({
   filled: z.number().int().nonnegative(),

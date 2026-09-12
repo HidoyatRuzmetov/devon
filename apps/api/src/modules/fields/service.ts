@@ -56,12 +56,7 @@ export async function listDefs(
   },
 ): Promise<FieldDefDto[]> {
   return withContext(ctx, async (tx) => {
-    const rows = await repo.listDefs(
-      tx,
-      input.departmentId,
-      input.appliesTo,
-      input.includeArchived,
-    )
+    const rows = await repo.listDefs(tx, input.departmentId, input.appliesTo, input.includeArchived)
     // Progress is a head-only number and only person fields have it -- one batched query for every
     // definition on screen, never one per row (I-14).
     const personIds = rows.filter((r) => r.applies_to === 'person').map((r) => r.id)
@@ -236,7 +231,9 @@ export async function createDef(ctx: RequestContext, input: CreateDefInput): Pro
   })
 }
 
-export type UpdateDefInput = Partial<Omit<CreateDefInput, 'departmentId' | 'actorUserId' | 'appliesTo' | 'key'>>
+export type UpdateDefInput = Partial<
+  Omit<CreateDefInput, 'departmentId' | 'actorUserId' | 'appliesTo' | 'key'>
+>
 
 export async function updateDef(
   ctx: RequestContext,
@@ -450,9 +447,7 @@ export async function notifyToFill(
     // Nobody new to ask -> this is the nudge. `reminder_days` is the head's own window, and `0` here
     // would re-ping everyone on every click, so the nudge respects it too.
     const reminded =
-      asked.length === 0
-        ? await repo.markReminded(tx, input.departmentId, input.defId, 0)
-        : []
+      asked.length === 0 ? await repo.markReminded(tx, input.departmentId, input.defId, 0) : []
 
     for (const userId of [...asked, ...reminded]) {
       tx.emit({
