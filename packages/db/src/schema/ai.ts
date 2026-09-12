@@ -53,3 +53,35 @@ export const aiTraces = appSchema.table('ai_traces', {
   status: aiTraceStatusEnum('status').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+/**
+ * AI L2 (EPIC-016, migration 0810). One row per indexed thing -- a card, a comment, a page, an event
+ * -- carrying the text search actually runs over, plus an OPTIONAL embedding.
+ *
+ * The `tsv` generated column and the `embedding` column are two backends over one table, on purpose:
+ * `tsv` is always populated by Postgres itself, so keyword and trigram search work on any deployment;
+ * `embedding` is written by a sidecar job only when `@devon/ai`'s runtime probe finds that this
+ * GLM endpoint actually serves `/v1/embeddings`. Neither the schema nor the queries change when the
+ * answer flips -- only which WHERE clause the search repo picks.
+ *
+ * `tsv` and `embedding` are deliberately absent from this Drizzle definition: a `tsvector` generated
+ * column is never written by application code (Postgres computes it), and `vector(1024)` has no
+ * Drizzle column type in the version pinned here. Both are read and written through `Tx.raw()` in
+ * `apps/api/src/modules/ai/search-repo.ts`, which is how every other module's non-trivial SQL works
+ * in this codebase.
+ */
+export const aiSearchDocuments = appSchema.table('ai_search_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  departmentId: uuid('department_id').notNull(),
+  /** `'card' | 'comment' | 'page' | 'event'` -- plain text, see the migration's comment for why. */
+  subjectType: text('subject_type').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  title: text('title').notNull().default(''),
+  body: text('body').notNull().default(''),
+  embeddingModel: text('embedding_model'),
+  /** sha256 of title+body when the embedding was written -- the sidecar's "has this changed" test. */
+  contentHash: text('content_hash').notNull().default(''),
+  embeddedAt: timestamp('embedded_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

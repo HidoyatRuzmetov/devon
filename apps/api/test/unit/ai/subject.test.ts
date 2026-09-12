@@ -27,7 +27,22 @@ describe('featureRunSubject', () => {
     expect(subject).toEqual({ kind: 'personal', ownerUserId: 'user-1' })
   })
 
-  for (const feature of AI_FEATURE_IDS.filter((f) => f !== 'plan_sprint')) {
+  // v1.1 SPEC §2.2 + §8: two helpers answer a management question about *other people* -- who is
+  // late (`board_risk_digest`) and who should take this (`suggest_assignee`). Those are
+  // `department_managed`, i.e. head-only on the server, not merely hidden in the client. A member
+  // running them was exactly the role leakage the CTO reported.
+  const HEAD_ONLY = ['board_risk_digest', 'suggest_assignee'] as const
+
+  for (const feature of HEAD_ONLY) {
+    it(`is {kind: department_managed, departmentId} for ${feature} (head-only)`, () => {
+      const subject = featureRunSubject(fakeRequest(feature, 'user-1', 'dept-1'))
+      expect(subject).toEqual({ kind: 'department_managed', departmentId: 'dept-1' })
+    })
+  }
+
+  for (const feature of AI_FEATURE_IDS.filter(
+    (f) => f !== 'plan_sprint' && !(HEAD_ONLY as readonly string[]).includes(f),
+  )) {
     it(`is {kind: department_child, departmentId} for ${feature}`, () => {
       const subject = featureRunSubject(fakeRequest(feature, 'user-1', 'dept-1'))
       expect(subject).toEqual({ kind: 'department_child', departmentId: 'dept-1' })

@@ -72,6 +72,8 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   // EPIC-012 ai (MODULE-GUIDE.md "DB: schema").
   'app.ai_department_settings': 'department_owned',
   'app.ai_traces': 'department_owned',
+  // EPIC-016 AI L2: the search index behind semantic search and the "Ask" box (migration 0810).
+  'app.ai_search_documents': 'department_owned',
 
   // EPIC-010/011 analytics + pages/onboarding-lite (MODULE-GUIDE.md "DB: schema").
   'app.analytics_daily': 'department_owned',

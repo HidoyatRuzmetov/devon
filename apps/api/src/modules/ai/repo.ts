@@ -141,9 +141,29 @@ export async function insertTrace(tx: Tx, input: InsertTraceInput): Promise<stri
   return rows[0]!.id
 }
 
+/**
+ * AI-AUDIT §5 fix 15: this month's spend broken down per feature, so `/ai` can show a head *which*
+ * helper is expensive instead of only how much is left. One grouped aggregate, never one query per
+ * feature (I-9).
+ */
+export async function spentThisMonthByFeature(
+  tx: Tx,
+  departmentId: string,
+): Promise<Record<string, number>> {
+  const rows = await tx.raw<{ feature: string; total: number }>(sql`
+    select feature, coalesce(sum(cost_uzs), 0)::int as total
+    from app.ai_traces
+    where department_id = ${departmentId}
+      and created_at >= date_trunc('month', now())
+    group by feature
+  `)
+  return Object.fromEntries(rows.map((row) => [row.feature, row.total]))
+}
+
 export type TraceRow = {
   id: string
   user_id: string
+  user_name: string
   feature: string
   model: string
   prompt_tokens: number
@@ -165,13 +185,22 @@ export async function listTraces(
   limit: number,
   onlyUserId: string | null = null,
 ): Promise<TraceRow[]> {
+  // SPEC §12 "the AI trace has a 'who ran it' column": joined here, in the same statement, rather
+  // than resolved per row by the caller (I-9). `left join` because a trace outlives the person --
+  // a xodim who has left the department must not make their own history unreadable.
   return tx.raw<TraceRow>(sql`
-    select id, user_id, feature, model, prompt_tokens, completion_tokens, total_tokens, cost_uzs,
-           latency_ms, retried, status, created_at
-    from app.ai_traces
-    where department_id = ${departmentId}
-      and (${onlyUserId}::uuid is null or user_id = ${onlyUserId}::uuid)
-    order by created_at desc
+    select t.id, t.user_id,
+           coalesce(nullif(trim(concat_ws(' ', u.family_name, u.given_name)), ''), '') as user_name,
+           t.feature, t.model,
+           t.prompt_tokens, t.completion_tokens, t.total_tokens, t.cost_uzs,
+           t.latency_ms, t.retried, t.status, t.created_at
+    from app.ai_traces t
+    left join app.memberships m
+      on m.user_id = t.user_id and m.department_id = t.department_id and m.deleted_at is null
+    left join app.users u on u.id = m.user_id
+    where t.department_id = ${departmentId}
+      and (${onlyUserId}::uuid is null or t.user_id = ${onlyUserId}::uuid)
+    order by t.created_at desc
     limit ${limit}
   `)
 }
