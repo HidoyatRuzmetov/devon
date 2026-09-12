@@ -111,7 +111,8 @@
       "people": "Кишилар",
       "cards": "Карталар",
       "events": "Тадбирлар",
-      "pages": "Саҳифалар"
+      "pages": "Саҳифалар",
+      "projects": "Лойиҳалар"
     },
     "item": {
       "home": "Бош саҳифага ўтиш",
@@ -2561,7 +2562,8 @@
       "aiParse": "AI билан аниқлаш",
       "aiPreviewTitle": "AI аниқлаган карта",
       "aiError": "Матнни аниқлаб бўлмади",
-      "aiMeta": "{tokens} токен · {ms} мс"
+      "aiMeta": "{tokens} токен · {ms} мс",
+      "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади."
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",

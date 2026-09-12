@@ -45,7 +45,8 @@
       "aiParse": "Распознать через ИИ",
       "aiPreviewTitle": "Карточка, распознанная ИИ",
       "aiError": "Не удалось распознать текст",
-      "aiMeta": "{tokens} токенов · {ms} мс"
+      "aiMeta": "{tokens} токенов · {ms} мс",
+      "dialogHint": "Введите название. Можно так: «Нодира: отчёт, пятница» — исполнитель и срок распознаются сами."
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",

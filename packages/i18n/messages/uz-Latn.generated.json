@@ -111,7 +111,8 @@
       "people": "Kishilar",
       "cards": "Kartalar",
       "events": "Tadbirlar",
-      "pages": "Sahifalar"
+      "pages": "Sahifalar",
+      "projects": "Loyihalar"
     },
     "item": {
       "home": "Bosh sahifaga oʻtish",
@@ -2561,7 +2562,8 @@
       "aiParse": "AI bilan aniqlash",
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matnni aniqlab boʻlmadi",
-      "aiMeta": "{tokens} token · {ms} ms"
+      "aiMeta": "{tokens} token · {ms} ms",
+      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi."
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",

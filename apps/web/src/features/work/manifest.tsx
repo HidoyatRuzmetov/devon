@@ -40,11 +40,18 @@ const manifest: FeatureManifest = {
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },
   ],
-  // The shell's top-bar quick-add (MODULE-GUIDE.md "Web features": `quickAdd`). The board's own
-  // quick-add bar is where a card is actually typed; this entry is the always-available way to get
-  // there from any screen in the product.
+  // The shell's top-bar quick-add (MODULE-GUIDE.md "Web features": `quickAdd`).
+  //
+  // v1.1 (WALKTHROUGH-FINDINGS 2.2): this used to point at `/work`, so the product's most prominent
+  // button navigated to the board and stopped -- no dialog, no focused input. `?new=1` opens the
+  // card composer (`components/new-card-dialog.tsx`) on arrival, from any screen in the product.
   quickAdd: [
-    { id: 'work.newCard', labelKey: 'work.actions.create', path: '/work', icon: KanbanSquare },
+    {
+      id: 'work.newCard',
+      labelKey: 'work.actions.create',
+      path: '/work?new=1',
+      icon: KanbanSquare,
+    },
   ],
 }
 export default manifest

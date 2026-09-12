@@ -111,7 +111,8 @@
       "people": "People",
       "cards": "Cards",
       "events": "Events",
-      "pages": "Pages"
+      "pages": "Pages",
+      "projects": "Projects"
     },
     "item": {
       "home": "Go to Home",
@@ -2561,7 +2562,8 @@
       "aiParse": "Parse with AI",
       "aiPreviewTitle": "AI-parsed card",
       "aiError": "Could not parse that text",
-      "aiMeta": "{tokens} tokens · {ms} ms"
+      "aiMeta": "{tokens} tokens · {ms} ms",
+      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood."
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",

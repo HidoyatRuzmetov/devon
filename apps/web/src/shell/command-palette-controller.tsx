@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   CalendarDays,
   FileText,
+  FolderKanban,
   Globe,
   KanbanSquare,
   LogOut,
@@ -31,6 +32,8 @@ import { getFeatureCommandEntries, getFeatureQuickAddEntries } from '../features
 import { fetchCards, type Card } from '../features/work/api.js'
 import { fetchEvents } from '../features/events/api.js'
 import type { EventDto } from '../features/events/schemas.js'
+import { fetchProjects } from '../features/projects/api.js'
+import type { Project } from '../features/projects/api.js'
 import { fetchPages } from '../features/pages/api.js'
 import type { PageSummary } from '../features/pages/types.js'
 import { fetchMembers, type Member } from '../features/structure/api.js'
@@ -111,6 +114,7 @@ interface PaletteEntities {
   cards: Card[]
   events: EventDto[]
   pages: PageSummary[]
+  projects: Project[]
 }
 
 /** The palette's real, async sources -- people, cards, events, pages -- each fetched once the
@@ -146,12 +150,21 @@ function usePaletteEntities(open: boolean, departmentId: string | null): Palette
     enabled,
     staleTime: 30_000,
   })
+  // v1.1 (WALKTHROUGH-FINDINGS 2.3): projects were the one thing a search for "hisobot" obviously
+  // should have found and did not -- "Yillik hisobot 2026" is a project, not a card.
+  const projectsQuery = useQuery({
+    queryKey: ['palette', 'projects'],
+    queryFn: () => fetchProjects(),
+    enabled,
+    staleTime: 30_000,
+  })
 
   return {
     members: membersQuery.data ?? [],
     cards: cardsQuery.data?.items ?? [],
     events: eventsQuery.data?.items ?? [],
     pages: pagesQuery.data ?? [],
+    projects: projectsQuery.data ?? [],
   }
 }
 
@@ -232,6 +245,12 @@ export function CommandPaletteController({
     icon: CalendarDays,
     onSelect: () => go(`/events?event=${encodeURIComponent(event.id)}`),
   }))
+  const projectItems = entities.projects.slice(0, SOURCE_LIMIT).map((project) => ({
+    id: `project:${project.id}`,
+    label: project.title,
+    icon: FolderKanban,
+    onSelect: () => go(`/projects/view?id=${encodeURIComponent(project.id)}`),
+  }))
   const pageItems = entities.pages.slice(0, SOURCE_LIMIT).map((page) => ({
     id: `page:${page.id}`,
     label: page.title,
@@ -241,6 +260,9 @@ export function CommandPaletteController({
   const entityGroups: CommandPaletteGroup[] = [
     ...(peopleItems.length > 0 ? [{ heading: t('cmd.group.people'), items: peopleItems }] : []),
     ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
+    ...(projectItems.length > 0
+      ? [{ heading: t('cmd.group.projects'), items: projectItems }]
+      : []),
     ...(eventItems.length > 0 ? [{ heading: t('cmd.group.events'), items: eventItems }] : []),
     ...(pageItems.length > 0 ? [{ heading: t('cmd.group.pages'), items: pageItems }] : []),
   ]

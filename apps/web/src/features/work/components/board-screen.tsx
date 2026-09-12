@@ -34,6 +34,7 @@ import { useAnnounce, DndAnnouncerProvider } from './dnd-announcer.js'
 import { useBoardQuery, useMoveCardMutation } from '../hooks.js'
 import { BoardColumn } from './board-column.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
+import { NewCardDialog } from './new-card-dialog.js'
 import { TouchDragPreviewLayer } from './touch-drag-preview.js'
 import { WorkShell } from './work-shell.js'
 import type { CardDropSpec } from './card-tile.js'
@@ -480,6 +481,8 @@ export default function BoardScreen() {
         <BoardScreenInner />
       </WorkShell>
       <CardPeekDialog />
+      {/* SPEC 12: the shell's "+ Yangi -> Yangi vazifa" routes to `/work?new=1`, which this opens. */}
+      <NewCardDialog />
       <TouchDragPreviewLayer />
     </DndAnnouncerProvider>
   )

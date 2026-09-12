@@ -57,6 +57,27 @@ const GROUP_HEADING_CLASS =
   '[&_[cmdk-group-heading]]:tracking-(--text-eyebrow--letter-spacing) ' +
   '[&_[cmdk-group-heading]]:text-muted-foreground'
 
+/**
+ * cmdk keys its selection on an item's `value`, not on its React key -- so two rows that happen to
+ * share a label are ONE value to cmdk, and both render highlighted and both fire on Enter. That is
+ * exactly what WALKTHROUGH-FINDINGS 2.3 caught: "Boʻlimlar" and "AI" each appear twice in the
+ * default palette (once under Recent, once under Go to) and both copies lit up together.
+ *
+ * The value therefore has to be unique, while still being the text cmdk's fuzzy filter scores
+ * against -- so the label leads (and the keywords follow), and a disambiguating suffix is appended
+ * only to the second and later occurrences of a label. A first occurrence is unchanged, which keeps
+ * scoring identical to before for every palette that has no duplicates at all.
+ */
+function uniqueValue(
+  item: { id: string; label: string; keywords?: readonly string[] },
+  seen: Map<string, number>,
+): string {
+  const base = [item.label, ...(item.keywords ?? [])].join(' ')
+  const count = seen.get(base) ?? 0
+  seen.set(base, count + 1)
+  return count === 0 ? base : `${base} \u200b${count}`
+}
+
 function CommandPaletteBody({
   placeholder,
   emptyMessage,
@@ -67,6 +88,9 @@ function CommandPaletteBody({
   loading,
   openHintLabel,
 }: Omit<CommandPaletteProps, 'open' | 'onOpenChange' | 'title' | 'variant'>) {
+  // Rebuilt on every render, in render order, so the "first occurrence keeps the plain value" rule
+  // is stable between renders (the group order is).
+  const seen = new Map<string, number>()
   return (
     <Command
       shouldFilter
@@ -109,7 +133,7 @@ function CommandPaletteBody({
                 {group.items.map((item) => (
                   <Command.Item
                     key={item.id}
-                    value={[item.label, ...(item.keywords ?? [])].join(' ')}
+                    value={uniqueValue(item, seen)}
                     onSelect={item.onSelect}
                     className={cn(
                       'group flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 text-body text-foreground',

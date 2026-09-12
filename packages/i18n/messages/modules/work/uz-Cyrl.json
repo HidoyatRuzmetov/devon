@@ -45,7 +45,8 @@
       "aiParse": "AI билан аниқлаш",
       "aiPreviewTitle": "AI аниқлаган карта",
       "aiError": "Матнни аниқлаб бўлмади",
-      "aiMeta": "{tokens} токен · {ms} мс"
+      "aiMeta": "{tokens} токен · {ms} мс",
+      "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади."
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
