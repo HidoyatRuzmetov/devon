@@ -883,165 +883,348 @@
   "ai": {
     "title": "AI",
     "eyebrow": "AI",
-    "description": "Budget, feature flags and usage for this department's AI helpers.",
+    "description": "The department's AI helpers: what each one does, where it lives, what it costs and who has used it.",
     "tabs": {
-      "overview": "Overview",
-      "usage": "Usage",
-      "assistant": "Assistant"
+      "helpers": "Helpers",
+      "ask": "Ask",
+      "usage": "Usage"
+    },
+    "command": {
+      "ask": "Ask AI",
+      "search": "Search the department"
+    },
+    "simulated": {
+      "title": "Sample answer.",
+      "body": "No AI key is configured on this server, so the answer was produced here and nothing was paid for it.",
+      "bannerTitle": "No AI key is configured.",
+      "bannerBody": "The helpers work, but every answer is a sample: no real model is called and nothing is charged."
+    },
+    "confidence": {
+      "high": "Confident",
+      "medium": "Check this",
+      "low": "Uncertain"
     },
     "budget": {
       "title": "Monthly AI budget",
       "status": {
-        "ok": "On track",
-        "soft_cap": "Near the cap",
-        "hard_stop": "Budget used up"
+        "ok": "Within budget",
+        "soft_cap": "Close to the cap",
+        "hard_stop": "Budget spent"
       },
-      "spentOfCap": "{spent} spent of {cap} this month",
-      "resetToast": "Monthly AI budget reset",
+      "spentOfCap": "{spent} of {cap} spent this month",
+      "resetToast": "The monthly AI budget has reset",
       "editLabel": "Monthly budget (UZS)",
-      "save": "Save budget",
+      "save": "Save the budget",
       "invalidAmount": "Enter a valid amount"
     },
     "flags": {
-      "title": "Features",
-      "description": "Turn AI features on or off for this department. Off by default until you enable them.",
-      "headOnly": "Only a department head can change these."
+      "title": "Helpers",
+      "description": "Read what each helper does and switch on the ones this department needs. Every one is off until you switch it on.",
+      "headOnly": "Only the head of the department can change these.",
+      "headOnlyBadge": "Head only",
+      "whereLabel": "Where:"
     },
     "usage": {
       "empty": {
         "title": "No AI calls yet",
-        "body": "Usage will appear here once someone in this department tries an AI feature."
+        "body": "Once someone in the department uses a helper, the usage appears here."
       },
       "columns": {
         "when": "When",
-        "feature": "Feature",
+        "who": "Who",
+        "feature": "Helper",
         "status": "Status",
         "tokens": "Tokens",
         "cost": "Cost",
         "latency": "Latency"
       },
+      "unknownUser": "No longer in this department",
       "status": {
-        "ok": "OK",
-        "empty_after_retry": "Empty reply",
-        "schema_invalid_after_retry": "Invalid reply",
+        "ok": "Fine",
+        "empty_after_retry": "Empty answer",
+        "schema_invalid_after_retry": "Malformed answer",
         "provider_error": "Provider error",
-        "blocked_budget": "Budget blocked",
-        "blocked_flag": "Feature disabled"
+        "blocked_budget": "Stopped by the budget",
+        "blocked_flag": "Helper switched off"
       }
     },
     "result": {
       "title": "Preview",
-      "tokens": "{count} tokens",
-      "latency": "{ms} ms",
-      "accept": "Copy result",
-      "copied": "Copied to clipboard",
-      "retried": "Retried once",
+      "pending": "Preparing the answer…",
+      "accept": "Apply",
       "edit": "Edit",
       "discard": "Discard",
-      "retry": "Retry",
-      "costLine": "{tokens} tokens · {ms} ms"
+      "retry": "Try again",
+      "latency": "{ms} ms",
+      "costLine": "{cost} · {tokens} tokens · {ms} ms",
+      "cachedLine": "Cached answer · {tokens} tokens · nothing new charged"
     },
-    "assistant": {
-      "title": "AI assistant",
-      "description": "Try an AI feature: fill in the fields, preview the result, then copy it or use it in the matching screen.",
-      "preview": "Preview",
-      "pending": "Preparing the answer…",
-      "disabled": {
-        "title": "This feature is off",
-        "body": "Ask a department head to turn it on in the Overview tab."
+    "ask": {
+      "label": "Ask the department's own records",
+      "placeholder": "For example: who is preparing the EGDI package?",
+      "submit": "Ask",
+      "hint": "The answer comes only from this department's cards, comments, pages and events. Every answer carries a link to its source.",
+      "answerTitle": "Answer: {question}",
+      "done": "Close"
+    },
+    "search": {
+      "title": "Found",
+      "typeToSearch": "Type at least two letters to search.",
+      "noHits": "Nothing found.",
+      "untitled": "Untitled",
+      "backendTitle": "How search works here",
+      "backend": {
+        "embeddings": "Meaning-based search",
+        "fts": "Keyword search"
       },
-      "budgetExceeded": {
-        "title": "This month's AI budget is used up",
-        "body": "Ask a department head to raise the monthly budget in the Overview tab."
+      "reason": {
+        "ok": "This GLM deployment offers an embeddings model, so search runs on meaning.",
+        "no_api_key": "No AI key is configured, so search runs on Postgres keyword and letter-similarity matching.",
+        "models_endpoint_unreachable": "The GLM server could not be reached, so search runs on keywords.",
+        "no_embeddings_model_listed": "This GLM deployment offers no embeddings model, so search runs on keywords.",
+        "embeddings_endpoint_failed": "The embeddings request failed, so search runs on keywords.",
+        "dimension_mismatch": "The embeddings vector was not the expected width, so search runs on keywords."
+      },
+      "indexed": "{count} records indexed, {pending} waiting.",
+      "rebuild": "Rebuild the index",
+      "rebuildHint": "Re-reads cards, comments, pages and events.",
+      "rebuilt": "{indexed} records refreshed, {embedded} vectors written.",
+      "kind": {
+        "card": "Card",
+        "comment": "Comment",
+        "page": "Page",
+        "event": "Event"
       }
     },
     "errors": {
       "invalidInput": "Check the fields and try again",
-      "forbidden": "This feature is off or the budget is used up",
-      "runFailed": "The AI could not produce an answer this time"
+      "forbidden": "This helper is switched off, or the budget is spent",
+      "runFailed": "AI could not answer just now",
+      "headOnly": "This helper is for the head of the department only"
+    },
+    "translateTarget": {
+      "label": "Into which language",
+      "uz-Latn": "Uzbek (Latin)",
+      "uz-Cyrl": "Uzbek (Cyrillic)",
+      "ru": "Russian",
+      "en": "English"
+    },
+    "preview": {
+      "noDate": "No deadline",
+      "unknownPerson": "Unknown person",
+      "unknownProject": "Unknown project",
+      "unknownCard": "Unknown card",
+      "openCard": "Open the card",
+      "minutes": "{count} min",
+      "needsApproval": "Needs approval",
+      "risk": {
+        "high": "High risk",
+        "medium": "Medium risk",
+        "low": "Low risk"
+      },
+      "severity": {
+        "high": "Serious",
+        "medium": "Moderate"
+      },
+      "quickAdd": {
+        "title": "Title",
+        "assignee": "Owner",
+        "noAssignee": "Not chosen",
+        "due": "Deadline",
+        "priority": "Importance",
+        "labels": "Labels",
+        "project": "Project",
+        "ambiguous": "Several people matched"
+      },
+      "subtasks": {
+        "insufficient": "There is not enough in this card to break down. Add a description and try again.",
+        "total": "{count} steps, about {minutes} min in total."
+      },
+      "plan": {
+        "focus": "Start here",
+        "wontFit": "Will not fit",
+        "overCommitted": "The plan is {minutes} min longer than the time left."
+      },
+      "catchUp": {
+        "wins": "Finished",
+        "risks": "Risks",
+        "overloaded": "People carrying too much",
+        "needsYou": "Waiting for you ({count})",
+        "action": "Needs action",
+        "more": "{count} more",
+        "ahead": "Coming up",
+        "openCount": "{count} open items"
+      },
+      "event": {
+        "place": "Place",
+        "attendees": "Expected attendance",
+        "dateOptions": "Date options",
+        "checklist": "Preparation checklist",
+        "carpool": "Travel"
+      },
+      "thread": {
+        "empty": "This discussion has no decisions and no open questions yet.",
+        "decisions": "Decisions",
+        "openQuestions": "Open questions",
+        "commitments": "Who promised what",
+        "source": "Source {n}",
+        "source1": "Source"
+      },
+      "analytics": {
+        "filter": "The filter it used",
+        "noFilter": "No filter",
+        "unmapped": "These words did not map to the filter: {terms}",
+        "chart": {
+          "bar": "Bars",
+          "line": "Line",
+          "pie": "Pie",
+          "table": "Table",
+          "burnup": "Burn-up"
+        },
+        "groupBy": {
+          "person": "By person",
+          "unit": "By unit",
+          "project": "By project",
+          "label": "By label",
+          "status": "By status",
+          "none": "Not grouped"
+        }
+      },
+      "translate": {
+        "alreadyInTarget": "The text was already in that language.",
+        "uncertain": "Uncertain terms:"
+      },
+      "reply": {
+        "tone": {
+          "neutral": "Plain",
+          "formal": "Formal",
+          "brief": "Brief"
+        },
+        "answering": "Answers {count} comment(s)",
+        "stillNeeded": "You still need to say:"
+      },
+      "riskAction": {
+        "move_due_date": "Move the deadline",
+        "ping_assignee": "Remind the owner",
+        "split_into_subtasks": "Break into steps",
+        "reassign": "Give to someone else",
+        "mark_blocked": "Mark as blocked"
+      },
+      "digest": {
+        "pressure": "Pressure points"
+      },
+      "assignee": {
+        "none": "Nobody here is a good fit right now.",
+        "choose": "Choose"
+      },
+      "duplicate": {
+        "none": "Nothing similar found.",
+        "duplicate": "Duplicate",
+        "related": "Related"
+      },
+      "ask": {
+        "notFound": "The department's records do not answer this question.",
+        "sources": "Sources",
+        "openSource": "Open the source"
+      }
     },
     "features": {
       "quickAddParse": {
-        "label": "Quick-add parsing",
-        "description": "Turn a free-typed sentence into a card title, assignee, due date and priority, in any of the four locales."
+        "label": "Quick add parsing",
+        "description": "Turns one sentence into a title, an owner, a deadline, an importance and labels. Today's date is supplied, so “tomorrow” and “by Friday” land on the right day.",
+        "where": "The quick add row on the board and in the personal workspace.",
+        "example": "“Give Nodira the quarterly report by Friday, urgent” → title, owner Nodira Karimova, deadline 19 September, urgent."
       },
       "subtaskBreakdown": {
-        "label": "Break into subtasks",
-        "description": "Split one card into a checklist of concrete, actionable subtasks."
+        "label": "Break into steps",
+        "description": "Splits one card into steps someone can actually do, each with a rough time.",
+        "where": "The checklist section inside a card, and the personal workspace row.",
+        "example": "“Prepare the EGDI package” → gather data, draft the schedule, agree with the unit, final copy."
       },
       "planSprint": {
-        "label": "Plan my period",
-        "description": "Suggest an order for your open personal to-dos and what to focus on first."
+        "label": "Plan the period",
+        "description": "Orders your open work by deadline, importance and the time you have left, says what to start with and what will not fit.",
+        "where": "Periods in the personal workspace, and the project page.",
+        "example": "Three hours and seven items → an ordered plan, the first one marked, two flagged as not fitting."
       },
       "deadlineRisk": {
-        "label": "Deadline risk",
-        "description": "Explain whether a card is at risk of missing its deadline, and what to do about it."
+        "label": "Explain this risk",
+        "description": "Says in plain words why a card carries its risk badge and proposes one concrete step. It never recalculates the risk level.",
+        "where": "Next to the risk badge on a card.",
+        "example": "“The deadline passed yesterday and the checklist is half done” → the reason, plus “move the deadline to 22 September”."
       },
-      "weeklySummary": {
-        "label": "Weekly summary",
-        "description": "Draft a short digest for one person or one department, from done/overdue/new cards."
+      "catchUp": {
+        "label": "What did I miss",
+        "description": "Gathers what happened while you were away, or over the past week: finished work, risks, what is waiting for you. For the head it is the Monday briefing over the whole unit.",
+        "where": "Home, the personal workspace, and the project page.",
+        "example": "“Since Friday: 4 finished, 2 overdue, Anvar has 11 open items.”"
       },
       "draftEvent": {
         "label": "Draft an event",
-        "description": "Turn a one-line idea into a description, checklist, poll options and a carpool plan."
+        "description": "Turns a one-line idea into a complete event: description, date options, a preparation checklist and a travel plan.",
+        "where": "The create-event dialog.",
+        "example": "“Autumn outing to Chorvoq” → description, three date options, an eight-item checklist, a travel plan."
       },
       "summarizeThread": {
-        "label": "Summarise a thread",
-        "description": "Summarise a long card comment thread, citing the comments it is based on."
+        "label": "Summarise the discussion",
+        "description": "Pulls the decisions, the open questions and who promised what out of a long comment thread, each with a link to the comment.",
+        "where": "Card and event comments.",
+        "example": "24 comments → 3 decisions, 2 open questions, “Anvar sends the PDF by Thursday”."
       },
       "nlAnalytics": {
         "label": "Ask analytics",
-        "description": "Turn a plain-language question into a filter and a chart type."
+        "description": "Turns a plain-language question into a filter and answers with the numbers, showing the filter it used.",
+        "where": "The analytics page.",
+        "example": "“Overdue work in the Data unit this month” → 7, with the filter and a chart."
       },
       "translate": {
         "label": "Translate",
-        "description": "Translate text into any of the four locales."
+        "description": "Translates text into the language you pick, leaving department terms alone. Latin ↔ Cyrillic never goes to the model — it is converted here.",
+        "where": "Card description, the page editor, and personal notes.",
+        "example": "An Uzbek description → a Russian translation with “muddat” and “boʻlim” preserved."
+      },
+      "draftReply": {
+        "label": "Draft a reply",
+        "description": "Writes a polite, businesslike reply to a discussion. It never sends: the text lands in the comment box and sending stays your decision.",
+        "where": "The card comment box, and a mention in the inbox.",
+        "example": "“Should I ask to move the deadline?” → a ready reply, plus “you still need to give the new date”."
+      },
+      "boardRiskDigest": {
+        "label": "Who is running late",
+        "description": "Ranks the riskiest work on the board in a single call, each with a reason and one action. Head only.",
+        "where": "The board header.",
+        "example": "Five items with reasons, plus the pressure point “Anvar has 11 open items”."
+      },
+      "suggestAssignee": {
+        "label": "Who should take this",
+        "description": "Proposes three candidates by workload and experience. The reason is only ever workload or experience, never a judgement. The head chooses.",
+        "where": "The owner field on a card.",
+        "example": "“EGDI report” → Nodira (4 items on this subject), Anvar (heavily loaded), Dilnoza."
+      },
+      "duplicateCheck": {
+        "label": "Find duplicates",
+        "description": "While you write a new item, checks whether a similar one already exists and links to it.",
+        "where": "Card creation, and the quick add preview.",
+        "example": "“Prepare the report” → “Prepare the quarterly report” is already open."
+      },
+      "semanticAsk": {
+        "label": "Ask the department's own records",
+        "description": "Answers a question using only this department's cards, comments, pages and events, citing each source. If it is not there, it says so.",
+        "where": "The “Ask” section on the AI page, and Ctrl+K.",
+        "example": "“Who is preparing the EGDI package?” → “Nodira Karimova, deadline 18 September”, linked to the card."
+      },
+      "weeklySummary": {
+        "label": "Weekly summary (retired)",
+        "description": "Now part of the “What did I miss” helper. Older records kept this name.",
+        "where": "No screen of its own any more.",
+        "example": "Appears in older usage records."
       },
       "whatDidIMiss": {
-        "label": "What did I miss",
-        "description": "Catch up on new cards, comments and events since you were last here."
+        "label": "What did I miss (retired)",
+        "description": "Now part of the “What did I miss” helper. Older records kept this name.",
+        "where": "No screen of its own any more.",
+        "example": "Appears in older usage records."
       }
-    },
-    "fields": {
-      "text": "Text",
-      "cardTitle": "Card title",
-      "cardDescription": "Card description (optional)",
-      "memberNames": "Department members (one per line, optional)",
-      "idea": "Event idea",
-      "query": "Question",
-      "knownUnits": "Known units (one per line, optional)",
-      "dueDate": "Due date (YYYY-MM-DD)",
-      "today": "Today (YYYY-MM-DD)",
-      "checklistTotal": "Checklist items",
-      "checklistDone": "Checklist items done",
-      "daysSinceUpdate": "Days since last update",
-      "comments": "Comments (one per line: id | text)",
-      "subjectName": "Person or department name",
-      "periodLabel": "Period label",
-      "doneCards": "Done cards (one per line: id | title, optional)",
-      "overdueCards": "Overdue cards (one per line: id | title, optional)",
-      "newCards": "New cards (one per line: id | title, optional)",
-      "sinceLabel": "Since when",
-      "commentsOnMyCards": "Comments on your cards (one per line: id | title, optional)",
-      "upcomingEvents": "Upcoming events (one per line: id | title, optional)",
-      "goal": "Goal (optional)",
-      "tasks": "Open to-dos (one per line: id | title)"
-    },
-    "samples": {
-      "translate": "The meeting starts tomorrow at 10 AM.",
-      "quickAdd": "Assign Nodira the quarterly report by Friday, high priority",
-      "memberNames": "Nodira Karimova\nAnvar Aliyev",
-      "event": "Autumn picnic at Chorvoq",
-      "analytics": "Overdue cards of Data boʻlimi this month",
-      "dueDate": "2026-09-10",
-      "today": "2026-09-08",
-      "period": "this week",
-      "since": "last Friday"
-    },
-    "placeholders": {
-      "commentLines": "k1 | We agreed on the September figures.\nk2 | I will send the final PDF tomorrow.",
-      "cardLines": "c1 | Quarterly report\nc2 | Website update",
-      "taskLines": "t1 | Reply to emails\nt2 | Write the report"
     }
   },
   "analytics": {

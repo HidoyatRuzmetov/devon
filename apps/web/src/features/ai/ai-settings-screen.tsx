@@ -1,7 +1,22 @@
-// The AI screen (TECH-SPEC §8: "Settings page with budget, flags and usage"). One route (`/ai`),
-// tabbed internally (MODULE-GUIDE.md: routes are exact-path only) -- Overview (budget gauge + per-
-// feature flags, head-editable), Usage (recent traces), Assistant (`assistant-panel.tsx`'s preview-
-// then-accept panel).
+// The AI screen (`/ai`). One route, three tabs, two products (SPEC §3.1, §8).
+//
+// v1.0's version is the screen AI-AUDIT §0.5 called "gray", and it was right: a budget ring, a number
+// input, ten identical toggle rows with no description of what any of them did, and a third tab that
+// was a raw-JSON playground whose Accept button copied `JSON.stringify(result)` to the clipboard.
+// `featureDescriptionKey()` already existed, already had four locales, and was called from nowhere.
+//
+// This version answers the three questions a person actually arrives with:
+//
+//   * **Yordamchilar** — what each helper does, *where in the product it appears*, and a concrete
+//     example of what it turns in and turns out. Every row, for everyone. The head additionally gets
+//     the switch and this month's spend for that one helper (AI-AUDIT §5 fix 15), so "this is
+//     expensive" becomes an action on one row instead of switching AI off entirely.
+//   * **Soʻrash** — the Ask box (EPIC-016), with the raw retrieval under it.
+//   * **Foydalanish** — who ran what, when, at what price, including the blocked attempts v1.1
+//     started recording (G-5). A member sees their own runs; a head sees the department's.
+//
+// The Yordamchi raw-JSON tab is gone (AI-AUDIT §4, D-3) along with `assistant-panel.tsx` and
+// `feature-forms.ts`. Every helper is reached where the work is, which is the entire point of them.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useT, useLocale, formatDate, formatTime, formatUzs, formatNumber } from '@devon/i18n'
@@ -23,22 +38,37 @@ import {
   useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
-import { BarChart3, Gauge, Sparkles } from 'lucide-react'
+import { BarChart3, Database, Gauge, RefreshCw, Sparkles } from 'lucide-react'
 import { useDepartment, useSession } from '../../lib/session.js'
-import { AssistantPanel } from './assistant-panel.js'
-import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
-import { AI_FEATURE_IDS, featureLabelKey, type AiFeatureId, type Trace } from './types.js'
+import { AskPanel } from './ask-panel.js'
+import {
+  useAiSettingsQuery,
+  useAiUsageQuery,
+  usePatchAiSettingsMutation,
+  useRebuildIndexMutation,
+} from './use-ai.js'
+import {
+  AI_FEATURE_IDS,
+  HEAD_ONLY_FEATURES,
+  featureDescriptionKey,
+  featureExampleKey,
+  featureLabelKey,
+  featureWhereKey,
+  type AiFeatureId,
+  type AiSettings,
+  type Trace,
+} from './types.js'
 
-type TabId = 'overview' | 'usage' | 'assistant'
+type TabId = 'helpers' | 'ask' | 'usage'
 
 const TABS: {
   id: TabId
   labelKey: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
 }[] = [
-  { id: 'overview', labelKey: 'ai.tabs.overview', icon: Gauge },
+  { id: 'helpers', labelKey: 'ai.tabs.helpers', icon: Gauge },
+  { id: 'ask', labelKey: 'ai.tabs.ask', icon: Sparkles },
   { id: 'usage', labelKey: 'ai.tabs.usage', icon: BarChart3 },
-  { id: 'assistant', labelKey: 'ai.tabs.assistant', icon: Sparkles },
 ]
 
 /** DESIGN.md §3 "budget gauge ring": the department's monthly AI spend read as one number a head can
@@ -126,8 +156,84 @@ function BudgetGauge({
   )
 }
 
-function OverviewTab() {
+/**
+ * SPEC §8 "Honesty": the head's AI budget and the admin health page must agree about whether a key is
+ * configured, and every person pressing a sparkle button deserves to know the answer will be a
+ * simulation before they trust it. One strip, everyone sees it, only when it is true.
+ */
+function SimulatedBanner() {
   const t = useT()
+  return (
+    <p
+      role="note"
+      className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-small text-foreground"
+    >
+      <Sparkles className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+      <span className="min-w-0">
+        <span className="font-medium">{t('ai.simulated.bannerTitle')}</span>{' '}
+        {t('ai.simulated.bannerBody')}
+      </span>
+    </p>
+  )
+}
+
+/** EPIC-016: which retrieval backend is live, why, and what the head can do about it. Written as a
+ * sentence, not a status code -- "keyword search, because this GLM deployment does not offer an
+ * embeddings model" is a thing a boshqarma boshligʻi can act on or accept. */
+function SearchBackendCard({ search, isHead }: { search: AiSettings['search']; isHead: boolean }) {
+  const t = useT()
+  const locale = useLocale()
+  const rebuild = useRebuildIndexMutation()
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Database className="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <h3 className="text-small font-medium text-foreground">{t('ai.search.backendTitle')}</h3>
+        <Badge tone={search.backend === 'embeddings' ? 'success' : 'neutral'}>
+          {t(`ai.search.backend.${search.backend}`)}
+        </Badge>
+      </div>
+      <p className="text-small text-muted-foreground">
+        {t(`ai.search.reason.${search.reason}`)}
+      </p>
+      <p className="text-caption tabular-nums text-muted-foreground">
+        {t('ai.search.indexed', {
+          count: formatNumber(search.indexedCount, locale),
+          pending: formatNumber(search.pendingEmbeddingCount, locale),
+        })}
+      </p>
+      {isHead ? (
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={rebuild.isPending}
+            onClick={() =>
+              rebuild.mutate(undefined, {
+                onSuccess: (result) =>
+                  toast(
+                    t('ai.search.rebuilt', {
+                      indexed: formatNumber(result.indexed, locale),
+                      embedded: formatNumber(result.embedded, locale),
+                    }),
+                  ),
+                onError: () => toast(t('toast.saveError')),
+              })
+            }
+          >
+            <RefreshCw className="size-3.5" aria-hidden="true" />
+            {t('ai.search.rebuild')}
+          </Button>
+          <span className="text-caption text-muted-foreground">{t('ai.search.rebuildHint')}</span>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function HelpersTab() {
+  const t = useT()
+  const locale = useLocale()
   const { department } = useDepartment()
   const settingsQuery = useAiSettingsQuery()
   const patchMutation = usePatchAiSettingsMutation()
@@ -182,8 +288,16 @@ function OverviewTab() {
     )
   }
 
+  // SPEC §2.2: a member never sees a helper that only a head may run. The server refuses it anyway;
+  // this is the manners, not the enforcement.
+  const visibleFeatures = AI_FEATURE_IDS.filter(
+    (feature) => isHead || !HEAD_ONLY_FEATURES.includes(feature),
+  )
+
   return (
     <div className="flex flex-col gap-6">
+      {settings.simulated ? <SimulatedBanner /> : null}
+
       {/* D2a: the budget ring, the monthly spend and the cost of the department's AI are the
           boshqarma boshlig'i's business. The server omits them for a xodim; this is the matching
           hide, and the screen's remaining half -- which helpers exist and what they do -- is exactly
@@ -221,43 +335,76 @@ function OverviewTab() {
         </div>
       ) : null}
 
+      <SearchBackendCard search={settings.search} isHead={isHead} />
+
       <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4">
         <h3 className="text-small font-medium text-foreground">{t('ai.flags.title')}</h3>
         <p className="mb-2 text-caption text-muted-foreground">{t('ai.flags.description')}</p>
         <Stagger as="ul" className="flex flex-col divide-y divide-border">
-          {AI_FEATURE_IDS.map((feature) => (
-            <StaggerItem
-              as="li"
-              key={feature}
-              className="relative flex items-center justify-between gap-3 py-2.5"
-            >
-              <AnimatePresence>
-                {flashedFeature === feature ? (
-                  <motion.span
-                    key={`${feature}-flash`}
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-sm bg-success/15"
-                    initial={{ opacity: 0.9 }}
-                    animate={{ opacity: 0 }}
-                    transition={{ duration: flashReduced ? 0.15 : 0.6, ease: 'easeOut' }}
-                    onAnimationComplete={() =>
-                      setFlashedFeature((cur) => (cur === feature ? null : cur))
-                    }
+          {visibleFeatures.map((feature) => {
+            const spend = settings.spendByFeature?.[feature]
+            return (
+              <StaggerItem
+                as="li"
+                key={feature}
+                className="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-2 py-3"
+              >
+                <AnimatePresence>
+                  {flashedFeature === feature ? (
+                    <motion.span
+                      key={`${feature}-flash`}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 rounded-sm bg-success/15"
+                      initial={{ opacity: 0.9 }}
+                      animate={{ opacity: 0 }}
+                      transition={{ duration: flashReduced ? 0.15 : 0.6, ease: 'easeOut' }}
+                      onAnimationComplete={() =>
+                        setFlashedFeature((cur) => (cur === feature ? null : cur))
+                      }
+                    />
+                  ) : null}
+                </AnimatePresence>
+
+                <div className="flex min-w-60 flex-1 flex-col gap-1">
+                  <label
+                    htmlFor={`flag-${feature}`}
+                    className="flex flex-wrap items-center gap-2 text-body font-medium text-foreground"
+                  >
+                    {t(featureLabelKey(feature))}
+                    {HEAD_ONLY_FEATURES.includes(feature) ? (
+                      <Badge tone="info">{t('ai.flags.headOnlyBadge')}</Badge>
+                    ) : null}
+                  </label>
+                  {/* AI-AUDIT §5 fix 14: these descriptions were already translated in four locales
+                      and rendered nowhere. */}
+                  <p className="text-small text-muted-foreground">
+                    {t(featureDescriptionKey(feature))}
+                  </p>
+                  <p className="text-caption text-muted-foreground">
+                    {t('ai.flags.whereLabel')} {t(featureWhereKey(feature))}
+                  </p>
+                  <p className="text-caption italic text-muted-foreground">
+                    {t(featureExampleKey(feature))}
+                  </p>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-3">
+                  {spend !== undefined && spend > 0 ? (
+                    <span className="text-caption tabular-nums text-muted-foreground">
+                      {formatUzs(spend, locale)}
+                    </span>
+                  ) : null}
+                  <Switch
+                    id={`flag-${feature}`}
+                    checked={settings.flags[feature] === true}
+                    onCheckedChange={(checked) => toggleFlag(feature, checked)}
+                    disabled={!isHead}
+                    aria-label={t(featureLabelKey(feature))}
                   />
-                ) : null}
-              </AnimatePresence>
-              <label htmlFor={`flag-${feature}`} className="text-body text-foreground">
-                {t(featureLabelKey(feature))}
-              </label>
-              <Switch
-                id={`flag-${feature}`}
-                checked={settings.flags[feature] === true}
-                onCheckedChange={(checked) => toggleFlag(feature, checked)}
-                disabled={!isHead}
-                aria-label={t(featureLabelKey(feature))}
-              />
-            </StaggerItem>
-          ))}
+                </div>
+              </StaggerItem>
+            )
+          })}
         </Stagger>
         {!isHead ? (
           <p className="pt-2 text-caption text-muted-foreground">{t('ai.flags.headOnly')}</p>
@@ -298,10 +445,11 @@ function UsageTab() {
 
   return (
     <div className="overflow-x-auto rounded-md border border-border">
-      <table className="w-full min-w-160 text-left text-small">
+      <table className="w-full min-w-180 text-left text-small">
         <thead className="border-b border-border bg-muted/40 text-caption text-muted-foreground">
           <tr>
             <th className="px-3 py-2">{t('ai.usage.columns.when')}</th>
+            <th className="px-3 py-2">{t('ai.usage.columns.who')}</th>
             <th className="px-3 py-2">{t('ai.usage.columns.feature')}</th>
             <th className="px-3 py-2">{t('ai.usage.columns.status')}</th>
             <th className="px-3 py-2">{t('ai.usage.columns.tokens')}</th>
@@ -316,6 +464,9 @@ function UsageTab() {
               <StaggerItem as="tr" key={trace.id} className="border-b border-border last:border-0">
                 <td className="px-3 py-2 text-foreground">
                   {formatDate(date, locale)} {formatTime(date, locale)}
+                </td>
+                <td className="px-3 py-2 text-foreground">
+                  {trace.userName || t('ai.usage.unknownUser')}
                 </td>
                 <td className="px-3 py-2 text-foreground">{t(featureLabelKey(trace.feature))}</td>
                 <td className="px-3 py-2">
@@ -342,7 +493,14 @@ function UsageTab() {
 export default function AiSettingsScreen() {
   const t = useT()
   const { isLoading, isAuthenticated } = useSession()
-  const [tab, setTab] = React.useState<TabId>('overview')
+  // `?tab=ask` -- the palette's "Soʻrash" command deep-links straight to the Ask box rather than
+  // dropping the person on the catalogue to find it (AI-AUDIT §5 fix 18). Read once, as the initial
+  // state: the tab is the user's afterwards, and re-syncing it from the URL on every render would
+  // fight them every time they click another tab.
+  const [tab, setTab] = React.useState<TabId>(() => {
+    const requested = new URLSearchParams(window.location.search).get('tab')
+    return requested === 'ask' || requested === 'usage' ? requested : 'helpers'
+  })
 
   if (isLoading) return <StateView kind="loading" titleKey="state.loading" />
   if (!isAuthenticated) {
@@ -367,14 +525,14 @@ export default function AiSettingsScreen() {
         }
       />
 
-      <TabsContent value="overview">
-        <OverviewTab />
+      <TabsContent value="helpers">
+        <HelpersTab />
+      </TabsContent>
+      <TabsContent value="ask">
+        <AskPanel />
       </TabsContent>
       <TabsContent value="usage">
         <UsageTab />
-      </TabsContent>
-      <TabsContent value="assistant">
-        <AssistantPanel />
       </TabsContent>
     </Tabs>
   )
