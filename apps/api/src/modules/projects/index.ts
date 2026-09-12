@@ -110,7 +110,9 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      return reply.send(departmentId ? await repo.listProjects(contextFromRequest(req), departmentId) : [])
+      return reply.send(
+        departmentId ? await repo.listProjects(contextFromRequest(req), departmentId) : [],
+      )
     },
   )
 

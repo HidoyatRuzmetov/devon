@@ -140,7 +140,10 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      return reply.send({ sprint: sprintToDto(outcome.sprint), movedTaskCount: outcome.movedTaskCount })
+      return reply.send({
+        sprint: sprintToDto(outcome.sprint),
+        movedTaskCount: outcome.movedTaskCount,
+      })
     },
   )
 

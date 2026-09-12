@@ -571,7 +571,9 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      return reply.send(departmentId ? await repo.getLabels(contextFromRequest(req), departmentId) : [])
+      return reply.send(
+        departmentId ? await repo.getLabels(contextFromRequest(req), departmentId) : [],
+      )
     },
   )
 
