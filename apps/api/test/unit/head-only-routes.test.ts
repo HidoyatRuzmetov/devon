@@ -13,6 +13,7 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'DELETE /api/v1/departments/:departmentId/units/:unitId',
   'POST /api/v1/departments/:departmentId/units/:unitId/restore',
   'GET /api/v1/telegram/departments/:departmentId/groups',
+  'GET /api/v1/telegram/departments/:departmentId/setup-checklist',
   'DELETE /api/v1/pages/onboarding/templates/:id',
   'GET /api/v1/pages/onboarding/templates',
   'PATCH /api/v1/pages/onboarding/templates/:id',

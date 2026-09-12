@@ -58,6 +58,20 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'security.code':
       'Tasdiqlash kodingiz: {code}\nUshbu kodni hech kimga aytmang -- uni faqat siz kiritishingiz kerak. {minutes} daqiqa amal qiladi.',
     no_bot: 'Telegram bot hali sozlanmagan. Administratorga murojaat qiling.',
+    'miniapp.open': 'Ilovani ochish',
+    'miniapp.open_inbox': 'Bildirishnomalar',
+    'miniapp.open_board': 'Doska',
+    'miniapp.open_today': 'Bugun',
+    'miniapp.open_events': 'Tadbirlar',
+    'miniapp.open_focus': 'Diqqat',
+    'miniapp.open_fields': 'Maʼlumotlarim',
+    'miniapp.app_intro':
+      'WorkPortal ilovasini shu yerda oching: vazifalar, bildirishnomalar, tadbirlar va diqqat vaqti -- hammasi Telegram ichida.',
+    'miniapp.not_available':
+      'Ilova hali sozlanmagan. Boʻlim boshligʻidan Telegram sozlamalarini tekshirishni soʻrang.',
+    'miniapp.focus_done':
+      'Diqqat vaqti tugadi: {minutes} daqiqa. Endi qisqa tanaffus qiling.',
+    'miniapp.break_done': 'Tanaffus tugadi ({minutes} daqiqa). Ishni davom ettiramizmi?',
   },
   'uz-Cyrl': {
     maintenance: 'Тизим ҳозир техник хизмат режимида. Бироздан сўнг қайтадан уриниб кўринг.',
@@ -96,6 +110,19 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'security.code':
       'Тасдиқлаш кодингиз: {code}\nУшбу кодни ҳеч кимга айтманг -- уни фақат сиз киритишингиз керак. {minutes} дақиқа амал қилади.',
     no_bot: 'Telegram бот ҳали созланмаган. Администраторга мурожаат қилинг.',
+    'miniapp.open': 'Иловани очиш',
+    'miniapp.open_inbox': 'Билдиришномалар',
+    'miniapp.open_board': 'Доска',
+    'miniapp.open_today': 'Бугун',
+    'miniapp.open_events': 'Тадбирлар',
+    'miniapp.open_focus': 'Диққат',
+    'miniapp.open_fields': 'Маълумотларим',
+    'miniapp.app_intro':
+      'WorkPortal иловасини шу ерда очинг: вазифалар, билдиришномалар, тадбирлар ва диққат вақти -- ҳаммаси Telegram ичида.',
+    'miniapp.not_available':
+      'Илова ҳали созланмаган. Бўлим бошлиғидан Telegram созламаларини текширишни сўранг.',
+    'miniapp.focus_done': 'Диққат вақти тугади: {minutes} дақиқа. Энди қисқа танаффус қилинг.',
+    'miniapp.break_done': 'Танаффус тугади ({minutes} дақиқа). Ишни давом эттирамизми?',
   },
   ru: {
     maintenance: 'Система сейчас находится в режиме техобслуживания. Попробуйте снова чуть позже.',
@@ -135,6 +162,19 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'security.code':
       'Код подтверждения: {code}\nНикому не сообщайте этот код -- ввести его должны только вы. Действует {minutes} мин.',
     no_bot: 'Telegram-бот пока не настроен. Обратитесь к администратору.',
+    'miniapp.open': 'Открыть приложение',
+    'miniapp.open_inbox': 'Уведомления',
+    'miniapp.open_board': 'Доска',
+    'miniapp.open_today': 'Сегодня',
+    'miniapp.open_events': 'Мероприятия',
+    'miniapp.open_focus': 'Фокус',
+    'miniapp.open_fields': 'Мои данные',
+    'miniapp.app_intro':
+      'Откройте WorkPortal прямо здесь: задачи, уведомления, мероприятия и фокус-сессии -- всё внутри Telegram.',
+    'miniapp.not_available':
+      'Приложение ещё не настроено. Попросите руководителя отдела проверить настройки Telegram.',
+    'miniapp.focus_done': 'Фокус-сессия завершена: {minutes} мин. Сделайте короткий перерыв.',
+    'miniapp.break_done': 'Перерыв окончен ({minutes} мин). Возвращаемся к работе?',
   },
   en: {
     maintenance: 'The system is currently in maintenance mode. Please try again shortly.',
@@ -173,6 +213,19 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'security.code':
       'Your verification code: {code}\nNever share this code -- only you should enter it. Valid for {minutes} min.',
     no_bot: 'The Telegram bot is not configured yet. Contact your administrator.',
+    'miniapp.open': 'Open the app',
+    'miniapp.open_inbox': 'Notifications',
+    'miniapp.open_board': 'Board',
+    'miniapp.open_today': 'Today',
+    'miniapp.open_events': 'Events',
+    'miniapp.open_focus': 'Focus',
+    'miniapp.open_fields': 'My details',
+    'miniapp.app_intro':
+      'Open WorkPortal right here: tasks, notifications, events and focus sessions -- all inside Telegram.',
+    'miniapp.not_available':
+      'The app is not set up yet. Ask your head of department to check the Telegram settings.',
+    'miniapp.focus_done': 'Focus session finished: {minutes} min. Take a short break.',
+    'miniapp.break_done': 'Break over ({minutes} min). Back to work?',
   },
 }
 
