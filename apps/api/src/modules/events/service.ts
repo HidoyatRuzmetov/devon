@@ -376,6 +376,11 @@ export async function upsertRsvp(
 ): Promise<EventDto> {
   const userId = actor.userId
   return withContext(ctx, async (tx) => {
+    // Capacity is decided below by counting the existing `yes` units and comparing them to
+    // `event.capacity`; without this lock two concurrent "yes" requests both read the pre-write
+    // count and both seat themselves (the `concurrency-races` probe). Taken before the first read so
+    // the count, the decision, the write and the waitlist promotion below are one indivisible step.
+    await repo.lockEventForCapacity(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     if (!event) throw new EventNotFoundError()
     if (event.status === 'cancelled' || event.status === 'done') {
@@ -650,6 +655,10 @@ export async function claimCarpoolSeat(
   seats: number,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    // Same aggregate invariant as RSVP capacity ("confirmed seats may not exceed `carpool.seats`"),
+    // same remedy: serialise every seat decision for this one carpool so the read below cannot see a
+    // count another in-flight claim is about to invalidate (the `concurrency-races` probe).
+    await repo.lockCarpoolForSeats(tx, carpoolId)
     const carpool = await repo.getCarpool(tx, carpoolId)
     if (!carpool) throw new EventNotFoundError()
     if (carpool.status === 'cancelled') throw new EventConflictError('carpool_cancelled')
@@ -691,6 +700,9 @@ export async function releaseCarpoolSeat(
   carpoolId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    // Releasing frees units and promotes from the waitlist -- the same aggregate the claim path
+    // guards, so it takes the same lock (a release racing a claim would otherwise over-promote).
+    await repo.lockCarpoolForSeats(tx, carpoolId)
     const carpool = await repo.getCarpool(tx, carpoolId)
     if (!carpool) throw new EventNotFoundError()
     const existing = await repo.getMyCarpoolSeat(tx, carpoolId, actor.userId)

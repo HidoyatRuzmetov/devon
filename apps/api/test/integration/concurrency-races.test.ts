@@ -4,21 +4,20 @@
 // in-memory fake `Deps` (test/unit/**) cannot exercise honestly (there is no interleaving to get
 // wrong when everything runs on one JS event loop against a plain object).
 //
-// Two outcomes are asserted here, both real:
+// Every case below is now a plain `it` asserting the invariant holds under true concurrency:
 //  - Positive controls: the setup-token consumption and the department-membership unique index ARE
 //    race-safe (atomic `UPDATE ... WHERE ... IS NULL` / a real unique index respectively) -- exactly
 //    one winner under true concurrency, every time.
-//  - Confirmed bugs (`it.fails`, so the suite stays green while this stands as a live regression
-//    probe -- see `tests.md`'s "requires external configuration" / "found bugs" section for detail
-//    and the exact `repo.ts` lines): RSVP capacity, carpool seats and the card `version` optimistic-
-//    concurrency check are all "read count/version, decide, then write" with NO row lock and no
-//    constraint enforcing the invariant at the database level, so two simultaneous requests can both
-//    read the pre-write state and both "win". Poll voting's delete-then-insert had the same shape for
-//    a double-submit of the identical vote until the api-data hardening package added the unique
-//    constraint and the same-voter advisory lock (H10.1); that case is now a plain `it` asserting the
-//    fix, and is the worked example of the paragraph below. The moment one of these is fixed, its `it.fails` will
-//    itself start failing (Vitest reports an `it.fails` whose body did NOT throw as a failure) --
-//    that is the intended signal to flip it back to a plain `it`.
+//  - Four cases were written as `it.fails` while they documented live check-then-act bugs. Poll
+//    voting was fixed first (unique constraints + a same-voter advisory lock, H10.1, api-data
+//    hardening). v1.1 fixed the remaining three: RSVP capacity and carpool seats are aggregate
+//    invariants no single-row constraint can express, so each capacity decision now takes a
+//    `pg_advisory_xact_lock` scoped to that one event/carpool (`events/repo.ts`'s
+//    `lockEventForCapacity` / `lockCarpoolForSeats`); the card `version` check moved into the
+//    statement itself (`update app.cards ... where id = $1 and version = $2`, `work/repo.ts`).
+//    Each `it.fails` was flipped back to a plain `it` the moment its product fix landed -- which is
+//    the whole point of having written the bug as an executable statement (Vitest reports an
+//    `it.fails` whose body did NOT throw as a failure, so a fix cannot land unnoticed).
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
@@ -122,9 +121,12 @@ describe('positive control: department membership has a real unique index', () =
   })
 })
 
-describe('BUG (H10.1): RSVP capacity is a check-then-act race, not enforced atomically', () => {
-  it.fails(
-    'capacity=1, two different users RSVP "yes" concurrently: exactly one should end up "yes" and the other "waitlist"',
+// v1.1: fixed by `events/service.ts`'s `lockEventForCapacity` (an advisory transaction lock on the
+// event id, so the count/decide/write sequence is indivisible per event). Flipped from `it.fails` to
+// a plain `it` the moment the product fix landed, exactly as this file's header prescribes.
+describe('H10.1: RSVP capacity is enforced atomically', () => {
+  it(
+    'capacity=1, two different users RSVP "yes" concurrently: exactly one ends up "yes" and the other "waitlist"',
     async () => {
       const dept = await seedDepartment(db, {
         name: 'RSVP race dept',
@@ -167,9 +169,11 @@ describe('BUG (H10.1): RSVP capacity is a check-then-act race, not enforced atom
   )
 })
 
-describe('BUG (H10.1): carpool seat claiming has the identical check-then-act race', () => {
-  it.fails(
-    'seats=1, two different users each claim 1 seat concurrently: exactly one should be "confirmed"',
+// v1.1: fixed by `events/service.ts`'s `lockCarpoolForSeats`, the carpool twin of the RSVP lock
+// above (claim *and* release take it, so a release racing a claim cannot over-promote either).
+describe('H10.1: carpool seat claiming is enforced atomically', () => {
+  it(
+    'seats=1, two different users each claim 1 seat concurrently: exactly one is "confirmed"',
     async () => {
       const dept = await seedDepartment(db, {
         name: 'Carpool race dept',
@@ -269,9 +273,12 @@ describe('H10.1: a double-submitted identical poll vote is deduplicated', () => 
   })
 })
 
-describe('BUG (H10.1): the card `version` optimistic-concurrency check is check-then-act, not atomic', () => {
-  it.fails(
-    'two concurrent PATCHes sent with the identical (stale) version: only one should succeed with 200, the other 409',
+// v1.1: fixed by moving the guard into the statement -- `update app.cards set ... where id = $1 and
+// version = $2` (`work/repo.ts`'s `patchCard`), so "check" and "act" are one row-locked step and the
+// loser matches zero rows and gets its 409 instead of silently overwriting the winner.
+describe('H10.1: the card `version` optimistic-concurrency check is atomic', () => {
+  it(
+    'two concurrent PATCHes sent with the identical (stale) version: only one succeeds with 200, the other 409',
     async () => {
       const dept = await seedDepartment(db, {
         name: 'Card race dept',

@@ -488,7 +488,20 @@ export async function patchCard(
       sets.push(sql`archived_at = ${patch.status === 'archived' ? sql`now()` : null}`)
     }
 
-    await tx.raw(sql`update app.cards set ${sql.join(sets, sql`, `)} where id = ${cardId}`)
+    // v1.1 (the `concurrency-races` probe): the `beforeRow.version !== expectedVersion` check above
+    // is a read, and a read cannot stop a second transaction that read the same version from also
+    // writing -- both PATCHes sent with the identical stale version used to return 200 and the first
+    // write was silently lost. The guard therefore moves *into* the UPDATE: `where version = <the
+    // version the caller believed>` makes "check" and "act" one statement, so exactly one of two
+    // concurrent writers matches a row and the other matches none and gets its 409. The read above
+    // stays: it is what distinguishes "no such card" (404) from "someone beat you to it" (409), and
+    // it is the `before` image the audit row carries.
+    const versionGuard =
+      expectedVersion === undefined ? sql`` : sql` and version = ${expectedVersion}`
+    const updated = await tx.raw<{ id: string }>(
+      sql`update app.cards set ${sql.join(sets, sql`, `)} where id = ${cardId}${versionGuard} returning id`,
+    )
+    if (updated.length === 0) return { ok: false, reason: 'conflict' }
 
     if (patch.status !== undefined && patch.status !== beforeRow.status) {
       await tx.raw(

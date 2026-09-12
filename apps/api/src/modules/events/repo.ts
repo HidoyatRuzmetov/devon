@@ -83,6 +83,30 @@ const EVENT_SELECT = sql`
   join app.users u on u.id = e.organizer_user_id
 `
 
+/**
+ * v1.1 (SPEC §12 / the `concurrency-races` probe): RSVP capacity is an aggregate invariant -- "the
+ * sum of `1 + guests` over the `yes` rows may not exceed `capacity`" -- which no single row
+ * constraint can express, so `upsertRsvp`'s "count, decide, write" needs the counting and the write
+ * to be one indivisible step. `pg_advisory_xact_lock` serialises every capacity-deciding
+ * transaction for the *same* event (and only that event) for the lifetime of the caller's own
+ * transaction; it is released by Postgres at commit/rollback, never held past `withContext`. Two
+ * concurrent "yes" RSVPs against `capacity = 1` therefore queue instead of both reading the empty
+ * pre-write count: the second one sees the first one's row and lands on the waitlist.
+ *
+ * The namespace prefix keeps this key space disjoint from `lockCarpool`'s and from
+ * `replacePollVotes`'s (`hashtextextended` over a namespaced string, the same shape that function
+ * already uses).
+ */
+export async function lockEventForCapacity(tx: Tx, eventId: string): Promise<void> {
+  await tx.raw(sql`select pg_advisory_xact_lock(hashtextextended(${`event:${eventId}`}, 0))`)
+}
+
+/** The carpool twin of `lockEventForCapacity` -- "the sum of `seats_claimed` over the `confirmed`
+ * rows may not exceed `carpools.seats`", same aggregate shape, same remedy, disjoint key space. */
+export async function lockCarpoolForSeats(tx: Tx, carpoolId: string): Promise<void> {
+  await tx.raw(sql`select pg_advisory_xact_lock(hashtextextended(${`carpool:${carpoolId}`}, 0))`)
+}
+
 export async function getEventRow(tx: Tx, eventId: string): Promise<EventRow | null> {
   const rows = await tx.raw<EventSqlRow>(
     sql`${EVENT_SELECT} where e.id = ${eventId} and e.deleted_at is null`,
