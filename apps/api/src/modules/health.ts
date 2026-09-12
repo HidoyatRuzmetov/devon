@@ -37,7 +37,7 @@ const healthRoutes: FastifyPluginAsyncZod = async (app) => {
       // status code above: this instance is fully able to serve every core request (board, events,
       // inbox) with any or all of these open, which is the entire point of H8.1's degradation paths.
       const snapshots = circuitSnapshots()
-      reply.code(ok ? 200 : 503).send({
+      return reply.code(ok ? 200 : 503).send({
         db,
         valkey,
         migrations,

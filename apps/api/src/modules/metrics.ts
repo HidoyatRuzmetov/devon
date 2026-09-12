@@ -30,7 +30,7 @@ const metricsRoutes: FastifyPluginAsyncZod = async (app) => {
         circuitBreakerState.set(STATE_VALUE[snapshot.state] ?? -1, { breaker: name })
       }
       reply.header('content-type', 'text/plain; version=0.0.4; charset=utf-8')
-      reply.send(registry.render())
+      return reply.send(registry.render())
     },
   )
 }

@@ -108,7 +108,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       // The raw CSRF token from the session just created -- NOT `req.cookies[...]`, which is empty on
       // the very request that sets the cookie (found live: the post-registration photo upload was
       // 403ing on its first CSRF-checked call because the body carried an empty token).
-      reply.code(201).send({ user: toAccountPublicUser(user), csrfToken: session.rawCsrf })
+      return reply.code(201).send({ user: toAccountPublicUser(user), csrfToken: session.rawCsrf })
     },
   )
 
@@ -125,7 +125,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const sessions = await repo.listSessions(req.actor!.userId)
-      reply.send({
+      return reply.send({
         sessions: sessions.map((s) => ({
           id: s.id,
           deviceLabel: s.deviceLabel,
@@ -159,7 +159,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -181,7 +181,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         ...expiredSessionCookieOptions(),
         httpOnly: false,
       })
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -198,7 +198,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const status = await repo.getTwoFactorStatus(req.actor!.userId)
-      reply.send({ ok: status.enabled })
+      return reply.send({ ok: status.enabled })
     },
   )
 
@@ -220,7 +220,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actorUser!.login,
         app.devonConfig.CSRF_SECRET,
       )
-      reply.send(result)
+      return reply.send(result)
     },
   )
 
@@ -252,7 +252,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         })
         return
       }
-      reply.send({ recoveryCodes: result.recoveryCodes })
+      return reply.send({ recoveryCodes: result.recoveryCodes })
     },
   )
 
@@ -274,7 +274,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'forbidden')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -316,7 +316,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       loginThrottle.recordSuccess(throttleKey)
       await startSession(result.userId, req, reply)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -345,7 +345,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'forbidden')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -369,7 +369,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const { userId } = req.params
       const temporaryPassword = await repo.adminResetPassword(userId, auditCtx(req))
-      reply.send({ temporaryPassword })
+      return reply.send({ temporaryPassword })
     },
   )
 
@@ -387,7 +387,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const scheduledFor = await repo.requestAccountDeletion(req.actor!.userId, auditCtx(req))
-      reply.send({ scheduledFor: scheduledFor.toISOString() })
+      return reply.send({ scheduledFor: scheduledFor.toISOString() })
     },
   )
 
@@ -408,7 +408,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -425,7 +425,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const scheduledFor = await repo.getPendingDeletion(req.actor!.userId)
-      reply.send(scheduledFor ? { scheduledFor: scheduledFor.toISOString() } : null)
+      return reply.send(scheduledFor ? { scheduledFor: scheduledFor.toISOString() } : null)
     },
   )
 
@@ -463,7 +463,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
         auditCtx(req),
       )
-      reply.send({
+      return reply.send({
         uploadId: upload.id,
         url: presigned.url,
         method: presigned.method,
@@ -540,7 +540,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await removeAvatar(app, req.actorUser!, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 

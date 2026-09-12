@@ -144,7 +144,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           to: req.query.to ? new Date(req.query.to) : undefined,
         },
       )
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -157,7 +157,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const created = await service.createEvent(toDbContext(req), currentActor(req), req.body)
-      reply.code(201).send(created)
+      return reply.code(201).send(created)
     },
   )
 
@@ -282,7 +282,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const items = await service.listRsvps(toDbContext(req), req.params.eventId)
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -300,7 +300,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.params.eventId,
       )
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -358,7 +358,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         currentActor(req).isHead,
         req.params.eventId,
       )
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -433,7 +433,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const items = await service.listItems(toDbContext(req), req.actor!.userId, req.params.eventId)
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -476,7 +476,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -497,7 +497,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -516,7 +516,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         currentActor(req).isHead,
         req.params.eventId,
       )
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -578,7 +578,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.params.eventId,
       )
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -635,7 +635,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.params.eventId,
       )
-      reply.send(result)
+      return reply.send(result)
     },
   )
 
@@ -680,7 +680,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const ics = await service.exportMyIcs(toDbContext(req), req.actor!.userId)
-      reply.send(ics)
+      return reply.send(ics)
     },
   )
 }

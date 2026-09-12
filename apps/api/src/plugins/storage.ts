@@ -148,7 +148,7 @@ function registerLocalRoutes(
         return
       }
       await store.put(payload.key, body, payload.contentType)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 

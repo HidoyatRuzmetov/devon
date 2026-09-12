@@ -79,7 +79,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         app.devon.listActiveMembershipsForUser(req.actorUser!.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(
+      return reply.send(
         toMe(
           req.actorUser!,
           memberships,
@@ -122,7 +122,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         app.devon.listActiveMembershipsForUser(updated.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(
+      return reply.send(
         toMe(
           updated,
           memberships,
@@ -177,7 +177,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const settings = await app.devon.getInstanceSettings()
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      reply.send(
+      return reply.send(
         toMe(
           req.actorUser!,
           memberships,

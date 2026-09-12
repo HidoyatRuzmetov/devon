@@ -87,7 +87,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const status = await getLinkStatus(req.actor!.userId)
       const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME ?? null
-      reply.send({
+      return reply.send({
         linked: status.linked,
         linkedAt: status.linkedAt ? status.linkedAt.toISOString() : null,
         mutedUntil: status.mutedUntil ? status.mutedUntil.toISOString() : null,
@@ -126,7 +126,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
           qrDataUrl = null // QR is a convenience; the code and deep link above are always usable without it.
         }
       }
-      reply.send({
+      return reply.send({
         code,
         deepLink,
         expiresAt: expiresAt.toISOString(),
@@ -152,7 +152,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await unlink(auditCtxFromReq(req), req.actor!.userId)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -180,7 +180,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const { departmentId } = req.params
       const groups = await listGroupsForDepartment(departmentId)
-      reply.send({
+      return reply.send({
         items: groups.map((g) => ({
           id: g.id,
           chatId: g.chatId,
@@ -220,7 +220,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         return sendProblem(reply, 'forbidden')
       }
       const { code, expiresAt } = await issueGroupConnectCode(departmentId, req.actor!.userId)
-      reply.send({ code, expiresAt: expiresAt.toISOString() })
+      return reply.send({ code, expiresAt: expiresAt.toISOString() })
     },
   )
 
@@ -249,7 +249,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const { departmentId, groupId } = req.params
       await setGroupKinds(auditCtxFromReq(req), groupId, departmentId, req.body.kinds)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -277,7 +277,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const { departmentId, groupId } = req.params
       await disconnectGroup(auditCtxFromReq(req), groupId, departmentId)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -304,7 +304,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.body.minutes > 0 ? new Date(Date.now() + req.body.minutes * 60_000) : null,
       )
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -357,7 +357,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       } catch (err) {
         req.log.error({ err }, 'telegram: webhook update handling failed')
       }
-      reply.code(200).send({ ok: true })
+      return reply.code(200).send({ ok: true })
     },
   )
 

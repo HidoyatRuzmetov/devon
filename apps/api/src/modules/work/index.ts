@@ -170,7 +170,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         member,
         cards: withCanEdit(byAssignee.get(member.userId) ?? [], me, isHead),
       }))
-      reply.send({
+      return reply.send({
         members,
         columns,
         unassigned: withCanEdit(unassigned, me, isHead),
@@ -237,7 +237,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         isHeadOf(req.actor, departmentId),
       )
       const nextCursor = cursorIndex + limit < filtered.length ? String(cursorIndex + limit) : null
-      reply.send({ items: page, nextCursor })
+      return reply.send({ items: page, nextCursor })
     },
   )
 
@@ -290,7 +290,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         orderKey: req.body.orderKey,
         createdByUserId: req.actor!.userId,
       })
-      reply.code(201).send({
+      return reply.code(201).send({
         ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
         checklist: [],
         comments: [],
@@ -320,7 +320,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, card.id),
         repo.getActivity(ctx, card.id),
       ])
-      reply.send({
+      return reply.send({
         ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
         checklist,
         comments,
@@ -370,7 +370,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, result.card.id),
         repo.getActivity(ctx, result.card.id),
       ])
-      reply.send({
+      return reply.send({
         ...withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
         checklist,
         comments,
@@ -402,7 +402,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -435,7 +435,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       // `null` means the card is not this department's (H1.2): the same 404 the card's own routes
       // answer, so a foreign card id is indistinguishable from one that never existed.
       if (id === null) return sendProblem(reply, 'not_found')
-      reply.code(201).send({ id })
+      return reply.code(201).send({ id })
     },
   )
 
@@ -466,7 +466,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -500,7 +500,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.itemId,
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -531,7 +531,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.mentions ?? [],
       )
       if (id === null) return sendProblem(reply, 'not_found')
-      reply.code(201).send({ id })
+      return reply.code(201).send({ id })
     },
   )
 
@@ -554,7 +554,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!(await repo.cardExists(ctx, requireDepartmentId(req)!, req.params.id))) {
         return sendProblem(reply, 'not_found')
       }
-      reply.send(await repo.getActivity(ctx, req.params.id))
+      return reply.send(await repo.getActivity(ctx, req.params.id))
     },
   )
 
@@ -571,7 +571,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      reply.send(departmentId ? await repo.getLabels(contextFromRequest(req), departmentId) : [])
+      return reply.send(departmentId ? await repo.getLabels(contextFromRequest(req), departmentId) : [])
     },
   )
 
@@ -598,7 +598,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.name,
         req.body.colour ?? '#6366f1',
       )
-      reply.code(201).send(label)
+      return reply.code(201).send(label)
     },
   )
 
@@ -616,7 +616,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send([])
-      reply.send(
+      return reply.send(
         await repo.listSavedViews(contextFromRequest(req), departmentId, req.actor!.userId),
       )
     },
@@ -645,7 +645,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.body,
       )
-      reply.code(201).send(view)
+      return reply.code(201).send(view)
     },
   )
 
@@ -670,7 +670,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.id,
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -697,7 +697,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       ])
       const member = members.find((m) => m.userId === req.query.userId)
       if (!member) return sendProblem(reply, 'not_found')
-      reply.send({ member, items })
+      return reply.send({ member, items })
     },
   )
 
@@ -771,7 +771,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, result.card.id),
         repo.getActivity(ctx, result.card.id),
       ])
-      reply.send({
+      return reply.send({
         ...withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
         checklist,
         comments,

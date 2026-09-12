@@ -191,7 +191,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send({ ...detail, createdAt: detail.createdAt.toISOString() })
+      return reply.send({ ...detail, createdAt: detail.createdAt.toISOString() })
     },
   )
 
@@ -208,7 +208,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -225,7 +225,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -242,7 +242,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -259,7 +259,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -284,7 +284,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
       const { value } = signViewAsCookie(req.params.id, app.devonConfig.CSRF_SECRET)
       reply.setCookie(VIEW_AS_COOKIE_NAME, value, sessionCookieOptions(VIEW_AS_MAX_MINUTES * 60))
       await repo.recordViewAsStarted(req.params.id, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -301,7 +301,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
       )
       reply.setCookie(VIEW_AS_COOKIE_NAME, '', expiredSessionCookieOptions())
       if (departmentId) await repo.recordViewAsStopped(departmentId, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -338,7 +338,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send({
+      return reply.send({
         ...detail,
         lastLoginAt: detail.lastLoginAt?.toISOString() ?? null,
         createdAt: detail.createdAt.toISOString(),
@@ -360,7 +360,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -377,7 +377,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -390,7 +390,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.forceTwoFactorReset(req.params.id, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -407,7 +407,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -498,7 +498,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.setMaintenance(req.body.enabled, req.body.message, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -511,7 +511,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.setRegistrationOpen(req.body.open, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -542,7 +542,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const publicKeyB64 = await repo.rotateSentinelKey(app.devonConfig.CSRF_SECRET, auditCtx(req))
-      reply.send({ publicKeyB64 })
+      return reply.send({ publicKeyB64 })
     },
   )
 
@@ -592,7 +592,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         )
         return
       }
-      reply.send({
+      return reply.send({
         id: result.id,
         countdownEndsAt: result.countdownEndsAt.toISOString(),
         countdownSeconds: result.countdownSeconds,
@@ -612,7 +612,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -628,7 +628,7 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 

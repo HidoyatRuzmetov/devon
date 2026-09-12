@@ -43,7 +43,7 @@ const setupRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'gone')
         return
       }
-      reply.code(201).send({ user: toPublicUser(result.user) })
+      return reply.code(201).send({ user: toPublicUser(result.user) })
     },
   )
 }

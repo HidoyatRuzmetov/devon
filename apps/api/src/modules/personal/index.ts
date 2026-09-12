@@ -93,7 +93,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.createSprint(req.actor!.userId, req.body, ctxFrom(req))
-      reply.code(201).send(sprintToDto(row))
+      return reply.code(201).send(sprintToDto(row))
     },
   )
 
@@ -117,7 +117,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(sprintToDto(outcome.row))
+      return reply.send(sprintToDto(outcome.row))
     },
   )
 
@@ -140,7 +140,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
-      reply.send({ sprint: sprintToDto(outcome.sprint), movedTaskCount: outcome.movedTaskCount })
+      return reply.send({ sprint: sprintToDto(outcome.sprint), movedTaskCount: outcome.movedTaskCount })
     },
   )
 
@@ -167,7 +167,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.createTask(req.actor!.userId, req.body, ctxFrom(req))
-      reply.code(201).send(taskToDto(row))
+      return reply.code(201).send(taskToDto(row))
     },
   )
 
@@ -187,7 +187,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await repo.patchTask(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(taskToDto(outcome.row))
+      return reply.send(taskToDto(outcome.row))
     },
   )
 
@@ -201,7 +201,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const ok = await repo.deleteTask(req.actor!.userId, req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -217,7 +217,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const updated = await repo.reorderTasks(req.actor!.userId, req.body.items, ctxFrom(req))
-      reply.send({ updated })
+      return reply.send({ updated })
     },
   )
 
@@ -244,7 +244,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.createNote(req.actor!.userId, req.body, ctxFrom(req))
-      reply.code(201).send(noteToDto(row))
+      return reply.code(201).send(noteToDto(row))
     },
   )
 
@@ -259,7 +259,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await repo.patchNote(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(noteToDto(outcome.row))
+      return reply.send(noteToDto(outcome.row))
     },
   )
 
@@ -273,7 +273,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const ok = await repo.deleteNote(req.actor!.userId, req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -300,7 +300,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const row = await repo.getCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
       if (!row) return sendProblem(reply, 'not_found')
-      reply.send(canvasToDto(row))
+      return reply.send(canvasToDto(row))
     },
   )
 
@@ -313,7 +313,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.createCanvas(req.actor!.userId, req.body, ctxFrom(req))
-      reply.code(201).send(canvasToDto(row))
+      return reply.code(201).send(canvasToDto(row))
     },
   )
 
@@ -337,7 +337,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(canvasToDto(outcome.row))
+      return reply.send(canvasToDto(outcome.row))
     },
   )
 
@@ -351,7 +351,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const ok = await repo.deleteCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -378,7 +378,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.patchPomodoroSettings(req.actor!.userId, req.body, ctxFrom(req))
-      reply.send(pomodoroSettingsToDto(row))
+      return reply.send(pomodoroSettingsToDto(row))
     },
   )
 
@@ -408,7 +408,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.createPomodoroSession(req.actor!.userId, req.body, ctxFrom(req))
-      reply.code(201).send(pomodoroSessionToDto(row))
+      return reply.code(201).send(pomodoroSessionToDto(row))
     },
   )
 
@@ -431,7 +431,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!row) return sendProblem(reply, 'not_found')
-      reply.send(pomodoroSessionToDto(row))
+      return reply.send(pomodoroSessionToDto(row))
     },
   )
 

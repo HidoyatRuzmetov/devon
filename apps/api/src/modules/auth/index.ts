@@ -95,7 +95,7 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
         session.rawCsrf,
         csrfCookieOptions(SESSION_ABSOLUTE_SECONDS),
       )
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -122,7 +122,7 @@ const authRoutes: FastifyPluginAsyncZod = async (app) => {
       }
       reply.setCookie(app.devonConfig.SESSION_COOKIE_NAME, '', expiredSessionCookieOptions())
       reply.setCookie(CSRF_COOKIE_NAME, '', { ...expiredSessionCookieOptions(), httpOnly: false })
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 }

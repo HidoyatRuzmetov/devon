@@ -88,7 +88,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const result = await listNotifications(req.actor!.userId, req.query)
-      reply.send({
+      return reply.send({
         items: result.items.map((n) => ({
           id: n.id,
           type: n.type,
@@ -124,7 +124,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const updated = await markRead(auditCtxFromReq(req), req.actor!.userId, req.body.ids)
-      reply.send({ updated })
+      return reply.send({ updated })
     },
   )
 
@@ -142,7 +142,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const updated = await markAllRead(auditCtxFromReq(req), req.actor!.userId)
-      reply.send({ updated })
+      return reply.send({ updated })
     },
   )
 
@@ -164,7 +164,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.body.ids,
       )
-      reply.send({ updated })
+      return reply.send({ updated })
     },
   )
 
@@ -187,7 +187,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const until = new Date(Date.now() + req.body.minutes * 60_000)
       await snoozeNotification(auditCtxFromReq(req), req.actor!.userId, req.params.id, until)
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -205,7 +205,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: prefsSchema } },
     },
     async (req, reply) => {
-      reply.send({ items: await getPrefs(req.actor!.userId) })
+      return reply.send({ items: await getPrefs(req.actor!.userId) })
     },
   )
 
@@ -223,7 +223,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const items = await putPrefs(auditCtxFromReq(req), req.actor!.userId, req.body.items)
-      reply.send({ items })
+      return reply.send({ items })
     },
   )
 
@@ -253,7 +253,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           }))
         : DEPARTMENT_QUIET_DEFAULT
       const effective = resolveEffectiveQuietWindow(personal, departmentDefault)
-      reply.send({
+      return reply.send({
         startMinute: personal?.startMinute ?? null,
         endMinute: personal?.endMinute ?? null,
         includeWeekends: personal?.includeWeekends ?? null,
@@ -311,7 +311,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       await putPersonalQuietHours(auditCtxFromReq(req), req.actor!.userId, req.body)
       const personal = await getPersonalQuietHours(req.actor!.userId)
       const effective = resolveEffectiveQuietWindow(personal, departmentDefault)
-      reply.send({
+      return reply.send({
         startMinute: personal?.startMinute ?? null,
         endMinute: personal?.endMinute ?? null,
         includeWeekends: personal?.includeWeekends ?? null,
@@ -340,7 +340,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) => {
-      reply.send(await getDepartmentSettings(req.params.departmentId))
+      return reply.send(await getDepartmentSettings(req.params.departmentId))
     },
   )
 
@@ -369,7 +369,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.departmentId,
         req.body,
       )
-      reply.send(updated)
+      return reply.send(updated)
     },
   )
 
@@ -416,7 +416,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const token = signIcsToken(req.actor!.userId, app.devonConfig.CSRF_SECRET)
-      reply.send({ url: `/api/v1/notifications/ics/${req.actor!.userId}/${token}` })
+      return reply.send({ url: `/api/v1/notifications/ics/${req.actor!.userId}/${token}` })
     },
   )
 }

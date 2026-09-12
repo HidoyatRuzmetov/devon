@@ -174,7 +174,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const row = await repo.getPage(activeDepartmentId(req), req.params.id, ctxFrom(req))
       if (!row) return sendProblem(reply, 'not_found')
-      reply.send(pageToDto(row))
+      return reply.send(pageToDto(row))
     },
   )
 
@@ -194,7 +194,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
         ctxFrom(req),
       )
-      reply.code(201).send(pageToDto(row))
+      return reply.code(201).send(pageToDto(row))
     },
   )
 
@@ -221,7 +221,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(pageToDto(outcome.row))
+      return reply.send(pageToDto(outcome.row))
     },
   )
 
@@ -238,7 +238,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!(await requirePageOwnership(req, reply, req.params.id))) return
       const ok = await repo.deletePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -291,7 +291,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!row) return sendProblem(reply, 'not_found')
-      reply.send(versionToDto(row))
+      return reply.send(versionToDto(row))
     },
   )
 
@@ -319,7 +319,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(pageToDto(outcome.row))
+      return reply.send(pageToDto(outcome.row))
     },
   )
 
@@ -358,7 +358,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
         ctxFrom(req),
       )
-      reply.code(201).send(templateToDto(row))
+      return reply.code(201).send(templateToDto(row))
     },
   )
 
@@ -384,7 +384,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(templateToDto(outcome.row))
+      return reply.send(templateToDto(outcome.row))
     },
   )
 
@@ -404,7 +404,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 }

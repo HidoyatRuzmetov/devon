@@ -121,7 +121,7 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const dto = await service.patchSettings(toDbContext(req), activeDepartmentId(req), req.body)
-      reply.send(dto)
+      return reply.send(dto)
     },
   )
 

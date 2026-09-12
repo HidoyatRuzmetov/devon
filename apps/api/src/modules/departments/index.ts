@@ -105,7 +105,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const id = await repo.createDepartmentRequest(req.actor!.userId, req.body, auditCtx(req))
-      reply.code(201).send({ id })
+      return reply.code(201).send({ id })
     },
   )
 
@@ -117,7 +117,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const rows = await repo.listOwnDepartmentRequests(req.actor!.userId)
-      reply.send({ requests: rows.map(requestToView) })
+      return reply.send({ requests: rows.map(requestToView) })
     },
   )
 
@@ -134,7 +134,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           ? rawStatus
           : undefined
       const rows = await repo.listDepartmentRequests(status)
-      reply.send({ requests: rows.map(requestToView) })
+      return reply.send({ requests: rows.map(requestToView) })
     },
   )
 
@@ -151,7 +151,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.send(result)
+      return reply.send(result)
     },
   )
 
@@ -168,7 +168,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -182,7 +182,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const rows = await repo.listMyDepartments(req.actor!.userId)
-      reply.send({ departments: rows.map(deptToView) })
+      return reply.send({ departments: rows.map(deptToView) })
     },
   )
 
@@ -208,7 +208,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send(deptToView(detail))
+      return reply.send(deptToView(detail))
     },
   )
 
@@ -226,7 +226,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.updateDepartmentSettings(req.params.id, req.actor!.userId, req.body, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -244,7 +244,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.requestDepartmentDeletion(req.params.id, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -267,7 +267,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send({
+      return reply.send({
         ...invite,
         // round2 critique #29: the configured public origin, not the client's own guess at it.
         joinUrl: invite.joinKey
@@ -294,7 +294,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const joinKey = await repo.rotateJoinKey(req.params.id, auditCtx(req))
-      reply.send({ joinKey })
+      return reply.send({ joinKey })
     },
   )
 
@@ -315,7 +315,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const password = await repo.rotateJoinPassword(req.params.id, auditCtx(req))
-      reply.send({ password })
+      return reply.send({ password })
     },
   )
 
@@ -333,7 +333,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.setJoinPassword(req.params.id, req.body.password, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -351,7 +351,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       await repo.setJoinApproval(req.params.id, req.body.joinRequiresApproval, auditCtx(req))
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -369,7 +369,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.send(preview)
+      return reply.send(preview)
     },
   )
 
@@ -394,7 +394,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, result.reason === 'rate_limited' ? 'rate_limited' : 'not_found')
         return
       }
-      reply.send({ departmentId: result.departmentId, status: result.status })
+      return reply.send({ departmentId: result.departmentId, status: result.status })
     },
   )
 
@@ -414,7 +414,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const role = myRoleIn(req, req.params.id)
       const rows = await repo.listMembers(req.params.id, req.actor!.userId, role ?? 'member')
-      reply.send({
+      return reply.send({
         members: rows.map((m) => ({
           userId: m.userId,
           givenName: m.givenName,
@@ -448,7 +448,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -470,7 +470,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -497,7 +497,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 }

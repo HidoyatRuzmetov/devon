@@ -244,7 +244,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
         ctxFrom(req),
       )
-      reply.code(201).send(savedFilterToDto(row))
+      return reply.code(201).send(savedFilterToDto(row))
     },
   )
 
@@ -271,7 +271,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      reply.send(savedFilterToDto(outcome.row))
+      return reply.send(savedFilterToDto(outcome.row))
     },
   )
 
@@ -292,7 +292,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -335,7 +335,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
         ctxFrom(req),
       )
-      reply.code(201).send(pinnedChartToDto(row))
+      return reply.code(201).send(pinnedChartToDto(row))
     },
   )
 
@@ -356,7 +356,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!ok) return sendProblem(reply, 'not_found')
-      reply.code(204).send()
+      return reply.code(204).send()
     },
   )
 
@@ -379,7 +379,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.ids,
         ctxFrom(req),
       )
-      reply.send({ updated })
+      return reply.send({ updated })
     },
   )
 }

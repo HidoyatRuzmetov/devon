@@ -110,7 +110,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      reply.send(departmentId ? await repo.listProjects(contextFromRequest(req), departmentId) : [])
+      return reply.send(departmentId ? await repo.listProjects(contextFromRequest(req), departmentId) : [])
     },
   )
 
@@ -126,7 +126,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: templateListSchema } },
     },
     async (_req, reply) => {
-      reply.send(PROJECT_TEMPLATES.map((t) => ({ ...t, milestones: [...t.milestones] })))
+      return reply.send(PROJECT_TEMPLATES.map((t) => ({ ...t, milestones: [...t.milestones] })))
     },
   )
 
@@ -167,7 +167,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         targetOn: milestones.at(-1)?.dueOn,
         milestones,
       })
-      reply.code(201).send(project)
+      return reply.code(201).send(project)
     },
   )
 
@@ -203,7 +203,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
           dueOn: m.dueOn,
         })),
       })
-      reply.code(201).send(project)
+      return reply.code(201).send(project)
     },
   )
 
@@ -222,7 +222,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)!
       const project = await repo.getProject(contextFromRequest(req), departmentId, req.params.id)
       if (!project) return sendProblem(reply, 'not_found')
-      reply.send(project)
+      return reply.send(project)
     },
   )
 
@@ -264,7 +264,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (!result.ok)
         return sendProblem(reply, result.reason === 'conflict' ? 'conflict' : 'not_found')
-      reply.send(result.project)
+      return reply.send(result.project)
     },
   )
 
@@ -295,7 +295,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
       )
       if (!project) return sendProblem(reply, 'not_found')
-      reply.send(project)
+      return reply.send(project)
     },
   )
 
@@ -327,7 +327,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
       )
       if (!project) return sendProblem(reply, 'not_found')
-      reply.send(project)
+      return reply.send(project)
     },
   )
 }
