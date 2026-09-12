@@ -1,0 +1,90 @@
+{
+  "realtime": {
+    "status": {
+      "live": "Live",
+      "liveHint": "Changes show up the moment they happen.",
+      "connecting": "Connecting…",
+      "connectingHint": "Restoring the live connection.",
+      "off": "Live mode is off",
+      "offHint": "This server runs without live updates — the page refreshes itself every few seconds.",
+      "error": "The live connection dropped",
+      "errorHint": "The page will keep refreshing itself every few seconds."
+    },
+    "presence": {
+      "label": "Here right now",
+      "nobody": "Nobody else is here right now",
+      "one": "{name} is looking at this board too",
+      "many": "{name} and {count} others are looking at this board",
+      "more": "{count} more"
+    },
+    "signal": {
+      "editing": "Being edited",
+      "editingBy": "{name} is editing this",
+      "typing": "Writing a comment",
+      "typingBy": "{name} is writing a comment",
+      "typingMany": "{count} people are writing a comment"
+    },
+    "canvas": {
+      "share": {
+        "action": "Share this canvas",
+        "title": "Share this canvas",
+        "description": "A copy of your private canvas appears on the project or event page. The original stays private.",
+        "privacyNote": "Sharing makes a copy. Later changes to your private canvas don't reach it — you edit the copy from here. You can take the share back at any moment.",
+        "scope": "Where",
+        "scopeProject": "Project",
+        "scopeEvent": "Event",
+        "target": "Choose",
+        "targetPlaceholder": "Choose a project or an event",
+        "allowEdit": "Let participants edit it",
+        "allowEditHelp": "Turn this off and they only look — no cursors either.",
+        "submit": "Share",
+        "sharing": "Sharing…",
+        "toast": "Canvas shared",
+        "noTargets": {
+          "title": "Nowhere to share it",
+          "body": "Join a project or sign up for an event first."
+        }
+      },
+      "revoke": {
+        "action": "Take the share back",
+        "confirmTitle": "Take the share back?",
+        "confirmBody": "The copy closes for everyone. Nothing happens to your private canvas.",
+        "confirm": "Yes, close it",
+        "cancel": "Cancel",
+        "toast": "Share taken back"
+      },
+      "shared": {
+        "badge": "Shared",
+        "toProject": "Shared to the {name} project",
+        "toEvent": "Shared to the {name} event",
+        "readOnly": "Read-only",
+        "editable": "Participants can edit it",
+        "openOriginal": "Open the private canvas"
+      },
+      "cursors": {
+        "label": "Live cursors",
+        "nobody": "Nobody else is on this canvas right now"
+      },
+      "conflict": {
+        "title": "Somebody changed this canvas before you",
+        "body": "The newest version is loaded. Make your change again.",
+        "action": "Refresh"
+      },
+      "empty": {
+        "title": "This canvas isn't shared yet",
+        "body": "Share it and the people in that project or event can look at it and edit it with you."
+      },
+      "loading": {
+        "title": "Loading the canvas"
+      },
+      "error": {
+        "title": "Couldn't open the canvas",
+        "body": "Something went wrong with the connection. Try again."
+      },
+      "forbidden": {
+        "title": "This canvas isn't open to you",
+        "body": "Only the people in the project or event it was shared to can see it."
+      }
+    }
+  }
+}

@@ -60,6 +60,7 @@ import {
   tokenResponseSchema,
   updateCanvasDocBodySchema,
 } from './schemas.js'
+import { SERVICE_WORKER_SOURCE, SERVICE_WORKER_VERSION } from './service-worker.js'
 import { signConnectionToken, signSubscriptionToken } from './tokens.js'
 
 function auditCtxFromReq(req: FastifyRequest): AuditCtx {
@@ -729,6 +730,38 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       return reply.send({ removed })
     },
+  )
+
+  /** The push service worker's own source (see `service-worker.ts` for why it is served from the API
+   * rather than shipped as a static file).
+   *
+   * `Service-Worker-Allowed: /` widens the worker's scope from its own path to the whole origin,
+   * which is what lets `navigator.serviceWorker.register('/api/v1/realtime/sw.js', { scope: '/' })`
+   * succeed. Authenticated, not public: `register()` and the browser's own update checks both fetch
+   * the script `credentials: 'same-origin'`, so the session cookie is on the request -- and there is
+   * no reason for an anonymous visitor to be able to enumerate this deployment's client code.
+   *
+   * `no-cache` (not `no-store`): the browser must be able to byte-compare the script it holds against
+   * the one it fetches on every update check, which is exactly how a fixed worker replaces a broken
+   * one. `no-store` would work too but re-downloads on every navigation for no benefit. */
+  app.get(
+    '/realtime/sw.js',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: () => ({ kind: 'authenticated' as const }),
+        },
+      },
+      schema: {},
+    },
+    async (_req, reply) =>
+      reply
+        .header('content-type', 'application/javascript; charset=utf-8')
+        .header('service-worker-allowed', '/')
+        .header('cache-control', 'no-cache')
+        .header('x-devon-sw-version', SERVICE_WORKER_VERSION)
+        .send(SERVICE_WORKER_SOURCE),
   )
 
   // Deliberately no head-only surface in this module. Presence and typing are peer facts; a "who is

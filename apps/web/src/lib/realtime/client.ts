@@ -80,11 +80,15 @@ function toMessage(data: unknown): RealtimeMessage | null {
   if (!data || typeof data !== 'object') return null
   const record = data as Record<string, unknown>
   if (typeof record['type'] !== 'string') return null
+  // `exactOptionalPropertyTypes` is on (TECH-SPEC §16): an optional property is either present with
+  // a real value or absent entirely -- never present holding `undefined`. So `at` is spread in only
+  // when the wire actually carried a string.
+  const at = record['at']
   return {
     type: record['type'],
     payload: (record['payload'] as Record<string, unknown> | undefined) ?? {},
     actorUserId: (record['actorUserId'] as string | null | undefined) ?? null,
-    at: typeof record['at'] === 'string' ? record['at'] : undefined,
+    ...(typeof at === 'string' ? { at } : {}),
   }
 }
 
