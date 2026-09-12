@@ -14,7 +14,7 @@
     },
     "register": {
       "title": "Roʻyxatdan oʻtish",
-      "subtitle": "Devon'dan foydalanish uchun hisob yarating.",
+      "subtitle": "WorkPortaldan foydalanish uchun hisob yarating.",
       "login": "Login",
       "loginHint": "Kichik lotin harflar, raqamlar, nuqta, tire",
       "email": "Elektron pochta (ixtiyoriy)",
@@ -37,7 +37,7 @@
       "loginLink": "Kirish",
       "error": {
         "conflict": "Bu login band. Boshqasini tanlang.",
-        "generic": "Roʻyxatdan oʻtib boʻlmadi. Ma'lumotlarni tekshirib, qayta urinib koʻring."
+        "generic": "Roʻyxatdan oʻtib boʻlmadi. Maʼlumotlarni tekshirib, qayta urinib koʻring."
       }
     },
     "sessions": {
@@ -47,7 +47,7 @@
         "title": "Faol seanslar yoʻq"
       },
       "current": "Joriy qurilma",
-      "unknownDevice": "Noma'lum qurilma",
+      "unknownDevice": "Nomaʼlum qurilma",
       "lastSeen": "Oxirgi faollik: {when}",
       "showAll": "Yana {count} tasini koʻrsatish",
       "revoke": "Chiqish",
@@ -75,7 +75,7 @@
         "done": "Tayyor"
       },
       "disableDialog": {
-        "title": "2FA'ni oʻchirish",
+        "title": "2FAʼni oʻchirish",
         "passwordLabel": "Parolingizni tasdiqlang",
         "submit": "Oʻchirish",
         "error": "Parol notoʻgʻri"
@@ -91,7 +91,7 @@
     },
     "delete": {
       "title": "Hisobni oʻchirish",
-      "warning": "Hisobingiz 30 kundan soʻng butunlay oʻchiriladi va shaxsiy ma'lumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin.",
+      "warning": "Hisobingiz 30 kundan soʻng butunlay oʻchiriladi va shaxsiy maʼlumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin.",
       "confirm": "Oʻchirishni soʻrash",
       "confirmDialog": "Hisobingizni rostdan ham oʻchirmoqchimisiz?",
       "cancel": "Bekor qilish",
@@ -123,7 +123,7 @@
     },
     "photo": {
       "title": "Profil surati",
-      "subtitle": "Devon'da ismingiz yonida koʻrsatiladi.",
+      "subtitle": "WorkPortalda ismingiz yonida koʻrsatiladi.",
       "hint": "JPEG, PNG yoki WebP, 5 MB gacha. Surat koʻrsatilishidan oldin zararli dasturlarga tekshiriladi va oʻlchami moslanadi.",
       "choose": "Surat tanlash",
       "change": "Suratni oʻzgartirish",

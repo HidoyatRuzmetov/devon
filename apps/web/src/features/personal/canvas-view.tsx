@@ -3,7 +3,7 @@
 // selection lives in this component's own state instead, same tradeoff MODULE-GUIDE.md documents for
 // every feature today.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatDateTime } from '@devon/i18n'
 import { ArrowLeft, Check, Loader2, Plus, Trash2 } from 'lucide-react'
 import {
   Button,
@@ -30,6 +30,7 @@ import {
 
 export function CanvasView() {
   const t = useT()
+  const locale = useLocale()
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const canvasesQuery = useCanvasesQuery()
   const createCanvas = useCreateCanvasMutation()
@@ -138,7 +139,7 @@ export function CanvasView() {
                   </IconButton>
                 </div>
                 <span className="text-caption text-muted-foreground">
-                  {new Date(canvas.updatedAt).toLocaleString()}
+                  {formatDateTime(new Date(canvas.updatedAt), locale)}
                 </span>
               </Card>
             </StaggerItem>

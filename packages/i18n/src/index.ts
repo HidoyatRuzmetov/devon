@@ -27,6 +27,7 @@ export { getLocale, setLocale, subscribeLocale } from './store.js'
 
 export {
   formatDate,
+  formatDateTime,
   formatTime,
   formatNumber,
   formatUzs,

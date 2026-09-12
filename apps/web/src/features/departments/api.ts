@@ -1,6 +1,11 @@
 // Typed endpoint functions for `/api/v1/departments/*` (MODULE-GUIDE.md "Web features").
 import { z } from 'zod'
+import { FEATURE_KEYS, type FeatureKey } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
+
+/** SPEC §7: the switch map the server resolves for us -- stored overrides already merged onto the
+ * registry defaults, so nothing on this side needs to know what the defaults are. */
+export const featureFlagsSchema = z.record(z.enum(FEATURE_KEYS), z.boolean())
 
 export type UnitDraft = { name: string; colour?: string | undefined }
 
@@ -84,6 +89,7 @@ export const departmentDetailSchema = z.object({
     joinRequiresApproval: z.boolean(),
     whoCanConnectTelegramGroup: z.enum(['everyone', 'head']),
     quietHours: z.object({ start: z.string(), end: z.string() }).nullable(),
+    features: featureFlagsSchema,
   }),
   myRole: z.enum(['head', 'member']),
   memberCount: z.number().int(),
@@ -215,6 +221,66 @@ export function transferHeadship(id: string, userId: string, csrfToken: string) 
     `/api/v1/departments/${id}/members/${userId}/transfer-headship`,
     {},
     z.void(),
+    csrfToken,
+  )
+}
+
+// --- v1.1 SPEC §2.2: the join-approval queue -------------------------------------------------------
+
+const joinRequestSchema = z.object({
+  userId: z.string().uuid(),
+  givenName: z.string(),
+  familyName: z.string(),
+  patronymic: z.string().nullable(),
+  title: z.string().nullable(),
+  avatarKey: z.string().nullable(),
+  requestedAt: z.string(),
+})
+export type JoinRequest = z.infer<typeof joinRequestSchema>
+const joinRequestListSchema = z.object({ requests: z.array(joinRequestSchema) })
+
+export function fetchJoinRequests(id: string) {
+  return apiClient.get(`/api/v1/departments/${id}/join-requests`, joinRequestListSchema)
+}
+
+/** `approve` / `reject` are the decision; `undo` puts it back in the queue, which is what the toast's
+ * "Bekor qilish" calls (DESIGN.md: undo over confirm). */
+export function decideJoinRequest(
+  id: string,
+  userId: string,
+  decision: 'approve' | 'reject' | 'undo',
+  csrfToken: string,
+) {
+  return apiClient.post(
+    `/api/v1/departments/${id}/join-requests/${userId}/${decision}`,
+    {},
+    z.void(),
+    csrfToken,
+  )
+}
+
+// --- v1.1 SPEC §7: Imkoniyatlar --------------------------------------------------------------------
+
+export function putFeatures(
+  id: string,
+  features: Partial<Record<FeatureKey, boolean>>,
+  csrfToken: string,
+) {
+  return apiClient.put(
+    `/api/v1/departments/${id}/features`,
+    { features },
+    z.object({ features: featureFlagsSchema }),
+    csrfToken,
+  )
+}
+
+// --- v1.1 SPEC §2.2: the head resets a member's password -------------------------------------------
+
+export function resetMemberPassword(id: string, userId: string, csrfToken: string) {
+  return apiClient.post(
+    `/api/v1/departments/${id}/members/${userId}/reset-password`,
+    {},
+    z.object({ temporaryPassword: z.string() }),
     csrfToken,
   )
 }

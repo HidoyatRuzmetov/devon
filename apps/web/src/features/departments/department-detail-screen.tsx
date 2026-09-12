@@ -7,7 +7,7 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Avatar,
   Badge,
@@ -34,15 +34,20 @@ import {
   toast,
 } from '@devon/ui'
 import { Copy, MoreVertical, RefreshCw } from 'lucide-react'
+import { FEATURES, FEATURE_KEYS, type FeatureKey } from '@devon/contracts'
 import { ApiError } from '../../lib/api-client.js'
-import { useMeQuery } from '../../lib/session.js'
+import { useMeQuery, useDepartment } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import { adminResetPassword } from '../accounts/api.js'
 import { ConfirmDialog } from './components/confirm-dialog.js'
 import {
+  decideJoinRequest,
   fetchDepartment,
   fetchInvite,
+  fetchJoinRequests,
   fetchMembers,
+  putFeatures,
+  resetMemberPassword,
   leaveDepartment,
   patchDepartmentSettings,
   removeMember,
@@ -52,6 +57,7 @@ import {
   setJoinApproval,
   setJoinPassword,
   transferHeadship,
+  type JoinRequest,
   type Member,
 } from './api.js'
 
@@ -107,6 +113,7 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   }
 
   return (
+    <div className="flex flex-col gap-5">
     <SectionCard
       title={t('departments.settings.permissionsTitle')}
       description={t('departments.settings.permissionsDescription')}
@@ -161,6 +168,8 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
         </div>
       </div>
     </SectionCard>
+    <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
+    </div>
   )
 }
 
@@ -360,6 +369,219 @@ function InviteTab({ id }: { id: string }) {
   )
 }
 
+/**
+ * SPEC §2.2 -- the join-approval queue, on the Members tab where a head already goes to think about
+ * people. Head-only: both the list and the decision are `{kind:'department_managed'}` server-side, so
+ * a member never renders this at all.
+ *
+ * Undo, not confirm (DESIGN.md): approving or rejecting happens on one click and the toast carries
+ * "Bekor qilish", which calls the `undo` route and puts the request back in the queue. That is the
+ * right shape for a decision a head makes a dozen times a week and occasionally mis-clicks.
+ */
+function JoinRequestsCard({ id }: { id: string }) {
+  const t = useT()
+  const locale = useLocale()
+  const meQuery = useMeQuery()
+  const queryClient = useQueryClient()
+  const query = useQuery({
+    queryKey: ['departments', 'joinRequests', id],
+    queryFn: () => fetchJoinRequests(id),
+  })
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ['departments', 'joinRequests', id] })
+    void queryClient.invalidateQueries({ queryKey: ['departments', 'members', id] })
+  }
+
+  const decide = useMutation({
+    mutationFn: (input: { userId: string; decision: 'approve' | 'reject' | 'undo' }) =>
+      decideJoinRequest(id, input.userId, input.decision, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (_result, input) => {
+      invalidate()
+      if (input.decision === 'undo') {
+        toast(t('departments.joinRequests.undone'))
+        return
+      }
+      toast(
+        t(
+          input.decision === 'approve'
+            ? 'departments.joinRequests.approvedToast'
+            : 'departments.joinRequests.rejectedToast',
+        ),
+        {
+          action: {
+            label: t('departments.common.undo'),
+            onClick: () => decide.mutate({ userId: input.userId, decision: 'undo' }),
+          },
+        },
+      )
+    },
+    onError: () => toast(t('departments.joinRequests.conflict')),
+  })
+
+  if (query.isPending) {
+    return (
+      <SectionCard title={t('departments.joinRequests.title')}>
+        <StateView kind="loading" titleKey="state.loading" compact />
+      </SectionCard>
+    )
+  }
+  if (query.isError) {
+    return (
+      <SectionCard title={t('departments.joinRequests.title')}>
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          bodyKey="state.error.body"
+          action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+          compact
+        />
+      </SectionCard>
+    )
+  }
+
+  const requests = query.data.requests
+  return (
+    <SectionCard
+      title={t('departments.joinRequests.title')}
+      description={t('departments.joinRequests.description')}
+      actions={
+        requests.length > 0 ? (
+          <Badge tone="warning">{String(requests.length)}</Badge>
+        ) : undefined
+      }
+    >
+      {requests.length === 0 ? (
+        <StateView
+          kind="empty"
+          titleKey="departments.joinRequests.empty.title"
+          bodyKey="departments.joinRequests.empty.body"
+          compact
+        />
+      ) : (
+        <Reveal>
+          <DataList label={t('departments.joinRequests.title')}>
+            {requests.map((r: JoinRequest) => {
+              const name = `${r.givenName} ${r.familyName}`
+              return (
+                <DataRow
+                  key={r.userId}
+                  leading={
+                    <Avatar
+                      size="sm"
+                      alt={name}
+                      initials={initialsFromName(r.givenName, r.familyName)}
+                      hueSeed={r.userId}
+                    />
+                  }
+                  trailing={
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={decide.isPending}
+                        onClick={() => decide.mutate({ userId: r.userId, decision: 'reject' })}
+                      >
+                        {t('departments.joinRequests.reject')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={decide.isPending}
+                        onClick={() => decide.mutate({ userId: r.userId, decision: 'approve' })}
+                      >
+                        {t('departments.joinRequests.approve')}
+                      </Button>
+                    </div>
+                  }
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-body text-foreground">
+                      {name}
+                      {r.title ? (
+                        <span className="text-muted-foreground"> · {r.title}</span>
+                      ) : null}
+                    </p>
+                    <span className="text-small text-muted-foreground">
+                      {t('departments.joinRequests.requestedAt', {
+                        date: formatDate(new Date(r.requestedAt), locale),
+                      })}
+                    </span>
+                  </div>
+                </DataRow>
+              )
+            })}
+          </DataList>
+        </Reveal>
+      )}
+    </SectionCard>
+  )
+}
+
+/**
+ * SPEC §7 -- Imkoniyatlar. The head flips them; a member sees the same list, read-only, because
+ * "we do not use estimates in this boshqarma" is a fact worth being able to look up rather than
+ * infer from an absence.
+ *
+ * Saved per switch, immediately, with an undo in the toast -- a settings screen with eleven toggles
+ * and one Save button is how people lose changes.
+ */
+function FeaturesCard({
+  id,
+  isHead,
+  features,
+}: {
+  id: string
+  isHead: boolean
+  features: Record<string, boolean>
+}) {
+  const t = useT()
+  const meQuery = useMeQuery()
+  const queryClient = useQueryClient()
+
+  const save = useMutation({
+    mutationFn: (patch: Partial<Record<FeatureKey, boolean>>) =>
+      putFeatures(id, patch, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (_result, patch) => {
+      void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+      const [key, value] = Object.entries(patch)[0] ?? []
+      if (!key) return
+      toast(t(value ? 'departments.features.onToast' : 'departments.features.offToast'), {
+        action: {
+          label: t('departments.common.undo'),
+          onClick: () => save.mutate({ [key as FeatureKey]: !value }),
+        },
+      })
+    },
+  })
+
+  return (
+    <SectionCard
+      title={t('departments.features.title')}
+      description={t(
+        isHead ? 'departments.features.description' : 'departments.features.readOnlyDescription',
+      )}
+    >
+      <div className="flex flex-col gap-5">
+        {FEATURE_KEYS.map((key) => (
+          <label key={key} className="flex items-start justify-between gap-4">
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-body text-foreground">{t(FEATURES[key].labelKey)}</span>
+              <span className="text-caption text-muted-foreground">
+                {t(FEATURES[key].descriptionKey)}
+              </span>
+            </span>
+            <Switch
+              checked={features[key] ?? false}
+              disabled={!isHead || save.isPending}
+              onCheckedChange={(value) => save.mutate({ [key]: value })}
+            />
+          </label>
+        ))}
+      </div>
+    </SectionCard>
+  )
+}
+
 function MemberRow({
   member,
   isHead,
@@ -382,8 +604,13 @@ function MemberRow({
   resetPasswordPending: boolean
 }) {
   const t = useT()
+  const locale = useLocale()
   const name = `${member.givenName} ${member.familyName}`
   const isMe = member.userId === myUserId
+  // v1.1 SPEC §2.2: a head may now reset an ordinary member's password (the department-scoped route);
+  // a super admin may reset anyone's (the instance route). Resetting another *head*'s password is
+  // refused by the server, so the item is not offered either.
+  const canResetAsHead = isHead && !isMe && member.role !== 'head' && member.status === 'active'
   const hasMenu = (isHead && !isMe) || (isSuperAdmin && !isMe)
 
   return (
@@ -421,7 +648,7 @@ function MemberRow({
                     </DropdownMenuItem>
                   </>
                 ) : null}
-                {isSuperAdmin && !isMe ? (
+                {(isSuperAdmin && !isMe) || canResetAsHead ? (
                   <DropdownMenuItem disabled={resetPasswordPending} onSelect={onResetPassword}>
                     {t('accounts.admin.resetPassword.button')}
                   </DropdownMenuItem>
@@ -452,7 +679,7 @@ function MemberRow({
             <Badge tone="warning">{t('departments.members.statusPending')}</Badge>
           ) : null}
           {t('departments.members.joinedAt', {
-            date: new Date(member.joinedAt).toLocaleDateString(),
+            date: formatDate(new Date(member.joinedAt), locale),
           })}
         </span>
       </div>
@@ -503,11 +730,18 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     },
     onError: () => toast(t('departments.members.leaveBlockedHead')),
   })
-  // TECH-SPEC §2.1: super-admin-only, instance-scoped password reset (route permission is
-  // `{action:'administer', subject:{kind:'instance'}}`, never a department permission) -- surfaced
-  // here because the member list is the one screen a super admin already has every user in front of.
+  // Two different routes behind one menu item, picked by who is asking (v1.1 SPEC §2.2):
+  //  - a **head** resets an ordinary member of their own department
+  //    (`POST /departments/:id/members/:userId/reset-password`, `{kind:'department_managed'}`);
+  //  - a **super admin** resets anyone (`POST /accounts/:userId/reset-password`,
+  //    `{kind:'instance'}`) -- the pre-v1.1 behaviour, unchanged.
+  // Before v1.1 only the second existed, so every forgotten password in every department escalated
+  // to the single ministry super admin (WALKTHROUGH-FINDINGS §2.5).
   const resetPassword = useMutation({
-    mutationFn: (userId: string) => adminResetPassword(userId, meQuery.data?.csrfToken ?? ''),
+    mutationFn: (userId: string) =>
+      isHead
+        ? resetMemberPassword(id, userId, meQuery.data?.csrfToken ?? '')
+        : adminResetPassword(userId, meQuery.data?.csrfToken ?? ''),
     onSuccess: (result) => {
       toast(t('accounts.admin.resetPassword.success'))
       setConfirmAction(null)
@@ -532,6 +766,7 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
 
   return (
     <div className="flex flex-col gap-4">
+      {isHead ? <JoinRequestsCard id={id} /> : null}
       {members.length === 0 ? (
         <StateView kind="empty" titleKey="departments.members.empty.title" compact />
       ) : (
@@ -678,7 +913,12 @@ export default function DepartmentDetailScreen() {
   const t = useT()
   const meQuery = useMeQuery()
   const params = useSearchParams()
-  const id = params.get('id') ?? ''
+  const { departmentId, memberships } = useDepartment()
+  // WALKTHROUGH-FINDINGS §2.4: `/department` with no `?id` used to render a generic "could not load"
+  // error -- with no network request behind it -- which is exactly where the sidebar's own
+  // "Boʻlimlar" entry and the hub's "Sozlamalarni ochish" link both landed. Without an id the screen
+  // is simply about *your* department, which the session already knows.
+  const id = params.get('id') ?? departmentId ?? ''
   const [tab, setTab] = React.useState<Tab>('general')
 
   const deptQuery = useQuery({
@@ -687,7 +927,22 @@ export default function DepartmentDetailScreen() {
     enabled: id.length > 0,
   })
 
-  if (!id) return <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
+  // Only reachable for an account that belongs to no department at all -- an empty state that
+  // teaches the next action, not an error (DESIGN.md).
+  if (!id) {
+    return (
+      <StateView
+        kind="empty"
+        titleKey="departments.detail.noDepartment.title"
+        bodyKey="departments.detail.noDepartment.body"
+        action={{
+          labelKey: 'departments.detail.noDepartment.action',
+          onAction: () => navigate('/departments'),
+        }}
+      />
+    )
+  }
+  void memberships
   if (deptQuery.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
   }

@@ -3,7 +3,7 @@
 // only renders for the head of the active department (the same `department`-subject write the API
 // itself requires, `apps/api/src/modules/telegram/index.ts`) -- a member sees just their own link.
 import * as React from 'react'
-import { useT } from '@devon/i18n'
+import { useT, useLocale, formatDateTime, formatTime } from '@devon/i18n'
 import {
   Badge,
   Button,
@@ -85,6 +85,7 @@ function TelegramPhoneMock({
 
 function PersonalLinkCard() {
   const t = useT()
+  const locale = useLocale()
   const statusQuery = useTelegramStatusQuery()
   const linkCode = useTelegramLinkCodeMutation()
   const unlink = useTelegramUnlinkMutation()
@@ -172,7 +173,7 @@ function PersonalLinkCard() {
                 {status.mutedUntil ? (
                   <p className="mt-2 text-small text-muted-foreground">
                     {t('telegram.personal.mute.until', {
-                      date: new Date(status.mutedUntil).toLocaleString(),
+                      date: formatDateTime(new Date(status.mutedUntil), locale),
                     })}
                   </p>
                 ) : null}
@@ -218,7 +219,7 @@ function PersonalLinkCard() {
                     ) : null}
                     <p className="text-caption text-muted-foreground">
                       {t('telegram.personal.codeExpires', {
-                        time: new Date(linkCode.data.expiresAt).toLocaleTimeString(),
+                        time: formatTime(new Date(linkCode.data.expiresAt), locale),
                       })}
                     </p>
                   </div>
@@ -340,6 +341,7 @@ function GroupsList({ query, disconnect, putKinds }: GroupsListProps) {
 
 function GroupsCard({ departmentId }: { departmentId: string }) {
   const t = useT()
+  const locale = useLocale()
   const groupsQuery = useDepartmentGroupsQuery(departmentId)
   const connectCode = useGroupConnectCodeMutation(departmentId)
   const putKinds = usePutGroupKindsMutation(departmentId)
@@ -371,7 +373,7 @@ function GroupsCard({ departmentId }: { departmentId: string }) {
             </div>
             <p className="mt-1 text-caption text-muted-foreground">
               {t('telegram.group.codeExpires', {
-                time: new Date(connectCode.data.expiresAt).toLocaleTimeString(),
+                time: formatTime(new Date(connectCode.data.expiresAt), locale),
               })}
             </p>
           </div>

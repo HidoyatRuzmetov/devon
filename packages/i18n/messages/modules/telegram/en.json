@@ -3,8 +3,8 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "online",
-      "replyMessage": "Connected! You'll get your Devon notifications here from now on.",
-      "connectedMessage": "You're connected — Devon notifications now arrive in this chat."
+      "replyMessage": "Connected! You'll get your WorkPortal notifications here from now on.",
+      "connectedMessage": "You're connected — WorkPortal notifications now arrive in this chat."
     },
     "notConfigured": {
       "title": "Telegram is not connected yet",

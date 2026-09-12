@@ -52,6 +52,14 @@ export function formatTime(d: Date, _locale: Locale, tz: string = DEFAULT_TZ): s
   return `${normalisedHour}:${minute}`
 }
 
+/** `05.09.2026 18:30` -- `formatDate` and `formatTime` joined, so a screen that needs both never
+ *  reaches for `Date.prototype.toLocaleString()` (which follows the *browser's* locale and timezone,
+ *  not the app's -- the exact bug WALKTHROUGH-FINDINGS §5.1 found on six screens, where an uz-Latn UI
+ *  printed `9/6/2026, 11:15:54 PM`). */
+export function formatDateTime(d: Date, locale: Locale, tz: string = DEFAULT_TZ): string {
+  return `${formatDate(d, locale, tz)} ${formatTime(d, locale, tz)}`
+}
+
 /** NumberFlow (the KpiTile/StatNumber ticker) formats internally with its own `Intl.NumberFormat`
  * call and offers no part-level hook to fix up afterwards, so `formatNumber`'s formatToParts trick
  * cannot reach it. `uz-Cyrl`'s CLDR numbering data groups correctly (space, not comma) and is

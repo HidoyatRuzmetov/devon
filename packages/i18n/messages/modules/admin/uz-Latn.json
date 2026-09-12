@@ -55,7 +55,7 @@
         "empty": {
           "title": "Boʻlimlar topilmadi"
         },
-        "memberCount": "{count} ta a'zo",
+        "memberCount": "{count} ta aʼzo",
         "viewAs": "Koʻrinish sifatida ochish",
         "pause": "Toʻxtatish",
         "archive": "Arxivlash",
@@ -75,11 +75,11 @@
         "columnName": "Boʻlim",
         "columnStatus": "Holat",
         "columnHead": "Boshliq",
-        "columnMembers": "A'zolar",
+        "columnMembers": "Aʼzolar",
         "columnCreated": "Yaratilgan",
         "drawerTitle": "Boʻlim tafsilotlari",
         "drawerClose": "Yopish",
-        "memberCountLabel": "A'zolar",
+        "memberCountLabel": "Aʼzolar",
         "headLabel": "Boshliq",
         "createdLabel": "Yaratilgan",
         "localeLabel": "Standart til"
@@ -102,7 +102,7 @@
         "role": {
           "superAdmin": "Super administrator",
           "head": "Boshliq",
-          "member": "A'zo"
+          "member": "Aʼzo"
         },
         "columnName": "Ism",
         "columnLogin": "Login",
@@ -124,7 +124,7 @@
         "temporaryPasswordBody": "Ushbu parolni foydalanuvchiga xavfsiz usulda yetkazing. Birinchi kirishda u yangi parol oʻrnatishi soʻraladi.",
         "temporaryPasswordClose": "Yopish",
         "anonymizeDialogTitle": "Hisobni oʻchirish",
-        "anonymizeDialogBody": "Foydalanuvchi ma'lumotlari anonimlashtiriladi va hisob doimiy ravishda oʻchiriladi. Bu amalni bekor qilib boʻlmaydi.",
+        "anonymizeDialogBody": "Foydalanuvchi maʼlumotlari anonimlashtiriladi va hisob doimiy ravishda oʻchiriladi. Bu amalni bekor qilib boʻlmaydi.",
         "anonymizeSubmit": "Oʻchirish",
         "anonymizedToast": "Hisob oʻchirildi"
       },
@@ -141,9 +141,9 @@
         "paused": "Toʻxtatilgan",
         "archived": "Arxivlangan",
         "heads": "Rahbarlar",
-        "members": "A'zolar",
+        "members": "Aʼzolar",
         "superAdmins": "Super administratorlar",
-        "noActivity": "Hozircha faollik ma'lumotlari yoʻq",
+        "noActivity": "Hozircha faollik maʼlumotlari yoʻq",
         "weeklyLoginsCaption": "Haftalik kirishlar soni (soʻnggi 8 hafta)",
         "notAvailable": "Mavjud emas",
         "tokensThisMonth": "Ushbu oydagi tokenlar",
@@ -165,7 +165,7 @@
         "columnAt": "Vaqt",
         "columnAction": "Amal",
         "columnActor": "Bajaruvchi",
-        "columnSubject": "Ob'ekt",
+        "columnSubject": "Obʼekt",
         "previousPage": "Oldingi",
         "nextPage": "Keyingi",
         "actorSystem": "Tizim",
@@ -329,7 +329,7 @@
       "health": {
         "refresh": "Yangilash",
         "checkedAt": "Oxirgi tekshiruv: {time}",
-        "db": "Ma'lumotlar bazasi",
+        "db": "Maʼlumotlar bazasi",
         "queue": "Navbat",
         "storage": "Xotira",
         "telegram": "Telegram",

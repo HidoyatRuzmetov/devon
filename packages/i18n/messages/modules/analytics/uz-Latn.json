@@ -80,7 +80,7 @@
         "title": "Oʻz vaqtida bajarilish darajasi",
         "question": "Topshiriqlar muddatida bajarilyaptimi?",
         "overall": "Umumiy: {percent}%",
-        "empty": "Baholash uchun yetarli ma'lumot yoʻq"
+        "empty": "Baholash uchun yetarli maʼlumot yoʻq"
       },
       "openVsOverdue": {
         "title": "Ochiq va muddati oʻtgan topshiriqlar",
@@ -95,7 +95,7 @@
       "loadPerUnit": {
         "title": "Boʻlimlar boʻyicha yuklama",
         "question": "Qaysi boʻlim eng band?",
-        "empty": "Hozircha boʻlimlar boʻyicha ma'lumot yoʻq"
+        "empty": "Hozircha boʻlimlar boʻyicha maʼlumot yoʻq"
       },
       "projectProgress": {
         "title": "Loyihalar boʻyicha jarayon",
@@ -135,6 +135,6 @@
       "titlePlaceholder": "Diagramma nomi",
       "confirm": "Mahkamlash"
     },
-    "chartEmpty": "Hozircha ma'lumot yoʻq"
+    "chartEmpty": "Hozircha maʼlumot yoʻq"
   }
 }

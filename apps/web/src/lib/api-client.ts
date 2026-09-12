@@ -135,7 +135,7 @@ async function del<T>(
 
 async function send<T>(
   path: string,
-  method: 'POST' | 'PATCH',
+  method: 'POST' | 'PATCH' | 'PUT',
   body: unknown,
   schema: z.ZodType<T>,
   csrfToken?: string,
@@ -196,6 +196,10 @@ export const apiClient = {
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'PATCH', body, schema, csrfToken),
+  /** For a whole-object replace, where PATCH would imply a merge the server does not do -- the
+   * Imkoniyatlar switch map (SPEC §7) is the first of these. */
+  put: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
+    send(path, 'PUT', body, schema, csrfToken),
   delete: del,
   uploadFile,
 }

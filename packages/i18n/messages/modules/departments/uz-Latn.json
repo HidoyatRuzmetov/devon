@@ -3,12 +3,13 @@
     "title": "Boʻlimlar",
     "subtitle": "Sizning boʻlimlaringiz va ularga qoʻshilish yoʻllari",
     "common": {
-      "cancel": "Bekor qilish"
+      "cancel": "Bekor qilish",
+      "undo": "Bekor qilish"
     },
     "landing": {
       "eyebrow": "Boʻlimlar",
       "title": "Boshlash uchun boʻlim tanlang",
-      "body": "Hozircha hech qanday boʻlimga a'zo emassiz. Yangi boʻlim yarating yoki mavjud boʻlimga qoʻshiling.",
+      "body": "Hozircha hech qanday boʻlimga aʼzo emassiz. Yangi boʻlim yarating yoki mavjud boʻlimga qoʻshiling.",
       "createCta": "Boʻlim yaratish",
       "createTitle": "Boʻlim yaratish",
       "createBody": "Boʻlimingizni tuzing, boʻlinmalarni belgilang. Soʻrovingiz super administrator tomonidan tasdiqlanadi.",
@@ -93,7 +94,7 @@
       "setPassword": "Parolni oʻzim belgilayman",
       "setPasswordSubmit": "Saqlash",
       "approvalToggleLabel": "Qoʻshilishni tasdiqlash",
-      "approvalToggleBody": "Yoqilgan boʻlsa, yangi a'zolar boshliq tasdiqlashini kutadi.",
+      "approvalToggleBody": "Yoqilgan boʻlsa, yangi aʼzolar boshliq tasdiqlashini kutadi.",
       "passwordHiddenNotice": "Xavfsizlik uchun parol faqat yaratilgan/yangilangan paytda koʻrsatiladi.",
       "saveNowWarning": "Buni hozir saqlab qoʻying — keyinroq qayta koʻrsatilmaydi.",
       "linkDescription": "Ushbu havola orqali kelgan har bir kishi boʻlimingizga qoʻshilishni soʻraydi.",
@@ -118,26 +119,26 @@
       "rateLimited": "Juda koʻp urinish. Birozdan soʻng qayta urinib koʻring."
     },
     "members": {
-      "title": "A'zolar",
+      "title": "Aʼzolar",
       "empty": {
-        "title": "A'zolar yoʻq"
+        "title": "Aʼzolar yoʻq"
       },
       "roleHead": "Boshliq",
-      "roleMember": "A'zo",
+      "roleMember": "Aʼzo",
       "statusPending": "Tasdiqlanishi kutilmoqda",
       "joinedAt": "Qoʻshilgan sana: {date}",
       "remove": "Oʻchirish",
       "removeConfirm": "{name}ni boʻlimdan chiqarasizmi?",
-      "removedToast": "A'zo oʻchirildi",
+      "removedToast": "Aʼzo oʻchirildi",
       "leave": "Boʻlimdan chiqish",
       "leaveConfirm": "Rostdan ham boʻlimdan chiqmoqchimisiz?",
-      "leaveBlockedHead": "Boshliq sifatida avval boshqa a'zoga vakolatni topshiring.",
+      "leaveBlockedHead": "Boshliq sifatida avval boshqa aʼzoga vakolatni topshiring.",
       "leftToast": "Boʻlimdan chiqdingiz",
       "transfer": "Boshliqlikni topshirish",
       "transferConfirm": "Boshliqlik {name}ga topshiriladi. Davom etasizmi?",
       "transferredToast": "Boshliqlik topshirildi",
       "transferDialogTitle": "Boshliqlikni topshirish",
-      "removeDialogTitle": "A'zoni boʻlimdan chiqarish",
+      "removeDialogTitle": "Aʼzoni boʻlimdan chiqarish",
       "leaveDialogTitle": "Boʻlimdan chiqish"
     },
     "settings": {
@@ -146,12 +147,12 @@
       "name": "Nomi",
       "description": "Tavsif",
       "permissionsTitle": "Ruxsatlar",
-      "permissionsDescription": "A'zolar nimani oʻzi bajara olishini belgilang.",
+      "permissionsDescription": "Aʼzolar nimani oʻzi bajara olishini belgilang.",
       "save": "Saqlash",
-      "allowSelfAssign": "A'zolar oʻzini boʻlinmaga tayinlashi mumkin",
-      "allowStructureEdit": "A'zolar tuzilmani tahrirlashi mumkin",
+      "allowSelfAssign": "Aʼzolar oʻzini boʻlinmaga tayinlashi mumkin",
+      "allowStructureEdit": "Aʼzolar tuzilmani tahrirlashi mumkin",
       "telegramGroupLabel": "Telegram guruhini kim ulashi mumkin",
-      "telegramEveryone": "Barcha a'zolar",
+      "telegramEveryone": "Barcha aʼzolar",
       "telegramHeadOnly": "Faqat boshliq",
       "quietHoursLabel": "Tinch soatlar",
       "quietHoursStart": "Boshlanishi",
@@ -170,10 +171,83 @@
     },
     "hub": {
       "statHead": "Boshliq",
-      "statMembers": "A'zolar",
+      "statMembers": "Aʼzolar",
       "noHead": "Hali tayinlanmagan",
-      "otherMemberships": "Boshqa a'zoliklaringiz",
+      "otherMemberships": "Boshqa aʼzoliklaringiz",
       "manageLink": "Sozlamalarni ochish"
+    },
+    "detail": {
+      "noDepartment": {
+        "title": "Siz hali boshqarmaga aʼzo emassiz",
+        "body": "Taklif havolasi orqali qoʻshiling yoki yangi boshqarma ochishni soʻrang.",
+        "action": "Boshqarmalar"
+      }
+    },
+    "joinRequests": {
+      "title": "Qoʻshilish soʻrovlari",
+      "description": "Boshqarmaga kirmoqchi boʻlganlar. Qabul qilsangiz, ular darhol ishga kirishadi.",
+      "approve": "Qabul qilish",
+      "reject": "Rad etish",
+      "approvedToast": "Xodim boshqarmaga qabul qilindi",
+      "rejectedToast": "Soʻrov rad etildi",
+      "undone": "Soʻrov navbatga qaytarildi",
+      "conflict": "Bu soʻrov allaqachon koʻrib chiqilgan.",
+      "requestedAt": "Soʻragan sana: {date}",
+      "empty": {
+        "title": "Kutayotgan soʻrov yoʻq",
+        "body": "Yangi soʻrov kelganda shu yerda va bildirishnomalaringizda koʻrinadi."
+      }
+    },
+    "features": {
+      "title": "Imkoniyatlar",
+      "description": "Boshqarmangizga kerak boʻlganini yoqing. Oʻchirilgani hech kimga koʻrinmaydi.",
+      "readOnlyDescription": "Boshqarmangizda yoqilgan imkoniyatlar. Ularni boʻlim boshligʻi boshqaradi.",
+      "onToast": "Imkoniyat yoqildi",
+      "offToast": "Imkoniyat oʻchirildi",
+      "custom_fields": {
+        "label": "Maxsus maydonlar",
+        "description": "Vazifalarga oʻz maydonlaringizni qoʻshing — masalan, hujjat raqami yoki manba."
+      },
+      "person_fields": {
+        "label": "Xodim maydonlari",
+        "description": "Xodimlar haqida oʻzimiz kiritadigan maʼlumot — masalan, qaysi oliygohni bitirgani."
+      },
+      "estimates": {
+        "label": "Vaqt baholari",
+        "description": "Har bir vazifaga taxminiy vaqt yozib qoʻyiladi va yuklamada hisobga olinadi."
+      },
+      "workload": {
+        "label": "Yuklama",
+        "description": "Kim qancha band — hafta boʻyicha koʻrinish (faqat boʻlim boshligʻi uchun)."
+      },
+      "dependencies": {
+        "label": "Bogʻliqliklar",
+        "description": "Bir vazifa boshqasini kutayotganini belgilash va toʻsilganlarni koʻrish."
+      },
+      "recurring": {
+        "label": "Takrorlanuvchi vazifalar",
+        "description": "Har hafta yoki har oy oʻzi qayta ochiladigan vazifalar."
+      },
+      "templates": {
+        "label": "Namunalar",
+        "description": "Tayyor vazifa va loyiha namunalari — bir xil ishni har safar qaytadan yozmaslik uchun."
+      },
+      "goals": {
+        "label": "Maqsadlar",
+        "description": "Choraklik maqsadlar va ularning bajarilish darajasi."
+      },
+      "focus_list": {
+        "label": "Diqqat markazi",
+        "description": "Har kim uchun beshtagacha asosiy vazifa roʻyxati."
+      },
+      "automations": {
+        "label": "Avtomatlashtirish",
+        "description": "«Muddat yaqinlashsa — eslat» kabi oddiy qoidalar."
+      },
+      "reminders": {
+        "label": "Eslatmalar",
+        "description": "Vazifa boʻyicha oʻzingizga belgilangan vaqtda eslatma olish."
+      }
     }
   }
 }

@@ -13,7 +13,7 @@ import {
   Tablet,
   Trash2,
 } from 'lucide-react'
-import { useT, useLocale, formatRelativeTime } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatDateTime, formatRelativeTime } from '@devon/i18n'
 import {
   AnimatePresence,
   Badge,
@@ -551,6 +551,7 @@ function PasswordSection() {
  * instance-wide wipe (`features/admin/settings-screen.tsx`) one level further up in severity. */
 function DeleteAccountSection() {
   const t = useT()
+  const locale = useLocale()
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
   const meQuery = useMeQuery()
@@ -587,7 +588,7 @@ function DeleteAccountSection() {
       {scheduledFor ? (
         <div className="flex items-center gap-3">
           <p className="text-small text-foreground">
-            {t('accounts.delete.scheduled', { date: new Date(scheduledFor).toLocaleDateString() })}
+            {t('accounts.delete.scheduled', { date: formatDate(new Date(scheduledFor), locale) })}
           </p>
           <Button
             variant="secondary"

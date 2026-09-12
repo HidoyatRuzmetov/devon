@@ -3,8 +3,8 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "в сети",
-      "replyMessage": "Подключено! Теперь уведомления Devon будут приходить сюда.",
-      "connectedMessage": "Вы подключены — уведомления Devon приходят в этот чат."
+      "replyMessage": "Подключено! Теперь уведомления WorkPortal будут приходить сюда.",
+      "connectedMessage": "Вы подключены — уведомления WorkPortal приходят в этот чат."
     },
     "notConfigured": {
       "title": "Telegram ещё не подключён",

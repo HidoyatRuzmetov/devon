@@ -14,7 +14,7 @@
     },
     "register": {
       "title": "Create your account",
-      "subtitle": "Set up an account to start using Devon.",
+      "subtitle": "Set up an account to start using WorkPortal.",
       "login": "Login",
       "loginHint": "Lowercase letters, digits, dot, dash",
       "email": "Email (optional)",
@@ -123,7 +123,7 @@
     },
     "photo": {
       "title": "Profile photo",
-      "subtitle": "Shown next to your name across Devon.",
+      "subtitle": "Shown next to your name across WorkPortal.",
       "hint": "JPEG, PNG or WebP, up to 5 MB. The photo is checked for malware and resized before it is shown.",
       "choose": "Choose photo",
       "change": "Change photo",

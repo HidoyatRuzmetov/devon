@@ -3,7 +3,8 @@
     "title": "Departments",
     "subtitle": "Your departments, and ways to join more",
     "common": {
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "undo": "Undo"
     },
     "landing": {
       "eyebrow": "Departments",
@@ -174,6 +175,79 @@
       "noHead": "Not yet assigned",
       "otherMemberships": "Your other memberships",
       "manageLink": "Open settings"
+    },
+    "detail": {
+      "noDepartment": {
+        "title": "You are not in a department yet",
+        "body": "Join with an invite link, or ask for a new department to be opened.",
+        "action": "Departments"
+      }
+    },
+    "joinRequests": {
+      "title": "Join requests",
+      "description": "People asking to join. Approve and they can start work immediately.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approvedToast": "Approved — they are in the department now",
+      "rejectedToast": "Request rejected",
+      "undone": "Request put back in the queue",
+      "conflict": "This request has already been decided.",
+      "requestedAt": "Asked on {date}",
+      "empty": {
+        "title": "No requests waiting",
+        "body": "A new request shows up here and in your notifications."
+      }
+    },
+    "features": {
+      "title": "Capabilities",
+      "description": "Turn on what your department needs. Anything off is hidden from everyone.",
+      "readOnlyDescription": "What is turned on in your department. The head decides these.",
+      "onToast": "Turned on",
+      "offToast": "Turned off",
+      "custom_fields": {
+        "label": "Custom fields",
+        "description": "Add your own fields to tasks — a document number, a source, anything."
+      },
+      "person_fields": {
+        "label": "Person fields",
+        "description": "Facts about colleagues we record ourselves — where they studied, for example."
+      },
+      "estimates": {
+        "label": "Time estimates",
+        "description": "Record roughly how long a task takes and count it towards workload."
+      },
+      "workload": {
+        "label": "Workload",
+        "description": "Who is how busy, week by week (head only)."
+      },
+      "dependencies": {
+        "label": "Dependencies",
+        "description": "Mark that one task is waiting on another, and see what is blocked."
+      },
+      "recurring": {
+        "label": "Recurring tasks",
+        "description": "Tasks that reopen themselves every week or every month."
+      },
+      "templates": {
+        "label": "Templates",
+        "description": "Ready-made task and project templates, so the same work is not retyped."
+      },
+      "goals": {
+        "label": "Goals",
+        "description": "Quarterly goals and how far along they are."
+      },
+      "focus_list": {
+        "label": "Focus list",
+        "description": "Up to five headline tasks per person."
+      },
+      "automations": {
+        "label": "Automations",
+        "description": "Simple rules like “due date approaching — remind me”."
+      },
+      "reminders": {
+        "label": "Reminders",
+        "description": "A reminder about a task at a time you pick."
+      }
     }
   }
 }
