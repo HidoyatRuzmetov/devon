@@ -28,7 +28,14 @@
       "columnsShowing": "{shown} / {total} ustun koʻrsatilmoqda",
       "expandAllColumns": "Barchasini yoyish",
       "showAllMembers": "Barcha xodimlar ({count})",
-      "showFewer": "Kamroq koʻrsatish"
+      "showFewer": "Kamroq koʻrsatish",
+      "scopeLabel": "Doskada nimani koʻrsatish",
+      "scopeAll": "Hammasi",
+      "scopeMine": "Mening",
+      "noUnit": "Boʻlimsiz",
+      "densityCompact": "Ixcham koʻrinish",
+      "densityRoomy": "Keng koʻrinish",
+      "collapseAllColumns": "Barcha ustunlarni yigʻish"
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",
@@ -117,7 +124,9 @@
       "backToBoard": "Doskaga qaytish",
       "noIdTitle": "Vazifa koʻrsatilmagan",
       "noIdBody": "Havolada vazifa identifikatori yoʻq.",
-      "readOnly": "Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin."
+      "readOnly": "Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin.",
+      "assignedTo": "Kimga: {name}",
+      "byGiver": "Kimdan: {name}"
     },
     "priority": {
       "none": "Muhimlik yoʻq",

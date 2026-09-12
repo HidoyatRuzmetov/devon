@@ -45,6 +45,10 @@ export interface BoardColumnProps {
   /** Lets the board report a "showing N of M" affordance for its collapse toggles without lifting
    * the (per-viewer, `localStorage`-backed) collapsed state itself out of each column. */
   onCollapsedChange?: (columnKey: string, collapsed: boolean) => void
+  /** v1.1 SPEC 3.3: `compact` narrows the column and tightens its header so a 26-person boshqarma
+   * fits on one screen instead of seven screens of horizontal scroll. Owned by the board (one
+   * preference for the whole board, remembered per viewer), passed down rather than read here. */
+  density?: 'comfortable' | 'compact'
 }
 
 /** Column collapse is a per-viewer convenience, not shared state -- `localStorage` (guarded: private
@@ -85,6 +89,7 @@ export function BoardColumn({
   onDropped,
   onMoveTo,
   onCollapsedChange,
+  density = 'comfortable',
 }: BoardColumnProps) {
   const t = useT()
   const listRef = React.useRef<HTMLDivElement | null>(null)
@@ -150,11 +155,14 @@ export function BoardColumn({
     )
   }
 
+  const compact = density === 'compact'
+
   return (
-    <div className="flex min-h-0 w-72 shrink-0 flex-col gap-2">
+    <div className={cn('flex min-h-0 shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}>
       <div
         className={cn(
-          'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 py-2 shadow-1',
+          'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 shadow-1',
+          compact ? 'py-1' : 'py-2',
         )}
       >
         <span
@@ -174,7 +182,9 @@ export function BoardColumn({
               <p className="truncate text-small font-semibold text-foreground">
                 {fullName(member)}
               </p>
-              {member.title ? (
+              {/* The job title is the first thing to go at compact density -- the name and the two
+                  counts are what a head is scanning for. */}
+              {member.title && !compact ? (
                 <p className="truncate text-caption text-muted-foreground">{member.title}</p>
               ) : null}
             </div>

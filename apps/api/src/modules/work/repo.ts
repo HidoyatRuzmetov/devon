@@ -107,10 +107,20 @@ export async function getMembers(
       title: string | null
       avatar_key: string | null
       role: 'head' | 'member'
+      unit_id: string | null
+      unit_name: string | null
     }>(
-      sql`select u.id as user_id, u.given_name, u.family_name, u.title, u.avatar_key, m.role
+      // v1.1 SPEC §3.3: the bo'lim comes back with the member, in the same query -- one left join,
+      // never a second round trip per column (TECH-SPEC §16). `app.unit_roles` holds at most one
+      // active assignment per person per department (the unique index in `0200_structure.sql`), so
+      // the join cannot multiply rows.
+      sql`select u.id as user_id, u.given_name, u.family_name, u.title, u.avatar_key, m.role,
+                 un.id as unit_id, un.name as unit_name
           from app.memberships m
           join app.users u on u.id = m.user_id
+          left join app.unit_roles ur
+            on ur.user_id = u.id and ur.department_id = m.department_id and ur.deleted_at is null
+          left join app.units un on un.id = ur.unit_id and un.deleted_at is null
           where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
             and u.deleted_at is null
           order by (m.role = 'head') desc, u.given_name asc, u.family_name asc`,
@@ -122,6 +132,8 @@ export async function getMembers(
       title: r.title,
       avatarKey: r.avatar_key,
       role: r.role,
+      unitId: r.unit_id,
+      unitName: r.unit_name,
     }))
   })
 }

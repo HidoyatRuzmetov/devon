@@ -26,6 +26,11 @@ export const memberSummarySchema = z.object({
   title: z.string().nullable(),
   avatarKey: z.string().nullable(),
   role: z.enum(['head', 'member']),
+  // v1.1 SPEC §3.3: the board groups its columns by bo'lim, so each column has to know which one
+  // its person belongs to. `null` = not assigned to a unit yet, which renders as its own trailing
+  // section rather than being hidden.
+  unitId: z.string().uuid().nullable(),
+  unitName: z.string().nullable(),
 })
 export type MemberSummary = z.infer<typeof memberSummarySchema>
 

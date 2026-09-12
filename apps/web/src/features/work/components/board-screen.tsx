@@ -1,17 +1,29 @@
 // The People board (TECH-SPEC §5, EPIC-004's centrepiece): one column per member, grouped under a
-// colour-coded bo'lim section, unassigned last. EPIC-003 (sub-department "bo'lim" units) has not
-// shipped yet (`docs/03-plan/backlog.json`: EPIC-003 is still `ready`, and `apps/api/src/modules/
-// work/index.ts`'s own `toFilterable` comment: "unitName: null // EPIC-003 ... has not shipped yet")
-// -- so there is exactly one section today, the signed-in department itself, coloured via
-// `unitHueClass(departmentId)` (the same stable-hash-to-hue helper a real bo'lim section will use once
-// EPIC-003 lands; only the grouping key changes, not the rendering). Virtualisation is intentionally
+// colour-coded bo'lim section, unassigned last.
+//
+// v1.1 SPEC §3.3 changed three defaults, all of them for the same reason: a head who opens the
+// department board and sees his own seven tasks has learned nothing about his department
+// (WALKTHROUGH-FINDINGS §2.1 -- 187 of 189 open cards were hidden behind a secondary pill).
+//  1. **Hammasi is the default for everyone.** "Mening" is still one click away and is remembered
+//     per person, but the board opens as what it says it is: the department.
+//  2. **Columns are grouped by boʻlim**, the way the org chart is, with "Boʻlimsiz" last -- the
+//     grouping EPIC-003's units finally make possible (`getMembers` brings the unit back with the
+//     member now, one left join, no extra round trip).
+//  3. **A head's columns are ordered by trouble**: overdue first, then open load. The five people
+//     who need attention are the five leftmost columns instead of being alphabetically scattered
+//     across seven screens of horizontal scroll.
+// Plus the two affordances a 26-column board needs and did not have: collapse-all, and a compact
+// density that fits roughly twice as many columns on a 1440px screen.
+//
+// Virtualisation is intentionally
 // not wired in here: at this build's demo scale (~250 cards over 16 columns, TECH-SPEC §14) a plain
 // `overflow-x-auto` row of `overflow-y-auto` columns scrolls smoothly with no windowing library; revisit
 // if a real department's card count grows an order of magnitude past the demo.
 import * as React from 'react'
 import { cardMatchesFilterText, parseFilterQuery } from '@devon/contracts'
 import { useT } from '@devon/i18n'
-import { FilterChip, Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
+import { IconButton, SegmentedControl, Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
+import { ChevronsLeftRight, Rows3, Rows4 } from 'lucide-react'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
@@ -27,31 +39,47 @@ import { WorkShell } from './work-shell.js'
 import type { CardDropSpec } from './card-tile.js'
 import { fullName } from '../lib/format.js'
 
-/** Per-viewer, remembered choice (round2 SEV2 "remember the choice per user") -- keyed by user id so
- * a shared machine never leaks one person's board width preference onto the next signed-in user. */
-function useShowAllMembers(userId: string | undefined): [boolean, (v: boolean) => void] {
-  const key = `devon.work.board.showAllMembers.${userId ?? 'anon'}`
-  const [value, setValue] = React.useState(() => {
+/** One per-viewer string preference, remembered by user id so a shared machine never leaks one
+ * person's board layout onto the next signed-in user. Guarded: a private window or blocked site data
+ * must never break the board (DESIGN.md; the same shape `useColumnCollapsed` uses). */
+function useStoredPreference<T extends string>(
+  name: string,
+  userId: string | undefined,
+  fallback: T,
+  isValid: (v: string) => v is T,
+): [T, (v: T) => void] {
+  const key = `devon.work.board.${name}.${userId ?? 'anon'}`
+  const [value, setValue] = React.useState<T>(() => {
     try {
-      return window.localStorage.getItem(key) === '1'
+      const stored = window.localStorage.getItem(key)
+      return stored && isValid(stored) ? stored : fallback
     } catch {
-      return false
+      return fallback
     }
   })
   const setAndStore = React.useCallback(
-    (next: boolean) => {
+    (next: T) => {
       setValue(next)
       try {
-        if (next) window.localStorage.setItem(key, '1')
-        else window.localStorage.removeItem(key)
+        window.localStorage.setItem(key, next)
       } catch {
-        // Best-effort only -- the toggle still works for this render.
+        // Best-effort only -- the choice still applies to this render.
       }
     },
     [key],
   )
   return [value, setAndStore]
 }
+
+/** SPEC §3.3: "Hammasi | Mening", persisted per user. `all` is the default for everyone, head and
+ * member alike -- the board is the department's, and a member who wants only their own column says
+ * so once. */
+type BoardScope = 'all' | 'mine'
+const isBoardScope = (v: string): v is BoardScope => v === 'all' || v === 'mine'
+
+/** SPEC §3.3: a density that fits a 26-person boshqarma on one screen. */
+type BoardDensity = 'comfortable' | 'compact'
+const isBoardDensity = (v: string): v is BoardDensity => v === 'comfortable' || v === 'compact'
 
 function findMemberMatches(
   needle: string,
@@ -71,7 +99,14 @@ function BoardScreenInner() {
   const t = useT()
   const { department, departmentId } = useDepartment()
   const { user } = useSession()
-  const [showAllMembers, setShowAllMembers] = useShowAllMembers(user?.id)
+  const [scope, setScope] = useStoredPreference<BoardScope>('scope', user?.id, 'all', isBoardScope)
+  const [density, setDensity] = useStoredPreference<BoardDensity>(
+    'density',
+    user?.id,
+    'comfortable',
+    isBoardDensity,
+  )
+  const isHead = department?.role === 'head'
   // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
   // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
@@ -222,20 +257,62 @@ function BoardScreenInner() {
 
   const columnKeys = [...board.columns.map((c) => c.member.userId), 'unassigned']
   const collapsedCount = columnKeys.filter((k) => collapsedByColumn[k]).length
-  // round2 SEV2: a 26-person department opened the board at 27 columns with no way to narrow it (3.8
-  // of 27 fit an 1112px scroller) -- defaulting to just the viewer's own column, with a chip to bring
-  // the rest back, means the board opens at a width someone can actually scan. No manager/report
-  // relationship exists in this data model (CLAUDE.md: "no HR"), so "the viewer's own column" is the
-  // whole default set; a viewer with no column of their own (e.g. a head who never holds cards) still
-  // sees everyone, since narrowing to nothing would be worse than not narrowing at all.
   const ownColumnIndex = board.columns.findIndex((c) => c.member.userId === user?.id)
   // An active search/filter always searches every column -- narrowing to "just me" while a filter is
   // typed would silently hide a matching card in a colleague's column with nothing to explain why.
   const isFiltering = q.trim().length > 0
   const visibleColumns =
-    showAllMembers || ownColumnIndex === -1 || isFiltering
+    scope === 'all' || ownColumnIndex === -1 || isFiltering
       ? board.columns
       : [board.columns[ownColumnIndex]!]
+
+  // SPEC §3.3: a head's columns lead with trouble -- most overdue first, then heaviest open load,
+  // then name so the order is stable between polls. Everyone else keeps the roster order (head
+  // first, then alphabetical), which is how people look each other up.
+  const orderedColumns =
+    isHead && scope === 'all'
+      ? [...visibleColumns].sort((a, b) => {
+          const overdue = (col: typeof a) => col.cards.filter((c) => c.risk === 'overdue').length
+          const open = (col: typeof a) => col.cards.filter((c) => c.status === 'active').length
+          return (
+            overdue(b) - overdue(a) ||
+            open(b) - open(a) ||
+            fullName(a.member).localeCompare(fullName(b.member))
+          )
+        })
+      : visibleColumns
+
+  // SPEC §3.3: grouped by boʻlim, "Boʻlimsiz" last. A department with no units at all collapses to
+  // one unnamed group, which renders exactly like the flat board did -- no empty heading.
+  type Group = { unitId: string | null; unitName: string | null; columns: typeof orderedColumns }
+  const groups: Group[] = []
+  for (const col of orderedColumns) {
+    const unitId = col.member.unitId ?? null
+    const existing = groups.find((g) => g.unitId === unitId)
+    if (existing) existing.columns.push(col)
+    else groups.push({ unitId, unitName: col.member.unitName ?? null, columns: [col] })
+  }
+  groups.sort((a, b) => {
+    if (a.unitId === null) return 1
+    if (b.unitId === null) return -1
+    return (a.unitName ?? '').localeCompare(b.unitName ?? '')
+  })
+  const hasNamedGroups = groups.some((g) => g.unitId !== null)
+
+  function setAllCollapsed(collapsed: boolean): void {
+    for (const key of columnKeys) {
+      try {
+        if (collapsed) window.localStorage.setItem(`devon.work.columnCollapsed.${key}`, '1')
+        else window.localStorage.removeItem(`devon.work.columnCollapsed.${key}`)
+      } catch {
+        // Best-effort -- the remount below still applies it for this render.
+      }
+    }
+    setCollapsedByColumn(
+      collapsed ? Object.fromEntries(columnKeys.map((k) => [k, true])) : {},
+    )
+    setExpandAllNonce((n) => n + 1)
+  }
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -249,39 +326,57 @@ function BoardScreenInner() {
             {department?.name ?? t('work.board.department')}
           </h2>
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            {/* SPEC 3.3: a visible segmented control, not a secondary pill -- "Hammasi" is the
+                default and both options are readable before either is chosen. Hidden entirely for a
+                viewer with no column of their own, for whom "Mening" would be an empty board. */}
             {ownColumnIndex !== -1 ? (
-              <FilterChip
-                active={showAllMembers}
-                onClick={() => setShowAllMembers(!showAllMembers)}
-              >
-                {showAllMembers
-                  ? t('work.board.showFewer')
-                  : t('work.board.showAllMembers', { count: board.members.length })}
-              </FilterChip>
+              <SegmentedControl
+                size="sm"
+                label={t('work.board.scopeLabel')}
+                value={isFiltering ? 'all' : scope}
+                onValueChange={setScope}
+                options={[
+                  { value: 'all', label: t('work.board.scopeAll'), count: board.members.length },
+                  { value: 'mine', label: t('work.board.scopeMine') },
+                ]}
+              />
             ) : null}
+            <IconButton
+              title={t(
+                density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact',
+              )}
+              aria-label={t(
+                density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact',
+              )}
+              onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+            >
+              {density === 'compact' ? (
+                <Rows3 className="size-4" aria-hidden="true" />
+              ) : (
+                <Rows4 className="size-4" aria-hidden="true" />
+              )}
+            </IconButton>
+            <IconButton
+              title={t(
+                collapsedCount === columnKeys.length
+                  ? 'work.board.expandAllColumns'
+                  : 'work.board.collapseAllColumns',
+              )}
+              aria-label={t(
+                collapsedCount === columnKeys.length
+                  ? 'work.board.expandAllColumns'
+                  : 'work.board.collapseAllColumns',
+              )}
+              onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
+            >
+              <ChevronsLeftRight className="size-4" aria-hidden="true" />
+            </IconButton>
             {collapsedCount > 0 ? (
-              <span className="flex items-center gap-2 text-caption text-muted-foreground">
+              <span className="text-caption text-muted-foreground">
                 {t('work.board.columnsShowing', {
                   shown: columnKeys.length - collapsedCount,
                   total: columnKeys.length,
                 })}
-                <button
-                  type="button"
-                  className="rounded-sm px-1.5 py-0.5 font-medium text-primary hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  onClick={() => {
-                    for (const key of columnKeys) {
-                      try {
-                        window.localStorage.removeItem(`devon.work.columnCollapsed.${key}`)
-                      } catch {
-                        // Best-effort -- the remount below still expands the columns for this render.
-                      }
-                    }
-                    setCollapsedByColumn({})
-                    setExpandAllNonce((n) => n + 1)
-                  }}
-                >
-                  {t('work.board.expandAllColumns')}
-                </button>
               </span>
             ) : null}
           </div>
@@ -310,36 +405,68 @@ function BoardScreenInner() {
               : undefined,
           }}
         >
-          {visibleColumns.map((col) => (
-            <BoardColumn
-              key={`${col.member.userId}:${expandAllNonce}`}
-              member={col.member}
-              cards={col.cards.filter(filterCard)}
-              projects={projects.filter((p) => p.members.includes(col.member.userId))}
-              allProjects={projects}
-              members={board.members}
-              labels={board.labels}
-              filterKey={q}
-              onOpenCard={openCardPeek}
-              onDropped={handleDropped}
-              onMoveTo={handleMoveTo}
-              onCollapsedChange={handleCollapsedChange}
-            />
+          {groups.map((group) => (
+            <div
+              key={group.unitId ?? 'no-unit'}
+              className="flex h-full min-w-0 shrink-0 flex-col gap-1.5"
+            >
+              {/* One heading per unit, printed once above its columns instead of a colour the
+                  reader has to decode. A department with no units at all shows no heading. */}
+              {hasNamedGroups ? (
+                <div className="flex items-center gap-1.5 px-1">
+                  <span
+                    className={cn(
+                      'size-1.5 shrink-0 rounded-full',
+                      unitHueClass(group.unitId ?? 'unassigned'),
+                    )}
+                    aria-hidden="true"
+                  />
+                  <h3 className="truncate text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                    {group.unitName ?? t('work.board.noUnit')}
+                  </h3>
+                </div>
+              ) : null}
+              <div className="flex min-h-0 flex-1 gap-4">
+                {group.columns.map((col) => (
+                  <BoardColumn
+                    key={`${col.member.userId}:${expandAllNonce}`}
+                    member={col.member}
+                    cards={col.cards.filter(filterCard)}
+                    projects={projects.filter((p) => p.members.includes(col.member.userId))}
+                    allProjects={projects}
+                    members={board.members}
+                    labels={board.labels}
+                    filterKey={q}
+                    density={density}
+                    onOpenCard={openCardPeek}
+                    onDropped={handleDropped}
+                    onMoveTo={handleMoveTo}
+                    onCollapsedChange={handleCollapsedChange}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
-          <BoardColumn
-            key={`unassigned:${expandAllNonce}`}
-            member={null}
-            cards={board.unassigned.filter(filterCard)}
-            projects={[]}
-            allProjects={projects}
-            members={board.members}
-            labels={board.labels}
-            filterKey={q}
-            onOpenCard={openCardPeek}
-            onDropped={handleDropped}
-            onMoveTo={handleMoveTo}
-            onCollapsedChange={handleCollapsedChange}
-          />
+          <div className="flex h-full min-w-0 shrink-0 flex-col gap-1.5">
+            {hasNamedGroups ? <div className="h-4.5" aria-hidden="true" /> : null}
+            <div className="flex min-h-0 flex-1">
+              <BoardColumn
+                key={`unassigned:${expandAllNonce}`}
+                member={null}
+                cards={board.unassigned.filter(filterCard)}
+                projects={[]}
+                allProjects={projects}
+                members={board.members}
+                labels={board.labels}
+                filterKey={q}
+                density={density}
+                onOpenCard={openCardPeek}
+                onDropped={handleDropped}
+                onMoveTo={handleMoveTo}
+                onCollapsedChange={handleCollapsedChange}
+              />
+            </div>
+          </div>
         </div>
       </section>
     </div>

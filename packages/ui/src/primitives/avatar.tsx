@@ -40,10 +40,13 @@ export interface AvatarProps extends React.ComponentPropsWithoutRef<typeof Avata
   initials: string
   /** A stable id (user id, unit id) used to pick a consistent unit hue for the initials fallback. */
   hueSeed?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
 }
 
 const SIZE_CLASS = {
+  // v1.1: the secondary avatar on a board card (the giver behind the assignee, SPEC 3.3) -- small
+  // enough to read as "and also" rather than as a second equal face.
+  xs: 'size-5 text-[0.625rem]',
   sm: 'size-6 text-caption',
   md: 'size-9 text-small',
   lg: 'size-11 text-body',

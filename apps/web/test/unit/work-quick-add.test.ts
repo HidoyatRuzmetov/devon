@@ -10,6 +10,8 @@ const MEMBERS: MemberSummary[] = [
     title: null,
     avatarKey: null,
     role: 'member',
+    unitId: null,
+    unitName: null,
   },
   {
     userId: 'u2',
@@ -18,6 +20,8 @@ const MEMBERS: MemberSummary[] = [
     title: null,
     avatarKey: null,
     role: 'head',
+    unitId: null,
+    unitName: null,
   },
   {
     userId: 'u3',
@@ -26,6 +30,8 @@ const MEMBERS: MemberSummary[] = [
     title: null,
     avatarKey: null,
     role: 'member',
+    unitId: null,
+    unitName: null,
   },
 ]
 

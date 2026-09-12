@@ -106,6 +106,11 @@ export {
   type ChipProps,
   type FilterChipProps,
 } from './primitives/chip.js'
+export {
+  SegmentedControl,
+  type SegmentedControlProps,
+  type SegmentedOption,
+} from './primitives/segmented-control.js'
 export { Breadcrumb, type BreadcrumbItem, type BreadcrumbProps } from './primitives/breadcrumb.js'
 export {
   Card,

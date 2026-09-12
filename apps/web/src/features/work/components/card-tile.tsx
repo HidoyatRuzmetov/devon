@@ -393,22 +393,50 @@ export function CardTile({
             </span>
           ) : null}
         </div>
-        {card.giverUserId ? (
-          <span title={t('work.field.giver')}>
-            {(() => {
-              const giver = members.find((m) => m.userId === card.giverUserId)
-              return giver ? (
-                <Avatar
-                  size="sm"
-                  src={null}
-                  alt={fullName(giver)}
-                  initials={initialsFromName(giver.givenName, giver.familyName)}
-                  hueSeed={giver.userId}
-                />
-              ) : null
-            })()}
-          </span>
-        ) : null}
+        {/* WALKTHROUGH-FINDINGS 4.8 / SPEC 3.3: the avatar on a card used to be the KIMDAN
+            (delegator), so a person's own column showed a dozen different faces and every Trello or
+            Jira user read them as the assignee. The main avatar is now the **assignee**; the giver,
+            when it is somebody else, is a small secondary avatar overlapped behind it, with a
+            tooltip that says which is which -- so "who is doing this" and "who asked for it" are
+            both answerable without opening the card. */}
+        {(() => {
+          const assignee = members.find((m) => m.userId === card.assigneeUserId)
+          const giver = members.find((m) => m.userId === card.giverUserId)
+          const showGiver = giver && giver.userId !== assignee?.userId
+          if (!assignee && !showGiver) return null
+          return (
+            <span className="flex shrink-0 items-center">
+              {showGiver ? (
+                <span
+                  className="relative z-0 -mr-1.5 opacity-80"
+                  title={t('work.card.byGiver', { name: fullName(giver) })}
+                >
+                  <Avatar
+                    size="xs"
+                    src={null}
+                    alt={t('work.card.byGiver', { name: fullName(giver) })}
+                    initials={initialsFromName(giver.givenName, giver.familyName)}
+                    hueSeed={giver.userId}
+                  />
+                </span>
+              ) : null}
+              {assignee ? (
+                <span
+                  className="relative z-10 rounded-full ring-2 ring-card"
+                  title={t('work.card.assignedTo', { name: fullName(assignee) })}
+                >
+                  <Avatar
+                    size="sm"
+                    src={null}
+                    alt={t('work.card.assignedTo', { name: fullName(assignee) })}
+                    initials={initialsFromName(assignee.givenName, assignee.familyName)}
+                    hueSeed={assignee.userId}
+                  />
+                </span>
+              ) : null}
+            </span>
+          )
+        })()}
       </div>
     </div>
   )

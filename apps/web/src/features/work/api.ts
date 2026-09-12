@@ -32,6 +32,8 @@ export const memberSummarySchema = z.object({
   title: z.string().nullable(),
   avatarKey: z.string().nullable(),
   role: z.enum(['head', 'member']),
+  unitId: z.string().nullable(),
+  unitName: z.string().nullable(),
 })
 export type MemberSummary = z.infer<typeof memberSummarySchema>
 

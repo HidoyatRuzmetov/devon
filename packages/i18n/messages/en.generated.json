@@ -2544,7 +2544,14 @@
       "columnsShowing": "Showing {shown} of {total} columns",
       "expandAllColumns": "Expand all",
       "showAllMembers": "All staff ({count})",
-      "showFewer": "Show fewer"
+      "showFewer": "Show fewer",
+      "scopeLabel": "What the board shows",
+      "scopeAll": "Everyone",
+      "scopeMine": "Mine",
+      "noUnit": "No unit",
+      "densityCompact": "Compact",
+      "densityRoomy": "Roomy",
+      "collapseAllColumns": "Collapse every column"
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
@@ -2633,7 +2640,9 @@
       "backToBoard": "Back to board",
       "noIdTitle": "No card selected",
       "noIdBody": "This link is missing a card id.",
-      "readOnly": "This card is not yours to change — reading only. Its giver, its assignee, its creator and the head of the department can edit it."
+      "readOnly": "This card is not yours to change — reading only. Its giver, its assignee, its creator and the head of the department can edit it.",
+      "assignedTo": "Assignee: {name}",
+      "byGiver": "Delegated by {name}"
     },
     "priority": {
       "none": "No priority",
