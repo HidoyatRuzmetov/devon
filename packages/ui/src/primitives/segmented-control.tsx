@@ -58,6 +58,10 @@ export function SegmentedControl<T extends string>({
 
   return (
     <LayoutGroup id={groupId}>
+      {/* The keyboard handler lives on each radio, not on the group. A `radiogroup` is a container,
+          not a tab stop -- WAI-ARIA's own radio-group pattern puts the roving tabindex on the radios
+          -- and hanging a key handler on a non-focusable element with an interactive role is exactly
+          what `jsx-a11y/interactive-supports-focus` exists to catch. */}
       <div
         role="radiogroup"
         aria-label={label}
@@ -65,15 +69,6 @@ export function SegmentedControl<T extends string>({
           'inline-flex items-center gap-0.5 rounded-md border border-border bg-muted p-0.5',
           className,
         )}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-            e.preventDefault()
-            move(1)
-          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-            e.preventDefault()
-            move(-1)
-          }
-        }}
       >
         {options.map((option) => {
           const selected = option.value === value
@@ -91,6 +86,15 @@ export function SegmentedControl<T extends string>({
               tabIndex={selected ? 0 : -1}
               title={option.description}
               onClick={() => onValueChange(option.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  move(1)
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  move(-1)
+                }
+              }}
               className={cn(
                 'relative rounded-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
                 size === 'sm' ? 'px-2 py-0.5 text-caption' : 'px-3 py-1 text-small',

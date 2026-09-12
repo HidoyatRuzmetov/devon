@@ -1394,7 +1394,7 @@
       "offToast": "Turned off",
       "custom_fields": {
         "label": "Custom fields",
-        "description": "Add your own fields to tasks — a document number, a source, anything."
+        "description": "Add your own fields to cards — a document number, a source, anything."
       },
       "person_fields": {
         "label": "Person fields",
@@ -1402,7 +1402,7 @@
       },
       "estimates": {
         "label": "Time estimates",
-        "description": "Record roughly how long a task takes and count it towards workload."
+        "description": "Record roughly how long a piece of work takes and count it towards workload."
       },
       "workload": {
         "label": "Workload",
@@ -1410,15 +1410,15 @@
       },
       "dependencies": {
         "label": "Dependencies",
-        "description": "Mark that one task is waiting on another, and see what is blocked."
+        "description": "Mark that one item is waiting on another, and see what is blocked."
       },
       "recurring": {
-        "label": "Recurring tasks",
-        "description": "Tasks that reopen themselves every week or every month."
+        "label": "Recurring work",
+        "description": "Work that reopens itself every week or every month."
       },
       "templates": {
         "label": "Templates",
-        "description": "Ready-made task and project templates, so the same work is not retyped."
+        "description": "Ready-made card and project templates, so the same work is not retyped."
       },
       "goals": {
         "label": "Goals",
@@ -1426,7 +1426,7 @@
       },
       "focus_list": {
         "label": "Focus list",
-        "description": "Up to five headline tasks per person."
+        "description": "Up to five headline items per person."
       },
       "automations": {
         "label": "Automations",
@@ -1434,7 +1434,7 @@
       },
       "reminders": {
         "label": "Reminders",
-        "description": "A reminder about a task at a time you pick."
+        "description": "A reminder about a card at a time you pick."
       }
     }
   },
