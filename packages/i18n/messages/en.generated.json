@@ -173,7 +173,7 @@
         "cta": "Open Analytics"
       },
       "personal": {
-        "onTimeRate": "On-time rate",
+        "onTimeRate": "Of what you finished, on time",
         "focusMinutes": "Focus minutes this week"
       },
       "onboarding": {
@@ -187,7 +187,7 @@
         "done": "All done"
       },
       "kpi": {
-        "onTimeQuestion": "How well are deadlines being met?",
+        "onTimeQuestion": "What share of the work you completed was delivered on time?",
         "focusQuestion": "How much focused time did you get this week?"
       },
       "sectionTiles": "Today"
@@ -1054,8 +1054,9 @@
       "openQuestion": "vs. the week before",
       "overdue": "Overdue cards",
       "overdueQuestion": "vs. the week before",
-      "onTimeRate": "On-time rate",
-      "onTimeRateQuestion": "percentage points vs. the week before"
+      "onTimeRate": "On time last week",
+      "onTimeRateQuestion": "percentage points vs. the week before",
+      "onTimeRateDenominator": "{onTime} of {due} due last week"
     },
     "ask": {
       "title": "Ask analytics",
@@ -1125,7 +1126,8 @@
         "title": "On-time rate",
         "question": "Are cards finishing on time?",
         "overall": "Overall: {percent}%",
-        "empty": "Not enough data to score yet"
+        "empty": "Not enough data to score yet",
+        "overallDenominator": "({onTime} of {due} due in the selected range)"
       },
       "openVsOverdue": {
         "title": "Open vs. overdue",
@@ -1167,7 +1169,7 @@
       "open": "Open",
       "overdue": "Overdue",
       "doneThisWeek": "Done this week",
-      "onTimeRate": "On-time rate",
+      "onTimeRate": "Of what you finished, on time",
       "focusMinutes": "Focus minutes",
       "upcomingEvents": "Upcoming events"
     },

@@ -173,7 +173,7 @@
         "cta": "Tahlil sahifasini ochish"
       },
       "personal": {
-        "onTimeRate": "Oʻz vaqtida bajarilish",
+        "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
         "focusMinutes": "Bu hafta fokus daqiqalari"
       },
       "onboarding": {
@@ -187,7 +187,7 @@
         "done": "Hammasi bajarildi"
       },
       "kpi": {
-        "onTimeQuestion": "Muddatlarga qanchalik amal qilinmoqda?",
+        "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
       "sectionTiles": "Bugungi holat"
@@ -1054,8 +1054,9 @@
       "openQuestion": "oldingi haftaga nisbatan",
       "overdue": "Muddati oʻtgan kartochkalar",
       "overdueQuestion": "oldingi haftaga nisbatan",
-      "onTimeRate": "Oʻz vaqtida bajarish darajasi",
-      "onTimeRateQuestion": "oldingi haftaga nisbatan foiz punkti"
+      "onTimeRate": "Oʻtgan hafta oʻz vaqtida",
+      "onTimeRateQuestion": "oldingi haftaga nisbatan foiz punkti",
+      "onTimeRateDenominator": "oʻtgan hafta muddati kelgan {due} tadan {onTime} tasi"
     },
     "ask": {
       "title": "Tahlildan soʻrash",
@@ -1125,7 +1126,8 @@
         "title": "Oʻz vaqtida bajarilish darajasi",
         "question": "Topshiriqlar muddatida bajarilyaptimi?",
         "overall": "Umumiy: {percent}%",
-        "empty": "Baholash uchun yetarli maʼlumot yoʻq"
+        "empty": "Baholash uchun yetarli maʼlumot yoʻq",
+        "overallDenominator": "(tanlangan davrda muddati kelgan {due} tadan {onTime} tasi)"
       },
       "openVsOverdue": {
         "title": "Ochiq va muddati oʻtgan topshiriqlar",
@@ -1167,7 +1169,7 @@
       "open": "Ochiq",
       "overdue": "Muddati oʻtgan",
       "doneThisWeek": "Shu hafta bajarilgan",
-      "onTimeRate": "Oʻz vaqtida bajarilish",
+      "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
       "focusMinutes": "Fokus daqiqalari",
       "upcomingEvents": "Yaqinlashib kelayotgan tadbirlar"
     },

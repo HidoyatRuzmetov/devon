@@ -22,7 +22,7 @@
         "cta": "Open Analytics"
       },
       "personal": {
-        "onTimeRate": "On-time rate",
+        "onTimeRate": "Of what you finished, on time",
         "focusMinutes": "Focus minutes this week"
       },
       "onboarding": {
@@ -36,7 +36,7 @@
         "done": "All done"
       },
       "kpi": {
-        "onTimeQuestion": "How well are deadlines being met?",
+        "onTimeQuestion": "What share of the work you completed was delivered on time?",
         "focusQuestion": "How much focused time did you get this week?"
       },
       "sectionTiles": "Today"

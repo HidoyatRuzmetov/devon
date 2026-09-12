@@ -22,7 +22,7 @@
         "cta": "Tahlil sahifasini ochish"
       },
       "personal": {
-        "onTimeRate": "Oʻz vaqtida bajarilish",
+        "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
         "focusMinutes": "Bu hafta fokus daqiqalari"
       },
       "onboarding": {
@@ -36,7 +36,7 @@
         "done": "Hammasi bajarildi"
       },
       "kpi": {
-        "onTimeQuestion": "Muddatlarga qanchalik amal qilinmoqda?",
+        "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
       "sectionTiles": "Bugungi holat"

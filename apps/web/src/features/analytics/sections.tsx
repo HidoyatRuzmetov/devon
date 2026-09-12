@@ -105,6 +105,9 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
   const rateLast = onTimePercent(rateSeries[rateSeries.length - 1])
   const ratePrev = onTimePercent(rateSeries[rateSeries.length - 2])
   const rateDelta = rateLast !== null && ratePrev !== null ? rateLast - ratePrev : null
+  const lastWeekPoint = rateSeries[rateSeries.length - 1]
+  const lastWeekDue = lastWeekPoint ? lastWeekPoint.dueCount : null
+  const lastWeekOnTime = lastWeekPoint ? lastWeekPoint.onTimeCount : null
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -131,13 +134,26 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
         deltaGoodWhen="down"
         question={t('analytics.kpi.overdueQuestion')}
       />
+      {/* WALKTHROUGH-FINDINGS 4.1: three different on-time percentages sat on one screen -- 0 %
+          here, 67 % in the chart subtitle, 100 % in the personal tile -- with nothing saying they
+          were three different questions. They are: this tile is the LAST WEEK, over the cards that
+          came due in it; the chart's subtitle is the whole selected range; the personal tile is
+          just the viewer's own work. Each now says its denominator out loud, so the reader can see
+          that the numbers agree rather than assuming the product cannot count. */}
       <KpiTile
         label={t('analytics.kpi.onTimeRate')}
         value={rateLast}
         locale={locale}
         suffix="%"
         delta={rateDelta}
-        question={t('analytics.kpi.onTimeRateQuestion')}
+        question={
+          lastWeekDue === null
+            ? t('analytics.kpi.onTimeRateQuestion')
+            : t('analytics.kpi.onTimeRateDenominator', {
+                onTime: lastWeekOnTime ?? 0,
+                due: lastWeekDue,
+              })
+        }
       />
     </div>
   )
@@ -218,6 +234,10 @@ export function OnTimeRateSection({
   }))
   const overallPercent =
     summary.onTimeRate.overall === null ? null : Math.round(summary.onTimeRate.overall * 100)
+  // The subtitle's own denominator, summed from the very series the chart draws -- so the sentence
+  // and the line can never disagree.
+  const totalDue = summary.onTimeRate.series.reduce((n, p) => n + p.dueCount, 0)
+  const totalOnTime = summary.onTimeRate.series.reduce((n, p) => n + p.onTimeCount, 0)
 
   return (
     <ChartCard
@@ -237,7 +257,13 @@ export function OnTimeRateSection({
     >
       {overallPercent !== null ? (
         <p className="mb-2 text-lead text-foreground">
-          {t('analytics.sections.onTimeRate.overall', { percent: overallPercent })}
+          {t('analytics.sections.onTimeRate.overall', { percent: overallPercent })}{' '}
+          <span className="text-small text-muted-foreground">
+            {t('analytics.sections.onTimeRate.overallDenominator', {
+              onTime: totalOnTime,
+              due: totalDue,
+            })}
+          </span>
         </p>
       ) : null}
       <ResponsiveContainer width="100%" height="100%" minHeight={200}>
@@ -764,6 +790,9 @@ export function PersonalStatsSection({
     { labelKey: 'analytics.personal.open', value: p.openCount },
     { labelKey: 'analytics.personal.overdue', value: p.overdueCount },
     { labelKey: 'analytics.personal.doneThisWeek', value: p.doneThisWeek },
+    // Renamed from the bare "Oʻz vaqtida bajarilish" (WALKTHROUGH-FINDINGS 4.2): sitting next to
+    // "13 ta ochiq, 4 tasi muddatidan oʻtgan", an unqualified 100 % read as a contradiction. It is
+    // the on-time share of what this person has *finished*, and now says so.
     ...(onTimePercent !== null
       ? [{ labelKey: 'analytics.personal.onTimeRate', value: onTimePercent, suffix: '%' }]
       : []),
