@@ -411,9 +411,12 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
         assigneeUserId: input.assigneeUserId ?? null,
       },
     })
+    // The notification registry (`notifications/registry.ts`) resolves "who cares" from the card
+    // itself; the payload only has to name the card and the person who acted, so the registry can
+    // keep the actor out of their own inbox.
     tx.emit({
       type: 'work.card.created',
-      payload: { cardId: id },
+      payload: { cardId: id, actorUserId: input.createdByUserId },
       departmentId: input.departmentId,
     })
 
@@ -533,7 +536,58 @@ export async function patchCard(
       before: { title: beforeRow.title, status: beforeRow.status },
       after: patch,
     })
-    tx.emit({ type: 'work.card.updated', payload: { cardId }, departmentId })
+    // The inbox says *what* changed, not "a card changed" (SPEC §11) -- so the payload carries the
+    // field names that actually moved, compared against the `before` image rather than simply
+    // listing the keys the client sent (a PATCH that re-sends the same assignee is not a change).
+    // `notifications/registry.ts` renders these in four locales; an empty list still notifies, with
+    // a neutral sentence.
+    const changes: string[] = []
+    if (patch.status !== undefined && patch.status !== beforeRow.status) changes.push('status')
+    if (patch.assigneeUserId !== undefined && patch.assigneeUserId !== beforeRow.assignee_user_id) {
+      changes.push('assignee')
+    }
+    if (patch.giverUserId !== undefined && patch.giverUserId !== beforeRow.giver_user_id) {
+      changes.push('giver')
+    }
+    const beforeDueIso = beforeRow.due_at ? new Date(beforeRow.due_at).toISOString() : null
+    if (patch.dueAt !== undefined && patch.dueAt !== beforeDueIso) changes.push('dueAt')
+    if (patch.priority !== undefined && patch.priority !== beforeRow.priority)
+      changes.push('priority')
+    if (patch.title !== undefined && patch.title !== beforeRow.title) changes.push('title')
+    if (patch.description !== undefined) changes.push('description')
+    if (patch.labels !== undefined) changes.push('labels')
+
+    // A reassignment is its own event, not a shade of "updated": the new assignee needs "this is
+    // yours now" in their inbox, which is a different sentence and a different urgency from the
+    // watchers' "something moved" (SPEC §11's recipients rules).
+    if (
+      patch.assigneeUserId !== undefined &&
+      patch.assigneeUserId !== null &&
+      patch.assigneeUserId !== beforeRow.assignee_user_id
+    ) {
+      tx.emit({
+        type: 'work.card.assigned',
+        payload: {
+          cardId,
+          actorUserId: actorUserId,
+          assigneeUserId: patch.assigneeUserId,
+          previousAssigneeUserId: beforeRow.assignee_user_id,
+        },
+        departmentId,
+      })
+    }
+    // Only when something other than the assignee moved. A pure reassignment is already told by the
+    // event above (and telling the new assignee twice about one PATCH is exactly the kind of noise
+    // that makes people mute an inbox); a pure reorder -- dragging a card up its own column -- is not
+    // news for anybody, and on a busy board it is the most frequent write there is.
+    const newsworthy = changes.filter((c) => c !== 'assignee')
+    if (newsworthy.length > 0) {
+      tx.emit({
+        type: 'work.card.updated',
+        payload: { cardId, actorUserId, changes: newsworthy },
+        departmentId,
+      })
+    }
 
     const after = await tx.raw<CardRow>(sql`${CARD_SELECT} where c.id = ${cardId}`)
     return { ok: true, card: toCardDTO(after[0]!) }
@@ -647,7 +701,7 @@ export async function addComment(
     })
     tx.emit({
       type: 'work.card.commented',
-      payload: { cardId, commentId: id, mentions },
+      payload: { cardId, commentId: id, mentions, actorUserId: authorUserId },
       departmentId,
     })
     return id

@@ -1,9 +1,13 @@
 // Zod schemas for `/api/v1/departments/*` (EPIC-002). See `modules/accounts/schemas.ts`'s header for
 // why this lives inside the module rather than the shared `apps/api/src/schemas.ts`.
 import { z } from 'zod'
+import { FEATURE_KEYS } from '@devon/contracts'
 import { localeSchema } from '../../schemas.js'
 
 const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/
+
+/** SPEC §7: the Imkoniyatlar switch keys, from the one registry both sides read. */
+export const featureKeySchema = z.enum(FEATURE_KEYS)
 
 export const unitDraftSchema = z
   .object({
@@ -48,6 +52,9 @@ export const departmentSettingsSchema = z.object({
   joinRequiresApproval: z.boolean(),
   whoCanConnectTelegramGroup: z.enum(['everyone', 'head']),
   quietHours: z.object({ start: z.string(), end: z.string() }).nullable(),
+  /** SPEC §7 Imkoniyatlar: every switch resolved (stored value or the registry default), so the
+   * client never has to know the defaults -- `useFeature(key)` reads this map and nothing else. */
+  features: z.record(featureKeySchema, z.boolean()),
 })
 
 export const patchDepartmentSettingsBodySchema = z
@@ -130,6 +137,32 @@ export const memberViewSchema = z.object({
   joinedAt: z.string(),
 })
 export const memberListSchema = z.object({ members: z.array(memberViewSchema) })
+
+// --- v1.1 SPEC §2.2: the join-approval queue ------------------------------------------------------
+
+export const joinRequestViewSchema = z.object({
+  userId: z.string().uuid(),
+  givenName: z.string(),
+  familyName: z.string(),
+  patronymic: z.string().nullable(),
+  title: z.string().nullable(),
+  avatarKey: z.string().nullable(),
+  requestedAt: z.string(),
+})
+export const joinRequestListSchema = z.object({ requests: z.array(joinRequestViewSchema) })
+
+// --- v1.1 SPEC §7: Imkoniyatlar ------------------------------------------------------------------
+
+export const putFeaturesBodySchema = z
+  .object({ features: z.record(featureKeySchema, z.boolean()) })
+  .strict()
+
+// --- v1.1 SPEC §2.2: the head resets a member's password ------------------------------------------
+
+export const resetMemberPasswordResultSchema = z.object({
+  /** Shown once, to the head, so they can read it out. Never stored in plain text, never mailed. */
+  temporaryPassword: z.string(),
+})
 
 export const departmentIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
 export const memberParamsSchema = z

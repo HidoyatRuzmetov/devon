@@ -479,3 +479,61 @@ export async function getPendingDeletion(userId: string): Promise<Date | null> {
     return scheduledFor === undefined ? null : new Date(scheduledFor)
   })
 }
+
+/**
+ * v1.1 SPEC §2.2 / WALKTHROUGH-FINDINGS §2.5 -- "Parolni tiklashni soʻrash" on the login screen.
+ *
+ * Until v1.1 the login screen told people to ask their boshqarma boshligʻi, and the head had no way
+ * to reset anything (the reset route was super-admin-only), so every forgotten password in every
+ * department escalated to the single ministry super admin. The head can reset now
+ * (`departments/repo.ts`'s `resetMemberPassword`); this is the other half -- the one click that
+ * tells the head there is someone to reset.
+ *
+ * Deliberately tells the caller nothing about what it found. A response that differed between "no
+ * such login" and "asked your head" would be a username oracle against a government directory, so
+ * the route answers 202 either way and this function silently does nothing for an unknown login.
+ * The flood guard is the route's rate limit plus the dedupe below: one open request per person per
+ * day, so holding the button down produces one notification rather than two hundred.
+ */
+export async function requestPasswordResetByLogin(login: string, ctx: AuditCtx): Promise<void> {
+  await withContext(
+    { ...anonymousCtx(), requestId: ctx.requestId, actorRole: 'super_admin' as Role },
+    async (tx) => {
+      const users = await tx.raw<{ id: string }>(
+        sql`select id from app.users
+          where login = ${login} and deleted_at is null and status = 'active'`,
+      )
+      const user = users[0]
+      if (!user) return
+
+      const recent = await tx.raw<{ n: number }>(
+        sql`select count(*)::int as n from app.outbox_events
+          where type = 'accounts.password_reset.requested'
+            and payload->>'userId' = ${user.id}
+            and created_at > now() - interval '1 day'`,
+      )
+      if ((recent[0]?.n ?? 0) > 0) return
+
+      const memberships = await tx.raw<{ department_id: string }>(
+        sql`select department_id from app.memberships
+          where user_id = ${user.id} and status = 'active' and deleted_at is null`,
+      )
+      tx.audit({
+        action: 'accounts.password_reset_requested',
+        subjectType: 'user',
+        subjectId: user.id,
+        after: { departments: memberships.length },
+      })
+      // One event per department: the notification registry's `head` rule resolves against the
+      // event's own department, and a person who sits in two boshqarma should reach both heads.
+      // `tx.emit` buffers a row inside the open transaction -- this is not a query in a loop.
+      for (let i = 0; i < memberships.length; i += 1) {
+        tx.emit({
+          type: 'accounts.password_reset.requested',
+          departmentId: memberships[i]!.department_id,
+          payload: { userId: user.id },
+        })
+      }
+    },
+  )
+}

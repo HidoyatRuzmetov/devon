@@ -208,6 +208,7 @@ export async function createEvent(
         title: body.title,
         startsAt: body.startsAt,
         organizerUserId: actor.userId,
+        actorUserId: actor.userId,
       },
     })
     const row = await repo.getEventRow(tx, id)
@@ -308,7 +309,7 @@ export async function updateEvent(
       tx.emit({
         type: 'events.event.updated',
         departmentId: before.department_id,
-        payload: { eventId, title: merged.title, changes },
+        payload: { eventId, title: merged.title, changes, actorUserId: actor.userId },
       })
     }
 
@@ -350,7 +351,13 @@ export async function cancelEvent(
     tx.emit({
       type: 'events.event.cancelled',
       departmentId: before.department_id,
-      payload: { eventId, title: before.title, reason, notifyUserIds: rsvpedUserIds },
+      payload: {
+        eventId,
+        title: before.title,
+        reason,
+        notifyUserIds: rsvpedUserIds,
+        actorUserId: actor.userId,
+      },
     })
 
     const row = await repo.getEventRow(tx, eventId)
@@ -446,7 +453,7 @@ export async function upsertRsvp(
     tx.emit({
       type: 'events.rsvp.changed',
       departmentId: event.department_id,
-      payload: { eventId, userId, status: finalStatus },
+      payload: { eventId, userId, status: finalStatus, actorUserId: userId },
     })
 
     const row = await repo.getEventRow(tx, eventId)
@@ -530,7 +537,7 @@ export async function addComment(
     tx.emit({
       type: 'events.comment.created',
       departmentId: event.department_id,
-      payload: { eventId, commentId: id },
+      payload: { eventId, commentId: id, actorUserId: actor.userId },
     })
     return {
       id,
@@ -640,7 +647,7 @@ export async function createCarpool(
     tx.emit({
       type: 'events.carpool.created',
       departmentId: event.department_id,
-      payload: { eventId, carpoolId: id },
+      payload: { eventId, carpoolId: id, actorUserId: actor.userId },
     })
     const carpools = await repo.listCarpools(tx, eventId)
     const created = carpools.find((c) => c.id === id)!
@@ -689,7 +696,13 @@ export async function claimCarpoolSeat(
     tx.emit({
       type: 'events.carpool.seat_claimed',
       departmentId: carpool.department_id,
-      payload: { carpoolId, eventId: carpool.event_id, userId: actor.userId, status },
+      payload: {
+        carpoolId,
+        eventId: carpool.event_id,
+        userId: actor.userId,
+        status,
+        actorUserId: actor.userId,
+      },
     })
   })
 }
@@ -930,7 +943,7 @@ export async function createPoll(
     tx.emit({
       type: 'events.poll.created',
       departmentId: event.department_id,
-      payload: { eventId, pollId: id },
+      payload: { eventId, pollId: id, actorUserId: actor.userId },
     })
     const poll = await repo.getPoll(tx, id)
     return pollToDto(tx, poll!, actor.userId, actor.isHead)

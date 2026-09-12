@@ -590,7 +590,12 @@ export async function assignUnitRole(
     tx.emit({
       type: 'structure.unit_role.assigned',
       departmentId,
-      payload: { unitId: row.unit_id, userId: row.user_id, role: row.role },
+      payload: {
+        unitId: row.unit_id,
+        userId: row.user_id,
+        role: row.role,
+        actorUserId: actor.userId,
+      },
     })
 
     return toUnitRoleDto(row)

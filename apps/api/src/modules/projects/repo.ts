@@ -206,7 +206,7 @@ export async function createProject(
     })
     tx.emit({
       type: 'projects.project.created',
-      payload: { projectId: id },
+      payload: { projectId: id, actorUserId: input.ownerUserId },
       departmentId: input.departmentId,
     })
     const rows = await tx.raw<ProjectRow>(

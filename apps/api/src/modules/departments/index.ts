@@ -4,6 +4,7 @@
 // permissions.ts`) which already enforces "head only" for `update`/`delete` on `{kind:'department'}`.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyRequest } from 'fastify'
+import { z } from 'zod'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
@@ -14,16 +15,20 @@ import {
   departmentIdParamsSchema,
   departmentListSchema,
   departmentRequestListSchema,
+  featureKeySchema,
   inviteSecretSchema,
   inviteViewSchema,
   joinBodySchema,
   joinKeyParamsSchema,
   joinPreviewSchema,
+  joinRequestListSchema,
   joinResultSchema,
   memberListSchema,
   memberParamsSchema,
   patchDepartmentSettingsBodySchema,
+  putFeaturesBodySchema,
   rejectRequestBodySchema,
+  resetMemberPasswordResultSchema,
   requestIdParamsSchema,
   setJoinApprovalBodySchema,
   setJoinPasswordBodySchema,
@@ -32,6 +37,12 @@ import {
 const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   const ownAccount = (userId: string) => ({ kind: 'own_account' as const, userId })
   const department = (departmentId: string) => ({ kind: 'department' as const, departmentId })
+  /** Head-only for reads and writes alike (SPEC §2.1) -- the join queue and a password reset are
+   * management surfaces, not department-child ones. */
+  const departmentManaged = (departmentId: string) => ({
+    kind: 'department_managed' as const,
+    departmentId,
+  })
   const departmentChild = (departmentId: string) => ({
     kind: 'department_child' as const,
     departmentId,
@@ -86,6 +97,9 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         joinRequiresApproval: d.joinRequiresApproval,
         whoCanConnectTelegramGroup: d.settings.whoCanConnectTelegramGroup,
         quietHours: d.settings.quietHours,
+        // SPEC §7: readable by every member (a member seeing "we do not use estimates here" is the
+        // point); writable only through `PUT /:id/features`, which is head-only.
+        features: d.features,
       },
       myRole: d.myRole,
       memberCount: d.memberCount,
@@ -471,6 +485,139 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         return
       }
       return reply.code(204).send()
+    },
+  )
+
+  // -- Join-approval queue (v1.1 SPEC §2.2) ------------------------------------------------------
+  //
+  // `{kind:'department_managed'}`, not `{kind:'department'}`: a pending joiner's name is management
+  // data (who tried to get in, and when), so the *read* is head-only too, not just the decision.
+  // Both ids are in `apps/api/test/unit/head-only-routes.test.ts`.
+
+  app.get(
+    '/:id/join-requests',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => departmentManaged((r.params as { id: string }).id),
+        },
+      },
+      schema: { params: departmentIdParamsSchema, response: { 200: joinRequestListSchema } },
+    },
+    async (req, reply) => {
+      const rows = await repo.listJoinRequests(req.params.id, auditCtx(req))
+      return reply.send({
+        requests: rows.map((r) => ({
+          userId: r.userId,
+          givenName: r.givenName,
+          familyName: r.familyName,
+          patronymic: r.patronymic,
+          title: r.title,
+          avatarKey: r.avatarKey,
+          requestedAt: r.requestedAt.toISOString(),
+        })),
+      })
+    },
+  )
+
+  for (const [segment, decision] of [
+    ['approve', 'approved'],
+    ['reject', 'rejected'],
+    // The undo behind the toast: puts an approved or rejected membership back in the queue, so a
+    // mis-click is one click to reverse rather than a support request (DESIGN.md: undo over confirm).
+    ['undo', 'pending'],
+  ] as const) {
+    app.post(
+      `/:id/join-requests/:userId/${segment}`,
+      {
+        config: {
+          permission: {
+            action: 'update',
+            subject: (r) => departmentManaged((r.params as { id: string }).id),
+          },
+        },
+        schema: { params: memberParamsSchema },
+      },
+      async (req, reply) => {
+        if (!checkCsrf(req, reply)) return
+        const ok = await repo.decideJoinRequest(
+          req.params.id,
+          req.params.userId,
+          decision,
+          auditCtx(req),
+        )
+        if (!ok) {
+          // Another head already decided, or the membership moved on -- a conflict, not a 404: the
+          // row exists, it just is not in the state this transition expects.
+          sendProblem(reply, 'conflict')
+          return
+        }
+        return reply.code(204).send()
+      },
+    )
+  }
+
+  // -- Imkoniyatlar switches (v1.1 SPEC §7) -------------------------------------------------------
+  //
+  // Read comes free with `GET /:id` (`settings.features`, visible to every member, read-only in the
+  // UI). Only the write needs its own route, and it is `{kind:'department'} + update` = head-only.
+
+  app.put(
+    '/:id/features',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => department((r.params as { id: string }).id),
+        },
+      },
+      schema: {
+        params: departmentIdParamsSchema,
+        body: putFeaturesBodySchema,
+        response: { 200: z.object({ features: z.record(featureKeySchema, z.boolean()) }) },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const features = await repo.updateFeatures(req.params.id, req.body.features, auditCtx(req))
+      return reply.send({ features })
+    },
+  )
+
+  // -- The head resets a member's password (v1.1 SPEC §2.2) ---------------------------------------
+
+  app.post(
+    '/:id/members/:userId/reset-password',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentManaged((r.params as { id: string }).id),
+        },
+        // Mints a credential; bounded the same way the super admin's own reset route is.
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      },
+      schema: {
+        params: memberParamsSchema,
+        response: { 200: resetMemberPasswordResultSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.resetMemberPassword(
+        req.params.id,
+        req.params.userId,
+        req.actor!.userId,
+        auditCtx(req),
+      )
+      if (!result.ok) {
+        // `not_a_member` is a 404 (nothing here to reset); refusing to reset your own or another
+        // head's password is a 409 -- the row is real, the transition is not allowed.
+        sendProblem(reply, result.reason === 'not_a_member' ? 'not_found' : 'conflict')
+        return
+      }
+      return reply.send({ temporaryPassword: result.temporaryPassword })
     },
   )
 

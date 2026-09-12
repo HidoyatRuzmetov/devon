@@ -37,6 +37,7 @@ import {
   totpVerifyBodySchema,
   totpVerifyResultSchema,
   twoFaLoginVerifyBodySchema,
+  passwordResetRequestBodySchema,
   userIdParamsSchema,
   accountStatusMessageSchema,
 } from './schemas.js'
@@ -370,6 +371,26 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       const { userId } = req.params
       const temporaryPassword = await repo.adminResetPassword(userId, auditCtx(req))
       return reply.send({ temporaryPassword })
+    },
+  )
+
+  // v1.1 SPEC §2.2 / WALKTHROUGH-FINDINGS §2.5: the forgot-password loop that did not exist.
+  // Public by necessity (no session), and deliberately uninformative: 202 whether or not the login
+  // matched anybody, so this can never be used to enumerate a ministry's staff directory. The only
+  // effect it can have is an inbox item (and a Telegram message) for that person's boshqarma
+  // boshligʻi, deduped to one open request per person per day inside the repo.
+  app.post(
+    '/password-reset-request',
+    {
+      config: {
+        permission: { public: true },
+        rateLimit: { max: 5, timeWindow: '10 minutes' },
+      },
+      schema: { body: passwordResetRequestBodySchema },
+    },
+    async (req, reply) => {
+      await repo.requestPasswordResetByLogin(req.body.login.trim(), auditCtx(req))
+      return reply.code(202).send()
     },
   )
 

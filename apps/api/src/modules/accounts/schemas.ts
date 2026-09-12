@@ -138,6 +138,12 @@ export const accountStatusMessageSchema = z.object({ ok: z.boolean() })
 export const sessionIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
 export const userIdParamsSchema = z.object({ userId: z.string().uuid() }).strict()
 
+/** v1.1 SPEC §2.2: the login screen's one-click "ask my head to reset my password". Only the login
+ * is taken -- no email, no phone, nothing that could be used to enumerate or to contact anyone. */
+export const passwordResetRequestBodySchema = z
+  .object({ login: z.string().min(1).max(64) })
+  .strict()
+
 // --- EPIC-001 photo upload (storage plugin, TECH-SPEC §2.1/§6) -----------------------------------
 
 /** Declared up front so the presigned URL can be bound to a content type and the finalise step can

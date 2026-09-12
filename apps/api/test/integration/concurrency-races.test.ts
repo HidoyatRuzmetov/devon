@@ -125,101 +125,95 @@ describe('positive control: department membership has a real unique index', () =
 // event id, so the count/decide/write sequence is indivisible per event). Flipped from `it.fails` to
 // a plain `it` the moment the product fix landed, exactly as this file's header prescribes.
 describe('H10.1: RSVP capacity is enforced atomically', () => {
-  it(
-    'capacity=1, two different users RSVP "yes" concurrently: exactly one ends up "yes" and the other "waitlist"',
-    async () => {
-      const dept = await seedDepartment(db, {
-        name: 'RSVP race dept',
-        slug: `rsvp-race-${randomUUID()}`,
-      })
-      const head = await seedMember(db, dept.id, { role: 'head' })
-      const memberA = await seedMember(db, dept.id, { role: 'member' })
-      const memberB = await seedMember(db, dept.id, { role: 'member' })
-      const headSession = await loginAs(baseUrl, head.login)
-      const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+  it('capacity=1, two different users RSVP "yes" concurrently: exactly one ends up "yes" and the other "waitlist"', async () => {
+    const dept = await seedDepartment(db, {
+      name: 'RSVP race dept',
+      slug: `rsvp-race-${randomUUID()}`,
+    })
+    const head = await seedMember(db, dept.id, { role: 'head' })
+    const memberA = await seedMember(db, dept.id, { role: 'member' })
+    const memberB = await seedMember(db, dept.id, { role: 'member' })
+    const headSession = await loginAs(baseUrl, head.login)
+    const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+      method: 'POST',
+      headers: headSession.headers,
+      body: JSON.stringify({
+        title: 'capacity race',
+        startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        endsAt: new Date(Date.now() + 90_000_000).toISOString(),
+        capacity: 1,
+        waitlistEnabled: true,
+      }),
+    })
+    const event = (await eventRes.json()) as { id: string }
+    const [sessionA, sessionB] = await Promise.all([
+      loginAs(baseUrl, memberA.login),
+      loginAs(baseUrl, memberB.login),
+    ])
+    const rsvp = (s: Session) =>
+      fetch(`${baseUrl}/api/v1/events/${event.id}/rsvp`, {
         method: 'POST',
-        headers: headSession.headers,
-        body: JSON.stringify({
-          title: 'capacity race',
-          startsAt: new Date(Date.now() + 86_400_000).toISOString(),
-          endsAt: new Date(Date.now() + 90_000_000).toISOString(),
-          capacity: 1,
-          waitlistEnabled: true,
-        }),
+        headers: s.headers,
+        body: JSON.stringify({ status: 'yes', guests: 0 }),
       })
-      const event = (await eventRes.json()) as { id: string }
-      const [sessionA, sessionB] = await Promise.all([
-        loginAs(baseUrl, memberA.login),
-        loginAs(baseUrl, memberB.login),
-      ])
-      const rsvp = (s: Session) =>
-        fetch(`${baseUrl}/api/v1/events/${event.id}/rsvp`, {
-          method: 'POST',
-          headers: s.headers,
-          body: JSON.stringify({ status: 'yes', guests: 0 }),
-        })
-      const [resA, resB] = await Promise.all([rsvp(sessionA), rsvp(sessionB)])
-      const [bodyA, bodyB] = (await Promise.all([resA.json(), resB.json()])) as {
-        myRsvp?: { status: string } | null
-      }[]
-      const statuses = [bodyA!.myRsvp?.status, bodyB!.myRsvp?.status].sort()
-      // The intended invariant: capacity 1 can seat exactly one "yes"; the other must be "waitlist".
-      expect(statuses).toEqual(['waitlist', 'yes'])
-    },
-  )
+    const [resA, resB] = await Promise.all([rsvp(sessionA), rsvp(sessionB)])
+    const [bodyA, bodyB] = (await Promise.all([resA.json(), resB.json()])) as {
+      myRsvp?: { status: string } | null
+    }[]
+    const statuses = [bodyA!.myRsvp?.status, bodyB!.myRsvp?.status].sort()
+    // The intended invariant: capacity 1 can seat exactly one "yes"; the other must be "waitlist".
+    expect(statuses).toEqual(['waitlist', 'yes'])
+  })
 })
 
 // v1.1: fixed by `events/service.ts`'s `lockCarpoolForSeats`, the carpool twin of the RSVP lock
 // above (claim *and* release take it, so a release racing a claim cannot over-promote either).
 describe('H10.1: carpool seat claiming is enforced atomically', () => {
-  it(
-    'seats=1, two different users each claim 1 seat concurrently: exactly one is "confirmed"',
-    async () => {
-      const dept = await seedDepartment(db, {
-        name: 'Carpool race dept',
-        slug: `carpool-race-${randomUUID()}`,
-      })
-      const head = await seedMember(db, dept.id, { role: 'head' })
-      const memberA = await seedMember(db, dept.id, { role: 'member' })
-      const memberB = await seedMember(db, dept.id, { role: 'member' })
-      const headSession = await loginAs(baseUrl, head.login)
-      const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+  it('seats=1, two different users each claim 1 seat concurrently: exactly one is "confirmed"', async () => {
+    const dept = await seedDepartment(db, {
+      name: 'Carpool race dept',
+      slug: `carpool-race-${randomUUID()}`,
+    })
+    const head = await seedMember(db, dept.id, { role: 'head' })
+    const memberA = await seedMember(db, dept.id, { role: 'member' })
+    const memberB = await seedMember(db, dept.id, { role: 'member' })
+    const headSession = await loginAs(baseUrl, head.login)
+    const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+      method: 'POST',
+      headers: headSession.headers,
+      body: JSON.stringify({
+        title: 'carpool race',
+        startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        endsAt: new Date(Date.now() + 90_000_000).toISOString(),
+      }),
+    })
+    const event = (await eventRes.json()) as { id: string }
+    const carpoolRes = await fetch(`${baseUrl}/api/v1/events/${event.id}/carpools`, {
+      method: 'POST',
+      headers: headSession.headers,
+      body: JSON.stringify({ seats: 1 }),
+    })
+    const carpool = (await carpoolRes.json()) as { id: string }
+    const [sessionA, sessionB] = await Promise.all([
+      loginAs(baseUrl, memberA.login),
+      loginAs(baseUrl, memberB.login),
+    ])
+    const claim = (s: Session) =>
+      fetch(`${baseUrl}/api/v1/events/${event.id}/carpools/${carpool.id}/claim`, {
         method: 'POST',
-        headers: headSession.headers,
-        body: JSON.stringify({
-          title: 'carpool race',
-          startsAt: new Date(Date.now() + 86_400_000).toISOString(),
-          endsAt: new Date(Date.now() + 90_000_000).toISOString(),
-        }),
-      })
-      const event = (await eventRes.json()) as { id: string }
-      const carpoolRes = await fetch(`${baseUrl}/api/v1/events/${event.id}/carpools`, {
-        method: 'POST',
-        headers: headSession.headers,
+        headers: s.headers,
         body: JSON.stringify({ seats: 1 }),
       })
-      const carpool = (await carpoolRes.json()) as { id: string }
-      const [sessionA, sessionB] = await Promise.all([
-        loginAs(baseUrl, memberA.login),
-        loginAs(baseUrl, memberB.login),
-      ])
-      const claim = (s: Session) =>
-        fetch(`${baseUrl}/api/v1/events/${event.id}/carpools/${carpool.id}/claim`, {
-          method: 'POST',
-          headers: s.headers,
-          body: JSON.stringify({ seats: 1 }),
-        })
-      await Promise.all([claim(sessionA), claim(sessionB)])
+    await Promise.all([claim(sessionA), claim(sessionB)])
 
-      const rows = await superuserQuery<{ status: string }>(
-        db,
-        `select status from app.carpool_seats where carpool_id = $1`,
-        [carpool.id],
-      )
-      const statuses = rows.map((r) => r.status).sort()
-      expect(statuses).toEqual(['confirmed', 'waitlist'])
-    },
-  )
+    const rows = await superuserQuery<{ status: string }>(
+      db,
+      `select status from app.carpool_seats where carpool_id = $1`,
+      [carpool.id],
+    )
+    const statuses = rows.map((r) => r.status).sort()
+    expect(statuses).toEqual(['confirmed', 'waitlist'])
+  })
 })
 
 // H10.1 (fixed by the api-data hardening package, merged 2026-09-12): `poll_votes` now carries a
@@ -277,30 +271,27 @@ describe('H10.1: a double-submitted identical poll vote is deduplicated', () => 
 // version = $2` (`work/repo.ts`'s `patchCard`), so "check" and "act" are one row-locked step and the
 // loser matches zero rows and gets its 409 instead of silently overwriting the winner.
 describe('H10.1: the card `version` optimistic-concurrency check is atomic', () => {
-  it(
-    'two concurrent PATCHes sent with the identical (stale) version: only one succeeds with 200, the other 409',
-    async () => {
-      const dept = await seedDepartment(db, {
-        name: 'Card race dept',
-        slug: `card-race-${randomUUID()}`,
-      })
-      const head = await seedMember(db, dept.id, { role: 'head' })
-      const session = await loginAs(baseUrl, head.login)
-      const createRes = await fetch(`${baseUrl}/api/v1/cards`, {
-        method: 'POST',
+  it('two concurrent PATCHes sent with the identical (stale) version: only one succeeds with 200, the other 409', async () => {
+    const dept = await seedDepartment(db, {
+      name: 'Card race dept',
+      slug: `card-race-${randomUUID()}`,
+    })
+    const head = await seedMember(db, dept.id, { role: 'head' })
+    const session = await loginAs(baseUrl, head.login)
+    const createRes = await fetch(`${baseUrl}/api/v1/cards`, {
+      method: 'POST',
+      headers: session.headers,
+      body: JSON.stringify({ title: 'lost update probe' }),
+    })
+    const card = (await createRes.json()) as { id: string; version: number }
+    const patch = (title: string) =>
+      fetch(`${baseUrl}/api/v1/cards/${card.id}`, {
+        method: 'PATCH',
         headers: session.headers,
-        body: JSON.stringify({ title: 'lost update probe' }),
+        body: JSON.stringify({ title, version: card.version }),
       })
-      const card = (await createRes.json()) as { id: string; version: number }
-      const patch = (title: string) =>
-        fetch(`${baseUrl}/api/v1/cards/${card.id}`, {
-          method: 'PATCH',
-          headers: session.headers,
-          body: JSON.stringify({ title, version: card.version }),
-        })
-      const [resA, resB] = await Promise.all([patch('write A'), patch('write B')])
-      const statuses = [resA.status, resB.status].sort()
-      expect(statuses).toEqual([200, 409])
-    },
-  )
+    const [resA, resB] = await Promise.all([patch('write A'), patch('write B')])
+    const statuses = [resA.status, resB.status].sort()
+    expect(statuses).toEqual([200, 409])
+  })
 })

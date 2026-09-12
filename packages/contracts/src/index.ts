@@ -30,6 +30,17 @@ export {
 } from './app-actions.js'
 
 export {
+  FEATURES,
+  FEATURE_KEYS,
+  allFeaturesOn,
+  isFeatureKey,
+  resolveFeatures,
+  type FeatureFlags,
+  type FeatureKey,
+  type FeatureSpec,
+} from './features.js'
+
+export {
   INDICATORS,
   INDICATOR_KEYS,
   getIndicator,

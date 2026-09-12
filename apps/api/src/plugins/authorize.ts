@@ -63,6 +63,11 @@ export const PUBLIC_ROUTES: ReadonlyArray<{ method: string; url: string }> = Obj
   // per-request secret instead (an HMAC-signed token, and a configured webhook path secret).
   { method: 'GET', url: '/api/v1/notifications/ics/:userId/:token' },
   { method: 'POST', url: '/api/v1/telegram/webhook/:secret' },
+  // v1.1 SPEC §2.2 / WALKTHROUGH-FINDINGS §2.5: "Parolni tiklashni soʻrash" on the login screen. A
+  // person who has forgotten their password has no session by definition. The handler answers 202
+  // whatever it finds (never an account-existence oracle), is rate limited per IP, and dedupes to
+  // one open request per person per day; the only effect it can have is an inbox item for the head.
+  { method: 'POST', url: '/api/v1/accounts/password-reset-request' },
 ])
 
 /**

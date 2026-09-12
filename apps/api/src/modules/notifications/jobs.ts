@@ -21,6 +21,7 @@ import {
 import { deliverNotification as deliver } from './delivery.js'
 import { listGroupsForKind } from '../telegram/repo.js'
 import { getBot, sendPlainMessage } from '../telegram/transport.js'
+import { departmentDigestText, personalDigestText, summarizeCounts } from './registry.js'
 import type { LocalizedText } from './schemas.js'
 import { queueDeadLetterGauge, queuePendingGauge } from '../../lib/metrics.js'
 
@@ -40,32 +41,6 @@ const QUEUE_DEAD_LETTER = 'notifications.dead-letter'
 const RETRY_LIMIT = 5
 const RETRY_DELAY_SECONDS = 60
 const QUEUE_METRICS_POLL_MS = 60_000
-
-const REASON_LABEL: Record<string, LocalizedText> = {
-  assigned: { 'uz-Latn': 'topshiriq', 'uz-Cyrl': 'топшириқ', ru: 'задача', en: 'assigned' },
-  mentioned: { 'uz-Latn': 'eslatish', 'uz-Cyrl': 'эслатиш', ru: 'упоминание', en: 'mention' },
-  due: { 'uz-Latn': 'muddat', 'uz-Cyrl': 'муддат', ru: 'срок', en: 'due' },
-  updated: { 'uz-Latn': 'yangilanish', 'uz-Cyrl': 'янгиланиш', ru: 'обновление', en: 'update' },
-  rsvp: { 'uz-Latn': 'ishtirok', 'uz-Cyrl': 'иштирок', ru: 'участие', en: 'RSVP' },
-  poll: { 'uz-Latn': "so'rovnoma", 'uz-Cyrl': 'сўровнома', ru: 'опрос', en: 'poll' },
-  decision: { 'uz-Latn': 'qaror', 'uz-Cyrl': 'қарор', ru: 'решение', en: 'decision' },
-}
-
-function summarizeCounts(counts: ReasonCounts, locale: keyof LocalizedText): string {
-  const parts = Object.entries(counts)
-    .filter(([, n]) => (n ?? 0) > 0)
-    .map(([reason, n]) => `${REASON_LABEL[reason]?.[locale] ?? reason}: ${n}`)
-  return parts.join(', ')
-}
-
-function localizedDigestTitle(count: number): LocalizedText {
-  return {
-    'uz-Latn': `Kunlik xulosa: ${count} ta yangilanish`,
-    'uz-Cyrl': `Кунлик хулоса: ${count} та янгиланиш`,
-    ru: `Дневная сводка: ${count} обновлений`,
-    en: `Daily summary: ${count} update(s)`,
-  }
-}
 
 // Every loop below is a plain indexed `for`, never `for-of`, even though each iteration's body
 // `await`s (TECH-SPEC §16 "no await in a loop over independent items" -- the lint rule this codebase
@@ -121,6 +96,9 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
       const counts = await unreadCountsByReason(userId)
       const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0)
       if (total === 0) continue
+      // SPEC §11: the copy comes from the registry's own builders, so the digest is written in the
+      // same four locales, with the same conventions, as every event-driven notification.
+      const digest = personalDigestText(counts)
       // nosemgrep: query-in-loop -- see this file's header comment above.
       await notifyUser(log, {
         userId,
@@ -129,13 +107,8 @@ async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
         subjectType: 'digest',
         subjectId: `daily-${new Date().toISOString().slice(0, 10)}`,
         departmentId,
-        title: localizedDigestTitle(total),
-        body: {
-          'uz-Latn': summarizeCounts(counts, 'uz-Latn'),
-          'uz-Cyrl': summarizeCounts(counts, 'uz-Cyrl'),
-          ru: summarizeCounts(counts, 'ru'),
-          en: summarizeCounts(counts, 'en'),
-        },
+        title: digest.title,
+        body: digest.body,
         deepLink: '/inbox',
       })
     }
@@ -165,7 +138,10 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     }
     const total = Object.values(totals).reduce((a, b) => a + (b ?? 0), 0)
     if (total === 0) continue
-    const text = `Haftalik xulosa / Weekly summary: ${summarizeCounts(totals, 'uz-Latn')}`
+    // In the department's own default locale, not a hard-coded bilingual string (the group is that
+    // department's, and `listGroupsForKind` now brings the locale back with the chat id).
+    const locale = isLocalizedKey(group.locale) ? group.locale : 'uz-Latn'
+    const text = departmentDigestText(totals, locale)
     // H8.1: timeout- and circuit-breaker-bound (`sendPlainMessage`), same as every other Telegram
     // send in this codebase -- previously called `bot.api.sendMessage` directly with neither, so a
     // wedged socket here could hold this cron's single-threaded `for` loop open indefinitely and a
@@ -179,6 +155,10 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
       )
     }
   }
+}
+
+function isLocalizedKey(value: string): value is keyof LocalizedText {
+  return value === 'uz-Latn' || value === 'uz-Cyrl' || value === 'ru' || value === 'en'
 }
 
 export type JobRunnerHandle = { stop(): Promise<void> }

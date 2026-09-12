@@ -15,6 +15,7 @@
 import { randomBytes, randomUUID } from 'node:crypto'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
+import { resolveFeatures, type FeatureFlags, type FeatureKey } from '@devon/contracts'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import type { AuditCtx } from '../../types.js'
 import type { Locale } from '../../schemas.js'
@@ -100,7 +101,7 @@ export async function createDepartmentRequest(
     })
     tx.emit({
       type: 'departments.request.created',
-      payload: { requestId: id, requesterUserId },
+      payload: { requestId: id, requesterUserId, actorUserId: requesterUserId },
     })
     return id
   })
@@ -336,6 +337,9 @@ export type DepartmentDetail = {
   status: 'active' | 'paused_by_admin' | 'deletion_requested' | 'archived'
   joinRequiresApproval: boolean
   settings: Required<SettingsJson>
+  /** SPEC §7: every Imkoniyatlar switch resolved against `packages/contracts/src/features.ts`'s
+   * defaults, so the client never needs to know what the defaults are. */
+  features: FeatureFlags
   myRole: 'head' | 'member'
   memberCount: number
 }
@@ -352,8 +356,10 @@ async function selectDepartmentCore(tx: Tx, departmentId: string) {
     status: DepartmentDetail['status']
     settings: unknown
     join_requires_approval: boolean
+    features: unknown
   }>(
-    sql`select id, name, slug, description, emoji, colour, locale_default, status, settings, join_requires_approval
+    sql`select id, name, slug, description, emoji, colour, locale_default, status, settings,
+               join_requires_approval, features
         from app.departments where id = ${departmentId} and deleted_at is null`,
   )
   return rows[0] ?? null
@@ -387,11 +393,12 @@ export async function listMyDepartments(userId: string): Promise<DepartmentDetai
         status: DepartmentDetail['status']
         settings: unknown
         join_requires_approval: boolean
+        features: unknown
         my_role: 'head' | 'member'
         member_count: number
       }>(
         sql`select d.id, d.name, d.slug, d.description, d.emoji, d.colour, d.locale_default, d.status,
-                   d.settings, d.join_requires_approval, m.role as my_role,
+                   d.settings, d.join_requires_approval, d.features, m.role as my_role,
                    (select count(*)::int from app.memberships m2
                       where m2.department_id = d.id and m2.status = 'active' and m2.deleted_at is null
                    ) as member_count
@@ -411,6 +418,7 @@ export async function listMyDepartments(userId: string): Promise<DepartmentDetai
         status: dept.status,
         joinRequiresApproval: dept.join_requires_approval,
         settings: normalizeSettings(dept.settings),
+        features: resolveFeatures(dept.features),
         myRole: dept.my_role,
         memberCount: dept.member_count,
       }))
@@ -454,6 +462,7 @@ export async function getDepartmentDetail(
         status: dept.status,
         joinRequiresApproval: dept.join_requires_approval,
         settings: normalizeSettings(dept.settings),
+        features: resolveFeatures(dept.features),
         myRole: role,
         memberCount: countRows[0]?.count ?? 0,
       }
@@ -780,7 +789,7 @@ export async function joinByKeyAndPassword(
     tx.emit({
       type: 'departments.member.joined',
       departmentId: dept.id,
-      payload: { userId, status },
+      payload: { userId, status, actorUserId: userId },
     })
     return { ok: true, departmentId: dept.id, status }
   })
@@ -956,4 +965,206 @@ export async function transferHeadship(
     })
     return true
   })
+}
+
+// ---------------------------------------------------------------------------------------------
+// v1.1 SPEC §2.2 -- the join-approval queue
+//
+// `join_requires_approval` shipped in v1.0 as a setting that inserted the membership with
+// `status = 'pending_approval'` and then had nothing anywhere that could approve it
+// (WALKTHROUGH-FINDINGS §1.3: "anyone who enables the toggle strands every new joiner
+// permanently"). These functions are the missing half. Every one of them is head-only at the
+// `can()` layer (`{kind:'department_managed'}`, `apps/api/test/unit/head-only-routes.test.ts`).
+
+export type JoinRequestRow = {
+  userId: string
+  givenName: string
+  familyName: string
+  patronymic: string | null
+  title: string | null
+  avatarKey: string | null
+  requestedAt: Date
+}
+
+export async function listJoinRequests(
+  departmentId: string,
+  ctx: AuditCtx,
+): Promise<JoinRequestRow[]> {
+  return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    const rows = await tx.raw<{
+      user_id: string
+      given_name: string
+      family_name: string
+      patronymic: string | null
+      title: string | null
+      avatar_key: string | null
+      joined_at: Date | string
+    }>(
+      sql`select m.user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key,
+                 m.joined_at
+          from app.memberships m join app.users u on u.id = m.user_id
+          where m.department_id = ${departmentId} and m.status = 'pending_approval'
+            and m.deleted_at is null and u.deleted_at is null
+          order by m.joined_at asc`,
+    )
+    return rows.map((r) => ({
+      userId: r.user_id,
+      givenName: r.given_name,
+      familyName: r.family_name,
+      patronymic: r.patronymic,
+      title: r.title,
+      avatarKey: r.avatar_key,
+      requestedAt: r.joined_at instanceof Date ? r.joined_at : new Date(r.joined_at),
+    }))
+  })
+}
+
+export type JoinDecision = 'approved' | 'rejected' | 'pending'
+
+/**
+ * Approve, reject, or put a decision back (the undo). One function rather than three because the
+ * three differ only in the status they move to and the audit verb, and because the guard -- "the
+ * membership must currently be in the status this transition expects" -- has to be identical in all
+ * three or an undo could resurrect a membership the head removed for a different reason.
+ *
+ * The status move is a single `UPDATE ... WHERE status in (<expected>)` so two heads clicking at
+ * once cannot both "win" (the same check-then-act lesson as `concurrency-races.test.ts`); the loser
+ * gets `false` and the client simply re-reads the list.
+ */
+export async function decideJoinRequest(
+  departmentId: string,
+  targetUserId: string,
+  decision: JoinDecision,
+  ctx: AuditCtx,
+): Promise<boolean> {
+  const next =
+    decision === 'approved' ? 'active' : decision === 'rejected' ? 'removed' : 'pending_approval'
+  const expected = decision === 'pending' ? ['active', 'removed'] : ['pending_approval']
+  return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    const rows = await tx.raw<{ user_id: string }>(
+      sql`update app.memberships
+          set status = ${next}, updated_at = now(),
+              left_at = ${decision === 'rejected' ? sql`now()` : null}
+          where department_id = ${departmentId} and user_id = ${targetUserId}
+            and deleted_at is null and status in ${expected}
+          returning user_id`,
+    )
+    if (rows.length === 0) return false
+    tx.audit({
+      action:
+        decision === 'approved'
+          ? 'departments.join_approved'
+          : decision === 'rejected'
+            ? 'departments.join_rejected'
+            : 'departments.join_decision_undone',
+      subjectType: 'membership',
+      subjectId: targetUserId,
+      departmentId,
+      after: { status: next },
+    })
+    // The joiner learns the outcome in their inbox and (if linked) in Telegram -- the registry
+    // resolves `target_user` from this payload (`notifications/registry.ts`).
+    if (decision !== 'pending') {
+      tx.emit({
+        type: 'departments.join_request.decided',
+        departmentId,
+        payload: { userId: targetUserId, decision, actorUserId: ctx.userId },
+      })
+    }
+    return true
+  })
+}
+
+// ---------------------------------------------------------------------------------------------
+// v1.1 SPEC §7 -- Imkoniyatlar switches
+
+export async function updateFeatures(
+  departmentId: string,
+  patch: Partial<Record<FeatureKey, boolean>>,
+  ctx: AuditCtx,
+): Promise<FeatureFlags> {
+  return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    const before = await tx.raw<{ features: unknown }>(
+      sql`select features from app.departments where id = ${departmentId}`,
+    )
+    const previous = resolveFeatures(before[0]?.features)
+    const merged = { ...previous, ...patch }
+    await tx.raw(
+      sql`update app.departments set features = ${JSON.stringify(merged)}::jsonb, updated_at = now()
+          where id = ${departmentId}`,
+    )
+    tx.audit({
+      action: 'departments.features_updated',
+      subjectType: 'department',
+      subjectId: departmentId,
+      departmentId,
+      before: previous,
+      after: merged,
+    })
+    return merged
+  })
+}
+
+// ---------------------------------------------------------------------------------------------
+// v1.1 SPEC §2.2 -- the head resets a member's password
+//
+// Before v1.1 `POST /accounts/:userId/reset-password` was `{kind:'instance'}`, so every forgotten
+// password in every department escalated to the single ministry super admin while the login screen
+// told people to ask their head (WALKTHROUGH-FINDINGS §2.5). This is the department-scoped twin: the
+// head may reset the password of an **active member of their own department**, and of nobody else.
+
+export type ResetMemberPasswordOutcome =
+  | { ok: true; temporaryPassword: string }
+  | { ok: false; reason: 'not_a_member' | 'is_self' | 'is_head' }
+
+export async function resetMemberPassword(
+  departmentId: string,
+  targetUserId: string,
+  actorUserId: string,
+  ctx: AuditCtx,
+): Promise<ResetMemberPasswordOutcome> {
+  if (targetUserId === actorUserId) return { ok: false, reason: 'is_self' }
+
+  const membership = await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) =>
+    tx.raw<{ role: 'head' | 'member'; status: string }>(
+      sql`select role, status from app.memberships
+          where department_id = ${departmentId} and user_id = ${targetUserId} and deleted_at is null`,
+    ),
+  )
+  const row = membership[0]
+  if (!row || row.status !== 'active') return { ok: false, reason: 'not_a_member' }
+  // A head resetting another head's password would be a lateral privilege move inside the
+  // department; headship transfer is the sanctioned path, and the super admin stays the escalation
+  // route for a head who is locked out.
+  if (row.role === 'head') return { ok: false, reason: 'is_head' }
+
+  const temporaryPassword = `${randomFromAlphabet(12)}aA1!`
+  const passwordHash = await hashPassword(temporaryPassword)
+
+  await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    await tx.raw(
+      sql`update app.users
+          set password_hash = ${passwordHash}, must_change_password = true, updated_at = now()
+          where id = ${targetUserId} and deleted_at is null`,
+    )
+    // Same rule as the super admin's reset: a deliberate credential reset revokes every live session.
+    await tx.raw(
+      sql`update app.sessions set revoked_at = now(), revoked_reason = 'password_reset'
+          where user_id = ${targetUserId} and revoked_at is null`,
+    )
+    tx.audit({
+      action: 'accounts.password_reset_by_head',
+      subjectType: 'user',
+      subjectId: targetUserId,
+      departmentId,
+      after: { mustChangePassword: true },
+    })
+    tx.emit({
+      type: 'accounts.password.reset_by_head',
+      departmentId,
+      payload: { userId: targetUserId, actorUserId },
+    })
+  })
+
+  return { ok: true, temporaryPassword }
 }

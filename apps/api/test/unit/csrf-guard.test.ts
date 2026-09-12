@@ -59,6 +59,10 @@ describe('global CSRF guard (H1.4)', () => {
     expect(unprotected.map((r) => `${r.method} ${r.url}`).sort()).toEqual(
       [
         'POST /api/v1/accounts/2fa/login-verify',
+        // v1.1: the login screen's "ask my head to reset my password" -- pre-session by definition,
+        // so there is no CSRF cookie to double-submit. It is rate limited, answers 202 whatever it
+        // finds, and its only effect is an inbox item for a head.
+        'POST /api/v1/accounts/password-reset-request',
         'POST /api/v1/accounts/register',
         'POST /api/v1/auth/login',
         'POST /api/v1/setup/:token',

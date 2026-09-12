@@ -434,15 +434,26 @@ export async function disconnectGroupByChatId(chatId: string): Promise<void> {
  * `weekly_summary`/`deadlines`) -- used by the outbound broadcast helpers, never by a per-user path. */
 export async function listGroupsForKind(
   kind: GroupKind,
-): Promise<{ chatId: string; departmentId: string }[]> {
+): Promise<{ chatId: string; departmentId: string; locale: string }[]> {
   return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    const rows = await tx.raw<{ chat_id: string; department_id: string }>(sql`
-      select chat_id, department_id from app.telegram_groups
-      where disconnected_at is null and ${kind} = any(kinds)
+    // v1.1: the department's default locale comes back with the group, joined here rather than
+    // looked up per group inside the digest cron's own loop (TECH-SPEC §16, no query in a loop) --
+    // the weekly group digest used to be sent as one hard-coded bilingual string
+    // ("Haftalik xulosa / Weekly summary: ..."), which is not a translation in any of the four
+    // locales this product ships.
+    const rows = await tx.raw<{
+      chat_id: string
+      department_id: string
+      locale_default: string
+    }>(sql`
+      select g.chat_id, g.department_id, d.locale_default
+      from app.telegram_groups g join app.departments d on d.id = g.department_id
+      where g.disconnected_at is null and ${kind} = any(g.kinds)
     `)
     return rows.map((r) => ({
       chatId: r.chat_id,
       departmentId: r.department_id,
+      locale: r.locale_default,
     }))
   })
 }
