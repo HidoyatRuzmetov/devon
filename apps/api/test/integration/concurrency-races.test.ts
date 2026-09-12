@@ -13,8 +13,10 @@
 //    and the exact `repo.ts` lines): RSVP capacity, carpool seats and the card `version` optimistic-
 //    concurrency check are all "read count/version, decide, then write" with NO row lock and no
 //    constraint enforcing the invariant at the database level, so two simultaneous requests can both
-//    read the pre-write state and both "win". Poll voting's delete-then-insert has the same shape for
-//    a double-submit of the identical vote. The moment one of these is fixed, its `it.fails` will
+//    read the pre-write state and both "win". Poll voting's delete-then-insert had the same shape for
+//    a double-submit of the identical vote until the api-data hardening package added the unique
+//    constraint and the same-voter advisory lock (H10.1); that case is now a plain `it` asserting the
+//    fix, and is the worked example of the paragraph below. The moment one of these is fixed, its `it.fails` will
 //    itself start failing (Vitest reports an `it.fails` whose body did NOT throw as a failure) --
 //    that is the intended signal to flip it back to a plain `it`.
 import { randomUUID } from 'node:crypto'
