@@ -443,13 +443,15 @@ function JoinRequestsCard({ id }: { id: string }) {
   const requests = query.data.requests
   return (
     <SectionCard
-      title={t('departments.joinRequests.title')}
-      description={t('departments.joinRequests.description')}
-      actions={
-        requests.length > 0 ? (
-          <Badge tone="warning">{String(requests.length)}</Badge>
-        ) : undefined
+      // The count belongs next to the heading, not in `actions` -- `SectionCard` renders `actions`
+      // as a footer row (that is where "Saqlash" sits on the card above), so a badge there reads as
+      // a stray control at the bottom of the card rather than "one person is waiting".
+      title={
+        requests.length > 0
+          ? `${t('departments.joinRequests.title')} · ${requests.length}`
+          : t('departments.joinRequests.title')
       }
+      description={t('departments.joinRequests.description')}
     >
       {requests.length === 0 ? (
         <StateView
@@ -919,7 +921,17 @@ export default function DepartmentDetailScreen() {
   // "Boʻlimlar" entry and the hub's "Sozlamalarni ochish" link both landed. Without an id the screen
   // is simply about *your* department, which the session already knows.
   const id = params.get('id') ?? departmentId ?? ''
-  const [tab, setTab] = React.useState<Tab>('general')
+  // `?tab=` is honoured so a deep link can land on the right tab -- the join-request notification
+  // points at `?tab=members`, and a link that opened the wrong tab would be worse than no link.
+  const requestedTab = params.get('tab')
+  const [tab, setTab] = React.useState<Tab>(
+    requestedTab === 'invite' ||
+      requestedTab === 'members' ||
+      requestedTab === 'danger' ||
+      requestedTab === 'general'
+      ? requestedTab
+      : 'general',
+  )
 
   const deptQuery = useQuery({
     queryKey: ['departments', 'detail', id],

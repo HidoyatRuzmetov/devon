@@ -106,39 +106,100 @@ export async function runPurgeLeftovers(
         order by login
       `)
 
+      // A department whose ONLY head is one of those accounts is debris too, whatever it calls
+      // itself -- "Sifat nazorati boshqarmasi", headed by "Kamron Testov" and nobody else, is the
+      // case WALKTHROUGH-FINDINGS §6 actually found, and no name pattern should be asked to guess
+      // that "quality control department" is not a real boshqarma. Deliberately "only head": a real
+      // department that a test account happened to also head stays, and loses the test account.
+      if (users.length > 0) {
+        const userIds = users.map((u) => u.id)
+        const orphaned = await tx.raw<{ id: string; name: string }>(sql`
+          select d.id, d.name from app.departments d
+          where d.deleted_at is null
+            and d.id <> ${protectedDepartmentId}
+            and exists (
+              select 1 from app.memberships m
+              where m.department_id = d.id and m.role = 'head' and m.deleted_at is null
+                and m.user_id in ${userIds}
+            )
+            and not exists (
+              select 1 from app.memberships m
+              where m.department_id = d.id and m.role = 'head' and m.deleted_at is null
+                and m.user_id not in ${userIds}
+            )
+        `)
+        for (const row of orphaned) {
+          if (!departments.some((d) => d.id === row.id)) departments.push(row)
+        }
+        departments.sort((a, b) => a.name.localeCompare(b.name))
+      }
+
       if (dryRun || (departments.length === 0 && users.length === 0)) {
         return { departments, users, previewOnly: dryRun }
       }
 
-      if (departments.length > 0) {
-        const ids = departments.map((d) => d.id)
-        await tx.raw(sql`
-          update app.departments set deleted_at = now(), updated_at = now()
-          where id in ${ids}
+      // `departments_write` and `memberships_write` (migration 0005) both require
+      // `<row>.department_id = app.current_department_id()`, so a single multi-department UPDATE
+      // would match zero rows however privileged the caller is -- RLS is not a role check here, it
+      // is a *scope* check. The GUC is therefore re-pointed once per department inside this one
+      // transaction (`set_config(..., true)` = transaction-local, the same move
+      // `departments/repo.ts`'s `joinByKeyAndPassword` documents), which is why this loop exists at
+      // all. It is bounded by the number of leftover departments -- a handful on a demo box, and
+      // zero on a clean one.
+      const userIds = users.map((u) => u.id)
+      const affectedDepartmentIds = new Set(departments.map((d) => d.id))
+      if (userIds.length > 0) {
+        // Every department those accounts belong to also needs its membership rows retired, even if
+        // the department itself is legitimate (a test account that joined the demo department).
+        const rows = await tx.raw<{ department_id: string }>(sql`
+          select distinct department_id from app.memberships
+          where user_id in ${userIds} and deleted_at is null
         `)
-        // Their memberships go too, or the people in them keep a department the product says is
-        // gone (and `GET /me` would still list it in the switcher).
-        await tx.raw(sql`
-          update app.memberships set deleted_at = now(), status = 'removed', updated_at = now()
-          where department_id in ${ids} and deleted_at is null
-        `)
+        for (const row of rows) affectedDepartmentIds.add(row.department_id)
       }
 
-      if (users.length > 0) {
-        const ids = users.map((u) => u.id)
+      const departmentIds = [...affectedDepartmentIds]
+      for (let i = 0; i < departmentIds.length; i += 1) {
+        const departmentId = departmentIds[i]!
+        // nosemgrep: query-in-loop -- see the comment above: one department per iteration is what
+        // the RLS scope check requires, and it is the loop's whole reason for existing.
+        await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
+        if (affectedDepartmentIds.has(departmentId) && departments.some((d) => d.id === departmentId)) {
+          // nosemgrep: query-in-loop
+          await tx.raw(sql`
+            update app.departments set deleted_at = now(), updated_at = now()
+            where id = ${departmentId}
+          `)
+          // Its memberships go too, or the people in it keep a department the product says is gone
+          // (and `GET /me` would still list it in the switcher).
+          // nosemgrep: query-in-loop
+          await tx.raw(sql`
+            update app.memberships set deleted_at = now(), status = 'removed', updated_at = now()
+            where department_id = ${departmentId} and deleted_at is null
+          `)
+        } else if (userIds.length > 0) {
+          // nosemgrep: query-in-loop
+          await tx.raw(sql`
+            update app.memberships set deleted_at = now(), status = 'removed', updated_at = now()
+            where department_id = ${departmentId} and user_id in ${userIds} and deleted_at is null
+          `)
+        }
+      }
+      // Back to "no department" for the instance-level writes below, so nothing inherits the last
+      // department this loop happened to touch.
+      await tx.raw(sql`select set_config('app.department_id', '', true)`)
+
+      if (userIds.length > 0) {
+        // `app.users` and `app.sessions` are `global` in `tenancy.ts` -- no RLS, no scope to set.
         await tx.raw(sql`
-          update app.users set deleted_at = now(), status = 'disabled', updated_at = now()
-          where id in ${ids}
-        `)
-        await tx.raw(sql`
-          update app.memberships set deleted_at = now(), status = 'removed', updated_at = now()
-          where user_id in ${ids} and deleted_at is null
+          update app.users set deleted_at = now(), status = 'deleted', updated_at = now()
+          where id in ${userIds}
         `)
         // A disabled account must not keep a live session (the same rule every password reset
         // follows).
         await tx.raw(sql`
           update app.sessions set revoked_at = now(), revoked_reason = 'account_purged'
-          where user_id in ${ids} and revoked_at is null
+          where user_id in ${userIds} and revoked_at is null
         `)
       }
 
