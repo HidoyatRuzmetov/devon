@@ -51,8 +51,25 @@ export type Subject =
   | { kind: 'instance_exit_view_as' } // /api/v1/admin/view-as/stop only
   | { kind: 'department'; departmentId: string }
   | { kind: 'department_child'; departmentId: string } // memberships, and every future dept table
+  // v1.1 SPEC §2.1 (PERMISSIONS-AUDIT D15): "a department-owned row that only the boshqarma
+  // boshlig'i may see or touch". Before this kind existed, every such rule was hand-rolled inside a
+  // module (structure and events did it; work, projects, pages, analytics, ai and telegram did not),
+  // which is exactly the drift I-7 exists to prevent. Head-only for BOTH reads and writes -- that is
+  // the difference from `department`, whose reads are open to every member.
+  | { kind: 'department_managed'; departmentId: string }
+  // v1.1 SPEC §2.1: a department-owned row whose *writes* belong to a named owner set (the card's
+  // giver/assignee/creator, the project's owner, the event's organizer, the page's author) or to the
+  // head. Reads behave exactly like `department_child` -- the department's board, wiki and calendar
+  // stay transparent; only mutation narrows. `can()` never queries, so the route passes the real
+  // owner ids it already loaded (I-7: the decision stays in one function).
+  | { kind: 'owned'; departmentId: string; ownerUserIds: readonly string[] }
   | { kind: 'personal'; ownerUserId: string } // I-1: owner only, never head, never view-as
   | { kind: 'own_account'; userId: string }
+  // PERMISSIONS-AUDIT D11: "any signed-in person may read this", said out loud. The avatar-bytes
+  // route used `{kind:'own_account', userId: <the requester's own id>}`, which is a tautology that
+  // reads like an owner check and is not one. Team avatars are deliberately visible to every
+  // colleague; this kind is how a route says so without lying about what it checks.
+  | { kind: 'authenticated' }
   | { kind: 'audit' }
   | { kind: 'public' } // /healthz, /readyz, login, setup
 
@@ -93,6 +110,13 @@ function findMembership(actor: Actor, departmentId: string): Membership | undefi
  *   with `read_only_view_as`.
  * - P7 `actingFor` is honoured only from a verified grant row; since none exist in this epic, any
  *   client-supplied value is ignored and the decision is always made against the real actor.
+ * - P8 (v1.1) `{kind:'department_managed'}` -> allowed iff the matching membership's
+ *   `role === 'head'`, for every action including `read`. A `super_admin` with a matching `viewAs`
+ *   may `read` only.
+ * - P9 (v1.1) `{kind:'owned'}` -> `read` behaves exactly like `department_child`; every other action
+ *   requires `role === 'head'` on the matching membership, or `actor.userId` inside
+ *   `subject.ownerUserIds`.
+ * - P10 (v1.1) `{kind:'authenticated'}` -> any non-null actor.
  */
 export function can(actor: Actor | null, action: Action, subject: Subject): Decision {
   // Public routes (health checks, login, setup) never require a session, and never depend on the
@@ -135,6 +159,43 @@ export function can(actor: Actor | null, action: Action, subject: Subject): Deci
     case 'own_account': {
       if (subject.userId !== actor.userId) return deny('not_owner')
       return ALLOW
+    }
+
+    // D11: every authenticated session passes. Deliberately not `department_child` -- the resource
+    // (an avatar's bytes) is legitimately readable by a colleague in any shared department, and
+    // pretending otherwise would either break the board or require a per-request department lookup
+    // for a 64x64 PNG.
+    case 'authenticated':
+      return ALLOW
+
+    // v1.1 SPEC §2.1. Head-only row, reads included.
+    case 'department_managed': {
+      const managedMembership = findMembership(actor, subject.departmentId)
+      if (managedMembership) {
+        if (managedMembership.role !== 'head') return deny('not_head')
+        return ALLOW
+      }
+      if (actor.role === 'super_admin' && actor.viewAs?.departmentId === subject.departmentId) {
+        if (action === 'read') return ALLOW
+        return deny('read_only_view_as')
+      }
+      return deny('not_a_member')
+    }
+
+    // v1.1 SPEC §2.1. Read like `department_child`; write for the owner set or the head.
+    case 'owned': {
+      const ownedMembership = findMembership(actor, subject.departmentId)
+      if (ownedMembership) {
+        if (action === 'read') return ALLOW
+        if (ownedMembership.role === 'head') return ALLOW
+        if (subject.ownerUserIds.includes(actor.userId)) return ALLOW
+        return deny('not_owner')
+      }
+      if (actor.role === 'super_admin' && actor.viewAs?.departmentId === subject.departmentId) {
+        if (action === 'read') return ALLOW
+        return deny('read_only_view_as')
+      }
+      return deny('not_a_member')
     }
 
     case 'department':

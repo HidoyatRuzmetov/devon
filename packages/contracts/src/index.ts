@@ -13,6 +13,52 @@ export {
 } from './permissions.js'
 
 export {
+  APP_ACTIONS,
+  APP_ACTION_IDS,
+  FEATURE_AREAS,
+  actionsForArea,
+  allowsAction,
+  canAction,
+  isAppActionId,
+  type ActionContext,
+  type ActionSettings,
+  type ActionSubjectKind,
+  type ActionWidener,
+  type AppActionId,
+  type AppActionSpec,
+  type FeatureAreaId,
+} from './app-actions.js'
+
+export {
+  INDICATORS,
+  INDICATOR_KEYS,
+  getIndicator,
+  indicatorsVisibleTo,
+  isIndicatorKey,
+  type IndicatorFormat,
+  type IndicatorKey,
+  type IndicatorSource,
+  type IndicatorSpec,
+  type IndicatorType,
+  type IndicatorValue,
+  type PersonIndicators,
+} from './indicators.js'
+
+export {
+  FIELD_CAPS,
+  type CustomFieldsPort,
+  type FieldAppliesTo,
+  type FieldDef,
+  type FieldOption,
+  type FieldRequest,
+  type FieldRequestProgress,
+  type FieldType,
+  type FieldValue,
+  type FieldValueRecord,
+  type FieldVisibility,
+} from './custom-fields.js'
+
+export {
   problem,
   PROBLEM_CODES,
   problemSchema,
