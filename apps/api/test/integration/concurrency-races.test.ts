@@ -216,53 +216,55 @@ describe('BUG (H10.1): carpool seat claiming has the identical check-then-act ra
   )
 })
 
-describe('BUG (H10.1): a double-submitted identical poll vote is not deduplicated', () => {
-  it.fails(
-    'the same user voting for the same option twice, concurrently, ends with exactly one recorded vote',
-    async () => {
-      const dept = await seedDepartment(db, {
-        name: 'Poll race dept',
-        slug: `poll-race-${randomUUID()}`,
-      })
-      const head = await seedMember(db, dept.id, { role: 'head' })
-      const headSession = await loginAs(baseUrl, head.login)
-      const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+// H10.1 (fixed by the api-data hardening package, merged 2026-09-12): `poll_votes` now carries a
+// unique constraint on (poll_id, option_id, user_id) / (poll_id, option_id, voter_hash) and a
+// same-voter advisory lock serialises a replace, so the double submit below collapses to one row.
+// Was `it.fails` while this file documented the bug; flipped to a normal assertion the moment the
+// product fix landed, which is the whole point of having written it as an executable statement.
+describe('H10.1: a double-submitted identical poll vote is deduplicated', () => {
+  it('the same user voting for the same option twice, concurrently, ends with exactly one recorded vote', async () => {
+    const dept = await seedDepartment(db, {
+      name: 'Poll race dept',
+      slug: `poll-race-${randomUUID()}`,
+    })
+    const head = await seedMember(db, dept.id, { role: 'head' })
+    const headSession = await loginAs(baseUrl, head.login)
+    const eventRes = await fetch(`${baseUrl}/api/v1/events`, {
+      method: 'POST',
+      headers: headSession.headers,
+      body: JSON.stringify({
+        title: 'poll race',
+        startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+        endsAt: new Date(Date.now() + 90_000_000).toISOString(),
+      }),
+    })
+    const event = (await eventRes.json()) as { id: string }
+    const pollRes = await fetch(`${baseUrl}/api/v1/events/${event.id}/polls`, {
+      method: 'POST',
+      headers: headSession.headers,
+      body: JSON.stringify({
+        kind: 'single',
+        question: 'double submit?',
+        options: [{ label: 'a' }, { label: 'b' }],
+      }),
+    })
+    const poll = (await pollRes.json()) as { id: string; options: { id: string }[] }
+    const optionId = poll.options[0]!.id
+    const vote = () =>
+      fetch(`${baseUrl}/api/v1/events/${event.id}/polls/${poll.id}/vote`, {
         method: 'POST',
         headers: headSession.headers,
-        body: JSON.stringify({
-          title: 'poll race',
-          startsAt: new Date(Date.now() + 86_400_000).toISOString(),
-          endsAt: new Date(Date.now() + 90_000_000).toISOString(),
-        }),
+        body: JSON.stringify({ optionIds: [optionId] }),
       })
-      const event = (await eventRes.json()) as { id: string }
-      const pollRes = await fetch(`${baseUrl}/api/v1/events/${event.id}/polls`, {
-        method: 'POST',
-        headers: headSession.headers,
-        body: JSON.stringify({
-          kind: 'single',
-          question: 'double submit?',
-          options: [{ label: 'a' }, { label: 'b' }],
-        }),
-      })
-      const poll = (await pollRes.json()) as { id: string; options: { id: string }[] }
-      const optionId = poll.options[0]!.id
-      const vote = () =>
-        fetch(`${baseUrl}/api/v1/events/${event.id}/polls/${poll.id}/vote`, {
-          method: 'POST',
-          headers: headSession.headers,
-          body: JSON.stringify({ optionIds: [optionId] }),
-        })
-      await Promise.all([vote(), vote()])
+    await Promise.all([vote(), vote()])
 
-      const rows = await superuserQuery(
-        db,
-        `select count(*)::int as n from app.poll_votes where poll_id = $1`,
-        [poll.id],
-      )
-      expect((rows[0] as { n: number }).n).toBe(1)
-    },
-  )
+    const rows = await superuserQuery(
+      db,
+      `select count(*)::int as n from app.poll_votes where poll_id = $1`,
+      [poll.id],
+    )
+    expect((rows[0] as { n: number }).n).toBe(1)
+  })
 })
 
 describe('BUG (H10.1): the card `version` optimistic-concurrency check is check-then-act, not atomic', () => {
