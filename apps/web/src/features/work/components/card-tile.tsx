@@ -32,9 +32,13 @@ import {
   GripVertical,
   Link2,
   ListChecks,
+  Lock,
   MessageSquare,
   Minus,
   MoveRight,
+  Pin,
+  Repeat,
+  Timer,
 } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
@@ -54,6 +58,7 @@ import {
   springSettle,
   useReducedMotion,
 } from '@devon/ui'
+import { formatDurationShort } from '../lib/estimate.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import type { Project } from '../../projects/api.js'
 import {
@@ -362,6 +367,37 @@ export function CardTile({
           >
             <CalendarClock className="size-3" aria-hidden="true" />
             {formatDate(new Date(card.dueAt), locale)}
+          </Chip>
+        ) : null}
+        {/* v1.1 SPEC §7. Each chip is a *fact the tile could not otherwise show*: this card is
+            waiting on other work (A10), it comes back on a schedule (A7), somebody sized it (A3),
+            it is one of my five (A9). All four are server-computed, so none of them is a guess. */}
+        {(card.blockedByOpenCount ?? 0) > 0 ? (
+          <Chip
+            tone="destructive"
+            leading={<Lock className="size-3" />}
+            title={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
+          >
+            {t('work.chip.blocked')}
+          </Chip>
+        ) : null}
+        {card.recurrence ? (
+          <Chip tone="info" leading={<Repeat className="size-3" />} title={t('work.chip.repeats')}>
+            {t('work.chip.repeats')}
+          </Chip>
+        ) : null}
+        {card.estimateMin ? (
+          <Chip
+            tone="outline"
+            leading={<Timer className="size-3" />}
+            title={t('work.estimate.label')}
+          >
+            {formatDurationShort(card.estimateMin, t)}
+          </Chip>
+        ) : null}
+        {card.focusPinned ? (
+          <Chip tone="primary" leading={<Pin className="size-3" />} title={t('work.focus.title')}>
+            {t('work.focus.chip')}
           </Chip>
         ) : null}
       </div>

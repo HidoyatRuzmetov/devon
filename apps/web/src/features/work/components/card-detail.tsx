@@ -11,7 +11,7 @@
 // path that writes a generated result into the card without that Accept.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChevronDown, Link2, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import {
   AiPreviewPanel,
@@ -38,6 +38,7 @@ import {
   useReducedMotion,
   RISE_PX,
 } from '@devon/ui'
+import { replaceSearchParam } from '../../../lib/router.js'
 import { useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
@@ -66,7 +67,9 @@ import {
   RISK_LABEL_KEY,
   fullName,
 } from '../lib/format.js'
+import { useAddFocusMutation, useFocusListQuery, useRemoveFocusMutation } from '../hooks-plus.js'
 import { MemberPicker } from './member-picker.js'
+import { CardPlusSections } from './card-plus-sections.js'
 import type { CardPriority, MemberSummary } from '../api.js'
 
 const PRIORITIES: readonly CardPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
@@ -114,6 +117,11 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const toggleWatcher = useToggleWatcherMutation()
   const createLabel = useCreateLabelMutation()
   const unfurl = useUnfurlMutation()
+  // A9 -- the focus list ("Diqqat markazi"). Personal, so it needs no `canEdit`: pinning somebody
+  // else's card to *your own* five is exactly the point.
+  const focusList = useFocusListQuery()
+  const addFocus = useAddFocusMutation()
+  const removeFocus = useRemoveFocusMutation()
 
   const assigneeFlash = useFieldFlash()
   const giverFlash = useFieldFlash()
@@ -279,6 +287,26 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     translateAi.reset()
   }
 
+  const focusMax = focusList.data?.max ?? 5
+  const pinned = card.focusPinned === true
+  function togglePin(): void {
+    if (pinned) {
+      removeFocus.mutate(card!.id, {
+        onSuccess: () => toast.success(t('work.focus.unpinned')),
+        onError: () => toast.error(t('work.focus.failed')),
+      })
+      return
+    }
+    if ((focusList.data?.items.length ?? 0) >= focusMax) {
+      toast.error(t('work.focus.full', { max: focusMax }))
+      return
+    }
+    addFocus.mutate(card!.id, {
+      onSuccess: () => toast.success(t('work.focus.pinned')),
+      onError: () => toast.error(t('work.focus.failed')),
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* v1.1 SPEC §2.2 (D6a): the whole department's board is readable -- that transparency is the
@@ -316,7 +344,26 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           {card.risk !== 'none' ? (
             <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
           ) : null}
-          <div className="ml-auto flex flex-wrap gap-2">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {/* A9: pin to my five. The server owns the ceiling and refuses a sixth; the button
+                stays enabled and the refusal becomes a sentence, because a silently disabled
+                control teaches nobody what the rule is. */}
+            {card.status === 'active' ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-pressed={pinned}
+                loading={addFocus.isPending || removeFocus.isPending}
+                onClick={() => togglePin()}
+              >
+                {pinned ? (
+                  <PinOff className="size-4" aria-hidden="true" />
+                ) : (
+                  <Pin className="size-4" aria-hidden="true" />
+                )}
+                {pinned ? t('work.focus.unpin') : t('work.focus.pin')}
+              </Button>
+            ) : null}
             {card.status === 'active' ? (
               <span className="relative inline-flex">
                 <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
@@ -626,6 +673,27 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
         </Field>
 
         <Checklist card={card} />
+
+        {/* v1.1 SPEC §7 -- estimate + time log, dependencies, repeat, reminders. */}
+        <CardPlusSections
+          card={card}
+          canEdit={canEdit}
+          members={members}
+          onOpenCard={(id) => replaceSearchParam('card', id)}
+          onEstimateChange={(estimateMin) =>
+            void patchCard.mutateAsync({ id: card.id, patch: { estimateMin } })
+          }
+          onRecurrenceChange={(recurrence) =>
+            void patchCard
+              .mutateAsync({ id: card.id, patch: { recurrence } })
+              .then(() =>
+                toast.success(
+                  recurrence ? t('work.recurrence.saved') : t('work.recurrence.stopped'),
+                ),
+              )
+              .catch(() => toast.error(t('work.recurrence.saveFailed')))
+          }
+        />
 
         <Comments
           cardId={card.id}

@@ -207,8 +207,13 @@ export function usePatchTemplateMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof api.patchWorkTemplate>[1] }) =>
-      api.patchWorkTemplate(id, patch, csrf),
+    mutationFn: ({
+      id,
+      patch,
+    }: {
+      id: string
+      patch: Parameters<typeof api.patchWorkTemplate>[1]
+    }) => api.patchWorkTemplate(id, patch, csrf),
     onSuccess: () => invalidateTemplates(qc),
   })
 }

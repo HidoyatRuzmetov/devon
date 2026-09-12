@@ -62,11 +62,7 @@ export interface TimeLogPanelProps {
   members: readonly MemberSummary[]
 }
 
-export function TimeLogPanel({
-  cardId,
-  canEdit,
-  members,
-}: TimeLogPanelProps): React.JSX.Element {
+export function TimeLogPanel({ cardId, canEdit, members }: TimeLogPanelProps): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const { user } = useSession()
