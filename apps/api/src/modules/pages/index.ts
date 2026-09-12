@@ -242,6 +242,25 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
+  // SPEC 12: the undo behind the delete toast. Same ownership gate as the delete itself -- whoever
+  // was allowed to remove it is allowed to put it back, and nobody else.
+  app.post(
+    '/:id/restore',
+    {
+      config: {
+        permission: { action: 'update', subject: departmentChildSubject },
+      },
+      schema: { params: idParamsSchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const ok = await repo.restorePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
+      // 409, not 404: the page exists, the undo window has simply closed.
+      if (!ok) return sendProblem(reply, 'conflict')
+      return reply.code(204).send()
+    },
+  )
+
   // -- Versions (diff/restore) --------------------------------------------------------------------
 
   app.get(

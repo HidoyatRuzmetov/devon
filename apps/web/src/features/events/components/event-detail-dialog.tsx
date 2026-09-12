@@ -224,11 +224,16 @@ function EventHeader({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* WALKTHROUGH-FINDINGS 2.6: `aspect-video` in a 720px-wide sheet is a 405px hero, which on a
+          1440x900 laptop pushed "Ishtirok etasizmi?" and its Ha / Balki / Yoʻq buttons below the
+          viewport edge -- RSVP is the single most common action in this module and it was
+          off-screen. A fixed, modest band instead: enough illustration to set the mood, not enough
+          to cost the reader the thing they opened the sheet to do. */}
       <EventIllustration
         illustrationKey={event.illustrationKey}
         category={event.category}
         eventId={event.id}
-        className="aspect-video w-full rounded-md object-cover"
+        className="h-28 w-full rounded-md object-cover sm:h-36"
       />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
@@ -447,7 +452,10 @@ export function EventDetailDialog({
         <DialogContent
           title={eventQuery.data?.title ?? t('events.title')}
           titleHidden
-          className="max-w-180 max-h-[88vh] overflow-y-auto"
+          // `overflow-x-hidden` as well as `-y-auto`: a long place name or a pasted URL in the
+          // description must wrap, never widen the sheet into a horizontal scroller (the 390px
+          // half of WALKTHROUGH-FINDINGS 2.6).
+          className="max-h-[88vh] w-[calc(100vw-2rem)] max-w-180 overflow-y-auto overflow-x-hidden"
         >
           {renderDialogBody()}
         </DialogContent>

@@ -92,6 +92,14 @@ function dateToIso(date: Date | undefined): string | null {
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())).toISOString()
 }
 
+/** "Nodira Karimova" for a user id, or `null` for "nobody" -- used by the reassign/giver undo
+ * toasts so the message names the person rather than echoing a uuid. */
+function nameOf(members: readonly MemberSummary[], userId: string | null): string | null {
+  if (!userId) return null
+  const member = members.find((m) => m.userId === userId)
+  return member ? fullName(member) : null
+}
+
 export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose?: () => void }) {
   const t = useT()
   const locale = useLocale()
@@ -415,15 +423,34 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               })()}
             </Field>
           ) : null}
+          {/* WALKTHROUGH-FINDINGS 1.2 / SPEC 12: reassigning somebody's work used to happen in
+              silence -- the card simply vanished from the board with no toast, no confirm and no way
+              back. Both of these now say what happened and offer the one click that undoes it
+              (DESIGN.md: undo over confirm). The previous value is captured before the mutation, so
+              the undo restores exactly what was there, including "nobody". */}
           <Field label={t('work.field.assignee')} flashedAt={assigneeFlash.flashedAt}>
             <MemberPicker
               members={members}
               value={card.assigneeUserId}
-              onChange={(userId) =>
+              onChange={(userId) => {
+                const previous = card.assigneeUserId
                 void patchCard
                   .mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
-                  .then(assigneeFlash.flash)
-              }
+                  .then(() => {
+                    assigneeFlash.flash()
+                    toastWithUndo({
+                      message: t('work.card.reassigned', {
+                        name: nameOf(members, userId) ?? t('work.field.unassigned'),
+                      }),
+                      undoLabel: t('work.card.undo'),
+                      onUndo: () =>
+                        void patchCard.mutateAsync({
+                          id: card.id,
+                          patch: { assigneeUserId: previous },
+                        }),
+                    })
+                  })
+              }}
               placeholderKey="work.field.unassigned"
             />
           </Field>
@@ -431,11 +458,25 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             <MemberPicker
               members={members}
               value={card.giverUserId}
-              onChange={(userId) =>
+              onChange={(userId) => {
+                const previous = card.giverUserId
                 void patchCard
                   .mutateAsync({ id: card.id, patch: { giverUserId: userId } })
-                  .then(giverFlash.flash)
-              }
+                  .then(() => {
+                    giverFlash.flash()
+                    toastWithUndo({
+                      message: t('work.card.giverChanged', {
+                        name: nameOf(members, userId) ?? t('work.field.noGiver'),
+                      }),
+                      undoLabel: t('work.card.undo'),
+                      onUndo: () =>
+                        void patchCard.mutateAsync({
+                          id: card.id,
+                          patch: { giverUserId: previous },
+                        }),
+                    })
+                  })
+              }}
               placeholderKey="work.field.noGiver"
             />
           </Field>

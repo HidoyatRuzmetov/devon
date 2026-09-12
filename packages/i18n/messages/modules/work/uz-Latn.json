@@ -127,7 +127,10 @@
       "noIdBody": "Havolada vazifa identifikatori yoʻq.",
       "readOnly": "Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin.",
       "assignedTo": "Kimga: {name}",
-      "byGiver": "Kimdan: {name}"
+      "byGiver": "Kimdan: {name}",
+      "reassigned": "Vazifa {name}ga oʻtkazildi",
+      "giverChanged": "Topshiriq beruvchi: {name}",
+      "undo": "Qaytarish"
     },
     "priority": {
       "none": "Muhimlik yoʻq",

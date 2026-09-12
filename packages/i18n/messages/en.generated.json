@@ -1902,7 +1902,9 @@
       "save": "Save",
       "saved": "Saved",
       "removeItem": "Remove item"
-    }
+    },
+    "moreActions": "More actions",
+    "undo": "Undo"
   },
   "people": {
     "table": {
@@ -2644,7 +2646,10 @@
       "noIdBody": "This link is missing a card id.",
       "readOnly": "This card is not yours to change — reading only. Its giver, its assignee, its creator and the head of the department can edit it.",
       "assignedTo": "Assignee: {name}",
-      "byGiver": "Delegated by {name}"
+      "byGiver": "Delegated by {name}",
+      "reassigned": "Reassigned to {name}",
+      "giverChanged": "Delegated by {name}",
+      "undo": "Undo"
     },
     "priority": {
       "none": "No priority",

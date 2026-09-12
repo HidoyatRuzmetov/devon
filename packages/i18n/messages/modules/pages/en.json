@@ -90,6 +90,8 @@
       "save": "Save",
       "saved": "Saved",
       "removeItem": "Remove item"
-    }
+    },
+    "moreActions": "More actions",
+    "undo": "Undo"
   }
 }

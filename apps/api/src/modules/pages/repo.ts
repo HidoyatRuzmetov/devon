@@ -172,6 +172,32 @@ export async function deletePage(
   })
 }
 
+/**
+ * v1.1 SPEC 12 ("undo on every mutation"): the other half of `deletePage`. Deleting a page is a soft
+ * delete -- `deleted_at` is set, nothing is dropped -- so the undo behind the toast is simply
+ * clearing it again. Bounded to a recent deletion (10 minutes) rather than being an open-ended
+ * "un-delete anything": an undo is for the click you just regretted, not an archive browser, and
+ * leaving it unbounded would quietly turn every deleted page into restorable content with no screen
+ * that says so.
+ */
+export async function restorePage(
+  departmentId: string,
+  id: string,
+  ctx: AuditCtx,
+): Promise<boolean> {
+  return withContext(toRequestContext(ctx, departmentId), async (tx) => {
+    const rows = await tx.raw<{ id: string }>(sql`
+      update app.pages set deleted_at = null, updated_at = now(), version = version + 1
+      where id = ${id} and department_id = ${departmentId}
+        and deleted_at is not null and deleted_at > now() - interval '10 minutes'
+      returning id
+    `)
+    if (rows.length === 0) return false
+    tx.audit({ action: 'pages.page.restored', subjectType: 'page', subjectId: id, departmentId })
+    return true
+  })
+}
+
 // ---------------------------------------------------------------------------------------------------
 // Page versions
 // ---------------------------------------------------------------------------------------------------

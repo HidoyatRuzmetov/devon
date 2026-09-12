@@ -7,13 +7,19 @@ import { useT, formatDate, useLocale } from '@devon/i18n'
 import {
   AnimatedCheck,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   HoverLift,
+  IconButton,
   Input,
   PageHeader,
   Stagger,
   StaggerItem,
   StateView,
   toast,
+  toastWithUndo,
   tweenPage,
   useReducedMotion,
 } from '@devon/ui'
@@ -22,10 +28,19 @@ import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import { fetchMembers } from '../structure/api.js'
 import { useDepartment } from '../../lib/session.js'
-import { BookOpen, ClipboardList, FileText, Notebook, Plus, StickyNote } from 'lucide-react'
+import {
+  BookOpen,
+  ClipboardList,
+  FileText,
+  MoreHorizontal,
+  Notebook,
+  Plus,
+  StickyNote,
+} from 'lucide-react'
 import {
   useCreatePageMutation,
   useDeletePageMutation,
+  useRestorePageMutation,
   usePageQuery,
   usePagesQuery,
   usePatchPageMutation,
@@ -277,6 +292,7 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const pageQuery = usePageQuery(id)
   const patchPage = usePatchPageMutation(id)
   const deletePage = useDeletePageMutation()
+  const restorePage = useRestorePageMutation()
   const mentionCandidates = useMentionCandidates()
   const [conflict, setConflict] = React.useState(false)
   const [localTitle, setLocalTitle] = React.useState('')
@@ -326,20 +342,36 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
         </button>
         <div className="flex items-center gap-2">
           <AutosaveIndicator saving={patchPage.isPending} />
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() =>
-              deletePage.mutate(page.id, {
-                onSuccess: () => {
-                  toast(t('pages.deleted'))
-                  onBack()
-                },
-              })
-            }
-          >
-            {t('pages.delete')}
-          </Button>
+          {/* WALKTHROUGH-FINDINGS 6: "Sahifani oʻchirish" was the largest, reddest control on the
+              knowledge-base editor -- louder than the page's own title. Deleting a page is a rare,
+              deliberate act, so it moves where rare deliberate acts live: an overflow menu. And it
+              is undoable now (soft delete + a 10-minute restore window), so it takes an undo toast
+              rather than a confirm dialog, exactly as DESIGN.md prescribes. */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton aria-label={t('pages.moreActions')}>
+                <MoreHorizontal className="size-4" aria-hidden="true" />
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={() =>
+                  deletePage.mutate(page.id, {
+                    onSuccess: () => {
+                      toastWithUndo({
+                        message: t('pages.deleted'),
+                        undoLabel: t('pages.undo'),
+                        onUndo: () => restorePage.mutate(page.id),
+                      })
+                      onBack()
+                    },
+                  })
+                }
+              >
+                {t('pages.delete')}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

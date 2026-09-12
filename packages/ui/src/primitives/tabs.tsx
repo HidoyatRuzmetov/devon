@@ -46,6 +46,12 @@ export const TabsList = React.forwardRef<
           ref={ref}
           className={cn(
             'relative flex items-center gap-1 overflow-x-auto border-b border-border',
+            // v1.1 (WALKTHROUGH-FINDINGS 2.6): at 390px a full-width native horizontal scrollbar
+            // rendered *inside* the event sheet, under the tab strip, reading as a broken layout.
+            // The strip still scrolls -- swipe, arrow keys and Tab all work -- it just no longer
+            // paints a system scrollbar across the sheet. Firefox and WebKit/Blink each need their
+            // own property for this; neither has a Tailwind utility.
+            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
             className,
           )}
           {...props}

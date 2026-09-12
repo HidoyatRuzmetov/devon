@@ -65,6 +65,16 @@ export function useDeletePageMutation() {
   })
 }
 
+/** SPEC 12: paired with `useDeletePageMutation` behind one undo toast. */
+export function useRestorePageMutation() {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (id: string) => api.restorePage(id, csrf),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.pages }),
+  })
+}
+
 export function useVersionsQuery(pageId: string | null) {
   return useQuery({
     queryKey: KEYS.versions(pageId ?? ''),

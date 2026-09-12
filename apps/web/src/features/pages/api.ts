@@ -1,4 +1,5 @@
 // Typed endpoint functions for pages + onboarding templates (MODULE-GUIDE.md "Web features").
+import { z } from 'zod'
 import { apiClient } from '../../lib/api-client.js'
 import {
   onboardingTemplateListSchema,
@@ -33,6 +34,11 @@ export const patchPage = (id: string, input: PatchPageInput, csrf: string): Prom
 
 export const deletePage = (id: string, csrf: string): Promise<void> =>
   apiClient.delete(`${BASE}/${id}`, csrf)
+
+/** v1.1 SPEC 12: the undo behind the delete toast. A page delete is a soft delete, so this simply
+ * clears `deleted_at` -- the server bounds it to a 10-minute window (see `pages/repo.ts`). */
+export const restorePage = (id: string, csrf: string): Promise<void> =>
+  apiClient.post(`${BASE}/${id}/restore`, {}, z.void(), csrf)
 
 export const fetchVersions = (pageId: string): Promise<PageVersionSummary[]> =>
   apiClient.get(`${BASE}/${pageId}/versions`, pageVersionListSchema)

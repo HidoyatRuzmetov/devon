@@ -90,6 +90,8 @@
       "save": "Saqlash",
       "saved": "Saqlandi",
       "removeItem": "Bandni oʻchirish"
-    }
+    },
+    "moreActions": "Yana amallar",
+    "undo": "Qaytarish"
   }
 }
