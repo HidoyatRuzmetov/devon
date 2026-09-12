@@ -25,6 +25,15 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'GET /api/v1/people/indicators',
   'GET /api/v1/people/indicators/registry',
   'POST /api/v1/labels',
+  // v1.1 SPEC §5 -- custom fields. Defining a column on the people table, reordering it, archiving it
+  // and asking the whole boshqarma to fill it in are management acts; reading the definitions and
+  // writing an answer are not, and are deliberately absent from this list.
+  'POST /api/v1/fields/defs',
+  'PATCH /api/v1/fields/defs/:id',
+  'POST /api/v1/fields/defs/reorder',
+  'POST /api/v1/fields/defs/:id/archive',
+  'POST /api/v1/fields/defs/:id/restore',
+  'POST /api/v1/fields/defs/:id/notify',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

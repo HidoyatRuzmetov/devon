@@ -74,6 +74,11 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.ai_traces': 'department_owned',
 
   // EPIC-010/011 analytics + pages/onboarding-lite (MODULE-GUIDE.md "DB: schema").
+  // v1.1 SPEC §5 -- custom fields. A definition, a value and a fill request all belong to exactly one
+  // boshqarma; person values hang off the *membership*, which is department-scoped by construction.
+  'app.field_defs': 'department_owned',
+  'app.field_values': 'department_owned',
+  'app.field_requests': 'department_owned',
   'app.analytics_daily': 'department_owned',
   'app.analytics_saved_filters': 'department_owned',
   'app.analytics_pinned_charts': 'department_owned',

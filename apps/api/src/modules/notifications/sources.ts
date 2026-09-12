@@ -414,6 +414,39 @@ async function loadAccount(tx: Tx, payload: Record<string, unknown>): Promise<Pa
   }
 }
 
+/** v1.1 SPEC §5. The subject is the *definition* the head is waiting on; the recipient is the one
+ * person the payload names. The definition's label travels in `extra`, one key per locale, so the
+ * inbox row and the Telegram message both read in the reader's own language. */
+async function loadFieldRequest(
+  tx: Tx,
+  payload: Record<string, unknown>,
+): Promise<Partial_ | null> {
+  const defId = pickString(payload, 'defId')
+  const userId = pickString(payload, 'userId')
+  if (!defId || !userId) return null
+  const rows = await tx.raw<{ id: string; key: string; label: Record<string, string> | null }>(
+    sql`select id, key, label from app.field_defs where id = ${defId} and archived_at is null`,
+  )
+  const def = rows[0]
+  if (!def) return null
+  const label = def.label ?? {}
+  const extra: Extra = {
+    key: def.key,
+    labelUzLatn: label['uz-Latn'] ?? '',
+    labelUzCyrl: label['uz-Cyrl'] ?? '',
+    labelRu: label['ru'] ?? '',
+    labelEn: label['en'] ?? '',
+    reminder: payload['reminder'] === true ? 'true' : 'false',
+  }
+  return {
+    subjectId: def.id,
+    subjectTitle: label['uz-Latn'] ?? def.key,
+    at: null,
+    extra,
+    byRule: { target_user: [userId] },
+  }
+}
+
 // --- the entry point ----------------------------------------------------------------------------------
 
 /**
@@ -460,6 +493,9 @@ export async function resolveEvent(input: {
         break
       case 'account':
         part = await loadAccount(tx, payload)
+        break
+      case 'field_request':
+        part = await loadFieldRequest(tx, payload)
         break
       default:
         part = null
