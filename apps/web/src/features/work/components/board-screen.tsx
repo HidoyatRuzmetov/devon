@@ -309,9 +309,7 @@ function BoardScreenInner() {
         // Best-effort -- the remount below still applies it for this render.
       }
     }
-    setCollapsedByColumn(
-      collapsed ? Object.fromEntries(columnKeys.map((k) => [k, true])) : {},
-    )
+    setCollapsedByColumn(collapsed ? Object.fromEntries(columnKeys.map((k) => [k, true])) : {})
     setExpandAllNonce((n) => n + 1)
   }
 

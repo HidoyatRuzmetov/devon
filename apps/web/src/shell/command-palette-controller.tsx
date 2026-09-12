@@ -260,9 +260,7 @@ export function CommandPaletteController({
   const entityGroups: CommandPaletteGroup[] = [
     ...(peopleItems.length > 0 ? [{ heading: t('cmd.group.people'), items: peopleItems }] : []),
     ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
-    ...(projectItems.length > 0
-      ? [{ heading: t('cmd.group.projects'), items: projectItems }]
-      : []),
+    ...(projectItems.length > 0 ? [{ heading: t('cmd.group.projects'), items: projectItems }] : []),
     ...(eventItems.length > 0 ? [{ heading: t('cmd.group.events'), items: eventItems }] : []),
     ...(pageItems.length > 0 ? [{ heading: t('cmd.group.pages'), items: pageItems }] : []),
   ]

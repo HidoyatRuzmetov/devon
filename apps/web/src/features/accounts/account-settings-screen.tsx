@@ -13,7 +13,7 @@ import {
   Tablet,
   Trash2,
 } from 'lucide-react'
-import { useT, useLocale, formatDate, formatDateTime, formatRelativeTime } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatRelativeTime } from '@devon/i18n'
 import {
   AnimatePresence,
   Badge,

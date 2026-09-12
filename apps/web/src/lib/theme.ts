@@ -54,7 +54,9 @@ export function bootTheme(): void {
   // a dark login screen nobody chose. `system` remains a first-class option in the theme toggle; it
   // is simply no longer what "I have not decided" means.
   current =
-    stored === 'light' || stored === 'dark' || stored === 'system' ? (stored as ThemePreference) : 'light'
+    stored === 'light' || stored === 'dark' || stored === 'system'
+      ? (stored as ThemePreference)
+      : 'light'
   apply(current)
   window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (current === 'system') apply(current)

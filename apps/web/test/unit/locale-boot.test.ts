@@ -40,10 +40,16 @@ describe('locale boot resolution (design.md §4.3, AC-4)', () => {
     expect(getLocale()).toBe('en')
   })
 
-  it('falls back to a recognised browser language when nothing is stored', () => {
+  // v1.1 (SPEC 12 / WALKTHROUGH-FINDINGS 5.5): the browser's own language is deliberately NOT
+  // consulted any more. A ministry workstation is very often an English or Russian Windows install,
+  // so the first screen a civil servant ever saw -- a login form, where there is no signed-in
+  // preference to fall back on -- was in the wrong language. uz-Latn is the product's language; a
+  // person who wants another picks it once from the locale menu and it is remembered (the stored
+  // locale and the `wp_locale` cookie, both asserted above, and the user record above those).
+  it('ignores the browser language and opens in uz-Latn when nothing is stored', () => {
     Object.defineProperty(window.navigator, 'language', { value: 'ru-RU', configurable: true })
     bootLocale()
-    expect(getLocale()).toBe('ru')
+    expect(getLocale()).toBe('uz-Latn')
   })
 
   it('persistLocale writes both the localStorage mirror and the wp_locale cookie', () => {

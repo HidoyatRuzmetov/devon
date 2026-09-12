@@ -9,6 +9,16 @@ const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/
 /** SPEC §7: the Imkoniyatlar switch keys, from the one registry both sides read. */
 export const featureKeySchema = z.enum(FEATURE_KEYS)
 
+/**
+ * A map of switch keys to booleans. `z.partialRecord`, not `z.record`: in zod 4 a record over an
+ * enum key is **exhaustive** -- `z.record(featureKeySchema, z.boolean())` rejects `{estimates:true}`
+ * with "expected boolean, received undefined" for all ten other keys. The settings screen saves one
+ * switch at a time (a settings page with eleven toggles and one Save button is how people lose
+ * changes), so a partial map is the normal request, not an edge case. Unknown keys and non-boolean
+ * values are still rejected.
+ */
+export const featureFlagsSchema = z.partialRecord(featureKeySchema, z.boolean())
+
 export const unitDraftSchema = z
   .object({
     name: z.string().min(1).max(80),
@@ -54,7 +64,7 @@ export const departmentSettingsSchema = z.object({
   quietHours: z.object({ start: z.string(), end: z.string() }).nullable(),
   /** SPEC §7 Imkoniyatlar: every switch resolved (stored value or the registry default), so the
    * client never has to know the defaults -- `useFeature(key)` reads this map and nothing else. */
-  features: z.record(featureKeySchema, z.boolean()),
+  features: featureFlagsSchema,
 })
 
 export const patchDepartmentSettingsBodySchema = z
@@ -153,9 +163,7 @@ export const joinRequestListSchema = z.object({ requests: z.array(joinRequestVie
 
 // --- v1.1 SPEC §7: Imkoniyatlar ------------------------------------------------------------------
 
-export const putFeaturesBodySchema = z
-  .object({ features: z.record(featureKeySchema, z.boolean()) })
-  .strict()
+export const putFeaturesBodySchema = z.object({ features: featureFlagsSchema }).strict()
 
 // --- v1.1 SPEC §2.2: the head resets a member's password ------------------------------------------
 

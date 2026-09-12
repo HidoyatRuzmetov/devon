@@ -5,7 +5,9 @@ import { apiClient } from '../../lib/api-client.js'
 
 /** SPEC §7: the switch map the server resolves for us -- stored overrides already merged onto the
  * registry defaults, so nothing on this side needs to know what the defaults are. */
-export const featureFlagsSchema = z.record(z.enum(FEATURE_KEYS), z.boolean())
+// `partialRecord`, not `record`: zod 4 makes a record over an enum key exhaustive, and the server
+// answers a one-switch save with the whole resolved map but the request carries one key.
+export const featureFlagsSchema = z.partialRecord(z.enum(FEATURE_KEYS), z.boolean())
 
 export type UnitDraft = { name: string; colour?: string | undefined }
 

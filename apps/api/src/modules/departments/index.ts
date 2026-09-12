@@ -15,7 +15,7 @@ import {
   departmentIdParamsSchema,
   departmentListSchema,
   departmentRequestListSchema,
-  featureKeySchema,
+  featureFlagsSchema,
   inviteSecretSchema,
   inviteViewSchema,
   joinBodySchema,
@@ -575,7 +575,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: {
         params: departmentIdParamsSchema,
         body: putFeaturesBodySchema,
-        response: { 200: z.object({ features: z.record(featureKeySchema, z.boolean()) }) },
+        response: { 200: z.object({ features: featureFlagsSchema }) },
       },
     },
     async (req, reply) => {

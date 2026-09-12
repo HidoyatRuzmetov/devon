@@ -114,61 +114,61 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
 
   return (
     <div className="flex flex-col gap-5">
-    <SectionCard
-      title={t('departments.settings.permissionsTitle')}
-      description={t('departments.settings.permissionsDescription')}
-      actions={
-        isHead ? (
-          <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
-            {t('departments.settings.save')}
-          </Button>
-        ) : undefined
-      }
-    >
-      <div className="flex flex-col gap-5">
-        <label className="flex items-center justify-between gap-4">
-          <span className="text-body text-foreground">
-            {t('departments.settings.allowSelfAssign')}
-          </span>
-          <Switch
-            checked={allowSelfAssign}
-            disabled={!isHead}
-            onCheckedChange={setAllowSelfAssign}
-          />
-        </label>
-        <label className="flex items-center justify-between gap-4">
-          <span className="text-body text-foreground">
-            {t('departments.settings.allowStructureEdit')}
-          </span>
-          <Switch
-            checked={allowStructureEdit}
-            disabled={!isHead}
-            onCheckedChange={setAllowStructureEdit}
-          />
-        </label>
-        <div className="flex flex-col gap-2">
-          <span className="text-small text-foreground">
-            {t('departments.settings.telegramGroupLabel')}
-          </span>
-          <RadioGroup
-            value={telegramPerm}
-            onValueChange={(v) => setTelegramPerm(v as typeof telegramPerm)}
-          >
-            <RadioOption
-              value="everyone"
-              label={t('departments.settings.telegramEveryone')}
+      <SectionCard
+        title={t('departments.settings.permissionsTitle')}
+        description={t('departments.settings.permissionsDescription')}
+        actions={
+          isHead ? (
+            <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
+              {t('departments.settings.save')}
+            </Button>
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-5">
+          <label className="flex items-center justify-between gap-4">
+            <span className="text-body text-foreground">
+              {t('departments.settings.allowSelfAssign')}
+            </span>
+            <Switch
+              checked={allowSelfAssign}
               disabled={!isHead}
+              onCheckedChange={setAllowSelfAssign}
             />
-            <RadioOption
-              value="head"
-              label={t('departments.settings.telegramHeadOnly')}
+          </label>
+          <label className="flex items-center justify-between gap-4">
+            <span className="text-body text-foreground">
+              {t('departments.settings.allowStructureEdit')}
+            </span>
+            <Switch
+              checked={allowStructureEdit}
               disabled={!isHead}
+              onCheckedChange={setAllowStructureEdit}
             />
-          </RadioGroup>
+          </label>
+          <div className="flex flex-col gap-2">
+            <span className="text-small text-foreground">
+              {t('departments.settings.telegramGroupLabel')}
+            </span>
+            <RadioGroup
+              value={telegramPerm}
+              onValueChange={(v) => setTelegramPerm(v as typeof telegramPerm)}
+            >
+              <RadioOption
+                value="everyone"
+                label={t('departments.settings.telegramEveryone')}
+                disabled={!isHead}
+              />
+              <RadioOption
+                value="head"
+                label={t('departments.settings.telegramHeadOnly')}
+                disabled={!isHead}
+              />
+            </RadioGroup>
+          </div>
         </div>
-      </div>
-    </SectionCard>
-    <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
+      </SectionCard>
+      <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
     </div>
   )
 }
@@ -499,9 +499,7 @@ function JoinRequestsCard({ id }: { id: string }) {
                   <div className="min-w-0">
                     <p className="truncate text-body text-foreground">
                       {name}
-                      {r.title ? (
-                        <span className="text-muted-foreground"> · {r.title}</span>
-                      ) : null}
+                      {r.title ? <span className="text-muted-foreground"> · {r.title}</span> : null}
                     </p>
                     <span className="text-small text-muted-foreground">
                       {t('departments.joinRequests.requestedAt', {
@@ -565,19 +563,27 @@ function FeaturesCard({
     >
       <div className="flex flex-col gap-5">
         {FEATURE_KEYS.map((key) => (
-          <label key={key} className="flex items-start justify-between gap-4">
-            <span className="flex min-w-0 flex-col gap-0.5">
+          // Not a <label>: the Switch primitive renders a button with role=switch, which a label
+          // cannot be associated with. aria-label + aria-describedby is what actually reaches a
+          // screen reader here -- the switch announces its own name and the sentence under it.
+          <div key={key} className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-0.5">
               <span className="text-body text-foreground">{t(FEATURES[key].labelKey)}</span>
-              <span className="text-caption text-muted-foreground">
+              <span
+                id={`feature-${key}-description`}
+                className="text-caption text-muted-foreground"
+              >
                 {t(FEATURES[key].descriptionKey)}
               </span>
-            </span>
+            </div>
             <Switch
+              aria-label={t(FEATURES[key].labelKey)}
+              aria-describedby={`feature-${key}-description`}
               checked={features[key] ?? false}
               disabled={!isHead || save.isPending}
               onCheckedChange={(value) => save.mutate({ [key]: value })}
             />
-          </label>
+          </div>
         ))}
       </div>
     </SectionCard>
