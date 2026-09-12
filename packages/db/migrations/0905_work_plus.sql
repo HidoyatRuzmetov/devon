@@ -3,6 +3,10 @@
 -- tables, nothing existing dropped, rewritten or re-meant. Idempotent throughout
 -- (`create table if not exists`, `add column if not exists`, enums guarded by
 -- `do $$ ... exception when duplicate_object`).
+-- Numbered 0905, not 0310 with the rest of `work`: every RLS policy below calls
+-- `app.current_department_role()`, which `0904_department_role_guc.sql` creates. Postgres resolves a
+-- policy expression at CREATE POLICY time, so this file must sort *after* 0904 or a fresh database
+-- fails to build with "function app.current_department_role() does not exist".
 --
 -- Every new table is `department_owned`: it carries its own `department_id`, copied from the owning
 -- card/person at write time by the API layer -- never derived through a join at read time -- so the

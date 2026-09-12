@@ -82,9 +82,9 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.onboarding_templates': 'department_owned',
   'app.onboarding_runs': 'department_owned',
 
-  // v1.1 SPEC §7 work-plus (migration 0310): estimates, dependencies, the light time log,
+  // v1.1 SPEC §7 work-plus (migration 0905): estimates, dependencies, the light time log,
   // reminders, templates, the focus list, per-person capacity and department goals. Every one of
-  // them carries its own `department_id` and its own policy in `0310_work_plus.sql`.
+  // them carries its own `department_id` and its own policy in `0905_work_plus.sql`.
   'app.card_dependencies': 'department_owned',
   'app.card_time_logs': 'department_owned',
   'app.card_reminders': 'department_owned',
