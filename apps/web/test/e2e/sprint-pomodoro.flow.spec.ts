@@ -45,7 +45,9 @@ test('@flow personal workspace: a sprint with a goal, then a completed Pomodoro 
   await expect(page.getByText(goal)).toBeVisible()
 
   const statsBefore = await context.request.get('/api/v1/personal/pomodoro/stats')
-  const before = (await statsBefore.json()) as { today: { focusSessions: number; focusMinutes: number } }
+  const before = (await statsBefore.json()) as {
+    today: { focusSessions: number; focusMinutes: number }
+  }
 
   const startedAt = new Date(now - 25 * 60 * 1000).toISOString()
   const endedAt = new Date(now).toISOString()
@@ -58,7 +60,9 @@ test('@flow personal workspace: a sprint with a goal, then a completed Pomodoro 
   expect(sessionRes.status()).toBe(201)
 
   const statsAfter = await context.request.get('/api/v1/personal/pomodoro/stats')
-  const after = (await statsAfter.json()) as { today: { focusSessions: number; focusMinutes: number } }
+  const after = (await statsAfter.json()) as {
+    today: { focusSessions: number; focusMinutes: number }
+  }
   expect(after.today.focusSessions).toBe(before.today.focusSessions + 1)
   expect(after.today.focusMinutes).toBeGreaterThan(before.today.focusMinutes)
 

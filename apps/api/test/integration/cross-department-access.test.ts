@@ -345,17 +345,22 @@ describe("memberships -- the :departmentId in the URL is the actor's own, the :u
     // No request body on this route -- `content-type: application/json` with an empty body is itself
     // a 400 at Fastify's parser, so only the cookie + CSRF header go here, never `aHead.headers`
     // (which always sets `content-type`, correctly, for every call that *does* carry a JSON body).
-    const res = await fetch(`${baseUrl}/api/v1/departments/${deptA.id}/members/${bHeadUserId}/remove`, {
-      method: 'POST',
-      headers: { cookie: aHead.cookie, 'x-csrf-token': aHead.csrf },
-    })
+    const res = await fetch(
+      `${baseUrl}/api/v1/departments/${deptA.id}/members/${bHeadUserId}/remove`,
+      {
+        method: 'POST',
+        headers: { cookie: aHead.cookie, 'x-csrf-token': aHead.csrf },
+      },
+    )
     // `repo.removeMember` scopes its UPDATE by `(department_id, user_id)` together -- a `userId` that
     // is real but belongs to a *different* department matches zero rows, same as a made-up uuid.
     expect(res.status).toBe(404)
     const stillActive = await fetch(`${baseUrl}/api/v1/departments/${deptB.id}/members`, {
       headers: { cookie: bHead.cookie },
     })
-    const { members } = (await stillActive.json()) as { members: { userId: string; status: string }[] }
+    const { members } = (await stillActive.json()) as {
+      members: { userId: string; status: string }[]
+    }
     expect(members.find((m) => m.userId === bHeadUserId)?.status).toBe('active')
   })
 
@@ -415,10 +420,15 @@ describe("AI settings (H1.2/H25.1) -- subject built from the actor's own departm
   it.fails(
     "a fresh department's own head can read (and lazily initialise) its AI settings on first visit",
     async () => {
-      const freshDept = await seedDepartment(db, { name: 'Fresh AI dept', slug: `dept-ai-${randomUUID()}` })
+      const freshDept = await seedDepartment(db, {
+        name: 'Fresh AI dept',
+        slug: `dept-ai-${randomUUID()}`,
+      })
       const freshHeadUser = await seedMember(db, freshDept.id, { role: 'head' })
       const freshHead = await loginAs(baseUrl, freshHeadUser.login)
-      const res = await fetch(`${baseUrl}/api/v1/ai/settings`, { headers: { cookie: freshHead.cookie } })
+      const res = await fetch(`${baseUrl}/api/v1/ai/settings`, {
+        headers: { cookie: freshHead.cookie },
+      })
       expect(res.status).toBe(200)
     },
   )

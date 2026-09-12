@@ -168,7 +168,11 @@ export async function createApprovedDepartment(
   if (approveRes.status() !== 200) {
     throw new Error(`approve failed: ${approveRes.status()} ${await approveRes.text()}`)
   }
-  return (await approveRes.json()) as { departmentId: string; joinKey: string; joinPassword: string }
+  return (await approveRes.json()) as {
+    departmentId: string
+    joinKey: string
+    joinPassword: string
+  }
 }
 
 /** Registers a second user and joins them into an already-approved department via the real

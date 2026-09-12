@@ -34,7 +34,7 @@ describe('no enumeration: login response is uniform whether the account exists o
     const wrongPassword = await fetch(`${baseUrl}/api/v1/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ login: real.login, password: 'definitely-wrong-value' }),
+      body: JSON.stringify({ login: real.login, password: 'example-wrong-password' }),
     })
     const noSuchAccount = await fetch(`${baseUrl}/api/v1/auth/login`, {
       method: 'POST',

@@ -2,7 +2,14 @@
 // real Postgres + real app (see `harness.ts`).
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { loginAs, seedBareUser, startHarness, stopHarness, type Db, type Server } from './harness.js'
+import {
+  loginAs,
+  seedBareUser,
+  startHarness,
+  stopHarness,
+  type Db,
+  type Server,
+} from './harness.js'
 
 let db: Db
 let server: Server

@@ -31,7 +31,18 @@ const MIGRATIONS_DIR = join(REPO_ROOT, 'packages', 'db', 'migrations')
 function runPsqlInContainer(sql: string, database: string): void {
   const result = spawnSync(
     'docker',
-    ['exec', '-i', FLOW_DB_CONTAINER, 'psql', '-v', 'ON_ERROR_STOP=1', '-U', 'postgres', '-d', database],
+    [
+      'exec',
+      '-i',
+      FLOW_DB_CONTAINER,
+      'psql',
+      '-v',
+      'ON_ERROR_STOP=1',
+      '-U',
+      'postgres',
+      '-d',
+      database,
+    ],
     { input: sql, encoding: 'utf8' },
   )
   if (result.status !== 0) {
@@ -62,7 +73,10 @@ export type FlowDatabase = { appUrl: string }
  * invocations on the same machine -- always starts from a clean slate, so `@flow` specs never inherit
  * state from a previous run. */
 export function bootstrapFlowDatabase(): FlowDatabase {
-  runPsqlInContainer(`drop database if exists ${FLOW_DB_NAME};\ncreate database ${FLOW_DB_NAME};`, 'postgres')
+  runPsqlInContainer(
+    `drop database if exists ${FLOW_DB_NAME};\ncreate database ${FLOW_DB_NAME};`,
+    'postgres',
+  )
 
   const migratorPassword = randomBytes(24).toString('base64url')
   const appPassword = randomBytes(24).toString('base64url')

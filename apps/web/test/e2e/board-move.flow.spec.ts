@@ -17,7 +17,9 @@ import {
 } from './flow-api.js'
 import { seedAiSettingsRow } from './flow-db.js'
 
-test('@flow a card moves from one column (person) to another on the real board', async ({ browser }) => {
+test('@flow a card moves from one column (person) to another on the real board', async ({
+  browser,
+}) => {
   const superAdminContext = await newFlowContext(browser)
   await loginAsSuperAdmin(superAdminContext)
 

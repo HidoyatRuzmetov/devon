@@ -178,13 +178,17 @@ describe('head -> super_admin: instance-only admin routes reject a department he
       path: `/api/v1/admin/accounts/${randomUUID()}/lock`,
       body: { reason: 'escalation test' },
     },
-    { method: 'POST', path: `/api/v1/admin/departments/${randomUUID()}/pause`, body: { reason: 'x' } },
+    {
+      method: 'POST',
+      path: `/api/v1/admin/departments/${randomUUID()}/pause`,
+      body: { reason: 'x' },
+    },
     { method: 'PATCH', path: '/api/v1/admin/maintenance', body: { enabled: true, message: null } },
     { method: 'PATCH', path: '/api/v1/admin/registration', body: { open: false } },
     {
       method: 'POST',
       path: '/api/v1/admin/wipe/start',
-      body: { phrase: 'WIPE', password: 'whatever' },
+      body: { phrase: 'WIPE', password: 'example-not-a-real-password' },
     },
   ]
 

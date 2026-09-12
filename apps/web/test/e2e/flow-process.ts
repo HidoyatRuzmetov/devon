@@ -26,7 +26,11 @@ export function spawnManaged(
   let child: ChildProcessWithoutNullStreams
   if (isWin) {
     const joined = [command, ...args].map(quote).join(' ')
-    child = spawn(joined, [], { cwd: opts.cwd, env: opts.env, shell: true }) as ChildProcessWithoutNullStreams
+    child = spawn(joined, [], {
+      cwd: opts.cwd,
+      env: opts.env,
+      shell: true,
+    }) as ChildProcessWithoutNullStreams
   } else {
     child = spawn(command, args, { cwd: opts.cwd, env: opts.env }) as ChildProcessWithoutNullStreams
   }

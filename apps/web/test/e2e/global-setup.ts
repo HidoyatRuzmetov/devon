@@ -44,7 +44,9 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   console.log('[flow global-setup] bootstrapping a dedicated database (devon_flow_e2e)')
   const db = bootstrapFlowDatabase()
 
-  console.log(`[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`)
+  console.log(
+    `[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`,
+  )
   apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'dev'], {
     cwd: REPO_ROOT,
     logFile: FLOW_API_LOG_FILE,
@@ -83,7 +85,9 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       }),
     })
     if (res.status !== 201) {
-      throw new Error(`flow suite: consuming the setup token failed: ${res.status} ${await res.text()}`)
+      throw new Error(
+        `flow suite: consuming the setup token failed: ${res.status} ${await res.text()}`,
+      )
     }
     await writeFile(FLOW_SUPERADMIN_FILE, JSON.stringify(superAdmin, null, 2), 'utf8')
     console.log('[flow global-setup] super_admin bootstrapped for the admin-pause flow.')

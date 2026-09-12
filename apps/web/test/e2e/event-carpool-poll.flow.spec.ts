@@ -14,7 +14,9 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-test('@flow event with a carpool and a poll: create, RSVP, claim a seat, vote', async ({ browser }) => {
+test('@flow event with a carpool and a poll: create, RSVP, claim a seat, vote', async ({
+  browser,
+}) => {
   const superAdminContext = await newFlowContext(browser)
   await loginAsSuperAdmin(superAdminContext)
 
@@ -74,9 +76,13 @@ test('@flow event with a carpool and a poll: create, RSVP, claim a seat, vote', 
   expect(pollRes.status()).toBe(201)
   const poll = (await pollRes.json()) as { id: string; options: { id: string }[] }
 
-  const voteRes = await authedPost(headContext, `/api/v1/events/${event.id}/polls/${poll.id}/vote`, {
-    optionIds: [poll.options[0]!.id],
-  })
+  const voteRes = await authedPost(
+    headContext,
+    `/api/v1/events/${event.id}/polls/${poll.id}/vote`,
+    {
+      optionIds: [poll.options[0]!.id],
+    },
+  )
   expect(voteRes.status()).toBe(200)
 
   // The head offers a carpool; the member (not the driver) claims a seat in it.

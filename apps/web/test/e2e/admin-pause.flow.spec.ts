@@ -35,9 +35,7 @@ test('@flow admin pause: paused blocks writes not reads, resume restores both, v
 
   // 1. Real UI: find the department in the console table and open its drawer.
   await superAdminPage.goto('/admin/departments')
-  await superAdminPage
-    .getByPlaceholder('Boʻlim nomi boʻyicha qidirish')
-    .fill(departmentName)
+  await superAdminPage.getByPlaceholder('Boʻlim nomi boʻyicha qidirish').fill(departmentName)
   const row = superAdminPage.getByRole('button', { name: departmentName })
   await expect(row).toBeVisible()
   await row.click()
@@ -59,9 +57,7 @@ test('@flow admin pause: paused blocks writes not reads, resume restores both, v
 
   // 4. Resume, through the real console again.
   await superAdminPage.goto('/admin/departments')
-  await superAdminPage
-    .getByPlaceholder('Boʻlim nomi boʻyicha qidirish')
-    .fill(departmentName)
+  await superAdminPage.getByPlaceholder('Boʻlim nomi boʻyicha qidirish').fill(departmentName)
   await superAdminPage.getByRole('button', { name: departmentName }).click()
   await superAdminPage.getByRole('button', { name: 'Davom ettirish' }).click()
   await expect(superAdminPage.getByText('Boʻlim qayta faollashtirildi')).toBeVisible()
