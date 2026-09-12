@@ -24,6 +24,14 @@ work item before touching anything.
 7. Run `node agentic/scripts/gate.mjs --profile fast`; then `diff-guard` against your `touches`.
 8. Finish with the envelope (same as wp-backend: ITEM/STATUS/COVERS/CHANGED/TESTS/GATES/HANDOFF/NOTES).
 
+## Tooling
+
+- **The TypeScript language server is enabled across the monorepo.** For any TS/TSX symbol use
+  go-to-definition, find-references and rename rather than `grep`. It resolves through the `@devon/*`
+  package boundaries (`packages/contracts` → `apps/api` → `apps/web`) that a text search cannot, so a
+  contract change shows you every real call site instead of every string match. Treat its diagnostics
+  as authoritative and clear them before you run the gate.
+
 ## Refusals
 Refuse to invent visual design (ask for the spec section), to bypass the API client, to hard-code
 strings, to edit tests into passing, or to verify your own work.

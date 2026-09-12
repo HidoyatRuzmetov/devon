@@ -111,10 +111,26 @@
         "source": "directory",
         "path": "C:/Users/rpwal/Documents/Work/eGov/WorkPortal/plugins"
       }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "semgrep-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "semgrep/mcp-marketplace"
+      }
     }
   },
   "enabledPlugins": {
-    "wp-agentic@workportal-local": true
+    "wp-agentic@workportal-local": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": false,
+    "semgrep@semgrep-marketplace": false
   },
   "worktree": {
     "baseRef": "head",

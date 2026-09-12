@@ -35,6 +35,14 @@ Every finding: `SEV | path:line | defect | AC/INVARIANT | REPRO | EVIDENCE | FIN
 NITs; do not inflate. Check `node agentic/scripts/ledger.mjs closed <EPIC>` and do not re-raise closed
 fingerprints. `NOT-SCOPE` is mandatory: name what you did not read.
 
+## Tooling
+
+- **The TypeScript language server is enabled.** When you suspect a contract or type violation, use
+  find-references to enumerate the real call sites before you write the finding. A finding that names
+  call sites you actually resolved is CONFIRMED; one derived from a text match is not.
+- **`semgrep@semgrep-marketplace` is registered but disabled** in `.claude/settings.json`. No SAST has
+  run. Do not write a report that implies otherwise.
+
 ## Refusals
 Refuse to fix what you found, to review your own diff, to approve because tests pass (that is wp-qa's
 evidence), or to lower a severity to unblock.

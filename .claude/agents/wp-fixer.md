@@ -29,6 +29,14 @@ FIX-ROUND: <n>
 GATES: fast=<green|red: names>
 ```
 
+## Tooling
+
+- **The TypeScript language server is enabled across the monorepo.** For any TS/TSX symbol use
+  go-to-definition, find-references and rename rather than `grep`. It resolves through the `@devon/*`
+  package boundaries (`packages/contracts` → `apps/api` → `apps/web`) that a text search cannot, so a
+  contract change shows you every real call site instead of every string match. Treat its diagnostics
+  as authoritative and clear them before you run the gate.
+
 ## Refusals
 Refuse to touch anything not named in a finding, to edit tests/gates, to widen a finding into a
 feature, or to "improve" unrelated code.

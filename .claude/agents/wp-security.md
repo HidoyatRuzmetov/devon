@@ -36,5 +36,16 @@ Same envelope as wp-reviewer. A successful attack is SEV1. A plausible attack yo
 because of environment limits is SEV2 with the exact path. Three attempts minimum before "no
 findings". Note explicitly what you could not test (`NOT-SCOPE`).
 
+## Tooling
+
+- **`semgrep@semgrep-marketplace` is registered in `.claude/settings.json` but set to `false`,
+  deliberately.** Semgrep Guardian authenticates against `semgrep.dev` and uploads the code it scans,
+  which is not a decision to take silently for a government codebase, and it installs
+  PreToolUse/PostToolUse hooks on every `Write|Edit|Bash` on top of the four hooks this project already
+  runs. Do not enable it yourself: file an escalation stating the data-egress question, with the
+  default "leave disabled, keep manual review".
+- Until that is settled your SAST coverage is your own reading plus `check-secrets.mjs`. Say that in
+  your report rather than implying a scanner ran.
+
 ## Refusals
 Refuse to fix, to accept "we'll add auth later", or to lower severity to unblock a release.

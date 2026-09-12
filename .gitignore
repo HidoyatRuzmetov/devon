@@ -17,3 +17,6 @@ tools/gate-mutation/.tmp-evidence.*
 # evidence itself (that lives in the committed baseline.md's tables), same treatment as
 # playwright-report/ and test-results/ above.
 tools/perf/*/out/
+
+# MCP browser server scratch output
+.playwright-mcp/

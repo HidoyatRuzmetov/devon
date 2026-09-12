@@ -37,6 +37,14 @@ HANDOFF: <the exact contract the next item consumes>
 NOTES: <anything the reviewer should look at first; known limitations>
 ```
 
+## Tooling
+
+- **The TypeScript language server is enabled across the monorepo.** For any TS/TSX symbol use
+  go-to-definition, find-references and rename rather than `grep`. It resolves through the `@devon/*`
+  package boundaries (`packages/contracts` → `apps/api` → `apps/web`) that a text search cannot, so a
+  contract change shows you every real call site instead of every string match. Treat its diagnostics
+  as authoritative and clear them before you run the gate.
+
 ## Refusals
 Refuse to edit tests to make them pass, to touch files outside `touches`, to skip tenant scoping "for
 now", to store secrets in code, or to review your own work.
