@@ -310,6 +310,9 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.id,
         req.body,
       )
+      // `null` means the card is not this department's (H1.2): the same 404 the card's own routes
+      // answer, so a foreign card id is indistinguishable from one that never existed.
+      if (id === null) return sendProblem(reply, 'not_found')
       reply.code(201).send({ id })
     },
   )
@@ -393,6 +396,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.text,
         req.body.mentions ?? [],
       )
+      if (id === null) return sendProblem(reply, 'not_found')
       reply.code(201).send({ id })
     },
   )
@@ -409,7 +413,14 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { params: idParamsSchema, response: { 200: z.array(z.any()) } },
     },
     async (req, reply) => {
-      reply.send(await repo.getActivity(contextFromRequest(req), req.params.id))
+      const ctx = contextFromRequest(req)
+      // Without this the route answered 200 with an empty array for a card the caller cannot see --
+      // RLS emptied the activity query, so nothing leaked, but the endpoint reported success for
+      // another department's id and disagreed with `GET /cards/:id`'s 404 (H1.2).
+      if (!(await repo.cardExists(ctx, requireDepartmentId(req)!, req.params.id))) {
+        return sendProblem(reply, 'not_found')
+      }
+      reply.send(await repo.getActivity(ctx, req.params.id))
     },
   )
 
@@ -564,6 +575,15 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       try {
+        // H1.6 (SSRF-safe unfurling). Triaged Semgrep false positive: the rule fires on any request
+        // value reaching an outbound fetch. `unfurlLink` is that control, not a bypass of it -- it
+        // resolves DNS itself and refuses loopback, link-local (including 169.254.169.254),
+        // RFC 1918, CGNAT and unique-local addresses before a byte is sent, refuses embedded
+        // credentials and non-http(s) schemes, pins the socket to the address it approved so a DNS
+        // rebind cannot move the connection afterwards, never follows a redirect (the target is a
+        // new URL none of those checks have run against), and bounds the body at 200 kB and the
+        // whole call at 4 s (`modules/work/link-unfurl.ts`, `test/unit/link-unfurl.test.ts`).
+        // nosemgrep: javascript.lang.security.audit.ssrf.ssrf-requests
         reply.send(await unfurlLink(req.body.url))
       } catch (err) {
         if (err instanceof UnsafeUrlError) {

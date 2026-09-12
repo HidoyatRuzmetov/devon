@@ -16,6 +16,10 @@ const configSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     API_PORT: z.coerce.number().int().positive().default(3000),
     DEVON_PUBLIC_URL: z.string().default('http://localhost:5173'),
+    // H1.10 CORS allow-list. Empty by default: the only allowed origin is `DEVON_PUBLIC_URL`'s own.
+    // A comma-separated list here adds further origins explicitly (a separate admin host, say) --
+    // there is deliberately no wildcard form (`plugins/security-headers.ts`).
+    DEVON_ALLOWED_ORIGINS: z.string().default(''),
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
     SESSION_COOKIE_NAME: z.string().min(1).default('devon_sid'),
     SESSION_IDLE_MINUTES: z.coerce.number().int().positive().default(720),
@@ -98,6 +102,36 @@ const configSchema = z
       .int()
       .positive()
       .default(32 * 1024),
+    // --- Telegram (TECH-SPEC §7; HARDENING H1.14, H1.15, H7.3) ---------------------------------
+    // Previously read straight from `process.env` inside `modules/telegram/{index,transport}.ts`,
+    // which meant the webhook secret was never validated at boot: a one-character `TELEGRAM_WEBHOOK_
+    // SECRET` was accepted and then published to Telegram as the webhook path. These three are the
+    // module's whole configuration and now go through the same fail-fast Zod parse as everything
+    // else, with the shape Telegram's own `setWebhook.secret_token` accepts (1-256 chars of
+    // `A-Z a-z 0-9 _ -`) narrowed to a length that is not brute-forceable (H1.15: >= 32 chars of
+    // CSPRNG output, i.e. >= 190 bits over this alphabet).
+    TELEGRAM_BOT_TOKEN: z
+      .string()
+      .trim()
+      .min(1)
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+    TELEGRAM_BOT_USERNAME: z
+      .string()
+      .trim()
+      .min(1)
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+    TELEGRAM_WEBHOOK_SECRET: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v ? v : undefined))
+      .refine((v) => v === undefined || /^[A-Za-z0-9_-]{32,256}$/.test(v), {
+        message:
+          'TELEGRAM_WEBHOOK_SECRET must be 32-256 characters of A-Z a-z 0-9 _ - (Telegram’s own ' +
+          'secret_token alphabet), generated from a CSPRNG: `openssl rand -base64 32 | tr "+/" "-_"`',
+      }),
   })
   .superRefine((cfg, ctx) => {
     if (cfg.STORAGE_DRIVER === 's3') {
@@ -114,6 +148,18 @@ const configSchema = z
           })
         }
       }
+    }
+    // H1.14: a bot configured in production with no webhook secret would either fall back to long
+    // polling (a second, unmonitored ingress) or register a webhook whose only protection is the
+    // bot token itself. Refused at boot, like every other production-only guard in this file.
+    if (cfg.NODE_ENV === 'production' && cfg.TELEGRAM_BOT_TOKEN && !cfg.TELEGRAM_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['TELEGRAM_WEBHOOK_SECRET'],
+        message:
+          'TELEGRAM_WEBHOOK_SECRET is required in production when TELEGRAM_BOT_TOKEN is set ' +
+          '(HARDENING H1.14: the webhook must verify a secret token).',
+      })
     }
   })
 

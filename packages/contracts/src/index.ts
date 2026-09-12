@@ -31,6 +31,17 @@ export {
 } from './field-tiers.js'
 
 export {
+  isSafeUrl,
+  richTextDocSchema,
+  richTextNodeSchema,
+  RICH_TEXT_MARK_TYPES,
+  RICH_TEXT_MAX_BYTES,
+  RICH_TEXT_NODE_TYPES,
+  SAFE_URL_SCHEMES,
+  type RichTextNode,
+} from './rich-text.js'
+
+export {
   parseFilterQuery,
   serializeFilterQuery,
   resolveDateWord,

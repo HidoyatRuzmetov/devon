@@ -26,9 +26,22 @@ export const featureParamsSchema = z.object({ feature: aiFeatureSchema })
 /** The body's `input` is validated a second time, feature-specifically, by `@devon/ai`'s own
  * `runFeature()` (each feature's `inputSchema`) -- this outer schema only guards against a body that
  * is not even a plain object, so a malformed request never reaches the gateway at all. */
-export const runFeatureBodySchema = z.object({
-  input: z.record(z.string(), z.unknown()),
-})
+export const runFeatureBodySchema = z
+  .object({
+    // H7.4 ("limits on ... AI input length"): the per-feature `inputSchema` in `@devon/ai` validates
+    // the shape, but nothing bounded the *size* of what reached the gateway -- a single request could
+    // hand the model an arbitrarily large prompt and bill the department for it. Bounded here, at the
+    // HTTP boundary, before any of it is read.
+    input: z
+      .record(z.string().max(64), z.unknown())
+      .refine((v) => JSON.stringify(v).length <= AI_INPUT_MAX_BYTES, {
+        message: 'AI input is too large',
+      }),
+  })
+  .strict()
+
+/** 64 KB of JSON: comfortably more than any feature's real input, far less than a model's context. */
+export const AI_INPUT_MAX_BYTES = 64 * 1024
 
 const runMetaSchema = z.object({
   feature: aiFeatureSchema,

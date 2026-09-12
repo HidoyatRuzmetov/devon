@@ -18,7 +18,12 @@ import type { Config } from './config.js'
 import type { Deps } from './deps.js'
 import sessionPlugin from './plugins/session.js'
 import authorizePlugin from './plugins/authorize.js'
+import securityHeadersPlugin from './plugins/security-headers.js'
+import csrfPlugin from './plugins/csrf-guard.js'
+import jsonBodyPlugin from './plugins/json-body.js'
 import storagePlugin, { type StorageOverrides } from './plugins/storage.js'
+import { redactPaths, REDACTION_CENSOR } from './lib/log-redaction.js'
+import { sendProblem } from './lib/problem-reply.js'
 import healthRoutes from './modules/health.js'
 import openapiRoutes from './modules/openapi.js'
 import metricsRoutes from './modules/metrics.js'
@@ -36,24 +41,6 @@ declare module 'fastify' {
   }
 }
 
-/** Greatest nesting depth of a parsed JSON value (a bare scalar is depth 0). Bails out early past a
- * hard ceiling well above any realistic `JSON_MAX_DEPTH` so a pathologically deep body cannot make
- * the depth check itself expensive to run -- the check's own cost must stay `O(small constant)`
- * regardless of how deep an attacker's body goes. */
-function jsonDepth(value: unknown, depth = 0): number {
-  if (depth > 100) return depth
-  if (value !== null && typeof value === 'object') {
-    let max = depth
-    for (const v of Object.values(value)) {
-      const d = jsonDepth(v, depth + 1)
-      if (d > max) max = d
-      if (max > 100) break
-    }
-    return max
-  }
-  return depth
-}
-
 export type BuildAppOptions = {
   /** Test seam for the storage plugin (a fake malware scanner, a fake object store). Production
    * (`server.ts`) never passes this: both are built from `Config` (`plugins/storage.ts`). */
@@ -66,7 +53,14 @@ export async function buildApp(
   options: BuildAppOptions = {},
 ): Promise<FastifyInstance> {
   const app = Fastify({
-    logger: { level: config.LOG_LEVEL },
+    // H1.11: passwords, tokens, codes and contact blocks are censored inside pino's serializer, so
+    // no call site can leak one by logging the wrong object (`lib/log-redaction.ts`).
+    logger: {
+      level: config.LOG_LEVEL,
+      redact: { paths: redactPaths(), censor: REDACTION_CENSOR },
+    },
+    // H1.10/H17.1: Caddy terminates TLS and sets X-Forwarded-For/-Proto (infra/Caddyfile), so
+    // `req.ip` is the real client (rate limits, audit rows) and `req.protocol` is `https` (HSTS).
     trustProxy: true,
     // Keep the route table exactly the OpenAPI path table in design.md §1.7 -- an auto-added HEAD
     // sibling for every GET would otherwise need its own, redundant `PUBLIC_ROUTES` entries.
@@ -81,43 +75,19 @@ export async function buildApp(
     // H7.4: an explicit, reviewed default (Fastify's own undocumented default is already 1 MiB --
     // see `config.ts`'s `HTTP_BODY_LIMIT_BYTES` doc comment). The storage plugin's own upload routes
     // pass their own larger, per-route `bodyLimit` (`plugins/storage.ts`), which overrides this.
+    // (The security package stated the same bound as a literal `1_048_576`; the env-overridable
+    // `HTTP_BODY_LIMIT_BYTES` above is the same number with a name and a boot-time validation, so the
+    // two H7.4 statements of this limit collapse into this one.)
     bodyLimit: config.HTTP_BODY_LIMIT_BYTES,
   }).withTypeProvider<ZodTypeProvider>()
 
-  // H7.4 "limits on ... JSON depth": an attacker-crafted deeply-nested JSON body costs every
-  // recursive validator/serializer that walks it far more CPU per byte than a flat body of the same
-  // size, so depth is bounded independently of the byte-count `bodyLimit` above. Parses exactly as
-  // Fastify's own default `application/json` parser would (`JSON.parse` on the full string; an empty
-  // body is `undefined`, matching the default parser's own behaviour) and only adds the depth check
-  // on top, so a malformed-JSON body still fails exactly the way it did before this parser existed.
-  app.addContentTypeParser<string>(
-    'application/json',
-    { parseAs: 'string' },
-    (_req, body, done) => {
-      if (body.length === 0) return done(null, undefined)
-      let json: unknown
-      try {
-        json = JSON.parse(body)
-      } catch (err) {
-        done(err as Error)
-        return
-      }
-      if (jsonDepth(json) > config.JSON_MAX_DEPTH) {
-        const err = new Error(
-          'JSON body nesting exceeds the configured maximum depth.',
-        ) as Error & {
-          code: string
-          statusCode: number
-        }
-        err.code = 'DEVON_JSON_TOO_DEEP'
-        err.statusCode = 422
-        done(err)
-        return
-      }
-      done(null, json)
-    },
-  )
-
+  // H7.4 "limits on ... JSON depth" lives in `plugins/json-body.ts` (registered below, before any
+  // route-adding plugin). Both hardening packages wrote a depth-bounded `application/json` parser;
+  // Fastify allows exactly one per content type, so the surviving one is the plugin's -- it measures
+  // depth on the raw text *before* `JSON.parse`, which is the step a deeply-nested body overflows the
+  // stack in -- reading its ceiling from `config.JSON_MAX_DEPTH` (this file's own former parser) and
+  // rejecting with `DEVON_JSON_TOO_DEEP`, which the error handler below turns into the 422 the
+  // product's Problem contract uses for a body that fails validation.
   app.setValidatorCompiler(validatorCompiler)
   app.setSerializerCompiler(serializerCompiler)
 
@@ -137,21 +107,19 @@ export async function buildApp(
   // module is never inherited by that module's routes (verified empirically against fastify@5.12.3;
   // this is not documented behaviour worth relying on being fixed).
   app.setErrorHandler((err: FastifyError, req, reply) => {
+    // H1.13/H16.1: the body is built by `@devon/contracts`'s `problem()` from its frozen table --
+    // never hand-assembled here -- so a stack, a SQL fragment, a filesystem path or the offending
+    // value can never reach a client, in any environment. `instance` carries the request id, which
+    // is the only thread from what the user sees to what the server log holds (H15.1).
+    const instance = `urn:devon:request:${req.id}`
     if (err.validation) {
-      reply
-        .code(422)
-        .header('content-type', 'application/problem+json; charset=utf-8')
-        .send({
-          type: 'https://devon.local/problems/validation_failed',
-          title: 'Validation Failed',
-          status: 422,
-          code: 'validation_failed',
-          detail: 'The request did not pass validation.',
-          errors: err.validation.map((v) => ({
-            path: v.instancePath || v.schemaPath,
-            code: v.keyword,
-          })),
-        })
+      sendProblem(reply, 'validation_failed', {
+        instance,
+        errors: err.validation.map((v) => ({
+          path: v.instancePath || v.schemaPath,
+          code: v.keyword,
+        })),
+      })
       return
     }
     // H7.4: a JSON body nested past `JSON_MAX_DEPTH` (the content-type parser above) -- same shape
@@ -174,31 +142,39 @@ export async function buildApp(
     // A body past the route's `bodyLimit` (the storage plugin's raw image parser) is a client error
     // with a fixed shape, never a 500 -- and never the JSON-body 422 above either.
     if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE') {
-      reply
-        .code(413)
-        .header('content-type', 'application/problem+json; charset=utf-8')
-        .send({
-          type: 'https://devon.local/problems/validation_failed',
-          title: 'Validation Failed',
-          status: 413,
-          code: 'validation_failed',
-          detail: 'The request did not pass validation.',
-          errors: [{ path: 'body', code: 'too_large' }],
-        })
+      sendProblem(reply, 'validation_failed', {
+        status: 413,
+        instance,
+        errors: [{ path: 'body', code: 'too_large' }],
+      })
       return
     }
-    req.log.error(err)
-    reply.code(500).header('content-type', 'application/problem+json; charset=utf-8').send({
-      type: 'https://devon.local/problems/internal',
-      title: 'Internal Server Error',
-      status: 500,
-      code: 'internal',
-      detail: 'An unexpected error occurred.',
-    })
+    // Every other transport-level client error -- a malformed JSON body, a body nested past
+    // `MAX_JSON_DEPTH` (`plugins/json-body.ts`), an unsupported media type, a rate-limit refusal --
+    // used to fall through to the 500 branch below, so the client was told the *server* had failed
+    // when in fact its own request was at fault (and a monitoring alert fired for it). Reported with
+    // the status the error carries and the same fixed Problem body: still no message, stack or path
+    // from the underlying error reaches the client (H1.13).
+    const status = typeof err.statusCode === 'number' ? err.statusCode : 500
+    if (status >= 400 && status < 500) {
+      sendProblem(reply, status === 429 ? 'rate_limited' : 'validation_failed', {
+        status,
+        instance,
+        ...(status === 429 ? {} : { errors: [{ path: 'body', code: 'invalid' }] }),
+      })
+      return
+    }
+    req.log.error({ err }, 'unhandled error')
+    sendProblem(reply, 'internal', { instance })
   })
 
+  // Before every route-registering plugin: the JSON parser must be in place when a route is added.
+  await app.register(jsonBodyPlugin)
   await app.register(cookie)
   await app.register(rateLimit, { global: false })
+  // H1.10: helmet-equivalent headers, the CORS allow-list and the `Origin` guard, registered before
+  // anything that can answer a request so even a 404 or a rate-limit 429 carries them.
+  await app.register(securityHeadersPlugin)
   await app.register(swagger, {
     openapi: {
       info: { title: 'WorkPortal API', version: '0.0.0' },
@@ -230,6 +206,10 @@ export async function buildApp(
   // encapsulation of its own.
   registerAvailabilityGate(app)
   await app.register(authorizePlugin)
+  // After `authorizePlugin` so its 401/403 answers an unauthorised request before this hook turns it
+  // into a CSRF 403, and before every route-registering plugin below (a Fastify hook only applies to
+  // routes registered after it in the same encapsulation context): H1.4.
+  await app.register(csrfPlugin)
   // After `authorizePlugin`: the storage plugin registers the local driver's two routes, and every
   // route must be seen by authorize's `onRoute` boot guard (plugins/authorize.ts).
   await app.register(storagePlugin, { ...(options.storage ? { overrides: options.storage } : {}) })

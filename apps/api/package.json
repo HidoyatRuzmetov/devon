@@ -20,7 +20,8 @@
     "accounts:prove": "tsx test/checks/accounts-prove.ts",
     "avatar:prove": "tsx test/checks/avatar-prove.ts",
     "storage:prove": "tsx test/checks/storage-s3-prove.ts",
-    "storage:breaker:prove": "tsx test/checks/storage-breaker-prove.ts"
+    "storage:breaker:prove": "tsx test/checks/storage-breaker-prove.ts",
+    "idor:prove": "tsx test/checks/idor-prove.ts"
   },
   "devDependencies": {
     "@devon/config": "workspace:*",

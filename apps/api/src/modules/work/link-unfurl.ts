@@ -3,7 +3,9 @@
 // link probe the department's own network (cloud metadata endpoints, internal admin panels, localhost
 // services) using the server as a proxy -- OWASP ASVS 5.0 L2's SSRF control.
 import { lookup } from 'node:dns/promises'
-import { isIPv4, isIPv6 } from 'node:net'
+import { request as httpRequest, type IncomingMessage } from 'node:http'
+import { request as httpsRequest } from 'node:https'
+import { isIPv4, isIPv6, type LookupFunction } from 'node:net'
 
 const FETCH_TIMEOUT_MS = 4000
 const MAX_BODY_BYTES = 200_000
@@ -47,7 +49,14 @@ function isPrivateIPv6(ip: string): boolean {
   )
 }
 
-async function assertPublicUrl(url: URL): Promise<void> {
+export type ResolvedAddress = { address: string; family: 4 | 6 }
+
+/**
+ * Throws `UnsafeUrlError` unless `url` is a plain http(s) URL that resolves only to public
+ * addresses, and returns the addresses it approved so the connection can be pinned to exactly those
+ * (see `pinnedLookup`). Exported for `test/unit/link-unfurl.test.ts`.
+ */
+export async function assertPublicUrl(url: URL): Promise<ResolvedAddress[]> {
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
     throw new UnsafeUrlError('only http/https URLs are allowed')
   }
@@ -59,8 +68,8 @@ async function assertPublicUrl(url: URL): Promise<void> {
     throw new UnsafeUrlError('local hostnames are not allowed')
   }
 
-  // Resolve DNS ourselves (rather than letting `fetch` do it) so a DNS answer that only appears at
-  // request time -- "DNS rebinding" -- is checked before any request is sent, not after.
+  // Resolve DNS ourselves (rather than letting the HTTP client do it) so a DNS answer that only
+  // appears at request time -- "DNS rebinding" -- is checked before any request is sent, not after.
   const addresses = isIPv4(hostname)
     ? [{ address: hostname, family: 4 as const }]
     : isIPv6(hostname)
@@ -81,9 +90,45 @@ async function assertPublicUrl(url: URL): Promise<void> {
       }
     }
   }
+  return addresses.map((a) => ({ address: a.address, family: a.family as 4 | 6 }))
 }
 
-function extractTitle(html: string): string | null {
+/**
+ * A `lookup` that answers only with the addresses `assertPublicUrl` already approved.
+ *
+ * Without it that check is advisory: it resolves the hostname, approves the answer, then hands the
+ * *hostname* to the HTTP client, which resolves it a second time. An attacker who runs the
+ * authoritative DNS for their own domain publishes a one-second TTL that answers with a public
+ * address on the first query and `169.254.169.254` (or `127.0.0.1`, or an internal admin panel) on
+ * the second -- DNS rebinding, the standard bypass for exactly this shape of SSRF filter. Pinning
+ * the socket to the vetted address closes the window: the name is resolved once, and the bytes go
+ * to the address that was approved.
+ *
+ * The TLS handshake still uses the hostname (`servername` below), so certificate validation is
+ * unaffected -- which is why this is a `lookup` hook and not a rewrite of the URL to an IP literal.
+ */
+export function pinnedLookup(addresses: ResolvedAddress[]): LookupFunction {
+  // `net.LookupFunction` is typed for `dns.lookup`'s overloads (options-or-callback in the second
+  // slot, and a callback whose arity depends on `all`). This shim answers both shapes from the
+  // already-approved list and never touches the resolver, which is the whole point.
+  const fn = (
+    _hostname: string,
+    options: { all?: boolean | undefined } | ((...args: unknown[]) => void),
+    callback?: (...args: unknown[]) => void,
+  ): void => {
+    const cb = (typeof options === 'function' ? options : callback)!
+    const all = typeof options === 'function' ? false : options.all === true
+    if (all) {
+      cb(null, addresses)
+      return
+    }
+    const first = addresses[0]!
+    cb(null, first.address, first.family)
+  }
+  return fn as unknown as LookupFunction
+}
+
+export function extractTitle(html: string): string | null {
   const match = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html)
   if (!match) return null
   const decoded = match[1]!
@@ -99,51 +144,82 @@ function extractTitle(html: string): string | null {
 
 export type UnfurlResult = { url: string; title: string; favicon: string | null }
 
+/**
+ * GETs `url` over a socket pinned to `addresses`, reading at most `MAX_BODY_BYTES` and stopping as
+ * soon as `</head>` has been seen. Resolves `null` for anything that is not a readable 2xx -- a
+ * redirect included: `node:http` never follows one on its own, which is the behaviour this wants,
+ * because the redirect target is a *new* URL that has had none of `assertPublicUrl`'s checks run
+ * against it. (Following it would have to re-run them, hop by hop, and a link chip is not worth that
+ * surface; the caller falls back to the URL as its own title.)
+ */
+export function fetchHtmlHead(url: URL, addresses: ResolvedAddress[]): Promise<string | null> {
+  return new Promise((resolve) => {
+    const send = url.protocol === 'https:' ? httpsRequest : httpRequest
+    let settled = false
+    const finish = (value: string | null) => {
+      if (settled) return
+      settled = true
+      resolve(value)
+    }
+
+    const req = send(
+      url,
+      {
+        method: 'GET',
+        headers: { accept: 'text/html', 'user-agent': 'DevonLinkPreview/1.0' },
+        lookup: pinnedLookup(addresses),
+        // TLS is still negotiated for the hostname, so an IP-pinned socket does not weaken
+        // certificate validation.
+        servername: url.hostname,
+        timeout: FETCH_TIMEOUT_MS,
+      },
+      (res: IncomingMessage) => {
+        if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
+          res.destroy()
+          finish(null)
+          return
+        }
+        let received = 0
+        let html = ''
+        res.setEncoding('utf8')
+        res.on('data', (chunk: string) => {
+          received += Buffer.byteLength(chunk, 'utf8')
+          html += chunk
+          if (received >= MAX_BODY_BYTES || /<\/head>/i.test(html)) {
+            res.destroy()
+            finish(html)
+          }
+        })
+        res.on('end', () => finish(html))
+        res.on('error', () => finish(html.length > 0 ? html : null))
+      },
+    )
+    // A server that accepts the connection and then says nothing must not hold a handler's worth of
+    // resources open for longer than the budget (H2.7: timeouts on every outbound call).
+    req.setTimeout(FETCH_TIMEOUT_MS, () => {
+      req.destroy()
+      finish(null)
+    })
+    req.on('error', () => finish(null))
+    req.end()
+  })
+}
+
 /** Fetches `rawUrl` and extracts its `<title>`, refusing anything that is not a public http(s) URL.
  * Never throws for a URL that is merely unreachable or slow -- the caller gets the URL back as its own
  * title (a link chip with no fetched title is a normal, expected state, not an error). Only a genuinely
  * unsafe URL (`UnsafeUrlError`) is the caller's problem to turn into a 422. */
 export async function unfurlLink(rawUrl: string): Promise<UnfurlResult> {
   const url = new URL(rawUrl)
-  await assertPublicUrl(url)
+  const addresses = await assertPublicUrl(url)
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
   try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      redirect: 'manual', // a redirect to a private address must be re-checked, not silently followed
-      headers: { accept: 'text/html', 'user-agent': 'DevonLinkPreview/1.0' },
-    })
-    if (res.status >= 300 && res.status < 400) {
-      return { url: rawUrl, title: rawUrl, favicon: null }
-    }
-    if (!res.ok || !res.body) return { url: rawUrl, title: rawUrl, favicon: null }
-
-    const reader = res.body.getReader()
-    let received = 0
-    let html = ''
-    const decoder = new TextDecoder()
-    for (;;) {
-      // Reading a byte stream chunk by chunk is inherently sequential (each `read()` depends on the
-      // previous one), not an independent-item batch.
-      // nosemgrep: query-in-loop
-      const { done, value } = await reader.read()
-      if (done) break
-      received += value.byteLength
-      html += decoder.decode(value, { stream: true })
-      if (received >= MAX_BODY_BYTES || /<\/head>/i.test(html)) {
-        // nosemgrep: query-in-loop -- terminal cleanup of the same stream, not a batchable read.
-        await reader.cancel().catch(() => {})
-        break
-      }
-    }
+    const html = await fetchHtmlHead(url, addresses)
+    if (html === null) return { url: rawUrl, title: rawUrl, favicon: null }
     const title = extractTitle(html) ?? rawUrl
     return { url: rawUrl, title, favicon: `${url.origin}/favicon.ico` }
   } catch (err) {
     if (err instanceof UnsafeUrlError) throw err
     return { url: rawUrl, title: rawUrl, favicon: null }
-  } finally {
-    clearTimeout(timeout)
   }
 }

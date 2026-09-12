@@ -194,7 +194,13 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { permission: { action: 'read', subject: departmentChildSubject } },
       schema: { params: idParamsSchema, response: { 200: pageVersionListSchema } },
     },
-    async (req) => {
+    async (req, reply) => {
+      // H1.2: the version list is scoped by `department_id`, so another department's page id
+      // produced 200 with an empty array rather than the 404 the page's own routes answer. Refuse on
+      // the page itself, exactly like `GET /:id/versions/:versionId` one route below.
+      if (!(await repo.getPage(activeDepartmentId(req), req.params.id, ctxFrom(req)))) {
+        return sendProblem(reply, 'not_found')
+      }
       const rows = await repo.listVersions(activeDepartmentId(req), req.params.id, ctxFrom(req))
       return rows.map((row) => ({
         id: row.id,

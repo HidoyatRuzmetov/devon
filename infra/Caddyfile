@@ -32,6 +32,56 @@
 	# and a public DNS name and therefore only makes sense off an air-gapped network.
 	tls {$CADDY_TLS_MODE:internal}
 
+	# --- Security headers (HARDENING H1.10, H1.5) ------------------------------------------------
+	# Set once for every response this site serves. `apps/api` sets its own, stricter set on its own
+	# responses (`apps/api/src/plugins/security-headers.ts`); `header` below runs on the way out, so
+	# for a proxied /api/* response these values replace the API's where the names collide and the
+	# API keeps the ones Caddy does not name. The two agree deliberately on everything but CSP, which
+	# genuinely differs: an API response may load nothing at all, whereas the SPA document must load
+	# its own bundle.
+	header {
+		# H1.10. Caddy only ever serves this site over TLS (the `tls` directive above), so asserting
+		# HSTS here is always correct. Two years, subdomains included, preload-eligible.
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		# Both halves of the same control: the header for pre-CSP2 user agents, `frame-ancestors`
+		# (below, in the CSP) for everything current.
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		Origin-Agent-Cluster "?1"
+		X-DNS-Prefetch-Control "off"
+		X-Permitted-Cross-Domain-Policies "none"
+		Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()"
+		# Caddy advertises its own version by default; nothing downstream needs it.
+		-Server
+	}
+
+	# The SPA document's CSP (H1.5). Deliberately nonce-free, and stronger than a nonce policy would
+	# be here: `apps/web`'s production build emits **no inline script at all** (verified against
+	# `apps/web/dist/index.html` -- see the H1.5 entry in
+	# `agentic/ledger/hardening/2026-09-08T06-45-00-05-00/security.md`), so plain `script-src 'self'`
+	# admits exactly the fingerprinted bundle files and nothing else -- whereas a nonce policy would
+	# have to be paired with `'strict-dynamic'` and would need this static file server to rewrite the
+	# HTML per request, which it cannot do.
+	#
+	# `style-src` keeps `'unsafe-inline'`: React and `motion` set element `style` attributes, which
+	# CSP's `style-src-attr` blocks and which no nonce can ever cover. This is the documented,
+	# unavoidable residue of the policy and it does not admit script execution.
+	#
+	# `connect-src` is `'self'` plus whatever `DEVON_CSP_CONNECT_EXTRA` names -- set it to the MinIO
+	# public endpoint when `STORAGE_DRIVER=s3`, because the browser then PUTs avatar bytes straight to
+	# a presigned URL on that origin (`apps/web/src/lib/api-client.ts`'s `uploadFile`).
+	@spa not path /api/* /healthz /readyz /realtime/*
+	header @spa Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' {$DEVON_CSP_CONNECT_EXTRA:} ; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+
+	# H6.3: source maps are built (`sourcemap: command === 'build'`, apps/web/src/vite.config.ts) and
+	# are 11 MB of readable application source. They belong in the error tracker, never on the public
+	# origin -- and the static file server behind `web:80` would happily serve them otherwise.
+	@sourcemaps path *.map
+	respond @sourcemaps 404
+
 	# `/api/*` and the two operational endpoints go to the API container (apps/api's Dockerfile and
 	# `api` Compose service land with the deployment-image epic; TECH-SPEC §13).
 	@api path /api/* /healthz /readyz
@@ -67,6 +117,38 @@
 	handle_errors {
 		@upstream_down expression {http.error.status_code} >= 500
 		handle @upstream_down {
+			# H1.5/H1.10: the site-level `header` above runs as part of the *normal* route chain, which
+			# an error aborts, so the error routes are their own chain and get their own headers. This
+			# page is served from the app's own origin, so it must not be the one response on that
+			# origin with no policy.
+			#
+			# `maintenance.html` is deliberately a single self-contained file with no network access of
+			# any kind -- it exists for the case where the api and web containers are unreachable, on a
+			# box that may have no internet at all -- so its stylesheet and its locale/auto-reload
+			# script are inline, and a nonce is impossible (this is a static file server; it cannot
+			# rewrite the document per request). The two sha256 hashes below admit exactly those two
+			# blocks and nothing else: no injected script, and no second inline block, can execute.
+			#
+			# If maintenance.html is ever edited, recompute both hashes: they are the base64 sha256 of the
+			# exact bytes BETWEEN the style and script tags -- every byte, including the newline that follows
+			# the opening tag and the indentation that precedes the closing one, which is what the browser
+			# hashes and what an off-by-one trim gets wrong. Any CSP hash generator, or the browser console -- a refusal logs the hash the
+			# browser computed and expected -- gives the same value. A stale hash never breaks the page text:
+			# it still renders and still says the service is unavailable. It only disables the language
+			# guess and the automatic retry, which the page's own
+			# `<noscript>`-equivalent copy already covers.
+			header {
+				Content-Security-Policy "default-src 'none'; style-src 'sha256-ofIb4LymHslEln6DMAVROjYqtbDnfaQnv4UzGApxxGM='; script-src 'sha256-fyI1dWZ1Yfu0Q4gc44clgCwkdqMSC/FCfZ9SC64teqA='; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+				X-Content-Type-Options "nosniff"
+				X-Frame-Options "DENY"
+				Referrer-Policy "no-referrer"
+				Cross-Origin-Opener-Policy "same-origin"
+				Cross-Origin-Resource-Policy "same-origin"
+				Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+				# The app is down; nothing about this page should be remembered as the app's answer.
+				Cache-Control "no-store"
+				-Server
+			}
 			root * /srv/maintenance
 			rewrite * /maintenance.html
 			file_server

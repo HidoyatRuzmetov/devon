@@ -1,0 +1,111 @@
+// Progressive lockout for credential-guessing endpoints (HARDENING H1.9: "Rate limits on login,
+// register, join, reset, 2FA, AI, uploads; progressive lockout; no enumeration (uniform responses
+// and timing)").
+//
+// `@fastify/rate-limit` already caps requests per IP per minute on those routes. That is the wrong
+// shape on its own for credential guessing: 10 attempts a minute, sustained, is 14 400 guesses a day
+// against one account, and the counter resets completely every minute no matter how many of those
+// attempts failed. This adds the second axis -- consecutive *failures* for one identity -- with a
+// lockout window that grows as the failures accumulate, and which a successful sign-in clears.
+//
+// Two properties this must have, and the tests pin both:
+//
+//   - No enumeration. The key is derived from what the client *submitted*, never from whether the
+//     account exists, so a locked-out attempt against a nonexistent login is indistinguishable from
+//     one against a real account. Callers must record a failure for a nonexistent login too.
+//   - Bounded (H11.1). At most `maxEntries` identities are tracked; entries past their window are
+//     pruned on access, and the oldest is evicted when the map is full, so a flood of distinct
+//     logins cannot grow this process's heap.
+import { createHash } from 'node:crypto'
+
+/** Consecutive failures allowed before the first lockout: four fat-finger retries stay free, the
+ * fifth failure starts the ladder. */
+const FREE_ATTEMPTS = 5
+
+/**
+ * Lockout duration by how many failures past `FREE_ATTEMPTS` have accumulated, in milliseconds --
+ * one minute, then five, then fifteen, then an hour, held at an hour. An hour caps the damage a
+ * malicious lockout of someone else's account can do (an attacker who knows a login can always
+ * trigger this; an unbounded lockout would turn that into a permanent denial of service).
+ */
+const LOCKOUT_LADDER_MS = [60_000, 5 * 60_000, 15 * 60_000, 60 * 60_000] as const
+
+/** How long a failure counter survives with no further attempts. */
+const COUNTER_TTL_MS = 60 * 60_000
+
+type Entry = { failures: number; lockedUntil: number; touchedAt: number }
+
+export type ThrottleDecision =
+  | { locked: false }
+  /** `retryAfterSeconds` is what the caller puts in `Retry-After`; never says why. */
+  | { locked: true; retryAfterSeconds: number }
+
+export class LoginThrottle {
+  readonly #entries = new Map<string, Entry>()
+
+  constructor(
+    private readonly maxEntries = 10_000,
+    private readonly now: () => number = Date.now,
+  ) {}
+
+  /**
+   * The tracked identity. Hashed so the raw login never sits in this process's heap in clear (it
+   * would then appear in a heap dump or a crash core), and salted per-instance by the caller's
+   * choice of `scope` so the same login on the login route and the 2FA route count separately.
+   */
+  static key(scope: string, identity: string, ip: string): string {
+    return createHash('sha256').update(`${scope}\u0000${identity}\u0000${ip}`, 'utf8').digest('hex')
+  }
+
+  /** Called before verifying a credential. Never mutates: a locked identity is simply refused. */
+  check(key: string): ThrottleDecision {
+    const entry = this.#entries.get(key)
+    if (!entry) return { locked: false }
+    const now = this.now()
+    if (entry.lockedUntil > now) {
+      return { locked: true, retryAfterSeconds: Math.ceil((entry.lockedUntil - now) / 1000) }
+    }
+    if (now - entry.touchedAt > COUNTER_TTL_MS) {
+      this.#entries.delete(key)
+    }
+    return { locked: false }
+  }
+
+  /** Called after a credential check failed -- including for a login that does not exist. */
+  recordFailure(key: string): void {
+    const now = this.now()
+    const existing = this.#entries.get(key)
+    const failures =
+      existing && now - existing.touchedAt <= COUNTER_TTL_MS ? existing.failures + 1 : 1
+    const over = failures - FREE_ATTEMPTS + 1
+    const lockedUntil =
+      over > 0
+        ? now + (LOCKOUT_LADDER_MS[Math.min(over, LOCKOUT_LADDER_MS.length) - 1] as number)
+        : 0
+    // Delete-then-set keeps `Map`'s insertion order meaningful, so the eviction below really does
+    // drop the least recently touched entry.
+    this.#entries.delete(key)
+    this.#entries.set(key, { failures, lockedUntil, touchedAt: now })
+    this.#evictIfNeeded()
+  }
+
+  /** Called after a successful sign-in: the identity starts clean again. */
+  recordSuccess(key: string): void {
+    this.#entries.delete(key)
+  }
+
+  get size(): number {
+    return this.#entries.size
+  }
+
+  #evictIfNeeded(): void {
+    while (this.#entries.size > this.maxEntries) {
+      const oldest = this.#entries.keys().next()
+      if (oldest.done) return
+      this.#entries.delete(oldest.value)
+    }
+  }
+}
+
+/** One process-wide instance; every credential route shares it through its own `scope`. */
+export const loginThrottle = new LoginThrottle()
