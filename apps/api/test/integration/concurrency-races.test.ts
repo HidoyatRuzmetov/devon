@@ -101,9 +101,7 @@ describe('positive control: department membership has a real unique index', () =
       headers: headSession.headers,
       body: '{}',
     })
-    const { password: joinPassword } = (await pwRes.json()) as {
-      password: string
-    }
+    const { password: joinPassword } = (await pwRes.json()) as { password: string }
 
     const joiner = await seedBareUser(db)
     const joinerSession = await loginAs(baseUrl, joiner.login)
@@ -252,10 +250,7 @@ describe('H10.1: a double-submitted identical poll vote is deduplicated', () => 
         options: [{ label: 'a' }, { label: 'b' }],
       }),
     })
-    const poll = (await pollRes.json()) as {
-      id: string
-      options: { id: string }[]
-    }
+    const poll = (await pollRes.json()) as { id: string; options: { id: string }[] }
     const optionId = poll.options[0]!.id
     const vote = () =>
       fetch(`${baseUrl}/api/v1/events/${event.id}/polls/${poll.id}/vote`, {

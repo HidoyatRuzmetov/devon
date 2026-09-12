@@ -35,12 +35,8 @@ describe('session rotation on login', () => {
     expect(first.csrf).not.toBe(second.csrf)
     // Both are independently valid at once (multi-device is intentional, not a bug) -- revocation is
     // an explicit action (`revoke-all`/`revoke/:id`), not an implicit side effect of a second login.
-    const meFirst = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: first.cookie },
-    })
-    const meSecond = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: second.cookie },
-    })
+    const meFirst = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: first.cookie } })
+    const meSecond = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: second.cookie } })
     expect(meFirst.status).toBe(200)
     expect(meSecond.status).toBe(200)
   })
@@ -50,9 +46,7 @@ describe('logout (single session)', () => {
   it('POST /auth/logout revokes the session: the same cookie is rejected afterwards', async () => {
     const user = await seedBareUser(db)
     const session = await loginAs(baseUrl, user.login)
-    const before = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: session.cookie },
-    })
+    const before = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: session.cookie } })
     expect(before.status).toBe(200)
 
     const logout = await fetch(`${baseUrl}/api/v1/auth/logout`, {
@@ -62,9 +56,7 @@ describe('logout (single session)', () => {
     })
     expect(logout.status).toBe(204)
 
-    const after = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: session.cookie },
-    })
+    const after = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: session.cookie } })
     expect(after.status).toBe(401)
   })
 })
@@ -82,12 +74,8 @@ describe('logout everywhere', () => {
     })
     expect(revoke.status).toBe(204)
 
-    const meA = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: deviceA.cookie },
-    })
-    const meB = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: deviceB.cookie },
-    })
+    const meA = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: deviceA.cookie } })
+    const meB = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: deviceB.cookie } })
     expect(meA.status).toBe(401)
     expect(meB.status).toBe(401)
   })
@@ -100,9 +88,7 @@ describe('logout everywhere', () => {
     const list = await fetch(`${baseUrl}/api/v1/accounts/sessions`, {
       headers: { cookie: deviceA.cookie },
     })
-    const { sessions } = (await list.json()) as {
-      sessions: { id: string; isCurrent: boolean }[]
-    }
+    const { sessions } = (await list.json()) as { sessions: { id: string; isCurrent: boolean }[] }
     const currentSession = sessions.find((s) => s.isCurrent)
     expect(currentSession).toBeDefined()
 
@@ -113,12 +99,8 @@ describe('logout everywhere', () => {
     })
     expect(revoke.status).toBe(204)
 
-    const meA = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: deviceA.cookie },
-    })
-    const meB = await fetch(`${baseUrl}/api/v1/me`, {
-      headers: { cookie: deviceB.cookie },
-    })
+    const meA = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: deviceA.cookie } })
+    const meB = await fetch(`${baseUrl}/api/v1/me`, { headers: { cookie: deviceB.cookie } })
     expect(meA.status).toBe(401)
     expect(meB.status).toBe(200)
   })

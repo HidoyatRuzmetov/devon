@@ -45,7 +45,7 @@
       "section": "Management view",
       "decisions": {
         "title": "Waiting on you",
-        "meaning": "Tasks you handed out that are past their due date.",
+        "meaning": "Cards you handed out that are past their due date.",
         "cta": "Open the board"
       },
       "overdue": {
@@ -56,7 +56,7 @@
       },
       "load": {
         "title": "Load this week",
-        "meaning": "Open tasks against each person's weekly capacity.",
+        "meaning": "Open cards against each person's weekly capacity.",
         "cta": "See the load",
         "empty": "No open tasks yet."
       },

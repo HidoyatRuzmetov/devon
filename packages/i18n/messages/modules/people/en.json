@@ -23,24 +23,24 @@
     },
     "indicator": {
       "openCards": {
-        "label": "Open tasks",
-        "description": "Tasks currently in progress"
+        "label": "Open cards",
+        "description": "Cards currently in progress"
       },
       "overdueCards": {
         "label": "Overdue",
-        "description": "Open tasks past their due date"
+        "description": "Open cards past their due date"
       },
       "dueThisWeek": {
         "label": "Due this week",
-        "description": "Tasks due in the next seven days"
+        "description": "Cards due in the next seven days"
       },
       "doneLast30d": {
         "label": "Done in 30 days",
-        "description": "Tasks finished in the last 30 days"
+        "description": "Cards finished in the last 30 days"
       },
       "onTimeRate90d": {
         "label": "On time",
-        "description": "Share of tasks finished by their due date over 90 days"
+        "description": "Share of cards finished by their due date over 90 days"
       },
       "workloadHours": {
         "label": "Load (hours)",
@@ -48,11 +48,11 @@
       },
       "workloadPct": {
         "label": "Load",
-        "description": "Open tasks against the weekly capacity"
+        "description": "Open cards against the weekly capacity"
       },
       "cardsGivenOpen": {
-        "label": "Tasks given",
-        "description": "Open tasks this person handed to a colleague"
+        "label": "Cards given",
+        "description": "Open cards this person handed to a colleague"
       },
       "projects": {
         "label": "Projects",

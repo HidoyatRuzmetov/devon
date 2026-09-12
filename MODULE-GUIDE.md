@@ -301,6 +301,84 @@ module, both blocked a cold boot on every machine, every time):
   zero, `seed:demo` writes 5 rows once and 0 on a repeat, and login/session/permission-deny all work
   as shown above.
 
+## v1.1 conventions (SPEC §2, §4.2, §5)
+
+Three things the v1.1 skeleton put in place. Every package built on top of it uses them rather than
+rolling its own.
+
+### 1. Permissions: one registry, two readers
+
+`packages/contracts/src/app-actions.ts` is the matrix as data — every action the product has, the
+feature area it belongs to and the subject kind it reduces to. `canAction(actor, id, ctx)` resolves an
+id through `can()`; nothing anywhere re-implements a rule, and `role === 'head'` never appears in a
+module again (I-7, I-9).
+
+Subject kinds, after v1.1:
+
+| kind | reads | writes |
+|---|---|---|
+| `department` | any active member | head |
+| `department_managed` | **head** | head |
+| `department_child` | any active member | any active member |
+| `owned` | any active member | the owner set (`ownerUserIds`) **or** the head |
+| `personal` | owner only, no exceptions ever (I-1) | owner only |
+| `authenticated` | any signed-in session | — |
+
+**Server.** Declare the subject on the route; pass the real owner ids for an `owned` object:
+
+```ts
+config: { permission: { action: 'read', subject: (r) => ({ kind: 'department_managed', departmentId: activeDepartmentId(r) }) } }
+```
+
+Per-object ownership is checked inside the handler with the same `can()` — see
+`apps/api/src/modules/work/index.ts`'s `requireCardOwnership` (404 for a foreign id, 403 for a real
+row the caller does not own) — and the answer is echoed back on the DTO as `canEdit`/`canManage` so
+the client never guesses. Head-only routes are listed in `apps/api/test/unit/head-only-routes.test.ts`;
+adding one is a visible diff there, exactly like `PUBLIC_ROUTES`.
+
+The per-department role lives in one place: `apps/api/src/lib/actor.ts`'s `departmentRoleOf` /
+`isHeadOf` / `contextDepartmentRole`. `Actor.role` is the **instance** role and is `member` for every
+real boshqarma boshligʻi (I-8b) — it is never the answer to "is this the head?". RLS gets the same
+fact through `RequestContext.departmentRole` → `app.current_department_role()` (migration `0904`).
+
+**Client.** `apps/web/src/lib/can.tsx`:
+
+```tsx
+const canEdit = useCan('work.card.edit', { ownerUserIds: card.ownerUserIds }) // one object
+const canSeeTable = useCan('people.table.read')                               // the capability
+<Can action="fields.definition.manage"><FieldManager /></Can>
+```
+
+Omitting the object asks "does this person ever get to do this here?", which is what a sidebar entry
+or a palette command needs. Sidebar entries, palette commands and page-header actions declare the
+action id they need (`NavEntry.action`) and the shell hides them through the same `can()` — the entry
+and the 403 can never disagree. The client only hides; the server always decides.
+
+### 2. People indicators: one registry, one endpoint
+
+`packages/contracts/src/indicators.ts` lists every auto indicator with its `id`, `labelKey`, `type`,
+`format`, `descriptionKey`, `headOnly`, `source` and footer `calculations`.
+`GET /api/v1/people/indicators?ids=&keys=` computes them — one batched query **per source**, never per
+person (I-14), cached 60 s per department, head-only. The table, the person page and the head's
+dashboard all read that one service, and `apps/web/src/features/people/format.ts` renders a value
+according to the registry's own `format`, so a percent is always a percent and a missing value is
+always the same em dash.
+
+Adding an indicator: add the spec, add its four locale strings under `people.indicator.<id>`, and
+teach the matching source function in `apps/api/src/modules/people/repo.ts`. Never add one that could
+carry personal-workspace *content* — `focusMinutes7d` is an aggregate minute count served by a
+`security definer` function whose return type is physically `(user_id, minutes)` (I-1).
+
+### 3. Custom fields: the interface the `fields` module implements
+
+`packages/contracts/src/custom-fields.ts` declares `FieldDef`, `FieldValueRecord`, `FieldRequest`,
+`FIELD_CAPS` and the `CustomFieldsPort` interface (SPEC §5). The people table, the card detail
+property column, the person page and the Telegram Mini App's "Maydonlar" screen are built against that
+port; the `fields` module implements it. Person values are stored against the **membership**
+(department-scoped), head-only values never appear in a list endpoint, and `packages/ai` strips person
+field values from every prompt payload.
+
+
 ## Before you're done
 
 ```bash

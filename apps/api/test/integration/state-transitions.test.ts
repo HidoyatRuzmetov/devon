@@ -47,10 +47,7 @@ async function createEvent(session: Session, overrides: Record<string, unknown> 
 
 describe('events: a cancelled event refuses new RSVPs', () => {
   it('RSVP after cancel is a 409, not a silent 200', async () => {
-    const dept = await seedDepartment(db, {
-      name: 'Cancel dept',
-      slug: `cancel-${randomUUID()}`,
-    })
+    const dept = await seedDepartment(db, { name: 'Cancel dept', slug: `cancel-${randomUUID()}` })
     const head = await seedMember(db, dept.id, { role: 'head' })
     const session = await loginAs(baseUrl, head.login)
     const event = await createEvent(session)
@@ -141,10 +138,7 @@ describe('polls: a closed poll refuses new votes', () => {
       }),
     })
     expect(pollRes.status).toBe(201)
-    const poll = (await pollRes.json()) as {
-      id: string
-      options: { id: string }[]
-    }
+    const poll = (await pollRes.json()) as { id: string; options: { id: string }[] }
     const vote = await fetch(`${baseUrl}/api/v1/events/${event.id}/polls/${poll.id}/vote`, {
       method: 'POST',
       headers: session.headers,
@@ -156,14 +150,9 @@ describe('polls: a closed poll refuses new votes', () => {
 
 describe('admin pause: a paused department blocks writes but not reads (H30.1 "admin pause" flow)', () => {
   it('after pause, the board is still readable but a card mutation is refused; resume restores it', async () => {
-    const dept = await seedDepartment(db, {
-      name: 'Pausable dept',
-      slug: `pause-${randomUUID()}`,
-    })
+    const dept = await seedDepartment(db, { name: 'Pausable dept', slug: `pause-${randomUUID()}` })
     const head = await seedMember(db, dept.id, { role: 'head' })
-    const superAdminUser = await seedBareUser(db, {
-      instanceRole: 'super_admin',
-    })
+    const superAdminUser = await seedBareUser(db, { instanceRole: 'super_admin' })
     const headSession = await loginAs(baseUrl, head.login)
     const superSession = await loginAs(baseUrl, superAdminUser.login)
 
@@ -189,10 +178,7 @@ describe('admin pause: a paused department blocks writes but not reads (H30.1 "a
     const writeWhilePaused = await fetch(`${baseUrl}/api/v1/cards/${card.id}`, {
       method: 'PATCH',
       headers: headSession.headers,
-      body: JSON.stringify({
-        title: 'edited while paused',
-        version: card.version,
-      }),
+      body: JSON.stringify({ title: 'edited while paused', version: card.version }),
     })
     expect(writeWhilePaused.status).toBe(403)
 
@@ -206,10 +192,7 @@ describe('admin pause: a paused department blocks writes but not reads (H30.1 "a
     const writeAfterResume = await fetch(`${baseUrl}/api/v1/cards/${card.id}`, {
       method: 'PATCH',
       headers: headSession.headers,
-      body: JSON.stringify({
-        title: 'edited after resume',
-        version: card.version,
-      }),
+      body: JSON.stringify({ title: 'edited after resume', version: card.version }),
     })
     expect(writeAfterResume.status).toBe(200)
   })

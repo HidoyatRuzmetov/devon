@@ -117,7 +117,7 @@
       "backToBoard": "Back to board",
       "noIdTitle": "No card selected",
       "noIdBody": "This link is missing a card id.",
-      "readOnly": "This task is not yours to change — reading only. Its giver, its assignee, its creator and the head of the department can edit it."
+      "readOnly": "This card is not yours to change — reading only. Its giver, its assignee, its creator and the head of the department can edit it."
     },
     "priority": {
       "none": "No priority",

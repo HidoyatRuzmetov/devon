@@ -115,11 +115,7 @@ export async function seedBareUser(
   return { id, login }
 }
 
-export type Session = {
-  cookie: string
-  csrf: string
-  headers: Record<string, string>
-}
+export type Session = { cookie: string; csrf: string; headers: Record<string, string> }
 
 export async function loginAs(
   baseUrl: string,
@@ -140,11 +136,7 @@ export async function loginAs(
   return {
     cookie,
     csrf,
-    headers: {
-      cookie,
-      'x-csrf-token': csrf,
-      'content-type': 'application/json',
-    },
+    headers: { cookie, 'x-csrf-token': csrf, 'content-type': 'application/json' },
   }
 }
 
