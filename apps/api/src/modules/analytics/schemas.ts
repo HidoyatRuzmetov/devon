@@ -23,6 +23,16 @@ export const ANALYTICS_CHART_KEYS = [
 export const analyticsChartKeySchema = z.enum(ANALYTICS_CHART_KEYS)
 export type AnalyticsChartKey = (typeof ANALYTICS_CHART_KEYS)[number]
 
+/** v1.1 SPEC §2.2 (D3): anything with a **person axis** is the head's. Department- and unit-level
+ * aggregates stay open to everyone -- shared goals need shared scoreboards, and nobody is singled
+ * out. Export inherits the chart's own gate, so this one list gates both the JSON summary's
+ * person-axis section and `GET /export.csv?chart=...`. */
+export const HEAD_ONLY_CHART_KEYS: readonly AnalyticsChartKey[] = Object.freeze(['loadPerPerson'])
+
+export function isHeadOnlyChart(key: AnalyticsChartKey): boolean {
+  return HEAD_ONLY_CHART_KEYS.includes(key)
+}
+
 export const summaryQuerySchema = z.object({
   filter: z.string().max(500).optional(),
   since: isoDate.optional(),

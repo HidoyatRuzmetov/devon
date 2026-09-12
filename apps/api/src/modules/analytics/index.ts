@@ -17,6 +17,7 @@ import { summaryChartToCsv } from './csv.js'
 import * as repo from './repo.js'
 import {
   analyticsChartKeySchema,
+  isHeadOnlyChart,
   analyticsSummarySchema,
   createPinBodySchema,
   createSavedFilterBodySchema,
@@ -29,6 +30,7 @@ import {
   summaryQuerySchema,
 } from './schemas.js'
 import type { PersonalOverview, PinnedChartRow, SavedFilterRow, SummaryResult } from './repo.js'
+import { isHeadOf } from '../../lib/actor.js'
 
 const idParamsSchema = z.object({ id: z.string().uuid() })
 const exportQuerySchema = summaryQuerySchema.extend({ chart: analyticsChartKeySchema })
@@ -75,6 +77,14 @@ function pinnedChartToDto(row: PinnedChartRow) {
 
 function personalToDto(overview: PersonalOverview) {
   return overview
+}
+
+/** D3a: a member's summary keeps every department- and unit-level aggregate and is narrowed to their
+ * OWN row in `loadPerPerson` -- an honest "you" bar rather than an empty state, and never a ranking
+ * of colleagues. The head gets the whole list. */
+function narrowPersonAxis(summary: SummaryResult, isHead: boolean, userId: string): SummaryResult {
+  if (isHead) return summary
+  return { ...summary, loadPerPerson: summary.loadPerPerson.filter((p) => p.userId === userId) }
 }
 
 function summaryToDto(summary: SummaryResult) {
@@ -127,7 +137,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         `analytics.summary:${departmentId}:${userId}:${req.query.filter ?? ''}:${req.query.since ?? ''}:${req.query.until ?? ''}`,
         () => repo.getSummary(departmentId, userId, ctxFrom(req), req.query),
       )
-      return summaryToDto(summary)
+      return summaryToDto(narrowPersonAxis(summary, isHeadOf(req.actor, departmentId), userId))
     },
   )
 
@@ -163,7 +173,16 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
         `analytics.summary:${departmentId}:${userId}:${req.query.filter ?? ''}:${req.query.since ?? ''}:${req.query.until ?? ''}`,
         () => repo.getSummary(departmentId, userId, ctxFrom(req), req.query),
       )
-      const csv = summaryChartToCsv(req.query.chart, summary)
+      // D3b: the export inherits the chart's gate. Without this the same per-person data a member
+      // cannot see on screen was one URL away as a downloadable file.
+      if (isHeadOnlyChart(req.query.chart) && !isHeadOf(req.actor, departmentId)) {
+        sendProblem(reply, 'forbidden')
+        return
+      }
+      const csv = summaryChartToCsv(
+        req.query.chart,
+        narrowPersonAxis(summary, isHeadOf(req.actor, departmentId), userId),
+      )
       reply
         .header('content-type', 'text/csv; charset=utf-8')
         .header('cache-control', 'private, no-store')

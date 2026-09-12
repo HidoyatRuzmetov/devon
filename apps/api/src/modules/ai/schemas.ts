@@ -71,13 +71,17 @@ export const runFeatureResponseSchema = z.object({
 
 export const aiSettingsSchema = z.object({
   departmentId: z.string().uuid(),
-  budgetUzsPerMonth: z.number().int().min(0),
+  // v1.1 SPEC §2.2 (D2a): the five money fields are head-only and are simply **absent** for a
+  // member -- `.optional()`, never a zero, because a zero budget is a different statement from "this
+  // is not yours to see". A member still receives `flags`/`available`, which is what they need to
+  // know which helpers exist.
+  budgetUzsPerMonth: z.number().int().min(0).optional(),
   softCapPct: z.number().int().min(1).max(100),
   flags: z.record(z.string(), z.boolean()),
-  spentUzsThisMonth: z.number().int().min(0),
-  remainingUzs: z.number().int().min(0),
-  budgetStatus: z.enum(['ok', 'soft_cap', 'hard_stop']),
-  usedPct: z.number().min(0),
+  spentUzsThisMonth: z.number().int().min(0).optional(),
+  remainingUzs: z.number().int().min(0).optional(),
+  budgetStatus: z.enum(['ok', 'soft_cap', 'hard_stop']).optional(),
+  usedPct: z.number().min(0).optional(),
   // H8.1 graceful degradation (additive field, backward compatible -- see `errors.ts`'s
   // `AiUnavailableError` doc comment). `flags` above is already forced all-`false` whenever this is
   // `false`, so a web client that has never heard of this field still hides every AI entry point

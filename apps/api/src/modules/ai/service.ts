@@ -140,13 +140,25 @@ export function __clearCacheForTests(): void {
 export async function getSettingsWithUsage(
   ctx: RequestContext,
   departmentId: string,
+  /** v1.1 SPEC §2.2 (D2a): the money half of this DTO is head-only. */
+  isHead = true,
 ): Promise<AiSettingsDto> {
   return withContext(ctx, async (tx) => {
     const [settings, spent] = await Promise.all([
       repo.getSettings(tx, departmentId),
       repo.spentThisMonthUzs(tx, departmentId),
     ])
-    return settingsToDto(settings, spent, isAiAvailable())
+    const dto = settingsToDto(settings, spent, isAiAvailable())
+    if (isHead) return dto
+    const {
+      budgetUzsPerMonth: _budget,
+      spentUzsThisMonth: _spent,
+      remainingUzs: _remaining,
+      budgetStatus: _status,
+      usedPct: _used,
+      ...memberVisible
+    } = dto
+    return memberVisible
   })
 }
 
@@ -180,9 +192,12 @@ export async function listUsage(
   ctx: RequestContext,
   departmentId: string,
   limit: number,
+  /** v1.1 SPEC §2.2 (D2b): `onlyUserId` non-null restricts the list to that person's own runs. The
+   * route passes the caller's id for a member and `null` for the head. */
+  options: { onlyUserId?: string | null } = {},
 ): Promise<TraceDto[]> {
   return withContext(ctx, async (tx) => {
-    const rows = await repo.listTraces(tx, departmentId, limit)
+    const rows = await repo.listTraces(tx, departmentId, limit, options.onlyUserId ?? null)
     return rows.map(traceToDto)
   })
 }

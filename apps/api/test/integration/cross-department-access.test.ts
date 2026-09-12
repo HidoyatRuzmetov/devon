@@ -409,12 +409,14 @@ describe("AI settings (H1.2/H25.1) -- subject built from the actor's own departm
   // always `'member'`, so this check can never be true for any real head -- only `super_admin` can
   // ever pass it. The very first `GET /ai/settings` for any new department (head or member, whoever
   // gets there first) 500s instead of lazily creating the row it was designed to create; every
-  // subsequent read/write also 500s forever after, since the row never gets created either. `it.fails`
-  // keeps the suite green while this stands as a live regression probe -- the fix is either passing
-  // the department *membership* role (not `Actor.role`) as `actorRole` into `toDbContext()` for this
-  // module, or having the RLS policy check membership directly rather than a GUC that was never wired
-  // to carry it.
-  it.fails(
+  // subsequent read/write also 500s forever after, since the row never got created either.
+  //
+  // FIXED in v1.1, both halves: migration `0904_department_role_guc.sql` adds
+  // `app.current_department_role()` (a new transaction-local GUC set by `withContext()` from
+  // `RequestContext.departmentRole`) and re-creates `ai_department_settings_write` to read it, and the
+  // AI module now passes the actor's *membership* role via `lib/actor.ts`'s `contextDepartmentRole()`.
+  // The database boundary and `can()` now derive "is this the head?" from the same source.
+  it(
     "a fresh department's own head can read (and lazily initialise) its AI settings on first visit",
     async () => {
       const freshDept = await seedDepartment(db, {

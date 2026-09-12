@@ -4,8 +4,9 @@
 // department's pages/onboarding templates -- TECH-SPEC §2.3: "member ... create/edit/archive ...
 // pages"); every mutation checks CSRF exactly like `PATCH /api/v1/me`.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyRequest } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { can } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
@@ -97,6 +98,40 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     departmentId: activeDepartmentId(r),
   })
 
+  /** v1.1 SPEC §2.2 (D4c): the onboarding checklist is how the head introduces a newcomer to the
+   * department -- not a shared wiki page. Every member could create, edit and delete them, and the
+   * client panel showed Add/Save/Trash to everyone. */
+  const departmentManagedSubject = (r: FastifyRequest) => ({
+    kind: 'department_managed' as const,
+    departmentId: activeDepartmentId(r),
+  })
+
+  /**
+   * v1.1 SPEC §2.2 (D4a/D4b). A wiki works because *editing* is open and version history is the
+   * safety net -- deleting a page and rolling back somebody's work are not editing. Author or head.
+   */
+  const requirePageOwnership = async (
+    req: FastifyRequest,
+    reply: FastifyReply,
+    pageId: string,
+  ): Promise<boolean> => {
+    const page = await repo.getPage(activeDepartmentId(req), pageId, ctxFrom(req))
+    if (!page) {
+      sendProblem(reply, 'not_found')
+      return false
+    }
+    const decision = can(req.actor, 'delete', {
+      kind: 'owned',
+      departmentId: activeDepartmentId(req),
+      ownerUserIds: [page.created_by_user_id],
+    })
+    if (!decision.allowed) {
+      sendProblem(reply, 'forbidden')
+      return false
+    }
+    return true
+  }
+
   // -- Pages ------------------------------------------------------------------------------------------
 
   app.get(
@@ -180,6 +215,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
+      if (!(await requirePageOwnership(req, reply, req.params.id))) return
       const ok = await repo.deletePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
       if (!ok) return sendProblem(reply, 'not_found')
       reply.code(204).send()
@@ -241,6 +277,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
+      if (!(await requirePageOwnership(req, reply, req.params.id))) return
       const outcome = await repo.restoreVersion(
         activeDepartmentId(req),
         req.actor!.userId,
@@ -259,7 +296,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/onboarding/templates',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: { permission: { action: 'read', subject: departmentManagedSubject } },
       schema: { response: { 200: onboardingTemplateListSchema } },
     },
     async (req) => {
@@ -271,7 +308,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/onboarding/templates',
     {
-      config: { permission: { action: 'create', subject: departmentChildSubject } },
+      config: { permission: { action: 'create', subject: departmentManagedSubject } },
       schema: {
         body: createOnboardingTemplateBodySchema,
         response: { 201: onboardingTemplateSchema },
@@ -292,7 +329,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/onboarding/templates/:id',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      config: { permission: { action: 'update', subject: departmentManagedSubject } },
       schema: {
         params: idParamsSchema,
         body: patchOnboardingTemplateBodySchema,
@@ -316,7 +353,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
   app.delete(
     '/onboarding/templates/:id',
     {
-      config: { permission: { action: 'delete', subject: departmentChildSubject } },
+      config: { permission: { action: 'delete', subject: departmentManagedSubject } },
       schema: { params: idParamsSchema },
     },
     async (req, reply) => {

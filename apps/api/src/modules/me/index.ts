@@ -1,10 +1,17 @@
 // GET /api/v1/me, PATCH /api/v1/me -- design.md §1.7. `own_account` (I-1/I-7): only the signed-in user
 // themselves, never a head, never the super admin, ever.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import { z } from 'zod'
 import { meSchema, patchMeSchema } from '../../schemas.js'
+import {
+  ACTIVE_DEPARTMENT_COOKIE_NAME,
+  activeDepartmentCookieOptions,
+  signActiveDepartmentCookie,
+} from '../../lib/active-department.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { CSRF_COOKIE_NAME } from '../../lib/cookies.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { sendProblem } from '../../lib/problem-reply.js'
 import { toPublicUser } from '../../lib/user-view.js'
 import type { MembershipRecord, UserRecord } from '../../types.js'
 
@@ -18,6 +25,7 @@ function toMe(
   isDemo: boolean,
   csrfToken: string,
   viewAsDepartmentId: string | null,
+  activeDepartmentId: string | null,
 ) {
   return {
     user: toPublicUser(user),
@@ -27,11 +35,11 @@ function toMe(
       role: m.role,
     })),
     membershipCount: memberships.length,
-    // No "switch department" endpoint yet (MODULE-GUIDE.md "Web features"): the first membership
-    // (`joined_at` ascending, `listActiveMembershipsForUser`'s own order) is as good a default as any
-    // until one exists -- `useDepartment()`'s client-side override still wins in the browser for
-    // anyone who has picked a different one (`activeDepartmentId` here only seeds that resolution
-    // order's first candidate).
+    // v1.1 SPEC §2.3: this is now the *server's* answer, resolved per request from the signed
+    // `devon_dept` cookie (`plugins/session.ts` -> `buildActor`) and falling back to the first
+    // membership by `joined_at`. The client no longer overrides it -- `useDepartment()` reads this
+    // field and `POST /me/active-department` is how it changes, so the department a screen renders
+    // and the department `can()` decided against are the same one.
     //
     // Blitz integration fix: a super admin's own `memberships` is always empty (I-8b: super_admin is
     // an instance-wide role, never also a department membership), so without this the field was always
@@ -42,7 +50,8 @@ function toMe(
     // nothing to render, even once `plugins/session.ts`'s matching fix let the actual API calls
     // through. `viewAsDepartmentId` (from `req.actor.viewAs`, set only for a super_admin who started
     // view-as, TECH-SPEC §10/I-8a) takes the same precedence a real membership already gets.
-    activeDepartmentId: viewAsDepartmentId ?? memberships[0]?.departmentId ?? null,
+    activeDepartmentId:
+      viewAsDepartmentId ?? activeDepartmentId ?? memberships[0]?.departmentId ?? null,
     actingForUserId: null,
     instance: { isDemo, maintenance: false },
     csrfToken,
@@ -74,6 +83,7 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
           settings.isDemo,
           csrfToken,
           req.actor?.viewAs?.departmentId ?? null,
+          req.actor?.departmentId ?? null,
         ),
       )
     },
@@ -113,6 +123,59 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
           settings.isDemo,
           csrfToken,
           req.actor?.viewAs?.departmentId ?? null,
+          req.actor?.departmentId ?? null,
+        ),
+      )
+    },
+  )
+
+  // v1.1 SPEC §2.3 -- the department switcher. `{kind:'own_account'}` because choosing which of YOUR
+  // OWN memberships is active is an account preference, not a department action: a member may switch,
+  // a head may switch, and neither gains anything by doing so (the target must already be one of
+  // `actor.memberships`, and every route still runs `can()` against the department that results).
+  app.post(
+    '/me/active-department',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => ({ kind: 'own_account', userId: r.actor?.userId ?? '' }),
+        },
+      },
+      schema: {
+        body: z.object({ departmentId: z.string().uuid() }).strict(),
+        response: { 200: meSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+
+      const { departmentId } = req.body
+      const memberships = await app.devon.listActiveMembershipsForUser(req.actorUser!.id)
+      // Fail-closed: a department the user is not an active member of is a 403, never a silent
+      // no-op, so the switcher cannot be used to probe which department ids exist.
+      if (!memberships.some((m) => m.departmentId === departmentId)) {
+        sendProblem(reply, 'forbidden')
+        return
+      }
+
+      const { value } = signActiveDepartmentCookie(
+        req.actorUser!.id,
+        departmentId,
+        app.devonConfig.CSRF_SECRET,
+      )
+      reply.setCookie(ACTIVE_DEPARTMENT_COOKIE_NAME, value, activeDepartmentCookieOptions())
+
+      const settings = await app.devon.getInstanceSettings()
+      const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
+      reply.send(
+        toMe(
+          req.actorUser!,
+          memberships,
+          settings.isDemo,
+          csrfToken,
+          req.actor?.viewAs?.departmentId ?? null,
+          departmentId,
         ),
       )
     },

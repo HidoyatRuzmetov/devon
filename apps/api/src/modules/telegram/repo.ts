@@ -53,6 +53,28 @@ function generateCode(length = 8): string {
 
 export type LinkCode = { code: string; expiresAt: Date }
 
+/**
+ * D9, fixed. `who_can_connect_telegram_group` was written by the settings screen, stored, shown back
+ * to the head -- and never read by anything, so the behaviour was always the strict one and the
+ * head's choice was inert. This is the reader. Defaults to `'everyone'` (TECH-SPEC §2.3) when the
+ * key is absent, and tolerates the snake_case spelling the same way `structure/repo.ts` does.
+ */
+export async function readWhoCanConnectGroup(
+  departmentId: string,
+): Promise<'everyone' | 'head'> {
+  return withContext(
+    toRequestContext(systemAuditCtx(null), { departmentId, actorRole: 'super_admin' }),
+    async (tx) => {
+      const rows = await tx.raw<{ settings: unknown }>(
+        sql`select settings from app.departments where id = ${departmentId} and deleted_at is null`,
+      )
+      const settings = (rows[0]?.settings ?? {}) as Record<string, unknown>
+      const value = settings['whoCanConnectTelegramGroup'] ?? settings['who_can_connect_telegram_group']
+      return value === 'head' ? 'head' : 'everyone'
+    },
+  )
+}
+
 export async function issueLinkCode(userId: string, ttlMinutes = 15): Promise<LinkCode> {
   const code = generateCode(8)
   const expiresAt = new Date(Date.now() + ttlMinutes * 60_000)

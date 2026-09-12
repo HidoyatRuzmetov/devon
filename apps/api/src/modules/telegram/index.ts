@@ -16,9 +16,12 @@ import {
   issueGroupConnectCode,
   issueLinkCode,
   listGroupsForDepartment,
+  readWhoCanConnectGroup,
   setGroupKinds,
   unlink,
 } from './repo.js'
+import { isHeadOf } from '../../lib/actor.js'
+import { sendProblem } from '../../lib/problem-reply.js'
 import { registerBotHandlers } from './bot.js'
 import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
 import { configureTelegram, getBot, isTelegramConfigured, publicUrl } from './transport.js'
@@ -144,8 +147,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'read',
+          // D8: a group chat id is an operational credential. The UI already hid this card behind
+          // `isHead`; the server now agrees instead of leaving the GET open to every member.
           subject: (r) => ({
-            kind: 'department_child',
+            kind: 'department_managed',
             departmentId: (r.params as { departmentId: string }).departmentId,
           }),
         },
@@ -176,8 +181,11 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'create',
+          // D9: `can()` proves membership; the department's own `whoCanConnectTelegramGroup` setting
+          // decides whether a member may connect a group, and is honoured in the handler below.
+          // Renaming and disconnecting an existing group stay `{kind:'department'}` (head-only).
           subject: (r) => ({
-            kind: 'department',
+            kind: 'department_child',
             departmentId: (r.params as { departmentId: string }).departmentId,
           }),
         },
@@ -190,6 +198,10 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const { departmentId } = req.params
+      const policy = await readWhoCanConnectGroup(departmentId)
+      if (policy !== 'everyone' && !isHeadOf(req.actor, departmentId)) {
+        return sendProblem(reply, 'forbidden')
+      }
       const { code, expiresAt } = await issueGroupConnectCode(departmentId, req.actor!.userId)
       reply.send({ code, expiresAt: expiresAt.toISOString() })
     },

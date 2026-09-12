@@ -51,6 +51,14 @@ const departmentChildSubject = (departmentId: string) => ({
   departmentId,
 })
 
+/** v1.1 SPEC §2.2 (D7): deleting or archiving a bo'lim rewrites everyone's home -- no department
+ * switch opens it, so it is `{kind:'department_managed'}` at the `can()` layer rather than a setting
+ * check inside the repo. */
+const departmentManagedSubject = (departmentId: string) => ({
+  kind: 'department_managed' as const,
+  departmentId,
+})
+
 /** Turns this module's `StructureError` (settings gating, version conflicts, cross-department
  * references -- see `repo.ts`) into the same RFC 9457 `Problem` every other route sends, without a
  * plugin-scoped `setErrorHandler` that would shadow `src/app.ts`'s root one (and, with it, its
@@ -190,7 +198,7 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
         permission: {
           action: 'delete',
           subject: (r) =>
-            departmentChildSubject((r.params as { departmentId: string }).departmentId),
+            departmentManagedSubject((r.params as { departmentId: string }).departmentId),
         },
       },
       schema: { params: unitParamsSchema, response: { 200: deletedUnitSchema } },
@@ -214,7 +222,7 @@ const structurePlugin: FastifyPluginAsyncZod = async (app) => {
         permission: {
           action: 'update',
           subject: (r) =>
-            departmentChildSubject((r.params as { departmentId: string }).departmentId),
+            departmentManagedSubject((r.params as { departmentId: string }).departmentId),
         },
       },
       schema: {

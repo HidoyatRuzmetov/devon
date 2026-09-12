@@ -7,6 +7,10 @@ import type { FastifyInstance, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
 import type { Actor } from '@devon/contracts'
 import { buildActor } from '../lib/actor.js'
+import {
+  ACTIVE_DEPARTMENT_COOKIE_NAME,
+  verifyActiveDepartmentCookie,
+} from '../lib/active-department.js'
 import type { UserRecord } from '../types.js'
 // EPIC-013 (admin module, I-8a "view-as"): the only line this module's `view-as.ts` needs from a
 // shared file. `verifyViewAsCookie` is pure and self-contained (HMAC-verified, expiry-checked) --
@@ -45,7 +49,16 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
     if (!loaded) return // expired/revoked/unknown token: request proceeds unauthenticated, never errors here.
 
     const memberships = await app.devon.listActiveMembershipsForUser(loaded.user.id)
-    req.actor = buildActor(loaded.user, memberships)
+    // v1.1 SPEC §2.3 (D13): the department switcher's cookie, verified for *this* user and then
+    // checked against their own memberships inside `buildActor`. A missing, stale, forged or
+    // no-longer-a-membership value falls back to the first membership, which is exactly the old
+    // behaviour -- so this is additive, never a new way to reach a department.
+    const requestedDepartmentId = verifyActiveDepartmentCookie(
+      req.cookies[ACTIVE_DEPARTMENT_COOKIE_NAME],
+      loaded.user.id,
+      app.devonConfig.CSRF_SECRET,
+    )
+    req.actor = buildActor(loaded.user, memberships, requestedDepartmentId)
     req.actorUser = loaded.user
     req.sessionId = loaded.session.id
     req.csrfHash = loaded.csrfHash

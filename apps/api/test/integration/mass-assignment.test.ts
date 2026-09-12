@@ -118,16 +118,13 @@ describe('cards: spoofed identity/ownership/state fields never take effect', () 
     expect(ids).toContain(card.id)
   })
 
-  // BUG (H1.3 / H1.2): confirmed. `work/repo.ts`'s `createCard` never checks that `assigneeUserId` /
-  // `giverUserId` actually name a member of the card's own department before writing them -- any uuid
-  // is accepted verbatim. A member of one department can create a card in their own department
-  // "assigned to" a user who belongs to a completely different one (or does not exist at all): a
-  // cross-tenant reference that (per this same file's cross-department board check above) never
-  // resolves to anything the victim's department can see, but is a data-integrity hole and a plausible
-  // information-shape probe (the assignee id round-trips in the response either way). `it.fails` keeps
-  // the suite green while this stands as a live probe -- see `tests.md` for the fix shape (validate
-  // membership the same way `patchCard`'s watcher/label ids already get checked against known ids).
-  it.fails('a card cannot be assigned to a user outside the department', async () => {
+  // FIXED in v1.1 (was `it.fails`; H1.3/H1.2). `createCard` wrote whatever uuid the body named as
+  // `assigneeUserId`/`giverUserId` without checking it against the card's own department, so a member
+  // could create a card "assigned to" somebody in a completely different department (or to nobody at
+  // all) -- a cross-tenant reference the victim's department can never see and the board can never
+  // render. `POST /cards` now resolves both ids against the department's active memberships in one
+  // query (`repo.filterDepartmentMemberIds`) before the insert, and answers 422.
+  it('a card cannot be assigned to a user outside the department', async () => {
     const res = await fetch(`${baseUrl}/api/v1/cards`, {
       method: 'POST',
       headers: actor.headers,

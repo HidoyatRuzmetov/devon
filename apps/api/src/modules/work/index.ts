@@ -3,8 +3,10 @@
 // `req.actor.departmentId` (this build's one active department per session -- EPIC-002 has not
 // shipped a switcher yet, see `apps/api/src/lib/actor.ts`).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
+import { can, matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
+import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
@@ -34,6 +36,59 @@ import {
 
 function departmentChildSubject(departmentId: string | null) {
   return { kind: 'department_child' as const, departmentId: departmentId ?? '' }
+}
+
+/** v1.1 SPEC §2.2 (D6d): the department's label vocabulary is head-shaped -- one shared set of names
+ * everyone files work under, not something any member may add to. */
+function departmentManagedSubject(departmentId: string | null) {
+  return { kind: 'department_managed' as const, departmentId: departmentId ?? '' }
+}
+
+/**
+ * v1.1 SPEC §2.1 (D6a/b/c/e). The route-level `can()` has already proven membership; this is the
+ * per-object half of the same decision, made by the same function (`can()` with `{kind:'owned'}`),
+ * never a hand-rolled `role === 'head'`.
+ *
+ * Answers 404 for a card that is not this department's -- identical to what every read route says
+ * about a foreign id (H1.2) -- and 403 for a real card the caller neither gave, was given, nor
+ * created. Returns the owner set on success so a caller that needs it (the watcher route) can refine
+ * further.
+ */
+async function requireCardOwnership(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  departmentId: string,
+  cardId: string,
+): Promise<{ ok: true; ownerUserIds: string[] } | { ok: false }> {
+  const owners = await repo.getCardOwners(contextFromRequest(req), departmentId, cardId)
+  if (!owners) {
+    sendProblem(reply, 'not_found')
+    return { ok: false }
+  }
+  const decision = can(req.actor, 'update', {
+    kind: 'owned',
+    departmentId,
+    ownerUserIds: owners.ownerUserIds,
+  })
+  if (!decision.allowed) {
+    sendProblem(reply, 'forbidden')
+    return { ok: false }
+  }
+  return { ok: true, ownerUserIds: owners.ownerUserIds }
+}
+
+/** Stamps the server's answer to "may this viewer edit this card?" onto every card DTO that leaves
+ * this module, so the board, the table and the card sheet hide or disable exactly what the server
+ * would refuse (PERMISSIONS-AUDIT Step 5). Pure JS over rows already loaded -- no extra query. */
+function withCanEdit<T extends CardDTO>(cards: T[], actorUserId: string, isHead: boolean): T[] {
+  return cards.map((card) => ({
+    ...card,
+    canEdit:
+      isHead ||
+      card.createdByUserId === actorUserId ||
+      card.giverUserId === actorUserId ||
+      card.assigneeUserId === actorUserId,
+  }))
 }
 
 /** `''` (no membership) never satisfies `can()` for any real department id, so this is a safe,
@@ -97,11 +152,13 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         list.push(card)
         byAssignee.set(card.assigneeUserId, list)
       }
+      const isHead = isHeadOf(req.actor, departmentId)
+      const me = req.actor!.userId
       const columns = members.map((member) => ({
         member,
-        cards: byAssignee.get(member.userId) ?? [],
+        cards: withCanEdit(byAssignee.get(member.userId) ?? [], me, isHead),
       }))
-      reply.send({ members, columns, unassigned, labels })
+      reply.send({ members, columns, unassigned: withCanEdit(unassigned, me, isHead), labels })
     },
   )
 
@@ -154,7 +211,11 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const limit = req.query.limit ?? 50
       const cursorIndex = req.query.cursor ? Number(req.query.cursor) : 0
-      const page = filtered.slice(cursorIndex, cursorIndex + limit)
+      const page = withCanEdit(
+        filtered.slice(cursorIndex, cursorIndex + limit),
+        req.actor!.userId,
+        isHeadOf(req.actor, departmentId),
+      )
       const nextCursor = cursorIndex + limit < filtered.length ? String(cursorIndex + limit) : null
       reply.send({ items: page, nextCursor })
     },
@@ -175,6 +236,20 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
+      // Cross-tenant reference guard (H1.3, `test/integration/mass-assignment.test.ts`): `createCard`
+      // wrote whatever uuid the body named as assignee/giver, so a member could create a card in
+      // their own department "assigned to" somebody who belongs to a different one (or to nobody at
+      // all) -- a row the victim's department can never see and the board can never render. Both ids
+      // are checked against the department's active memberships in ONE query before the insert.
+      const named = [req.body.assigneeUserId, req.body.giverUserId].filter(
+        (id): id is string => typeof id === 'string',
+      )
+      if (named.length > 0) {
+        const members = await repo.filterDepartmentMemberIds(ctx, departmentId, named)
+        if (named.some((id) => !members.has(id))) {
+          return sendProblem(reply, 'validation_failed')
+        }
+      }
       const card = await repo.createCard(ctx, {
         departmentId,
         title: req.body.title,
@@ -192,7 +267,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         orderKey: req.body.orderKey,
         createdByUserId: req.actor!.userId,
       })
-      reply.code(201).send({ ...card, checklist: [], comments: [], activity: [] })
+      reply.code(201).send({
+        ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+        checklist: [],
+        comments: [],
+        activity: [],
+      })
     },
   )
 
@@ -217,7 +297,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, card.id),
         repo.getActivity(ctx, card.id),
       ])
-      reply.send({ ...card, checklist, comments, activity })
+      reply.send({
+        ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+        checklist,
+        comments,
+        activity,
+      })
     },
   )
 
@@ -241,6 +326,11 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
       const { version, ...patch } = req.body
+      // D6a/D6b: rewriting, re-dating, reassigning or archiving a colleague's card you have nothing
+      // to do with is the leak the CTO felt. The giver, the assignee, the creator and the head may;
+      // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
+      const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      if (!ownership.ok) return
       const result = await repo.patchCard(
         ctx,
         departmentId,
@@ -257,7 +347,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, result.card.id),
         repo.getActivity(ctx, result.card.id),
       ])
-      reply.send({ ...result.card, checklist, comments, activity })
+      reply.send({
+        ...withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+        checklist,
+        comments,
+        activity,
+      })
     },
   )
 
@@ -275,6 +370,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const restoreOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      if (!restoreOwnership.ok) return
       const ok = await repo.restoreCard(
         contextFromRequest(req),
         departmentId,
@@ -304,6 +401,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const checklistOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      if (!checklistOwnership.ok) return
       const id = await repo.addChecklistItem(
         contextFromRequest(req),
         departmentId,
@@ -335,6 +434,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const patchItemOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      if (!patchItemOwnership.ok) return
       const ok = await repo.patchChecklistItem(
         contextFromRequest(req),
         departmentId,
@@ -360,6 +461,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const deleteItemOwnership = await requireCardOwnership(req, reply, departmentId, req.params.id)
+      if (!deleteItemOwnership.ok) return
       const ok = await repo.deleteChecklistItem(
         contextFromRequest(req),
         departmentId,
@@ -447,7 +550,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       config: {
         permission: {
           action: 'create',
-          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+          subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
         },
       },
       schema: { body: createLabelBodySchema, response: { 201: labelListSchema.element } },
@@ -631,7 +734,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         repo.getComments(ctx, result.card.id),
         repo.getActivity(ctx, result.card.id),
       ])
-      reply.send({ ...result.card, checklist, comments, activity })
+      reply.send({
+        ...withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+        checklist,
+        comments,
+        activity,
+      })
     },
   )
 }

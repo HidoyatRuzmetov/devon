@@ -104,16 +104,15 @@ describe('member -> head: department-head-only actions reject a plain member (ow
     expect(asHead.status).toBe(200)
   })
 
-  // BUG (H1.16 / H28): confirmed. `departments/repo.ts`'s `updateDepartmentSettings` writes the
-  // merged settings object straight into the `departments.settings` jsonb column with its TS
-  // (camelCase) property names -- `{"allowStructureEdit": false, ...}`. `structure/repo.ts`'s
-  // `readSettings`, which `assertCanEditStructure` consults, reads the SNAKE_CASE key instead:
-  // `settings['allow_structure_edit'] !== false`. That key is never present under either name's
-  // *counterpart*, so the lookup is always `undefined`, `undefined !== false` is always `true`, and
-  // the department's "only heads may edit structure" toggle has no effect at all -- a member can
-  // always create/patch/delete units regardless of what a head configured. `it.fails` keeps the suite
-  // green while this stands as a live probe; see `tests.md` for the one-line fix (match the casing).
-  it.fails(
+  // FIXED in v1.1 (was `it.fails`; D1/H1.16/H28). `departments/repo.ts`'s `updateDepartmentSettings`
+  // writes the merged settings jsonb with its TypeScript (camelCase) property names --
+  // `{"allowStructureEdit": false, ...}` -- while `structure/repo.ts`'s `readSettings` read the
+  // SNAKE_CASE key, which nothing ever writes: the lookup was always `undefined`, `undefined !== false`
+  // was always `true`, and the head's "only heads may edit the structure" switch did nothing at all.
+  // `readSettings` now reads the writer's key (keeping the snake_case spelling as a fallback) and
+  // defaults `allowStructureEdit` to **off** (v1.1 SPEC §2.2), and unit delete/restore moved to
+  // `{kind:'department_managed'}` so no switch can ever open them.
+  it(
     'a plain member cannot patch/delete a structure unit once a head disables member self-service',
     async () => {
       const disable = await fetch(`${baseUrl}/api/v1/departments/${dept.id}/settings`, {

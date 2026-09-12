@@ -22,6 +22,13 @@ export type RequestContext = {
   userId: string | null
   actorRole: Role | null
   departmentId: string | null
+  /** v1.1 SPEC §2.3 / PERMISSIONS-AUDIT: the actor's role **inside `departmentId`** -- the
+   * `app.memberships.role` column, not the instance-wide `actorRole` above (I-8b: a department head's
+   * instance role is always `'member'`). Exposed to RLS as `app.current_department_role()` so a
+   * head-only policy can be written without a sub-select, which `test/migration-lint.ts` forbids.
+   * Optional so every existing `RequestContext` literal keeps compiling; absent means "unknown", and
+   * a head-only policy denies, which is the fail-closed direction. */
+  departmentRole?: Exclude<Role, 'super_admin'> | null
   actingForUserId: string | null
   viewAs: boolean
   ip: string
@@ -190,13 +197,15 @@ export async function withContext<T>(ctx: RequestContext, fn: (tx: Tx) => Promis
                 set_config('app.user_id', $2, true),
                 set_config('app.actor_role', $3, true),
                 set_config('app.department_id', $4, true),
-                set_config('app.view_as', $5, true)`,
+                set_config('app.view_as', $5, true),
+                set_config('app.department_role', $6, true)`,
         [
           ctx.requestId,
           toGuc(ctx.userId),
           toGuc(ctx.actorRole),
           toGuc(ctx.departmentId),
           ctx.viewAs ? 'true' : 'false',
+          toGuc(ctx.departmentRole ?? null),
         ],
       )
 

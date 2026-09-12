@@ -208,6 +208,57 @@ async function cardIsVisible(tx: Tx, departmentId: string, cardId: string): Prom
 }
 
 /** The same predicate for a handler that needs to answer 404 before reading a card's children. */
+export type CardOwners = { ownerUserIds: string[] }
+
+/** The owner set `can()` needs for `{kind:'owned'}` -- giver, assignee and creator (v1.1 SPEC §2.1).
+ * `null` when the card does not exist in this department, so the caller answers 404 exactly the way
+ * every other card route does for a foreign id (H1.2). One indexed lookup on the primary key; never
+ * called in a loop. */
+export async function getCardOwners(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+): Promise<CardOwners | null> {
+  return withContext(ctx, async (tx) => {
+    const rows = await tx.raw<{
+      created_by_user_id: string
+      giver_user_id: string | null
+      assignee_user_id: string | null
+    }>(sql`
+      select created_by_user_id, giver_user_id, assignee_user_id
+      from app.cards
+      where id = ${cardId} and department_id = ${departmentId} and deleted_at is null
+    `)
+    const row = rows[0]
+    if (!row) return null
+    const owners = [row.created_by_user_id, row.giver_user_id, row.assignee_user_id].filter(
+      (id): id is string => Boolean(id),
+    )
+    return { ownerUserIds: owners }
+  })
+}
+
+/** The department's active member ids -- used to refuse a card assigned or given to somebody outside
+ * it (`apps/api/test/integration/mass-assignment.test.ts`: "a card cannot be assigned to a user
+ * outside the department"). One `= any(...)` lookup for both ids together, never one per id. */
+export async function filterDepartmentMemberIds(
+  ctx: RequestContext,
+  departmentId: string,
+  userIds: readonly string[],
+): Promise<Set<string>> {
+  const wanted = [...new Set(userIds.filter(Boolean))]
+  if (wanted.length === 0) return new Set()
+  return withContext(ctx, async (tx) => {
+    const rows = await tx.raw<{ user_id: string }>(sql`
+      select user_id from app.memberships
+      where department_id = ${departmentId}
+        and status = 'active'
+        and user_id = any(${sql.param(wanted)}::uuid[])
+    `)
+    return new Set(rows.map((r) => r.user_id))
+  })
+}
+
 export async function cardExists(
   ctx: RequestContext,
   departmentId: string,

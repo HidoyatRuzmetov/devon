@@ -465,15 +465,21 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
   )
 
   // Any signed-in user may see any user's photo: it is `public`-tier profile data within the
-  // instance, exactly like the name it sits beside (design.md §3.2). `own_account` on the *caller's
-  // own* id is the one `Subject` shape that means precisely "authenticated as yourself" -- it allows
-  // every signed-in actor and turns an anonymous caller into a 401, without inventing a new kind.
+  // instance, exactly like the name it sits beside (design.md §3.2). v1.1 added `{kind:'authenticated'}`
+  // to `can()` so that statement is the subject itself (PERMISSIONS-AUDIT D11).
   // Content-addressed by upload id (a new photo is always a new URL), so the variant is immutable and
   // cacheable for a day; no database read happens here at all.
   app.get(
     '/avatar/:userId/:uploadId/:size',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        // D11, fixed. This used to declare `{kind:'own_account', userId: <the requester's own id>}`,
+        // which is a tautology: it reads like an owner check on the path's `:userId` and is in fact
+        // "any authenticated session". The behaviour is right -- a colleague's avatar is deliberately
+        // visible to the whole team, and per-request department resolution for a 64x64 PNG would be
+        // absurd -- so the subject now says that out loud instead of pretending to be stricter.
+        permission: { action: 'read', subject: () => ({ kind: 'authenticated' as const }) },
+      },
       schema: { params: avatarImageParamsSchema },
     },
     async (req, reply) => {

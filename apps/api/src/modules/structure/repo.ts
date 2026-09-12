@@ -75,11 +75,31 @@ type DepartmentSettingsRow = { settings: unknown }
 
 export type DepartmentSettings = { allowSelfAssign: boolean; allowStructureEdit: boolean }
 
+/**
+ * D1 (SEV1), fixed. `departments/repo.ts`'s `updateDepartmentSettings` persists the settings jsonb
+ * with its TypeScript property names -- `{"allowStructureEdit": false, ...}` -- and this function used
+ * to read `settings['allow_structure_edit']`. That key is never written under either name's
+ * counterpart, so the lookup was always `undefined`, `undefined !== false` was always `true`, and a
+ * head who switched "members may edit the structure" off watched the UI update, the value persist,
+ * `GET /departments/:id` report it off -- while members kept creating and deleting bo'limlar.
+ *
+ * Reads the writer's camelCase key first and keeps the snake_case spelling as a fallback, so a
+ * department whose settings were hand-edited under the old name still resolves.
+ *
+ * The default also changes: `allowStructureEdit` is now **off** when absent (v1.1 SPEC §2.2 -- the
+ * CTO's finding overrides TECH-SPEC §2.3's default-on; recorded in TECH-SPEC §19). The org chart is
+ * the department's constitution. `allowSelfAssign` stays on: putting yourself in your own bo'lim is
+ * convenience, not governance.
+ */
 function readSettings(raw: unknown): DepartmentSettings {
   const settings = (raw ?? {}) as Record<string, unknown>
+  const bool = (camel: string, snake: string, fallback: boolean): boolean => {
+    const value = settings[camel] ?? settings[snake]
+    return typeof value === 'boolean' ? value : fallback
+  }
   return {
-    allowSelfAssign: settings['allow_self_assign'] !== false,
-    allowStructureEdit: settings['allow_structure_edit'] !== false,
+    allowSelfAssign: bool('allowSelfAssign', 'allow_self_assign', true),
+    allowStructureEdit: bool('allowStructureEdit', 'allow_structure_edit', false),
   }
 }
 
@@ -140,8 +160,10 @@ async function loadUnit(tx: Tx, departmentId: string, unitId: string): Promise<U
   return rows[0]
 }
 
-/** `actor` may create when they are the department head, or the department's `allow_structure_edit`
- * setting allows it (default: allowed) -- design.md §2.3. */
+/** `actor` may create/rename/reorder when they are the department head, or the department's
+ * `allowStructureEdit` setting opens it up (default: **off**, v1.1 SPEC §2.2). Deleting or archiving
+ * a bo'lim is head-only regardless -- that route declares `{kind:'department_managed'}` and never
+ * reaches this function. */
 function assertCanEditStructure(
   actorRoleInDept: 'head' | 'member',
   settings: DepartmentSettings,

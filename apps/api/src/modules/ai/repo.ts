@@ -140,12 +140,21 @@ export type TraceRow = {
   created_at: Date | string
 }
 
-export async function listTraces(tx: Tx, departmentId: string, limit: number): Promise<TraceRow[]> {
+/** `onlyUserId` non-null narrows the list to one person's own runs (v1.1 SPEC §2.2, D2b). A single
+ * parameterised predicate rather than two query strings, so the index
+ * (`ai_traces_department_created_idx`) is used either way and there is one statement to read. */
+export async function listTraces(
+  tx: Tx,
+  departmentId: string,
+  limit: number,
+  onlyUserId: string | null = null,
+): Promise<TraceRow[]> {
   return tx.raw<TraceRow>(sql`
     select id, user_id, feature, model, prompt_tokens, completion_tokens, total_tokens, cost_uzs,
            latency_ms, retried, status, created_at
     from app.ai_traces
     where department_id = ${departmentId}
+      and (${onlyUserId}::uuid is null or user_id = ${onlyUserId}::uuid)
     order by created_at desc
     limit ${limit}
   `)

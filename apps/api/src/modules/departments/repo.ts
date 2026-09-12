@@ -310,7 +310,9 @@ function normalizeSettings(raw: unknown): Required<SettingsJson> {
   const s = (raw ?? {}) as SettingsJson
   return {
     allowSelfAssign: s.allowSelfAssign ?? true,
-    allowStructureEdit: s.allowStructureEdit ?? true,
+    // v1.1 SPEC §2.2 / TECH-SPEC §19: defaults to OFF. The org chart is the department's
+    // constitution; a head opens it up deliberately, never by not having thought about it.
+    allowStructureEdit: s.allowStructureEdit ?? false,
     whoCanConnectTelegramGroup: s.whoCanConnectTelegramGroup ?? 'everyone',
     quietHours: s.quietHours ?? null,
   }

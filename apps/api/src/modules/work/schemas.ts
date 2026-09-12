@@ -56,6 +56,12 @@ export const cardSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   version: z.number().int(),
+  /** v1.1 SPEC §2.1 (PERMISSIONS-AUDIT Step 5, modelled on the events module's `canManage`): may THIS
+   * viewer edit, move, reassign, archive, restore, re-checklist or add a watcher to this card? True
+   * for the card's giver, assignee and creator, and for the boshqarma boshlig'i. Server-computed so
+   * the client never guesses a permission -- optional only so a client built before this field
+   * existed still parses the payload. */
+  canEdit: z.boolean().optional(),
 })
 export type CardDTO = z.infer<typeof cardSchema>
 

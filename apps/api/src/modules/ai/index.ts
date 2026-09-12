@@ -15,6 +15,7 @@ import type { RequestContext } from '@devon/db'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { contextDepartmentRole, isHeadOf } from '../../lib/actor.js'
 import type { Subject } from '@devon/contracts'
 import {
   AiBudgetExceededError,
@@ -45,6 +46,14 @@ function toDbContext(req: FastifyRequest): RequestContext {
     userId: req.actor?.userId ?? null,
     actorRole: req.actor?.role ?? null,
     departmentId: req.actor?.viewAs?.departmentId ?? req.actor?.departmentId ?? null,
+    // The per-department membership role, which is what `app.current_department_role()` (and
+    // therefore `ai_department_settings_write`, migration 0904) actually needs. Passing
+    // `Actor.role` here -- the instance-wide role, always `'member'` for a real head -- was the
+    // reason a fresh department's first `GET /ai/settings` 500'd on its own lazy INSERT.
+    departmentRole: contextDepartmentRole(
+      req.actor,
+      req.actor?.viewAs?.departmentId ?? req.actor?.departmentId ?? null,
+    ),
     actingForUserId: null,
     viewAs: req.actor?.viewAs != null,
     ip: requestIp(req),
@@ -83,7 +92,15 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { response: { 200: aiSettingsSchema } },
     },
     async (req) => {
-      return service.getSettingsWithUsage(toDbContext(req), activeDepartmentId(req))
+      // D2a: budget, spend, % used and budget status are the head's (audit §4.11 -- "a money figure
+      // for the department"). A member still gets the feature flags, so they know which helpers they
+      // may use; the four money fields are simply absent from their payload, never zeroed (a zero
+      // would read as "no budget", which is a different, wrong statement).
+      return service.getSettingsWithUsage(
+        toDbContext(req),
+        activeDepartmentId(req),
+        isHeadOf(req.actor, activeDepartmentId(req)),
+      )
     },
   )
 
@@ -107,11 +124,12 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       schema: { querystring: usageQuerySchema, response: { 200: usageListResponseSchema } },
     },
     async (req) => {
-      const traces = await service.listUsage(
-        toDbContext(req),
-        activeDepartmentId(req),
-        req.query.limit ?? 50,
-      )
+      // D2b: who asked the AI what, how often and at what cost is surveillance-grade. A member sees
+      // their own runs (useful self-awareness); the head sees the department's.
+      const departmentId = activeDepartmentId(req)
+      const traces = await service.listUsage(toDbContext(req), departmentId, req.query.limit ?? 50, {
+        onlyUserId: isHeadOf(req.actor, departmentId) ? null : (req.actor?.userId ?? ''),
+      })
       return { traces }
     },
   )

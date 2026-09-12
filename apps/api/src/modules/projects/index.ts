@@ -2,6 +2,9 @@
 // templates. `{kind:'department_child'}`, scoped to `req.actor.departmentId` -- same reasoning as
 // `../work/index.ts`.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { can } from '@devon/contracts'
+import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
@@ -17,10 +20,53 @@ import {
   projectListSchema,
   projectSchema,
   templateListSchema,
+  type ProjectDTO,
 } from './schemas.js'
 
 function departmentChildSubject(departmentId: string | null) {
   return { kind: 'department_child' as const, departmentId: departmentId ?? '' }
+}
+
+/**
+ * v1.1 SPEC §2.1 (D5a/D5c). A project's owner -- and the head -- decide what the project says; a
+ * colleague who happens to be in the same department does not. The owner set is the project's
+ * `ownerUserId` plus its `members`, because someone working inside a project may legitimately move
+ * its milestones.
+ *
+ * 404 for a project that is not this department's (identical to every read route's answer for a
+ * foreign id), 403 for a real project the caller does not own.
+ */
+async function requireProjectOwnership(
+  req: FastifyRequest,
+  reply: FastifyReply,
+  departmentId: string,
+  projectId: string,
+): Promise<{ ok: true; project: ProjectDTO } | { ok: false }> {
+  const project = await repo.getProject(contextFromRequest(req), departmentId, projectId)
+  if (!project) {
+    sendProblem(reply, 'not_found')
+    return { ok: false }
+  }
+  const decision = can(req.actor, 'update', {
+    kind: 'owned',
+    departmentId,
+    ownerUserIds: [project.ownerUserId, ...project.members].filter(Boolean),
+  })
+  if (!decision.allowed) {
+    sendProblem(reply, 'forbidden')
+    return { ok: false }
+  }
+  return { ok: true, project }
+}
+
+/** D5b: `ownerUserId` came straight from the request body, so any member could appoint anyone --
+ * including themselves -- to lead a piece of work. Creating is open to everyone (a xodim may start a
+ * piece of work); *naming someone else the owner* is a management act, so a member's new project is
+ * owned by the member who created it and only a head may point it elsewhere. */
+function resolveOwnerOnCreate(req: FastifyRequest, requested: string | undefined): string {
+  const me = req.actor!.userId
+  if (!requested || requested === me) return me
+  return isHeadOf(req.actor, requireDepartmentId(req)) ? requested : me
 }
 
 function requireDepartmentId(req: {
@@ -108,7 +154,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         title: req.body.title ?? template.title,
         description: template.description,
         colour: undefined,
-        ownerUserId: req.body.ownerUserId,
+        ownerUserId: resolveOwnerOnCreate(req, req.body.ownerUserId),
         members: req.body.members,
         status: 'planning',
         startOn,
@@ -138,7 +184,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         title: req.body.title,
         description: req.body.description,
         colour: req.body.colour,
-        ownerUserId: req.body.ownerUserId,
+        ownerUserId: resolveOwnerOnCreate(req, req.body.ownerUserId),
         members: req.body.members,
         status: req.body.status,
         startOn: req.body.startOn,
@@ -187,6 +233,16 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
       const { version, ...patch } = req.body
+      const ownership = await requireProjectOwnership(req, reply, departmentId, req.params.id)
+      if (!ownership.ok) return
+      // D5b again, on the way in: re-pointing an existing project at a different owner is head-only.
+      if (
+        patch.ownerUserId !== undefined &&
+        patch.ownerUserId !== ownership.project.ownerUserId &&
+        !isHeadOf(req.actor, departmentId)
+      ) {
+        return sendProblem(reply, 'forbidden')
+      }
       const result = await repo.patchProject(
         contextFromRequest(req),
         departmentId,
@@ -218,6 +274,8 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const addOwnership = await requireProjectOwnership(req, reply, departmentId, req.params.id)
+      if (!addOwnership.ok) return
       const project = await repo.addMilestone(
         contextFromRequest(req),
         departmentId,
@@ -247,6 +305,8 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      const patchOwnership = await requireProjectOwnership(req, reply, departmentId, req.params.id)
+      if (!patchOwnership.ok) return
       const project = await repo.patchMilestone(
         contextFromRequest(req),
         departmentId,
