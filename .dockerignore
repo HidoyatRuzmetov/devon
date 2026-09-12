@@ -1,0 +1,22 @@
+# Devon (WorkPortal) -- H17.1/H18.1: keep Docker build contexts small and reproducible. Applies to
+# every Dockerfile in this repo (root-context builds for apps/api, apps/web, apps/api/Dockerfile.worker).
+# Secrets are never in the repo (H1.1) so there is nothing to exclude on that account; this file is
+# purely about build-context size and cache-hit rate.
+
+.git
+.claude
+**/node_modules
+**/dist
+**/.turbo
+**/coverage
+**/playwright-report
+**/test-results
+**/.data
+backups
+docs
+agentic/ledger
+e2e/screenshots
+*.log
+.env
+.env.*
+!.env.example

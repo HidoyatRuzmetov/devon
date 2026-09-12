@@ -1,0 +1,57 @@
+name: Renovate
+
+# Self-hosted Renovate (H1.12: "Renovate self-hosted") -- runs the `renovate` CLI directly in a GitHub
+# Actions job on a schedule, rather than installing Anthropic's/Mend's hosted GitHub App. This keeps
+# dependency-update automation inside the same self-hosted boundary as the rest of this ministry
+# deployment's CI (docs/ops/DEPLOY.md, TECH-SPEC §13 decision 2: single self-hosted box, no third-party
+# SaaS in the loop) -- the config it reads is `renovate.json` at the repo root, committed like any other
+# tooling config, not a setting hidden in a GitHub App install.
+#
+# Requires one repo secret this workflow cannot create for you: `RENOVATE_TOKEN`, a fine-grained
+# GitHub PAT (or a GitHub App installation token) scoped to THIS repo only, with "Contents:
+# read/write", "Pull requests: read/write", "Workflows: read/write" (needed because some updates touch
+# `.github/workflows/*.yml` itself) permissions -- generate it under the bot/service account this
+# ministry deployment uses for automation, never a personal admin account, and add it as
+# Settings -> Secrets and variables -> Actions -> `RENOVATE_TOKEN`. Rotation procedure documented in
+# docs/ops/RUNBOOK.md's "Rotate secrets" table.
+on:
+  schedule:
+    # Matches renovate.json's own "schedule" (Monday pre-6am Asia/Tashkent) with slack for GitHub
+    # Actions' documented scheduling jitter/delay -- Renovate re-checks its own `schedule` config
+    # before opening anything, so an earlier or later cron tick here never bypasses that.
+    - cron: '0 1 * * 1'
+  workflow_dispatch: {} # manual "run Renovate now" button (Actions tab)
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+
+jobs:
+  renovate:
+    name: self-hosted Renovate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+
+      - name: Run Renovate
+        # Pinned exact version (repo convention, TECH-SPEC §16) via `npx`, the same pattern this repo
+        # already uses for Lighthouse CI (tools/perf/lighthouse/run-lhci.mjs) -- no `renovate` entry
+        # in any package.json devDependencies, so a contributor's ordinary `pnpm install` never pulls
+        # a bot's own toolchain.
+        run: npx --yes renovate@44.69.7
+        env:
+          RENOVATE_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          RENOVATE_PLATFORM: github
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
+          RENOVATE_ENDPOINT: https://api.github.com/
+          LOG_LEVEL: info

@@ -50,11 +50,19 @@ jobs:
       # is an npm package, so CI provisions them here rather than pretending a `pnpm install` covers
       # it. Locally these are never invoked by `pnpm setup`/`pnpm start` (security is not in the
       # `fast`/`item` profiles), so a contributor's machine never needs them.
+      # Trivy is fetched as a checksummed release tarball, not the vendor's `curl | sh` one-liner --
+      # the latter is exactly the "pipe a remote script into a shell" pattern the `security` gate's
+      # own Semgrep OWASP ruleset flags as blocking (`gha-curl-pipe-shell`) when it later scans this
+      # very file, so using it here would make CI itself fail the gate it is trying to provision.
       - name: Install security scanners (Semgrep, Trivy)
         run: |
           python3 -m pip install --quiet --disable-pip-version-check semgrep==1.176.1
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/v0.74.0/contrib/install.sh \
-            | sh -s -- -b /usr/local/bin v0.74.0
+          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_checksums.txt
+          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
+          sha256sum --ignore-missing -c trivy_0.74.0_checksums.txt
+          tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
           semgrep --version
           trivy --version
 
@@ -111,11 +119,17 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
+      # See the `gate` job's identical step above for why this is a checksummed release download
+      # rather than the vendor's `curl | sh` one-liner.
       - name: Install security scanners (Semgrep, Trivy)
         run: |
           python3 -m pip install --quiet --disable-pip-version-check semgrep==1.176.1
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/v0.74.0/contrib/install.sh \
-            | sh -s -- -b /usr/local/bin v0.74.0
+          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_checksums.txt
+          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
+          sha256sum --ignore-missing -c trivy_0.74.0_checksums.txt
+          tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
+          sudo install -m 0755 trivy /usr/local/bin/trivy
+          rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
 
       - name: Run the release gate profile
         run: node agentic/scripts/gate.mjs --profile release

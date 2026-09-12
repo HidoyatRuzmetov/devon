@@ -1,0 +1,131 @@
+{
+  // Devon (WorkPortal) -- dead-code / unused-dependency check (HARDENING H28.1, H20.1).
+  // Run via `pnpm -w knip` (root package.json) -- see tools/knip/README.md for the workflow.
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {
+      // The root workspace: this repo's OWN tooling (ops-tooling package), not product code. Every
+      // file under tools/ and scripts/ is a standalone CLI entry point (invoked by a root
+      // package.json script or `docker`/CI directly, never imported by another file) -- same
+      // "treat every file as an entry" reasoning as packages/config below. Scanning these here (they
+      // were previously blanket-ignored, see the removed "tools/**" line below) is what lets knip
+      // see that `madge`/`knip` really are used, instead of flagging them as unused root
+      // devDependencies just because their only caller was invisible to it.
+      "entry": ["scripts/*.mjs", "tools/**/*.mjs"],
+      // tools/perf/playwright/** is excluded: it is its OWN independent npm project (its own
+      // package.json + package-lock.json, deliberately not part of the pnpm workspace -- see that
+      // package.json's own comment) so it can reuse Playwright's already-downloaded browser cache
+      // without touching pnpm-workspace.yaml. Scanning it here would flag its dependency
+      // (`@playwright/test`) as "unlisted" against the wrong package.json entirely.
+      "project": ["scripts/*.mjs", "tools/**/*.mjs"],
+      "ignoreBinaries": [
+        // Shelled out to directly by tools/security/scan.mjs and the root "security:scan" script --
+        // neither is an npm package (semgrep is a pip package, trivy a standalone Go binary; see that
+        // script's own header comment and docs/ops for install instructions), so knip's "is this
+        // binary declared as a dependency" check can never be satisfied for either.
+        "semgrep",
+        "trivy",
+        // `where`/`which` -- tools/security/scan.mjs's and tools/perf/check.mjs's own
+        // commandExists() helper (cross-platform "is X on PATH" probe), not a real dependency on the
+        // Windows/POSIX `where`/`which` utilities as a package.
+        "where",
+        "which"
+      ],
+      "ignoreDependencies": [
+        // Used only as `pnpm exec turbo run dev` (scripts/start.mjs) -- a string literal inside a
+        // spawned args array, not a call knip's binary-usage heuristic recognises (the process it
+        // actually spawns is `pnpm`, with "turbo" merely one of pnpm's own arguments).
+        "turbo"
+      ]
+    },
+    "apps/api": {
+      // `src/modules/*/index.ts` -- module-loader.ts (apps/api/src/module-loader.ts) discovers and
+      // `import()`s every module directory by a *runtime template-literal* path (`./modules/${name}/
+      // index.js`), specifically so modules never need a static registration list. Knip's import
+      // graph can only start from statically-resolvable specifiers, so without listing each module's
+      // `index.ts` as its own entry point here, knip cannot see past `app.ts` into any module at all
+      // -- every module file (repo.ts, schemas.ts, service.ts, ...) then falsely reads as an unused
+      // file/export. Listing the modules directory as a second entry glob restores real reachability
+      // without touching module-loader.ts's deliberately-dynamic design.
+      "entry": ["src/server.ts", "src/modules/*/index.ts", "test/checks/*.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": [
+        // Native/optional deps whose only "usage" is being present for another package (sharp's
+        // libvips, argon2's napi binding) or that knip's static analysis cannot see through a
+        // dynamic plugin-registration pattern (module-loader.ts loads modules by string).
+        "fastify-plugin",
+        // Consumed only via the "lint" script's `--config ../../packages/config/eslint/base.js` CLI
+        // flag (apps/api/package.json), never via an `import` -- same class of blind spot as
+        // packages/config's own entry below, just seen from the consuming side this time.
+        "@devon/config"
+      ]
+    },
+    "apps/web": {
+      "entry": ["src/main.tsx", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "packages/ai": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@devon/config"] // see apps/api's identical entry for why
+    },
+    "packages/config": {
+      // A config-only package: every file here is consumed by another workspace's package.json
+      // `--config ../../packages/config/...` flag, not by an `import`, so knip's default
+      // entry-point heuristic (looking for imports) finds nothing here -- treat every file as an
+      // entry point instead of flagging the whole package unused.
+      "entry": ["eslint/*.js", "prettier.config.js", "tsconfig/*.json"],
+      "project": ["**/*.{js,json}"]
+    },
+    "packages/contracts": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@devon/config"] // see apps/api's identical entry for why
+    },
+    "packages/db": {
+      // `src/seed/modules/*.ts` -- packages/db/src/seed/module-loader.ts discovers and `import()`s
+      // every seed module by the same runtime-template-literal pattern as apps/api's module-loader.ts
+      // (see that entry's comment above); without this, every seed module and everything only it
+      // reaches (several packages/db/src/schema/*.ts tables that schema/index.ts itself never
+      // re-exports, e.g. work.ts, events.ts, projects.ts -- they are consumed directly by the seed
+      // modules that build fixtures for them, not through the public `schema` barrel) reads as dead.
+      "entry": [
+        "src/index.ts",
+        "src/cli-migrate.ts",
+        "src/seed/cli-demo.ts",
+        "src/seed/cli-reset.ts",
+        "src/seed/cli-matrix.ts",
+        "src/seed/cli-counts.ts",
+        "src/seed/modules/*.ts",
+        "test/*.ts"
+      ],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@devon/config"] // see apps/api's identical entry for why
+    },
+    "packages/i18n": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@devon/config"] // see apps/api's identical entry for why
+    },
+    "packages/ui": { "entry": ["src/index.ts"], "project": ["src/**/*.{ts,tsx}"] }
+  },
+  "ignore": [
+    // e2e/, agentic/, infra/, plugins/, .claude/ are not this repo's PRODUCT source tree -- e2e is
+    // test-only (its own package, not part of H28.1's "dead code" concern), agentic/ + plugins/
+    // wp-agentic + .claude/workflows are the delivery/agent system itself (out of this package's edit
+    // scope entirely -- ops-tooling touches infra/, tools/, docs/ops/, Dockerfiles, scripts/, root
+    // package.json scripts, nothing under agentic/ or plugins/), and infra/ is shell/YAML, not JS/TS
+    // knip can analyse anyway.
+    "e2e/**",
+    "agentic/**",
+    "infra/**",
+    "plugins/**",
+    ".claude/**",
+    // Its own independent npm project (own package.json + package-lock.json, deliberately outside
+    // the pnpm workspace -- see tools/perf/playwright/package.json's own comment); the root
+    // workspace's "tools/**/*.mjs" project glob above would otherwise flag its `@playwright/test`
+    // dependency as "unlisted" against the wrong package.json.
+    "tools/perf/playwright/**"
+  ],
+  "ignoreExportsUsedInFile": true
+}

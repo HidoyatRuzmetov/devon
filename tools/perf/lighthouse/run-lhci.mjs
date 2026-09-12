@@ -41,7 +41,10 @@ const CHROME_PATH = process.env.CHROME_PATH || findPlaywrightChromium()
 console.log(`[lhci] using Chromium: ${CHROME_PATH}`)
 console.log(`[lhci] @lhci/cli@${LHCI_VERSION}`)
 
-const ROUTES = ['/', '/work', '/work/table', '/events', '/inbox', '/analytics']
+// `--routes /,/work` narrows this to a subset (tools/perf/check.mjs's "smoke" wiring passes just `/`
+// -- a full 6-route Lighthouse pass is a multi-minute baseline measurement, not a per-gate smoke
+// check); omit the flag for the original full baseline behaviour.
+const ROUTES = flag('routes', '/,/work,/work/table,/events,/inbox,/analytics').split(',')
 const reportPaths = {}
 
 for (const route of ROUTES) {

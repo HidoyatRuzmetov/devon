@@ -1,0 +1,79 @@
+# Devon (WorkPortal) -- production image for the `worker` Compose service (H17 build, H18 deployment,
+# H12.1 "worker horizontally scalable").
+#
+# Build from the REPO ROOT, same as apps/api/Dockerfile:
+#   docker build -f apps/api/Dockerfile.worker -t devon-worker:<tag> .
+#
+# IMPORTANT, read before assuming this is a distinct binary: as of this package (ops-tooling), Devon's
+# background work -- the outbox drain (`@devon/db`'s `startEventsWorker`), the event-reminder scan
+# (`apps/api/src/modules/events/reminder-worker.ts`) and the upload retention sweep
+# (`apps/api/src/modules/accounts/upload-sweeper.ts`) -- is started from inside `apps/api/src/
+# server.ts`'s `main()`, the exact same entry point that also opens the HTTP listener. There is no
+# `apps/api` "worker-only" mode/flag in the application code (out of this package's edit scope --
+# ops-tooling touches infra/, tools/, docs/ops/, Dockerfiles, scripts/, not `apps/api/src`). This image
+# is therefore byte-for-byte the same runtime as `apps/api/Dockerfile`, run as its own Compose service
+# so it can be scaled, restarted and resource-limited independently of the replica(s) Caddy actually
+# routes traffic to.
+#
+# This duplication is deliberately SAFE, not just convenient: every one of those three background
+# loops is documented and written to tolerate more than one process running it concurrently --
+# `events-worker.ts` uses `for update skip locked` explicitly "so a future second worker process never
+# double-runs" a domain event; `reminder-worker.ts`'s fire step is a fired-guarded `update ... returning
+# id` (a second process's identical update affects zero rows once the first has committed); the upload
+# sweep's status flip is the same fired-guard shape. Running this image as a second replica is exactly
+# the "future second worker process" those comments were written for -- not a promise that the API
+# port doesn't also start, which it does (nothing outside `apps/api` routes to it; see infra/Caddyfile,
+# which only ever proxies to the `api` service name).
+#
+# Once `apps/api` grows a real `--worker-only` entry point (skips `app.listen`, keeps the three
+# background loops), only this file's final `CMD` needs to change -- flagged for a follow-up package in
+# agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md.
+#
+# syntax=docker/dockerfile:1
+ARG NODE_IMAGE=node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+
+FROM ${NODE_IMAGE} AS base
+RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
+WORKDIR /repo
+
+FROM base AS deps
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+COPY packages/ai/package.json packages/ai/package.json
+COPY packages/config/package.json packages/config/package.json
+COPY packages/contracts/package.json packages/contracts/package.json
+COPY packages/db/package.json packages/db/package.json
+COPY packages/i18n/package.json packages/i18n/package.json
+COPY packages/ui/package.json packages/ui/package.json
+RUN pnpm install --frozen-lockfile
+
+FROM base AS runtime
+ENV NODE_ENV=production
+RUN addgroup -g 10001 -S devon && adduser -u 10001 -S devon -G devon
+COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo/package.json ./package.json
+COPY --from=deps /repo/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY packages/config packages/config
+COPY packages/contracts packages/contracts
+COPY packages/db packages/db
+COPY packages/ai packages/ai
+COPY packages/i18n packages/i18n
+COPY apps/api apps/api
+COPY --from=deps /repo/packages/config/node_modules packages/config/node_modules
+COPY --from=deps /repo/packages/contracts/node_modules packages/contracts/node_modules
+COPY --from=deps /repo/packages/db/node_modules packages/db/node_modules
+COPY --from=deps /repo/packages/ai/node_modules packages/ai/node_modules
+COPY --from=deps /repo/packages/i18n/node_modules packages/i18n/node_modules
+COPY --from=deps /repo/apps/api/node_modules apps/api/node_modules
+WORKDIR /repo/apps/api
+RUN mkdir -p .data/storage && chown -R devon:devon /repo/apps/api/.data
+USER devon:devon
+EXPOSE 3000
+# Not published by Caddy/Compose for this service (see infra/docker-compose.prod.yml's `worker`
+# entry -- no `ports:`), but the process still answers on it, and it is the one signal this image can
+# give an orchestrator that the background loops' host process is alive without inventing a second
+# health surface that does not exist in the application code.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
+  CMD wget -q -O- http://127.0.0.1:3000/healthz || exit 1
+CMD ["node_modules/.bin/tsx", "src/server.ts"]
