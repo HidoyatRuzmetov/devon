@@ -69,8 +69,7 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
       'WorkPortal ilovasini shu yerda oching: vazifalar, bildirishnomalar, tadbirlar va diqqat vaqti -- hammasi Telegram ichida.',
     'miniapp.not_available':
       'Ilova hali sozlanmagan. Boʻlim boshligʻidan Telegram sozlamalarini tekshirishni soʻrang.',
-    'miniapp.focus_done':
-      'Diqqat vaqti tugadi: {minutes} daqiqa. Endi qisqa tanaffus qiling.',
+    'miniapp.focus_done': 'Diqqat vaqti tugadi: {minutes} daqiqa. Endi qisqa tanaffus qiling.',
     'miniapp.break_done': 'Tanaffus tugadi ({minutes} daqiqa). Ishni davom ettiramizmi?',
   },
   'uz-Cyrl': {

@@ -1813,6 +1813,282 @@
       "saved": "Preferences saved"
     }
   },
+  "miniapp": {
+    "title": "WorkPortal",
+    "devMode": "Demo mode — a browser session, not Telegram",
+    "noDepartment": "No department",
+    "action": {
+      "back": "Back",
+      "retry": "Try again",
+      "undo": "Undo"
+    },
+    "tab": {
+      "aria": "Main sections",
+      "today": "Today",
+      "todayShort": "Today",
+      "inbox": "Notifications",
+      "inboxShort": "Inbox",
+      "board": "Board",
+      "boardShort": "Board",
+      "events": "Events",
+      "eventsShort": "Events",
+      "focus": "Focus",
+      "focusShort": "Focus"
+    },
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening",
+      "night": "Good night"
+    },
+    "empty": {
+      "title": "Nothing here yet",
+      "body": "There is nothing to show here."
+    },
+    "error": {
+      "title": "Something went wrong",
+      "body": "We could not load this. Please try again."
+    },
+    "offline": {
+      "title": "You are offline",
+      "body": "The connection dropped. Try again once you are back online."
+    },
+    "forbidden": {
+      "title": "You do not have access",
+      "body": "This screen is for the department head. If that looks wrong, ask your head."
+    },
+    "unlinked": {
+      "title": "Account not linked",
+      "body": "Your Telegram is not linked to a WorkPortal account yet. Open the Telegram section on the site and get a link code."
+    },
+    "due": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "yesterday": "Yesterday",
+      "overdue": "Overdue"
+    },
+    "priority": {
+      "none": "Normal",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "role": {
+      "head": "Head",
+      "member": "Member"
+    },
+    "reason": {
+      "assigned": "Assigned",
+      "mentioned": "Mentioned",
+      "due": "Due",
+      "updated": "Updated",
+      "rsvp": "Event",
+      "poll": "Poll",
+      "decision": "Decision",
+      "digest": "Digest",
+      "system": "System"
+    },
+    "today": {
+      "open": "Open",
+      "done": "Done",
+      "more": "More",
+      "add": "Add",
+      "addPlaceholder": "What is on for today?",
+      "addFailed": "Could not add it",
+      "toggleFailed": "Could not update it",
+      "empty": {
+        "title": "Nothing for today",
+        "body": "Type your first item in the field above. Only you can see this list."
+      }
+    },
+    "inbox": {
+      "title": "Notifications",
+      "eyebrow": "{count} unread",
+      "unread": "New",
+      "markRead": "Mark read",
+      "markedRead": "Marked as read",
+      "markAllRead": "Mark all as read",
+      "allRead": "All marked as read",
+      "snooze": "Snooze",
+      "snoozed": "We will remind you tomorrow",
+      "archive": "Archive",
+      "archived": "Archived",
+      "actionFailed": "That did not go through",
+      "empty": {
+        "title": "You are all caught up",
+        "body": "No new notifications. The bot will tell you here when one arrives."
+      }
+    },
+    "board": {
+      "title": "Board",
+      "viewAria": "Board view",
+      "mine": "My column",
+      "team": "Team",
+      "myCards": "My cards",
+      "you": "you",
+      "openCount": "{count} open",
+      "overdueCount": "{count} overdue",
+      "openTotal": "Open in the department",
+      "overdueTotal": "Overdue in the department",
+      "empty": {
+        "title": "Your column is empty",
+        "body": "No cards are assigned to you yet. When one is, it shows up here."
+      },
+      "emptyTeam": {
+        "title": "The board is empty",
+        "body": "The department has no open cards yet."
+      }
+    },
+    "card": {
+      "title": "Card",
+      "eyebrow": "Board",
+      "open": "Open",
+      "done": "Done",
+      "markDone": "Mark done",
+      "markedDone": "Marked done",
+      "reopen": "Reopen",
+      "reopened": "Reopened",
+      "updateFailed": "Could not update the card",
+      "noDescription": "No description",
+      "readOnly": "You can read this card, but not change it.",
+      "checklist": "Checklist",
+      "comments": "Comments",
+      "noComments": "No comments yet",
+      "commentPlaceholder": "Write a comment…",
+      "send": "Send",
+      "commentAdded": "Comment added",
+      "commentFailed": "Could not send the comment"
+    },
+    "events": {
+      "title": "Events",
+      "one": "Event",
+      "eyebrow": "Department events",
+      "organizer": "Organised by {name}",
+      "going": "{count} going",
+      "capacity": "{used} of {total} places",
+      "rsvpAria": "Your answer",
+      "rsvpFailed": "Could not save your answer",
+      "cancelled": "This event was cancelled",
+      "finished": "This event is over",
+      "rsvp": {
+        "yes": "Going",
+        "maybe": "Maybe",
+        "no": "Not going"
+      },
+      "rsvpSaved": {
+        "yes": "Marked as going",
+        "maybe": "Marked as maybe",
+        "no": "Marked as not going"
+      },
+      "empty": {
+        "title": "No upcoming events",
+        "body": "Nothing is planned in the department for the coming days."
+      },
+      "missing": {
+        "title": "Event not found",
+        "body": "This event was removed, or it is not visible to you."
+      }
+    },
+    "carpool": {
+      "title": "Carpool",
+      "seats": "{free} of {total} seats free",
+      "claim": "Take a seat",
+      "claimed": "Seat taken",
+      "release": "Give up the seat",
+      "released": "Seat released",
+      "empty": "Nobody has offered a ride to this event.",
+      "failed": "Could not change the seat"
+    },
+    "polls": {
+      "title": "Polls",
+      "total": "{count} votes",
+      "voted": "Your vote is in",
+      "voteFailed": "Could not record your vote",
+      "closed": "This poll is closed",
+      "anonymous": "Anonymous poll",
+      "shareAria": "Share of votes for {option}",
+      "empty": "This event has no polls."
+    },
+    "focus": {
+      "title": "Focus",
+      "eyebrow": "Personal workspace",
+      "start": "Start",
+      "stop": "Stop",
+      "reset": "Reset",
+      "minutes": "{count} min",
+      "stats": "Focus time",
+      "today": "Today",
+      "week": "This week",
+      "phaseAria": "Phase",
+      "ringAria": "Time left in {phase}",
+      "botNote": "The bot pings you in Telegram when the time is up. It never sends what you were working on.",
+      "alertNotLinked": "Telegram is not linked, so no ping was sent.",
+      "alertMuted": "Notifications are muted, so no ping was sent.",
+      "startFailed": "Could not start the timer",
+      "saveFailed": "Could not save it",
+      "phase": {
+        "focus": "Focus",
+        "short_break": "Short break",
+        "long_break": "Long break"
+      }
+    },
+    "fields": {
+      "title": "My details",
+      "eyebrow": "Fields your department asked for",
+      "requested": "Requested",
+      "missing": "Not filled in",
+      "save": "Save",
+      "saved": "Saved",
+      "saveFailed": "Could not save it",
+      "readOnly": "Your department head fills this one in.",
+      "yes": "Yes",
+      "numberInvalid": "Numbers only, please",
+      "empty": {
+        "title": "Nothing to fill in",
+        "body": "Your department has not asked you for anything."
+      }
+    },
+    "setup": {
+      "title": "Telegram setup",
+      "bot": "Bot",
+      "noBot": "The bot is not configured yet. Your system administrator does that.",
+      "appUrl": "Mini App address",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Could not copy it",
+      "checklist": "Setup checklist",
+      "done": "Done",
+      "todo": "To do",
+      "linkedSummary": "{linked} of {total} members linked Telegram · {groups} groups connected",
+      "step": {
+        "bot_token": {
+          "title": "Bot token is set",
+          "body": "Your administrator sets TELEGRAM_BOT_TOKEN on the server."
+        },
+        "bot_username": {
+          "title": "Bot username is known",
+          "body": "This is the name people search for to find the bot."
+        },
+        "menu_button": {
+          "title": "Menu button opens the app",
+          "body": "In BotFather, point /setmenubutton at the address above."
+        },
+        "link_self": {
+          "title": "Your own account is linked",
+          "body": "Open the bot and send it the link code from the site."
+        },
+        "members_linked": {
+          "title": "Members are linked",
+          "body": "Each person links their own account; you cannot do it for them."
+        },
+        "group_connected": {
+          "title": "Department group is connected",
+          "body": "Add the bot to the group so event and poll announcements arrive there."
+        }
+      }
+    }
+  },
   "pages": {
     "title": "Pages",
     "eyebrow": "Knowledge",

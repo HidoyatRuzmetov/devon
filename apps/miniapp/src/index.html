@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="uz-Latn">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- `viewport-fit=cover` + `user-scalable=no`: Telegram's webview is a fixed-size sheet the user
+         drags, and a pinch-zoom inside it fights the host gesture. The accessibility floor is met by
+         the app's own type scale and 44px targets (DESIGN.md §2.4/§6), not by browser zoom, and the
+         same page opened in a normal browser tab keeps zooming because Telegram is the one imposing
+         the sheet. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <!-- Telegram's own script: it is the only way to read `initData`, the theme parameters and the
+         viewport height. Loaded from telegram.org because there is no other source for it; every
+         other request this app makes is same-origin. When it is absent (a normal browser, or an
+         offline webview) `src/lib/telegram.ts` substitutes a documented stub and the app still runs. -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preload" href="/fonts/sans-regular.woff2" as="font" type="font/woff2" crossorigin />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>WorkPortal</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>

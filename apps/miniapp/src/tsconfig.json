@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../packages/config/tsconfig/react.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["vite/client", "node"],
+    "rootDir": "..",
+    "outDir": "../dist",
+    "tsBuildInfoFile": "../dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../test/**/*.ts", "../test/**/*.tsx"],
+  "exclude": ["../dist", "../node_modules", "../test/vitest.config.ts"]
+}

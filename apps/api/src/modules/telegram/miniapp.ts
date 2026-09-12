@@ -55,12 +55,7 @@ import { getLinkStatus, resolveUserByChatId } from './repo.js'
 import { isTelegramConfigured, publicUrl, sendPlainMessage } from './transport.js'
 import { tb, isBotLocale, DEFAULT_BOT_LOCALE, type BotLocale } from './templates.js'
 import { verifyInitData, type VerifiedInitData } from './miniapp-initdata.js'
-import {
-  boardPeek,
-  fieldsAvailable,
-  listMyPersonFields,
-  setMyPersonField,
-} from './miniapp-repo.js'
+import { boardPeek, fieldsAvailable, listMyPersonFields, setMyPersonField } from './miniapp-repo.js'
 import {
   boardPeekSchema,
   focusAlertBodySchema,
@@ -411,8 +406,7 @@ const miniappRoutes: FastifyPluginAsyncZod = async (app) => {
         return reply.send({ sent: false, reason: 'muted' })
       }
       const locale = localeOf(req)
-      const key =
-        req.body.kind === 'focus' ? 'miniapp.focus_done' : 'miniapp.break_done'
+      const key = req.body.kind === 'focus' ? 'miniapp.focus_done' : 'miniapp.break_done'
       const sendResult = await sendPlainMessage(
         status.chatId,
         tb(locale, key, { minutes: req.body.minutes }),

@@ -3,8 +3,9 @@
 // A Mini App is a web page Telegram opens in its own webview and hands a signed query string
 // (`window.Telegram.WebApp.initData`). That string is the ONLY proof of who the viewer is, so this
 // file is a security boundary: it is pure (no I/O, no database, no clock injection beyond an
-// explicit `now`), exhaustively unit-tested (`apps/api/test/unit/telegram.miniapp.test.ts`), and it
-// never trusts a single field of the payload before the HMAC has matched.
+// explicit `now`), exhaustively unit-tested
+// (`apps/api/test/unit/telegram.miniapp-initdata.test.ts`), and it never trusts a single field of
+// the payload before the HMAC has matched.
 //
 // The algorithm is Telegram's own (core.telegram.org/bots/webapps#validating-data-received-via-the-
 // mini-app):
@@ -195,15 +196,15 @@ export function verifyInitData(
 }
 
 /**
- * Builds a valid `initData` string for a given bot token. Used by the dev-mode stub
- * (`DEVON_MINIAPP_DEV_LOGIN`, see `miniapp.ts`) and by this module's own tests -- never on a request
- * path. Exported from a source file rather than a test helper because the dev stub route needs it at
- * runtime, and a second copy of the signing rules is exactly how the two would drift.
+ * Builds a valid `initData` string for a given bot token -- the inverse of `verifyInitData`, used by
+ * this module's own tests and by nothing on a request path. It lives beside the verifier rather than
+ * in a test helper so that the data-check-string rules exist exactly once: a test that built its own
+ * fixtures could agree with itself while both disagreed with Telegram.
+ *
+ * There is deliberately no environment flag that turns this into a sign-in path. See `miniapp.ts`'s
+ * header: the local development path is an ordinary web session, never a skipped signature check.
  */
-export function signInitData(
-  fields: Record<string, string>,
-  botToken: string,
-): string {
+export function signInitData(fields: Record<string, string>, botToken: string): string {
   const pairs = Object.entries(fields).map(([k, v]) => [k, v] as const)
   const secretKey = createHmac('sha256', 'WebAppData').update(botToken).digest()
   const hash = hmacHex(secretKey, dataCheckString(pairs, ['hash']))

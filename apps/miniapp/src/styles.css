@@ -1,0 +1,38 @@
+/* Tokens and self-hosted faces come from `@devon/ui` -- this app never declares a colour, a radius or
+   a font of its own (DESIGN.md §2: "a component never reaches past a token"). `tokens.css` also
+   carries `@import 'tailwindcss'`, so importing it is what turns the utilities on. */
+@import '@devon/ui/styles/fonts.css';
+@import '@devon/ui/styles/tokens.css';
+
+/* Tailwind scans the files it can see from the importing package; this app's own source has to be
+   declared the same way `@devon/ui` declares its own (see the long note in tokens.css). */
+@source '../';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  /* Telegram hands the webview its own scroll; a rubber-band bounce on the page behind the app reads
+     as a broken sheet. The scroll container is the screen body, declared in `app-shell.tsx`. */
+  overscroll-behavior-y: none;
+}
+
+/* The Telegram sheet reports how much of the viewport it actually occupies; `app-shell.tsx` keeps
+   `--tg-viewport-height` in sync with it (and falls back to `100dvh` outside Telegram) so a screen is
+   never taller than the visible sheet and the tab bar is never under the keyboard. */
+:root {
+  --tg-viewport-height: 100dvh;
+  --tg-safe-bottom: 0px;
+}
+
+/* WCAG 2.4.11: the sticky header must never cover a focused control. */
+:where(main) :focus-visible {
+  scroll-margin-top: 64px;
+}

@@ -70,6 +70,26 @@ export {
 } from './custom-fields.js'
 
 export {
+  MINIAPP_INIT_DATA_HEADER,
+  MINIAPP_ROUTES,
+  MINIAPP_ROUTE_KEYS,
+  isMiniappRouteKey,
+  type MiniappBoardPeek,
+  type MiniappCard,
+  type MiniappField,
+  type MiniappFields,
+  type MiniappFieldValue,
+  type MiniappFocusAlert,
+  type MiniappIdentity,
+  type MiniappPerson,
+  type MiniappRouteKey,
+  type MiniappSession,
+  type MiniappSetupChecklist,
+  type MiniappSetupStepId,
+  type MiniappSource,
+} from './miniapp.js'
+
+export {
   problem,
   PROBLEM_CODES,
   problemSchema,

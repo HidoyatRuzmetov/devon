@@ -7,22 +7,11 @@
 // degrades to the plain `url` button the bot already used, and a bot with no configured public URL
 // gets no button at all. The caller never has to know which case it is in.
 import { InlineKeyboard } from 'grammy'
+// The route list is shared with the app itself (`@devon/contracts`), so a bot button can never open
+// a screen the Mini App no longer has.
+import { MINIAPP_ROUTES, type MiniappRouteKey } from '@devon/contracts'
 import { miniappUrl } from './miniapp.js'
 import { tb, type BotLocale } from './templates.js'
-
-/** The Mini App's hash routes, named once so the bot and the client cannot drift.
- * `apps/miniapp/src/lib/routes.ts` carries the same list. */
-export const MINIAPP_ROUTES = {
-  today: '#/',
-  inbox: '#/inbox',
-  board: '#/board',
-  events: '#/events',
-  focus: '#/focus',
-  fields: '#/fields',
-  setup: '#/setup',
-} as const
-
-export type MiniappRouteKey = keyof typeof MINIAPP_ROUTES
 
 export function miniappHref(route: MiniappRouteKey): string {
   return `${miniappUrl()}${MINIAPP_ROUTES[route]}`

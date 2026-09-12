@@ -14,9 +14,7 @@ export const miniappIdentitySchema = z.object({
     locale: z.string(),
     avatarKey: z.string().nullable(),
   }),
-  department: z
-    .object({ id: z.string().uuid(), name: z.string() })
-    .nullable(),
+  department: z.object({ id: z.string().uuid(), name: z.string() }).nullable(),
   /** The role **inside the active department** (I-8b: never `Actor.role`). */
   departmentRole: z.enum(['head', 'member']).nullable(),
   botUsername: z.string().nullable(),

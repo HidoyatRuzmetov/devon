@@ -223,10 +223,7 @@ export type SetupCounts = {
 /** One query, three counts. Feeds `GET /telegram/departments/:id/setup-checklist` (head-only) and the
  * Mini App's own "Sozlash" screen. `app.telegram_links` is a `global` table (see
  * `packages/db/src/tenancy.ts`), so the department scoping is the membership join, not RLS. */
-export async function setupCounts(
-  ctx: RequestContext,
-  departmentId: string,
-): Promise<SetupCounts> {
+export async function setupCounts(ctx: RequestContext, departmentId: string): Promise<SetupCounts> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       member_count: number

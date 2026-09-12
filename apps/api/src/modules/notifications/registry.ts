@@ -401,6 +401,40 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       ),
   },
 
+  // --- person fields ------------------------------------------------------------------------------
+  // SPEC §11: "the head is notified of ... field-fill completions (batched)". `digest` is the reason
+  // that batching rides on -- a boshqarma of thirty filling a requested field on the same afternoon
+  // must reach the head as one daily line, not thirty interruptions. The Mini App's "Mening
+  // maʼlumotlarim" screen (SPEC §9) and the web person page both emit this same event.
+  'fields.value.filled': {
+    notify: true,
+    reason: 'digest',
+    // `membership` resolves `payload.userId` into the person the value is about, which is exactly
+    // who the head wants named; the field itself is deliberately not in the text (a requested field
+    // can be a private detail -- I-1).
+    source: 'membership',
+    subjectType: 'person',
+    recipients: ['head'],
+    deepLink: (f) => (f.subjectId ? `/people/${f.subjectId}` : '/people/table'),
+    title: (f) =>
+      withName(
+        plain(
+          'Maydon toʻldirildi',
+          'Майдон тўлдирилди',
+          'Поле заполнено',
+          'A requested field was filled in',
+        ),
+        f.subjectTitle,
+      ),
+    body: () =>
+      plain(
+        'Soʻralgan maʼlumot kiritildi. Xodimlar jadvalida koʻrishingiz mumkin.',
+        'Сўралган маълумот киритилди. Ходимлар жадвалида кўришингиз мумкин.',
+        'Запрошенные данные внесены. Их видно в таблице сотрудников.',
+        'The details you asked for are in. You can see them in the people table.',
+      ),
+  },
+
   // --- work ---------------------------------------------------------------------------------------
   'work.card.created': {
     notify: true,
