@@ -50,13 +50,16 @@ export function featureDescriptionKey(feature: AiFeatureId): string {
 
 export const aiSettingsSchema = z.object({
   departmentId: z.string().uuid(),
-  budgetUzsPerMonth: z.number().int(),
+  // v1.1 SPEC §2.2 (D2a): the money fields are head-only and are simply absent from a member's
+  // payload. Optional here, and every reader below treats "absent" as "not yours to see" rather than
+  // as zero -- a zero budget is a different, wrong statement.
+  budgetUzsPerMonth: z.number().int().optional(),
   softCapPct: z.number().int(),
   flags: z.record(z.string(), z.boolean()),
-  spentUzsThisMonth: z.number().int(),
-  remainingUzs: z.number().int(),
-  budgetStatus: z.enum(['ok', 'soft_cap', 'hard_stop']),
-  usedPct: z.number(),
+  spentUzsThisMonth: z.number().int().optional(),
+  remainingUzs: z.number().int().optional(),
+  budgetStatus: z.enum(['ok', 'soft_cap', 'hard_stop']).optional(),
+  usedPct: z.number().optional(),
 })
 export type AiSettings = z.infer<typeof aiSettingsSchema>
 

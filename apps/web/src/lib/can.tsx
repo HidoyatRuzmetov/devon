@@ -127,7 +127,6 @@ export function useCanMany(
       }).allowed
     }
     return out
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ctx fields are read individually above
   }, [actor, actions, departmentIdForCheck, ctx.ownerUserIds, ctx.subjectUserId, settings])
 }
 

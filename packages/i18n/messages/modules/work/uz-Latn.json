@@ -3,7 +3,9 @@
     "eyebrow": "ISH",
     "title": "Vazifalar",
     "description": "Xodimlar doskasi: boshqarma aʼzosiga bitta ustundan.",
-    "filterChrome": { "toggle": "Filtrlar va tezkor qoʻshish" },
+    "filterChrome": {
+      "toggle": "Filtrlar va tezkor qoʻshish"
+    },
     "view": {
       "board": "Doska",
       "table": "Jadval",
@@ -114,7 +116,8 @@
       "addCommentPlaceholder": "Izoh yozing, @ bilan xodimni belgilang",
       "backToBoard": "Doskaga qaytish",
       "noIdTitle": "Vazifa koʻrsatilmagan",
-      "noIdBody": "Havolada vazifa identifikatori yoʻq."
+      "noIdBody": "Havolada vazifa identifikatori yoʻq.",
+      "readOnly": "Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin."
     },
     "priority": {
       "none": "Muhimlik yoʻq",

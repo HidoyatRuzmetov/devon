@@ -121,6 +121,9 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const doneCelebrate = useCelebrate()
 
   const card = query.data
+  /** The server's own answer (`canEdit` on the card DTO), never a client-side guess. Absent means an
+   * older server: treat as editable, exactly as before v1.1. */
+  const canEdit = card?.canEdit !== false
   React.useEffect(() => {
     if (card) {
       setTitleDraft(card.title)
@@ -270,6 +273,19 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
 
   return (
     <div className="flex flex-col gap-6">
+      {/* v1.1 SPEC §2.2 (D6a): the whole department's board is readable -- that transparency is the
+          product -- but a card belongs to the person who gave it, the person doing it and the person
+          who created it, plus the boshqarma boshlig'i. For everyone else this sheet is a reading
+          view, and it says so once, at the top, instead of letting a dozen controls fail one by one.
+          `canEdit` is computed on the server and carried on the DTO. */}
+      {!canEdit ? (
+        <p
+          className="rounded-md border border-border bg-muted/40 px-3 py-2 text-small text-muted-foreground"
+          role="status"
+        >
+          {t('work.card.readOnly')}
+        </p>
+      ) : null}
       <header className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <textarea
@@ -277,8 +293,9 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             onChange={(e) => setTitleDraft(e.target.value)}
             onBlur={() => void saveTitle()}
             rows={1}
+            readOnly={!canEdit}
             aria-label={t('work.field.title')}
-            className="w-full resize-none rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full resize-none rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">

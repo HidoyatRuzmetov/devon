@@ -164,7 +164,6 @@ export function HeadDashboard(): React.JSX.Element {
   }
 
   const members = membersQuery.data ?? []
-  const membersById = new Map(members.map((m) => [m.userId, m]))
   const rows = indicatorsQuery.data?.people ?? []
   const capacity = indicatorsQuery.data?.capacityCards ?? 8
   const summary = summaryQuery.data
@@ -413,8 +412,8 @@ export function HeadDashboard(): React.JSX.Element {
   )
 }
 
-/** Kept out of the component so `membersById` stays available to the head-console package's tiles
- * when it extends this file's data (SPEC §13, wave 3). */
+/** The shape the head-console package's own tiles receive when it extends `HEAD_TILES`
+ * (SPEC §13, wave 3): the department's members, already loaded, keyed by id. */
 export type HeadDashboardData = {
   members: Map<string, Member>
 }

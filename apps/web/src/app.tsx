@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { MotionProvider, RouteSkeleton, TooltipProvider } from '@devon/ui'
+import { MotionProvider, RouteSkeleton, StateView, TooltipProvider } from '@devon/ui'
 import { useT } from '@devon/i18n'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import { useMeQuery } from './lib/session.js'
-import { useRouteName, useRoutePath } from './lib/router.js'
+import { navigate, useRouteName, useRoutePath } from './lib/router.js'
 import { usePageHead } from './lib/page-meta.js'
 import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
@@ -57,6 +57,19 @@ function LocaleReconciler() {
  * is a fact about the shell, not about the feature. */
 const AUTH_ROUTES = new Set(['/login', '/setup', '/register', '/join'])
 
+/** v1.1 SPEC §2.2 (PERMISSIONS-AUDIT D12): `/admin/*` and `/departments/requests` were registered
+ * for every role -- only the *sidebar entry* was gated -- so a xodim who typed the URL got a screen
+ * that fetched, 403'd and showed an error, or a blank frame. The server was always right; the client
+ * simply had nothing to say about it. These paths now render the shared no-permission state, which is
+ * one of DESIGN.md's five required screen states and reads as an answer rather than a failure. */
+const SUPER_ADMIN_ROUTE_PREFIXES = ['/admin', '/departments/requests']
+
+function isSuperAdminRoute(path: string): boolean {
+  return SUPER_ADMIN_ROUTE_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  )
+}
+
 /** Every lazy route renders a page-shaped skeleton while its chunk downloads, never a spinner and
  * never a blank frame (DESIGN.md §4). */
 function RouteFallback() {
@@ -92,6 +105,7 @@ function RouteOutlet() {
   const path = useRoutePath()
   const name = useRouteName()
   const t = useT()
+  const meQuery = useMeQuery()
 
   const featureRoute = matchFeatureRoute(path)
   // H23.1: every route's `<title>`/`<meta name="robots">`/canonical link, set unconditionally
@@ -103,6 +117,19 @@ function RouteOutlet() {
     description: AUTH_ROUTES.has(path) ? t('auth.tagline') : undefined,
     noindex: !AUTH_ROUTES.has(path),
   })
+
+  if (isSuperAdminRoute(path) && meQuery.data && meQuery.data.user.role !== 'super_admin') {
+    return (
+      <AppShell>
+        <StateView
+          kind="forbidden"
+          titleKey="state.denied.title"
+          bodyKey="state.denied.body"
+          action={{ labelKey: 'state.denied.action', onAction: () => navigate('/') }}
+        />
+      </AppShell>
+    )
+  }
 
   if (featureRoute) {
     const FeatureComponent = featureRoute.component

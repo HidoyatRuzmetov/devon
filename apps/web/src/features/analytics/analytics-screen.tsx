@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
 import { PageHeader, Skeleton, StateView, useReducedMotion } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
+import { Can } from '../../lib/can.js'
 import { useSearchParams, navigate } from '../../lib/router.js'
 import {
   EventsParticipationSection,
@@ -144,7 +145,13 @@ export default function AnalyticsScreen() {
           <ThroughputSection {...sectionProps} />
           <OnTimeRateSection {...sectionProps} />
           <OpenVsOverdueSection {...sectionProps} />
-          <LoadPerPersonSection {...sectionProps} />
+          {/* v1.1 SPEC §2.2 (D3a): a chart of who has how many open and overdue tasks is a
+              performance comparison -- in a ministry it reads as a public reprimand. Head-only, and
+              the server narrows the data to the viewer's own row regardless, so this hide is the
+              affordance half, never the boundary. */}
+          <Can action="analytics.perPerson.read">
+            <LoadPerPersonSection {...sectionProps} />
+          </Can>
           <LoadPerUnitSection {...sectionProps} />
           <ProjectProgressSection {...sectionProps} />
           <EventsParticipationSection {...sectionProps} />

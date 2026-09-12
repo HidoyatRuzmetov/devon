@@ -33,6 +33,7 @@ import {
 import { PageEditor } from './page-editor.js'
 import { VersionHistory } from './version-history.js'
 import { OnboardingTemplatesPanel } from './onboarding-templates.js'
+import { Can, useCan } from '../../lib/can.js'
 import type { PageKind, TiptapNode } from './types.js'
 import type { MentionCandidate } from './mention-suggestion.js'
 
@@ -382,6 +383,7 @@ export default function PagesScreen() {
   const pageId = search.get('page')
   const tab = search.get('tab')
   const createPage = useCreatePageMutation()
+  const canManageOnboarding = useCan('pages.onboarding.template.manage').allowed
 
   function openPage(id: string) {
     const url = new URL(window.location.href)
@@ -423,24 +425,30 @@ export default function PagesScreen() {
         title={t('pages.title')}
         actions={
           <>
-            <Button
-              variant={tab === 'onboarding' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => {
-                const url = new URL(window.location.href)
-                if (tab === 'onboarding') url.searchParams.delete('tab')
-                else url.searchParams.set('tab', 'onboarding')
-                navigate(`${url.pathname}${url.search}`)
-              }}
-            >
-              {t('pages.onboarding.title')}
-            </Button>
+            {/* v1.1 SPEC §2.2 (D4c): the onboarding checklist is how the head introduces a
+                newcomer to the department, not a shared wiki page -- every member could create, edit
+                and delete the templates, and this button offered it to them. The four routes behind
+                it are `{kind:'department_managed'}` now. */}
+            <Can action="pages.onboarding.template.manage">
+              <Button
+                variant={tab === 'onboarding' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => {
+                  const url = new URL(window.location.href)
+                  if (tab === 'onboarding') url.searchParams.delete('tab')
+                  else url.searchParams.set('tab', 'onboarding')
+                  navigate(`${url.pathname}${url.search}`)
+                }}
+              >
+                {t('pages.onboarding.title')}
+              </Button>
+            </Can>
             {tab !== 'onboarding' ? <CreatePageForm onCreated={openPage} /> : null}
           </>
         }
       />
 
-      {tab === 'onboarding' ? (
+      {tab === 'onboarding' && canManageOnboarding ? (
         <OnboardingTemplatesPanel />
       ) : (
         <PageList onOpen={openPage} onCreateEmpty={createBlankPage} />

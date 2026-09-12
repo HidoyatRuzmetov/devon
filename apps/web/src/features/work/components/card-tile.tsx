@@ -123,9 +123,15 @@ export function CardTile({
     active: boolean
   }>({ timer: null, startX: 0, startY: 0, active: false })
 
+  // v1.1 SPEC §2.2 (D6a): a member may read the whole department's board and move only the cards
+  // they gave, were given or created (the head moves anything). Without this, dragging a colleague's
+  // card would animate, land, 403 and snap back -- the worst of both worlds. `canEdit` is the
+  // server's own answer, carried on the card DTO.
+  const canMove = card.canEdit !== false
+
   React.useEffect(() => {
     const el = ref.current
-    if (!el) return
+    if (!el || !canMove) return
     return combine(
       draggable({
         element: el,
@@ -187,7 +193,7 @@ export function CardTile({
     // `card.id`/`columnUserId` capture what the closures above need; `onDropped` is expected stable
     // (defined once per board render via `React.useCallback` in `BoardScreen`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card.id, columnUserId])
+  }, [card.id, columnUserId, canMove])
 
   // Touch-only pointer path (item 9): native HTML5 drag (`draggable()` above) never starts from a
   // touchscreen, so a coarse pointer gets its own long-press-to-lift gesture instead, reusing the
@@ -204,6 +210,8 @@ export function CardTile({
 
   function onTouchPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (e.pointerType !== 'touch') return
+    // Same rule as the mouse path above: no lift gesture on a card this viewer may not move.
+    if (!canMove) return
     // Pointer capture, taken immediately (not just once the lift fires): once the finger travels
     // past this element's own bounds, an *uncaptured* pointer's move/up events start targeting
     // whatever element is now underneath it instead -- this card's own handlers would simply stop
@@ -317,13 +325,15 @@ export function CardTile({
       <div className="flex items-start justify-between gap-2">
         <p className="text-small font-medium leading-snug text-foreground">{card.title}</p>
         <div className="flex shrink-0 items-center gap-1">
-          <span
-            className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
-            aria-hidden="true"
-          >
-            <GripVertical className="size-4" />
-          </span>
-          <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} />
+          {canMove ? (
+            <span
+              className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
+              aria-hidden="true"
+            >
+              <GripVertical className="size-4" />
+            </span>
+          ) : null}
+          {canMove ? <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} /> : null}
         </div>
       </div>
 

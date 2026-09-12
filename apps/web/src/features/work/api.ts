@@ -62,6 +62,12 @@ export const cardSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   version: z.number().int(),
+  /** v1.1 SPEC §2.1 (PERMISSIONS-AUDIT Step 5): the server's own answer to "may this viewer edit
+   * this card?" -- true for its giver, its assignee, its creator and the boshqarma boshlig'i. The
+   * client never recomputes it; it obeys it. Optional so a response from a server built before this
+   * field existed still parses, and absent is treated as "yes" (the old behaviour) rather than as a
+   * silent lock-out. */
+  canEdit: z.boolean().optional(),
 })
 export type Card = z.infer<typeof cardSchema>
 

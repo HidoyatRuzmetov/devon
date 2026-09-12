@@ -135,7 +135,9 @@ function OverviewTab() {
 
   const [budgetInput, setBudgetInput] = React.useState('')
   React.useEffect(() => {
-    if (settingsQuery.data) setBudgetInput(String(settingsQuery.data.budgetUzsPerMonth))
+    if (settingsQuery.data?.budgetUzsPerMonth !== undefined) {
+      setBudgetInput(String(settingsQuery.data.budgetUzsPerMonth))
+    }
   }, [settingsQuery.data])
 
   // round2 SEV3 "toggling a flag gives only the Switch's own motion, no row acknowledgement": a
@@ -182,12 +184,21 @@ function OverviewTab() {
 
   return (
     <div className="flex flex-col gap-6">
-      <BudgetGauge
-        spentUzsThisMonth={settings.spentUzsThisMonth}
-        budgetUzsPerMonth={settings.budgetUzsPerMonth}
-        usedPct={settings.usedPct}
-        budgetStatus={settings.budgetStatus}
-      />
+      {/* D2a: the budget ring, the monthly spend and the cost of the department's AI are the
+          boshqarma boshlig'i's business. The server omits them for a xodim; this is the matching
+          hide, and the screen's remaining half -- which helpers exist and what they do -- is exactly
+          what a member came here for (SPEC §3.1). */}
+      {settings.budgetStatus !== undefined &&
+      settings.spentUzsThisMonth !== undefined &&
+      settings.budgetUzsPerMonth !== undefined &&
+      settings.usedPct !== undefined ? (
+        <BudgetGauge
+          spentUzsThisMonth={settings.spentUzsThisMonth}
+          budgetUzsPerMonth={settings.budgetUzsPerMonth}
+          usedPct={settings.usedPct}
+          budgetStatus={settings.budgetStatus}
+        />
+      ) : null}
 
       {isHead ? (
         <div className="flex flex-wrap items-end gap-3 rounded-md border border-border bg-card p-4">
