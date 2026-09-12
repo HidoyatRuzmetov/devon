@@ -164,7 +164,10 @@ export async function runPurgeLeftovers(
         // nosemgrep: query-in-loop -- see the comment above: one department per iteration is what
         // the RLS scope check requires, and it is the loop's whole reason for existing.
         await tx.raw(sql`select set_config('app.department_id', ${departmentId}, true)`)
-        if (affectedDepartmentIds.has(departmentId) && departments.some((d) => d.id === departmentId)) {
+        if (
+          affectedDepartmentIds.has(departmentId) &&
+          departments.some((d) => d.id === departmentId)
+        ) {
           // nosemgrep: query-in-loop
           await tx.raw(sql`
             update app.departments set deleted_at = now(), updated_at = now()
