@@ -1,8 +1,17 @@
-// The one `run()` every feature calls (TECH-SPEC §8). Orchestrates, in order: history trimming,
-// the provider call, the "empty content + finish_reason length -> retry with doubled max_tokens"
-// rule, tool-call extraction, Zod validation with exactly one retry carrying the validation error
-// back to the model, and cost/latency accounting. Nothing above this file ever talks to `AiProvider`
-// directly (`features.ts`/the API module only ever call `run()`).
+// The one `run()` every feature calls (TECH-SPEC §8, v1.1 SPEC §8 "Gateway"). Orchestrates, in
+// order: history trimming, the provider call, the "answer truncated -> retry with doubled
+// max_tokens" rule, tool-call extraction, Zod validation with exactly one retry carrying the
+// validation error back to the model, an optional feature-specific faithfulness check that may also
+// buy one retry, and cost/latency accounting. Nothing above this file ever talks to `AiProvider`
+// directly (`features.ts` and the API module only ever call `run()`).
+//
+// v1.1 fixes carried here, from AI-AUDIT §2.2:
+//   G-1 a *truncated tool call* (finish_reason 'length' with unparseable arguments) now also
+//       doubles max_tokens, instead of burning the schema retry at the same budget and billing twice.
+//   G-2 `temperature` is always sent. Ten structured-extraction tasks on a provider's default
+//       sampling is precisely the "two identical quick-adds give different labels" complaint.
+//   G-6 the schema-retry's tool message is keyed to the tool call that actually matched, not
+//       `toolCalls[0]`.
 import { z } from 'zod'
 import { tokensToCostUzs } from './budget.js'
 import type { AiConfig } from './config.js'
@@ -24,28 +33,30 @@ export type RunOptions<T> = {
   messages: ChatMessage[]
   tool: ToolDef<T>
   /** Defaults to `config.minMaxTokens` (>= 1024, TECH-SPEC §8) -- a caller may ask for more up front
-   * for a feature it knows tends to reason longer (e.g. weekly summaries), never less. */
+   * for a feature it knows tends to reason longer (a Monday briefing), never less. */
   maxTokens?: number
-}
-
-function emptyUsageMeta(feature: AiFeature, model: string): RunMeta {
-  return {
-    feature,
-    model,
-    promptTokens: 0,
-    completionTokens: 0,
-    reasoningTokens: 0,
-    totalTokens: 0,
-    costUzs: 0,
-    latencyMs: 0,
-    retried: false,
-    status: 'ok',
-  }
+  /** v1.1 G-2. Always supplied by `features.ts` from the feature's own spec; defaulted here only so
+   * a direct `run()` call in a unit test does not have to think about sampling. */
+  temperature?: number
+  /**
+   * Feature-specific faithfulness check, run after Zod accepts the shape. Returning an error buys
+   * exactly one extra round trip carrying that reason back to the model, then fails the run --
+   * `features.ts` passes its spec's `validateOutput` through here so the retry loop lives in one
+   * place rather than being re-implemented per feature.
+   */
+  validate?: (output: T) => { ok: true; output: T } | { ok: false; error: string }
 }
 
 function findToolCall(toolCalls: readonly ToolCall[], name: string): ToolCall | null {
   return toolCalls.find((call) => call.name === name) ?? null
 }
+
+type Extraction =
+  | { kind: 'ok'; value: unknown }
+  /** A tool call arrived but its `arguments` were not parseable JSON -- the fingerprint of a reply
+   * the provider cut off mid-object (G-1). Distinct from "nothing arrived at all". */
+  | { kind: 'unparseable' }
+  | { kind: 'absent' }
 
 /** Tries the model's tool call first (the intended path); falls back to parsing `content` as JSON --
  * some smaller/quantised OpenAI-compatible deployments answer a forced single-tool request in
@@ -55,28 +66,30 @@ function extractArguments(
   toolCalls: readonly ToolCall[],
   toolName: string,
   content: string | null,
-): unknown | undefined {
+): Extraction {
   const call = findToolCall(toolCalls, toolName)
   if (call) {
     try {
-      return JSON.parse(call.argumentsJson)
+      return { kind: 'ok', value: JSON.parse(call.argumentsJson) }
     } catch {
-      return undefined
+      return { kind: 'unparseable' }
     }
   }
-  if (content) {
+  if (content && content.trim().length > 0) {
     try {
-      return JSON.parse(content)
+      return { kind: 'ok', value: JSON.parse(content) }
     } catch {
-      return undefined
+      return { kind: 'unparseable' }
     }
   }
-  return undefined
+  return { kind: 'absent' }
 }
 
 export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   const { provider, config, feature, tool } = options
   const requestedMaxTokens = Math.max(options.maxTokens ?? config.minMaxTokens, config.minMaxTokens)
+  const temperature = options.temperature ?? config.defaultTemperature
+  const simulated = provider.simulated
   const start = Date.now()
 
   const usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
@@ -88,9 +101,29 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   let maxTokens = requestedMaxTokens
   let lastContent: string | null = null
   let lastToolCalls: ToolCall[] = []
+  let extraction: Extraction = { kind: 'absent' }
 
-  // -- Step 1: call the model, doubling max_tokens once if it came back empty because reasoning ate
-  // the whole budget (TECH-SPEC §8 / glm-api-instruction.md point 1). --------------------------------
+  const finish = (status: RunMeta['status']): RunMeta => ({
+    feature,
+    model: config.model,
+    promptTokens: usage.promptTokens,
+    completionTokens: usage.completionTokens,
+    // GLM bills reasoning inside `completion_tokens` and never reports it separately, so this can
+    // only ever be 0 here -- TECH-SPEC §8 forbids storing the text anyway (AI-AUDIT G-3: the honest
+    // answer to "why did a 40-word summary cost 2100 tokens?" is this comment, not a fabricated
+    // split of a number the provider does not give us).
+    reasoningTokens: 0,
+    totalTokens: usage.totalTokens,
+    costUzs: tokensToCostUzs(usage.totalTokens, config.pricePerMillionTokensUzs),
+    latencyMs: Date.now() - start,
+    retried,
+    simulated,
+    status,
+  })
+
+  // -- Step 1: call the model, doubling max_tokens once if the answer was cut off -- either because
+  // reasoning ate the whole budget (empty reply, glm-api-instruction.md point 1) or because the tool
+  // call itself was truncated mid-JSON (v1.1 G-1). ---------------------------------------------------
   for (let attempt = 0; attempt < 2; attempt++) {
     let result
     try {
@@ -100,11 +133,10 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
         maxTokens,
         tools: [tool],
         toolChoice: 'required',
+        temperature,
       })
     } catch (err) {
-      const meta = emptyUsageMeta(feature, config.model)
-      meta.latencyMs = Date.now() - start
-      meta.status = 'provider_error'
+      const meta = finish('provider_error')
       return { ok: false, error: err instanceof Error ? err.message : String(err), meta }
     }
 
@@ -113,12 +145,16 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     usage.totalTokens += result.usage.totalTokens
     lastContent = result.content
     lastToolCalls = result.toolCalls
+    extraction = extractArguments(result.toolCalls, tool.name, result.content)
 
     const cameBackEmpty =
       (result.content === null || result.content.trim().length === 0) &&
       result.toolCalls.length === 0
+    const truncatedMidAnswer = extraction.kind === 'unparseable'
+    const worthMoreTokens = cameBackEmpty || truncatedMidAnswer
+
     if (
-      cameBackEmpty &&
+      worthMoreTokens &&
       result.finishReason === 'length' &&
       attempt === 0 &&
       maxTokens < config.maxMaxTokens
@@ -130,29 +166,31 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     break
   }
 
-  if (lastToolCalls.length === 0 && (!lastContent || lastContent.trim().length === 0)) {
-    const meta = emptyUsageMeta(feature, config.model)
-    meta.promptTokens = usage.promptTokens
-    meta.completionTokens = usage.completionTokens
-    meta.totalTokens = usage.totalTokens
-    meta.costUzs = tokensToCostUzs(usage.totalTokens, config.pricePerMillionTokensUzs)
-    meta.latencyMs = Date.now() - start
-    meta.retried = retried
-    meta.status = 'empty_after_retry'
+  if (extraction.kind === 'absent' && lastToolCalls.length === 0) {
     return {
       ok: false,
       error: 'The model returned no content after a retry with more tokens.',
-      meta,
+      meta: finish('empty_after_retry'),
     }
   }
 
-  // -- Step 2: validate the tool call's arguments against the feature's Zod schema, one retry with
-  // the validation error appended to history (TECH-SPEC §8: "one retry with the error"). -------------
-  let raw = extractArguments(lastToolCalls, tool.name, lastContent)
-  let parsed = tool.schema.safeParse(raw)
+  // -- Step 2: validate the tool call's arguments against the feature's Zod schema, then against the
+  // feature's own faithfulness rule. Exactly one corrective round trip is spent across the two
+  // (TECH-SPEC §8: "one retry with the error"): a model that both mis-shapes and misattributes on the
+  // same answer does not get two chances to bill the department. -------------------------------------
+  const judge = (candidate: unknown): { problem: string } | { problem: null; output: T } => {
+    const result = tool.schema.safeParse(candidate)
+    if (!result.success) return { problem: z.prettifyError(result.error) }
+    if (!options.validate) return { problem: null, output: result.data }
+    const verdict = options.validate(result.data)
+    return verdict.ok ? { problem: null, output: verdict.output } : { problem: verdict.error }
+  }
 
-  if (!parsed.success) {
-    const errorSummary = z.prettifyError(parsed.error)
+  let judged = judge(extraction.kind === 'ok' ? extraction.value : undefined)
+
+  if (judged.problem !== null) {
+    const problem = judged.problem
+    const matchedCall = findToolCall(lastToolCalls, tool.name) ?? lastToolCalls[0] ?? null
     const retryMessages: ChatMessage[] = [
       ...messages,
       {
@@ -161,9 +199,12 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
         ...(lastToolCalls.length > 0 ? { toolCalls: lastToolCalls } : {}),
       },
       {
-        role: lastToolCalls.length > 0 ? 'tool' : 'user',
-        content: `Your previous answer did not match the required schema for "${tool.name}". Validation errors:\n${errorSummary}\n\nCall "${tool.name}" again with corrected arguments that satisfy the schema exactly.`,
-        ...(lastToolCalls.length > 0 ? { toolCallId: lastToolCalls[0]!.id } : {}),
+        role: matchedCall ? 'tool' : 'user',
+        content: `Your previous answer was rejected. Reason:\n${problem}\n\nCall "${tool.name}" again with corrected arguments. Fix only what the reason names; keep everything else identical.`,
+        // v1.1 G-6: key the tool result to the call this tool actually matched, not blindly to
+        // `toolCalls[0]` -- harmless with one tool per feature, a silent mis-attribution the moment
+        // a feature ever exposes two.
+        ...(matchedCall ? { toolCallId: matchedCall.id } : {}),
       },
     ]
 
@@ -175,16 +216,11 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
         maxTokens,
         tools: [tool],
         toolChoice: 'required',
+        temperature,
       })
     } catch (err) {
-      const meta = emptyUsageMeta(feature, config.model)
-      meta.promptTokens = usage.promptTokens
-      meta.completionTokens = usage.completionTokens
-      meta.totalTokens = usage.totalTokens
-      meta.costUzs = tokensToCostUzs(usage.totalTokens, config.pricePerMillionTokensUzs)
-      meta.latencyMs = Date.now() - start
-      meta.retried = true
-      meta.status = 'provider_error'
+      retried = true
+      const meta = finish('provider_error')
       return { ok: false, error: err instanceof Error ? err.message : String(err), meta }
     }
 
@@ -193,25 +229,17 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     usage.totalTokens += retryResult.usage.totalTokens
     retried = true
 
-    raw = extractArguments(retryResult.toolCalls, tool.name, retryResult.content)
-    parsed = tool.schema.safeParse(raw)
+    const retryExtraction = extractArguments(retryResult.toolCalls, tool.name, retryResult.content)
+    judged = judge(retryExtraction.kind === 'ok' ? retryExtraction.value : undefined)
   }
 
-  const meta: RunMeta = {
-    feature,
-    model: config.model,
-    promptTokens: usage.promptTokens,
-    completionTokens: usage.completionTokens,
-    reasoningTokens: 0, // never reconstructable from usage alone; TECH-SPEC §8 forbids storing it anyway.
-    totalTokens: usage.totalTokens,
-    costUzs: tokensToCostUzs(usage.totalTokens, config.pricePerMillionTokensUzs),
-    latencyMs: Date.now() - start,
-    retried,
-    status: parsed.success ? 'ok' : 'schema_invalid_after_retry',
+  if (judged.problem !== null) {
+    return {
+      ok: false,
+      error: judged.problem,
+      meta: finish('schema_invalid_after_retry'),
+    }
   }
 
-  if (!parsed.success) {
-    return { ok: false, error: z.prettifyError(parsed.error), meta }
-  }
-  return { ok: true, data: parsed.data, meta }
+  return { ok: true, data: judged.output, meta: finish('ok') }
 }
