@@ -15,6 +15,7 @@ import {
   type PersonIndicators,
 } from '@devon/contracts'
 import * as repo from './repo.js'
+import * as personRepo from './person-repo.js'
 
 /** SPEC §7 (A3/A4) adds `estimate_min` and per-person capacity; until they exist, load is measured in
  * open cards against this default weekly capacity, which is what the board already shows a head. The
@@ -186,4 +187,67 @@ async function compute(
       return { userId, values }
     })
   })
+}
+
+// -- Person-page and export helpers (SPEC §4.3, §6) ------------------------------------------------
+
+export type PersonName = {
+  userId: string
+  givenName: string
+  familyName: string
+  patronymic: string | null
+  title: string | null
+  unit: string | null
+}
+
+/** Names for a cohort, in the same board order `activeMemberIds` uses, so the CSV's row order
+ * matches what the head is looking at on screen. One query. */
+export async function getNames(
+  ctx: RequestContext,
+  departmentId: string,
+  userIds: readonly string[],
+): Promise<PersonName[]> {
+  const ids = userIds.length > 0 ? userIds : await repo.activeMemberIds(ctx, departmentId)
+  return withContext(ctx, (tx) => repo.nameRows(tx, departmentId, ids))
+}
+
+/** SPEC §4.3: a CSV of everyone's numbers leaving the product is an event the department can account
+ * for later. Audited, never silent. */
+export async function auditExport(
+  ctx: RequestContext,
+  departmentId: string,
+  detail: { rows: number; keys: readonly string[] },
+): Promise<void> {
+  await withContext(ctx, async (tx) => {
+    tx.audit({
+      action: 'people.table.exported',
+      subjectType: 'department',
+      subjectId: departmentId,
+      departmentId,
+      after: { rows: detail.rows, columns: [...detail.keys] },
+    })
+    tx.emit({
+      type: 'people.table.exported',
+      departmentId,
+      payload: { rows: detail.rows, columns: [...detail.keys] },
+    })
+  })
+}
+
+export async function personCards(
+  ctx: RequestContext,
+  departmentId: string,
+  userId: string,
+  options: { role: 'assignee' | 'giver'; status: 'active' | 'done' | 'all'; limit: number },
+): Promise<personRepo.PersonCard[]> {
+  return withContext(ctx, (tx) => personRepo.personCards(tx, departmentId, userId, options))
+}
+
+export async function personActivity(
+  ctx: RequestContext,
+  departmentId: string,
+  userId: string,
+  limit: number,
+): Promise<personRepo.ActivityEntry[]> {
+  return withContext(ctx, (tx) => personRepo.personActivity(tx, departmentId, userId, limit))
 }

@@ -1,19 +1,26 @@
-// The boshqarma boshlig'i's Home (v1.1 SPEC §3.2) -- the answer to CTO finding #2: the head's home is
+// The boshqarma boshligʻi's Home (v1.1 SPEC §3.2) -- the answer to CTO finding #2: the head's home is
 // for *management* (people, load, risk, decisions), the member's home is for *working*. Same shell,
 // two products.
 //
-// Every number here is real and comes from an endpoint that already exists: the analytics summary
-// (whose person-axis sections the server serves only to a head), the shared people-indicator service
-// (SPEC §4.2, head-only), and the head's own personal overview. Nothing is mocked and nothing is a
-// dashed "coming soon" box -- a management dashboard that lies once is never trusted again.
+// Every number here is real and comes from an endpoint that already exists: the department board
+// (one request that already groups every card by the person who holds it), the shared
+// people-indicator service (SPEC §4.2, head-only), the analytics summary and the head's own personal
+// overview. Nothing is mocked and nothing is a dashed "coming soon" box -- a management dashboard
+// that lies once is never trusted again.
 //
-// `HeadDashboardTile` below is the typed seam the head-console package extends (SPEC §13): it adds
-// `Xavf ostida` from `computeRisk`, `Maqsadlar` from the goals module and `AI xulosa` from the
-// catch-up feature by adding entries to `HEAD_TILES`, not by rewriting this file.
+// Every tile drills somewhere specific (SPEC §3.2): a person's name opens their person page, an
+// overdue count opens the people table already filtered to overdue work, a card opens the card, load
+// opens the table sorted by load. A tile whose number you cannot act on is a poster, not a dashboard.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useT, useLocale, formatNumber } from '@devon/i18n'
-import { INDICATORS, type IndicatorKey } from '@devon/contracts'
+import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
+import {
+  DEFAULT_PEOPLE_VIEW_CONFIG,
+  PEOPLE_VIEW_URL_PARAM,
+  encodePeopleViewConfig,
+  type IndicatorKey,
+  type PeopleViewConfig,
+} from '@devon/contracts'
 import {
   Avatar,
   Card,
@@ -26,16 +33,18 @@ import {
   cn,
   initialsFromName,
 } from '@devon/ui'
-import { AlertTriangle, CalendarDays, Gavel, Sparkle, Users2 } from 'lucide-react'
+import { AlertTriangle, CalendarDays, Flame, Gavel, Sparkle, Users2 } from 'lucide-react'
 import { navigate } from '../../lib/router.js'
 import { avatarUrl } from '../../lib/avatar.js'
-import { useDepartment } from '../../lib/session.js'
+import { useSession, useDepartment } from '../../lib/session.js'
 import { fetchMembers, type Member } from '../structure/api.js'
 import { fetchIndicators } from '../people/api.js'
+import { personPath } from '../people/routes.js'
+import { fetchBoard, type Card as WorkCard } from '../work/api.js'
 import { usePersonalOverviewQuery, useSummaryQuery } from '../analytics/use-analytics.js'
 
 /** The indicator keys this dashboard asks for. Narrow on purpose: the service runs one query per
- * source it is actually asked about, so a five-tile dashboard costs three statements. */
+ * source it is actually asked about, so a six-tile dashboard costs three statements. */
 const DASHBOARD_KEYS: readonly IndicatorKey[] = [
   'overdueCards',
   'openCards',
@@ -44,17 +53,21 @@ const DASHBOARD_KEYS: readonly IndicatorKey[] = [
   'joinedAt',
 ]
 
-/**
- * A tile on the head's Home. The head-console package adds entries to `HEAD_TILES`; the layout,
- * the stagger and the empty-state contract live here, once.
- */
+/** A drill-down into the people table that arrives already arranged for the question the tile asked.
+ * The table reads exactly this shape back out of the URL (`features/people/routes.ts` and
+ * `PEOPLE_VIEW_URL_PARAM`), so a tile and the table can never disagree about what "overdue by
+ * person" means. */
+function tablePath(patch: Partial<PeopleViewConfig>): string {
+  const config: PeopleViewConfig = { ...DEFAULT_PEOPLE_VIEW_CONFIG, ...patch }
+  return `/people/table?${PEOPLE_VIEW_URL_PARAM}=${encodeURIComponent(encodePeopleViewConfig(config))}`
+}
+
 export type HeadDashboardTile = {
   id: string
   titleKey: string
   /** One line saying what the number means -- never a bare number on a management screen. */
   meaningKey: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
-  /** Where the drill-down goes. */
   onOpen: () => void
   ctaKey: string
 }
@@ -87,7 +100,7 @@ function TileShell({
       <button
         type="button"
         onClick={tile.onOpen}
-        className="mt-auto self-start text-small font-medium text-primary hover:underline"
+        className="mt-auto self-start rounded-sm text-small font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {t(tile.ctaKey)}
       </button>
@@ -95,6 +108,8 @@ function TileShell({
   )
 }
 
+/** A person row that goes where a person row should go: their page (SPEC §3.2 "people at risk →
+ * person page", "onboarding in progress → person pages"). */
 function PersonRow({
   member,
   right,
@@ -103,17 +118,64 @@ function PersonRow({
   right: React.ReactNode
 }): React.JSX.Element {
   const name = `${member.givenName} ${member.familyName}`.trim()
+  const href = personPath(member.userId)
   return (
-    <li className="flex items-center gap-2">
-      <Avatar
-        size="sm"
-        alt={name}
-        hueSeed={member.userId}
-        initials={initialsFromName(member.givenName, member.familyName)}
-        src={avatarUrl(member.avatarKey, 64)}
-      />
-      <span className="min-w-0 flex-1 truncate text-small">{name}</span>
-      {right}
+    <li>
+      <a
+        href={href}
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+          event.preventDefault()
+          navigate(href)
+        }}
+        className="flex min-h-9 items-center gap-2 rounded-sm px-1 transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Avatar
+          size="sm"
+          alt={name}
+          hueSeed={member.userId}
+          initials={initialsFromName(member.givenName, member.familyName)}
+          src={avatarUrl(member.avatarKey, 64)}
+        />
+        <span className="min-w-0 flex-1 truncate text-small">{name}</span>
+        {right}
+      </a>
+    </li>
+  )
+}
+
+function CardRow({
+  card,
+  tone,
+}: {
+  card: WorkCard
+  tone: 'danger' | 'warning'
+}): React.JSX.Element {
+  const locale = useLocale()
+  const href = `/work?card=${card.id}`
+  return (
+    <li>
+      <a
+        href={href}
+        onClick={(event) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+          event.preventDefault()
+          navigate(href)
+        }}
+        className="flex min-h-9 items-center gap-2 rounded-sm px-1 transition-colors duration-(--dur-micro) hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="min-w-0 flex-1 truncate text-small">{card.title}</span>
+        {card.dueAt ? (
+          <span
+            className={cn(
+              'shrink-0 tabular-nums text-caption',
+              tone === 'danger' ? 'text-destructive' : 'text-warning',
+            )}
+          >
+            {formatDate(new Date(card.dueAt), locale)}
+          </span>
+        ) : null}
+      </a>
     </li>
   )
 }
@@ -121,6 +183,7 @@ function PersonRow({
 export function HeadDashboard(): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
+  const session = useSession()
   const { departmentId } = useDepartment()
 
   const membersQuery = useQuery({
@@ -131,6 +194,11 @@ export function HeadDashboard(): React.JSX.Element {
   const indicatorsQuery = useQuery({
     queryKey: ['people', 'indicators', departmentId, DASHBOARD_KEYS.join(',')],
     queryFn: () => fetchIndicators([...DASHBOARD_KEYS]),
+    enabled: departmentId !== null,
+  })
+  const boardQuery = useQuery({
+    queryKey: ['work', 'board'],
+    queryFn: fetchBoard,
     enabled: departmentId !== null,
   })
   const summaryQuery = useSummaryQuery({})
@@ -157,6 +225,7 @@ export function HeadDashboard(): React.JSX.Element {
           onAction: () => {
             void indicatorsQuery.refetch()
             void summaryQuery.refetch()
+            void boardQuery.refetch()
           },
         }}
       />
@@ -168,6 +237,11 @@ export function HeadDashboard(): React.JSX.Element {
   const capacity = indicatorsQuery.data?.capacityCards ?? 8
   const summary = summaryQuery.data
   const overview = overviewQuery.data
+
+  const allCards: WorkCard[] = [
+    ...(boardQuery.data?.columns ?? []).flatMap((column) => column.cards),
+    ...(boardQuery.data?.unassigned ?? []),
+  ]
 
   const num = (userId: string, key: IndicatorKey): number =>
     Number(rows.find((r) => r.userId === userId)?.values[key] ?? 0)
@@ -208,7 +282,21 @@ export function HeadDashboard(): React.JSX.Element {
     if (upcomingEvents.length === 4) break
   }
 
-  const decisionsWaiting = overview?.givenOverdueCount ?? 0
+  // "Qaror kutmoqda": work this head gave out that has run past its date. The head is the only
+  // person who can move it, extend it or take it back -- which is exactly what a decision is.
+  const decisionCards = allCards
+    .filter((card) => card.giverUserId === session.user?.id && card.risk === 'overdue')
+    .sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''))
+    .slice(0, 5)
+  const decisionsWaiting = Math.max(decisionCards.length, overview?.givenOverdueCount ?? 0)
+
+  // "Xavf ostida": everything in the department due within two days that is not finished. The board
+  // computes this risk once, server-side, and the tile never re-decides it.
+  const atRiskCards = allCards
+    .filter((card) => card.risk === 'at_risk')
+    .sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''))
+    .slice(0, 5)
+
   const totalOverdue = members.reduce((sum, member) => sum + num(member.userId, 'overdueCards'), 0)
   const overloaded = loadThisWeek.filter((row) => row.pct >= 100).length
 
@@ -228,11 +316,22 @@ export function HeadDashboard(): React.JSX.Element {
                 meaningKey: 'home.head.decisions.meaning',
                 icon: Gavel,
                 ctaKey: 'home.head.decisions.cta',
-                onOpen: () => navigate('/work'),
+                onOpen: () => navigate('/work?mine=given'),
               }}
               tone={decisionsWaiting > 0 ? 'attention' : 'neutral'}
             >
-              <StatNumber value={decisionsWaiting} locale={locale} />
+              <p className="font-display text-h1 tabular-nums">
+                <StatNumber value={decisionsWaiting} locale={locale} />
+              </p>
+              {decisionCards.length === 0 ? (
+                <p className="text-small text-muted-foreground">{t('home.head.decisions.empty')}</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {decisionCards.map((card) => (
+                    <CardRow key={card.id} card={card} tone="danger" />
+                  ))}
+                </ul>
+              )}
             </TileShell>
           </StaggerItem>
 
@@ -244,24 +343,56 @@ export function HeadDashboard(): React.JSX.Element {
                 meaningKey: 'home.head.overdue.meaning',
                 icon: AlertTriangle,
                 ctaKey: 'home.head.overdue.cta',
-                onOpen: () => navigate('/people/table'),
+                onOpen: () =>
+                  navigate(
+                    tablePath({
+                      columns: ['unit', 'overdueCards', 'openCards', 'workloadPct'],
+                      sort: { columnId: 'overdueCards', desc: true },
+                      filters: [{ columnId: 'overdueCards', op: 'gte', value: 1 }],
+                      groupBy: 'none',
+                    }),
+                  ),
               }}
               tone={totalOverdue > 0 ? 'attention' : 'neutral'}
             >
               {overdueByPerson.length === 0 ? (
                 <p className="text-small text-muted-foreground">{t('home.head.overdue.empty')}</p>
               ) : (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-1">
                   {overdueByPerson.map(({ member, overdue }) => (
                     <PersonRow
                       key={member.userId}
                       member={member}
                       right={
-                        <span className="tabular-nums text-small font-medium text-danger">
+                        <span className="tabular-nums text-small font-medium text-destructive">
                           {formatNumber(overdue, locale)}
                         </span>
                       }
                     />
+                  ))}
+                </ul>
+              )}
+            </TileShell>
+          </StaggerItem>
+
+          {/* Xavf ostida */}
+          <StaggerItem className="h-full">
+            <TileShell
+              tile={{
+                titleKey: 'home.head.risk.title',
+                meaningKey: 'home.head.risk.meaning',
+                icon: Flame,
+                ctaKey: 'home.head.risk.cta',
+                onOpen: () => navigate('/work'),
+              }}
+              tone={atRiskCards.length > 0 ? 'attention' : 'neutral'}
+            >
+              {atRiskCards.length === 0 ? (
+                <p className="text-small text-muted-foreground">{t('home.head.risk.empty')}</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {atRiskCards.map((card) => (
+                    <CardRow key={card.id} card={card} tone="warning" />
                   ))}
                 </ul>
               )}
@@ -276,27 +407,49 @@ export function HeadDashboard(): React.JSX.Element {
                 meaningKey: 'home.head.load.meaning',
                 icon: Users2,
                 ctaKey: 'home.head.load.cta',
-                onOpen: () => navigate('/people/table'),
+                onOpen: () =>
+                  navigate(
+                    tablePath({
+                      columns: ['unit', 'workloadPct', 'openCards', 'dueThisWeek'],
+                      sort: { columnId: 'workloadPct', desc: true },
+                      groupBy: 'none',
+                    }),
+                  ),
               }}
               tone={overloaded > 0 ? 'attention' : 'neutral'}
             >
               {loadThisWeek.length === 0 ? (
                 <p className="text-small text-muted-foreground">{t('home.head.load.empty')}</p>
               ) : (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-1">
                   {loadThisWeek.map(({ member, pct, open }) => (
                     <PersonRow
                       key={member.userId}
                       member={member}
                       right={
-                        <span
-                          className="tabular-nums text-small text-muted-foreground"
-                          title={t('people.table.workload.value', {
-                            open,
-                            capacity,
-                          })}
-                        >
-                          {pct}%
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="h-1.5 w-14 overflow-hidden rounded-full bg-muted"
+                            aria-hidden="true"
+                          >
+                            <span
+                              className={cn(
+                                'block h-full rounded-full',
+                                pct >= 100
+                                  ? 'bg-destructive'
+                                  : pct >= 75
+                                    ? 'bg-warning'
+                                    : 'bg-primary',
+                              )}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                          </span>
+                          <span
+                            className="tabular-nums text-small text-muted-foreground"
+                            title={t('people.table.workload.value', { open, capacity })}
+                          >
+                            {pct}%
+                          </span>
                         </span>
                       }
                     />
@@ -376,7 +529,15 @@ export function HeadDashboard(): React.JSX.Element {
                 meaningKey: 'home.head.onboarding.meaning',
                 icon: Users2,
                 ctaKey: 'home.head.onboarding.cta',
-                onOpen: () => navigate('/people/table'),
+                onOpen: () =>
+                  navigate(
+                    tablePath({
+                      columns: ['unit', 'onboardingPct', 'joinedAt', 'telegramLinked'],
+                      sort: { columnId: 'onboardingPct', desc: false },
+                      filters: [{ columnId: 'onboardingPct', op: 'lte', value: 99 }],
+                      groupBy: 'none',
+                    }),
+                  ),
               }}
             >
               {onboarding.length === 0 ? (
@@ -384,7 +545,7 @@ export function HeadDashboard(): React.JSX.Element {
                   {t('home.head.onboarding.empty')}
                 </p>
               ) : (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-1">
                   {onboarding.map(({ member, pct }) => (
                     <PersonRow
                       key={member.userId}
@@ -404,9 +565,7 @@ export function HeadDashboard(): React.JSX.Element {
       </section>
 
       <Reveal>
-        <p className="text-caption text-muted-foreground">
-          {t('home.head.indicatorsNote', { count: INDICATORS.length })}
-        </p>
+        <p className="text-caption text-muted-foreground">{t('home.head.drillNote')}</p>
       </Reveal>
     </div>
   )

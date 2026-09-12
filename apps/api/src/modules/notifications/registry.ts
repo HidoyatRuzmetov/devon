@@ -401,6 +401,16 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       ),
   },
 
+  // --- people (v1.1 SPEC §4.3) ----------------------------------------------------------------------
+  'people.view.created': {
+    notify: false,
+    why: 'Arranging your own copy of the people table is a preference, not news. The other heads discover a shared view in the tab strip, where it belongs.',
+  },
+  'people.table.exported': {
+    notify: false,
+    why: 'The export is deliberately audited rather than notified: the department needs an accountable record of a staff spreadsheet leaving the product, and the head who pressed the button does not need an inbox row telling them they pressed it.',
+  },
+
   // --- work ---------------------------------------------------------------------------------------
   'work.card.created': {
     notify: true,

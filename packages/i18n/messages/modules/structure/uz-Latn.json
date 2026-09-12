@@ -1,6 +1,9 @@
 {
   "structure": {
-    "nav": { "units": "Tuzilma", "people": "Xodimlar" },
+    "nav": {
+      "units": "Tuzilma",
+      "people": "Xodimlar"
+    },
     "units": {
       "title": "Tuzilma",
       "subtitle": "{departmentName} boʻlimlari va lavozimlari",
@@ -33,7 +36,10 @@
       "dragHint": "Tartibini oʻzgartirish uchun torting",
       "expandBranch": "Ichki boʻlimlarni yoyish",
       "collapseBranch": "Ichki boʻlimlarni yigʻish",
-      "view": { "tree": "Roʻyxat", "chart": "Tuzilma sxemasi" },
+      "view": {
+        "tree": "Roʻyxat",
+        "chart": "Tuzilma sxemasi"
+      },
       "chart": {
         "exportPng": "PNG sifatida saqlash",
         "noHead": "Boshligʻi hali tayinlanmagan",
@@ -46,7 +52,9 @@
         "resetView": "Koʻrinishni tiklash",
         "closePanel": "Yopish"
       },
-      "validation": { "nameRequired": "Nomini kiriting" },
+      "validation": {
+        "nameRequired": "Nomini kiriting"
+      },
       "addDialog": {
         "title": "Yangi boʻlim",
         "namePlaceholder": "Masalan, Monitoring guruhi",
@@ -57,7 +65,11 @@
       }
     },
     "roles": {
-      "roleLabel": { "head": "Boʻlim boshligʻi", "deputy": "Oʻrinbosar", "member": "Aʼzo" },
+      "roleLabel": {
+        "head": "Boʻlim boshligʻi",
+        "deputy": "Oʻrinbosar",
+        "member": "Aʼzo"
+      },
       "join": "Ushbu boʻlimga qoʻshilish",
       "joinAs": "{role} sifatida qoʻshilish",
       "leave": "Boʻlimdan chiqish",
@@ -80,10 +92,14 @@
     "people": {
       "title": "Xodimlar",
       "subtitle": "{departmentName} jamoasi, boʻlimlar boʻyicha",
-      "empty": { "title": "Hali aʼzo yoʻq" },
+      "empty": {
+        "title": "Hali aʼzo yoʻq"
+      },
       "searchPlaceholder": "Xodimni qidirish",
       "unassignedGroup": "Boʻlimsiz",
-      "memberCard": { "noUnit": "Boʻlim belgilanmagan" },
+      "memberCard": {
+        "noUnit": "Boʻlim belgilanmagan"
+      },
       "filters": {
         "label": "Boʻlim boʻyicha filtr",
         "all": "Barchasi",
@@ -100,9 +116,28 @@
         "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish",
         "copyLink": "Havolani nusxalash",
         "copyLinkAria": "{name} profiliga havolani nusxalash",
-        "linkCopied": "Havola nusxalandi"
+        "linkCopied": "Havola nusxalandi",
+        "openProfile": "Profilni ochish"
+      },
+      "openTable": "Koʻrsatkichlar jadvali",
+      "layout": {
+        "label": "Koʻrinish",
+        "cards": "Kartochkalar",
+        "table": "Jadval"
+      },
+      "table": {
+        "caption": "Boʻlim xodimlari roʻyxati",
+        "name": "Ism",
+        "unit": "Boʻlim",
+        "unitRole": "Boʻlimdagi roli",
+        "title": "Lavozim",
+        "noRole": "Belgilanmagan",
+        "noTitle": "Koʻrsatilmagan"
       }
     },
-    "common": { "head": "Boshligʻi", "member": "Aʼzo" }
+    "common": {
+      "head": "Boshligʻi",
+      "member": "Aʼzo"
+    }
   }
 }

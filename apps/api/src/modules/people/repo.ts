@@ -356,3 +356,60 @@ export async function activeMemberIds(
     return rows.map((r) => r.user_id)
   })
 }
+
+export type NameRow = {
+  userId: string
+  givenName: string
+  familyName: string
+  patronymic: string | null
+  title: string | null
+  unit: string | null
+}
+
+/**
+ * Names, titles and bo'lim for a cohort, ordered exactly like `activeMemberIds` (head first, then by
+ * name) so an export's row order matches the table the head exported it from. One query, never one
+ * per person (I-14).
+ */
+export async function nameRows(
+  tx: Tx,
+  departmentId: string,
+  userIds: readonly string[],
+): Promise<NameRow[]> {
+  if (userIds.length === 0) return []
+  const ids = sql.param([...userIds])
+  const rows = await tx.raw<{
+    user_id: string
+    given_name: string
+    family_name: string
+    patronymic: string | null
+    title: string | null
+    unit: string | null
+  }>(sql`
+    select m.user_id,
+           u.given_name,
+           u.family_name,
+           u.patronymic,
+           coalesce(m.title_override, u.title) as title,
+           un.name as unit
+    from app.memberships m
+    join app.users u on u.id = m.user_id
+    left join app.unit_roles ur
+      on ur.user_id = m.user_id and ur.department_id = m.department_id and ur.deleted_at is null
+    left join app.units un on un.id = ur.unit_id and un.deleted_at is null
+    where m.department_id = ${departmentId}
+      and m.status = 'active'
+      and m.deleted_at is null
+      and u.deleted_at is null
+      and m.user_id = any(${ids}::uuid[])
+    order by (m.role = 'head') desc, u.given_name asc, u.family_name asc
+  `)
+  return rows.map((r) => ({
+    userId: r.user_id,
+    givenName: r.given_name,
+    familyName: r.family_name,
+    patronymic: r.patronymic,
+    title: r.title,
+    unit: r.unit,
+  }))
+}

@@ -4,13 +4,30 @@
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { FilterChip, Input, Stagger, StaggerItem, StateView, cn } from '@devon/ui'
+import {
+  Avatar,
+  Badge,
+  Button,
+  FilterChip,
+  Input,
+  SegmentedControl,
+  Stagger,
+  StaggerItem,
+  StateView,
+  cn,
+  initialsFromName,
+} from '@devon/ui'
 import { Search } from 'lucide-react'
 import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { useOnline } from '../../lib/use-online.js'
-import { useSearchParams } from '../../lib/router.js'
+import { navigate, useSearchParams } from '../../lib/router.js'
 import { ApiError } from '../../lib/api-client.js'
+import { avatarUrl } from '../../lib/avatar.js'
+import { useCan } from '../../lib/can.js'
+import { useSession } from '../../lib/session.js'
+import { PersonPage } from '../people/person/person-page.js'
+import { personIdFromSearch, personPath } from '../people/routes.js'
 import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.js'
 import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
@@ -74,6 +91,19 @@ export default function PeopleScreen() {
   // once the directory has loaded. `consumedRef` makes this a one-shot effect (the param stays in the
   // URL after landing, so a later re-render must not keep re-scrolling/re-clearing the filter).
   const search = useSearchParams()
+  const session = useSession()
+  const canSeeAnyPerson = useCan('people.person.read')
+  const personId = personIdFromSearch(search)
+  // SPEC §4.1: a member gets the directory; SPEC §6: the only person page they may open is their
+  // own. `useCan` hides the link; the server refuses it regardless (`{kind:'department_managed'}`).
+  const profileHrefFor = React.useCallback(
+    (userId: string): string | undefined => {
+      if (canSeeAnyPerson.allowed) return personPath(userId)
+      return userId === session.user?.id ? '/people/me' : undefined
+    },
+    [canSeeAnyPerson.allowed, session.user?.id],
+  )
+  const [layout, setLayout] = React.useState<'cards' | 'table'>('cards')
   const highlightMemberId = search.get('member')
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null)
   const consumedHighlightRef = React.useRef<string | null>(null)
@@ -110,6 +140,32 @@ export default function PeopleScreen() {
   }, [highlightMemberId, membersQuery.data])
 
   if (forced) return <ForcedStateBlock kind={forced} />
+
+  // The `person` search param on `/people` is the person page (SPEC §6). The exact-path router this shell ships means
+  // a detail view is a search param, exactly like `/work?card=` and `/events?event=` -- see
+  // `features/people/routes.ts` for why, and for the one place that changes when a param-bearing
+  // router lands.
+  if (personId) {
+    if (!canSeeAnyPerson.allowed && personId !== session.user?.id) {
+      return (
+        <StateView
+          kind="forbidden"
+          titleKey="people.person.denied.title"
+          bodyKey="people.person.denied.body"
+          action={{
+            labelKey: 'people.person.denied.action',
+            onAction: () => navigate('/people/me'),
+          }}
+        />
+      )
+    }
+    return (
+      <div className="flex flex-col gap-4">
+        <PersonPage userId={personId} onBack={() => navigate('/people')} />
+      </div>
+    )
+  }
+
   if (!online) {
     return (
       <StateView
@@ -191,6 +247,69 @@ export default function PeopleScreen() {
           : {})}
       />
     )
+  } else if (layout === 'table') {
+    // SPEC §4.1: "cards or a simple table (name, boʻlim, unit role, title)". Deliberately the four
+    // directory facts and nothing else -- every indicator column is head-only and lives on
+    // `/people/table`, which a member cannot open at all.
+    body = (
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <table className="w-full min-w-[32rem] border-collapse text-left text-small">
+          <caption className="sr-only">{t('structure.people.table.caption')}</caption>
+          <thead>
+            <tr className="border-b border-border bg-muted/40">
+              <th scope="col" className="px-3 py-2 font-medium">
+                {t('structure.people.table.name')}
+              </th>
+              <th scope="col" className="px-3 py-2 font-medium">
+                {t('structure.people.table.unit')}
+              </th>
+              <th scope="col" className="px-3 py-2 font-medium">
+                {t('structure.people.table.unitRole')}
+              </th>
+              <th scope="col" className="px-3 py-2 font-medium">
+                {t('structure.people.table.title')}
+              </th>
+            </tr>
+          </thead>
+          <Stagger as="tbody" animateKey={`${query}:${unitFilter ?? ''}`}>
+            {filtered.map((m) => {
+              const href = profileHrefFor(m.userId)
+              const unitName = m.unitId ? (unitsById.get(m.unitId)?.name ?? null) : null
+              return (
+                <StaggerItem
+                  as="tr"
+                  key={m.userId}
+                  className="border-b border-border last:border-0 hover:bg-accent/50"
+                >
+                  <th scope="row" className="px-3 py-2 font-normal">
+                    <DirectoryName member={m} href={href} />
+                  </th>
+                  <td className="px-3 py-2">{unitName ?? t('structure.people.unassignedGroup')}</td>
+                  <td className="px-3 py-2">
+                    {m.unitRole ? (
+                      <Badge tone={m.unitRole === 'head' ? 'info' : 'neutral'}>
+                        {t(`structure.roles.roleLabel.${m.unitRole}`)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {t('structure.people.table.noRole')}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    {m.title ?? (
+                      <span className="text-muted-foreground">
+                        {t('structure.people.table.noTitle')}
+                      </span>
+                    )}
+                  </td>
+                </StaggerItem>
+              )
+            })}
+          </Stagger>
+        </table>
+      </div>
+    )
   } else if (unitFilter !== null) {
     body = (
       <Stagger
@@ -209,7 +328,11 @@ export default function PeopleScreen() {
                   'ring-2 ring-primary ring-offset-2 ring-offset-background',
               )}
             >
-              <MemberCard member={m} unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null} />
+              <MemberCard
+                member={m}
+                unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
+                profileHref={profileHrefFor(m.userId)}
+              />
             </div>
           </StaggerItem>
         ))}
@@ -244,6 +367,7 @@ export default function PeopleScreen() {
                       member={m}
                       unit={group.unit}
                       onFilterByUnit={group.unit ? setUnitFilter : undefined}
+                      profileHref={profileHrefFor(m.userId)}
                     />
                   </div>
                 </StaggerItem>
@@ -263,18 +387,35 @@ export default function PeopleScreen() {
         departments={departments}
       />
 
-      <div className="relative max-w-100">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden="true"
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative max-w-100 flex-1">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('structure.people.searchPlaceholder')}
+            aria-label={t('structure.people.searchPlaceholder')}
+            className="pl-9"
+          />
+        </div>
+        <SegmentedControl
+          size="sm"
+          label={t('structure.people.layout.label')}
+          value={layout}
+          onValueChange={setLayout}
+          options={[
+            { value: 'cards', label: t('structure.people.layout.cards') },
+            { value: 'table', label: t('structure.people.layout.table') },
+          ]}
         />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={t('structure.people.searchPlaceholder')}
-          aria-label={t('structure.people.searchPlaceholder')}
-          className="pl-9"
-        />
+        {canSeeAnyPerson.allowed ? (
+          <Button variant="secondary" size="sm" onClick={() => navigate('/people/table')}>
+            {t('structure.people.openTable')}
+          </Button>
+        ) : null}
       </div>
 
       {hasAnyMembers && units.length > 0 ? (
@@ -300,5 +441,42 @@ export default function PeopleScreen() {
 
       {body}
     </div>
+  )
+}
+
+/** The directory table's name cell: avatar + name, a link to the person page when the viewer may
+ * open it, plain text when they may not (never a link that answers 403). */
+function DirectoryName({
+  member,
+  href,
+}: {
+  member: Member
+  href: string | undefined
+}): React.JSX.Element {
+  const content = (
+    <span className="flex items-center gap-2.5">
+      <Avatar
+        size="sm"
+        alt={fullName(member)}
+        hueSeed={member.unitId ?? member.userId}
+        initials={initialsFromName(member.givenName, member.familyName)}
+        src={avatarUrl(member.avatarKey, 64)}
+      />
+      <span className="truncate font-medium">{fullName(member)}</span>
+    </span>
+  )
+  if (!href) return content
+  return (
+    <a
+      href={href}
+      onClick={(event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+        event.preventDefault()
+        navigate(href)
+      }}
+      className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {content}
+    </a>
   )
 }

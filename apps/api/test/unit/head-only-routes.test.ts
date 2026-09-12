@@ -24,6 +24,20 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/departments/:id/members/:userId/reset-password',
   'GET /api/v1/people/indicators',
   'GET /api/v1/people/indicators/registry',
+  // v1.1 SPEC §4.3: the people table's saved views and its audited CSV export are the table itself,
+  // so they carry the table's gate.
+  'GET /api/v1/people/views',
+  'POST /api/v1/people/views',
+  'PATCH /api/v1/people/views/:id',
+  'DELETE /api/v1/people/views/:id',
+  'GET /api/v1/people/export.csv',
+  // v1.1 SPEC §6: the person page. The subject *kind* below is what the boot-time probe resolves
+  // (`params: {}` -> not 'me' -> head-only), which is the honest default; the same declaration
+  // narrows to `{kind:'own_account'}` for the literal path `/people/me/...`, the one person page a
+  // xodim may open -- see `apps/api/src/modules/people/index.ts`'s `personSubject`.
+  'GET /api/v1/people/:userId/overview',
+  'GET /api/v1/people/:userId/cards',
+  'GET /api/v1/people/:userId/activity',
   'POST /api/v1/labels',
 ]
 

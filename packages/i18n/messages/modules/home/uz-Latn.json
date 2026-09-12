@@ -46,7 +46,8 @@
       "decisions": {
         "title": "Qaror kutmoqda",
         "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
-        "cta": "Doskani ochish"
+        "cta": "Doskani ochish",
+        "empty": "Sizdan kutilayotgan qaror yoʻq."
       },
       "overdue": {
         "title": "Kechikayotgan ishlar",
@@ -79,7 +80,14 @@
         "cta": "Xodimlar jadvali",
         "empty": "Hamma moslashuv qadamlarini yakunlagan."
       },
-      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud."
+      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud.",
+      "risk": {
+        "title": "Xavf ostida",
+        "meaning": "Ikki kun ichida muddati tugaydigan, hali bajarilmagan ishlar.",
+        "cta": "Doskani ochish",
+        "empty": "Yaqin ikki kunda xavf ostidagi ish yoʻq."
+      },
+      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi."
     }
   }
 }
