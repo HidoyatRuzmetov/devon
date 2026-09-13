@@ -98,7 +98,8 @@ animation composites and never reflows; **paint** = a colour/decoration change w
 
 | Interaction | Before | After | Reduced-motion twin | Perf |
 |---|---|---|---|---|
-| **Optimistic property edit** | A bespoke `AnimatePresence` sweep written inside `card-detail.tsx` | The shared `<FlashOnChange>` — one implementation, one reduced-motion contract, and the wash now sits around the **control** rather than the whole label, so the eye lands on the value that changed and not on the word for it | Wash kept, held longer, no travel | opacity only |
+| **Optimistic property edit — taken** | A bespoke `AnimatePresence` sweep written inside `card-detail.tsx` | The shared `<FlashOnChange tone="saved">` — one implementation, one reduced-motion contract, and the wash now sits around the **control** rather than the whole label, so the eye lands on the value that changed and not on the word for it | Wash kept, held longer, no travel | opacity only |
+| **Optimistic property edit — put back** | The panel had the flash but not its other half: every one of the five inline properties rolled back **in silence** on failure, and the mutation only said what happened for the one error code it recognised | The refused control **shakes once**, and every failure now speaks (`work.card.saveFailed`, four locales). A side effect worth having: each of those `mutateAsync` chains now has a `catch`, which none of them did | Destructive ring on the control | **free** (CSS) |
 | Checklist item done | Check draws in + 12-particle burst ✓ | plus the label now **rules itself through** over `--dur-standard` | Strike arrives instantly | paint |
 | Activity timeline | `Collapsible` height animation ✓ | unchanged | Instant height | height (one element) |
 | Panel enter/exit | `Sheet` on `spring.sheet` ✓ | unchanged | Instant | transform |
