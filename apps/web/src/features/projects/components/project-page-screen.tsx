@@ -17,18 +17,21 @@ import {
   Badge,
   Button,
   Checkbox,
+  cn,
+  initialsFromName,
   Input,
   ProgressRing,
-  SparkleButton,
   Skeleton,
-  StateView,
+  SparkleButton,
   Stagger,
   StaggerItem,
+  StateView,
+  Strikethrough,
+  strikethroughClass,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  initialsFromName,
   toast,
   toastWithUndo,
 } from '@devon/ui'
@@ -78,11 +81,10 @@ function TaskRow({ card }: { card: Card }) {
       <button
         type="button"
         onClick={() => openCardPeek(card.id)}
-        className={
-          card.status === 'done'
-            ? 'flex-1 truncate text-left text-small text-muted-foreground line-through'
-            : 'flex-1 truncate text-left text-small text-foreground'
-        }
+        className={cn(
+          'flex-1 truncate text-left text-small text-foreground',
+          strikethroughClass(card.status === 'done'),
+        )}
       >
         {card.title}
       </button>
@@ -403,15 +405,9 @@ export default function ProjectPageScreen() {
                       aria-label={m.title}
                     />
                     <CalendarClock className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    <span
-                      className={
-                        m.doneAt
-                          ? 'text-small text-muted-foreground line-through'
-                          : 'text-small text-foreground'
-                      }
-                    >
+                    <Strikethrough done={m.doneAt !== null} className="text-small text-foreground">
                       {m.title}
-                    </span>
+                    </Strikethrough>
                     {m.dueOn ? (
                       <span className="text-caption text-muted-foreground">
                         {formatDate(new Date(m.dueOn), locale)}

@@ -21,8 +21,9 @@ import {
   Skeleton,
   Stagger,
   StaggerItem,
-  StatNumber,
   StateView,
+  StatNumber,
+  Strikethrough,
   toast,
   useCelebrate,
   WelcomeIllustration,
@@ -243,9 +244,7 @@ function OnboardingCard({ items }: { items: readonly ChecklistItem[] }) {
                     >
                       {item.done ? <Check className="size-3.5" aria-hidden="true" /> : null}
                     </span>
-                    <span className={item.done ? 'text-muted-foreground line-through' : undefined}>
-                      {t(item.labelKey)}
-                    </span>
+                    <Strikethrough done={item.done}>{t(item.labelKey)}</Strikethrough>
                   </button>
                 </li>
               ))}

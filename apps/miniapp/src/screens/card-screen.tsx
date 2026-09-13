@@ -8,7 +8,16 @@
 import * as React from 'react'
 import { MessageSquare, Send } from 'lucide-react'
 import { formatRelativeTime, useLocale, useT } from '@devon/i18n'
-import { Badge, Button, Celebrate, Textarea, cn, toast, toastWithUndo } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Celebrate,
+  cn,
+  strikethroughClass,
+  Textarea,
+  toast,
+  toastWithUndo,
+} from '@devon/ui'
 import { addCardComment, getCard, setCardStatus } from '../lib/api.js'
 import { useQuery } from '../lib/use-query.js'
 import { tg } from '../lib/telegram.js'
@@ -143,8 +152,8 @@ export function CardScreen({ cardId }: { cardId: string }): React.ReactElement {
                     <li
                       key={item.id}
                       className={cn(
-                        'flex items-start gap-2 text-[13px] leading-5',
-                        item.doneAt ? 'text-muted-foreground line-through' : 'text-foreground',
+                        'flex items-start gap-2 text-[13px] leading-5 text-foreground',
+                        strikethroughClass(item.doneAt !== null),
                       )}
                     >
                       <span

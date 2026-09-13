@@ -11,7 +11,13 @@ import {
   Link2,
   Trash2,
 } from 'lucide-react'
-import { Checkbox, IconButton, SparkleButton, cn } from '@devon/ui'
+import {
+  Checkbox,
+  cn,
+  IconButton,
+  SparkleButton,
+  strikethroughClass,
+} from '@devon/ui'
 import type { TaskNode } from './task-tree.js'
 
 export type TaskRowProps = {
@@ -150,7 +156,9 @@ export function TaskRow({
             'min-w-0 flex-1 rounded-sm border border-transparent bg-transparent px-1.5 py-1 text-body',
             'text-foreground transition-colors duration-(--dur-micro) ease-out',
             'focus-visible:border-border focus-visible:outline-none',
-            done && 'text-muted-foreground line-through',
+            // The title is an `<input>` (the row is inline-editable), so the gesture arrives as a
+            // class rather than a wrapper -- same two transitions either way.
+            done && strikethroughClass(true),
           )}
         />
 

@@ -35,7 +35,8 @@
       "noUnit": "No unit",
       "densityCompact": "Compact",
       "densityRoomy": "Roomy",
-      "collapseAllColumns": "Collapse every column"
+      "collapseAllColumns": "Collapse every column",
+      "moveFailed": "Could not move it. The card went back where it was."
     },
     "quickAdd": {
       "placeholder": "Quick add: \"Nodira: prepare the monthly report by friday\"",

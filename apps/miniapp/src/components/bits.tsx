@@ -101,7 +101,9 @@ export function timeRange(
 export const rowSurface = cn(
   'w-full rounded-md border border-border bg-card px-3 py-3 text-left',
   'shadow-1 transition-[transform,box-shadow,background-color] duration-(--dur-micro) ease-out',
-  'hover:-translate-y-0.5 hover:shadow-2 active:translate-y-0 active:scale-[0.99]',
+  // Telegram-native feedback is scale *and* colour: on a phone with no haptics the colour step is
+  // the only answer a tap gets before the screen changes.
+  'hover:-translate-y-0.5 hover:shadow-2 active:translate-y-0 active:scale-[0.99] active:bg-accent',
   'motion-reduce:transform-none motion-reduce:transition-colors',
   'focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
 )

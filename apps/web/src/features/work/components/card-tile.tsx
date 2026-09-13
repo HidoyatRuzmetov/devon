@@ -56,7 +56,9 @@ import {
   DropdownMenuTrigger,
   HoverLift,
   IconButton,
+  LivePulse,
   PressScale,
+  Shake,
   initialsFromName,
   springSettle,
   useReducedMotion,
@@ -113,6 +115,11 @@ export interface CardTileProps {
   /** True while *any* card on the board is selected -- pins every checkbox visible so the selection
    * can be extended without hunting for hover targets. */
   selectionActive?: boolean
+  /** Set for a beat when a move this card just made was refused by the server and rolled back.
+   * Without it the optimistic move simply un-happened between two frames, which reads as the drag
+   * having missed rather than as the server having said no (DESIGN.md §10 "rollback shake"). */
+  rejected?: boolean
+  onRejectedDone?: () => void
 }
 
 function isDragPayload(data: Record<string, unknown>): data is DragPayload {
@@ -152,10 +159,11 @@ function LiveSignalStrip({ cardId }: { cardId: string }): React.JSX.Element | nu
       aria-live="polite"
       className="flex items-center gap-1.5 text-caption text-primary motion-safe:animate-[devon-fade-in_220ms_var(--ease-out)]"
     >
-      <span
-        aria-hidden="true"
-        className="size-1.5 shrink-0 rounded-full bg-primary motion-safe:animate-pulse"
-      />
+      {/* v1.1 motion pass: this was Tailwind's generic `animate-pulse` behind `motion-safe:`, which
+          *deletes* the signal under reduced motion rather than replacing it (DESIGN.md §2.5).
+          `LivePulse` breathes on a 2 s loop and falls back to a steady dot, and it is named for a
+          screen reader -- the strip's own text is `aria-live`, so the dot carries no new words. */}
+      <LivePulse label="" className="mt-px" />
       {label}
     </p>
   )
@@ -173,6 +181,8 @@ export function CardTile({
   selected = false,
   onSelectedChange,
   selectionActive = false,
+  rejected = false,
+  onRejectedDone,
 }: CardTileProps) {
   const t = useT()
   const reducedMotion = useReducedMotion()
@@ -585,9 +595,11 @@ export function CardTile({
           aria-hidden="true"
         />
       ) : null}
-      <PressScale disabled={isDragging}>
-        <HoverLift disabled={isDragging}>{cardBody}</HoverLift>
-      </PressScale>
+      <Shake play={rejected} {...(onRejectedDone ? { onDone: onRejectedDone } : {})}>
+        <PressScale disabled={isDragging}>
+          <HoverLift disabled={isDragging}>{cardBody}</HoverLift>
+        </PressScale>
+      </Shake>
       {closestEdge === 'bottom' ? (
         <div
           className="absolute -bottom-1 inset-x-1 z-10 h-0.5 rounded-full bg-primary"

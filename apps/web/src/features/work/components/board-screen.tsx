@@ -22,7 +22,15 @@
 import * as React from 'react'
 import { cardMatchesFilterText, parseFilterQuery } from '@devon/contracts'
 import { useT, useLocale } from '@devon/i18n'
-import { IconButton, SegmentedControl, Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
+import {
+  IconButton,
+  SegmentedControl,
+  Skeleton,
+  StateView,
+  cn,
+  toast,
+  unitHueClass,
+} from '@devon/ui'
 import { ChevronsLeftRight, Rows3, Rows4 } from 'lucide-react'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
@@ -150,6 +158,9 @@ function BoardScreenInner() {
   const boardQuery = useBoardQuery()
   const projectsQuery = useProjectsQuery()
   const moveCard = useMoveCardMutation()
+  // The one card whose move the server refused, cleared by the tile once its shake has played.
+  const [rejectedCardId, setRejectedCardId] = React.useState<string | null>(null)
+  const clearRejection = React.useCallback(() => setRejectedCardId(null), [])
   const announce = useAnnounce()
   const search = useSearchParams()
   const q = search.get('q') ?? ''
@@ -223,7 +234,19 @@ function BoardScreenInner() {
       const draggedCard = [...board.unassigned, ...board.columns.flatMap((c) => c.cards)].find(
         (c) => c.id === draggedCardId,
       )
-      moveCard.mutate({ id: draggedCardId, toUserId: spec.toUserId, orderKey })
+      moveCard.mutate(
+        { id: draggedCardId, toUserId: spec.toUserId, orderKey },
+        {
+          // The mutation already rolls the optimistic move back on failure. Rolling back silently is
+          // the problem: the card slides to its new column, then simply is not there any more, which
+          // reads as a drag that missed rather than as a refusal. One shake on the tile that came
+          // back, plus the error toast, and the two together say what happened.
+          onError: () => {
+            setRejectedCardId(draggedCardId)
+            toast.error(t('work.board.moveFailed'))
+          },
+        },
+      )
       announce(
         t('work.board.moved', {
           title: draggedCard?.title ?? '',
@@ -508,6 +531,8 @@ function BoardScreenInner() {
                     selectedIds={selectedCardIds}
                     onCardSelectedChange={handleCardSelectedChange}
                     selectionActive={selectedCardIds.size > 0}
+                    rejectedCardId={rejectedCardId}
+                    onRejectionShown={clearRejection}
                   />
                 ))}
               </div>
@@ -533,6 +558,8 @@ function BoardScreenInner() {
                 selectedIds={selectedCardIds}
                 onCardSelectedChange={handleCardSelectedChange}
                 selectionActive={selectedCardIds.size > 0}
+                rejectedCardId={rejectedCardId}
+                onRejectionShown={clearRejection}
               />
             </div>
           </div>

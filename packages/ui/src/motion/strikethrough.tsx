@@ -1,6 +1,17 @@
 import * as React from 'react'
 import { cn } from '../lib/cn.js'
 
+/** The same gesture as a class string, for the handful of places the struck text is an element that
+ * cannot be wrapped -- a personal task's title is an `<input>`, not a span, because the row is
+ * inline-editable. Same two transitions, same reduced-motion backstop. */
+export function strikethroughClass(done: boolean): string {
+  return cn(
+    'line-through decoration-2 transition-[color,text-decoration-color]',
+    'duration-(--dur-standard) ease-(--ease-standard)',
+    done ? 'text-muted-foreground decoration-current' : 'decoration-transparent',
+  )
+}
+
 export interface StrikethroughProps {
   done: boolean
   children: React.ReactNode
@@ -30,16 +41,5 @@ export function Strikethrough({
   className,
   as: Comp = 'span',
 }: StrikethroughProps): React.JSX.Element {
-  return (
-    <Comp
-      className={cn(
-        'line-through decoration-2 transition-[color,text-decoration-color]',
-        'duration-(--dur-standard) ease-(--ease-standard)',
-        done ? 'text-muted-foreground decoration-current' : 'decoration-transparent',
-        className,
-      )}
-    >
-      {children}
-    </Comp>
-  )
+  return <Comp className={cn(strikethroughClass(done), className)}>{children}</Comp>
 }

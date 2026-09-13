@@ -8,9 +8,10 @@ import * as React from 'react'
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { ChevronsLeftRight, ChevronsRightLeft, FolderKanban } from 'lucide-react'
 import { navigate } from '../../../lib/router.js'
-import { useT } from '@devon/i18n'
+import { numberFlowLocale, useLocale, useT } from '@devon/i18n'
 import {
   Avatar,
+  CountFlow,
   IconButton,
   Stagger,
   StaggerItem,
@@ -54,6 +55,11 @@ export interface BoardColumnProps {
   selectedIds?: ReadonlySet<string>
   onCardSelectedChange?: (cardId: string, selected: boolean, shiftKey: boolean) => void
   selectionActive?: boolean
+  /** The card whose move the server just refused, if any -- that tile shakes itself back into place
+   * rather than silently reappearing where it started. Owned by the board (the mutation lives
+   * there), passed through. */
+  rejectedCardId?: string | null
+  onRejectionShown?: () => void
 }
 
 /** Column collapse is a per-viewer convenience, not shared state -- `localStorage` (guarded: private
@@ -98,8 +104,13 @@ export function BoardColumn({
   selectedIds,
   onCardSelectedChange,
   selectionActive = false,
+  rejectedCardId = null,
+  onRejectionShown,
 }: BoardColumnProps) {
   const t = useT()
+  // `uz-Latn` groups with an ASCII comma on a real embedded-Chromium ICU; `numberFlowLocale` maps it
+  // to `uz-Cyrl`, which groups the way DESIGN.md §5 asks for. Same shim KpiTile's call sites use.
+  const locale = numberFlowLocale(useLocale())
   const listRef = React.useRef<HTMLDivElement | null>(null)
   const [isDropTarget, setIsDropTarget] = React.useState(false)
   const userId = member?.userId ?? null
@@ -156,8 +167,8 @@ export function BoardColumn({
         >
           {member ? fullName(member) : t('work.board.unassigned')}
         </span>
-        <span className="rounded-full bg-muted px-1.5 py-0.5 text-caption tabular-nums text-muted-foreground">
-          {cards.length}
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">
+          <CountFlow value={cards.length} locale={locale} />
         </span>
       </div>
     )
@@ -204,18 +215,21 @@ export function BoardColumn({
             {t('work.board.unassigned')}
           </p>
         )}
+        {/* The two counts are the direct consequence of the card somebody just dragged in or ticked
+            off, so they tick rather than cut (DESIGN.md §10 "Counters"). Tabular figures come with
+            `CountFlow`, so 9 -> 10 never nudges the collapse button. */}
         <span
-          className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption tabular-nums text-muted-foreground"
+          className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
           title={t('work.board.loadCount', { count: cards.length })}
         >
-          {cards.length}
+          <CountFlow value={cards.length} locale={locale} />
         </span>
         {overdueCount > 0 ? (
           <span
-            className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption tabular-nums text-destructive"
+            className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption text-destructive"
             title={t('work.risk.overdue')}
           >
-            {overdueCount}
+            <CountFlow value={overdueCount} locale={locale} />
           </span>
         ) : null}
         <IconButton aria-label={t('work.board.collapseColumn')} onClick={() => setCollapsed(true)}>
@@ -281,6 +295,8 @@ export function BoardColumn({
                   onMoveTo={onMoveTo}
                   selected={selectedIds?.has(card.id) ?? false}
                   selectionActive={selectionActive}
+                  rejected={rejectedCardId === card.id}
+                  {...(onRejectionShown ? { onRejectedDone: onRejectionShown } : {})}
                   {...(onCardSelectedChange
                     ? {
                         onSelectedChange: (selected: boolean, shiftKey: boolean) =>

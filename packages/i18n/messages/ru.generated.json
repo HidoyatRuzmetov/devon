@@ -4064,7 +4064,8 @@
       "noUnit": "Без отдела",
       "densityCompact": "Компактно",
       "densityRoomy": "Просторно",
-      "collapseAllColumns": "Свернуть все колонки"
+      "collapseAllColumns": "Свернуть все колонки",
+      "moveFailed": "Не удалось переместить. Карточка вернулась на прежнее место."
     },
     "quickAdd": {
       "placeholder": "Быстро добавить: «Нодира: пакет ЕГДИ, пятница»",

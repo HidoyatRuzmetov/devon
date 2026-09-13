@@ -36,7 +36,11 @@ export {
   type SettlePulseProps,
   type LivePulseProps,
 } from './pulse.js'
-export { Strikethrough, type StrikethroughProps } from './strikethrough.js'
+export {
+  Strikethrough,
+  strikethroughClass,
+  type StrikethroughProps,
+} from './strikethrough.js'
 export { CountFlow, type CountFlowProps } from './count-flow.js'
 export { Swap, type SwapProps } from './swap.js'
 export { AnimatedCheck, type AnimatedCheckProps } from './animated-check.js'

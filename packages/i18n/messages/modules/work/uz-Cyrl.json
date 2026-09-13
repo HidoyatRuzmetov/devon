@@ -35,7 +35,8 @@
       "noUnit": "Бўлимсиз",
       "densityCompact": "Ихчам кўриниш",
       "densityRoomy": "Кенг кўриниш",
-      "collapseAllColumns": "Барча устунларни йиғиш"
+      "collapseAllColumns": "Барча устунларни йиғиш",
+      "moveFailed": "Кўчириб бўлмади. Карта олдинги жойига қайтарилди."
     },
     "quickAdd": {
       "placeholder": "Тез қўшиш: \"Нодира: ЭГДИ пакети, жума\"",

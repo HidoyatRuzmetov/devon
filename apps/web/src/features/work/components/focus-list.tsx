@@ -14,6 +14,7 @@ import { ArrowDown, ArrowUp, Pin, PinOff } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Badge,
+  cn,
   HoverLift,
   IconButton,
   SectionCard,
@@ -21,7 +22,7 @@ import {
   Stagger,
   StaggerItem,
   StateView,
-  cn,
+  strikethroughClass,
   toast,
 } from '@devon/ui'
 import { replaceSearchParam } from '../../../lib/router.js'
@@ -68,7 +69,9 @@ function PinRow({
             // Two lines rather than one hard truncation: at 390 the five trailing controls left
             // "Hafta yaku..." on screen, which is not a task anybody can recognise.
             'line-clamp-2 break-words',
-            card.status === 'active' ? 'text-foreground' : 'text-muted-foreground line-through',
+            // The strike arrives over `--dur-standard` rather than on the next frame, so a card
+            // ticked off in the focus list reads as finishing rather than as a re-render.
+            card.status === 'active' ? 'text-foreground' : strikethroughClass(true),
           )}
         >
           {card.title}

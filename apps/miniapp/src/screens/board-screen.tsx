@@ -9,7 +9,12 @@
 import * as React from 'react'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { Badge, SegmentedControl, cn } from '@devon/ui'
+import {
+  Badge,
+  cn,
+  SegmentedControl,
+  strikethroughClass,
+} from '@devon/ui'
 import { getBoardPeek } from '../lib/api.js'
 import { useQuery } from '../lib/use-query.js'
 import { useSession } from '../lib/session.js'
@@ -79,10 +84,8 @@ export function BoardScreen(): React.ReactElement {
                     <span className="flex items-start gap-2">
                       <span
                         className={cn(
-                          'min-w-0 flex-1 text-[14px] leading-5 font-medium',
-                          card.status === 'done'
-                            ? 'text-muted-foreground line-through'
-                            : 'text-foreground',
+                          'min-w-0 flex-1 text-[14px] leading-5 font-medium text-foreground',
+                          strikethroughClass(card.status === 'done'),
                         )}
                       >
                         {card.title}

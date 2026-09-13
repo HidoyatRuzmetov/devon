@@ -14,7 +14,12 @@
 // same coin-sized `Celebrate` burst fires from it on completion (DESIGN.md §2.5's second celebration
 // moment). If `@devon/ui` ever grows a labelled, full-row checkbox, this is the thing to delete.
 import * as React from 'react'
-import { AnimatedCheck, Celebrate, cn } from '@devon/ui'
+import {
+  AnimatedCheck,
+  Celebrate,
+  cn,
+  Strikethrough,
+} from '@devon/ui'
 import { rowSurface } from './bits.js'
 
 export function TaskCheckRow({
@@ -55,15 +60,12 @@ export function TaskCheckRow({
         <AnimatedCheck checked={done} className="size-3.5" />
         <Celebrate play={burst} onDone={() => setBurst(false)} />
       </span>
-      <span
-        className={cn(
-          'min-w-0 flex-1 text-[14px] leading-5',
-          // The catalogue's "text strikes through" half of the done moment.
-          done ? 'text-muted-foreground line-through' : 'text-foreground',
-        )}
-      >
+      {/* The catalogue's "text strikes through" half of the done moment -- the shared primitive,
+          so the line arrives over `--dur-standard` here exactly as it does on the web board, and on
+          every wrapped line of a long Uzbek title. */}
+      <Strikethrough done={done} className="min-w-0 flex-1 text-[14px] leading-5 text-foreground">
         {title}
-      </span>
+      </Strikethrough>
     </button>
   )
 }

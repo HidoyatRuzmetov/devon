@@ -25,18 +25,19 @@ import {
   Collapsible,
   DatePicker,
   IconButton,
-  Input,
-  Select,
-  SparkleButton,
-  Skeleton,
-  StateView,
   initialsFromName,
+  Input,
   labelChipColors,
+  RISE_PX,
+  Select,
+  Skeleton,
+  SparkleButton,
+  StateView,
+  Strikethrough,
   toast,
   toastWithUndo,
   useCelebrate,
   useReducedMotion,
-  RISE_PX,
 } from '@devon/ui'
 import { replaceSearchParam } from '../../../lib/router.js'
 import { useDepartment, useSession } from '../../../lib/session.js'
@@ -1211,15 +1212,11 @@ function ChecklistRow({
         size="sm"
         aria-label={item.text}
       />
-      <span
-        className={
-          item.doneAt !== null
-            ? 'flex-1 text-small text-muted-foreground line-through'
-            : 'flex-1 text-small text-foreground'
-        }
-      >
+      {/* The box already draws its check and fires its burst; this is the third beat -- the line
+          arriving across the text over the same `--dur-standard`, on every wrapped line of it. */}
+      <Strikethrough done={item.doneAt !== null} className="flex-1 text-small text-foreground">
         {item.text}
-      </span>
+      </Strikethrough>
       <IconButton aria-label={t('work.action.delete')} onClick={onDelete}>
         <Trash2 className="size-3.5" />
       </IconButton>

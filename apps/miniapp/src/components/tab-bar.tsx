@@ -79,7 +79,11 @@ export function TabBar({
             onClick={() => tg.haptic.tap()}
             className={cn(
               'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1',
-              'transition-colors duration-(--dur-micro) ease-out',
+              // Telegram-native feedback is scale *and* colour on the press itself -- the haptic
+              // above only fires on a device that has one, and on every other device the tap had no
+              // answer at all until the route changed.
+              'transition-[transform,color,background-color] duration-(--dur-micro) ease-out',
+              'active:bg-accent active:scale-[0.96] motion-reduce:active:scale-100',
               'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none',
               active ? 'text-primary' : 'text-muted-foreground',
             )}

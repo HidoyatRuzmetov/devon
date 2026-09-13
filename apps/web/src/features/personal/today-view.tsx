@@ -22,6 +22,7 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  Strikethrough,
   toast,
   toastWithUndo,
   useReducedMotion,
@@ -373,14 +374,12 @@ export function TodayView({
                           size="sm"
                           className="relative mt-0.5 shrink-0 md:mt-0"
                         />
-                        <span
-                          className={cn(
-                            'min-w-0 flex-1 line-clamp-2 text-body text-foreground md:truncate md:line-clamp-none',
-                            justDone && 'text-muted-foreground line-through',
-                          )}
+                        <Strikethrough
+                          done={justDone}
+                          className="min-w-0 flex-1 line-clamp-2 text-body text-foreground md:truncate md:line-clamp-none"
                         >
                           {task.title}
-                        </span>
+                        </Strikethrough>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 pl-7 md:shrink-0 md:pl-0">
                         {task.sprintId === null && (

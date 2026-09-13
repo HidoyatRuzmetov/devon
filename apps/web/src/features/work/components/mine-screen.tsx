@@ -15,6 +15,7 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  strikethroughClass,
 } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useCardsQuery, usePatchCardMutation } from '../hooks.js'
@@ -60,7 +61,7 @@ function MineRow({ card, locale }: { card: Card; locale: Locale }) {
             <span
               className={cn(
                 'min-w-0 flex-1 truncate text-small',
-                done ? 'text-muted-foreground line-through' : 'text-foreground',
+                done ? strikethroughClass(true) : 'text-foreground',
               )}
             >
               {card.title}

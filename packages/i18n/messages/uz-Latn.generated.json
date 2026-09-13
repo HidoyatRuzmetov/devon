@@ -4064,7 +4064,8 @@
       "noUnit": "Boʻlimsiz",
       "densityCompact": "Ixcham koʻrinish",
       "densityRoomy": "Keng koʻrinish",
-      "collapseAllColumns": "Barcha ustunlarni yigʻish"
+      "collapseAllColumns": "Barcha ustunlarni yigʻish",
+      "moveFailed": "Koʻchirib boʻlmadi. Karta oldingi joyiga qaytarildi."
     },
     "quickAdd": {
       "placeholder": "Tez qoʻshish: \"Nodira: oylik hisobotni juma kuniga tayyorla\"",
