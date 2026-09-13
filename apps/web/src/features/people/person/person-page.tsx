@@ -85,6 +85,7 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
               assigneeUserId,
               priority: input.priority,
               dueAt: input.dueAt,
+              ...(input.estimateMin === null ? {} : { estimateMin: input.estimateMin }),
             },
             csrf,
           ),

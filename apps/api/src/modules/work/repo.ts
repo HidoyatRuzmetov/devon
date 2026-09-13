@@ -430,6 +430,19 @@ type CreateCardInput = {
   description: string | undefined
   kind: 'task' | 'project_task' | undefined
   assigneeUserId: string | null | undefined
+  /**
+   * Who asked for this work. **Defaults to the creator** when the caller omits it -- v1.1
+   * integration found every card made through the UI landing with `giver_user_id = null`: the
+   * board's giver avatar had nobody to show, and the head's "Qaror kutmoqda" tile (which counts
+   * cards *this head gave out*) could never see a card they had just assigned from the people table.
+   *
+   * "Given by nobody" is not a state this product has a meaning for -- a person creating a card is
+   * asking for the work, whether they hand it to a colleague or keep it. The default lives here,
+   * one level below every route and every client, so no future caller can reintroduce the hole:
+   * `null` and `undefined` both mean "the creator", because neither has ever meant anything else.
+   * A card can still be *re-given* afterwards (`patchCard`'s `giverUserId`), which is the only way
+   * the field was ever meant to change hands.
+   */
   giverUserId: string | null | undefined
   priority: CardRow['priority'] | undefined
   startAt: string | null | undefined
@@ -472,7 +485,7 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
           ) values (
             ${id}, ${input.departmentId}, ${input.kind ?? 'task'}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
-            ${input.assigneeUserId ?? null}, ${input.giverUserId ?? null},
+            ${input.assigneeUserId ?? null}, ${input.giverUserId ?? input.createdByUserId},
             ${input.projectId ?? null}, ${input.projectScope ?? 'none'}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
             ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,

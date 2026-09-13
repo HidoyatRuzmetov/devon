@@ -240,7 +240,8 @@
         "titlePlaceholder": "Masalan: Hisobotni tayyorlash",
         "due": "Muddati",
         "duePlaceholder": "Muddat belgilanmagan",
-        "priority": "Muhimligi"
+        "priority": "Muhimligi",
+        "estimate": "Taxminiy vaqt"
       },
       "priority": {
         "none": "Belgilanmagan",

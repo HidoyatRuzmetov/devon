@@ -1,5 +1,5 @@
 // "Assign a task" from a people-table row, a directory hover card, or a person page (v1.1 SPEC §4.3
-// "Row actions: assign a task (quick-add sheet with assignee preset, title, due, priority)").
+// "Row actions: assign a task (quick-add sheet with assignee preset, title, due, priority, estimate)").
 //
 // The assignee is never a field here -- it is the row you clicked, shown as a person chip so the
 // head can see who they are about to give work to and cannot pick the wrong one by accident. The
@@ -25,6 +25,7 @@ import {
 } from '@devon/ui'
 import { X } from 'lucide-react'
 import { avatarUrl } from '../../../lib/avatar.js'
+import { EstimateField } from '../../work/components/estimate-field.js'
 
 export type QuickAssignTarget = {
   userId: string
@@ -42,6 +43,10 @@ export type QuickAssignSubmit = {
   title: string
   dueAt: string | null
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
+  /** v1.1 integration: the fourth field SPEC §4.3 names. It is the one that makes the Yuklama column
+   * this sheet was opened from mean anything -- a head who assigns work without saying how big it is
+   * cannot then read the load they just changed. `null` when left blank. */
+  estimateMin: number | null
 }
 
 export type QuickAssignSheetProps = {
@@ -67,6 +72,7 @@ export function QuickAssignSheet({
   const [title, setTitle] = React.useState('')
   const [due, setDue] = React.useState<Date | undefined>(undefined)
   const [priority, setPriority] = React.useState<(typeof PRIORITIES)[number]>('none')
+  const [estimateMin, setEstimateMin] = React.useState<number | null>(null)
   const [touched, setTouched] = React.useState(false)
   const titleRef = React.useRef<HTMLInputElement>(null)
 
@@ -77,6 +83,7 @@ export function QuickAssignSheet({
     setTitle('')
     setDue(undefined)
     setPriority('none')
+    setEstimateMin(null)
     setTouched(false)
     const id = window.setTimeout(() => titleRef.current?.focus(), 120)
     return () => window.clearTimeout(id)
@@ -94,6 +101,7 @@ export function QuickAssignSheet({
       title: title.trim(),
       dueAt: due ? due.toISOString() : null,
       priority,
+      estimateMin,
     })
     toast.success(
       targets.length === 1
@@ -169,6 +177,16 @@ export function QuickAssignSheet({
                 selected={due}
                 onSelect={setDue}
                 placeholder={t('people.assign.field.duePlaceholder')}
+              />
+            </Field>
+
+            {/* No `hint` of our own: `EstimateField` already prints the examples it accepts, and
+                echoes back what it understood as you type. Two hints under one input is one too many. */}
+            <Field label={t('people.assign.field.estimate')} htmlFor="people-assign-estimate">
+              <EstimateField
+                id="people-assign-estimate"
+                value={estimateMin}
+                onCommit={setEstimateMin}
               />
             </Field>
 

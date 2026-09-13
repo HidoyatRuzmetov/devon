@@ -295,6 +295,7 @@ export default function PeopleTableScreen(): React.JSX.Element {
               assigneeUserId,
               priority: input.priority,
               dueAt: input.dueAt,
+              ...(input.estimateMin === null ? {} : { estimateMin: input.estimateMin }),
             },
             csrf,
           ),

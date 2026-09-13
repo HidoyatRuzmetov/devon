@@ -240,7 +240,8 @@
         "titlePlaceholder": "Масалан: Ҳисоботни тайёрлаш",
         "due": "Муддати",
         "duePlaceholder": "Муддат белгиланмаган",
-        "priority": "Муҳимлиги"
+        "priority": "Муҳимлиги",
+        "estimate": "Тахминий вақт"
       },
       "priority": {
         "none": "Белгиланмаган",

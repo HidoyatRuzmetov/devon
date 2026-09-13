@@ -3118,7 +3118,8 @@
         "titlePlaceholder": "For example: prepare the report",
         "due": "Due",
         "duePlaceholder": "No due date",
-        "priority": "Priority"
+        "priority": "Priority",
+        "estimate": "Estimate"
       },
       "priority": {
         "none": "None",

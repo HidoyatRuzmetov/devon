@@ -3118,7 +3118,8 @@
         "titlePlaceholder": "Например: Подготовить отчёт",
         "due": "Срок",
         "duePlaceholder": "Срок не указан",
-        "priority": "Важность"
+        "priority": "Важность",
+        "estimate": "Оценка времени"
       },
       "priority": {
         "none": "Не указана",
