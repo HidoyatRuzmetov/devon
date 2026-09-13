@@ -8,11 +8,7 @@
 // `DEMO_DEPARTMENT.id` for the whole seed transaction.
 import { sql } from 'drizzle-orm'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
-import {
-  ALL_WORK_MEMBER_IDS,
-  NEWCOMER_INDEX,
-  NEWCOMER_JOINED_AT,
-} from '../work-fixtures.js'
+import { ALL_WORK_MEMBER_IDS, NEWCOMER_INDEX, NEWCOMER_JOINED_AT } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 

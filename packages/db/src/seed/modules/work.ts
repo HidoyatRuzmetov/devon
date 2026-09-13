@@ -356,8 +356,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         departmentId: DEPARTMENT_ID,
         userId: u.id,
         role: 'member' as const,
-        joinedAt:
-          i + 2 === NEWCOMER_INDEX ? NEWCOMER_JOINED_AT : daysFromNow(-(QUARTER_DAYS + 30)),
+        joinedAt: i + 2 === NEWCOMER_INDEX ? NEWCOMER_JOINED_AT : daysFromNow(-(QUARTER_DAYS + 30)),
       })),
     )
     .onConflictDoNothing()

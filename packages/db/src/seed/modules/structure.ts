@@ -101,7 +101,6 @@ const U_ANALYTICS = demoId('structure.unit.axborot-tahlil')
 const U_MONITORING = demoId('structure.unit.monitoring')
 const U_EXECUTION = demoId('structure.unit.ijro-intizomi')
 
-
 function path(...ids: string[]): string {
   return `/${ids.join('/')}/`
 }
