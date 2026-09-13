@@ -3,10 +3,13 @@
 //   1. A brand-new department, "Axborot-tahlil va ijro intizomi boshqarmasi", with two top-level
 //      bo'limlar and one sub-bo'lim (three levels total, one of them with both a head and a deputy)
 //      -- proves the org chart at real depth.
-//   2. The foundation's own demo department ("Raqamli xizmatlar boshqarmasi", seeded by `core.ts`)
-//      gets two flat bo'limlar and *no* unit heads at all -- proves the org chart looks complete with
-//      zero unit heads (design.md §2.3), using the two accounts already documented in
-//      MODULE-GUIDE.md ("Running the app") so `demo.boshliq`/`demo.xodim` see it immediately on login.
+//   2. The demo department itself ("Raqamli xizmatlar boshqarmasi", seeded by `core.ts`) gets the
+//      three flat bo'limlar of `work-fixtures.ts`'s `DEMO_UNITS`, every member placed in one of them,
+//      two boʻlim boshligʻi and one deputy as real `unit_roles` -- and one bo'lim left deliberately
+//      headless, which still proves the org chart looks complete with no unit head (design.md §2.3)
+//      while the department around it reads like a real boshqarma rather than two empty boxes.
+//      The boshqarma boshligʻi belongs to no bo'lim, so the People page's "unassigned" bucket is
+//      populated too.
 // `fixtures.ts` is core's file, not this module's (MODULE-GUIDE.md's touches list) -- this module
 // creates its own department and users the same way `core.ts` creates the foundation's, with its own
 // `demoId(...)` namespace, and never edits `fixtures.ts`/`DEMO_DELETE_ORDER`.
@@ -20,11 +23,18 @@ import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import * as structureSchema from '../../schema/structure.js'
 import { DEMO_DEPARTMENT, DEMO_USERS, demoPasswordHash } from '../fixtures.js'
+import {
+  ALL_WORK_MEMBER_IDS,
+  DEMO_UNITS,
+  NEWCOMER_INDEX,
+  NEWCOMER_JOINED_AT,
+  unitIdFor,
+} from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import { asDepartment } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
-export const order = 100 // after core.ts (0)
+export const order = 100 // after core.ts (0) and work.ts (90, this module's unit-role users)
 
 const ATI_DEPARTMENT_ID = demoId('structure.department.ati')
 
@@ -91,8 +101,6 @@ const U_ANALYTICS = demoId('structure.unit.axborot-tahlil')
 const U_MONITORING = demoId('structure.unit.monitoring')
 const U_EXECUTION = demoId('structure.unit.ijro-intizomi')
 
-const F_SUPPORT = demoId('structure.unit.texnik-yordam')
-const F_CONTENT = demoId('structure.unit.kontent')
 
 function path(...ids: string[]): string {
   return `/${ids.join('/')}/`
@@ -142,29 +150,19 @@ const UNIT_ROWS: NewUnit[] = [
     createdBy: rahimov,
     createdAt: new Date('2026-08-11T08:05:00Z'),
   },
-  // The flat department: two sibling bo'limlar, deliberately zero unit-head assignments below.
-  {
-    id: F_SUPPORT,
+  // The demo department: three sibling bo'limlar, from `work-fixtures.ts`'s one cast list so the
+  // board, the People page and the org chart can never disagree about who sits where.
+  ...DEMO_UNITS.map((unit, i) => ({
+    id: unitIdFor(unit.key),
     departmentId: DEMO_DEPARTMENT.id,
     parentUnitId: null,
-    name: 'Texnik yordam',
-    colour: 4,
-    sort: 0,
-    path: path(F_SUPPORT),
+    name: unit.name,
+    colour: unit.colour,
+    sort: i,
+    path: path(unitIdFor(unit.key)),
     createdBy: DEMO_USERS[0]!.id,
-    createdAt: new Date('2026-09-01T06:00:00Z'),
-  },
-  {
-    id: F_CONTENT,
-    departmentId: DEMO_DEPARTMENT.id,
-    parentUnitId: null,
-    name: 'Kontent',
-    colour: 1,
-    sort: 1,
-    path: path(F_CONTENT),
-    createdBy: DEMO_USERS[0]!.id,
-    createdAt: new Date('2026-09-01T06:05:00Z'),
-  },
+    createdAt: new Date(`2026-06-0${i + 1}T06:00:00Z`),
+  })),
 ]
 
 const UNIT_ROLE_ROWS: NewUnitRole[] = [
@@ -217,18 +215,52 @@ const UNIT_ROLE_ROWS: NewUnitRole[] = [
     assignedBy: yoqubova,
     assignedAt: new Date('2026-08-16T13:00:00Z'),
   },
-  // Flat department: `demo.xodim` self-assigns into "Kontent" as a plain member -- no head, by
-  // design, to prove the org chart renders a headless bo'lim correctly. `demo.boshliq` is left
-  // unassigned to any unit, to prove the People page's "unassigned" bucket too.
-  {
-    id: demoId('structure.unit-role.xodim-member'),
-    departmentId: DEMO_DEPARTMENT.id,
-    unitId: F_CONTENT,
-    userId: DEMO_USERS[1]!.id,
-    role: 'member',
-    assignedBy: DEMO_USERS[1]!.id,
-    assignedAt: new Date('2026-09-02T07:00:00Z'),
-  },
+  // The demo department: everybody is placed. Two boʻlim boshligʻi and one oʻrinbosar are appointed
+  // by the boshqarma boshligʻi; plain members self-assign, which is what the app itself lets them do.
+  // "Devonxona va huquq boʻlimi" is left without a head on purpose -- a bo'lim between appointments
+  // is the normal state of a real department, and the org chart still has to look finished
+  // (design.md §2.3). `demo.boshliq` is in no bo'lim at all, which populates the People page's
+  // "unassigned" bucket.
+  ...DEMO_UNITS.flatMap((unit) => {
+    const unitId = unitIdFor(unit.key)
+    const rows: NewUnitRole[] = []
+    if (unit.headIndex !== null) {
+      rows.push({
+        id: demoId(`structure.unit-role.${unit.key}.head`),
+        departmentId: DEMO_DEPARTMENT.id,
+        unitId,
+        userId: ALL_WORK_MEMBER_IDS[unit.headIndex]!,
+        role: 'head',
+        assignedBy: DEMO_USERS[0]!.id,
+        assignedAt: new Date('2026-06-15T06:00:00Z'),
+      })
+    }
+    if (unit.deputyIndex !== undefined) {
+      rows.push({
+        id: demoId(`structure.unit-role.${unit.key}.deputy`),
+        departmentId: DEMO_DEPARTMENT.id,
+        unitId,
+        userId: ALL_WORK_MEMBER_IDS[unit.deputyIndex]!,
+        role: 'deputy',
+        assignedBy: DEMO_USERS[0]!.id,
+        assignedAt: new Date('2026-06-16T06:00:00Z'),
+      })
+    }
+    for (const memberIndex of unit.memberIndexes) {
+      rows.push({
+        id: demoId(`structure.unit-role.${unit.key}.member.${memberIndex}`),
+        departmentId: DEMO_DEPARTMENT.id,
+        unitId,
+        userId: ALL_WORK_MEMBER_IDS[memberIndex]!,
+        role: 'member',
+        assignedBy: ALL_WORK_MEMBER_IDS[memberIndex]!,
+        // The newcomer cannot have been placed in a bo'lim before she joined.
+        assignedAt:
+          memberIndex === NEWCOMER_INDEX ? NEWCOMER_JOINED_AT : new Date('2026-06-17T06:00:00Z'),
+      })
+    }
+    return rows
+  }),
 ]
 
 const idsIn = (

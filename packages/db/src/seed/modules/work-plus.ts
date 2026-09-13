@@ -29,6 +29,7 @@ import {
   HEAD_USER_ID,
   MEMBER_USER_ID,
   labelId,
+  standaloneCardCount,
 } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import { asUser } from '../scope.js'
@@ -43,19 +44,23 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const daysFromNow = (days: number): Date => new Date(NOW.getTime() + days * DAY_MS)
 const isoDate = (days: number): string => daysFromNow(days).toISOString().slice(0, 10)
 
-/** `work.ts`'s own id scheme, repeated here so this module can point at those cards by name.
- * `(assigneeIndex, n)` with `n < 12` is always present -- every member gets at least 12 cards. */
+/** `work.ts`'s own id scheme, repeated here so this module can point at those cards by name. Which
+ * `(assigneeIndex, n)` pairs exist is `work-fixtures.ts`'s `standaloneCardCount` to decide, and this
+ * module reads that same function rather than assuming a fixed column height -- the assumption it
+ * used to make ("every member gets at least 12 cards") is exactly what broke when the demo dropped
+ * from ~230 cards to ~65. Index 1 (`demo.xodim`) is guaranteed the tallest column, which is why every
+ * dependency/focus/time-log fixture below lives there. */
 const workCardId = (assigneeIndex: number, n: number): string =>
   demoId(`work.card.standalone.${assigneeIndex}.${n}`)
 
 // --- estimates (A3) -----------------------------------------------------------------------------
 //
-// Spread over the first ten cards of every member's column so the workload grid has hours in every
-// cell and the people table's Yuklama column shows hours rather than a bare open count (HANDOFFS #5).
-// 30..300 minutes, deterministic per card.
+// Every card in every member's column gets one, so the workload grid has hours in every cell and the
+// people table's Yuklama column shows hours rather than a bare open count (HANDOFFS #5). 30..300
+// minutes, deterministic per card.
 const ESTIMATES: readonly { cardId: string; minutes: number }[] = ALL_WORK_MEMBER_IDS.flatMap(
   (_userId, i) =>
-    Array.from({ length: 10 }, (__, n) => ({
+    Array.from({ length: standaloneCardCount(i) }, (__, n) => ({
       cardId: workCardId(i, n),
       minutes: 30 + ((i * 3 + n * 5) % 10) * 30,
     })),
@@ -248,6 +253,104 @@ const AUTOMATIONS: readonly {
       },
     ],
     enabled: false,
+  },
+]
+
+// --- the automation run log (EPIC-017) ----------------------------------------------------------
+//
+// A rule with an empty run log is a promise, not a feature: the head cannot tell a rule that is
+// working quietly from a rule that has never fired. These rows are the answer to "what has this
+// actually done for me this week?" -- and they are also why one rule ships switched off, because the
+// log itself shows what happened the day it was on.
+//
+// `detail` stays machine-readable (`{ actions: [...] }` / `{ reason: 'filter_did_not_match' }`) and is
+// rendered in four locales by the client, exactly as `1100_automations.sql` requires -- never prose in
+// one language.
+const AUTOMATION_RUNS: readonly {
+  id: string
+  ruleId: string
+  cardId: string | null
+  status: 'applied' | 'skipped' | 'failed'
+  detail: unknown
+  atDays: number
+}[] = [
+  // The rule that is on and earning its keep: "Muhim" goes on a card, the priority follows.
+  {
+    id: demoId('workplus.run.muhim.1'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(1, 1),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -1,
+  },
+  {
+    id: demoId('workplus.run.muhim.2'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(4, 2),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -2,
+  },
+  {
+    id: demoId('workplus.run.muhim.3'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(6, 0),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -3,
+  },
+  // Not every trigger is a match, and saying so is the point: a silent rule and a broken rule look
+  // identical until the log distinguishes them.
+  {
+    id: demoId('workplus.run.muhim.4'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(9, 1),
+    status: 'skipped',
+    detail: { reason: 'filter_did_not_match' },
+    atDays: -3,
+  },
+  {
+    id: demoId('workplus.run.muhim.5'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(2, 0),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -5,
+  },
+  {
+    id: demoId('workplus.run.muhim.6'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(12, 0),
+    status: 'skipped',
+    detail: { reason: 'already_applied_today' },
+    atDays: -5,
+  },
+  // The overdue-notifier, on the one morning it was switched on. Two cards told the boshliq something
+  // he wanted to know; the third was the same card again, and the daily dedupe caught it. That
+  // morning is why the rule now ships disabled -- see `AUTOMATIONS` above.
+  {
+    id: demoId('workplus.run.kechikkan.1'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(3, 1),
+    status: 'applied',
+    detail: { actions: ['notify_head'] },
+    atDays: -8,
+  },
+  {
+    id: demoId('workplus.run.kechikkan.2'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(1, 3),
+    status: 'applied',
+    detail: { actions: ['notify_head'] },
+    atDays: -8,
+  },
+  {
+    id: demoId('workplus.run.kechikkan.3'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(1, 3),
+    status: 'skipped',
+    detail: { reason: 'already_applied_today' },
+    atDays: -8,
   },
 ]
 
@@ -450,6 +553,22 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         returning id`,
   )
 
+  // --- automation run log
+  const runValues = sql.join(
+    AUTOMATION_RUNS.map(
+      (r) =>
+        sql`(${r.id}::uuid, ${DEPARTMENT_ID}::uuid, ${r.ruleId}::uuid, ${r.cardId}::uuid, ${r.status}::app.automation_run_status, ${JSON.stringify(r.detail)}::jsonb, ${daysFromNow(r.atDays).toISOString()}::timestamptz)`,
+    ),
+    sql`, `,
+  )
+  written += await insertCount(
+    ctx,
+    sql`insert into app.automation_runs (id, department_id, rule_id, card_id, status, detail, at)
+        values ${runValues}
+        on conflict do nothing
+        returning id`,
+  )
+
   // --- focus pins, time logs and reminders are owner-only rows (`user_id = app.current_user_id()`,
   // no actor-role carve-out -- I-1), so each owner's slice is written under `asUser` exactly as
   // `personal.ts` and `notifications.ts` already do. One statement per *owner*, never per row.
@@ -552,6 +671,11 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
       ),
     )
   }
+  // Run-log rows reference their rule (`automation_runs_rule_id_fkey`), so they go first.
+  deleted += await byIds(
+    'app.automation_runs',
+    AUTOMATION_RUNS.map((r) => r.id),
+  )
   deleted += await byIds(
     'app.automation_rules',
     AUTOMATIONS.map((a) => a.id),
