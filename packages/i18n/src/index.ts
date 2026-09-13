@@ -39,4 +39,13 @@ export {
 export { normalizeUz } from './normalize-uz.js'
 export { latinToCyrillic } from './transliterate.js'
 
-export { flatten, flatMessages, messageTree, knownKeys, type MessageTree } from './messages.js'
+export {
+  flatten,
+  flatMessages,
+  hasCatalogue,
+  knownKeys,
+  loadCatalogue,
+  messageTree,
+  registerCatalogue,
+  type MessageTree,
+} from './messages.js'

@@ -6,7 +6,8 @@
   "description": "Four-locale messages (uz-Latn default, uz-Cyrl, ru, en), t()/useT(), terminology (terms.json -> TERMS.md) and Uzbek text helpers.",
   "license": "UNLICENSED",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./catalogues": "./src/catalogues.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

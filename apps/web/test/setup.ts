@@ -2,6 +2,12 @@ import { afterEach } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 
+// Every locale's strings, registered up front. `@devon/i18n` ships only the default catalogue in a
+// browser's shell chunk and fetches the rest on demand (packages/i18n/src/messages.ts); a Node test
+// has no such constraint, and a suite that calls `setLocale('ru')` and asserts on the Russian string
+// needs the switch to stay synchronous. This import is what keeps it so.
+import '@devon/i18n/catalogues'
+
 // Same reasoning as `@devon/ui`'s `src/test-config/setup.ts`: this repo does not set `test.globals`,
 // so `@testing-library/react`'s automatic `afterEach(cleanup)` never registers on its own.
 afterEach(() => {

@@ -20,8 +20,12 @@ function readCookieLocale(): string | null {
   return value ? decodeURIComponent(value) : null
 }
 
-/** Called once, before the first render (`main.tsx`). */
-export function bootLocale(): void {
+/** The locale this session should open in, from storage/cookie alone. Split out of `bootLocale()`
+ *  for `main.tsx`, which has to know the answer *before* it sets it: `@devon/i18n` now ships only
+ *  the default catalogue in the shell chunk, so a session opening in ru or uz-Cyrl awaits that one
+ *  catalogue and only then sets the locale -- which is what keeps "no flash of the wrong language"
+ *  true now that a catalogue can arrive a moment late. */
+export function resolveBootLocale(): Locale {
   // v1.1 (WALKTHROUGH-FINDINGS §5.5): the browser's own language is deliberately NOT consulted any
   // more. A ministry workstation is very often an English or Russian Windows install, so the first
   // screen a civil servant ever saw was in English -- and the first screen is a login form, where
@@ -29,11 +33,16 @@ export function bootLocale(): void {
   // person who wants another one picks it from the locale menu once and it is remembered (stored
   // locale / `wp_locale` cookie, both still honoured above, and the signed-in user record wins over
   // both in `reconcileLocaleWithUser`).
-  const resolved = resolveLocale({
+  return resolveLocale({
     stored: readStoredLocale() ?? readCookieLocale(),
     header: null,
   })
-  setLocale(resolved)
+}
+
+/** Called once, before the first render. Kept as the synchronous form for callers that already
+ *  have every catalogue in memory (the unit tests, which register all four). */
+export function bootLocale(): void {
+  setLocale(resolveBootLocale())
 }
 
 /** Signed-in persistence writes to the user record (`PATCH /api/v1/me`, done by the caller); this

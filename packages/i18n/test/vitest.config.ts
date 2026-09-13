@@ -11,6 +11,7 @@ export default mergeConfig(
     test: {
       include: ['test/unit/**/*.test.ts'],
       environment: 'jsdom',
+      setupFiles: ['./test/setup.ts'],
       coverage: {
         include: ['src/**/*.ts'],
         exclude: ['**/dist/**', '**/*.config.*', '**/test/**', '**/*.d.ts', 'src/cli/**'],
