@@ -3105,7 +3105,14 @@
       "moved": "Card moved",
       "moveFailed": "Could not move the card",
       "emptyTitle": "Nothing to weigh yet",
-      "emptyBody": "No card in this department is assigned to anybody yet."
+      "emptyBody": "No card in this department is assigned to anybody yet.",
+      "capacityValue": "{hours} h/week",
+      "capacityDefault": "default",
+      "capacityEdit": "Change the weekly capacity",
+      "capacityLabel": "Weekly capacity (hours)",
+      "capacitySaved": "Capacity saved",
+      "capacityFailed": "Could not save the capacity",
+      "capacityInvalid": "Enter between 0 and 168 hours"
     },
     "goals": {
       "title": "Goals",

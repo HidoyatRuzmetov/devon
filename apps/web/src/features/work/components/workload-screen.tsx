@@ -17,6 +17,7 @@ import {
   Avatar,
   Button,
   IconButton,
+  Input,
   PageHeader,
   Popover,
   PopoverContent,
@@ -32,9 +33,15 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { useDepartment } from '../../../lib/session.js'
+import { useDepartment, useSession } from '../../../lib/session.js'
 import { useCardsQuery } from '../hooks.js'
-import { useMoveWorkloadMutation, useMyWorkloadQuery, useWorkloadQuery } from '../hooks-plus.js'
+import {
+  useCapacityQuery,
+  useMoveWorkloadMutation,
+  useMyWorkloadQuery,
+  usePutCapacityMutation,
+  useWorkloadQuery,
+} from '../hooks-plus.js'
 import { formatHoursNumber } from '../lib/estimate.js'
 import { fullName, shortName } from '../lib/format.js'
 import type { Workload, WorkloadCell, WorkloadRow } from '../api-plus.js'
@@ -240,16 +247,115 @@ function Cell({
   )
 }
 
+/**
+ * A4's "per-person capacity overrides", edited where the number is actually read rather than buried
+ * in a settings screen nobody opens while looking at a red week.
+ *
+ * `canEdit` is the same rule the API enforces (`plus-routes.ts`: a member sets their own, the head
+ * sets anybody's) -- the client only hides a control that would be refused anyway. A capacity still
+ * on the registry default shows as such instead of pretending somebody chose 40.
+ */
+function CapacityCell({
+  userId,
+  hours,
+  isDefault,
+  canEdit,
+}: {
+  userId: string
+  hours: number
+  isDefault: boolean
+  canEdit: boolean
+}): React.JSX.Element {
+  const t = useT()
+  const putCapacity = usePutCapacityMutation()
+  const [editing, setEditing] = React.useState(false)
+  const [draft, setDraft] = React.useState(String(hours))
+
+  React.useEffect(() => setDraft(String(hours)), [hours])
+
+  function commit(): void {
+    setEditing(false)
+    const next = Number(draft)
+    if (!Number.isFinite(next) || next < 0 || next > 168) {
+      setDraft(String(hours))
+      toast.error(t('work.workload.capacityInvalid'))
+      return
+    }
+    if (next === hours) return
+    putCapacity.mutate(
+      { userId, weeklyHours: next },
+      {
+        onSuccess: () => toast.success(t('work.workload.capacitySaved')),
+        onError: () => {
+          setDraft(String(hours))
+          toast.error(t('work.workload.capacityFailed'))
+        },
+      },
+    )
+  }
+
+  if (!canEdit) {
+    return (
+      <span className="truncate text-caption tabular-nums text-muted-foreground">
+        {t('work.workload.capacityValue', { hours: formatHoursNumber(hours) })}
+      </span>
+    )
+  }
+
+  if (editing) {
+    return (
+      <Input
+        autoFocus
+        type="number"
+        min={0}
+        max={168}
+        inputMode="numeric"
+        value={draft}
+        aria-label={t('work.workload.capacityLabel')}
+        className="h-7 w-20 px-1.5 text-caption"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            e.currentTarget.blur()
+          } else if (e.key === 'Escape') {
+            e.preventDefault()
+            setDraft(String(hours))
+            setEditing(false)
+          }
+        }}
+      />
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title={t('work.workload.capacityEdit')}
+      className="truncate rounded-sm text-left text-caption tabular-nums text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {t('work.workload.capacityValue', { hours: formatHoursNumber(hours) })}
+      {isDefault ? ` · ${t('work.workload.capacityDefault')}` : ''}
+    </button>
+  )
+}
+
 function Row({
   row,
   cardsByCell,
   onMove,
   canDrag,
+  capacityIsDefault,
+  canEditCapacity,
 }: {
   row: WorkloadRow
   cardsByCell: ReadonlyMap<string, Card[]>
   onMove: (cardId: string, toUserId: string, toWeekStart: string) => void
   canDrag: boolean
+  capacityIsDefault: boolean
+  canEditCapacity: boolean
 }): React.JSX.Element {
   const capacity = row.capacityHours || DEFAULT_WEEKLY_CAPACITY_HOURS
   const name = fullName(row.member)
@@ -265,9 +371,12 @@ function Row({
         />
         <div className="min-w-0">
           <p className="truncate text-small font-medium text-foreground">{shortName(row.member)}</p>
-          <p className="truncate text-caption text-muted-foreground tabular-nums">
-            {formatHoursNumber(capacity)}
-          </p>
+          <CapacityCell
+            userId={row.member.userId}
+            hours={capacity}
+            isDefault={capacityIsDefault}
+            canEdit={canEditCapacity}
+          />
         </div>
       </div>
       {row.cells.map((cell) => (
@@ -290,11 +399,15 @@ function Grid({
   cardsByCell,
   canDrag,
   onMove,
+  defaultCapacityUserIds,
+  canEditCapacityFor,
 }: {
   workload: Workload
   cardsByCell: ReadonlyMap<string, Card[]>
   canDrag: boolean
   onMove: (cardId: string, toUserId: string, toWeekStart: string) => void
+  defaultCapacityUserIds: ReadonlySet<string>
+  canEditCapacityFor: (userId: string) => boolean
 }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
@@ -325,6 +438,8 @@ function Grid({
             cardsByCell={cardsByCell}
             onMove={onMove}
             canDrag={canDrag}
+            capacityIsDefault={defaultCapacityUserIds.has(row.member.userId)}
+            canEditCapacity={canEditCapacityFor(row.member.userId)}
           />
         ))}
       </div>
@@ -335,6 +450,7 @@ function Grid({
 export default function WorkloadScreen(): React.JSX.Element {
   const t = useT()
   const { department } = useDepartment()
+  const { user } = useSession()
   const isHead = department?.role === 'head'
   const [offset, setOffset] = React.useState(0)
   const start = mondayIso(offset)
@@ -348,6 +464,13 @@ export default function WorkloadScreen(): React.JSX.Element {
   const moveCard = useMoveWorkloadMutation()
   const cardsQuery = useCardsQuery({ limit: 100 })
   const cardsByCell = React.useMemo(() => groupCards(cardsQuery.data ?? []), [cardsQuery.data])
+  // Which rows are still on the registry default -- the row says so rather than showing 40 as if
+  // somebody had chosen it. Head-only: `/work/capacity` is a management read.
+  const capacityQuery = useCapacityQuery(isHead)
+  const defaultCapacityUserIds = React.useMemo(
+    () => new Set((capacityQuery.data ?? []).filter((r) => r.isDefault).map((r) => r.userId)),
+    [capacityQuery.data],
+  )
 
   function move(cardId: string, toUserId: string, toWeekStart: string): void {
     moveCard.mutate(
@@ -389,7 +512,14 @@ export default function WorkloadScreen(): React.JSX.Element {
     const workload = active.data
     body = (
       <div className="flex flex-col gap-4">
-        <Grid workload={workload} cardsByCell={cardsByCell} canDrag={isHead} onMove={move} />
+        <Grid
+          workload={workload}
+          cardsByCell={cardsByCell}
+          canDrag={isHead}
+          onMove={move}
+          defaultCapacityUserIds={defaultCapacityUserIds}
+          canEditCapacityFor={(userId) => isHead || userId === user?.id}
+        />
         {/* The two ways a workload grid quietly lies, stated rather than hidden. */}
         {workload.unscheduled.noDueDate > 0 || workload.unscheduled.noEstimate > 0 ? (
           <SectionCard title={t('work.workload.unscheduledTitle')}>

@@ -3105,7 +3105,14 @@
       "moved": "Karta koʻchirildi",
       "moveFailed": "Kartani koʻchirib boʻlmadi",
       "emptyTitle": "Yuklama hisoblanmadi",
-      "emptyBody": "Boshqarmada hali biriktirilgan karta yoʻq."
+      "emptyBody": "Boshqarmada hali biriktirilgan karta yoʻq.",
+      "capacityValue": "{hours} soat/hafta",
+      "capacityDefault": "standart",
+      "capacityEdit": "Haftalik imkoniyatni oʻzgartirish",
+      "capacityLabel": "Haftalik imkoniyat (soat)",
+      "capacitySaved": "Imkoniyat saqlandi",
+      "capacityFailed": "Imkoniyatni saqlab boʻlmadi",
+      "capacityInvalid": "0 dan 168 gacha soat kiriting"
     },
     "goals": {
       "title": "Maqsadlar",
