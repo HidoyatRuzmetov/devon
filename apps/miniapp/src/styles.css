@@ -20,11 +20,11 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
   /* Telegram hands the webview its own scroll; a rubber-band bounce on the page behind the app reads
-     as a broken sheet. The scroll container is the screen body, declared in `app-shell.tsx`. */
+     as a broken sheet. The scroll container is `ScreenBody` (`components/screen.tsx`). */
   overscroll-behavior-y: none;
 }
 
-/* The Telegram sheet reports how much of the viewport it actually occupies; `app-shell.tsx` keeps
+/* The Telegram sheet reports how much of the viewport it actually occupies; `app.tsx`'s `useViewportHeight` keeps
    `--tg-viewport-height` in sync with it (and falls back to `100dvh` outside Telegram) so a screen is
    never taller than the visible sheet and the tab bar is never under the keyboard. */
 :root {
