@@ -71,7 +71,9 @@ export function CanvasShareDialog({
     if (scope === 'project') {
       return (projectsQuery.data ?? [])
         .filter(
-          (p) => isHead || (myUserId !== null && (p.ownerUserId === myUserId || p.members.includes(myUserId))),
+          (p) =>
+            isHead ||
+            (myUserId !== null && (p.ownerUserId === myUserId || p.members.includes(myUserId))),
         )
         .map((p) => ({ value: p.id, label: p.title }))
     }
@@ -222,7 +224,9 @@ export function CanvasShareDialog({
 
           {body()}
 
-          <p className="text-caption text-muted-foreground">{t('realtime.canvas.share.onlyMine')}</p>
+          <p className="text-caption text-muted-foreground">
+            {t('realtime.canvas.share.onlyMine')}
+          </p>
         </form>
       </DialogContent>
     </Dialog>
