@@ -49,6 +49,11 @@ export interface BoardColumnProps {
    * fits on one screen instead of seven screens of horizontal scroll. Owned by the board (one
    * preference for the whole board, remembered per viewer), passed down rather than read here. */
   density?: 'comfortable' | 'compact'
+  /** v1.1 SPEC §7 (A8) -- the board's multitask selection, owned by the board and passed straight
+   * through to each tile. Omit `onSelectedChange` and the tiles render with no checkbox at all. */
+  selectedIds?: ReadonlySet<string>
+  onCardSelectedChange?: (cardId: string, selected: boolean, shiftKey: boolean) => void
+  selectionActive?: boolean
 }
 
 /** Column collapse is a per-viewer convenience, not shared state -- `localStorage` (guarded: private
@@ -90,6 +95,9 @@ export function BoardColumn({
   onMoveTo,
   onCollapsedChange,
   density = 'comfortable',
+  selectedIds,
+  onCardSelectedChange,
+  selectionActive = false,
 }: BoardColumnProps) {
   const t = useT()
   const listRef = React.useRef<HTMLDivElement | null>(null)
@@ -243,6 +251,14 @@ export function BoardColumn({
                   onOpen={onOpenCard}
                   onDropped={onDropped}
                   onMoveTo={onMoveTo}
+                  selected={selectedIds?.has(card.id) ?? false}
+                  selectionActive={selectionActive}
+                  {...(onCardSelectedChange
+                    ? {
+                        onSelectedChange: (selected: boolean, shiftKey: boolean) =>
+                          onCardSelectedChange(card.id, selected, shiftKey),
+                      }
+                    : {})}
                 />
               </StaggerItem>
             ))}

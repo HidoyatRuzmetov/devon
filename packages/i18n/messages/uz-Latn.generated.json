@@ -2406,7 +2406,9 @@
       "template": "Shablon",
       "milestones": "Bosqichlar",
       "objective": "Umumiy vazifalar",
-      "subjective": "Shaxsiy vazifalar"
+      "subjective": "Shaxsiy vazifalar",
+      "galleryTemplate": "Andoza",
+      "galleryTemplateHint": "Bosqichlar va boshlangʻich kartalar avtomatik yaratiladi."
     },
     "status": {
       "planning": "Rejalashtirilmoqda",
@@ -2422,7 +2424,9 @@
       "fromScratch": "Boshidan",
       "submit": "Yaratish",
       "success": "Loyiha yaratildi",
-      "error": "Loyihani yaratib boʻlmadi"
+      "error": "Loyihani yaratib boʻlmadi",
+      "fromGallery": "Andozalar galereyasidan",
+      "templateUnreadable": "Andozani oʻqib boʻlmadi"
     },
     "milestone": {
       "addPlaceholder": "Bosqich nomini kiriting",
@@ -2670,7 +2674,8 @@
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matnni aniqlab boʻlmadi",
       "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi."
+      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
+      "fromTemplate": "Andozadan yaratish"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -2824,7 +2829,8 @@
       "resizeEnd": "Muddatni oʻzgartirish",
       "legend": {
         "onTrack": "Faol"
-      }
+      },
+      "dependencyArrows": "Bogʻliqlik strelkalari: {count} ta"
     },
     "calendar": {
       "prev": "Oldingi oy",
@@ -3029,7 +3035,8 @@
       "noneApplied": "Hech bir kartaga oʻzgartirish kiritilmadi",
       "failed": "Amalni bajarib boʻlmadi",
       "undone": "Qaytarildi",
-      "undoFailed": "Qaytarib boʻlmadi"
+      "undoFailed": "Qaytarib boʻlmadi",
+      "selectCard": "«{title}» kartasini tanlash"
     },
     "focus": {
       "title": "Diqqat markazi",

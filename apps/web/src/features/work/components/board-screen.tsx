@@ -33,6 +33,7 @@ import { keyBetween } from '../lib/fractional.js'
 import { useAnnounce, DndAnnouncerProvider } from './dnd-announcer.js'
 import { useBoardQuery, useMoveCardMutation } from '../hooks.js'
 import { BoardColumn } from './board-column.js'
+import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { NewCardDialog } from './new-card-dialog.js'
 import { TouchDragPreviewLayer } from './touch-drag-preview.js'
@@ -231,6 +232,39 @@ function BoardScreenInner() {
     [handleDropped],
   )
 
+  // v1.1 SPEC §7 (A8) -- the board's own multitask selection. The ordered id list is column by
+  // column, top to bottom, which is exactly the order the columns are rendered in, so a shift-click
+  // range covers what the eye expects rather than whatever order the API happened to return.
+  //
+  // Declared above the loading/error/empty returns below, because a hook may not be called
+  // conditionally: while the board is still loading the list is simply empty, which is correct.
+  const visibleCardIds = React.useMemo(
+    () => [
+      ...(board?.columns ?? []).flatMap((col) => col.cards.filter(filterCard).map((c) => c.id)),
+      ...(board?.unassigned ?? []).filter(filterCard).map((c) => c.id),
+    ],
+    [board, filterCard],
+  )
+  const {
+    selected: selectedCardIds,
+    toggle: toggleCardSelected,
+    selectRange: selectCardRange,
+    clear: clearSelection,
+  } = useCardSelection(visibleCardIds)
+  const lastSelectedRef = React.useRef<string | null>(null)
+
+  const handleCardSelectedChange = React.useCallback(
+    (cardId: string, selected: boolean, shiftKey: boolean) => {
+      if (shiftKey && lastSelectedRef.current) {
+        selectCardRange(lastSelectedRef.current, cardId, visibleCardIds)
+        return
+      }
+      lastSelectedRef.current = cardId
+      toggleCardSelected(cardId, selected)
+    },
+    [selectCardRange, toggleCardSelected, visibleCardIds],
+  )
+
   if (boardQuery.isPending) {
     return (
       <div className="flex gap-4">
@@ -257,6 +291,7 @@ function BoardScreenInner() {
   }
 
   const columnKeys = [...board.columns.map((c) => c.member.userId), 'unassigned']
+
   const collapsedCount = columnKeys.filter((k) => collapsedByColumn[k]).length
   const ownColumnIndex = board.columns.findIndex((c) => c.member.userId === user?.id)
   // An active search/filter always searches every column -- narrowing to "just me" while a filter is
@@ -316,7 +351,17 @@ function BoardScreenInner() {
   return (
     <div className="flex h-full flex-col gap-4">
       <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-        <div className="flex flex-wrap items-center gap-2 px-1">
+        {/* A8: the multitask toolbar takes over this row the moment anything is selected, sliding up
+            on the same spring the table's does -- one bar, one behaviour, two screens. */}
+        <div className="relative flex flex-wrap items-center gap-2 px-1">
+          <MultitaskToolbarSlot show={selectedCardIds.size > 0}>
+            <MultitaskToolbar
+              ids={[...selectedCardIds]}
+              members={board.members}
+              labels={board.labels}
+              onClear={clearSelection}
+            />
+          </MultitaskToolbarSlot>
           <span
             className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(departmentId ?? 'devon'))}
             aria-hidden="true"
@@ -441,6 +486,9 @@ function BoardScreenInner() {
                     onDropped={handleDropped}
                     onMoveTo={handleMoveTo}
                     onCollapsedChange={handleCollapsedChange}
+                    selectedIds={selectedCardIds}
+                    onCardSelectedChange={handleCardSelectedChange}
+                    selectionActive={selectedCardIds.size > 0}
                   />
                 ))}
               </div>
@@ -463,6 +511,9 @@ function BoardScreenInner() {
                 onDropped={handleDropped}
                 onMoveTo={handleMoveTo}
                 onCollapsedChange={handleCollapsedChange}
+                selectedIds={selectedCardIds}
+                onCardSelectedChange={handleCardSelectedChange}
+                selectionActive={selectedCardIds.size > 0}
               />
             </div>
           </div>

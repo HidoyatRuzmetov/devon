@@ -46,7 +46,8 @@
       "aiPreviewTitle": "AI-parsed card",
       "aiError": "Could not parse that text",
       "aiMeta": "{tokens} tokens · {ms} ms",
-      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood."
+      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood.",
+      "fromTemplate": "Create from a template"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -200,7 +201,8 @@
       "resizeEnd": "Change due date",
       "legend": {
         "onTrack": "Active"
-      }
+      },
+      "dependencyArrows": "{count} dependency arrows"
     },
     "calendar": {
       "prev": "Previous month",
@@ -405,7 +407,8 @@
       "noneApplied": "No card was changed",
       "failed": "The action could not be completed",
       "undone": "Undone",
-      "undoFailed": "Could not undo"
+      "undoFailed": "Could not undo",
+      "selectCard": "Select the card “{title}”"
     },
     "focus": {
       "title": "Focus list",

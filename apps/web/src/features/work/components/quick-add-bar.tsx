@@ -8,11 +8,25 @@
 // `compact` form with a `defaultAssigneeUserId`, is the board's inline "+ Add card" at a column's
 // foot.
 import * as React from 'react'
-import { CalendarClock, Plus, UserRound } from 'lucide-react'
+import { CalendarClock, FileStack, Plus, UserRound } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import { AiPreviewPanel, Input, SparkleButton, toast } from '@devon/ui'
+import {
+  AiPreviewPanel,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  IconButton,
+  Input,
+  SparkleButton,
+  toast,
+} from '@devon/ui'
+import { replaceSearchParam } from '../../../lib/router.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { useCreateCardMutation } from '../hooks.js'
+import { useCreateCardFromTemplateMutation, useWorkTemplatesQuery } from '../hooks-plus.js'
 import { parseQuickAdd, resolveQuickAddAssignee } from '../lib/quick-add.js'
 import type { CardPriority, MemberSummary } from '../api.js'
 import { PRIORITY_LABEL_KEY, fullName } from '../lib/format.js'
@@ -58,6 +72,11 @@ export function QuickAddBar({
   const [aiMeta, setAiMeta] = React.useState<{ totalTokens: number; latencyMs: number } | null>(
     null,
   )
+  // v1.1 SPEC §7.2: "create from template in quick-add". The gallery is the place to *manage*
+  // templates; this is the place to *use* one, which is where somebody actually is when the thought
+  // "we do this every month" occurs.
+  const cardTemplates = useWorkTemplatesQuery('card').data ?? []
+  const createFromTemplate = useCreateCardFromTemplateMutation()
   const createCard = useCreateCardMutation()
   const aiSettings = useAiSettingsQuery()
   const parseAi = useRunAiFeatureMutation('quick_add_parse')
@@ -159,6 +178,50 @@ export function QuickAddBar({
           disabled={createCard.isPending}
           className={compact ? 'h-9 text-small' : undefined}
         />
+        {cardTemplates.length > 0 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <IconButton
+                aria-label={t('work.quickAdd.fromTemplate')}
+                title={t('work.quickAdd.fromTemplate')}
+                disabled={createFromTemplate.isPending || createCard.isPending}
+              >
+                <FileStack className="size-4" aria-hidden="true" />
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-72 w-64 overflow-y-auto">
+              <DropdownMenuLabel>{t('work.quickAdd.fromTemplate')}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {cardTemplates.map((template) => (
+                <DropdownMenuItem
+                  key={template.id}
+                  onSelect={() =>
+                    createFromTemplate.mutate(
+                      {
+                        id: template.id,
+                        input: defaultAssigneeUserId
+                          ? { assigneeUserId: defaultAssigneeUserId }
+                          : {},
+                      },
+                      {
+                        onSuccess: (created) => {
+                          toast.success(t('work.templates.created', { name: template.name }))
+                          onCreated?.()
+                          // Opening the new card is the point: a card made from a template almost
+                          // always needs one field adjusted before it is real.
+                          replaceSearchParam('card', created.id)
+                        },
+                        onError: () => toast.error(t('work.templates.createFailed')),
+                      },
+                    )
+                  }
+                >
+                  {template.name}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
         {aiEnabled ? (
           <SparkleButton
             aria-label={t('work.quickAdd.aiParse')}

@@ -25,7 +25,9 @@
       "template": "Shablon",
       "milestones": "Bosqichlar",
       "objective": "Umumiy vazifalar",
-      "subjective": "Shaxsiy vazifalar"
+      "subjective": "Shaxsiy vazifalar",
+      "galleryTemplate": "Andoza",
+      "galleryTemplateHint": "Bosqichlar va boshlangʻich kartalar avtomatik yaratiladi."
     },
     "status": {
       "planning": "Rejalashtirilmoqda",
@@ -41,7 +43,9 @@
       "fromScratch": "Boshidan",
       "submit": "Yaratish",
       "success": "Loyiha yaratildi",
-      "error": "Loyihani yaratib boʻlmadi"
+      "error": "Loyihani yaratib boʻlmadi",
+      "fromGallery": "Andozalar galereyasidan",
+      "templateUnreadable": "Andozani oʻqib boʻlmadi"
     },
     "milestone": {
       "addPlaceholder": "Bosqich nomini kiriting",

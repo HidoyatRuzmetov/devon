@@ -28,6 +28,7 @@ import {
 
 const RISK_ICON = { AlertCircle, Clock3 } as const
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
+import { FocusList } from './focus-list.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
 
@@ -227,7 +228,14 @@ export default function MineScreen() {
 
   return (
     <>
-      <WorkShell filterLayout="mine">{body}</WorkShell>
+      <WorkShell filterLayout="mine">
+        <div className="flex flex-col gap-6">
+          {/* A9: the pinned five come first -- a focus list that sits below three other groups is
+              not a focus list. */}
+          <FocusList variant="bare" />
+          {body}
+        </div>
+      </WorkShell>
       <CardPeekDialog />
     </>
   )

@@ -46,7 +46,8 @@
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matnni aniqlab boʻlmadi",
       "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi."
+      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
+      "fromTemplate": "Andozadan yaratish"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -200,7 +201,8 @@
       "resizeEnd": "Muddatni oʻzgartirish",
       "legend": {
         "onTrack": "Faol"
-      }
+      },
+      "dependencyArrows": "Bogʻliqlik strelkalari: {count} ta"
     },
     "calendar": {
       "prev": "Oldingi oy",
@@ -405,7 +407,8 @@
       "noneApplied": "Hech bir kartaga oʻzgartirish kiritilmadi",
       "failed": "Amalni bajarib boʻlmadi",
       "undone": "Qaytarildi",
-      "undoFailed": "Qaytarib boʻlmadi"
+      "undoFailed": "Qaytarib boʻlmadi",
+      "selectCard": "«{title}» kartasini tanlash"
     },
     "focus": {
       "title": "Diqqat markazi",

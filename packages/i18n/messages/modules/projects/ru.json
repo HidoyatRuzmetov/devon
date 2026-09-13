@@ -25,7 +25,9 @@
       "template": "Шаблон",
       "milestones": "Этапы",
       "objective": "Общие задачи",
-      "subjective": "Личные задачи"
+      "subjective": "Личные задачи",
+      "galleryTemplate": "Шаблон",
+      "galleryTemplateHint": "Этапы и стартовые карточки создадутся автоматически."
     },
     "status": {
       "planning": "Планируется",
@@ -41,7 +43,9 @@
       "fromScratch": "С нуля",
       "submit": "Создать",
       "success": "Проект создан",
-      "error": "Не удалось создать проект"
+      "error": "Не удалось создать проект",
+      "fromGallery": "Из галереи шаблонов",
+      "templateUnreadable": "Не удалось прочитать шаблон"
     },
     "milestone": {
       "addPlaceholder": "Введите название этапа",

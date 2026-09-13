@@ -26,6 +26,7 @@ import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-heig
 import { useProjectsQuery } from '../../projects/hooks.js'
 import type { Project } from '../../projects/api.js'
 import { useCardsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
+import { useDependencyGraphQuery } from '../hooks-plus.js'
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 import { fullName } from '../lib/format.js'
@@ -267,6 +268,87 @@ function GanttBar({
   )
 }
 
+/**
+ * v1.1 SPEC §7 (A10) -- dependency arrows on the Gantt.
+ *
+ * One elbow per edge, drawn from the right edge of the blocker's bar to the left edge of the bar
+ * that waits for it: out, across, and in with an arrowhead, which is the shape every Gantt in this
+ * class uses (Jakob's Law) and the only one that stays readable when two bars share a row band.
+ *
+ * An SVG overlay rather than per-bar borders, because an edge joins two rows that are arbitrarily
+ * far apart and may belong to different groups. It is `pointer-events: none` throughout -- the bars
+ * underneath stay draggable and clickable.
+ *
+ * Edges whose endpoints are not both laid out (a card filtered away, a collapsed group, a card with
+ * no due date and therefore no bar) are simply skipped: half an arrow pointing into empty space is
+ * worse than no arrow.
+ */
+function DependencyArrows({
+  edges,
+  layout,
+  height,
+  width,
+}: {
+  edges: readonly { cardId: string; blockedByCardId: string }[]
+  layout: ReadonlyMap<string, { x1: number; x2: number; y: number }>
+  height: number
+  width: number
+}) {
+  const t = useT()
+  const paths: { key: string; d: string }[] = []
+  for (const edge of edges) {
+    const from = layout.get(edge.blockedByCardId)
+    const to = layout.get(edge.cardId)
+    if (!from || !to) continue
+    // Leave the blocker on its right edge, arrive at the blocked bar's left edge.
+    const startX = from.x2
+    const startY = from.y
+    const endX = to.x1
+    const endY = to.y
+    const gap = 10
+    // When the blocked bar starts before the blocker ends, the elbow has to route around rather
+    // than draw backwards through both bars.
+    const midX = endX - gap > startX + gap ? (startX + endX) / 2 : startX + gap
+    paths.push({
+      key: `${edge.blockedByCardId}->${edge.cardId}`,
+      d: `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`,
+    })
+  }
+  if (paths.length === 0) return null
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 z-10 overflow-visible"
+      width={width}
+      height={height}
+      role="img"
+      aria-label={t('work.timeline.dependencyArrows', { count: paths.length })}
+    >
+      <defs>
+        <marker
+          id="devon-dep-arrow"
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L6,3 L0,6 z" className="fill-muted-foreground" />
+        </marker>
+      </defs>
+      {paths.map((path) => (
+        <path
+          key={path.key}
+          d={path.d}
+          fill="none"
+          strokeWidth={1.5}
+          className="stroke-muted-foreground/70"
+          markerEnd="url(#devon-dep-arrow)"
+        />
+      ))}
+    </svg>
+  )
+}
+
 export default function TimelineScreen() {
   // H4.1/H4.2: up to 100 Gantt bars re-rendering on every zoom, filter and drag tick -- a measured
   // hot spot, opted into the compiler individually (`vite.config.ts`'s note).
@@ -311,6 +393,8 @@ export default function TimelineScreen() {
   React.useEffect(() => {
     prevPxPerDayRef.current = pxPerDay
   }, [pxPerDay])
+
+  const dependencyGraph = useDependencyGraphQuery()
 
   function toggleGroupCollapsed(key: string) {
     setCollapsedGroups((prev) => {
@@ -420,6 +504,32 @@ export default function TimelineScreen() {
   )
 
   const scrollRef = React.useRef<HTMLDivElement | null>(null)
+  /** A10: the on-screen rectangle of every bar, keyed by card id -- the arrow layer's only input.
+   * Mirrors `GanttBar`'s own maths (clamp to the range, `dayIndex * pxPerDay`, `MIN_BAR_WIDTH`) and
+   * walks the groups in render order to get each row's absolute y. */
+  const barLayout = React.useMemo(() => {
+    const map = new Map<string, { x1: number; x2: number; y: number }>()
+    let top = 0
+    for (const group of groups) {
+      top += GROUP_HEADER_HEIGHT
+      if (collapsedGroups.has(group.key)) continue
+      group.cards.forEach((card, index) => {
+        if (!card.dueAt) return
+        const clampX = (d: Date) => {
+          const clamped = new Date(
+            Math.min(Math.max(startOfDay(d).getTime(), rangeStart.getTime()), rangeEnd.getTime()),
+          )
+          return dayIndex(clamped, rangeStart) * pxPerDay
+        }
+        const x1 = clampX(card.startAt ? new Date(card.startAt) : new Date(card.createdAt))
+        const x2 = Math.max(clampX(new Date(card.dueAt)) + pxPerDay, x1 + MIN_BAR_WIDTH)
+        map.set(card.id, { x1, x2, y: top + index * ROW_HEIGHT + ROW_HEIGHT / 2 })
+      })
+      top += group.cards.length * ROW_HEIGHT
+    }
+    return map
+  }, [groups, collapsedGroups, rangeStart, rangeEnd, pxPerDay])
+
   function scrollToToday() {
     scrollRef.current?.scrollTo({ left: Math.max(todayX - 120, 0), behavior: 'smooth' })
   }
@@ -524,6 +634,12 @@ export default function TimelineScreen() {
                 aria-hidden="true"
               />
             </div>
+            <DependencyArrows
+              edges={dependencyGraph.data ?? []}
+              layout={barLayout}
+              height={rowsHeight}
+              width={Math.max(totalWidth, 1)}
+            />
             {groups.map((group) => {
               const collapsed = collapsedGroups.has(group.key)
               return (

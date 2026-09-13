@@ -22,7 +22,7 @@ import {
   cn,
   toast,
 } from '@devon/ui'
-import { replaceSearchParam } from '../../../lib/router.js'
+import { navigate, replaceSearchParam } from '../../../lib/router.js'
 import { useDepartment } from '../../../lib/session.js'
 import {
   useCreateCardFromTemplateMutation,
@@ -125,7 +125,7 @@ export default function TemplatesScreen(): React.JSX.Element {
     if (template.kind === 'project') {
       // A project template is applied by the project stepper, which needs a title, a lead and dates
       // this gallery has no business inventing -- so "use" hands off to it with the template chosen.
-      window.location.assign(`/projects?new=1&template=${encodeURIComponent(template.id)}`)
+      navigate(`/projects?new=1&template=${encodeURIComponent(template.id)}`)
       return
     }
     setPending(template.id)

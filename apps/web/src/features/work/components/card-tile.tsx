@@ -44,7 +44,9 @@ import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Avatar,
   Badge,
+  Checkbox,
   Chip,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -100,6 +102,16 @@ export interface CardTileProps {
   onOpen: (cardId: string) => void
   onDropped: (draggedCardId: string, spec: CardDropSpec) => void
   onMoveTo: (cardId: string, toUserId: string | null) => void
+  /** v1.1 SPEC §7 (A8). Omit both to get a tile with no selection affordance at all -- the archive
+   * and any future read-only board keep exactly the v1.0 tile. When they are supplied the checkbox
+   * is revealed on hover/focus, or permanently once anything in the board is selected, which is the
+   * pattern every list of this kind uses (Jakob's Law) and which keeps a 26-column board from
+   * growing 300 permanent checkboxes. */
+  selected?: boolean
+  onSelectedChange?: (selected: boolean, shiftKey: boolean) => void
+  /** True while *any* card on the board is selected -- pins every checkbox visible so the selection
+   * can be extended without hunting for hover targets. */
+  selectionActive?: boolean
 }
 
 function isDragPayload(data: Record<string, unknown>): data is DragPayload {
@@ -115,11 +127,15 @@ export function CardTile({
   onOpen,
   onDropped,
   onMoveTo,
+  selected = false,
+  onSelectedChange,
+  selectionActive = false,
 }: CardTileProps) {
   const t = useT()
   const reducedMotion = useReducedMotion()
   const ref = React.useRef<HTMLDivElement | null>(null)
   const [isDragging, setIsDragging] = React.useState(false)
+  const shiftRef = React.useRef(false)
   const [closestEdge, setClosestEdge] = React.useState<Edge | null>(null)
   const touchLift = React.useRef<{
     timer: number | null
@@ -309,11 +325,39 @@ export function CardTile({
       onPointerMove={onTouchPointerMove}
       onPointerUp={onTouchPointerUp}
       onPointerCancel={onTouchPointerUp}
-      className="group flex touch-pan-y flex-col gap-2 rounded-md border border-border bg-card p-3 text-left shadow-1
+      className={cn(
+        `group relative flex touch-pan-y flex-col gap-2 rounded-md border bg-card p-3 text-left shadow-1
         transition-colors duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
         focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-        data-[dragging]:touch-none data-[dragging]:opacity-40"
+        data-[dragging]:touch-none data-[dragging]:opacity-40`,
+        selected ? 'border-primary ring-1 ring-primary' : 'border-border',
+      )}
     >
+      {onSelectedChange ? (
+        <span
+          className={cn(
+            'absolute right-2 top-2 z-10 transition-opacity duration-(--dur-micro)',
+            selected || selectionActive
+              ? 'opacity-100'
+              : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+          )}
+        >
+          <Checkbox
+            checked={selected}
+            size="sm"
+            aria-label={t('work.bulk.selectCard', { title: card.title })}
+            // The handlers live on the checkbox itself (a real button) rather than on a wrapping
+            // span, so the tile behind it never also opens, and no non-interactive element carries
+            // a click handler.
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => {
+              shiftRef.current = e.shiftKey
+            }}
+            onCheckedChange={(v) => onSelectedChange(v === true, shiftRef.current)}
+          />
+        </span>
+      ) : null}
       {activeLabels.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {activeLabels.map((l) => (
