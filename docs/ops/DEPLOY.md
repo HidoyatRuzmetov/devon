@@ -1,8 +1,20 @@
 # Deploying Devon (WorkPortal)
 
+**Qisqacha (uz-Latn).** Bu sahifa — ishlab chiqarish muhitida qurish va chiqarish (build/release)
+bosqichlari: `infra/docker-compose.prod.yml` bilan dev muhitidan farqlar, tasvirlarni qurish,
+migratsiyalarni ilovadan **oldin** qo'llash, sog'liqqa bog'langan chiqarish va orqaga qaytarish.
+Noldan o'rnatish uchun `docs/ops/INSTALL.md`, yangilash uchun `docs/ops/UPDATE.md`, kundalik
+amallar uchun `docs/ops/RUNBOOK.md` ni o'qing.
+
 Ops-tooling package (`agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md`), H17/H18.
 This is the production path -- for the local developer inner loop, use `pnpm setup && pnpm start`
 (`infra/README.md`), not anything on this page.
+
+**Newer, more complete pages supersede parts of this one**, which predates them:
+`docs/ops/INSTALL.md` (zero-to-running on a fresh ministry host, with every environment variable
+explained and the `/setup` ceremony), `docs/ops/UPDATE.md` + `scripts/update.sh` (the release
+channel), `docs/ops/RUNBOOK.md` (every operational procedure). This page remains the reference for
+what production differs from dev in, and for the build step itself.
 
 ## 0. What's different from dev
 
@@ -136,17 +148,21 @@ a deployment history. To roll back a release:
    expand/contract.
 4. `docker compose -f infra/docker-compose.prod.yml up -d`
 
-## 7. Graceful shutdown -- known gap
+## 7. Graceful shutdown -- closed
 
-`docker compose ... stop` sends SIGTERM. **`apps/api`'s process does not currently handle it**
-(verified while building this package: `docker stop` on the api container exits with code 143
-immediately, no drain). This is *safe* -- every background loop (outbox drain, event-reminder scan,
-upload sweep) is written to tolerate being killed mid-cycle and resumed cold -- but an in-flight HTTP
-request is cut off rather than finishing. `infra/docker-compose.prod.yml`'s `stop_grace_period: 30s`
-is set generously in anticipation of a `process.on('SIGTERM', ...)` handler landing in `apps/api/src/
-server.ts` (out of this package's edit scope; flagged as a follow-up task, see
-`agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md`). Until then, prefer rolling out
-during low-traffic windows.
+**This section used to record a known gap. It is fixed and this text is the correction.**
+
+`docker compose ... stop` sends SIGTERM, and `apps/api` now handles it (`apps/api/src/server.ts`'s
+`registerGracefulShutdown`, `apps/api/src/bootstrap/graceful-shutdown.ts`, `apps/api/src/plugins/
+shutdown.ts`): SIGTERM and SIGINT run `app.close()`, so in-flight requests finish, every `onClose`
+hook runs (pg-boss graceful stop, storage close, Telegram long-poll stop, the outbox/reminder/upload
+loops), the database pool is ended, and the process exits 0. A close still unfinished after 25 s is
+force-exited, inside the 30 s `stop_grace_period` in `infra/docker-compose.prod.yml` -- which is why
+that value was set generously in the first place.
+
+The safety argument that made the gap tolerable still holds independently: every background loop is
+written to tolerate being killed mid-cycle and resumed cold. In-flight HTTP requests are the part
+that is no longer cut off.
 
 ## 8. Jobs are preserved across a deploy
 

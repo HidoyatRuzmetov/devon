@@ -1,0 +1,138 @@
+name: Restore drill
+
+# HARDENING H19.1 ("automated weekly restore verification, quarterly drill"), TECH-SPEC.md §13.
+#
+# A backup nobody has restored is a hope, not a backup. This job builds a real database from the
+# repository's own migrations and demo seed, takes a real backup with `infra/backup/backup.sh`
+# (encrypted, mirrored to a real MinIO), and then restores BOTH halves into scratch with
+# `tools/backup/restore-drill.mjs` -- exactly the script the production host runs weekly
+# (infra/backup/systemd/devon-restore-drill.timer). It exists so a change that breaks the restore
+# path -- a migration the dump cannot round-trip, an `mc` flag that changed, a pg_restore option
+# Postgres dropped -- is caught here, on a weekday, rather than on the ministry host during an
+# incident.
+#
+# It deliberately does NOT drill the ministry's own backups: this runner has no access to them and
+# never should. What it proves is that the tooling and the schema still restore; the production
+# host's own weekly timer is what proves that production's actual bytes restore, and its report
+# lands under agentic/ledger/backups/ on that host.
+
+on:
+  schedule:
+    # Mondays 04:17 UTC (09:17 Tashkent) -- off the hour, so it does not pile onto the top-of-hour
+    # rush every other repository's cron schedules into.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+  # Changes to the restore path itself get drilled on the PR that makes them, not a week later.
+  pull_request:
+    paths:
+      - 'tools/backup/**'
+      - 'infra/backup/**'
+      - 'infra/docker-compose.yml'
+      - 'packages/db/migrations/**'
+      - '.github/workflows/restore-drill.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: 'true'
+
+jobs:
+  drill:
+    name: restore drill (backup -> scratch database + scratch bucket)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm (version read from package.json#packageManager)
+        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Compose (not `services:`) on purpose: the drill and the backup scripts run `docker run
+      # --network devon`, and this is what creates that network with the exact digest-pinned images
+      # the ministry host runs. A `services:` block would give a different network and different
+      # image pins, and would therefore drill something other than production's path.
+      - name: Start Postgres and MinIO from the pinned compose file
+        run: |
+          docker compose -f infra/docker-compose.yml --profile minio up -d --wait postgres minio
+          docker compose -f infra/docker-compose.yml ps
+
+      - name: Apply migrations and seed the demo tenant
+        env:
+          NODE_ENV: development
+          POSTGRES_DB: devon
+          POSTGRES_SUPERUSER_PASSWORD: devon_local_dev_root
+          POSTGRES_MIGRATOR_PASSWORD: devon_local_dev_migrator
+          POSTGRES_APP_PASSWORD: devon_local_dev_app
+          # The .env.example local-dev placeholder values, verbatim -- this runner has a throwaway
+          # database that lives for one job and is never reachable from outside it.
+          MIGRATION_DATABASE_URL: postgres://postgres:devon_local_dev_root@127.0.0.1:55432/devon # .env.example value
+          DATABASE_URL: postgres://devon_app:devon_local_dev_app@127.0.0.1:55432/devon # .env.example value
+          DEVON_DEMO: '1'
+        run: |
+          pnpm --filter @devon/db migrate:apply
+          pnpm --filter @devon/db seed:demo
+
+      # The passphrase is generated per run and never leaves the job. A real deployment keeps its own
+      # in a root-owned 0600 file on the host (docs/ops/RUNBOOK.md → "Rotate secrets"); what is being
+      # drilled here is that the encrypt -> mirror -> decrypt -> restore path works at all.
+      - name: Take a real backup (encrypted, mirrored to MinIO)
+        env:
+          POSTGRES_DB: devon
+          POSTGRES_SUPERUSER_PASSWORD: devon_local_dev_root
+          BACKUP_MIRROR_TO_MINIO: '1'
+          STORAGE_S3_ENDPOINT: http://minio:9000
+          STORAGE_S3_ACCESS_KEY: devon_minio_admin
+          STORAGE_S3_SECRET_KEY: devon_local_dev_minio_change_me
+        run: |
+          BACKUP_ENCRYPTION_PASSPHRASE="$(openssl rand -hex 32)"
+          echo "::add-mask::${BACKUP_ENCRYPTION_PASSPHRASE}"
+          echo "BACKUP_ENCRYPTION_PASSPHRASE=${BACKUP_ENCRYPTION_PASSPHRASE}" >> "$GITHUB_ENV"
+          export BACKUP_ENCRYPTION_PASSPHRASE
+          bash infra/backup/backup.sh --dir "${RUNNER_TEMP}/devon-backups"
+
+      - name: Weekly restore verification (schema check)
+        env:
+          POSTGRES_DB: devon
+          POSTGRES_SUPERUSER_PASSWORD: devon_local_dev_root
+          BACKUP_DIR: ${{ runner.temp }}/devon-backups
+        run: bash infra/backup/verify.sh
+
+      - name: Restore drill (scratch database + scratch bucket, full comparison)
+        env:
+          POSTGRES_DB: devon
+          POSTGRES_SUPERUSER_PASSWORD: devon_local_dev_root
+          BACKUP_DIR: ${{ runner.temp }}/devon-backups
+          STORAGE_S3_ENDPOINT: http://minio:9000
+          STORAGE_S3_ACCESS_KEY: devon_minio_admin
+          STORAGE_S3_SECRET_KEY: devon_local_dev_minio_change_me
+        run: |
+          node tools/backup/restore-drill.mjs \
+            --skip-migrate-verify \
+            --report "${RUNNER_TEMP}/restore-drill.md"
+
+      - name: Upload the drill report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: restore-drill-report
+          path: ${{ runner.temp }}/restore-drill.md
+          if-no-files-found: warn
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f infra/docker-compose.yml --profile minio down -v

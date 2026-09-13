@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
-# Shared by backup.sh / restore.sh / verify.sh. Not a standalone script -- sourced only.
+# Shared by backup.sh / restore.sh / verify.sh / quarterly-drill.sh. Not a standalone script --
+# sourced only.
+#
+# Git Bash / MSYS2 (the "Windows + Docker Desktop staging rehearsal" host docs/ops/DEPLOY.md §1
+# names) rewrites any argument that *looks* like a POSIX path into a Windows path before the child
+# process sees it -- so `docker run -v "$DIR:/backups:ro"` arrives as `-v C:\...:C:/Program
+# Files/Git/backups:ro` and the container mounts nothing at /backups. Caught empirically: the MinIO
+# mirror step of backup.sh failed with "Unable to guess the type of copy operation" on Windows while
+# working on Linux. These two variables disable that rewriting for this script and its children; on
+# Linux and macOS they are simply unset variables nothing reads, so the export is a no-op there.
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
 #
 # load_env_defaults(): reads simple KEY=VALUE lines from a .env-style file and exports each one only
 # if that variable is not already set in the environment. Shell env (including flags a caller passes

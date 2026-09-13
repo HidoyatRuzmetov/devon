@@ -32,11 +32,10 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "10"
 
-# H18.1 graceful shutdown: generous headroom before Compose sends SIGKILL. NOTE (verified empirically
-# building apps/api/Dockerfile): `apps/api/src/server.ts` has no SIGTERM handler today, so this grace
-# period is currently unused -- the process exits immediately on SIGTERM rather than draining. Kept
-# here anyway so `stop_grace_period` is already correct the day a handler lands (see apps/api/
-# Dockerfile's CMD comment and agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md).
+# H18.1 graceful shutdown: generous headroom before Compose sends SIGKILL. This value is now load-
+# bearing, not anticipatory -- `apps/api/src/server.ts` registers SIGTERM/SIGINT handlers that run
+# `app.close()` (in-flight requests finish, every onClose hook runs, the pool is ended), and force-
+# exit at 25 s, i.e. inside this window. Lowering it below ~30 s would start cutting drains short.
 x-app-stop-grace: &app-stop-grace
   stop_grace_period: 30s
 

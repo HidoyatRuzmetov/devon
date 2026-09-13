@@ -1,0 +1,48 @@
+# Non-secret configuration. Everything here is safe in git; every secret lives in `secret.yaml`,
+# which is NOT committed (see secret.example.yaml and README.md).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devon-config
+  namespace: devon
+data:
+  NODE_ENV: production
+  LOG_LEVEL: info
+  API_PORT: '3000'
+  # Replace with the real hostname before applying. It is the CORS origin, the cookie domain, the
+  # base of every link in an email/Telegram message and the Ingress host below -- all four must agree.
+  DEVON_PUBLIC_URL: https://work.example.ministry.uz
+  POSTGRES_DB: devon
+  POSTGRES_APP_USER: devon_app
+  POSTGRES_MIGRATOR_USER: devon_migrator
+  SESSION_COOKIE_NAME: devon_sid
+  SESSION_IDLE_MINUTES: '720'
+  SESSION_ABSOLUTE_DAYS: '30'
+  SLOW_REQUEST_MS: '1000'
+  # The API and worker reach these by in-cluster service DNS, never by IP.
+  VALKEY_URL: redis://devon-valkey:6379
+  STORAGE_DRIVER: s3
+  STORAGE_S3_ENDPOINT: http://devon-minio:9000
+  STORAGE_S3_PUBLIC_ENDPOINT: https://work.example.ministry.uz/objects
+  STORAGE_S3_BUCKET: devon
+  STORAGE_S3_REGION: us-east-1
+  STORAGE_S3_FORCE_PATH_STYLE: 'true'
+  STORAGE_MAX_UPLOAD_BYTES: '5242880'
+  STORAGE_TIMEOUT_MS: '10000'
+  # apps/api refuses to boot with NODE_ENV=production and CLAMAV_MODE=off (config.ts). Either run
+  # the clamav Deployment in optional/ or accept that the API will not start.
+  CLAMAV_MODE: clamd
+  CLAMAV_HOST: devon-clamav
+  CLAMAV_PORT: '3310'
+  CLAMAV_TIMEOUT_MS: '20000'
+  CENTRIFUGO_WS_URL: wss://work.example.ministry.uz/realtime/connection/websocket
+  CENTRIFUGO_API_URL: http://devon-centrifugo:8000/api
+  CENTRIFUGO_TOKEN_TTL_SECONDS: '600'
+  CENTRIFUGO_TIMEOUT_MS: '3000'
+  AI_BASE_URL: https://api-llm.gpu.uz/v1
+  AI_MODEL: glm-5.2
+  AI_REQUEST_TIMEOUT_MS: '60000'
+  DEVON_SETUP_REMOTE: '0'
+  DEVON_METRICS_REMOTE: '0'
+  DEVON_DEMO: '0'
+  DEVON_E2E: '0'

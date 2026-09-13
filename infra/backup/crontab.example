@@ -2,6 +2,24 @@
 # with `crontab -e` as the account that can reach the Docker daemon and the `devon` network (the same
 # account that runs `docker compose up`).
 #
+# BACKUP_DIR must be the same for all three jobs, and should live OUTSIDE /opt/devon: the sentinel's
+# wipe switch deletes the project directory and everything under it (docs/ops/RUNBOOK.md → "Wipe").
+# Encrypted backups (H19.1) additionally need BACKUP_ENCRYPTION_PASSPHRASE -- keep it in a root-owned
+# 0600 file and source it, never inline in the crontab (crontabs are world-readable on many hosts).
+BACKUP_DIR=/var/backups/devon
+
 # minute hour day month weekday command
+#
+# Daily full backup (pg_dump + retention + optional encryption + optional off-host MinIO mirror).
 15 2 * * *  /bin/bash /opt/devon/infra/backup/backup.sh >> /var/log/devon-backup.log 2>&1
+#
+# Weekly cheap check: does the newest backup restore at all, with the app/audit schemas intact.
 30 3 * * 0  /bin/bash /opt/devon/infra/backup/verify.sh >> /var/log/devon-backup-verify.log 2>&1
+#
+# Weekly restore DRILL (HARDENING H19.1): restores the newest backup into a scratch database AND the
+# MinIO mirror into a scratch bucket, then compares migrations, RLS policies and every table's row
+# count against the manifest recorded at dump time, and writes a dated report under
+# agentic/ledger/backups/. Non-zero exit = the newest backup is not trustworthy; alert on it.
+# `--skip-migrate-verify` keeps the unattended run off Testcontainers; the quarterly drill
+# (docs/ops/CHECKLIST-QUARTERLY-DRILL.md) runs it without that flag, with a human watching.
+30 4 * * 0  /usr/bin/node /opt/devon/tools/backup/restore-drill.mjs --skip-migrate-verify >> /var/log/devon-restore-drill.log 2>&1

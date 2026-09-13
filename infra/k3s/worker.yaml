@@ -1,0 +1,49 @@
+# The pg-boss worker: reminders, digests, AI jobs, thumbnails, outbox -> notifications/Telegram/
+# Centrifugo, audit anchoring. No Service: nothing routes to it.
+#
+# Horizontally scalable (H12.1) -- the three background loops use `for update skip locked` and a
+# fired-guard update, so more than one replica is safe. Queued jobs live in Postgres, so a restart
+# or a rescheduled pod never loses one.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devon-worker
+  namespace: devon
+  labels: { app.kubernetes.io/name: worker, app.kubernetes.io/part-of: devon }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: worker }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: worker, app.kubernetes.io/part-of: devon }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: worker
+          image: devon-worker:local
+          envFrom:
+            - configMapRef: { name: devon-config }
+            - secretRef: { name: devon-secrets }
+          env:
+            - name: DATABASE_URL
+              value: postgres://$(POSTGRES_APP_USER):$(POSTGRES_APP_PASSWORD)@devon-postgres:5432/$(POSTGRES_DB) # $(NAME) is a placeholder kubelet expands from this container's own env
+          livenessProbe:
+            httpGet: { path: /healthz, port: 3000 }
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 5
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: '1', memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities: { drop: ['ALL'] }
+      terminationGracePeriodSeconds: 30

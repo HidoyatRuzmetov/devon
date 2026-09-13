@@ -1,0 +1,36 @@
+# The security headers and the SPA's CSP, transcribed from infra/Caddyfile so the two deployment
+# shapes serve byte-identical policy (H1.5, H1.10).
+#
+# A Traefik CRD, so it is NOT in kustomization.yaml -- `kubectl apply --dry-run=client` on a machine
+# without the Traefik CRDs installed cannot validate an unknown kind, and the dry-run in README.md
+# has to stay runnable from a laptop. Apply it BEFORE the Ingress: an Ingress whose
+# `router.middlewares` annotation names a middleware that does not exist makes Traefik drop the
+# route, so the app answers 503 until this file is applied.
+#
+#   kubectl apply -f infra/k3s/optional/traefik-middleware.yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: security-headers
+  namespace: devon
+spec:
+  headers:
+    stsSeconds: 63072000
+    stsIncludeSubdomains: true
+    stsPreload: true
+    contentTypeNosniff: true
+    frameDeny: true
+    referrerPolicy: no-referrer
+    customResponseHeaders:
+      Cross-Origin-Opener-Policy: same-origin
+      Cross-Origin-Resource-Policy: same-origin
+      Origin-Agent-Cluster: '?1'
+      X-DNS-Prefetch-Control: 'off'
+      X-Permitted-Cross-Domain-Policies: none
+      Server: ''
+      Permissions-Policy: 'accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()'
+      # apps/web's production build emits NO inline script, so plain `script-src 'self'` admits
+      # exactly the fingerprinted bundle files -- stronger than a nonce policy, which a static file
+      # server cannot issue per request anyway. `style-src 'unsafe-inline'` is the unavoidable
+      # residue: React and `motion` set element style attributes, which no nonce can cover.
+      Content-Security-Policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; frame-src 'none'; child-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"

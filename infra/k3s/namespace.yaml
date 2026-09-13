@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devon
+  labels:
+    app.kubernetes.io/part-of: devon
+    # Baseline is not enough for this workload: nothing here needs to run privileged, host-network
+    # or as root, so the strictest built-in policy is the correct one and any regression that would
+    # need more is rejected at admission rather than discovered later.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest

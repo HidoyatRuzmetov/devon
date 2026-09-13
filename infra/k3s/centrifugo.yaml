@@ -1,0 +1,60 @@
+# Centrifugo 6: realtime fan-out (presence, live card moves, the editing indicator). Holds no
+# durable state -- it is a broker in front of Valkey -- so it is a plain Deployment and a restart
+# costs every connected client one reconnect with a freshly issued token.
+apiVersion: v1
+kind: Service
+metadata:
+  name: devon-centrifugo
+  namespace: devon
+  labels: { app.kubernetes.io/name: centrifugo, app.kubernetes.io/part-of: devon }
+spec:
+  selector: { app.kubernetes.io/name: centrifugo }
+  ports:
+    - { name: http, port: 8000, targetPort: 8000 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devon-centrifugo
+  namespace: devon
+  labels: { app.kubernetes.io/name: centrifugo, app.kubernetes.io/part-of: devon }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: centrifugo }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: centrifugo, app.kubernetes.io/part-of: devon }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: centrifugo
+          image: centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
+          args: ['centrifugo']
+          env:
+            - { name: CENTRIFUGO_ADDRESS, value: '0.0.0.0' }
+            - { name: CENTRIFUGO_HTTP_API_INSECURE, value: 'false' }
+            - { name: CENTRIFUGO_HEALTH_ENABLED, value: 'true' }
+            - { name: CENTRIFUGO_ENGINE_TYPE, value: 'redis' }
+            - { name: CENTRIFUGO_ENGINE_REDIS_ADDRESS, value: 'redis://devon-valkey:6379' }
+            - name: CENTRIFUGO_API_KEY
+              valueFrom: { secretKeyRef: { name: devon-secrets, key: CENTRIFUGO_API_KEY } }
+            - name: CENTRIFUGO_TOKEN_HMAC_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: devon-secrets, key: CENTRIFUGO_TOKEN_HMAC_SECRET_KEY } }
+          ports:
+            - { name: http, containerPort: 8000 }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { cpu: '1', memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ['ALL'] }
