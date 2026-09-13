@@ -36,7 +36,8 @@
       "poll": "Soʻrovnoma",
       "decision": "Qaror",
       "digest": "Xulosa",
-      "system": "Tizim"
+      "system": "Tizim",
+      "field_request": "Maʼlumot"
     },
     "channel": {
       "inapp": "Ilovada",

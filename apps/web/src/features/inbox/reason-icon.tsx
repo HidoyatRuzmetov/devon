@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   ClipboardList,
   Clock,
+  FileQuestion,
   Gavel,
   Newspaper,
   RefreshCw,
@@ -28,6 +29,7 @@ const ICONS: Record<Reason, React.ComponentType<React.SVGProps<SVGSVGElement>>> 
   decision: Gavel,
   digest: Newspaper,
   system: Bell,
+  field_request: FileQuestion,
 }
 
 export function ReasonIcon({ reason, className }: { reason: Reason; className?: string }) {
@@ -47,5 +49,7 @@ export const REASON_TONE: Record<Reason, NonNullable<ChipProps['tone']>> = {
   poll: 'info',
   decision: 'attention',
   digest: 'neutral',
+  // A question waiting on this person, like an assignment -- "act on me", not background noise.
+  field_request: 'primary',
   system: 'neutral',
 }

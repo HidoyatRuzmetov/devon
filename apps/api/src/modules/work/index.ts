@@ -9,7 +9,12 @@ import { can, matchesFilterQuery, parseFilterQuery, type FilterableCard } from '
 import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
+import { withContext } from '@devon/db'
 import { contextFromRequest } from './context.js'
+// v1.1 SPEC §5: `field:<key>:<value>` is part of this grammar, so the card search has to know the
+// answers. One narrow, documented dependency on the `fields` module -- the same shape
+// `notifications/delivery.ts` has on `telegram/transport.ts`.
+import { cardFieldValues, type CardFieldValues } from '../fields/filter-values.js'
 import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
 import * as repo from './repo.js'
 import {
@@ -110,8 +115,11 @@ function toFilterable(
   card: CardDTO,
   projectNames: Map<string, string>,
   labelNames: Map<string, string>,
+  fieldValues?: CardFieldValues,
 ): FilterableCard {
+  const values = fieldValues?.get(card.id)
   return {
+    ...(values ? { fieldValues: values } : {}),
     id: card.id,
     title: card.title,
     description: card.description?.text ?? null,
@@ -197,11 +205,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send({ items: [], nextCursor: null })
       const ctx = contextFromRequest(req)
-      const [cards, members, labels, projectNames] = await Promise.all([
+      const [cards, members, labels, projectNames, fieldValues] = await Promise.all([
         repo.listCards(ctx, departmentId, {}),
         repo.getMembers(ctx, departmentId),
         repo.getLabels(ctx, departmentId),
         repo.getProjectNames(ctx, departmentId),
+        withContext(ctx, (tx) => cardFieldValues(tx, departmentId)),
       ])
       const labelNames = new Map(labels.map((l) => [l.id, l.name]))
       const resolveUserIds = (token: string): string[] => {
@@ -219,7 +228,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (req.query.q && req.query.q.trim().length > 0) {
         const query = parseFilterQuery(req.query.q)
         filtered = cards.filter((c) =>
-          matchesFilterQuery(toFilterable(c, projectNames, labelNames), query, {
+          matchesFilterQuery(toFilterable(c, projectNames, labelNames, fieldValues), query, {
             meUserId: req.actor!.userId,
             resolveUserIds,
           }),

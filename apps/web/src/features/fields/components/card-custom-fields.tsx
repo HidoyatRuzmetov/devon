@@ -1,17 +1,13 @@
 // Card custom fields for the card detail's property column (v1.1 SPEC §5).
 //
-// **Merge note (this package's brief, "build it inside your feature's components/ folder and say so
-// in notes").** The card detail screen lives in `apps/web/src/features/work/components/card-detail.tsx`,
-// which this package may not edit. This component is the whole feature, finished and self-contained;
-// wiring it into that sidebar is one import and one line:
+// **Merge note.** This component belongs to the `fields` feature but is rendered by
+// `apps/web/src/features/work/components/card-detail.tsx` (one import, one line at the end of the
+// property list) -- the single edit this package makes outside its own folder on the web side,
+// because a card field nobody can see on a card is not a card field. If that file is rewritten in
+// the merge, keep those two lines:
 //
 //     import { CardCustomFields } from '../../fields/index.js'
-//     ...
-//     <CardCustomFields cardId={card.id} ownerUserIds={card.ownerUserIds} />
-//
-// It is already reachable and exercised today through `/fields` ("Kartochka maydonlari" → a card
-// picker), so the API, the validation and every state are proven in the browser before that line
-// lands rather than after it.
+//     <CardCustomFields cardId={card.id} ownerUserIds={[giver, assignee, creator]} />
 //
 // Behaviour the spec asks for and this component implements: the head's order, inline editing that
 // saves on blur (a property column is not a form with a Save button), a required card field that is

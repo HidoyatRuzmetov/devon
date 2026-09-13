@@ -23,7 +23,7 @@
       "askFailed": "The request could not be sent.",
       "tab": {
         "person": "People fields",
-        "card": "Task fields"
+        "card": "Card fields"
       },
       "tabsAria": "Choose which fields to manage",
       "capCount": "{used} of {cap} fields",
@@ -43,8 +43,8 @@
           "body": "Add a column such as Education or Languages and it appears in the people table and on every colleague's page."
         },
         "card": {
-          "title": "No task fields yet",
-          "body": "Add a column such as Estimated hours or a document link and it appears on the task itself."
+          "title": "No card fields yet",
+          "body": "Add a column such as Estimated hours or a document link and it appears on the card itself."
         }
       },
       "denied": {
@@ -76,7 +76,7 @@
       "saved": "Field updated.",
       "saveFailed": "The field could not be saved.",
       "editAria": "Edit “{field}”",
-      "requiredBlocksDone": "This task cannot be finished until this field is filled in."
+      "requiredBlocksDone": "This card cannot be marked done until this field is filled in."
     },
     "form": {
       "createTitle": "New field",

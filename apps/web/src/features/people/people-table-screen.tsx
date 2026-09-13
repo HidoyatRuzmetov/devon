@@ -40,6 +40,11 @@ import { useOnline } from '../../lib/use-online.js'
 import { useDepartment } from '../../lib/session.js'
 import { navigate } from '../../lib/router.js'
 import { fetchMembers, type Member } from '../structure/api.js'
+// v1.1 SPEC §5: "fields appear as columns in the people table". The `fields` feature owns the data
+// and the rendering; this screen only asks for the columns and lays them out after the indicators.
+// Which person fields appear here is the head's own `showInTable` switch on `/fields`, not a second
+// setting hidden in this screen.
+import { useFieldColumns, FieldValueDisplay } from '../fields/index.js'
 import { fetchIndicators, type PersonIndicators } from './api.js'
 import { formatIndicator } from './format.js'
 
@@ -130,6 +135,12 @@ export default function PeopleTableScreen(): React.JSX.Element {
     queryFn: () => fetchIndicators(requestedKeys),
     enabled: departmentId !== null && permission.allowed,
   })
+
+  const memberUserIds = React.useMemo(
+    () => (membersQuery.data ?? []).map((m) => m.userId),
+    [membersQuery.data],
+  )
+  const fieldColumns = useFieldColumns(memberUserIds)
 
   function toggleColumn(id: string): void {
     setColumnIds((current) => {
@@ -287,6 +298,15 @@ export default function PeopleTableScreen(): React.JSX.Element {
                   <span title={t(column.descriptionKey)}>{t(column.labelKey)}</span>
                 </th>
               ))}
+              {fieldColumns.columns.map((column) => (
+                <th
+                  key={column.def.id}
+                  scope="col"
+                  className="px-4 py-3 font-medium whitespace-nowrap"
+                >
+                  {column.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <Stagger as="tbody">
@@ -333,6 +353,14 @@ export default function PeopleTableScreen(): React.JSX.Element {
                           {formatIndicator(column, values[column.id] ?? null, t, locale)}
                         </span>
                       )}
+                    </td>
+                  ))}
+                  {fieldColumns.columns.map((column) => (
+                    <td key={column.def.id} className="px-4 py-3 align-middle">
+                      <FieldValueDisplay
+                        def={column.def}
+                        value={column.values.get(member.userId) ?? null}
+                      />
                     </td>
                   ))}
                 </StaggerItem>
