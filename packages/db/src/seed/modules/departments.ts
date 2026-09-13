@@ -69,7 +69,10 @@ const NEW_DEPARTMENTS: NewDeptSpec[] = [
   },
 ]
 
-const CORE_EXTRA_MEMBER_INDEXES = Array.from({ length: 10 }, (_, i) => i + 26) // 26..35
+/** Exported for `structure.ts` (order 100), which places every one of these people in a boʻlim --
+ * v1.1 critique SEV2 #24's "26 of 27 people sit in BOʻLIMSIZ". Recomputing the list there would be
+ * two chances to disagree about who is in the demo department. */
+export const CORE_EXTRA_MEMBER_INDEXES = Array.from({ length: 10 }, (_, i) => i + 26) // 26..35
 const PENDING_REQUEST_USER_INDEX = 36
 const PENDING_REQUEST_ID = demoId('department_request.licensing')
 

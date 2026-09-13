@@ -34,6 +34,37 @@ function daysFromNow(days: number): Date {
   return new Date(NOW.getTime() + days * DAY_MS)
 }
 
+/** The department's real subjects, used to tell two cards cut from the same template apart. Cycled
+ * alongside the title pool, so the pairing is deterministic and a re-seed writes the same rows. */
+const CARD_SUBJECT_POOL: readonly string[] = [
+  'e-xizmatlar',
+  'litsenziyalash',
+  'fuqarolar qabuli',
+  'ichki portal',
+  'Telegram bot',
+  'hisobot tizimi',
+  'arxiv',
+  'xaridlar',
+  'kadrlar boʻlimi',
+  'monitoring paneli',
+]
+
+/**
+ * v1.1 critique SEV2 #24. `CARD_TITLE_POOL` is 35 sentences and the seed writes several hundred
+ * cards, so a title necessarily repeats. What made that read as a bug rather than as a busy
+ * department was that the repeats were *identical*: the same sentence, twice, on one dashboard.
+ *
+ * The n-th use of a title gets the n-th subject appended. The first use is left bare -- a department
+ * whose every card is "X — y" reads as generated, and most titles are used once.
+ */
+function titleFor(assigneeIndex: number, n: number): string {
+  const index = (assigneeIndex * 7 + n) % CARD_TITLE_POOL.length
+  const title = CARD_TITLE_POOL[index]!
+  const repeat = Math.floor((assigneeIndex * 7 + n) / CARD_TITLE_POOL.length)
+  if (repeat === 0) return title
+  return `${title} — ${CARD_SUBJECT_POOL[(repeat - 1) % CARD_SUBJECT_POOL.length]!}`
+}
+
 type NewCard = typeof workSchema.cards.$inferInsert
 type NewChecklistItem = typeof workSchema.cardChecklistItems.$inferInsert
 type NewComment = typeof workSchema.cardComments.$inferInsert
@@ -59,7 +90,16 @@ function buildStandaloneCard(
   const assigneeId = ALL_WORK_MEMBER_IDS[assigneeIndex]!
   const giverId = ALL_WORK_MEMBER_IDS[(assigneeIndex + 3 + n) % ALL_WORK_MEMBER_IDS.length]!
   const cardId = demoId(`work.card.standalone.${assigneeIndex}.${n}`)
-  const title = CARD_TITLE_POOL[(assigneeIndex * 7 + n) % CARD_TITLE_POOL.length]!
+  // v1.1 critique SEV2 #24: the pool cycles, so the same sentence came back on several cards --
+  // "Yangi loyiha uchun byudjet hisob-kitobi" appeared twice on the head's own dashboard under two
+  // different ids (Qaror kutmoqda and Xavf ostida), and "API hujjatlarini yangilash" three times
+  // across three people. A head reading one screen saw what looked like duplicates of one task.
+  //
+  // Every repeat now carries the subject it is actually about, so two cards from the same template
+  // are two readable, different pieces of work ("API hujjatlarini yangilash — e-xizmatlar"). The
+  // first use of a title stays bare, which is what keeps the board reading like a board rather than
+  // like a generated list.
+  const title = titleFor(assigneeIndex, n)
   const priority = PRIORITIES[(assigneeIndex + n) % PRIORITIES.length]!
 
   const bucket = n % 10
@@ -196,8 +236,75 @@ function buildAllStandaloneRows(): StandaloneRows {
       all.comments.push(...built.comments)
       all.activity.push(...built.activity)
     }
+    all.cards.push(...buildHistoryCards(i))
   }
   return all
+}
+
+/** How many weeks of finished work every person carries behind them. Twelve is the person page's own
+ * chart window, so a demo department has a full one. */
+const HISTORY_WEEKS = 14
+
+/**
+ * v1.1 critique SEV2 #13 / #24 -- "the person page opens on two empty charts ... the demo dataset
+ * only carries about four weeks of history".
+ *
+ * `buildStandaloneCard` above spreads its due dates over a three-week window around "now", which is
+ * right for a board -- a board is about the next fortnight. It is wrong for a *report*: "Haftalik
+ * natija" plots twelve weeks and had data in four of them, and "Oʻz vaqtida bajarish" drew two
+ * points at the far right of an empty axis. A head clicking through from "Kechikayotgan ishlar"
+ * landed on what looked like a broken page.
+ *
+ * So every person also gets a tail of finished work, two or three cards per week going back
+ * fourteen weeks, most of them closed on time and a deterministic minority late -- which is what
+ * gives the on-time trend a line with a shape rather than a flat 100%. These are `done` and
+ * archived-free: they never reach the board, only the reports.
+ *
+ * Deterministic in every field, like everything else here, so `seed()` writes exactly the ids
+ * `reset()` deletes (`idsOf(rows.cards)` already covers them -- they are ordinary standalone cards).
+ */
+function buildHistoryCards(assigneeIndex: number): NewCard[] {
+  const assigneeId = ALL_WORK_MEMBER_IDS[assigneeIndex]!
+  const rows: NewCard[] = []
+  for (let week = 1; week <= HISTORY_WEEKS; week += 1) {
+    // Two or three a week, varying by person and week so no two columns have the same shape.
+    const perWeek = 2 + ((assigneeIndex + week) % 2)
+    for (let k = 0; k < perWeek; k += 1) {
+      const n = week * 10 + k
+      const giverId = ALL_WORK_MEMBER_IDS[(assigneeIndex + 2 + week) % ALL_WORK_MEMBER_IDS.length]!
+      // Monday-ish of that week, then a weekday inside it.
+      const dueOffsetDays = -(week * 7) + (k % 5)
+      const dueAt = daysFromNow(dueOffsetDays)
+      // Roughly one in five finished late -- enough for the on-time line to move, not so many that
+      // the department looks incompetent.
+      const late = (assigneeIndex + week * 3 + k) % 5 === 0
+      const doneAt = daysFromNow(dueOffsetDays + (late ? 2 : -1))
+      rows.push({
+        id: demoId(`work.card.history.${assigneeIndex}.${n}`),
+        departmentId: DEPARTMENT_ID,
+        kind: 'task',
+        title: titleFor(assigneeIndex + week, n),
+        description: null,
+        assigneeUserId: assigneeId,
+        giverUserId: giverId,
+        projectId: null,
+        projectScope: 'none',
+        status: 'done',
+        priority: PRIORITIES[(assigneeIndex + week + k) % PRIORITIES.length]!,
+        dueAt,
+        startAt: null,
+        doneAt,
+        archivedAt: null,
+        labels: [],
+        watchers: [],
+        links: [],
+        createdByUserId: giverId,
+        createdAt: daysFromNow(dueOffsetDays - 5),
+        updatedAt: doneAt,
+      })
+    }
+  }
+  return rows
 }
 
 const idsOf = (rows: ReadonlyArray<{ id?: string | undefined }>): string[] => rows.map((r) => r.id!)

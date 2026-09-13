@@ -18,10 +18,15 @@ runPurgeLeftovers({ dryRun })
       // eslint-disable-next-line no-console -- a CLI's whole output is its console
       console.log(`account     @${u.login}`)
     }
+    for (const c of outcome.cards) {
+      // eslint-disable-next-line no-console -- a CLI's whole output is its console
+      console.log(`card        ${c.title}`)
+    }
     const verb = outcome.previewOnly ? 'would remove' : 'removed'
     // eslint-disable-next-line no-console -- a CLI's whole output is its console
     console.log(
-      `[seed:purge-leftovers] ${verb} ${outcome.departments.length} department(s) and ${outcome.users.length} account(s)`,
+      `[seed:purge-leftovers] ${verb} ${outcome.departments.length} department(s), ` +
+        `${outcome.users.length} account(s) and ${outcome.cards.length} card(s)`,
     )
     process.exit(0)
   })

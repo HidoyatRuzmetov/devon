@@ -37,6 +37,30 @@ export const LEFTOVER_DEPARTMENT_PATTERNS: readonly string[] = [
   'e2e',
 ]
 
+/**
+ * v1.1 critique SEV2 #24 -- "the board carries a build-agent test card titled 'v1.1 bildirishnoma
+ * zanjirini tekshirish' -- the 'Test kartochkasi' problem, reintroduced."
+ *
+ * Cards written by an agent driving the real API (which is how the notification chain, the
+ * automations engine and the Mini App were all verified) are department data in every respect except
+ * that nobody in the department wrote them, and they sit on the board the CTO opens. They are not
+ * the seed's to delete on reset -- `seed:reset --demo` deletes what `seed:demo` wrote -- so they
+ * belong here, with the blitz departments and the test accounts, behind the same explicit command
+ * and the same production guard.
+ *
+ * Matched case-insensitively against `app.cards.title`, as a short checked-in list rather than a
+ * heuristic: a real card called "Tekshiruv natijalarini yigʻish" must survive this, so the patterns
+ * name the *verification vocabulary an agent writes*, not the ordinary Uzbek word for a check.
+ */
+export const LEFTOVER_CARD_PATTERNS: readonly string[] = [
+  'test kartochka',
+  'test card',
+  'zanjirini tekshirish',
+  'smoke test',
+  'e2e',
+  'blitz',
+]
+
 /** Login fragments that mark an account as automation debris. Matched against `app.users.login`. */
 export const LEFTOVER_LOGIN_PATTERNS: readonly string[] = [
   'blitz',
@@ -51,6 +75,8 @@ export const LEFTOVER_LOGIN_PATTERNS: readonly string[] = [
 export type PurgeOutcome = {
   departments: { id: string; name: string }[]
   users: { id: string; login: string }[]
+  /** SEV2 #24: agent-written cards, in whichever department they landed in. */
+  cards: { id: string; title: string; departmentId: string }[]
   /** True when `dryRun` was set -- the rows above were found but nothing was written. */
   previewOnly: boolean
 }
@@ -106,6 +132,22 @@ export async function runPurgeLeftovers(
         order by login
       `)
 
+      // SEV2 #24. `app.cards` is department-scoped by RLS, and the GUC is not pointed at anything
+      // yet at this stage -- but this transaction runs as the migrator/superuser role the seed
+      // entry points use, which is the same way the department and membership scans above read
+      // across every department. Ordered by department so the CLI's output groups sensibly.
+      const cards = await tx.raw<{ id: string; title: string; department_id: string }>(sql`
+        select id, title, department_id from app.cards
+        where deleted_at is null
+          and (${likeAny('title', LEFTOVER_CARD_PATTERNS)})
+        order by department_id, title
+      `)
+      const cardRows = cards.map((row) => ({
+        id: row.id,
+        title: row.title,
+        departmentId: row.department_id,
+      }))
+
       // A department whose ONLY head is one of those accounts is debris too, whatever it calls
       // itself -- "Sifat nazorati boshqarmasi", headed by "Kamron Testov" and nobody else, is the
       // case WALKTHROUGH-FINDINGS §6 actually found, and no name pattern should be asked to guess
@@ -134,8 +176,8 @@ export async function runPurgeLeftovers(
         departments.sort((a, b) => a.name.localeCompare(b.name))
       }
 
-      if (dryRun || (departments.length === 0 && users.length === 0)) {
-        return { departments, users, previewOnly: dryRun }
+      if (dryRun || (departments.length === 0 && users.length === 0 && cardRows.length === 0)) {
+        return { departments, users, cards: cardRows, previewOnly: dryRun }
       }
 
       // `departments_write` and `memberships_write` (migration 0005) both require
@@ -148,6 +190,9 @@ export async function runPurgeLeftovers(
       // zero on a clean one.
       const userIds = users.map((u) => u.id)
       const affectedDepartmentIds = new Set(departments.map((d) => d.id))
+      // SEV2 #24: a leftover card's own department has to be visited by the RLS loop below too, even
+      // when the department itself is perfectly legitimate (the demo department is the usual case).
+      for (const card of cardRows) affectedDepartmentIds.add(card.departmentId)
       if (userIds.length > 0) {
         // Every department those accounts belong to also needs its membership rows retired, even if
         // the department itself is legitimate (a test account that joined the demo department).
@@ -187,6 +232,20 @@ export async function runPurgeLeftovers(
             where department_id = ${departmentId} and user_id in ${userIds} and deleted_at is null
           `)
         }
+
+        // SEV2 #24: the agent-written cards in this department, soft-deleted the way every other
+        // deletion in this product works -- the audit trail keeps them (I-3) and one SQL statement
+        // brings them back.
+        const cardIdsHere = cardRows
+          .filter((card) => card.departmentId === departmentId)
+          .map((card) => card.id)
+        if (cardIdsHere.length > 0) {
+          // nosemgrep: query-in-loop -- same RLS scope reason as every other statement in this loop.
+          await tx.raw(sql`
+            update app.cards set deleted_at = now(), updated_at = now()
+            where department_id = ${departmentId} and id in ${cardIdsHere} and deleted_at is null
+          `)
+        }
       }
       // Back to "no department" for the instance-level writes below, so nothing inherits the last
       // department this loop happened to touch.
@@ -210,10 +269,14 @@ export async function runPurgeLeftovers(
         action: 'seed.leftovers_purged',
         subjectType: 'instance',
         subjectId: null,
-        after: { departments: departments.length, users: users.length },
+        after: {
+          departments: departments.length,
+          users: users.length,
+          cards: cardRows.length,
+        },
       })
 
-      return { departments, users, previewOnly: false }
+      return { departments, users, cards: cardRows, previewOnly: false }
     },
   )
 }

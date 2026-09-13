@@ -323,7 +323,8 @@
           "title": "Loyihalar boʻyicha yuklama",
           "question": "Hozirgi ochiq ishlar qaysi loyihalarga tegishli?",
           "empty": "Ochiq ish yoʻq."
-        }
+        },
+        "notEnoughData": "Yetarli maʼlumot yoʻq — hisobotlar 12 haftadan keyin toʻliq boʻladi."
       },
       "risk": {
         "title": "Xavf ostidagi ishlar",

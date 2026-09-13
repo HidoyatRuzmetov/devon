@@ -449,7 +449,11 @@ function BoardScreenInner() {
           // to its content size regardless -- found live, in the browser, the whole reason this file
           // has a viewport-bounded-height hook instead of a CSS-only fix. `min-h-80` is only the
           // instant-before-first-measurement fallback (`useViewportBoundedHeight`'s own floor).
-          className="flex flex-none gap-4 overflow-x-auto overflow-y-hidden pb-2 min-h-80"
+          // SEV2 #18: `overflow-auto`, not `overflow-x-auto overflow-y-hidden`. One scroller that
+          // moves in both directions replaces the per-column vertical scrollers, so the board has
+          // two scroll regions (the page, and this) instead of three. Each column's header is
+          // `sticky top-0` inside it, so scrolling down never loses whose column you are in.
+          className="flex flex-none items-start gap-4 overflow-auto pb-2 min-h-80"
           style={{
             ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
             // A five-person department already overflows the board horizontally with no scrollbar
@@ -541,7 +545,8 @@ function BoardScreenInner() {
 export default function BoardScreen() {
   return (
     <DndAnnouncerProvider>
-      <WorkShell filterLayout="people_board">
+      {/* SEV2 #18: the board owns the Me/All control, because its own one carries the count. */}
+      <WorkShell filterLayout="people_board" hideMeControl>
         <BoardScreenInner />
       </WorkShell>
       <CardPeekDialog />

@@ -45,6 +45,13 @@
         "body": "{count} items I gave out are past their date",
         "empty": "Everything I gave out is on time",
         "cta": "Work I gave out"
+      },
+      "myLoad": {
+        "title": "My load",
+        "hours": "{hours} h of {capacity} h",
+        "cards": "{count} cards this week",
+        "meaning": "Your work due this week against your own weekly capacity.",
+        "meaningCards": "Less than half the department's work is estimated, so this counts cards, not hours."
       }
     },
     "head": {

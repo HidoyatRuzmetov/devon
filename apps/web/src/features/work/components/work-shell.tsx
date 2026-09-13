@@ -41,6 +41,15 @@ const TABS: ReadonlyArray<{ path: string; labelKey: string; layout: SavedViewLay
 export interface WorkShellProps {
   /** Omit to hide the filter bar (the archive view has its own member switcher instead). */
   filterLayout?: SavedViewLayout
+  /**
+   * v1.1 critique SEV2 #18: "two identical 'Hammasi | Mening' segmented controls sit on one screen".
+   *
+   * The board has its own, directly above the columns, and it carries the department's head-count
+   * (`Hammasi 27`) -- information the shell's copy does not have and cannot get. So the board turns
+   * this one off and keeps the one that says more. Every other work view keeps the shell's, which is
+   * the only one it has.
+   */
+  hideMeControl?: boolean
   /** Omit to hide the quick-add bar (archive, and the full card page, have nothing to quick-add). */
   showQuickAdd?: boolean
   children: React.ReactNode
@@ -59,7 +68,12 @@ function withoutMeClause(q: string): string {
     .join(' ')
 }
 
-export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkShellProps) {
+export function WorkShell({
+  filterLayout,
+  showQuickAdd = true,
+  hideMeControl = false,
+  children,
+}: WorkShellProps) {
   const t = useT()
   const path = useRoutePath()
   const search = useSearchParams()
@@ -140,7 +154,7 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
             {/* A9: "Mening" -- a visible segmented control on every work view, not a setting buried in
               a menu (WALKTHROUGH-FINDINGS 2.1's own complaint about the board's hidden me/everyone
               switch). `/work/mine` is already nothing but my cards, so it needs no toggle. */}
-            {filterLayout && filterLayout !== 'mine' ? (
+            {filterLayout && filterLayout !== 'mine' && !hideMeControl ? (
               <SegmentedControl
                 size="sm"
                 className="mb-1"

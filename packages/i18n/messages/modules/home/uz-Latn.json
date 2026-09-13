@@ -45,6 +45,13 @@
         "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
         "empty": "Men bergan ishlarning hammasi muddatida",
         "cta": "Men bergan ishlar"
+      },
+      "myLoad": {
+        "title": "Mening yuklamam",
+        "hours": "{capacity} soatdan {hours} soat",
+        "cards": "Bu hafta {count} ta karta",
+        "meaning": "Bu haftaga muddati belgilangan ishlaringizning haftalik imkoniyatingizga nisbati.",
+        "meaningCards": "Boʻlimda ishlarning yarmidan kami baholangan, shuning uchun bu soat emas, karta soni."
       }
     },
     "head": {

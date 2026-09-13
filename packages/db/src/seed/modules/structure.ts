@@ -19,6 +19,9 @@
 import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import * as structureSchema from '../../schema/structure.js'
+import { ALL_WORK_MEMBER_IDS } from '../work-fixtures.js'
+import { EXTRA_USERS, extraUserId } from './accounts.js'
+import { CORE_EXTRA_MEMBER_INDEXES } from './departments.js'
 import { DEMO_DEPARTMENT, DEMO_USERS, demoPasswordHash } from '../fixtures.js'
 import { demoId } from '../ids.js'
 import { asDepartment } from '../scope.js'
@@ -218,8 +221,8 @@ const UNIT_ROLE_ROWS: NewUnitRole[] = [
     assignedAt: new Date('2026-08-16T13:00:00Z'),
   },
   // Flat department: `demo.xodim` self-assigns into "Kontent" as a plain member -- no head, by
-  // design, to prove the org chart renders a headless bo'lim correctly. `demo.boshliq` is left
-  // unassigned to any unit, to prove the People page's "unassigned" bucket too.
+  // design, to prove the org chart renders a headless bo'lim correctly. `demo.boshliq` leads
+  // "Texnik yordam" (see `DEMO_DEPARTMENT_UNIT_ROLES` below).
   {
     id: demoId('structure.unit-role.xodim-member'),
     departmentId: DEMO_DEPARTMENT.id,
@@ -229,7 +232,55 @@ const UNIT_ROLE_ROWS: NewUnitRole[] = [
     assignedBy: DEMO_USERS[1]!.id,
     assignedAt: new Date('2026-09-02T07:00:00Z'),
   },
+  ...demoDepartmentUnitRoles(),
 ]
+
+/**
+ * v1.1 critique SEV2 #24 -- "26 of 27 people sit in 'BOʻLIMSIZ', so the directory, the table and the
+ * board all show one giant unassigned group and the structure feature looks broken rather than
+ * unused."
+ *
+ * The department had two boʻlims and exactly one person in one of them, because every unit role was
+ * hand-written and only the two named fixture accounts were. The 25 people the roster generates were
+ * never placed anywhere, so the feature that exists to group a department showed one group.
+ *
+ * Everyone is now placed, round-robin across the two boʻlims, **except the last person in the
+ * roster** -- who stays unassigned on purpose, because the "BOʻLIMSIZ" bucket is a real state the
+ * directory, the table and the org chart all have to render correctly and a demo with nobody in it
+ * proves nothing. One person is a bucket; twenty-six is a bug.
+ *
+ * `demo.boshliq` takes headship of "Texnik yordam"; "Kontent" stays deliberately headless, which is
+ * the other state the org chart has to draw (the fixture note above).
+ */
+function demoDepartmentUnitRoles(): NewUnitRole[] {
+  // Everyone in the demo department, in a stable order: the two fixture accounts, the work roster,
+  // then the ten extra members `departments.ts` joins. Deterministic, so a re-seed writes the same
+  // rows and `reset()` deletes exactly them.
+  const alreadyPlaced = new Set<string>([DEMO_USERS[1]!.id])
+  const everyone = [
+    ...ALL_WORK_MEMBER_IDS,
+    ...CORE_EXTRA_MEMBER_INDEXES.map((idx) => extraUserId(EXTRA_USERS[idx]!)),
+  ].filter((id, index, list) => list.indexOf(id) === index)
+
+  const units = [F_SUPPORT, F_CONTENT]
+  const rows: NewUnitRole[] = []
+  everyone.forEach((userId, index) => {
+    if (alreadyPlaced.has(userId)) return
+    // The last person stays in BOʻLIMSIZ, on purpose -- see the doc comment.
+    if (index === everyone.length - 1) return
+    const isDepartmentHead = userId === DEMO_USERS[0]!.id
+    rows.push({
+      id: demoId(`structure.unit-role.demo.${index}`),
+      departmentId: DEMO_DEPARTMENT.id,
+      unitId: isDepartmentHead ? F_SUPPORT : units[index % units.length]!,
+      userId,
+      role: isDepartmentHead ? 'head' : 'member',
+      assignedBy: DEMO_USERS[0]!.id,
+      assignedAt: new Date('2026-09-02T08:00:00Z'),
+    })
+  })
+  return rows
+}
 
 const idsIn = (
   rows: ReadonlyArray<{ id?: string | undefined; departmentId: string }>,

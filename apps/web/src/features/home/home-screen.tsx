@@ -18,6 +18,7 @@ import {
   KpiTile,
   Progress,
   Reveal,
+  Skeleton,
   Stagger,
   StaggerItem,
   StatNumber,
@@ -27,6 +28,9 @@ import {
   WelcomeIllustration,
 } from '@devon/ui'
 import { ArrowRight, CalendarDays, Check, Gavel, ListTodo } from 'lucide-react'
+import { DEFAULT_WEEKLY_CAPACITY_HOURS } from '@devon/contracts'
+import { FocusList } from '../work/components/focus-list.js'
+import { useMyWorkloadQuery } from '../work/hooks-plus.js'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useIsHead } from '../../lib/can.js'
 import { HeadDashboard } from './head-dashboard.js'
@@ -317,6 +321,84 @@ function PinnedCharts() {
   )
 }
 
+/**
+ * v1.1 critique SEV2 #20 -- "Mening yuklamam", SPEC §3.2's own name for it.
+ *
+ * The member Home was missing both of the things §3.2 adds to it, and what stood in their place
+ * repeated five numbers from the tiles directly above. This is the first of the two: the member's
+ * own capacity bar for this week, from `/work/workload/mine` -- the one workload call a xodim is
+ * allowed to make, and the reason SPEC §2.2 could say "head-only grid, own row on Home" without
+ * inventing a second endpoint.
+ *
+ * Deliberately quiet when there is nothing to say: a department that does not estimate its work has
+ * no hours to draw, so the bar falls back to the open-card count with its own label rather than
+ * rendering a confident empty bar -- the same honesty rule `/work/workload` itself now follows.
+ */
+function MyLoad(): React.JSX.Element | null {
+  const t = useT()
+  const locale = useLocale()
+  const start = mondayIsoThisWeek()
+  const query = useMyWorkloadQuery({ weeks: 1, start }, true)
+
+  if (query.isPending) return <Skeleton className="h-24 w-full rounded-md" />
+  if (query.isError || !query.data) return null
+
+  const row = query.data.rows[0]
+  if (!row) return null
+  const cell = row.cells[0]
+  if (!cell) return null
+
+  const capacity = row.capacityHours || DEFAULT_WEEKLY_CAPACITY_HOURS
+  const pct = capacity > 0 ? Math.round((cell.estimateHours / capacity) * 100) : 0
+  const unscheduled = query.data.unscheduled
+  const covered =
+    unscheduled.openTotal > 0
+      ? (unscheduled.openTotal - unscheduled.noEstimate) / unscheduled.openTotal
+      : 1
+  const byHours = covered >= 0.5
+
+  return (
+    <Card elevation="flat" className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h3 className="text-small font-medium text-foreground">
+          {t('home.dashboard.myLoad.title')}
+        </h3>
+        <span className="text-small tabular-nums text-muted-foreground">
+          {byHours
+            ? t('home.dashboard.myLoad.hours', {
+                hours: formatNumber(Math.round(cell.estimateHours), locale),
+                capacity: formatNumber(Math.round(capacity), locale),
+              })
+            : t('home.dashboard.myLoad.cards', {
+                count: formatNumber(cell.cardCount, locale),
+              })}
+        </span>
+      </div>
+      {byHours ? (
+        <Progress
+          value={Math.min(100, pct)}
+          label={t('home.dashboard.myLoad.title')}
+          tone={pct > 100 ? 'destructive' : pct >= 80 ? 'warning' : 'success'}
+        />
+      ) : null}
+      <p className="text-caption text-muted-foreground">
+        {byHours ? t('home.dashboard.myLoad.meaning') : t('home.dashboard.myLoad.meaningCards')}
+      </p>
+    </Card>
+  )
+}
+
+/** Monday of the current week as `YYYY-MM-DD` -- the shape `/work/workload` expects, and the same
+ * bucketing the grid uses, so "this week" means the same thing on both screens. */
+function mondayIsoThisWeek(): string {
+  const now = new Date()
+  const day = now.getUTCDay() === 0 ? 7 : now.getUTCDay()
+  const monday = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (day - 1)),
+  )
+  return monday.toISOString().slice(0, 10)
+}
+
 function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
   const t = useT()
   const locale = useLocale()
@@ -457,6 +539,15 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
           />
         </StaggerItem>
       </Stagger>
+
+      {/* SEV2 #20: the two things SPEC §3.2 adds to the member's Home and the wave never built --
+          the member's own capacity bar and the five-card focus list ("Diqqat markazi", §7's A9).
+          Both are the member's own data through endpoints they are allowed to call; neither repeats
+          a number from the tiles above. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <MyLoad />
+        <FocusList />
+      </div>
 
       <OnboardingCard items={checklist} />
 

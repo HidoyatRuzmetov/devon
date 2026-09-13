@@ -6,7 +6,8 @@
 // isn't over any card.
 import * as React from 'react'
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
-import { ChevronsLeftRight, ChevronsRightLeft } from 'lucide-react'
+import { ChevronsLeftRight, ChevronsRightLeft, FolderKanban } from 'lucide-react'
+import { navigate } from '../../../lib/router.js'
 import { useT } from '@devon/i18n'
 import {
   Avatar,
@@ -17,7 +18,6 @@ import {
   initialsFromName,
   unitHueClass,
 } from '@devon/ui'
-import { ProjectTile } from '../../projects/components/project-tile.js'
 import type { Project } from '../../projects/api.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
@@ -166,7 +166,9 @@ export function BoardColumn({
   const compact = density === 'compact'
 
   return (
-    <div className={cn('flex min-h-0 shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}>
+    // SEV2 #18: `h-fit`, not a stretched flex child -- the column is as tall as its cards and the
+    // board row is the one thing that scrolls.
+    <div className={cn('flex h-fit shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}>
       <div
         className={cn(
           'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 shadow-1',
@@ -220,22 +222,48 @@ export function BoardColumn({
           <ChevronsRightLeft className="size-4" />
         </IconButton>
       </div>
-      {/* `min-h-0` + `overflow-y-auto`: this list, not the column or the board row, is the thing
-          that scrolls -- without it the column grows to its content height and the scroller row
-          above (which now has a real, viewport-bounded height) either clips it or lets the document
-          grow instead, exactly the "board is not a board" defect this fixes. */}
+
+      {/* v1.1 critique SEV2 #18: "the board still repeats a project card in the first slot of every
+          column". A full `ProjectTile` per column, above the cards, for every member of that project
+          -- so a three-person project cost three tall tiles and pushed the actual work below the
+          fold in all three columns. The project is a fact about the column, so it belongs in the
+          column's chrome: one chip per project, one line, click-through to the project. SPEC §3.3
+          says exactly this ("project chips shown once"). */}
+      {projects.length > 0 ? (
+        <div className="flex flex-wrap gap-1 px-2">
+          {projects.map((project) => (
+            <a
+              key={project.id}
+              href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+              onClick={(event) => {
+                if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+                event.preventDefault()
+                navigate(`/projects/view?id=${encodeURIComponent(project.id)}`)
+              }}
+              title={project.title}
+              className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-caption text-muted-foreground transition-colors duration-(--dur-micro) hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <FolderKanban aria-hidden="true" className="size-3 shrink-0" />
+              <span className="truncate">{project.title}</span>
+            </a>
+          ))}
+        </div>
+      ) : null}
+      {/* SEV2 #18: "the board still nests three scroll regions (page, horizontal board, per-column
+          vertical)". This list used to be the third. It is now a plain block: the board row above is
+          a single two-axis scroller, so a column simply grows and the one scroller moves in both
+          directions. The column *header* is `sticky top-0` inside that scroller, so scrolling down a
+          long column never loses whose column it is -- which was the only thing the per-column
+          scroller was buying. */}
       <div
         ref={listRef}
         data-dnd-column={columnKey}
         data-drop-target={isDropTarget || touchOver || undefined}
-        className="min-h-0 flex-1 overflow-y-auto rounded-md p-1 outline-2 outline-offset-2
+        className="rounded-md p-1 outline-2 outline-offset-2
           outline-transparent transition-colors duration-(--dur-micro)
           data-[drop-target]:bg-accent/40 data-[drop-target]:outline-primary/40"
       >
         <div className="flex min-h-24 flex-col gap-2">
-          {projects.map((p) => (
-            <ProjectTile key={p.id} project={p} compact />
-          ))}
           <Stagger
             className="flex flex-col gap-2"
             {...(filterKey !== undefined ? { animateKey: filterKey } : {})}
@@ -263,7 +291,7 @@ export function BoardColumn({
               </StaggerItem>
             ))}
           </Stagger>
-          {cards.length === 0 && projects.length === 0 ? (
+          {cards.length === 0 ? (
             <p className="rounded-md border border-dashed border-border p-4 text-center text-caption text-muted-foreground">
               {t('work.board.columnEmpty')}
             </p>

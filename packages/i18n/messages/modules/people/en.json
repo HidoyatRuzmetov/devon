@@ -323,7 +323,8 @@
           "title": "Load by project",
           "question": "Which projects is the open work in?",
           "empty": "No open work."
-        }
+        },
+        "notEnoughData": "Not enough data yet — reports fill out after twelve weeks."
       },
       "risk": {
         "title": "Work at risk",
