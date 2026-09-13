@@ -39,8 +39,23 @@ export function invalidateIndicatorCache(departmentId?: string): void {
   }
 }
 
-function cacheKey(departmentId: string, userIds: readonly string[], keys: readonly IndicatorKey[]) {
-  return `${departmentId}:${[...userIds].sort().join(',')}:${[...keys].sort().join(',')}`
+/**
+ * The viewer's *role* is part of the key, not only the department and the columns.
+ *
+ * The header above says the cache deliberately ignores the viewer because every head of a
+ * department sees the same numbers -- true, but a xodim reading their own `/people/me` is not a head
+ * and `focusMinutes7d` is computed for one of them and not the other (see `compute`). Sharing one
+ * entry between the two would hand whichever request arrived second the other's answer: a head
+ * seeing empty focus figures for a minute, or a member seeing a column the matrix does not give
+ * them. One extra segment removes the whole class of question.
+ */
+function cacheKey(
+  departmentId: string,
+  role: string,
+  userIds: readonly string[],
+  keys: readonly IndicatorKey[],
+) {
+  return `${departmentId}:${role}:${[...userIds].sort().join(',')}:${[...keys].sort().join(',')}`
 }
 
 const ALL_KEYS: readonly IndicatorKey[] = INDICATORS.map((i) => i.id)
@@ -63,7 +78,8 @@ export async function getIndicators(
       : await repo.activeMemberIds(ctx, request.departmentId)
   const keys = request.keys.length > 0 ? request.keys : ALL_KEYS
 
-  const key = cacheKey(request.departmentId, userIds, keys)
+  const viewerRole = ctx.departmentRole === 'head' && !ctx.viewAs ? 'head' : 'member'
+  const key = cacheKey(request.departmentId, viewerRole, userIds, keys)
   const hit = cache.get(key)
   const now = Date.now()
   if (hit && hit.expiresAt > now) return hit.value
@@ -116,7 +132,15 @@ async function compute(
       'lastActiveAt',
       'onboardingPct',
     )
-    const needFocus = wants(keys, 'focusMinutes7d')
+    // `app.focus_minutes_by_user` is a `security definer` function that raises (42501) unless the
+    // caller is this department's head and is not under view-as -- migration 0904 says so out loud,
+    // and that rule is right: it is the one window into a colleague's personal workspace the matrix
+    // allows, and it is the head's window. So the caller's own role, not just the requested key,
+    // decides whether the query runs at all. Without this a xodim opening their own `/people/me`
+    // asked for their own focus figure (a number about themselves, so `indicatorsVisibleTo` allows
+    // it) and the whole overview 500'd on the database's refusal.
+    const isDepartmentHead = ctx.departmentRole === 'head' && !ctx.viewAs
+    const needFocus = wants(keys, 'focusMinutes7d') && isDepartmentHead
     const needOnboarding = wants(keys, 'onboardingPct')
 
     const [cards, projects, events, directory, focus, started] = await Promise.all([

@@ -599,8 +599,10 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
     : renderRows
 
   const allSelected = rows.length > 0 && selection.length === rows.length
+  // Deduped: `openCards` is both a default column and the one figure the export always carries, and
+  // without this the CSV grew a second identical column whenever the head kept the default view.
   const exportUrl = peopleExportUrl(
-    [...config.columns, 'openCards'],
+    [...new Set([...config.columns, 'openCards'])],
     selection.length > 0 ? selection : [],
   )
 
@@ -734,7 +736,12 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                 </button>
               </th>
               {specs.map((spec) => (
-                <th key={spec.id} scope="col" className="px-3 py-2 font-medium">
+                <th
+                  key={spec.id}
+                  scope="col"
+                  className="relative px-3 py-2 font-medium"
+                  style={config.widths[spec.id] ? { width: config.widths[spec.id] } : undefined}
+                >
                   <ColumnHeader
                     spec={spec}
                     sort={sortStateOf(spec.id)}
@@ -747,6 +754,16 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                           : config.filters.filter((f) => f.columnId !== spec.id),
                       })
                     }
+                  />
+                  <ColumnResizer
+                    label={t('people.table.resize', { name: t(spec.labelKey) })}
+                    width={config.widths[spec.id] ?? null}
+                    onResize={(px) => patchConfig({ widths: { ...config.widths, [spec.id]: px } })}
+                    onReset={() => {
+                      const next = { ...config.widths }
+                      delete next[spec.id]
+                      patchConfig({ widths: next })
+                    }}
                   />
                 </th>
               ))}
@@ -983,9 +1000,11 @@ function PersonCell({ row, t }: { row: PersonRow; t: Translate }): React.JSX.Ele
       }}
       className="flex items-center gap-2.5 rounded-sm py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
+      {/* Decorative: the link's own text already says the name, and `Avatar` always renders an
+          `sr-only` copy of `alt` -- so passing the name here made every row announce it twice. */}
       <Avatar
         size="sm"
-        alt={name}
+        alt=""
         hueSeed={row.member.userId}
         initials={initialsFromName(row.member.givenName, row.member.familyName)}
         src={avatarUrl(row.member.avatarKey, 64)}
@@ -1040,6 +1059,86 @@ function TaskChips({ cards, t }: { cards: Card[]; t: Translate }): React.JSX.Ele
         </span>
       ) : null}
     </span>
+  )
+}
+
+/**
+ * The per-column resize grip (SPEC §4.3 "drag to reorder; resize"). The width it writes lands in the
+ * saved view's `widths` map, so a head who widened "Vazifalar" once gets that table back tomorrow and
+ * in the link they paste to a colleague.
+ *
+ * Pointer *and* keyboard: this is a `separator` with an aria-valuenow, arrow keys move it 16 px at a
+ * time and Home resets the column to its natural width -- a resize handle reachable only by drag is a
+ * setting a keyboard user simply cannot have (DESIGN.md §6).
+ */
+function ColumnResizer({
+  label,
+  width,
+  onResize,
+  onReset,
+}: {
+  label: string
+  width: number | null
+  onResize: (px: number) => void
+  onReset: () => void
+}): React.JSX.Element {
+  const MIN = 64
+  const MAX = 640
+  const clamp = (px: number): number => Math.min(MAX, Math.max(MIN, Math.round(px)))
+  const ref = React.useRef<HTMLButtonElement>(null)
+
+  function start(event: React.PointerEvent<HTMLButtonElement>): void {
+    event.preventDefault()
+    const th = ref.current?.closest('th')
+    if (!th) return
+    const startX = event.clientX
+    const startWidth = th.getBoundingClientRect().width
+    const target = event.currentTarget
+    target.setPointerCapture(event.pointerId)
+    const move = (e: PointerEvent): void => onResize(clamp(startWidth + (e.clientX - startX)))
+    const stop = (): void => {
+      target.releasePointerCapture(event.pointerId)
+      target.removeEventListener('pointermove', move)
+      target.removeEventListener('pointerup', stop)
+      target.removeEventListener('pointercancel', stop)
+    }
+    target.addEventListener('pointermove', move)
+    target.addEventListener('pointerup', stop)
+    target.addEventListener('pointercancel', stop)
+  }
+
+  function key(event: React.KeyboardEvent<HTMLButtonElement>): void {
+    const current = width ?? ref.current?.closest('th')?.getBoundingClientRect().width ?? 160
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      onResize(clamp(current - 16))
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      onResize(clamp(current + 16))
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      onReset()
+    }
+  }
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      // The ARIA pattern for a resize grip: a vertical slider whose value is the column width.
+      // A real <button> (not a bare div with a tabIndex) so it is in the tab order by construction
+      // and the pointer handlers sit on something a keyboard user can already reach.
+      role="slider"
+      aria-orientation="vertical"
+      aria-label={label}
+      aria-valuenow={width ?? MIN}
+      aria-valuemin={MIN}
+      aria-valuemax={MAX}
+      onPointerDown={start}
+      onKeyDown={key}
+      onDoubleClick={onReset}
+      className="absolute inset-y-1 right-0 w-2 cursor-col-resize touch-none rounded-full hover:bg-primary/40 focus-visible:bg-primary/60 focus-visible:outline-none"
+    />
   )
 }
 

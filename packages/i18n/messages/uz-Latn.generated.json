@@ -238,7 +238,20 @@
         "cta": "Doskani ochish",
         "empty": "Yaqin ikki kunda xavf ostidagi ish yoʻq."
       },
-      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi."
+      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi.",
+      "arrange": {
+        "action": "Joylashuv",
+        "heading": "Kartochkalarni joylashtiring",
+        "hint": "Tartibni oʻzgartiring yoki keraksizlarini yashiring — tanlovingiz shu qurilmada saqlanadi.",
+        "show": "«{name}» kartochkasini koʻrsatish",
+        "moveUp": "«{name}» kartochkasini yuqoriga surish",
+        "moveDown": "«{name}» kartochkasini pastga surish",
+        "reset": "Dastlabki holatga qaytarish",
+        "allHidden": {
+          "title": "Barcha kartochkalar yashirilgan",
+          "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartochkalarni belgilang."
+        }
+      }
     }
   },
   "state": {
@@ -2049,7 +2062,8 @@
       "denied": {
         "body": "Xodimlar jadvali va undagi koʻrsatkichlar faqat boshqarma boshligʻiga koʻrinadi. Maʼlumotnomani ochishingiz mumkin.",
         "action": "Maʼlumotnomani ochish"
-      }
+      },
+      "resize": "«{name}» ustuni kengligini oʻzgartirish"
     },
     "indicator": {
       "openCards": {

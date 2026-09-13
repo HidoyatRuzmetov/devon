@@ -95,11 +95,11 @@
         "selected": "{count} people selected",
         "export": "Download the selection",
         "clear": "Clear the selection",
-        "assign": "Assign a task ({count})"
+        "assign": "Give a card ({count})"
       },
       "action": {
-        "assign": "Assign a task to {name}",
-        "assignShort": "Assign a task",
+        "assign": "Give {name} a card",
+        "assignShort": "Give a card",
         "board": "Open the board column for {name}",
         "message": "Message {name} on Telegram"
       },
@@ -132,7 +132,8 @@
       "denied": {
         "body": "The people table and its indicators are for the department head. The directory is open to you.",
         "action": "Open the directory"
-      }
+      },
+      "resize": "Resize the {name} column"
     },
     "indicator": {
       "openCards": {
@@ -224,17 +225,17 @@
       }
     },
     "assign": {
-      "title": "Assign a task",
-      "subtitle": "The task goes to this person, given by you.",
+      "title": "Give a card",
+      "subtitle": "The card goes to this person, given by you.",
       "close": "Close",
       "noTitle": "No title recorded",
       "cancel": "Cancel",
-      "submit": "Assign the task",
-      "done": "Task assigned to {name}",
+      "submit": "Give the card",
+      "done": "Card given to {name}",
       "field": {
-        "title": "Task name",
+        "title": "Card title",
         "titleHint": "Keep it short and plain — this is what they see on the board.",
-        "titleRequired": "Enter a task name.",
+        "titleRequired": "Enter a card title.",
         "titlePlaceholder": "For example: prepare the report",
         "due": "Due",
         "duePlaceholder": "No due date",
@@ -247,7 +248,7 @@
         "high": "High",
         "urgent": "Urgent"
       },
-      "doneMany": "Task given to {count} people",
+      "doneMany": "Card given to {count} people",
       "plusOthers": "+{count} more"
     },
     "person": {
@@ -270,7 +271,7 @@
         "telegram": "Telegram"
       },
       "action": {
-        "assign": "Assign a task",
+        "assign": "Give a card",
         "board": "Board column",
         "message": "Message on Telegram"
       },
@@ -367,7 +368,7 @@
         "pending": "Pending",
         "step": {
           "photo": "Photo added",
-          "work": "First task received",
+          "work": "First card received",
           "event": "Signed up for an event",
           "telegram": "Telegram linked"
         }
@@ -395,13 +396,13 @@
           "body": "No work activity has been recorded for this person yet."
         },
         "kind": {
-          "created": "Created a task",
-          "status": "Changed a task status",
-          "assigned": "Assigned a task",
+          "created": "Created a card",
+          "status": "Changed a card status",
+          "assigned": "Assigned a card",
           "due": "Changed a due date",
           "checklist": "Updated a checklist",
           "comment": "Left a comment",
-          "card_assigned": "Received a task",
+          "card_assigned": "Received a card",
           "event_rsvp": "Answered an event"
         }
       },

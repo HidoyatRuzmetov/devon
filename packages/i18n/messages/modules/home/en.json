@@ -87,7 +87,20 @@
         "cta": "Open the board",
         "empty": "Nothing is at risk in the next two days."
       },
-      "drillNote": "Every number here opens the person or the card behind it."
+      "drillNote": "Every number here opens the person or the card behind it.",
+      "arrange": {
+        "action": "Layout",
+        "heading": "Arrange the tiles",
+        "hint": "Reorder them or hide the ones you do not need — your choice stays on this device.",
+        "show": "Show the {name} tile",
+        "moveUp": "Move the {name} tile up",
+        "moveDown": "Move the {name} tile down",
+        "reset": "Restore the default layout",
+        "allHidden": {
+          "title": "Every tile is hidden",
+          "body": "Nothing is left on the management view. Restore the default layout, or tick the tiles you want back."
+        }
+      }
     }
   }
 }

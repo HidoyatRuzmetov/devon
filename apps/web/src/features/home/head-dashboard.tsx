@@ -23,7 +23,13 @@ import {
 } from '@devon/contracts'
 import {
   Avatar,
+  Button,
   Card,
+  Checkbox,
+  IconButton,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Progress,
   Reveal,
   Stagger,
@@ -33,7 +39,17 @@ import {
   cn,
   initialsFromName,
 } from '@devon/ui'
-import { AlertTriangle, CalendarDays, Flame, Gavel, Sparkle, Users2 } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowDown,
+  ArrowUp,
+  CalendarDays,
+  Flame,
+  Gavel,
+  LayoutGrid,
+  Sparkle,
+  Users2,
+} from 'lucide-react'
 import { navigate } from '../../lib/router.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { useSession, useDepartment } from '../../lib/session.js'
@@ -180,11 +196,102 @@ function CardRow({
   )
 }
 
+/**
+ * SPEC §3.2: "An arrangeable layout (drag tiles, hide tiles; persisted per head)."
+ *
+ * Order and visibility, per signed-in head, remembered on that head's own machine. Stored as ids
+ * rather than positions so a tile added in a later round appears (at the end) instead of silently
+ * vanishing for everyone who has ever arranged their dashboard -- and an id this build no longer
+ * knows is dropped on read rather than rendering a hole.
+ */
+const HEAD_TILE_IDS = [
+  'decisions',
+  'overdue',
+  'risk',
+  'load',
+  'projects',
+  'events',
+  'onboarding',
+] as const
+type HeadTileId = (typeof HEAD_TILE_IDS)[number]
+
+type HeadLayout = { order: HeadTileId[]; hidden: HeadTileId[]; visible: HeadTileId[] }
+
+function useHeadLayout(userId: string | undefined): {
+  layout: HeadLayout
+  move: (id: HeadTileId, delta: -1 | 1) => void
+  toggle: (id: HeadTileId) => void
+  reset: () => void
+} {
+  const key = `devon.home.head.layout.${userId ?? 'anon'}`
+  const [state, setState] = React.useState<{ order: HeadTileId[]; hidden: HeadTileId[] }>(() => {
+    try {
+      const raw = window.localStorage.getItem(key)
+      if (!raw) return { order: [...HEAD_TILE_IDS], hidden: [] }
+      const parsed = JSON.parse(raw) as { order?: string[]; hidden?: string[] }
+      const known = (list: string[] | undefined): HeadTileId[] =>
+        (list ?? []).filter((id): id is HeadTileId =>
+          (HEAD_TILE_IDS as readonly string[]).includes(id),
+        )
+      const order = known(parsed.order)
+      // Anything this build knows that the stored order does not mention is new: append it.
+      for (const id of HEAD_TILE_IDS) if (!order.includes(id)) order.push(id)
+      return { order, hidden: known(parsed.hidden) }
+    } catch {
+      return { order: [...HEAD_TILE_IDS], hidden: [] }
+    }
+  })
+
+  const persist = React.useCallback(
+    (next: { order: HeadTileId[]; hidden: HeadTileId[] }) => {
+      setState(next)
+      try {
+        window.localStorage.setItem(key, JSON.stringify(next))
+      } catch {
+        // Best-effort: a private window still gets the arrangement for this session.
+      }
+    },
+    [key],
+  )
+
+  const move = React.useCallback(
+    (id: HeadTileId, delta: -1 | 1) => {
+      const order = [...state.order]
+      const index = order.indexOf(id)
+      const target = index + delta
+      if (index < 0 || target < 0 || target >= order.length) return
+      const [removed] = order.splice(index, 1)
+      order.splice(target, 0, removed!)
+      persist({ order, hidden: state.hidden })
+    },
+    [state, persist],
+  )
+
+  const toggle = React.useCallback(
+    (id: HeadTileId) => {
+      const hidden = state.hidden.includes(id)
+        ? state.hidden.filter((x) => x !== id)
+        : [...state.hidden, id]
+      persist({ order: state.order, hidden })
+    },
+    [state, persist],
+  )
+
+  const reset = React.useCallback(
+    () => persist({ order: [...HEAD_TILE_IDS], hidden: [] }),
+    [persist],
+  )
+
+  const visible = state.order.filter((id) => !state.hidden.includes(id))
+  return { layout: { ...state, visible }, move, toggle, reset }
+}
+
 export function HeadDashboard(): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const session = useSession()
   const { departmentId } = useDepartment()
+  const { layout, move, toggle, reset } = useHeadLayout(session.user?.id)
 
   const membersQuery = useQuery({
     queryKey: ['structure', 'members', departmentId],
@@ -300,274 +407,366 @@ export function HeadDashboard(): React.JSX.Element {
   const totalOverdue = members.reduce((sum, member) => sum + num(member.userId, 'overdueCards'), 0)
   const overloaded = loadThisWeek.filter((row) => row.pct >= 100).length
 
+  /** Every tile, by id. The map is built unconditionally (each one is cheap JSX over data this
+   * component already has); `layout` decides which of them reach the grid. */
+  const tiles: Record<HeadTileId, React.ReactNode> = {
+    decisions: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.decisions.title',
+            meaningKey: 'home.head.decisions.meaning',
+            icon: Gavel,
+            ctaKey: 'home.head.decisions.cta',
+            onOpen: () => navigate('/work?mine=given'),
+          }}
+          tone={decisionsWaiting > 0 ? 'attention' : 'neutral'}
+        >
+          <p className="font-display text-h1 tabular-nums">
+            <StatNumber value={decisionsWaiting} locale={locale} />
+          </p>
+          {decisionCards.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.decisions.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {decisionCards.map((card) => (
+                <CardRow key={card.id} card={card} tone="danger" />
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    overdue: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.overdue.title',
+            meaningKey: 'home.head.overdue.meaning',
+            icon: AlertTriangle,
+            ctaKey: 'home.head.overdue.cta',
+            onOpen: () =>
+              navigate(
+                tablePath({
+                  columns: ['unit', 'overdueCards', 'openCards', 'workloadPct'],
+                  sort: { columnId: 'overdueCards', desc: true },
+                  filters: [{ columnId: 'overdueCards', op: 'gte', value: 1 }],
+                  groupBy: 'none',
+                }),
+              ),
+          }}
+          tone={totalOverdue > 0 ? 'attention' : 'neutral'}
+        >
+          {overdueByPerson.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.overdue.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {overdueByPerson.map(({ member, overdue }) => (
+                <PersonRow
+                  key={member.userId}
+                  member={member}
+                  right={
+                    <span className="tabular-nums text-small font-medium text-destructive">
+                      {formatNumber(overdue, locale)}
+                    </span>
+                  }
+                />
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    risk: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.risk.title',
+            meaningKey: 'home.head.risk.meaning',
+            icon: Flame,
+            ctaKey: 'home.head.risk.cta',
+            onOpen: () => navigate('/work'),
+          }}
+          tone={atRiskCards.length > 0 ? 'attention' : 'neutral'}
+        >
+          {atRiskCards.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.risk.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {atRiskCards.map((card) => (
+                <CardRow key={card.id} card={card} tone="warning" />
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    load: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.load.title',
+            meaningKey: 'home.head.load.meaning',
+            icon: Users2,
+            ctaKey: 'home.head.load.cta',
+            onOpen: () =>
+              navigate(
+                tablePath({
+                  columns: ['unit', 'workloadPct', 'openCards', 'dueThisWeek'],
+                  sort: { columnId: 'workloadPct', desc: true },
+                  groupBy: 'none',
+                }),
+              ),
+          }}
+          tone={overloaded > 0 ? 'attention' : 'neutral'}
+        >
+          {loadThisWeek.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.load.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {loadThisWeek.map(({ member, pct, open }) => (
+                <PersonRow
+                  key={member.userId}
+                  member={member}
+                  right={
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-1.5 w-14 overflow-hidden rounded-full bg-muted"
+                        aria-hidden="true"
+                      >
+                        <span
+                          className={cn(
+                            'block h-full rounded-full',
+                            pct >= 100 ? 'bg-destructive' : pct >= 75 ? 'bg-warning' : 'bg-primary',
+                          )}
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </span>
+                      <span
+                        className="tabular-nums text-small text-muted-foreground"
+                        title={t('people.table.workload.value', { open, capacity })}
+                      >
+                        {pct}%
+                      </span>
+                    </span>
+                  }
+                />
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    projects: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.projects.title',
+            meaningKey: 'home.head.projects.meaning',
+            icon: Sparkle,
+            ctaKey: 'home.head.projects.cta',
+            onOpen: () => navigate('/projects'),
+          }}
+        >
+          {slippingProjects.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.projects.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {slippingProjects.map((project) => (
+                <li key={project.id} className="flex flex-col gap-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate text-small">{project.title}</span>
+                    <span className="tabular-nums text-caption text-muted-foreground">
+                      {Math.round(project.progress)}%
+                    </span>
+                  </span>
+                  <Progress
+                    value={Math.round(project.progress)}
+                    label={t('home.head.projects.progressAria', { title: project.title })}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    events: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.events.title',
+            meaningKey: 'home.head.events.meaning',
+            icon: CalendarDays,
+            ctaKey: 'home.head.events.cta',
+            onOpen: () => navigate('/events'),
+          }}
+        >
+          {upcomingEvents.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.events.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {upcomingEvents.map((event) => (
+                <li key={event.id} className="flex items-baseline justify-between gap-2">
+                  <span className="min-w-0 truncate text-small">{event.title}</span>
+                  <span className="tabular-nums text-caption text-muted-foreground">
+                    {formatNumber(event.yes, locale)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    onboarding: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.onboarding.title',
+            meaningKey: 'home.head.onboarding.meaning',
+            icon: Users2,
+            ctaKey: 'home.head.onboarding.cta',
+            onOpen: () =>
+              navigate(
+                tablePath({
+                  columns: ['unit', 'onboardingPct', 'joinedAt', 'telegramLinked'],
+                  sort: { columnId: 'onboardingPct', desc: false },
+                  filters: [{ columnId: 'onboardingPct', op: 'lte', value: 99 }],
+                  groupBy: 'none',
+                }),
+              ),
+          }}
+        >
+          {onboarding.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.onboarding.empty')}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {onboarding.map(({ member, pct }) => (
+                <PersonRow
+                  key={member.userId}
+                  member={member}
+                  right={
+                    <span className="tabular-nums text-small text-muted-foreground">{pct}%</span>
+                  }
+                />
+              ))}
+            </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+  }
+
   return (
     <div className="flex w-full flex-col gap-8">
       <section className="flex flex-col gap-3">
-        <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-          {t('home.head.section')}
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+            {t('home.head.section')}
+          </h2>
+          <TileArranger
+            order={layout.order}
+            hidden={layout.hidden}
+            onMove={move}
+            onToggle={toggle}
+            onReset={reset}
+          />
+        </div>
 
         <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {/* Qaror kutmoqda */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.decisions.title',
-                meaningKey: 'home.head.decisions.meaning',
-                icon: Gavel,
-                ctaKey: 'home.head.decisions.cta',
-                onOpen: () => navigate('/work?mine=given'),
-              }}
-              tone={decisionsWaiting > 0 ? 'attention' : 'neutral'}
-            >
-              <p className="font-display text-h1 tabular-nums">
-                <StatNumber value={decisionsWaiting} locale={locale} />
-              </p>
-              {decisionCards.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.decisions.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {decisionCards.map((card) => (
-                    <CardRow key={card.id} card={card} tone="danger" />
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Kechikayotgan ishlar -- overdue by person */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.overdue.title',
-                meaningKey: 'home.head.overdue.meaning',
-                icon: AlertTriangle,
-                ctaKey: 'home.head.overdue.cta',
-                onOpen: () =>
-                  navigate(
-                    tablePath({
-                      columns: ['unit', 'overdueCards', 'openCards', 'workloadPct'],
-                      sort: { columnId: 'overdueCards', desc: true },
-                      filters: [{ columnId: 'overdueCards', op: 'gte', value: 1 }],
-                      groupBy: 'none',
-                    }),
-                  ),
-              }}
-              tone={totalOverdue > 0 ? 'attention' : 'neutral'}
-            >
-              {overdueByPerson.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.overdue.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {overdueByPerson.map(({ member, overdue }) => (
-                    <PersonRow
-                      key={member.userId}
-                      member={member}
-                      right={
-                        <span className="tabular-nums text-small font-medium text-destructive">
-                          {formatNumber(overdue, locale)}
-                        </span>
-                      }
-                    />
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Xavf ostida */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.risk.title',
-                meaningKey: 'home.head.risk.meaning',
-                icon: Flame,
-                ctaKey: 'home.head.risk.cta',
-                onOpen: () => navigate('/work'),
-              }}
-              tone={atRiskCards.length > 0 ? 'attention' : 'neutral'}
-            >
-              {atRiskCards.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.risk.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {atRiskCards.map((card) => (
-                    <CardRow key={card.id} card={card} tone="warning" />
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Bu hafta yuklama */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.load.title',
-                meaningKey: 'home.head.load.meaning',
-                icon: Users2,
-                ctaKey: 'home.head.load.cta',
-                onOpen: () =>
-                  navigate(
-                    tablePath({
-                      columns: ['unit', 'workloadPct', 'openCards', 'dueThisWeek'],
-                      sort: { columnId: 'workloadPct', desc: true },
-                      groupBy: 'none',
-                    }),
-                  ),
-              }}
-              tone={overloaded > 0 ? 'attention' : 'neutral'}
-            >
-              {loadThisWeek.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.load.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {loadThisWeek.map(({ member, pct, open }) => (
-                    <PersonRow
-                      key={member.userId}
-                      member={member}
-                      right={
-                        <span className="flex items-center gap-2">
-                          <span
-                            className="h-1.5 w-14 overflow-hidden rounded-full bg-muted"
-                            aria-hidden="true"
-                          >
-                            <span
-                              className={cn(
-                                'block h-full rounded-full',
-                                pct >= 100
-                                  ? 'bg-destructive'
-                                  : pct >= 75
-                                    ? 'bg-warning'
-                                    : 'bg-primary',
-                              )}
-                              style={{ width: `${Math.min(pct, 100)}%` }}
-                            />
-                          </span>
-                          <span
-                            className="tabular-nums text-small text-muted-foreground"
-                            title={t('people.table.workload.value', { open, capacity })}
-                          >
-                            {pct}%
-                          </span>
-                        </span>
-                      }
-                    />
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Loyihalar */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.projects.title',
-                meaningKey: 'home.head.projects.meaning',
-                icon: Sparkle,
-                ctaKey: 'home.head.projects.cta',
-                onOpen: () => navigate('/projects'),
-              }}
-            >
-              {slippingProjects.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.projects.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {slippingProjects.map((project) => (
-                    <li key={project.id} className="flex flex-col gap-1">
-                      <span className="flex items-baseline justify-between gap-2">
-                        <span className="min-w-0 truncate text-small">{project.title}</span>
-                        <span className="tabular-nums text-caption text-muted-foreground">
-                          {Math.round(project.progress)}%
-                        </span>
-                      </span>
-                      <Progress
-                        value={Math.round(project.progress)}
-                        label={t('home.head.projects.progressAria', { title: project.title })}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Tadbirlar */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.events.title',
-                meaningKey: 'home.head.events.meaning',
-                icon: CalendarDays,
-                ctaKey: 'home.head.events.cta',
-                onOpen: () => navigate('/events'),
-              }}
-            >
-              {upcomingEvents.length === 0 ? (
-                <p className="text-small text-muted-foreground">{t('home.head.events.empty')}</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {upcomingEvents.map((event) => (
-                    <li key={event.id} className="flex items-baseline justify-between gap-2">
-                      <span className="min-w-0 truncate text-small">{event.title}</span>
-                      <span className="tabular-nums text-caption text-muted-foreground">
-                        {formatNumber(event.yes, locale)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
-
-          {/* Yangi xodimlar */}
-          <StaggerItem className="h-full">
-            <TileShell
-              tile={{
-                titleKey: 'home.head.onboarding.title',
-                meaningKey: 'home.head.onboarding.meaning',
-                icon: Users2,
-                ctaKey: 'home.head.onboarding.cta',
-                onOpen: () =>
-                  navigate(
-                    tablePath({
-                      columns: ['unit', 'onboardingPct', 'joinedAt', 'telegramLinked'],
-                      sort: { columnId: 'onboardingPct', desc: false },
-                      filters: [{ columnId: 'onboardingPct', op: 'lte', value: 99 }],
-                      groupBy: 'none',
-                    }),
-                  ),
-              }}
-            >
-              {onboarding.length === 0 ? (
-                <p className="text-small text-muted-foreground">
-                  {t('home.head.onboarding.empty')}
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {onboarding.map(({ member, pct }) => (
-                    <PersonRow
-                      key={member.userId}
-                      member={member}
-                      right={
-                        <span className="tabular-nums text-small text-muted-foreground">
-                          {pct}%
-                        </span>
-                      }
-                    />
-                  ))}
-                </ul>
-              )}
-            </TileShell>
-          </StaggerItem>
+          {/* SPEC §3.2: "An arrangeable layout (drag tiles, hide tiles; persisted per head)."
+              Each tile is an entry in this map, and `layout` decides the order and what is on
+              screen -- so the head's arrangement is data, not a hard-coded sequence of JSX. */}
+          {layout.visible.map((id) => (
+            <React.Fragment key={id}>{tiles[id]}</React.Fragment>
+          ))}
         </Stagger>
+        {layout.visible.length === 0 ? (
+          <StateView
+            kind="empty"
+            titleKey="home.head.arrange.allHidden.title"
+            bodyKey="home.head.arrange.allHidden.body"
+            action={{ labelKey: 'home.head.arrange.reset', onAction: reset }}
+          />
+        ) : null}
       </section>
 
       <Reveal>
         <p className="text-caption text-muted-foreground">{t('home.head.drillNote')}</p>
       </Reveal>
     </div>
+  )
+}
+
+/** The arrange control (SPEC §3.2). Move-up / move-down buttons and a checkbox per tile rather than
+ * drag alone: a head rearranges this once, often from a keyboard on a government laptop, and every
+ * primary flow in this product has a keyboard path (DESIGN.md §6). */
+function TileArranger({
+  order,
+  hidden,
+  onMove,
+  onToggle,
+  onReset,
+}: {
+  order: readonly HeadTileId[]
+  hidden: readonly HeadTileId[]
+  onMove: (id: HeadTileId, delta: -1 | 1) => void
+  onToggle: (id: HeadTileId) => void
+  onReset: () => void
+}): React.JSX.Element {
+  const t = useT()
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <LayoutGrid aria-hidden="true" className="size-4" />
+          {t('home.head.arrange.action')}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="flex w-80 flex-col gap-2">
+        <p className="text-small font-medium">{t('home.head.arrange.heading')}</p>
+        <p className="text-caption text-muted-foreground">{t('home.head.arrange.hint')}</p>
+        <ul className="flex flex-col gap-1">
+          {order.map((id, index) => {
+            const name = t(`home.head.${id}.title`)
+            return (
+              <li
+                key={id}
+                className="flex min-h-11 items-center gap-2 rounded-sm border border-border px-2 py-1"
+              >
+                <Checkbox
+                  id={`head-tile-${id}`}
+                  checked={!hidden.includes(id)}
+                  onCheckedChange={() => onToggle(id)}
+                  aria-label={t('home.head.arrange.show', { name })}
+                />
+                <label htmlFor={`head-tile-${id}`} className="min-w-0 flex-1 truncate text-small">
+                  {name}
+                </label>
+                <IconButton
+                  aria-label={t('home.head.arrange.moveUp', { name })}
+                  disabled={index === 0}
+                  onClick={() => onMove(id, -1)}
+                >
+                  <ArrowUp aria-hidden="true" />
+                </IconButton>
+                <IconButton
+                  aria-label={t('home.head.arrange.moveDown', { name })}
+                  disabled={index === order.length - 1}
+                  onClick={() => onMove(id, 1)}
+                >
+                  <ArrowDown aria-hidden="true" />
+                </IconButton>
+              </li>
+            )
+          })}
+        </ul>
+        <Button variant="secondary" size="sm" onClick={onReset}>
+          {t('home.head.arrange.reset')}
+        </Button>
+      </PopoverContent>
+    </Popover>
   )
 }
 

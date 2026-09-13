@@ -132,7 +132,8 @@
       "denied": {
         "body": "Xodimlar jadvali va undagi koʻrsatkichlar faqat boshqarma boshligʻiga koʻrinadi. Maʼlumotnomani ochishingiz mumkin.",
         "action": "Maʼlumotnomani ochish"
-      }
+      },
+      "resize": "«{name}» ustuni kengligini oʻzgartirish"
     },
     "indicator": {
       "openCards": {
