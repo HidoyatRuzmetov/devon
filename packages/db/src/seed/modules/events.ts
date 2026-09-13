@@ -32,6 +32,14 @@ const MEMBER = DEMO_USERS.find((u) => u.role === 'member')!.id
 const VOLLEYBALL_CAPACITY = 12
 const VOLLEYBALL_ATTENDEE_IDS = WORK_DEMO_USERS.slice(0, VOLLEYBALL_CAPACITY - 1).map((u) => u.id)
 
+// The same scrub, one level up: a koʻngillilar kuni with two people on it is not a department
+// volunteering day, it is two colleagues in a park -- and the photos and the feedback hanging off it
+// only mean something if enough of the boshqarma was actually there. Nine of the fourteen colleagues
+// came; five did not, which is what a Saturday morning actually looks like.
+const VOLUNTEERING_ATTENDEE_IDS = WORK_DEMO_USERS.slice(0, 9).map((u) => u.id)
+// The Excel training is next month and filling up: six signed up, one said no, one is undecided.
+const TRAINING_YES_IDS = WORK_DEMO_USERS.slice(2, 8).map((u) => u.id)
+
 // 2026-09-06 is "today" in the demo dataset (TASKS.md EPIC-008: "believable dates around 2026-09").
 const PICNIC_ID = demoId('event.picnic')
 const VOLLEYBALL_ID = demoId('event.volleyball')
@@ -150,6 +158,16 @@ const RSVP_ROWS: (typeof schema.eventRsvps.$inferInsert)[] = [
     status: 'maybe',
     guests: 0,
   },
+  // The picnic is the event the carpool and the date poll hang off, so it needs enough people on it
+  // for "who is driving whom" to be a real question rather than a demonstration of a widget.
+  ...WORK_DEMO_USERS.slice(3, 9).map((u, index) => ({
+    id: demoId(`rsvp.picnic.attendee.${index}`),
+    departmentId: DEPT,
+    eventId: PICNIC_ID,
+    userId: u.id,
+    status: (index === 4 ? 'no' : 'yes') as 'yes' | 'no',
+    guests: index === 0 ? 3 : index === 2 ? 1 : 0,
+  })),
   {
     id: demoId('rsvp.volleyball.head'),
     departmentId: DEPT,
@@ -190,12 +208,47 @@ const RSVP_ROWS: (typeof schema.eventRsvps.$inferInsert)[] = [
     status: 'yes',
     guests: 0,
   },
+  ...VOLUNTEERING_ATTENDEE_IDS.map((userId, index) => ({
+    id: demoId(`rsvp.volunteering.attendee.${index}`),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId,
+    // Two of the nine brought family -- a volunteering day is the kind of thing people do bring
+    // family to, and `guests` exists precisely so the organiser knows how many spades to bring.
+    status: 'yes' as const,
+    guests: index === 1 ? 2 : index === 4 ? 1 : 0,
+  })),
   {
     id: demoId('rsvp.training.member'),
     departmentId: DEPT,
     eventId: TRAINING_ID,
     userId: MEMBER,
     status: 'yes',
+    guests: 0,
+  },
+  ...TRAINING_YES_IDS.map((userId, index) => ({
+    id: demoId(`rsvp.training.attendee.${index}`),
+    departmentId: DEPT,
+    eventId: TRAINING_ID,
+    userId,
+    status: 'yes' as const,
+    guests: 0,
+  })),
+  {
+    id: demoId('rsvp.training.no'),
+    departmentId: DEPT,
+    eventId: TRAINING_ID,
+    userId: WORK_DEMO_USERS[8]!.id,
+    status: 'no' as const,
+    guests: 0,
+    note: 'Oʻsha kuni Vazirlikda yigʻilish bor.',
+  },
+  {
+    id: demoId('rsvp.training.maybe'),
+    departmentId: DEPT,
+    eventId: TRAINING_ID,
+    userId: WORK_DEMO_USERS[9]!.id,
+    status: 'maybe' as const,
     guests: 0,
   },
 ]
@@ -352,6 +405,53 @@ const FEEDBACK_ROWS: (typeof schema.eventFeedback.$inferInsert)[] = [
     rating: 4,
     comment: 'Yaxshi, lekin ertalabki vaqt biroz erta edi.',
     anonymous: true,
+  },
+  // Five more, so the event's rating is an average of seven people rather than the two who happened
+  // to be seeded accounts -- and so the anonymous ones are genuinely indistinguishable, which is the
+  // only thing that makes anonymous feedback worth collecting.
+  {
+    id: demoId('feedback.volunteering.1'),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId: WORK_DEMO_USERS[0]!.id,
+    rating: 5,
+    comment: 'Bolalar bilan bordik, juda yoqdi.',
+    anonymous: false,
+  },
+  {
+    id: demoId('feedback.volunteering.2'),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId: WORK_DEMO_USERS[1]!.id,
+    rating: 5,
+    comment: 'Keyingi safar koʻchat sonini oldindan aniqlab olsak.',
+    anonymous: false,
+  },
+  {
+    id: demoId('feedback.volunteering.3'),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId: WORK_DEMO_USERS[3]!.id,
+    rating: 3,
+    comment: 'Suv va qoʻlqop yetmadi.',
+    anonymous: true,
+  },
+  {
+    id: demoId('feedback.volunteering.4'),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId: WORK_DEMO_USERS[5]!.id,
+    rating: 4,
+    anonymous: false,
+  },
+  {
+    id: demoId('feedback.volunteering.5'),
+    departmentId: DEPT,
+    eventId: VOLUNTEERING_ID,
+    userId: WORK_DEMO_USERS[7]!.id,
+    rating: 5,
+    comment: 'Har chorakda bir marta qilsak boʻlardi.',
+    anonymous: false,
   },
 ]
 
