@@ -161,8 +161,39 @@ export function reorderDefs(ids: readonly string[], csrfToken: string): Promise<
   ) as Promise<void>
 }
 
-export function notifyToFill(id: string, csrfToken: string): Promise<NotifyResult> {
-  return apiClient.post(`/api/v1/fields/defs/${id}/notify`, {}, notifyResponseSchema, csrfToken)
+export function notifyToFill(
+  id: string,
+  csrfToken: string,
+  /** Omit for "everyone still missing this answer" (the field manager and the column-header menu);
+   * pass ids to scope the ask to one person or to the table's selection (SPEC §4.3). */
+  userIds?: readonly string[],
+): Promise<NotifyResult> {
+  return apiClient.post(
+    `/api/v1/fields/defs/${id}/notify`,
+    userIds?.length ? { userIds: [...userIds] } : {},
+    notifyResponseSchema,
+    csrfToken,
+  )
+}
+
+export const notifyManyResponseSchema = z.object({
+  asked: z.number().int(),
+  reminded: z.number().int(),
+  defs: z.number().int(),
+  people: z.number().int(),
+})
+export type NotifyManyResult = z.infer<typeof notifyManyResponseSchema>
+
+/** "Ask these people to fill these fields." Both axes default to "all of them", so the people-table
+ * row action passes one user and no defs, and the bulk bar passes the selection. */
+export function notifyMany(
+  input: { defIds?: readonly string[]; userIds?: readonly string[] },
+  csrfToken: string,
+): Promise<NotifyManyResult> {
+  const body: { defIds?: string[]; userIds?: string[] } = {}
+  if (input.defIds?.length) body.defIds = [...input.defIds]
+  if (input.userIds?.length) body.userIds = [...input.userIds]
+  return apiClient.post('/api/v1/fields/notify', body, notifyManyResponseSchema, csrfToken)
 }
 
 export function fetchValues(input: {

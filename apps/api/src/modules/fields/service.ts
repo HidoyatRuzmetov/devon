@@ -67,6 +67,21 @@ export async function listDefs(
   })
 }
 
+/**
+ * v1.1 critique SEV1 #1. Until this round `listValues` used `isHead` only to decide whether to write
+ * `audit.private_reads` rows: there was no filter to the caller's own subject anywhere, the requested
+ * `subjectIds` were only ever *added* to (never honoured as a narrowing), and `visible_to:
+ * 'head_only'` was never consulted. A xodim asking for a colleague's membership id got the whole
+ * department's answers back, unaudited. Three rules now, each enforced here *and* in SQL:
+ *
+ *   1. A non-head only ever sees rows whose `subject_user_id` is their own (`restrictToUserId`).
+ *   2. A non-head never sees a `head_only` definition's answers at all.
+ *   3. The requested cohort is a narrowing, not a hint: asking for ids that resolve to nothing
+ *      returns nothing, never "the whole department".
+ *
+ * The route above this refuses a member's cross-person query outright with `department_managed`;
+ * this is the second line, so one bad route declaration cannot re-open the leak.
+ */
 export async function listValues(
   ctx: RequestContext,
   input: {
@@ -81,12 +96,21 @@ export async function listValues(
   },
 ): Promise<ReturnType<typeof repo.toValueDto>[]> {
   return withContext(ctx, async (tx) => {
+    const askedForSubjects = input.subjectIds.length > 0 || input.userIds.length > 0
     let subjectIds = [...input.subjectIds]
     if (input.subjectType === 'person' && input.userIds.length > 0) {
       const map = await repo.membershipUserMap(tx, input.departmentId, input.userIds)
-      subjectIds = [...subjectIds, ...map.keys()]
+      subjectIds = [...new Set([...subjectIds, ...map.keys()])]
     }
-    const rows = await repo.listValues(tx, input.departmentId, input.subjectType, subjectIds)
+    // Rule 3: a cohort that resolves to nothing is an empty answer, never "everyone".
+    if (askedForSubjects && subjectIds.length === 0) return []
+
+    const personScope = input.subjectType === 'person' && !input.isHead
+    const rows = await repo.listValues(tx, input.departmentId, input.subjectType, subjectIds, {
+      // Rules 1 and 2.
+      restrictToUserId: personScope ? input.actorUserId : null,
+      includeHeadOnly: input.subjectType !== 'person' || input.isHead,
+    })
 
     if (input.subjectType === 'person' && input.isHead) {
       const foreign = rows.filter(
@@ -99,7 +123,9 @@ export async function listValues(
       }
     }
 
-    return rows.map(repo.toValueDto)
+    return rows
+      .filter((r) => !personScope || r.subject_user_id === input.actorUserId)
+      .map(repo.toValueDto)
   })
 }
 
@@ -435,7 +461,14 @@ export type NotifyResult = Progress & { asked: number; reminded: number }
  */
 export async function notifyToFill(
   ctx: RequestContext,
-  input: { departmentId: string; actorUserId: string; defId: string },
+  input: {
+    departmentId: string
+    actorUserId: string
+    defId: string
+    /** `null` = everyone missing this answer. A list narrows the ask to one person (the people-table
+     * row action or the person page) or to the table's current selection (SEV2 #6). */
+    userIds?: readonly string[] | null
+  },
 ): Promise<NotifyResult> {
   return withContext(ctx, async (tx) => {
     const row = await repo.getDef(tx, input.departmentId, input.defId)
@@ -443,11 +476,22 @@ export async function notifyToFill(
     if (row.applies_to !== 'person') throw new FieldRefusedError('unknown_subject', 'defId')
     if (row.archived_at !== null) throw new FieldRefusedError('archived', 'defId')
 
-    const asked = await repo.createRequests(tx, input.departmentId, input.defId, input.actorUserId)
+    const scope = input.userIds ?? null
+    const asked = await repo.createRequests(
+      tx,
+      input.departmentId,
+      input.defId,
+      input.actorUserId,
+      scope,
+    )
     // Nobody new to ask -> this is the nudge. `reminder_days` is the head's own window, and `0` here
     // would re-ping everyone on every click, so the nudge respects it too.
     const reminded =
-      asked.length === 0 ? await repo.markReminded(tx, input.departmentId, input.defId, 0) : []
+      asked.length === 0
+        ? scope === null
+          ? await repo.markReminded(tx, input.departmentId, input.defId, 0)
+          : await repo.markRemindedFor(tx, input.departmentId, input.defId, scope)
+        : []
 
     for (const userId of [...asked, ...reminded]) {
       tx.emit({
@@ -473,6 +517,96 @@ export async function notifyToFill(
     const progress = await repo.progressFor(tx, input.departmentId, [row.id])
     const p = progress.get(row.id) ?? { filled: 0, total: 0, openRequests: 0 }
     return { ...p, asked: asked.length, reminded: reminded.length }
+  })
+}
+
+export type NotifyManyResult = { asked: number; reminded: number; defs: number; people: number }
+
+/**
+ * "Ask to fill", every scope the product has (SPEC §4.3/§5, v1.1 critique SEV2 #6).
+ *
+ * `defIds === null` means every live person definition; `userIds === null` means everyone still
+ * missing. So the people table's row action passes one user and no defs ("ask Nodira for everything
+ * she has not answered"), the bulk bar passes the selection, the column-header menu passes one def
+ * and no users, and the field manager keeps calling the single-def route. The open-request dedupe is
+ * unchanged -- `createRequests`'s partial unique index still makes a second click a nudge, not a
+ * second message (SPEC §5's "dedupe on open request").
+ *
+ * `missingByDef` is one query for the whole grid, so this stays O(defs) statements, never O(people)
+ * (I-14).
+ */
+export async function notifyMany(
+  ctx: RequestContext,
+  input: {
+    departmentId: string
+    actorUserId: string
+    defIds: readonly string[] | null
+    userIds: readonly string[] | null
+  },
+): Promise<NotifyManyResult> {
+  return withContext(ctx, async (tx) => {
+    const live = await repo.listDefs(tx, input.departmentId, 'person', false)
+    const wanted = live
+      // Asking somebody to fill a field only the head can write is noise with a Telegram message
+      // attached. `derived` answers itself.
+      .filter((d) => d.self_editable && d.type !== 'derived')
+      .filter((d) => input.defIds === null || input.defIds.includes(d.id))
+    if (wanted.length === 0) return { asked: 0, reminded: 0, defs: 0, people: 0 }
+
+    // Only ask for what is actually empty: asking someone to fill a field they already answered is
+    // the "pointless Telegram request" the critique called out by name.
+    const missing = await repo.missingByDef(
+      tx,
+      input.departmentId,
+      wanted.map((d) => d.id),
+      input.userIds,
+    )
+
+    let asked = 0
+    let reminded = 0
+    let touchedDefs = 0
+    const people = new Set<string>()
+
+    for (const def of wanted) {
+      const cohort = (missing.get(def.id) ?? []).filter((u) => u !== input.actorUserId)
+      if (cohort.length === 0) continue
+      touchedDefs += 1
+      const created = await repo.createRequests(
+        tx,
+        input.departmentId,
+        def.id,
+        input.actorUserId,
+        cohort,
+      )
+      const nudged =
+        created.length === 0
+          ? await repo.markRemindedFor(tx, input.departmentId, def.id, cohort)
+          : []
+      asked += created.length
+      reminded += nudged.length
+      for (const userId of [...created, ...nudged]) {
+        people.add(userId)
+        tx.emit({
+          type: 'fields.request.created',
+          departmentId: input.departmentId,
+          payload: {
+            defId: def.id,
+            key: def.key,
+            userId,
+            actorUserId: input.actorUserId,
+            reminder: created.length === 0,
+          },
+        })
+      }
+      tx.audit({
+        action: 'fields.fill_requested',
+        subjectType: 'field_def',
+        subjectId: def.id,
+        after: { key: def.key, asked: created.length, reminded: nudged.length, scoped: true },
+      })
+    }
+
+    return { asked, reminded, defs: touchedDefs, people: people.size }
   })
 }
 

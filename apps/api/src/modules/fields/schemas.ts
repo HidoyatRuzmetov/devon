@@ -165,6 +165,31 @@ export const setValueSchema = z
 
 export const setManySchema = z.object({ items: z.array(setValueSchema).min(1).max(50) }).strict()
 
+/** v1.1 critique SEV2 #6. "Ask to fill" is reachable from four places now and each one asks for a
+ * different slice: a column header asks everyone missing that one field, a row action asks one person
+ * for every field they have not answered, the bulk bar asks a selection, and the field manager still
+ * asks the department. One body shape covers all four -- `null` on either axis means "all of them". */
+export const notifyScopeSchema = z
+  .object({
+    userIds: z.array(z.string().uuid()).max(200).optional(),
+  })
+  .strict()
+
+export const notifyManySchema = z
+  .object({
+    defIds: z.array(z.string().uuid()).max(20).optional(),
+    userIds: z.array(z.string().uuid()).max(200).optional(),
+  })
+  .strict()
+
+export const notifyManyResponseSchema = z.object({
+  asked: z.number().int().nonnegative(),
+  reminded: z.number().int().nonnegative(),
+  /** Definitions this call actually touched -- "3 ta maydon uchun soʻraldi". */
+  defs: z.number().int().nonnegative(),
+  people: z.number().int().nonnegative(),
+})
+
 export const notifyResponseSchema = z.object({
   filled: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),

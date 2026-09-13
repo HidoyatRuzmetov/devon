@@ -390,7 +390,8 @@
         "unavailable": {
           "title": "Maydonlar hali ulanmagan",
           "body": "Bu boʻlimda xodim maydonlari hozircha yoqilmagan."
-        }
+        },
+        "reminded": "Eslatma yuborildi"
       },
       "activity": {
         "empty": {

@@ -10,15 +10,23 @@
 // | GET  /fields/defs                      | `department_child`     | any active member        |
 // | POST/PATCH/archive/restore/reorder     | `department_managed`   | the boshqarma boshligʻi  |
 // | POST /fields/defs/:id/notify           | `department_managed`   | the head                 |
-// | GET  /fields/values                    | `department_child`     | any member; RLS removes  |
-// |                                        |                        | head-only answers        |
-// | PUT  /fields/values                    | `department_child`     | any member; the service  |
-// |                                        |                        | decides whose answer     |
+// | POST /fields/notify                    | `department_managed`   | the head                 |
+// | GET  /fields/values (about me)         | `owned`                | the person themselves    |
+// | GET  /fields/values (about anyone else)| `department_managed`   | the boshqarma boshligʻi  |
+// | PUT  /fields/values                    | `owned`                | the subject, or the head |
 // | GET/PUT /fields/me                     | `own_account`          | the person themselves    |
 //
 // `GET /fields/defs` is deliberately open to every member: a *definition* is a form label, and the
-// member fill screen cannot render without it. The *answers* are what PERMISSIONS-AUDIT §4.13 protects,
-// and they are protected in the database (`field_values_read`), not by this file.
+// member fill screen cannot render without it. The *answers* are what PERMISSIONS-AUDIT §4.13 protects.
+//
+// **v1.1 critique SEV1 #1.** Until this round `GET /values` was declared `department_child`, whose P3
+// rule grants any active member every action, and the service used `isHead` only to decide whether to
+// write `audit.private_reads` rows. A xodim could read all 27 colleagues' answers -- unfiltered,
+// unaudited, `visible_to: 'head_only'` ignored -- in a government system holding personal data. It is
+// closed in three independent places now, none of which relies on the other two: the subject function
+// below (`valuesReadSubject`) refuses the query outright, `service.listValues` filters to the caller's
+// own `subject_user_id`, and `repo.listValues` does the same narrowing in SQL. RLS
+// (`field_values_read`) remains under all three.
 import { z } from 'zod'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
@@ -42,7 +50,10 @@ import {
   defsQuerySchema,
   defsResponseSchema,
   myFieldsResponseSchema,
+  notifyManyResponseSchema,
+  notifyManySchema,
   notifyResponseSchema,
+  notifyScopeSchema,
   reorderSchema,
   setManySchema,
   setValueSchema,
@@ -166,6 +177,50 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     kind: 'own_account' as const,
     userId: r.actor?.userId ?? '',
   })
+
+  /**
+   * v1.1 critique SEV1 #1: the shape of the *question* decides the subject.
+   *
+   * `GET /values` serves two genuinely different reads. "Show me my own answers" is an `owned` read
+   * any member may make. "Show me these colleagues' answers" is per-person analytics, which SPEC §2.1
+   * puts squarely under `department_managed` -- head only, reads included. A member who asks for
+   * anyone but themselves now gets a 403 from `can()` before a single row is fetched, instead of the
+   * old `department_child` (whose P3 rule grants any active member every action).
+   *
+   * Person values are keyed by *membership* id, which a route function cannot resolve to a user id
+   * synchronously. So the rule is conservative in the only direction that is safe: a query is "about
+   * me" only when it names me by `userIds` and nothing else. Everything broader is head territory.
+   */
+  const valuesReadSubject = (r: FastifyRequest) => {
+    const departmentId = activeDepartmentId(r)
+    const actorUserId = r.actor?.userId ?? ''
+    const query = (r.query ?? {}) as { subjectType?: string; subjectIds?: string; userIds?: string }
+    if (query.subjectType === 'card') {
+      // Card values are department-transparent, exactly like the card they hang off.
+      return { kind: 'department_child' as const, departmentId }
+    }
+    // Everything else -- including the boot-time probe's empty request, which is why this route is
+    // listed in `head-only-routes.test.ts` -- falls to the head-only branch unless it is provably a
+    // question about the caller themselves. Fail closed, then widen.
+    const subjectIds = splitList(query.subjectIds)
+    const userIds = splitList(query.userIds)
+    const onlyMe =
+      subjectIds.length === 0 && userIds.length === 1 && userIds[0] === actorUserId && actorUserId
+    if (onlyMe) {
+      return { kind: 'owned' as const, departmentId, ownerUserIds: [actorUserId] }
+    }
+    return { kind: 'department_managed' as const, departmentId }
+  }
+
+  /** A person value belongs to the person it is about; a card value to the department. Either way the
+   * owner set is what `can()` decides on, not an `isHead` branch inside the handler (I-7). */
+  const valuesWriteSubject = (r: FastifyRequest) => {
+    const departmentId = activeDepartmentId(r)
+    const body = (r.body ?? {}) as { subjectUserId?: string | null }
+    const actorUserId = r.actor?.userId ?? ''
+    const target = body.subjectUserId ?? actorUserId
+    return { kind: 'owned' as const, departmentId, ownerUserIds: target ? [target] : [] }
+  }
 
   // --- definitions ---------------------------------------------------------------------------------
 
@@ -337,7 +392,11 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/defs/:id/notify',
     {
       config: { permission: { action: 'create', subject: departmentManagedSubject } },
-      schema: { params: defParamsSchema, response: { 200: notifyResponseSchema } },
+      schema: {
+        params: defParamsSchema,
+        body: notifyScopeSchema.optional(),
+        response: { 200: notifyResponseSchema },
+      },
     },
     async (req, reply) => {
       try {
@@ -345,6 +404,30 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           departmentId: activeDepartmentId(req),
           actorUserId: req.actor!.userId,
           defId: req.params.id,
+          userIds: req.body?.userIds ?? null,
+        })
+      } catch (err) {
+        if (replyForError(reply, err)) return reply
+        throw err
+      }
+    },
+  )
+
+  /** SEV2 #6: the same ask, from the people table's row action and bulk bar, where the head is
+   * looking at *people* rather than at one field. `defIds`/`userIds` omitted means "all of them". */
+  app.post(
+    '/notify',
+    {
+      config: { permission: { action: 'create', subject: departmentManagedSubject } },
+      schema: { body: notifyManySchema, response: { 200: notifyManyResponseSchema } },
+    },
+    async (req, reply) => {
+      try {
+        return await service.notifyMany(toDbContext(req), {
+          departmentId: activeDepartmentId(req),
+          actorUserId: req.actor!.userId,
+          defIds: req.body.defIds ?? null,
+          userIds: req.body.userIds ?? null,
         })
       } catch (err) {
         if (replyForError(reply, err)) return reply
@@ -358,7 +441,7 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/values',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: { permission: { action: 'read', subject: valuesReadSubject } },
       schema: { querystring: valuesQuerySchema, response: { 200: valuesResponseSchema } },
     },
     async (req) => {
@@ -378,7 +461,7 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.put(
     '/values',
     {
-      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      config: { permission: { action: 'update', subject: valuesWriteSubject } },
       schema: { body: setValueSchema, response: { 204: z.void() } },
     },
     async (req, reply) => {

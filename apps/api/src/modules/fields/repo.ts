@@ -250,14 +250,23 @@ export function toValueDto(row: ValueRow) {
 }
 
 /** Every value for a cohort of subjects in one query. `subjectIds` empty means "the whole
- * department", which is what the people table and the manager's progress bar ask for. */
+ * department", which is what the people table and the manager's progress bar ask for -- and which is
+ * why `options.restrictToUserId` exists: a member may only ever be handed their *own* answers, and
+ * that narrowing happens in SQL here as well as in `service.ts`, so neither layer alone is the only
+ * thing standing between a xodim and a colleague's answers (v1.1 critique SEV1 #1).
+ *
+ * `options.includeHeadOnly = false` drops every value whose definition is `visible_to: 'head_only'`
+ * -- SPEC §5's "head-only person values are never in list endpoints". */
 export async function listValues(
   tx: Tx,
   departmentId: string,
   subjectType: FieldAppliesTo,
   subjectIds: readonly string[],
+  options: { restrictToUserId?: string | null; includeHeadOnly?: boolean } = {},
 ): Promise<ValueRow[]> {
   const ids = sql.param([...subjectIds])
+  const restrictToUserId = options.restrictToUserId ?? null
+  const includeHeadOnly = options.includeHeadOnly !== false
   return tx.raw<ValueRow>(sql`
     select v.def_id, d.key, v.subject_type, v.subject_id, v.subject_user_id, v.value,
            v.updated_by_user_id, v.updated_at
@@ -266,6 +275,8 @@ export async function listValues(
     where v.department_id = ${departmentId}
       and v.subject_type = ${subjectType}
       and (${subjectIds.length === 0} or v.subject_id = any(${ids}::uuid[]))
+      and (${restrictToUserId}::uuid is null or v.subject_user_id = ${restrictToUserId}::uuid)
+      and (${includeHeadOnly} or d.visible_to <> 'head_only')
     order by d.sort, d.key
   `)
 }
@@ -428,7 +439,13 @@ export async function createRequests(
   departmentId: string,
   defId: string,
   requestedByUserId: string,
+  /** `null` = everyone in the department who is missing this answer (the column-header ask). A list
+   * narrows it to one person (the row action) or to a selection (the bulk bar) -- SPEC §4.3's
+   * "ask to fill for a specific missing field", v1.1 critique SEV2 #6. */
+  onlyUserIds: readonly string[] | null = null,
 ): Promise<string[]> {
+  const scoped = onlyUserIds !== null
+  const scopedIds = sql.param([...(onlyUserIds ?? [])])
   const rows = await tx.raw<{ user_id: string }>(sql`
     insert into app.field_requests (department_id, def_id, user_id, requested_by_user_id)
     select ${departmentId}, ${defId}, m.user_id, ${requestedByUserId}
@@ -438,11 +455,65 @@ export async function createRequests(
     where m.department_id = ${departmentId}
       and m.status = 'active' and m.deleted_at is null and u.deleted_at is null
       and m.user_id <> ${requestedByUserId}
+      and (${!scoped} or m.user_id = any(${scopedIds}::uuid[]))
       and (v.value is null or v.value::text = 'null' or v.value::text = '""')
     on conflict (def_id, user_id) where resolved_at is null do nothing
     returning user_id
   `)
   return rows.map((r) => r.user_id)
+}
+
+/** The same nudge as `markReminded`, narrowed to a named cohort -- the row action and the bulk bar
+ * ask again for one person or a selection, never for the whole department. */
+export async function markRemindedFor(
+  tx: Tx,
+  departmentId: string,
+  defId: string,
+  userIds: readonly string[],
+): Promise<string[]> {
+  if (userIds.length === 0) return []
+  const rows = await tx.raw<{ user_id: string }>(sql`
+    update app.field_requests
+    set reminded_at = now()
+    where department_id = ${departmentId}
+      and def_id = ${defId}
+      and resolved_at is null
+      and user_id = any(${sql.param([...userIds])}::uuid[])
+    returning user_id
+  `)
+  return rows.map((r) => r.user_id)
+}
+
+/** Who, of this cohort, is still missing an answer for each of these definitions. One query for the
+ * whole grid -- the row action needs "which of Nodira's fields are empty" without N round trips. */
+export async function missingByDef(
+  tx: Tx,
+  departmentId: string,
+  defIds: readonly string[],
+  userIds: readonly string[] | null,
+): Promise<Map<string, string[]>> {
+  if (defIds.length === 0) return new Map()
+  const scoped = userIds !== null
+  const rows = await tx.raw<{ def_id: string; user_id: string }>(sql`
+    select d.id as def_id, m.user_id
+    from app.field_defs d
+    join app.memberships m on m.department_id = ${departmentId}
+      and m.status = 'active' and m.deleted_at is null
+    join app.users u on u.id = m.user_id and u.deleted_at is null
+    left join app.field_values v on v.def_id = d.id and v.subject_id = m.id
+    where d.department_id = ${departmentId}
+      and d.id = any(${sql.param([...defIds])}::uuid[])
+      and d.archived_at is null
+      and (${!scoped} or m.user_id = any(${sql.param([...(userIds ?? [])])}::uuid[]))
+      and (v.value is null or v.value::text = 'null' or v.value::text = '""')
+  `)
+  const out = new Map<string, string[]>()
+  for (const row of rows) {
+    const list = out.get(row.def_id)
+    if (list) list.push(row.user_id)
+    else out.set(row.def_id, [row.user_id])
+  }
+  return out
 }
 
 /** The head's second ask, and the reminder job's: stamp `reminded_at` on every open request older

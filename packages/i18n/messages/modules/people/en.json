@@ -390,7 +390,8 @@
         "unavailable": {
           "title": "Fields are not connected yet",
           "body": "Person fields are not switched on for this department."
-        }
+        },
+        "reminded": "Reminder sent"
       },
       "activity": {
         "empty": {

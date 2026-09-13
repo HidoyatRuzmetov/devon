@@ -52,6 +52,15 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/fields/defs/:id/archive',
   'POST /api/v1/fields/defs/:id/restore',
   'POST /api/v1/fields/defs/:id/notify',
+  'POST /api/v1/fields/notify',
+  // v1.1 critique SEV1 #1. `GET /fields/values` used to be `department_child` -- any active member,
+  // every action -- and a xodim could read all 27 colleagues' answers. The subject is now decided by
+  // the *shape of the query*: `subjectType=card` stays department-transparent, a query that names
+  // only the caller in `userIds` narrows to `{kind:'owned'}`, and everything else -- including the
+  // boot-time probe's empty request, which is what this line records -- is per-person analytics and
+  // therefore head-only (SPEC §2.1). Same honest-default pattern as `GET /people/:userId/overview`
+  // two dozen lines above.
+  'GET /api/v1/fields/values',
   // v1.1 SPEC §7 (work-plus). The workload grid is head-only by decision (§2.2: "a member sees
   // their own load on Home and on their own person page. No leaderboard anywhere") -- a member's
   // own row comes from `GET /api/v1/work/workload/mine`, which is `department_child` and cannot be
