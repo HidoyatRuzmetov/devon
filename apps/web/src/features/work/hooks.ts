@@ -13,6 +13,9 @@ import {
   type QueryClient,
   type UseQueryResult,
 } from '@tanstack/react-query'
+import { toast } from '@devon/ui'
+import { useT } from '@devon/i18n'
+import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import * as api from './api.js'
 import type { Board, Card, CardDetail, CardStatus, Label, SavedView } from './api.js'
@@ -151,11 +154,20 @@ export function useCreateCardMutation() {
 export function usePatchCardMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const t = useT()
   return useMutation({
     mutationFn: ({ id, patch }: { id: string; patch: api.PatchCardInput }) =>
       api.patchCard(id, patch, csrf),
     onMutate: ({ id, patch }) => patchCardInCaches(qc, id, patch as Partial<Card>),
-    onError: (_err, _vars, context) => context?.rollback(),
+    onError: (err, _vars, context) => {
+      context?.rollback()
+      // v1.1 SPEC §5: a card the boshqarma still needs answers for cannot be finished -- and a
+      // rollback with no message reads as "the app ate my click". The server names the reason; this
+      // says it out loud in the reader's own language.
+      if (err instanceof ApiError && err.errors.some((e) => e.code === 'required_field_missing')) {
+        toast.error(t('fields.card.requiredBlocksDone'))
+      }
+    },
     onSettled: (_data, _err, { id }) => invalidateCard(qc, id),
   })
 }

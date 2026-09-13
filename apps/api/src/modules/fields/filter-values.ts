@@ -40,3 +40,37 @@ export async function cardFieldValues(tx: Tx, departmentId: string): Promise<Car
   }
   return byCard
 }
+
+/**
+ * SPEC §5: "required fields block moving to done with an inline message". Returns the `key` of every
+ * required, live card field this card has left empty -- empty list means the card may be finished.
+ *
+ * One query, and the emptiness test is the same one `isFieldValueMissing` makes in
+ * `@devon/contracts`, expressed in SQL so a card with *no row at all* for a required field counts as
+ * missing (a left join is the only way to see a value that was never written). `checkbox` is the one
+ * type where `false` is a real answer, exactly as in the shared validator.
+ */
+export async function missingRequiredCardFields(
+  tx: Tx,
+  departmentId: string,
+  cardId: string,
+): Promise<string[]> {
+  const rows = await tx.raw<{ key: string }>(sql`
+    select d.key
+    from app.field_defs d
+    left join app.field_values v
+      on v.def_id = d.id and v.subject_id = ${cardId}::uuid and v.subject_type = 'card'
+    where d.department_id = ${departmentId}
+      and d.applies_to = 'card'
+      and d.archived_at is null
+      and d.required = true
+      and (
+        v.value is null
+        or v.value = 'null'::jsonb
+        or (jsonb_typeof(v.value) = 'string' and btrim(v.value #>> '{}') = '')
+        or (jsonb_typeof(v.value) = 'array' and jsonb_array_length(v.value) = 0)
+      )
+    order by d.sort, d.key
+  `)
+  return rows.map((r) => r.key)
+}

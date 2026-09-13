@@ -14,7 +14,11 @@ import { contextFromRequest } from './context.js'
 // v1.1 SPEC §5: `field:<key>:<value>` is part of this grammar, so the card search has to know the
 // answers. One narrow, documented dependency on the `fields` module -- the same shape
 // `notifications/delivery.ts` has on `telegram/transport.ts`.
-import { cardFieldValues, type CardFieldValues } from '../fields/filter-values.js'
+import {
+  cardFieldValues,
+  missingRequiredCardFields,
+  type CardFieldValues,
+} from '../fields/filter-values.js'
 import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
 import * as repo from './repo.js'
 import {
@@ -363,6 +367,23 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
       const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
       if (!ownership.ok) return
+      // v1.1 SPEC §5: "required fields block moving to done with an inline message". The refusal is
+      // here, on the server, because a card that leaves the board without its required answers is
+      // exactly the hole a client-side check leaves open. Only on the transition *into* done or
+      // archived -- editing the title of an already-finished card is never blocked.
+      if (patch.status === 'done' || patch.status === 'archived') {
+        const missing = await withContext(ctx, (tx) =>
+          missingRequiredCardFields(tx, departmentId, req.params.id),
+        )
+        if (missing.length > 0) {
+          return sendProblem(reply, 'validation_failed', {
+            errors: missing.map((key) => ({
+              path: `field:${key}`,
+              code: 'required_field_missing',
+            })),
+          })
+        }
+      }
       const result = await repo.patchCard(
         ctx,
         departmentId,
