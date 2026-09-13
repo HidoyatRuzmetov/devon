@@ -12,10 +12,28 @@
 // for the web side; until then `can()`'s own `department_child` check denies every request with
 // `not_a_member` before a handler body ever runs, which is the correct fail-closed behaviour, not a
 // bug in this module.
+//
+// ## Permissions, after v1.1 critique SEV2 #10
+//
+// A route's `department_child` subject proves exactly one thing: **the caller is an active member of
+// this department**. It deliberately does not try to prove ownership, because an event's organizer,
+// a comment's author and a photo's uploader are rows, and a `subject(req)` function is synchronous.
+// Declaring `{kind:'owned', ownerUserIds: []}` here would lock every organizer who is not the head
+// out of their own event; declaring `[actor.userId]` would be the tautology PERMISSIONS-AUDIT D11
+// names. So the decision is split exactly the way `modules/work/index.ts` already splits it and
+// MODULE-GUIDE.md states as the contract: membership at the route, ownership in the handler --
+// through the same `can()` with `{kind:'owned'}`, in `guards.ts`.
+//
+// What changed is that the ownership half used to be three hand-written copies of
+// `if (x !== actor.userId && !actor.isHead) throw` inside `service.ts`, and a dozen
+// `canManage: owner === viewer || isHead` expressions in the DTO builders. `role === 'head'` no
+// longer appears anywhere in this module (I-7, I-8b); `test/unit/events/matrix.test.ts` walks every
+// cell of the decision.
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import { checkCsrf } from '../../lib/csrf.js'
+import { isHeadOf } from '../../lib/actor.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { RequestContext } from '@devon/db'
@@ -68,17 +86,30 @@ function toDbContext(req: FastifyRequest): RequestContext {
   }
 }
 
+/**
+ * v1.1 critique SEV2 #10. This used to derive `isHead` with its own
+ * `memberships.some(m => m.role === 'head')` -- a second, private copy of the per-department role
+ * rule that `lib/actor.ts`'s `isHeadOf` already owns (I-8b: `Actor.role` is the *instance* role and
+ * is `member` for every real boshqarma boshligʻi, so a module that reads it is wrong).
+ *
+ * The actor handed to the service now carries the department and the real `req.actor` principal
+ * instead of a "this person is special" boolean, so every ownership question downstream is answered
+ * by `can()` -- see `guards.ts`.
+ */
 function currentActor(req: FastifyRequest): service.Actor {
-  const departmentId = activeDepartmentId(req)
-  const isHead =
-    req.actor?.memberships.some((m) => m.departmentId === departmentId && m.role === 'head') ??
-    false
   return {
     userId: req.actor!.userId,
-    isHead,
+    departmentId: activeDepartmentId(req),
+    principal: req.actor ?? null,
     givenName: req.actorUser?.givenName ?? '',
     familyName: req.actorUser?.familyName ?? '',
   }
+}
+
+/** "Is the caller this department's boshqarma boshligʻi?" -- the one fact the list builders still
+ * take as a boolean, resolved in the one place that is allowed to know it. */
+function callerIsHead(req: FastifyRequest): boolean {
+  return isHeadOf(req.actor, activeDepartmentId(req))
 }
 
 /** Maps this module's typed domain errors (`errors.ts`) to the same RFC 9457 `Problem` bodies every
@@ -138,7 +169,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       const items = await service.listEvents(
         toDbContext(req),
         req.actor!.userId,
-        currentActor(req).isHead,
+        callerIsHead(req),
         {
           from: req.query.from ? new Date(req.query.from) : undefined,
           to: req.query.to ? new Date(req.query.to) : undefined,
@@ -172,7 +203,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         const event = await service.getEvent(
           toDbContext(req),
           req.actor!.userId,
-          currentActor(req).isHead,
+          callerIsHead(req),
           req.params.eventId,
         )
         reply.send(event)
@@ -355,7 +386,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       const items = await service.listCarpools(
         toDbContext(req),
         req.actor!.userId,
-        currentActor(req).isHead,
+        callerIsHead(req),
         req.params.eventId,
       )
       return reply.send({ items })
@@ -513,7 +544,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       const items = await service.listPolls(
         toDbContext(req),
         req.actor!.userId,
-        currentActor(req).isHead,
+        callerIsHead(req),
         req.params.eventId,
       )
       return reply.send({ items })

@@ -10,7 +10,18 @@
 // with what it did, and a rule's last error rides on the rule card itself.
 import * as React from 'react'
 import { AnimatePresence } from 'motion/react'
-import { AlertTriangle, Check, CircleSlash, Pause, Plus, Trash2, Zap } from 'lucide-react'
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  CircleSlash,
+  Copy,
+  Pause,
+  Pencil,
+  Plus,
+  Trash2,
+  Zap,
+} from 'lucide-react'
 import { AUTOMATION_MAX_RULES, type AutomationRuleBody } from '@devon/contracts'
 import { useT, useLocale, formatDateTime } from '@devon/i18n'
 import {
@@ -44,6 +55,14 @@ import {
 } from '../hooks.js'
 import { ACTION_LABEL_KEY, RuleBuilder, TRIGGER_LABEL_KEY } from './rule-builder.js'
 import type { AutomationRule, AutomationRun } from '../api.js'
+
+/** SEV2 #9: how many grouped batches one page of the run log shows. */
+const RUN_PAGE_SIZE = 20
+
+const RUN_STATUSES = ['applied', 'skipped', 'failed'] as const
+
+const RUN_FILTER_CLASS =
+  'h-9 rounded-sm border border-border bg-card px-2 text-small text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 
 const RUN_STATUS_ICON = {
   applied: Check,
@@ -80,15 +99,31 @@ const RUN_REASON_KEY: Record<string, string> = {
   already_applied_today: 'automations.run.reason.alreadyAppliedToday',
 }
 
+/**
+ * v1.1 critique SEV2 #9: "each rule card offers only a toggle and a delete icon: you cannot change a
+ * rule you wrote, only delete it and retype it." Edit and Duplicate now sit beside the toggle --
+ * Duplicate because the second rule a head writes is almost always a variation on the first, and
+ * retyping a trigger, a filter and three actions to change one field is how an automations feature
+ * stops being used.
+ *
+ * The card also says out loud when its history and its switch disagree. The demo's own log showed
+ * 79 runs from a rule that is currently OFF while the inbox showed 4 items, and nothing on screen
+ * reconciled the two. A disabled rule with a run history now says that those runs happened while it
+ * was on and that nothing new will fire.
+ */
 function RuleCard({
   rule,
   onToggle,
   onDelete,
+  onEdit,
+  onDuplicate,
   busy,
 }: {
   rule: AutomationRule
   onToggle: (enabled: boolean) => void
   onDelete: () => void
+  onEdit: () => void
+  onDuplicate: () => void
   busy: boolean
 }): React.JSX.Element {
   const t = useT()
@@ -126,6 +161,20 @@ function RuleCard({
           aria-label={t('automations.rule.toggle', { name: rule.name })}
         />
         <IconButton
+          aria-label={t('automations.rule.edit', { name: rule.name })}
+          onClick={onEdit}
+          disabled={busy}
+        >
+          <Pencil className="size-4" aria-hidden="true" />
+        </IconButton>
+        <IconButton
+          aria-label={t('automations.rule.duplicate', { name: rule.name })}
+          onClick={onDuplicate}
+          disabled={busy}
+        >
+          <Copy className="size-4" aria-hidden="true" />
+        </IconButton>
+        <IconButton
           aria-label={t('automations.rule.delete', { name: rule.name })}
           onClick={onDelete}
           disabled={busy}
@@ -133,6 +182,16 @@ function RuleCard({
           <Trash2 className="size-4" aria-hidden="true" />
         </IconButton>
       </div>
+
+      {/* SEV2 #9: the log and the switch, reconciled. A rule that is off but has a history is not a
+          rule that is running quietly -- and a head looking at 79 log rows under a grey toggle
+          deserves that sentence rather than having to infer it. */}
+      {!rule.enabled && rule.runCount > 0 ? (
+        <p className="flex items-start gap-1.5 rounded-sm bg-muted px-2 py-1.5 text-caption text-muted-foreground">
+          <Pause className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          {t('automations.rule.suppressed', { count: rule.runCount })}
+        </p>
+      ) : null}
 
       {/* A broken rule announces itself rather than quietly doing nothing. */}
       {rule.lastError ? (
@@ -156,6 +215,99 @@ function RuleCard({
         {rule.triggerConfig.filter ? <Chip tone="outline">{rule.triggerConfig.filter}</Chip> : null}
       </div>
     </article>
+  )
+}
+
+/**
+ * v1.1 critique SEV2 #9 -- "79 consecutive identical rows: same rule, same minute, different card,
+ * unpaginated, ungrouped, unfilterable".
+ *
+ * A rule that fires over a batch of cards produces one log entry per card, which is correct data and
+ * useless reading. Runs are grouped by (rule, outcome, minute): a batch collapses to one row saying
+ * what it was -- "79 ta karta · 13.09 11:00" -- and expands to the individual cards on demand. A
+ * genuine one-off run is a group of one and renders exactly as it did before.
+ *
+ * The minute is the grain because that is what a trigger batch looks like from the outside: the
+ * engine processes a sweep in one pass, and every row in the demo's 79 carried the same
+ * `13.09.2026 11:00`.
+ */
+type RunGroup = {
+  key: string
+  ruleId: string
+  ruleName: string
+  status: AutomationRun['status']
+  at: string
+  runs: AutomationRun[]
+}
+
+function groupRuns(runs: readonly AutomationRun[]): RunGroup[] {
+  const groups: RunGroup[] = []
+  for (const run of runs) {
+    // `YYYY-MM-DDTHH:MM` -- the minute the engine's sweep ran.
+    const minute = run.at.slice(0, 16)
+    const key = `${run.ruleId}|${run.status}|${minute}`
+    const last = groups[groups.length - 1]
+    if (last && last.key === key) {
+      last.runs.push(run)
+      continue
+    }
+    groups.push({
+      key,
+      ruleId: run.ruleId,
+      ruleName: run.ruleName,
+      status: run.status,
+      at: run.at,
+      runs: [run],
+    })
+  }
+  return groups
+}
+
+function RunGroupRow({ group }: { group: RunGroup }): React.JSX.Element {
+  const t = useT()
+  const locale = useLocale()
+  const [open, setOpen] = React.useState(false)
+  const Icon = RUN_STATUS_ICON[group.status]
+
+  if (group.runs.length === 1) {
+    return <RunRow run={group.runs[0]!} />
+  }
+
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-small transition-colors duration-(--dur-micro) hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronRight
+          aria-hidden="true"
+          className={cn(
+            'size-4 shrink-0 text-muted-foreground transition-transform duration-(--dur-micro) ease-(--ease-standard)',
+            open && 'rotate-90',
+          )}
+        />
+        <Badge tone="neutral" className={cn('shrink-0', RUN_STATUS_CLASS[group.status])}>
+          <Icon className="size-3" aria-hidden="true" />
+          {t(RUN_STATUS_LABEL_KEY[group.status])}
+        </Badge>
+        <span className="min-w-0 flex-1 truncate text-foreground">{group.ruleName}</span>
+        <span className="shrink-0 text-caption text-muted-foreground">
+          {t('automations.run.batch', { count: group.runs.length })}
+        </span>
+        <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+          {formatDateTime(new Date(group.at), locale)}
+        </span>
+      </button>
+      {open ? (
+        <div className="flex flex-col gap-0.5 border-t border-border p-1">
+          {group.runs.map((run) => (
+            <RunRow key={run.id} run={run} />
+          ))}
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -227,6 +379,16 @@ export default function AutomationsScreen(): React.JSX.Element {
 
   const [builderOpen, setBuilderOpen] = React.useState(false)
   const [pending, setPending] = React.useState<string | null>(null)
+  // SEV2 #9: `null` = create; a rule = edit it; a `{ draft }` = duplicate it (a new rule, seeded).
+  const [builderRule, setBuilderRule] = React.useState<AutomationRule | null>(null)
+  const [builderSeed, setBuilderSeed] = React.useState<AutomationRuleBody | null>(null)
+  // SEV2 #9: the run log's own filters and paging.
+  const [runRuleFilter, setRunRuleFilter] = React.useState<'all' | string>('all')
+  const [runStatusFilter, setRunStatusFilter] = React.useState<'all' | AutomationRun['status']>(
+    'all',
+  )
+  const [runPage, setRunPage] = React.useState(0)
+  React.useEffect(() => setRunPage(0), [runRuleFilter, runStatusFilter])
 
   // SPEC §2.2: a member has no business here, and the server agrees -- so they get the designed
   // no-permission state rather than an empty list or a raw 403.
@@ -250,10 +412,40 @@ export default function AutomationsScreen(): React.JSX.Element {
   const rules = rulesQuery.data ?? []
   const atLimit = rules.filter((r) => r.enabled).length >= AUTOMATION_MAX_RULES
 
-  function create(body: AutomationRuleBody): void {
+  function closeBuilder(): void {
+    setBuilderOpen(false)
+    setBuilderRule(null)
+    setBuilderSeed(null)
+  }
+
+  /** SEV2 #9: one submit handler for all three ways into the builder. Editing patches the rule in
+   * place (keeping its id, and therefore its run history); creating and duplicating both create. */
+  function submitRule(body: AutomationRuleBody): void {
+    if (builderRule) {
+      patchRule.mutate(
+        {
+          id: builderRule.id,
+          patch: {
+            name: body.name,
+            triggerConfig: body.triggerConfig,
+            actions: body.actions,
+            enabled: body.enabled,
+            version: builderRule.version,
+          },
+        },
+        {
+          onSuccess: () => {
+            closeBuilder()
+            toast.success(t('automations.saved'))
+          },
+          onError: () => toast.error(t('automations.saveFailed')),
+        },
+      )
+      return
+    }
     createRule.mutate(body, {
       onSuccess: () => {
-        setBuilderOpen(false)
+        closeBuilder()
         toast.success(t('automations.created'))
       },
       onError: () => toast.error(t('automations.createFailed')),
@@ -333,6 +525,24 @@ export default function AutomationsScreen(): React.JSX.Element {
                 busy={pending === rule.id}
                 onToggle={(enabled) => toggle(rule, enabled)}
                 onDelete={() => remove(rule)}
+                onEdit={() => {
+                  setBuilderRule(rule)
+                  setBuilderSeed(null)
+                  setBuilderOpen(true)
+                }}
+                onDuplicate={() => {
+                  setBuilderRule(null)
+                  setBuilderSeed({
+                    name: t('automations.rule.copyOf', { name: rule.name }),
+                    trigger: rule.trigger,
+                    triggerConfig: rule.triggerConfig,
+                    actions: rule.actions,
+                    // A copy starts switched off: a rule that began firing the moment it was
+                    // duplicated would be the automations feature's worst first impression.
+                    enabled: false,
+                  })
+                  setBuilderOpen(true)
+                }}
               />
             </StaggerItem>
           ))}
@@ -342,12 +552,32 @@ export default function AutomationsScreen(): React.JSX.Element {
   }
 
   const runs = runsQuery.data?.items ?? []
+  // SEV2 #9: filter, then group, then page. Grouping after filtering is what makes "show me only the
+  // failures" collapse to the handful of batches that actually failed instead of to nothing.
+  const filteredRuns = runs.filter((run) => {
+    if (runRuleFilter !== 'all' && run.ruleId !== runRuleFilter) return false
+    if (runStatusFilter !== 'all' && run.status !== runStatusFilter) return false
+    return true
+  })
+  const runGroups = groupRuns(filteredRuns)
+  const runPageCount = Math.max(1, Math.ceil(runGroups.length / RUN_PAGE_SIZE))
+  const safeRunPage = Math.min(runPage, runPageCount - 1)
+  const shownGroups = runGroups.slice(
+    safeRunPage * RUN_PAGE_SIZE,
+    safeRunPage * RUN_PAGE_SIZE + RUN_PAGE_SIZE,
+  )
+
   let runsBody: React.ReactNode
   if (runsQuery.isPending) {
     runsBody = (
+      // SEV2 #12: the run log had no skeleton of its own shape at all. Badge, line, timestamp.
       <div className="flex flex-col gap-1" aria-busy="true">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-10 w-full" />
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+            <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
+            <Skeleton className="h-4 flex-1 rounded-sm" />
+            <Skeleton className="h-4 w-24 shrink-0 rounded-sm" />
+          </div>
         ))}
       </div>
     )
@@ -370,13 +600,36 @@ export default function AutomationsScreen(): React.JSX.Element {
         bodyKey="automations.runsEmptyBody"
       />
     )
+  } else if (runGroups.length === 0) {
+    runsBody = (
+      <StateView
+        kind="empty"
+        compact
+        titleKey="automations.runsFilteredTitle"
+        bodyKey="automations.runsFilteredBody"
+        action={{
+          labelKey: 'automations.runsClearFilters',
+          onAction: () => {
+            setRunRuleFilter('all')
+            setRunStatusFilter('all')
+          },
+        }}
+      />
+    )
   } else {
     runsBody = (
-      <div className="flex flex-col gap-0.5">
-        {runs.map((run) => (
-          <RunRow key={run.id} run={run} />
+      // SEV2 #12: the 79-row log had no motion at all. Stagger, re-keyed on the filter so a
+      // narrowed list visibly re-enters rather than silently swapping underneath the reader.
+      <Stagger
+        className="flex flex-col gap-0.5"
+        animateKey={`${runRuleFilter}|${runStatusFilter}|${safeRunPage}`}
+      >
+        {shownGroups.map((group) => (
+          <StaggerItem key={group.key}>
+            <RunGroupRow group={group} />
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
     )
   }
 
@@ -427,18 +680,125 @@ export default function AutomationsScreen(): React.JSX.Element {
         title={t('automations.runsTitle')}
         description={t('automations.runsDescription')}
       >
-        {runsBody}
+        <div className="flex flex-col gap-3">
+          {/* SEV2 #9: filters by rule and by outcome, above the list. Client-side over the loaded
+              window -- the endpoint already returns the department's recent runs, and narrowing them
+              here is instant and costs no request. */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <label htmlFor="runs-rule" className="text-caption text-muted-foreground">
+                {t('automations.runsFilter.rule')}
+              </label>
+              <select
+                id="runs-rule"
+                className={RUN_FILTER_CLASS}
+                value={runRuleFilter}
+                onChange={(e) => setRunRuleFilter(e.target.value)}
+              >
+                <option value="all">{t('automations.runsFilter.allRules')}</option>
+                {rules.map((rule) => (
+                  <option key={rule.id} value={rule.id}>
+                    {rule.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="runs-status" className="text-caption text-muted-foreground">
+                {t('automations.runsFilter.status')}
+              </label>
+              <select
+                id="runs-status"
+                className={RUN_FILTER_CLASS}
+                value={runStatusFilter}
+                onChange={(e) =>
+                  setRunStatusFilter(e.target.value as 'all' | AutomationRun['status'])
+                }
+              >
+                <option value="all">{t('automations.runsFilter.allStatuses')}</option>
+                {RUN_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {t(RUN_STATUS_LABEL_KEY[status])}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p
+              className="ml-auto pb-2 text-caption tabular-nums text-muted-foreground"
+              role="status"
+            >
+              {t('automations.runsFilter.count', {
+                groups: runGroups.length,
+                runs: filteredRuns.length,
+              })}
+            </p>
+          </div>
+
+          {runsBody}
+
+          {runPageCount > 1 ? (
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safeRunPage === 0}
+                onClick={() => setRunPage((prev) => Math.max(0, prev - 1))}
+              >
+                {t('automations.runsPage.previous')}
+              </Button>
+              <p className="text-caption tabular-nums text-muted-foreground" role="status">
+                {t('automations.runsPage.of', {
+                  page: safeRunPage + 1,
+                  pages: runPageCount,
+                })}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safeRunPage >= runPageCount - 1}
+                onClick={() => setRunPage((prev) => Math.min(runPageCount - 1, prev + 1))}
+              >
+                {t('automations.runsPage.next')}
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </SectionCard>
 
-      <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
-        <DialogContent title={t('automations.newTitle')} className="max-w-2xl">
+      <Dialog
+        open={builderOpen}
+        onOpenChange={(next) => {
+          if (next) setBuilderOpen(true)
+          else closeBuilder()
+        }}
+      >
+        <DialogContent
+          title={builderRule ? t('automations.editTitle') : t('automations.newTitle')}
+          className="max-w-2xl"
+        >
           <RuleBuilder
+            // Remounts when the rule being edited changes, so the form is seeded from that rule
+            // rather than keeping whatever the previous one left in its state.
+            key={builderRule?.id ?? (builderSeed ? `copy-${builderSeed.name}` : 'new')}
             members={members}
             labels={labels}
-            submitLabel={t('automations.create')}
-            busy={createRule.isPending}
-            onSubmit={create}
-            onCancel={() => setBuilderOpen(false)}
+            {...(builderRule
+              ? {
+                  initial: {
+                    name: builderRule.name,
+                    trigger: builderRule.trigger,
+                    triggerConfig: builderRule.triggerConfig,
+                    actions: builderRule.actions,
+                    enabled: builderRule.enabled,
+                  },
+                }
+              : builderSeed
+                ? { initial: builderSeed }
+                : {})}
+            submitLabel={builderRule ? t('automations.save') : t('automations.create')}
+            busy={builderRule ? patchRule.isPending : createRule.isPending}
+            onSubmit={submitRule}
+            onCancel={closeBuilder}
           />
         </DialogContent>
       </Dialog>

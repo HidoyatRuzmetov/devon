@@ -12,7 +12,7 @@
 // and rendering "Maʼlumotlarni yuklab boʻlmadi" (seen live as demo.xodim before this guard).
 import * as React from 'react'
 import { AnimatePresence } from 'motion/react'
-import { Loader2, Plus, Target, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, Loader2, Pencil, Plus, Target, Trash2 } from 'lucide-react'
 import type { GoalMetric } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
@@ -29,18 +29,28 @@ import {
   Skeleton,
   Stagger,
   StaggerItem,
+  StatNumber,
   StateView,
   Textarea,
   toast,
   toastWithUndo,
 } from '@devon/ui'
 import { useDepartment } from '../../../lib/session.js'
-import { useCreateGoalMutation, useDeleteGoalMutation, useGoalsQuery } from '../hooks-plus.js'
+import { navigate } from '../../../lib/router.js'
+import {
+  useCreateGoalMutation,
+  useDeleteGoalMutation,
+  useGoalsQuery,
+  usePatchGoalMutation,
+} from '../hooks-plus.js'
 import {
   GOAL_METRIC_LABEL_KEYS,
+  goalBarFill,
+  goalCardsHref,
   goalProgress,
   goalProgressTone,
   isCeilingMetric,
+  isPercentMetric,
 } from '../lib/goal-format.js'
 import type { Goal } from '../api-plus.js'
 
@@ -58,45 +68,79 @@ const METRIC_HINT_KEY: Record<GoalMetric, string> = {
   open_cards_max: 'work.goals.metricHint.openCardsMax',
 }
 
+/**
+ * v1.1 critique SEV2 #8 -- "goals are posters, not targets, and two of the three render wrong".
+ *
+ * Four things changed, and they are four different bugs that happened to share a card:
+ *
+ *   1. **A percentage is not a fraction.** `on_time_rate` rendered as "98 / 85". It now reads
+ *      "98% (maqsad: 85%)" -- the value, then what it is being measured against, both as percentages.
+ *   2. **A cap is not a countdown.** `open_cards_max` drew a red bar at 22%, because the achievement
+ *      ratio of a ceiling goal is inverted (1 - 78/100). The bar now fills *towards* the cap and is
+ *      green while there is room -- see `goal-format.ts`'s `goalBarFill`.
+ *   3. **The only control was a trash icon.** A head could delete a goal they had written and retype
+ *      it, and nothing else. There is now Edit, and a click-through to the cards the goal actually
+ *      counts (`/work/table` narrowed by the goal's own filter), which is the question a head asks
+ *      the moment a bar looks wrong.
+ *   4. **Titles truncated mid-word** ("…dan past tus…") above an empty row. They wrap now, and the
+ *      card grows to fit.
+ *
+ * SEV2 #12 as well: `NumberFlow` on the figure, so a goal that moves is visibly a goal that moved.
+ */
 export function GoalCard({
   goal,
   canManage,
   onDelete,
+  onEdit,
   busy,
 }: {
   goal: Goal
   canManage: boolean
   onDelete: () => void
+  onEdit?: (() => void) | undefined
   busy: boolean
 }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const ratio = goalProgress(goal.metric, goal.currentValue, goal.targetValue)
+  const fill = goalBarFill(goal.metric, goal.currentValue, goal.targetValue)
   const ceiling = isCeilingMetric(goal.metric)
+  const percent = isPercentMetric(goal.metric)
+  const overCap = ceiling && goal.targetValue > 0 && goal.currentValue > goal.targetValue
 
   return (
-    <article className="flex flex-col gap-3 rounded-md border border-border bg-card p-4">
+    <article className="flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4">
       <div className="flex items-start gap-2">
         <Target className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-body font-medium text-foreground">{goal.title}</h3>
+          {/* SEV2 #8: wraps rather than truncating. DESIGN.md §3.5's anti-truncation contract --
+              the fix for a long label is a taller card, never a clipped word. */}
+          <h3 className="text-pretty break-words text-body font-medium text-foreground">
+            {goal.title}
+          </h3>
           <p className="text-caption text-muted-foreground">
             {t(GOAL_METRIC_LABEL_KEYS[goal.metric])}
           </p>
         </div>
         {canManage ? (
-          <IconButton
-            aria-label={t('work.goals.delete', { title: goal.title })}
-            onClick={onDelete}
-            disabled={busy}
-            className="shrink-0"
-          >
-            {busy ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Trash2 className="size-4" aria-hidden="true" />
-            )}
-          </IconButton>
+          <div className="flex shrink-0 items-center gap-0.5">
+            {onEdit ? (
+              <IconButton aria-label={t('work.goals.edit', { title: goal.title })} onClick={onEdit}>
+                <Pencil className="size-4" aria-hidden="true" />
+              </IconButton>
+            ) : null}
+            <IconButton
+              aria-label={t('work.goals.delete', { title: goal.title })}
+              onClick={onDelete}
+              disabled={busy}
+            >
+              {busy ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="size-4" aria-hidden="true" />
+              )}
+            </IconButton>
+          </div>
         ) : null}
       </div>
 
@@ -105,37 +149,68 @@ export function GoalCard({
       ) : null}
 
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
           <span className="text-h4 font-semibold tabular-nums text-foreground">
-            {/* A ceiling goal reads "10 dan 4 ta", not "4 / 10" -- the sentence is different because
-                the direction is. */}
-            {ceiling
-              ? t('work.goals.ceilingValue', {
-                  current: goal.currentValue,
-                  target: goal.targetValue,
-                })
-              : t('work.goals.value', { current: goal.currentValue, target: goal.targetValue })}
+            {/* Three different sentences, because these are three different kinds of target.
+                A percentage: "98% (maqsad: 85%)". A ceiling: "100 dan 78 ta". A count: "82 / 120". */}
+            {percent ? (
+              <>
+                <StatNumber value={goal.currentValue} locale={locale} suffix="%" />
+                <span className="ml-1.5 text-small font-normal text-muted-foreground">
+                  {t('work.goals.percentTarget', { target: goal.targetValue })}
+                </span>
+              </>
+            ) : ceiling ? (
+              t('work.goals.ceilingValue', {
+                current: goal.currentValue,
+                target: goal.targetValue,
+              })
+            ) : (
+              t('work.goals.value', { current: goal.currentValue, target: goal.targetValue })
+            )}
           </span>
           <span className="text-caption tabular-nums text-muted-foreground">
-            {Math.round(ratio * 100)}%
+            {/* For a ceiling goal the honest caption is how much of the cap is used, which is what
+                the bar shows; the achievement ratio (`ratio`) would say 22% next to a 78% bar. */}
+            {ceiling
+              ? t('work.goals.capUsed', { pct: Math.round(fill * 100) })
+              : `${Math.round(ratio * 100)}%`}
           </span>
         </div>
         <Progress
-          value={Math.round(ratio * 100)}
+          value={Math.round(fill * 100)}
           label={t('work.goals.progressLabel', { title: goal.title })}
           tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
         />
+        {overCap ? (
+          <p className="flex items-center gap-1.5 text-caption text-destructive">
+            <AlertTriangle aria-hidden="true" className="size-3.5 shrink-0" />
+            {t('work.goals.overCap', { over: goal.currentValue - goal.targetValue })}
+          </p>
+        ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="mt-auto flex flex-wrap items-center gap-1.5">
         {goal.filter ? <Chip tone="outline">{goal.filter}</Chip> : null}
         {/* A goal with nothing behind it says so, instead of showing a confident flat 0 %. */}
         {goal.matchedCards === 0 ? (
           <Chip tone="attention">{t('work.goals.noMatchingWork')}</Chip>
         ) : (
-          <span className="text-caption text-muted-foreground">
+          // SEV2 #8's click-through: the cards this goal is counted from, in the table, narrowed by
+          // the goal's own filter. "Why is this number what it is" is one click, not a re-typed
+          // query.
+          <a
+            href={goalCardsHref(goal.filter)}
+            onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+              event.preventDefault()
+              navigate(goalCardsHref(goal.filter))
+            }}
+            className="inline-flex items-center gap-1 rounded-sm text-caption text-primary transition-colors duration-(--dur-micro) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             {t('work.goals.matchedCards', { count: goal.matchedCards })}
-          </span>
+            <ArrowUpRight aria-hidden="true" className="size-3.5" />
+          </a>
         )}
         {goal.dueOn ? (
           <span className="ml-auto text-caption tabular-nums text-muted-foreground">
@@ -147,15 +222,26 @@ export function GoalCard({
   )
 }
 
-function NewGoalDialog({
+/**
+ * v1.1 critique SEV2 #8: "you cannot change a rule you wrote, only delete it and retype it" applied
+ * to goals as well -- the only control on a card was a trash icon. One dialog does both jobs,
+ * because the fields are identical and a second near-copy is a second chance for the two to drift.
+ * `goal === null` is the create case; anything else is the edit case, and the form is seeded from
+ * that goal every time it opens.
+ */
+function GoalDialog({
   open,
+  goal,
   onOpenChange,
 }: {
   open: boolean
+  goal: Goal | null
   onOpenChange: (open: boolean) => void
 }): React.JSX.Element {
   const t = useT()
   const createGoal = useCreateGoalMutation()
+  const patchGoal = usePatchGoalMutation()
+  const editing = goal !== null
   const [title, setTitle] = React.useState('')
   const [description, setDescription] = React.useState('')
   const [metric, setMetric] = React.useState<GoalMetric>('cards_done')
@@ -172,20 +258,61 @@ function NewGoalDialog({
     setDueOn('')
   }
 
+  // Seeded on open, not on every render: a head halfway through editing a target must not have it
+  // overwritten by a background refetch of the goals list.
+  React.useEffect(() => {
+    if (!open) return
+    if (goal === null) {
+      reset()
+      return
+    }
+    setTitle(goal.title)
+    setDescription(goal.description ?? '')
+    setMetric(goal.metric)
+    setFilter(goal.filter ?? '')
+    setTarget(String(goal.targetValue))
+    setDueOn(goal.dueOn ?? '')
+    // `goal.id` rather than `goal`: the object identity changes on every refetch, the goal does not.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, goal?.id])
+
   const targetValue = Number(target)
   const valid = title.trim().length > 0 && Number.isFinite(targetValue) && targetValue >= 0
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
     if (!valid) return
+    const draft = {
+      title: title.trim(),
+      metric,
+      targetValue,
+      description: description.trim() ? description.trim() : null,
+      // `''` rather than `null`: an emptied filter means "count every card", which is a value the
+      // server understands, not an absent field.
+      filter: filter.trim(),
+      dueOn: dueOn ? dueOn : null,
+    }
+    if (editing) {
+      patchGoal.mutate(
+        { id: goal.id, patch: draft },
+        {
+          onSuccess: () => {
+            toast.success(t('work.goals.saved'))
+            onOpenChange(false)
+          },
+          onError: () => toast.error(t('work.goals.saveFailed')),
+        },
+      )
+      return
+    }
     createGoal.mutate(
       {
-        title: title.trim(),
+        title: draft.title,
         metric,
         targetValue,
-        ...(description.trim() ? { description: description.trim() } : {}),
-        ...(filter.trim() ? { filter: filter.trim() } : {}),
-        ...(dueOn ? { dueOn } : {}),
+        ...(draft.description ? { description: draft.description } : {}),
+        ...(draft.filter ? { filter: draft.filter } : {}),
+        ...(draft.dueOn ? { dueOn: draft.dueOn } : {}),
       },
       {
         onSuccess: () => {
@@ -200,7 +327,10 @@ function NewGoalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={t('work.goals.newTitle')} className="max-w-lg">
+      <DialogContent
+        title={editing ? t('work.goals.editTitle') : t('work.goals.newTitle')}
+        className="max-w-lg"
+      >
         <form onSubmit={submit} className="flex flex-col gap-4">
           <Field label={t('work.goals.fieldTitle')} htmlFor="goal-title">
             <Input
@@ -278,8 +408,12 @@ function NewGoalDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={!valid} loading={createGoal.isPending}>
-              {t('work.goals.create')}
+            <Button
+              type="submit"
+              disabled={!valid}
+              loading={editing ? patchGoal.isPending : createGoal.isPending}
+            >
+              {editing ? t('work.goals.save') : t('work.goals.create')}
             </Button>
           </div>
         </form>
@@ -297,6 +431,8 @@ export default function GoalsScreen(): React.JSX.Element {
   const deleteGoal = useDeleteGoalMutation()
   const createGoal = useCreateGoalMutation()
   const [dialogOpen, setDialogOpen] = React.useState(false)
+  // SEV2 #8: `null` opens the dialog on "create", a goal opens it on "edit".
+  const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null)
   const [pending, setPending] = React.useState<string | null>(null)
 
   const goals = (query.data ?? []).filter((goal) => goal.archivedAt === null)
@@ -360,7 +496,13 @@ export default function GoalsScreen(): React.JSX.Element {
         kind="empty"
         titleKey="work.goals.emptyTitle"
         bodyKey="work.goals.emptyBodyHead"
-        action={{ labelKey: 'work.goals.create', onAction: () => setDialogOpen(true) }}
+        action={{
+          labelKey: 'work.goals.create',
+          onAction: () => {
+            setEditingGoal(null)
+            setDialogOpen(true)
+          },
+        }}
       />
     )
   } else {
@@ -377,6 +519,10 @@ export default function GoalsScreen(): React.JSX.Element {
                 canManage={isHead}
                 busy={pending === goal.id}
                 onDelete={() => remove(goal)}
+                onEdit={() => {
+                  setEditingGoal(goal)
+                  setDialogOpen(true)
+                }}
               />
             </StaggerItem>
           ))}
@@ -393,7 +539,12 @@ export default function GoalsScreen(): React.JSX.Element {
         description={t('work.goals.description')}
         actions={
           isHead ? (
-            <Button onClick={() => setDialogOpen(true)}>
+            <Button
+              onClick={() => {
+                setEditingGoal(null)
+                setDialogOpen(true)
+              }}
+            >
               <Plus className="size-4" aria-hidden="true" />
               {t('work.goals.create')}
             </Button>
@@ -401,7 +552,16 @@ export default function GoalsScreen(): React.JSX.Element {
         }
       />
       {body}
-      {isHead ? <NewGoalDialog open={dialogOpen} onOpenChange={setDialogOpen} /> : null}
+      {isHead ? (
+        <GoalDialog
+          open={dialogOpen}
+          goal={editingGoal}
+          onOpenChange={(next) => {
+            setDialogOpen(next)
+            if (!next) setEditingGoal(null)
+          }}
+        />
+      ) : null}
     </div>
   )
 }

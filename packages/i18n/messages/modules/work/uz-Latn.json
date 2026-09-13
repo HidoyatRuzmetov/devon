@@ -556,7 +556,15 @@
       "emptyTitle": "Maqsad qoʻyilmagan",
       "emptyBodyHead": "Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi.",
       "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
-      "forbiddenBody": "Maqsadlarni faqat boshqarma boshligʻi koʻradi va qoʻyadi."
+      "forbiddenBody": "Maqsadlarni faqat boshqarma boshligʻi koʻradi va qoʻyadi.",
+      "edit": "{title} maqsadini tahrirlash",
+      "editTitle": "Maqsadni tahrirlash",
+      "save": "Saqlash",
+      "saved": "Maqsad saqlandi",
+      "saveFailed": "Maqsadni saqlab boʻlmadi",
+      "percentTarget": "(maqsad: {target}%)",
+      "capUsed": "chegaraning {pct}% i",
+      "overCap": "Chegaradan {over} taga oshib ketdi"
     }
   },
   "common": {

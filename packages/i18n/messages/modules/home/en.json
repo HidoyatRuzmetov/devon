@@ -112,7 +112,8 @@
         "meaning": "The goals furthest behind come first. Progress is computed from the cards themselves.",
         "cta": "All goals",
         "empty": "No goals yet. Set the first one — progress computes itself.",
-        "progressAria": "{title} — progress"
+        "progressAria": "{title} — progress",
+        "ofCap": "of cap"
       },
       "catchUp": {
         "title": "AI briefing",

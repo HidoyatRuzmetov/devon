@@ -63,7 +63,12 @@ import { fetchIndicators } from '../people/api.js'
 import { personPath } from '../people/routes.js'
 import { fetchBoard, type Card as WorkCard } from '../work/api.js'
 import { useGoalsQuery } from '../work/hooks-plus.js'
-import { GOAL_METRIC_LABEL_KEYS, goalProgressTone } from '../work/lib/goal-format.js'
+import {
+  GOAL_METRIC_LABEL_KEYS,
+  goalBarFill,
+  goalProgressTone,
+  isCeilingMetric,
+} from '../work/lib/goal-format.js'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { CatchUpPreview } from '../ai/components/previews.js'
@@ -897,12 +902,24 @@ export function HeadDashboard(): React.JSX.Element {
                 <li key={goal.id} className="flex flex-col gap-1">
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="min-w-0 truncate text-small">{goal.title}</span>
+                    {/* SEV2 #8: a ceiling goal's bar fills TOWARDS its cap, and its caption says how
+                        much of the cap is used -- the achievement ratio would draw 22% next to a
+                        department that is comfortably inside its own limit. Same two functions the
+                        /goals card uses, so the tile and the page cannot disagree. */}
                     <span className="shrink-0 tabular-nums text-caption text-muted-foreground">
-                      {formatNumber(Math.round(goal.progress * 100), locale)}%
+                      {formatNumber(
+                        Math.round(
+                          goalBarFill(goal.metric, goal.currentValue, goal.targetValue) * 100,
+                        ),
+                        locale,
+                      )}
+                      %{isCeilingMetric(goal.metric) ? ` ${t('home.head.goals.ofCap')}` : ''}
                     </span>
                   </span>
                   <Progress
-                    value={Math.round(goal.progress * 100)}
+                    value={Math.round(
+                      goalBarFill(goal.metric, goal.currentValue, goal.targetValue) * 100,
+                    )}
                     tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
                     label={t('home.head.goals.progressAria', { title: goal.title })}
                   />

@@ -29,7 +29,11 @@
       "lastError": "Last error: {error}",
       "runCount": "Ran {count} times",
       "lastRun": "Last run: {at}",
-      "neverRun": "Has not run yet"
+      "neverRun": "Has not run yet",
+      "edit": "Edit the rule {name}",
+      "duplicate": "Duplicate the rule {name}",
+      "copyOf": "{name} — copy",
+      "suppressed": "This rule is off now — those {count} runs happened while it was on, and nothing fires for new cards."
     },
     "trigger": {
       "cardCreated": "When a card is created",
@@ -99,7 +103,27 @@
         "filterDidNotMatch": "The card did not match the filter",
         "alreadyAppliedToday": "Already applied today",
         "other": "Skipped"
-      }
+      },
+      "batch": "{count} cards"
+    },
+    "editTitle": "Edit rule",
+    "save": "Save",
+    "saved": "Rule saved",
+    "saveFailed": "Could not save the rule",
+    "runsFilter": {
+      "rule": "Rule",
+      "status": "Outcome",
+      "allRules": "All rules",
+      "allStatuses": "All",
+      "count": "{groups} groups · {runs} runs"
+    },
+    "runsFilteredTitle": "Nothing matches this filter",
+    "runsFilteredBody": "Pick another rule or another outcome.",
+    "runsClearFilters": "Clear the filters",
+    "runsPage": {
+      "previous": "Previous",
+      "next": "Next",
+      "of": "Page {page} of {pages}"
     }
   }
 }

@@ -112,7 +112,8 @@
         "meaning": "Eng orqada qolgan maqsadlar oldinda. Progress kartalardan oʻzi hisoblanadi.",
         "cta": "Barcha maqsadlar",
         "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi.",
-        "progressAria": "{title} — bajarilgan qismi"
+        "progressAria": "{title} — bajarilgan qismi",
+        "ofCap": "chegaradan"
       },
       "catchUp": {
         "title": "AI xulosa",

@@ -29,7 +29,11 @@
       "lastError": "Oxirgi xato: {error}",
       "runCount": "{count} marta ishlagan",
       "lastRun": "Oxirgi marta: {at}",
-      "neverRun": "Hali ishga tushmagan"
+      "neverRun": "Hali ishga tushmagan",
+      "edit": "{name} qoidasini tahrirlash",
+      "duplicate": "{name} qoidasidan nusxa olish",
+      "copyOf": "{name} — nusxa",
+      "suppressed": "Qoida hozir oʻchirilgan — quyidagi {count} ta ishga tushish u yoqilgan paytda boʻlgan, yangi kartalar uchun hech narsa bajarilmaydi."
     },
     "trigger": {
       "cardCreated": "Karta yaratilganda",
@@ -99,7 +103,27 @@
         "filterDidNotMatch": "Karta filtrga tushmadi",
         "alreadyAppliedToday": "Bugun allaqachon bajarilgan",
         "other": "Oʻtkazib yuborildi"
-      }
+      },
+      "batch": "{count} ta karta"
+    },
+    "editTitle": "Qoidani tahrirlash",
+    "save": "Saqlash",
+    "saved": "Qoida saqlandi",
+    "saveFailed": "Qoidani saqlab boʻlmadi",
+    "runsFilter": {
+      "rule": "Qoida",
+      "status": "Natija",
+      "allRules": "Hamma qoidalar",
+      "allStatuses": "Hammasi",
+      "count": "{groups} ta guruh · {runs} ta ishga tushish"
+    },
+    "runsFilteredTitle": "Bu filtrga mos yozuv yoʻq",
+    "runsFilteredBody": "Boshqa qoidani yoki boshqa natijani tanlang.",
+    "runsClearFilters": "Filtrlarni tozalash",
+    "runsPage": {
+      "previous": "Oldingi",
+      "next": "Keyingi",
+      "of": "{pages} sahifadan {page} chisi"
     }
   }
 }

@@ -460,9 +460,26 @@ export function createGoal(input: CreateGoalInput, csrfToken: string): Promise<{
   return apiClient.post('/api/v1/goals', input, idResultSchema, csrfToken)
 }
 
+/** v1.1 critique SEV2 #8 -- editing a goal, which the product could not do at all. Mirrors the
+ * server's own `patchGoalBodySchema`, which is deliberately *wider* than `CreateGoalInput`:
+ * `description` and `dueOn` are nullable on a patch, because clearing a description is a real edit
+ * and `undefined` would mean "leave it alone". `filter` is a string there, so an emptied filter is
+ * sent as `''` -- "count every card" -- rather than as `null`. */
+export type PatchGoalInput = {
+  title?: string
+  description?: string | null
+  metric?: z.infer<typeof goalMetricSchema>
+  filter?: string
+  targetValue?: number
+  startsOn?: string | null
+  dueOn?: string | null
+  archived?: boolean
+  version?: number
+}
+
 export async function patchGoal(
   id: string,
-  patch: Partial<CreateGoalInput & { archived: boolean; version: number }>,
+  patch: PatchGoalInput,
   csrfToken: string,
 ): Promise<void> {
   await apiClient.patch(`/api/v1/goals/${encodeURIComponent(id)}`, patch, z.void(), csrfToken)

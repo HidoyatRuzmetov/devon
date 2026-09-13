@@ -5,7 +5,7 @@
 // (I-5, MODULE-GUIDE.md "Domain events").
 import { randomUUID, createHash } from 'node:crypto'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
-import { EventConflictError, EventForbiddenError, EventNotFoundError } from './errors.js'
+import { EventConflictError, EventNotFoundError } from './errors.js'
 import { buildIcs } from './ics.js'
 import {
   average,
@@ -17,6 +17,7 @@ import {
   type DiffableEvent,
 } from './logic.js'
 import * as repo from './repo.js'
+import { assertManage, mayManage, viewerCanManage, type Actor as GuardActor } from './guards.js'
 import type {
   CarpoolDto,
   CommentDto,
@@ -30,7 +31,11 @@ import type {
   UpdateEventBody,
 } from './schemas.js'
 
-export type Actor = { userId: string; isHead: boolean; givenName: string; familyName: string }
+/** v1.1 critique SEV2 #10: re-exported from `guards.ts`, which is now the only place in this module
+ * that knows how an ownership question is answered. `isHead` is gone from the shape -- a boolean
+ * that says "this person is special" travelling through a service is how a hand-rolled check gets
+ * written in the first place. */
+export type Actor = GuardActor
 
 function eventDiffable(e: repo.EventRow): DiffableEvent {
   return {
@@ -45,10 +50,9 @@ function eventDiffable(e: repo.EventRow): DiffableEvent {
   }
 }
 
+/** SEV2 #10: the event's owner set is its organizer; the decision is `can()`'s, not this file's. */
 function requireManage(event: repo.EventRow, actor: Actor): void {
-  if (event.organizer_user_id !== actor.userId && !actor.isHead) {
-    throw new EventForbiddenError()
-  }
+  assertManage(actor, [event.organizer_user_id])
 }
 
 function toEventDto(
@@ -132,7 +136,7 @@ export async function listEvents(
         maybeCount: c?.maybe_count ?? 0,
         waitlistCount: c?.waitlist_count ?? 0,
         myRsvp: my,
-        canManage: row.organizer_user_id === viewerUserId || isHead,
+        canManage: viewerCanManage(row.organizer_user_id, viewerUserId, isHead),
       })
     })
   })
@@ -156,7 +160,7 @@ export async function getEvent(
       maybeCount: counts.maybe_count,
       waitlistCount: counts.waitlist_count,
       myRsvp: my,
-      canManage: row.organizer_user_id === viewerUserId || isHead,
+      canManage: viewerCanManage(row.organizer_user_id, viewerUserId, isHead),
     })
   })
 }
@@ -463,7 +467,7 @@ export async function upsertRsvp(
       maybeCount: counts.maybe_count,
       waitlistCount: counts.waitlist_count,
       myRsvp: my,
-      canManage: row!.organizer_user_id === userId || actor.isHead,
+      canManage: viewerCanManage(row!.organizer_user_id, userId, mayManage(actor, [null])),
     })
   })
 }
@@ -557,7 +561,8 @@ export async function deleteComment(
   return withContext(ctx, async (tx) => {
     const authorUserId = await repo.getCommentAuthor(tx, commentId)
     if (!authorUserId) throw new EventNotFoundError()
-    if (authorUserId !== actor.userId && !actor.isHead) throw new EventForbiddenError()
+    // SEV2 #10: a comment's owner set is its author.
+    assertManage(actor, [authorUserId])
     await repo.softDeleteComment(tx, commentId)
     tx.audit({
       action: 'events.comment_deleted',
@@ -594,7 +599,7 @@ function toCarpoolDto(
       seatsClaimed: p.seats_claimed,
       status: p.status as 'confirmed' | 'waitlist',
     })),
-    canManage: c.driver_user_id === viewerUserId || isHead,
+    canManage: viewerCanManage(c.driver_user_id, viewerUserId, isHead),
   }
 }
 
@@ -651,7 +656,7 @@ export async function createCarpool(
     })
     const carpools = await repo.listCarpools(tx, eventId)
     const created = carpools.find((c) => c.id === id)!
-    return toCarpoolDto(created, [], actor.userId, actor.isHead)
+    return toCarpoolDto(created, [], actor.userId, mayManage(actor, [null]))
   })
 }
 
@@ -877,7 +882,7 @@ async function pollToDto(
       votes: votesByOption.get(o.id) ?? 0,
       votedByMe: myVoteIds.has(o.id),
     })),
-    canManage: poll.created_by_user_id === viewerUserId || isHead,
+    canManage: viewerCanManage(poll.created_by_user_id, viewerUserId, isHead),
   }
 }
 
@@ -946,7 +951,7 @@ export async function createPoll(
       payload: { eventId, pollId: id, actorUserId: actor.userId },
     })
     const poll = await repo.getPoll(tx, id)
-    return pollToDto(tx, poll!, actor.userId, actor.isHead)
+    return pollToDto(tx, poll!, actor.userId, mayManage(actor, [null]))
   })
 }
 
@@ -981,7 +986,7 @@ export async function voteOnPoll(
     })
 
     tx.audit({ action: 'events.poll_voted', subjectType: 'poll', subjectId: pollId })
-    return pollToDto(tx, poll, actor.userId, actor.isHead)
+    return pollToDto(tx, poll, actor.userId, mayManage(actor, [null]))
   })
 }
 
@@ -1046,7 +1051,8 @@ export async function deletePhoto(
   return withContext(ctx, async (tx) => {
     const ownerId = await repo.getPhotoOwner(tx, photoId)
     if (!ownerId) throw new EventNotFoundError()
-    if (ownerId !== actor.userId && !actor.isHead) throw new EventForbiddenError()
+    // SEV2 #10: a photo's owner set is whoever uploaded it.
+    assertManage(actor, [ownerId])
     await repo.deletePhoto(tx, photoId)
     tx.audit({ action: 'events.photo_deleted', subjectType: 'event_photo', subjectId: photoId })
   })
