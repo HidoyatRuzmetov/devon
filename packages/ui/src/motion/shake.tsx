@@ -5,34 +5,32 @@ import { cn } from '../lib/cn.js'
 import { S_STANDARD, EASE_STANDARD } from './tokens.js'
 
 export interface ShakeProps {
-  /** Flip to `true` for one frame to fire one refusal; the component calls `onDone` when it ends so
-   * the caller can flip it back (the same contract `<Celebrate>` uses). */
+  /** Flip to `true` for one frame to fire one refusal; the component calls `onDone` when the
+   * animation ends so the caller can flip it back (the same contract `<Celebrate>` uses). */
   play: boolean
   onDone?: () => void
   children: React.ReactNode
   className?: string
-  /** Peak travel in pixels. 4 px is the product default: enough to read as "no", small enough that
-   * nothing around it appears to move. */
-  distance?: number
 }
 
 /** The catalogue's *refusal*, and the counterpart to `<Celebrate>`: the product says yes with a
- * 12-particle burst and no with this. Three surfaces use it — an invalid drop on the board, a
- * failed optimistic write rolling back, and a field whose inline validation just rejected what was
- * typed — and they all mean the same thing, so they all move the same way.
+ * 12-particle burst and no with this. Four surfaces use it — an invalid drop on the board, a failed
+ * optimistic write rolling back, a field whose inline validation just rejected what was typed, and a
+ * login/register/join submission the server turned down — and they all mean the same thing, so they
+ * all move the same way.
  *
- * Transform-only (`x`), so a shake inside a 200-card board column composites on the GPU and never
- * reflows its siblings.
+ * **The wag is a CSS keyframe (`devon-shake` in `styles/tokens.css`), not a `motion` animation**, and
+ * that is a measured decision rather than a stylistic one. `<Shake>` wraps things that exist in
+ * quantity: every tile on a 540-card board is a potential rollback, so every tile carries one. A
+ * `motion` component pays its layout bookkeeping on every render whether or not it is animating; a
+ * keyframe costs nothing at all until the class lands on the element. Transform-only either way, so
+ * the wag itself composites on the GPU and never reflows a sibling.
  *
- * **Reduced motion replaces the travel with a destructive-tinted ring that fades out in place.**
- * The refusal is still unmistakable, nothing moves. (DESIGN.md §2.5: replace, never delete.) */
-export function Shake({
-  play,
-  onDone,
-  children,
-  className,
-  distance = 4,
-}: ShakeProps): React.JSX.Element {
+ * **Reduced motion replaces the travel with a destructive-tinted ring that fades out in place.** Note
+ * that it *replaces* rather than relies on the global `prefers-reduced-motion` backstop in
+ * `tokens.css` — that backstop would collapse the keyframe to nothing, leaving a refusal with no
+ * feedback at all, which is exactly what DESIGN.md §2.5 forbids. */
+export function Shake({ play, onDone, children, className }: ShakeProps): React.JSX.Element {
   const reduced = useReducedMotion()
   const handleComplete = React.useCallback(() => onDone?.(), [onDone])
 
@@ -55,20 +53,15 @@ export function Shake({
   }
 
   return (
-    <motion.div
-      className={className}
-      animate={
-        play ? { x: [0, -distance, distance, -distance * 0.6, distance * 0.6, 0] } : { x: 0 }
-      }
-      transition={play ? { duration: S_STANDARD, ease: EASE_STANDARD } : { duration: 0 }}
-      // `exactOptionalPropertyTypes` refuses a possibly-`undefined` handler prop, so the handler is
-      // always defined and decides for itself whether this completion was a shake ending.
-      onAnimationComplete={() => {
-        if (play) handleComplete()
+    <div
+      className={cn(className, play && 'devon-shake')}
+      // The keyframe runs twice; `onAnimationEnd` fires once at the end of the whole run.
+      onAnimationEnd={(event) => {
+        if (play && event.animationName.includes('devon-shake')) handleComplete()
       }}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }
 

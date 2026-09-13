@@ -473,6 +473,40 @@
   }
 }
 
+/* The product's refusal (`packages/ui/src/motion/shake.tsx`): one quick horizontal wag, twice.
+
+   A CSS keyframe rather than a `motion` animation on purpose, and the reason is measured. `<Shake>`
+   wraps things that exist in *quantity* -- every card on a 540-card board is a potential rollback --
+   and a `motion` component costs its layout bookkeeping on every render whether or not it is
+   animating, while a keyframe costs exactly nothing until the class is on the element.
+
+   The global `prefers-reduced-motion` backstop above would *delete* this rather than replace it, so
+   `<Shake>` does not rely on it: under reduced motion the component renders a destructive ring that
+   fades in place instead, and never adds this class. */
+@keyframes devon-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+.devon-shake {
+  animation: devon-shake var(--dur-standard) var(--ease-emphasized) 2;
+}
+
 /* -- Route change: View Transitions (UI-OVERHAUL.md §3 row 1) ----------------------------------
    The router calls `startViewTransition()` around its own state update (`packages/ui/src/motion/
    view-transition.ts`); these two rules are what the browser then plays. Crossfade plus an 8 px

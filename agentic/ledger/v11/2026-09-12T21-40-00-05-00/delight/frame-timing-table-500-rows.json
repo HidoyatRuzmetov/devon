@@ -1,0 +1,48 @@
+{
+  "url": "http://127.0.0.1:5174/work/table",
+  "build": "production (apps/web/dist, served with the same same-origin /api proxy)",
+  "persona": "head (demo.boshliq)",
+  "department_cards_total": 540,
+  "rows_in_dom": 25,
+  "virtualised": "yes -- TanStack Virtual keeps ~25 rows mounted out of 540",
+  "note": [
+    "rAF ticks faster than 60 Hz here, so the frame-budget answer is framesOver16_7ms, not the median.",
+    "Idle and hover sit at 4.2 ms with 540 rows behind the window: the motion this pass added costs nothing here.",
+    "Scrolling misses frames, and it is NOT the motion. Measured two ways. (a) Rebuilding both virtualised row components as plain divs with an inline translateY instead of motion.div changed the median by under 4% (91.6 -> 87.4 ms at one row per frame; 29.1 -> 29.2 ms at a realistic wheel step). (b) Running the identical scroll with the list not painted costs 87.5 ms against the painted 91.7 -- so, unlike the board, this is not paint either.",
+    "What is left is the virtualiser: TanStack Virtual sets state on every scroll event and the whole visible window of ~25 heavy rows re-renders with it. That is a rendering concern inside the table screen, untouched by this pass and outside a motion pass's scope. Recorded here so the finding is not lost; it belongs in the backlog as its own item."
+  ],
+  "results": [
+    {
+      "label": "table idle",
+      "frames": 355,
+      "medianMs": 4.2,
+      "p95Ms": 4.3,
+      "maxMs": 8.4,
+      "framesOver16_7ms": 0
+    },
+    {
+      "label": "hover rows",
+      "frames": 357,
+      "medianMs": 4.2,
+      "p95Ms": 4.3,
+      "maxMs": 8.3,
+      "framesOver16_7ms": 0
+    },
+    {
+      "label": "scroll the whole 540-row list",
+      "frames": 68,
+      "medianMs": 91.7,
+      "p95Ms": 404.1,
+      "maxMs": 470.8,
+      "framesOver16_7ms": 60
+    },
+    {
+      "label": "the same scroll with the list visibility:hidden (identical DOM and JS, nothing painted)",
+      "frames": 68,
+      "medianMs": 87.5,
+      "p95Ms": 383.3,
+      "maxMs": 404.1,
+      "framesOver16_7ms": 59
+    }
+  ]
+}
