@@ -24,10 +24,17 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // every signed-in role for the same reason `personal` and `inbox` are: everything on it is the
   // person's own, scoped by a `{kind:'personal'}` subject on every route behind it, so there is
   // nothing for a role to gate.
+  //
+  // v1.1 integration: `automations`, and `work`'s own `workload` and `goals`, join the list.
+  // `shell/nav.ts`'s `manage-head` group had always reserved those three ids and no manifest claimed
+  // them, so three of the head's six Boshqaruv destinations were reachable only by typing a palette
+  // command from memory. Each declares a head-only action, which is why they appear here (no `can`
+  // in this context = no action gating) and are asserted absent for a xodim further down.
   const featureEntryIds = [
     'account-settings',
     'ai',
     'analytics',
+    'automations',
     'calendar',
     'departments',
     'department-settings',
@@ -41,6 +48,8 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
     'structure',
     'people',
     'work',
+    'workload',
+    'goals',
   ]
 
   it('shows Home plus every role-visible feature entry to a member', () => {
@@ -61,6 +70,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'account-settings',
       'ai',
       'analytics',
+      'automations',
       'calendar',
       'departments',
       'department-requests',
@@ -75,6 +85,8 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'structure',
       'people',
       'work',
+      'workload',
+      'goals',
     ])
   })
 
@@ -91,6 +103,11 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     'people.table.read',
     'departments.settings.edit',
     'fields.definition.manage',
+    // v1.1 integration: the other three Boshqaruv destinations. SPEC §3.1 names six, and a set that
+    // listed three of them could pass while half the group leaked.
+    'work.workload.read',
+    'goals.read',
+    'automations.read',
   ])
 
   function ctxFor(role: 'head' | 'member') {
@@ -108,6 +125,10 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     expect(ids).not.toContain('department-settings')
     // v1.1 SPEC §5: the custom-field manager is a Boshqaruv destination, never a xodim's.
     expect(ids).not.toContain('fields')
+    // SPEC §3.1 names six Boshqaruv entries; all six are asserted, so the group can never half-leak.
+    expect(ids).not.toContain('workload')
+    expect(ids).not.toContain('goals')
+    expect(ids).not.toContain('automations')
   })
 
   it('a xodim keeps the whole working set', () => {
@@ -135,6 +156,9 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     expect(ids).toContain('people-table')
     expect(ids).toContain('department-settings')
     expect(ids).toContain('fields')
+    expect(ids).toContain('workload')
+    expect(ids).toContain('goals')
+    expect(ids).toContain('automations')
   })
 
   it('the instance role is never what decides it (I-8b)', () => {

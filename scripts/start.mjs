@@ -93,19 +93,39 @@ run(
 // developer ever sees presence, live card moves or the editing indicator.
 //
 // Filled in only where the shell or `.env` has said nothing, so a real deployment's own values always
-// win. The two placeholder secrets are the same ones `infra/docker-compose.yml` already defaults the
-// container to -- they are local-development placeholders with `change_me` in the name, not secrets
-// (I-17), and a production boot sets all four in `.env` exactly as it sets `DATABASE_URL`.
-const CENTRIFUGO_PORT = process.env.CENTRIFUGO_PORT || '8000'
+// win, and a production boot sets all four in `.env` exactly as it sets `DATABASE_URL`.
+//
+// The two shared secrets are READ OUT OF the compose file rather than restated here. The API and the
+// broker have to agree on them or every token is rejected, and a second copy in this script is a
+// second thing to change -- `infra/docker-compose.yml`'s own `${VAR:-default}` is where the local
+// default is declared, so that is where this reads it from. It also keeps a credential-shaped string
+// literal out of the repo's JavaScript, which `agentic/scripts/check-secrets.mjs` is right to refuse
+// (I-17).
+/** The `default` half of a compose `${VAR:-default}` interpolation. Read by scanning for the literal
+ * opener rather than by building a regex out of `variable`: nothing here has to be escaped, and a
+ * mention of the same name inside a YAML comment cannot match. */
+function composeDefault(yaml, variable) {
+  const opener = '${' + variable + ':-'
+  const start = yaml.indexOf(opener)
+  if (start === -1) return ''
+  const end = yaml.indexOf('}', start + opener.length)
+  return end === -1 ? '' : yaml.slice(start + opener.length, end).trim()
+}
+const composeYaml = readFileSync(composeFile, 'utf8')
+const CENTRIFUGO_PORT =
+  process.env.CENTRIFUGO_PORT || composeDefault(composeYaml, 'CENTRIFUGO_PORT') || '8000'
 const REALTIME_DEV_DEFAULTS = {
   CENTRIFUGO_WS_URL: `ws://127.0.0.1:${CENTRIFUGO_PORT}/connection/websocket`,
   CENTRIFUGO_API_URL: `http://127.0.0.1:${CENTRIFUGO_PORT}/api`,
-  CENTRIFUGO_API_KEY: 'devon_local_dev_centrifugo_api_change_me',
-  CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: 'devon_local_dev_centrifugo_change_me',
+  CENTRIFUGO_API_KEY: composeDefault(composeYaml, 'CENTRIFUGO_API_KEY'),
+  CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: composeDefault(composeYaml, 'CENTRIFUGO_TOKEN_HMAC_SECRET_KEY'),
 }
 const filledRealtime = []
 for (const [key, value] of Object.entries(REALTIME_DEV_DEFAULTS)) {
-  if (!process.env[key]) {
+  // An empty value means the compose file no longer declares that default: leave the variable unset
+  // so `realtime/config.ts` reports `enabled: false` honestly, rather than handing the API a blank
+  // HMAC key that would reject every token with no explanation.
+  if (!process.env[key] && value) {
     process.env[key] = value
     filledRealtime.push(key)
   }
