@@ -5,7 +5,6 @@
 // no would cost a round trip and teach nothing -- a disabled row with "this would create a loop"
 // under it explains the rule the moment it matters.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { ArrowRight, Link2Off, Loader2, Lock, Unlock } from 'lucide-react'
 import { wouldCreateDependencyCycle, type DependencyEdge } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -198,21 +197,23 @@ export function DependenciesPanel({
             {t('work.dependencies.blockedByEmpty')}
           </p>
         ) : (
-          <AnimatePresence initial={false}>
-            <Stagger className="flex flex-col gap-1.5" animateKey={`blockedBy-${blockedBy.length}`}>
-              {blockedBy.map((entry) => (
-                <StaggerItem key={entry.id} exit="hidden" layout>
-                  <DependencyRow
-                    entry={entry}
-                    onOpenCard={onOpenCard}
-                    onRemove={() => removeBlocker(entry)}
-                    removing={pendingRemoval === entry.id}
-                    canEdit={canEdit}
-                  />
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </AnimatePresence>
+          <Stagger
+            presence
+            className="flex flex-col gap-1.5"
+            animateKey={`blockedBy-${blockedBy.length}`}
+          >
+            {blockedBy.map((entry) => (
+              <StaggerItem key={entry.id} exit="hidden" layout>
+                <DependencyRow
+                  entry={entry}
+                  onOpenCard={onOpenCard}
+                  onRemove={() => removeBlocker(entry)}
+                  removing={pendingRemoval === entry.id}
+                  canEdit={canEdit}
+                />
+              </StaggerItem>
+            ))}
+          </Stagger>
         )}
         {canEdit ? (
           picking ? (

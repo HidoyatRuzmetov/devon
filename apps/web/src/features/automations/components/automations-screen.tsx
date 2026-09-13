@@ -9,7 +9,6 @@
 // did nothing from a rule that is broken. So every run -- applied, skipped *and* failed -- is listed
 // with what it did, and a rule's last error rides on the rule card itself.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import {
   AlertTriangle,
   Check,
@@ -528,40 +527,38 @@ export default function AutomationsScreen(): React.JSX.Element {
     )
   } else {
     rulesBody = (
-      <AnimatePresence initial={false}>
-        <Stagger className="grid gap-3 lg:grid-cols-2" animateKey={`rules-${rules.length}`}>
-          {rules.map((rule) => (
-            <StaggerItem key={rule.id} exit="hidden" layout className="h-full min-w-0">
-              <RuleCard
-                rule={rule}
-                busy={pending === rule.id}
-                celebrate={savedRuleId === rule.id}
-                onCelebrateDone={() => setSavedRuleId(null)}
-                onToggle={(enabled) => toggle(rule, enabled)}
-                onDelete={() => remove(rule)}
-                onEdit={() => {
-                  setBuilderRule(rule)
-                  setBuilderSeed(null)
-                  setBuilderOpen(true)
-                }}
-                onDuplicate={() => {
-                  setBuilderRule(null)
-                  setBuilderSeed({
-                    name: t('automations.rule.copyOf', { name: rule.name }),
-                    trigger: rule.trigger,
-                    triggerConfig: rule.triggerConfig,
-                    actions: rule.actions,
-                    // A copy starts switched off: a rule that began firing the moment it was
-                    // duplicated would be the automations feature's worst first impression.
-                    enabled: false,
-                  })
-                  setBuilderOpen(true)
-                }}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </AnimatePresence>
+      <Stagger presence className="grid gap-3 lg:grid-cols-2" animateKey={`rules-${rules.length}`}>
+        {rules.map((rule) => (
+          <StaggerItem key={rule.id} exit="hidden" layout className="h-full min-w-0">
+            <RuleCard
+              rule={rule}
+              busy={pending === rule.id}
+              celebrate={savedRuleId === rule.id}
+              onCelebrateDone={() => setSavedRuleId(null)}
+              onToggle={(enabled) => toggle(rule, enabled)}
+              onDelete={() => remove(rule)}
+              onEdit={() => {
+                setBuilderRule(rule)
+                setBuilderSeed(null)
+                setBuilderOpen(true)
+              }}
+              onDuplicate={() => {
+                setBuilderRule(null)
+                setBuilderSeed({
+                  name: t('automations.rule.copyOf', { name: rule.name }),
+                  trigger: rule.trigger,
+                  triggerConfig: rule.triggerConfig,
+                  actions: rule.actions,
+                  // A copy starts switched off: a rule that began firing the moment it was
+                  // duplicated would be the automations feature's worst first impression.
+                  enabled: false,
+                })
+                setBuilderOpen(true)
+              }}
+            />
+          </StaggerItem>
+        ))}
+      </Stagger>
     )
   }
 

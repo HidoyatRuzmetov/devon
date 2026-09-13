@@ -5,7 +5,6 @@
 // (that is what assigning and a due date are for). The server scopes every row to its creator, so
 // this panel only ever shows your own.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { BellRing, Check, Loader2, Trash2 } from 'lucide-react'
 import { useT, useLocale, formatDateTime } from '@devon/i18n'
 import {
@@ -152,56 +151,58 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
       {reminders.length === 0 ? (
         <p className="text-caption text-muted-foreground">{t('work.reminders.empty')}</p>
       ) : (
-        <AnimatePresence initial={false}>
-          <Stagger className="flex flex-col gap-1" animateKey={`reminders-${reminders.length}`}>
-            {reminders.map((reminder) => (
-              <StaggerItem key={reminder.id} exit="hidden" layout>
-                <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
-                  <BellRing className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <span className="shrink-0 text-small tabular-nums text-foreground">
-                    {formatDateTime(new Date(reminder.remindAt), locale)}
+        <Stagger
+          presence
+          className="flex flex-col gap-1"
+          animateKey={`reminders-${reminders.length}`}
+        >
+          {reminders.map((reminder) => (
+            <StaggerItem key={reminder.id} exit="hidden" layout>
+              <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+                <BellRing className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <span className="shrink-0 text-small tabular-nums text-foreground">
+                  {formatDateTime(new Date(reminder.remindAt), locale)}
+                </span>
+                {reminder.note ? (
+                  <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
+                    {reminder.note}
                   </span>
-                  {reminder.note ? (
-                    <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
-                      {reminder.note}
-                    </span>
-                  ) : (
-                    <span className="flex-1" />
-                  )}
-                  {reminder.sentAt ? (
-                    <Chip
-                      tone="neutral"
-                      leading={<Check className="size-3" />}
-                      className="text-muted-foreground"
-                    >
-                      {t('work.reminders.sent')}
-                    </Chip>
-                  ) : (
-                    <Chip tone="outline">{t('work.reminders.pending')}</Chip>
-                  )}
-                  <IconButton
-                    aria-label={t('work.reminders.delete')}
-                    disabled={pendingDelete === reminder.id}
-                    onClick={() => {
-                      setPendingDelete(reminder.id)
-                      deleteReminder.mutate(reminder.id, {
-                        onSettled: () => setPendingDelete(null),
-                        onError: () => toast.error(t('work.reminders.deleteFailed')),
-                      })
-                    }}
-                    className="shrink-0"
+                ) : (
+                  <span className="flex-1" />
+                )}
+                {reminder.sentAt ? (
+                  <Chip
+                    tone="neutral"
+                    leading={<Check className="size-3" />}
+                    className="text-muted-foreground"
                   >
-                    {pendingDelete === reminder.id ? (
-                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    ) : (
-                      <Trash2 className="size-4" aria-hidden="true" />
-                    )}
-                  </IconButton>
-                </div>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </AnimatePresence>
+                    {t('work.reminders.sent')}
+                  </Chip>
+                ) : (
+                  <Chip tone="outline">{t('work.reminders.pending')}</Chip>
+                )}
+                <IconButton
+                  aria-label={t('work.reminders.delete')}
+                  disabled={pendingDelete === reminder.id}
+                  onClick={() => {
+                    setPendingDelete(reminder.id)
+                    deleteReminder.mutate(reminder.id, {
+                      onSettled: () => setPendingDelete(null),
+                      onError: () => toast.error(t('work.reminders.deleteFailed')),
+                    })
+                  }}
+                  className="shrink-0"
+                >
+                  {pendingDelete === reminder.id ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Trash2 className="size-4" aria-hidden="true" />
+                  )}
+                </IconButton>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
       )}
     </div>
   )

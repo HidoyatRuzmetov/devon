@@ -5,8 +5,8 @@
 // (outside this module's own paths -- see this item's report).
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { formatNumber, useLocale, useT } from '@devon/i18n'
-import { Badge, Button, Collapsible, DataList, DataRow, StateView, cn } from '@devon/ui'
+import { formatNumber, numberFlowLocale, useLocale, useT } from '@devon/i18n'
+import { Badge, Button, Collapsible, CountFlow, DataList, DataRow, StateView, cn } from '@devon/ui'
 import {
   Activity,
   AlertTriangle,
@@ -198,12 +198,20 @@ function UserCountTile({ total }: { total: number }): React.JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
+    // Same surface as the two `StatTile`s beside it (`charts.tsx`): `bg-surface-2`, `shadow-1`,
+    // `font-display text-h1`. The three overview tiles are read as one row and were drawn as two
+    // different things.
+    <div className="flex flex-col gap-2 rounded-md border border-border bg-surface-2 p-4 shadow-1">
       <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
         {t('admin.console.dashboard.userCount')}
       </p>
-      <p className="text-h2 font-semibold tabular-nums text-foreground">
-        {formatNumber(total, locale)}
+      {/* Motion verdict F11: this was the one counter in the product that did not tick. It is also
+          the number a super admin watches while approving a department -- the single moment it
+          changes -- so it changed without ever being seen changing. `CountFlow` is the same ticker
+          the board columns and the inbox badge use, handed the app's locale (not the browser's, or a
+          uz-Latn UI groups with commas), and `animated={false}` under reduced motion comes with it. */}
+      <p className="font-display text-h1 tabular-nums text-foreground">
+        <CountFlow value={total} locale={numberFlowLocale(locale)} />
       </p>
       <button
         type="button"

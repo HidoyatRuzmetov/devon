@@ -35,6 +35,7 @@ import {
   resume as resumeEngine,
   startPhase,
   stopToIdle,
+  usePomodoroRemainingSec,
   usePomodoroState,
   type PomodoroPhase,
 } from './pomodoro-engine.js'
@@ -61,6 +62,10 @@ const PHASE_LABEL_KEY: Record<PomodoroPhase, string> = {
 export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null }) {
   const t = useT()
   const state = usePomodoroState()
+  // F3: the per-second snapshot. It drives the mini ring *and* re-arms the end-of-phase effect
+  // below -- `state` alone never changes reference on a tick, so that effect used to fire only on
+  // start/pause/phase change and a phase could run past zero unnoticed.
+  const remainingSec = usePomodoroRemainingSec()
   const settingsQuery = usePomodoroSettingsQuery()
   const createSession = useCreatePomodoroSessionMutation()
   const patchSession = usePatchPomodoroSessionMutation()
@@ -116,13 +121,13 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
       stopToIdle()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on the tick, not on every dep change.
-  }, [state, settings, activeTaskId])
+  }, [state, remainingSec, settings, activeTaskId])
 
   if (!settings) return null
 
   const running = state.phase !== 'idle'
   const paused = running && state.remainingAtPause !== null
-  const remaining = remainingMs()
+  const remaining = remainingSec * 1000
   const ringValue =
     running && settings
       ? 100 -

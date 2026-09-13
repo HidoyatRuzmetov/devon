@@ -170,7 +170,12 @@ export default function JoinScreen() {
               </a>
             </p>
           ) : (
-            <Button type="submit" size="lg" loading={mutation.isPending}>
+            <Button
+              type="submit"
+              size="lg"
+              loading={mutation.isPending}
+              loadingLabel={t('state.loading')}
+            >
               {t('departments.join.submit')}
             </Button>
           )}

@@ -43,11 +43,11 @@ import {
   pause as pauseEngine,
   phaseDurationMs,
   phaseToKind,
-  remainingMs,
   requestNotificationPermission,
   resume as resumeEngine,
   startPhase,
   stopToIdle,
+  usePomodoroRemainingSec,
   usePomodoroState,
   type PomodoroPhase,
 } from './pomodoro-engine.js'
@@ -195,6 +195,9 @@ export function PomodoroPanel() {
   const createSession = useCreatePomodoroSessionMutation()
   const patchSession = usePatchPomodoroSessionMutation()
   const state = usePomodoroState()
+  // The snapshot that changes on the tick (F3): `usePomodoroState()` alone hands back the same
+  // object reference 4x/s, so the ring and the clock below would never re-render without this.
+  const remainingSec = usePomodoroRemainingSec()
   const lastSoundRef = React.useRef<PomodoroSettings['sound']>('chime')
 
   if (settingsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -214,7 +217,7 @@ export function PomodoroPanel() {
 
   const running = state.phase !== 'idle'
   const paused = running && state.remainingAtPause !== null
-  const remaining = remainingMs()
+  const remaining = remainingSec * 1000
   const total = running
     ? phaseDurationMs(state.phase as Exclude<PomodoroPhase, 'idle'>, settings)
     : 0

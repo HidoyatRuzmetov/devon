@@ -52,6 +52,11 @@ export interface ButtonProps
    * label stays in the DOM the whole time, so the width never jumps and a screen reader still reads
    * the action. */
   success?: boolean
+  /** Shown in place of the label while `loading` **under reduced motion only** -- e.g.
+   * `t('state.loading')`. See the reduced-motion branch in the body: the spinner is replaced there
+   * by a label crossfade plus an opacity pulse, and this is the text it crossfades to. Omit it and
+   * the button's own label simply stays legible while it pulses. */
+  loadingLabel?: React.ReactNode
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -62,6 +67,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       asChild = false,
       loading = false,
+      loadingLabel,
       success = false,
       disabled,
       children,
@@ -90,11 +96,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const phase = loading ? 'loading' : success ? 'success' : 'idle'
     const transition = reduced ? crossfade : tweenMicro
+    // Motion verdict F10. `Loader2`'s `animate-spin` is a CSS animation, and `tokens.css`'s global
+    // reduced-motion backstop clamps every animation to `0.01ms` / one iteration -- so under
+    // reduced motion the spinner used to land on a single static frame and hold it for the whole
+    // request, which reads as a broken button rather than a busy one. DESIGN.md §10's contract is
+    // that motion is *replaced*, never deleted ("nothing becomes silent"), so the replacement is a
+    // 2 s `opacity: 1 -> .72 -> 1` pulse (opacity is not a transform, so it honours the intent)
+    // plus a crossfade of the label to `loadingLabel`. `.devon-busy-pulse` re-asserts its own
+    // duration and iteration count past the backstop, the way `devon-shake` sidesteps it by never
+    // relying on it at all.
+    const busy = reduced && phase === 'loading'
 
     return (
       <Comp
         ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={cn(buttonVariants({ variant, size }), busy && 'devon-busy-pulse', className)}
         disabled={disabled ?? loading}
         aria-busy={loading || undefined}
         {...props}
@@ -121,7 +137,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               transition={transition}
             >
               {phase === 'loading' ? (
-                <Loader2 className="size-4 animate-spin" />
+                busy ? (
+                  <span className="px-3 text-center">{loadingLabel ?? children}</span>
+                ) : (
+                  <Loader2 className="size-4 animate-spin" />
+                )
               ) : (
                 <AnimatedCheck checked className="size-5" />
               )}

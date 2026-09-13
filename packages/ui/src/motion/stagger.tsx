@@ -1,5 +1,11 @@
 import * as React from 'react'
-import { motion, type TargetAndTransition, type Variants, type VariantLabels } from 'motion/react'
+import {
+  AnimatePresence,
+  motion,
+  type TargetAndTransition,
+  type Variants,
+  type VariantLabels,
+} from 'motion/react'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
 import { RISE_PX, STAGGER_STEP, tweenOut, crossfade } from './tokens.js'
 
@@ -12,6 +18,18 @@ export interface StaggerProps {
   /** Seconds before the first child enters. */
   delay?: number
   as?: 'div' | 'ul' | 'ol' | 'section' | 'tbody'
+  /** Opt in when rows are *removed* from this list while it is on screen -- an archived
+   * notification, a deleted reminder, a card dropped out of focus.
+   *
+   * `AnimatePresence` only animates the exit of its own DIRECT children. Wrapping it *around*
+   * `<Stagger>` (the shape twelve call sites used to have) makes its only child the `motion` element
+   * this component renders, and that element never unmounts -- so every `StaggerItem`'s `exit` and
+   * `layout` were grandchildren, and inert. The boundary has to live *inside* the container, which is
+   * what this prop does. `mode="popLayout"` pops the leaving row out of flow so the survivors slide
+   * up to close the gap instead of snapping.
+   *
+   * Pass `exit="hidden"` and `layout` on each `<StaggerItem>` to actually see it. */
+  presence?: boolean
 }
 
 export interface StaggerItemProps {
@@ -20,8 +38,10 @@ export interface StaggerItemProps {
   as?: 'div' | 'li' | 'article' | 'tr'
   /** Opt-in only -- omit for the ordinary case (a parent that just adds/removes children with no
    * animated exit). Pass `"hidden"` (the same variant this item already enters from) to reverse it
-   * on the way out instead, when the immediate parent is wrapped in framer-motion's own
-   * `AnimatePresence` (e.g. a to-do list row that should hold, strike through, then animate away
+   * on the way out instead, when the immediate parent provides a presence boundary -- either
+   * `<Stagger presence>` (the supported way; the boundary is then this item's direct parent) or a
+   * hand-rolled `AnimatePresence` whose direct child this item is (e.g. a to-do list row that
+   * should hold, strike through, then animate away
    * once completed, rather than being yanked out of the DOM the instant it is removed from the
    * array). Layout-shifts the remaining siblings into place at the same time. */
   exit?: TargetAndTransition | VariantLabels
@@ -73,6 +93,7 @@ export function Stagger({
   animateKey,
   delay = 0,
   as = 'div',
+  presence = false,
 }: StaggerProps): React.JSX.Element {
   const reduced = useReducedMotion()
   const Comp = motion[as]
@@ -85,7 +106,13 @@ export function Stagger({
         initial="hidden"
         animate="shown"
       >
-        {children}
+        {presence ? (
+          <AnimatePresence initial={false} mode="popLayout">
+            {children}
+          </AnimatePresence>
+        ) : (
+          children
+        )}
       </Comp>
     </StaggerReducedContext.Provider>
   )

@@ -195,7 +195,13 @@ export function SetupRoute() {
           </span>
         </label>
 
-        <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          loading={mutation.isPending}
+          loadingLabel={t('state.loading')}
+        >
           {t('setup.submit')}
         </Button>
       </form>

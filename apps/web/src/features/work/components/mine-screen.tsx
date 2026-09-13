@@ -1,7 +1,6 @@
 // "Mine" view (TECH-SPEC §5): every card assigned to the signed-in user, across every project and
 // standalone task, grouped by risk so what's overdue is never buried under what isn't.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import { AlertCircle, ChevronDown, Clock3 } from 'lucide-react'
 import {
@@ -135,15 +134,13 @@ function Group({
         {t(titleKey)} ({cards.length})
       </button>
       <Collapsible open={!collapsed}>
-        <AnimatePresence initial={false}>
-          <Stagger className="flex flex-col gap-1.5" animateKey={animateKey}>
-            {cards.map((card) => (
-              <StaggerItem key={card.id} exit="hidden" layout>
-                <MineRow card={card} locale={locale} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </AnimatePresence>
+        <Stagger presence className="flex flex-col gap-1.5" animateKey={animateKey}>
+          {cards.map((card) => (
+            <StaggerItem key={card.id} exit="hidden" layout>
+              <MineRow card={card} locale={locale} />
+            </StaggerItem>
+          ))}
+        </Stagger>
       </Collapsible>
     </div>
   )

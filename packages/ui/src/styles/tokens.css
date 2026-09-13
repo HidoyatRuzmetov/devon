@@ -507,6 +507,37 @@
   animation: devon-shake var(--dur-standard) var(--ease-emphasized) 2;
 }
 
+/* -- Busy pulse: the reduced-motion replacement for a button's spinner ---------------------------
+   `Loader2`'s `animate-spin` is a CSS animation, so the global reduced-motion backstop above clamps
+   it to one 0.01ms frame and the spinner freezes for the whole request -- a button that looks
+   broken rather than busy. DESIGN.md §10 is explicit that motion is *replaced*, never deleted, so
+   `<Button>` swaps the glyph for its label and adds this class instead (motion verdict F10).
+
+   It is opacity only -- no transform, nothing that travels -- which is what makes it an acceptable
+   reduced-motion signal rather than a violation of one. The `!important` declarations below beat
+   the backstop's on specificity alone (a class selector outranks `*`), which is how this survives
+   the very rule that kills the spinner. */
+@keyframes devon-busy-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+.devon-busy-pulse {
+  animation: devon-busy-pulse 2s var(--ease-standard) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .devon-busy-pulse {
+    animation-duration: 2s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
 /* -- Route change: View Transitions (UI-OVERHAUL.md §3 row 1) ----------------------------------
    The router calls `startViewTransition()` around its own state update (`packages/ui/src/motion/
    view-transition.ts`); these two rules are what the browser then plays. Crossfade plus an 8 px

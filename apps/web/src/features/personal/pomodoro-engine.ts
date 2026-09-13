@@ -253,8 +253,26 @@ export function notifyPhaseEnd(enabled: boolean, title: string, body: string): v
   }
 }
 
-/** React binding: re-renders whenever the store changes, plus a steady tick while a phase is
- * running so a countdown display updates every 250ms without each consumer managing its own timer. */
+/** React binding: re-renders whenever the store's *state object* changes -- start, pause, resume,
+ * phase change. It deliberately does NOT re-render on the 250ms tick: `getPomodoroState()` returns
+ * the same object reference every tick, so `useSyncExternalStore` compares it with `Object.is` and
+ * bails out. Anything that has to advance with the clock (the countdown text, the ring stroke, the
+ * end-of-phase effect) must subscribe to `usePomodoroRemainingSec()` as well. */
 export function usePomodoroState(): PomodoroState {
   return React.useSyncExternalStore(subscribePomodoro, getPomodoroState, () => IDLE_STATE)
+}
+
+/** The snapshot that actually changes on a tick: whole seconds left in the current phase.
+ *
+ * DESIGN.md §10 ("Pomodoro | animated ring stroke, phase colour crossfade | 1 s per tick") asks the
+ * ring and the number to move once a second. Seconds -- not milliseconds -- are the snapshot on
+ * purpose: the store notifies 4x/s, `Object.is` collapses three of those four to no-ops, and React
+ * re-renders exactly once per second, which is the cadence `sweep="tick"` was written for.
+ * `Math.ceil` so a 25:00 phase shows "25:00" on its first frame rather than "24:59". */
+export function usePomodoroRemainingSec(): number {
+  return React.useSyncExternalStore(
+    subscribePomodoro,
+    () => Math.ceil(remainingMs() / 1000),
+    () => 0,
+  )
 }

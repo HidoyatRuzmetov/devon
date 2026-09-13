@@ -11,7 +11,6 @@
 // must show them the designed no-permission state rather than firing a request that comes back 403
 // and rendering "Maʼlumotlarni yuklab boʻlmadi" (seen live as demo.xodim before this guard).
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { AlertTriangle, ArrowUpRight, Loader2, Pencil, Plus, Target, Trash2 } from 'lucide-react'
 import type { GoalMetric } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -529,27 +528,26 @@ export default function GoalsScreen(): React.JSX.Element {
     )
   } else {
     body = (
-      <AnimatePresence initial={false}>
-        <Stagger
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          animateKey={`goals-${goals.length}`}
-        >
-          {goals.map((goal) => (
-            <StaggerItem key={goal.id} exit="hidden" layout className="h-full min-w-0">
-              <GoalCard
-                goal={goal}
-                canManage={isHead}
-                busy={pending === goal.id}
-                onDelete={() => remove(goal)}
-                onEdit={() => {
-                  setEditingGoal(goal)
-                  setDialogOpen(true)
-                }}
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </AnimatePresence>
+      <Stagger
+        presence
+        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+        animateKey={`goals-${goals.length}`}
+      >
+        {goals.map((goal) => (
+          <StaggerItem key={goal.id} exit="hidden" layout className="h-full min-w-0">
+            <GoalCard
+              goal={goal}
+              canManage={isHead}
+              busy={pending === goal.id}
+              onDelete={() => remove(goal)}
+              onEdit={() => {
+                setEditingGoal(goal)
+                setDialogOpen(true)
+              }}
+            />
+          </StaggerItem>
+        ))}
+      </Stagger>
     )
   }
 

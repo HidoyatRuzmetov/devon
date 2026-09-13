@@ -210,7 +210,13 @@ export default function RegisterScreen() {
             </p>
           </Collapsible>
 
-          <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={mutation.isPending}
+            loadingLabel={t('state.loading')}
+          >
             {t('accounts.register.submit')}
           </Button>
 

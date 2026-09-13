@@ -9,7 +9,6 @@
 // Personal by design: nobody else's pins ever appear here, and pinning somebody else's card to your
 // own five is exactly the intended use.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { ArrowDown, ArrowUp, Pin, PinOff } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
@@ -176,30 +175,29 @@ export function FocusList({
     )
   } else {
     body = (
-      <AnimatePresence initial={false}>
-        <Stagger
-          className="flex flex-col gap-1.5"
-          animateKey={items.map((p) => p.cardId).join(',')}
-        >
-          {items.map((pin, index) => (
-            <StaggerItem key={pin.cardId} exit="hidden" layout>
-              <PinRow
-                pin={pin}
-                index={index}
-                total={items.length}
-                busy={busy}
-                onMove={move}
-                onUnpin={() =>
-                  removeFocus.mutate(pin.cardId, {
-                    onSuccess: () => toast.success(t('work.focus.unpinned')),
-                    onError: () => toast.error(t('work.focus.failed')),
-                  })
-                }
-              />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </AnimatePresence>
+      <Stagger
+        presence
+        className="flex flex-col gap-1.5"
+        animateKey={items.map((p) => p.cardId).join(',')}
+      >
+        {items.map((pin, index) => (
+          <StaggerItem key={pin.cardId} exit="hidden" layout>
+            <PinRow
+              pin={pin}
+              index={index}
+              total={items.length}
+              busy={busy}
+              onMove={move}
+              onUnpin={() =>
+                removeFocus.mutate(pin.cardId, {
+                  onSuccess: () => toast.success(t('work.focus.unpinned')),
+                  onError: () => toast.error(t('work.focus.failed')),
+                })
+              }
+            />
+          </StaggerItem>
+        ))}
+      </Stagger>
     )
   }
 

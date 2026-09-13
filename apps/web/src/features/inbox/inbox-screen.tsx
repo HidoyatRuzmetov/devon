@@ -158,23 +158,27 @@ function InboxList({
   return (
     // round2 SEV2 "archiving a row removes it instantly": `StaggerItem`'s own `exit="hidden"`
     // reverses its entrance variant, `layout` slides the remaining rows up to close the gap --
-    // `AnimatePresence` is what lets it play at all before the row actually leaves the DOM.
-    <AnimatePresence initial={false}>
-      <Stagger as="ul" animateKey={listKey} className="rounded-md border border-border bg-card">
-        {items.map((notification, index) => (
-          <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-            <NotificationRow
-              notification={notification}
-              selected={index === selectedIndex}
-              onOpen={() => onOpen(notification, index)}
-              onQuickAction={() => onQuickAction(notification)}
-              onArchive={() => onArchive(notification.id)}
-              onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-            />
-          </StaggerItem>
-        ))}
-      </Stagger>
-    </AnimatePresence>
+    // and `presence` on the `Stagger` is what lets either play at all: the presence boundary has to
+    // live *inside* the list container, or the rows are `AnimatePresence`'s grandchildren and inert.
+    <Stagger
+      presence
+      as="ul"
+      animateKey={listKey}
+      className="rounded-md border border-border bg-card"
+    >
+      {items.map((notification, index) => (
+        <StaggerItem key={notification.id} as="li" exit="hidden" layout>
+          <NotificationRow
+            notification={notification}
+            selected={index === selectedIndex}
+            onOpen={() => onOpen(notification, index)}
+            onQuickAction={() => onQuickAction(notification)}
+            onArchive={() => onArchive(notification.id)}
+            onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+          />
+        </StaggerItem>
+      ))}
+    </Stagger>
   )
 }
 
@@ -213,27 +217,26 @@ function GroupedInboxList({
               </Chip>
               <span className="text-caption text-muted-foreground">{group.length}</span>
             </div>
-            <AnimatePresence initial={false}>
-              <Stagger
-                as="ul"
-                animateKey={listKey}
-                className="rounded-md border border-border bg-card"
-              >
-                {group.map((notification) => (
-                  <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-                    <NotificationRow
-                      notification={notification}
-                      selected={indexOf.get(notification.id) === selectedIndex}
-                      showReasonChip={false}
-                      onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
-                      onQuickAction={() => onQuickAction(notification)}
-                      onArchive={() => onArchive(notification.id)}
-                      onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-                    />
-                  </StaggerItem>
-                ))}
-              </Stagger>
-            </AnimatePresence>
+            <Stagger
+              presence
+              as="ul"
+              animateKey={listKey}
+              className="rounded-md border border-border bg-card"
+            >
+              {group.map((notification) => (
+                <StaggerItem key={notification.id} as="li" exit="hidden" layout>
+                  <NotificationRow
+                    notification={notification}
+                    selected={indexOf.get(notification.id) === selectedIndex}
+                    showReasonChip={false}
+                    onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
+                    onQuickAction={() => onQuickAction(notification)}
+                    onArchive={() => onArchive(notification.id)}
+                    onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+                  />
+                </StaggerItem>
+              ))}
+            </Stagger>
           </section>
         )
       })}

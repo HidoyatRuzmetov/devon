@@ -143,6 +143,7 @@ export function LoginRoute() {
               size="lg"
               className="w-full"
               loading={askHead.isPending}
+              loadingLabel={t('state.loading')}
               disabled={!online || identifier.trim().length === 0}
             >
               {t('login.forgot.askHead')}
@@ -200,6 +201,7 @@ export function LoginRoute() {
               size="lg"
               className="w-full"
               loading={twoFaMutation.isPending}
+              loadingLabel={t('state.loading')}
               disabled={!online}
             >
               {t('accounts.login2fa.submit')}
@@ -312,6 +314,7 @@ export function LoginRoute() {
             size="lg"
             className="w-full"
             loading={mutation.isPending}
+            loadingLabel={t('state.loading')}
             disabled={!online}
           >
             {t('login.submit')}

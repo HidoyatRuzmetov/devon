@@ -241,9 +241,14 @@ function BoardScreenInner() {
           // the problem: the card slides to its new column, then simply is not there any more, which
           // reads as a drag that missed rather than as a refusal. One shake on the tile that came
           // back, plus the error toast, and the two together say what happened.
+          // ...and the same for a person who cannot see the shake: the optimistic
+          // `announce(work.board.moved)` below has already been spoken by the time the server
+          // refuses, so it has to be retracted here or the screen reader is the only surface in the
+          // product still reporting success (motion verdict F8).
           onError: () => {
             setRejectedCardId(draggedCardId)
             toast.error(t('work.board.moveFailed'))
+            announce(t('work.board.moveFailed'))
           },
         },
       )

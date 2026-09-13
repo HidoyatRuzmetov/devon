@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { useT, useLocale, formatDate, formatRelativeTime } from '@devon/i18n'
 import {
-  AnimatePresence,
   Badge,
   Button,
   cn,
@@ -245,27 +244,25 @@ function SessionsSection() {
       <div className="flex flex-col gap-3">
         {/* UI-OVERHAUL.md §3 "Lists ... 24ms stagger" and "AnimatePresence for exit" -- round2 SEV2
             found zero motion primitives on this screen despite it being the one every user visits.
-            `AnimatePresence` wraps each `Stagger` so a revoked row (removed once the query refetches)
-            animates out instead of vanishing; `StaggerItem`'s own `exit="hidden"` reverses its
-            entrance variant for that. The overflow beyond `SESSIONS_COLLAPSED_COUNT` sits in its own
+            `<Stagger presence>` puts framer-motion's presence boundary *inside* the list container
+            (wrapping `AnimatePresence` around `Stagger` made the rows grandchildren, and their exits
+            inert), so a revoked row animates out instead of vanishing and the survivors slide up;
+            `StaggerItem`'s own `exit="hidden"` reverses its entrance variant for that. The overflow beyond `SESSIONS_COLLAPSED_COUNT` sits in its own
             `Collapsible` so "Yana N tasini koʻrsatish" expands with a real height animation instead
             of the extra rows simply appearing. */}
         <div className="overflow-hidden rounded-md border border-border">
-          <AnimatePresence initial={false}>
-            <Stagger as="ul" className="flex flex-col divide-y divide-border">
-              {base.map(renderRow)}
-            </Stagger>
-          </AnimatePresence>
+          <Stagger presence as="ul" className="flex flex-col divide-y divide-border">
+            {base.map(renderRow)}
+          </Stagger>
           {overflow.length > 0 ? (
             <Collapsible open={showAll} id="sessions-overflow">
-              <AnimatePresence initial={false}>
-                <Stagger
-                  as="ul"
-                  className="flex flex-col divide-y divide-border border-t border-border"
-                >
-                  {overflow.map(renderRow)}
-                </Stagger>
-              </AnimatePresence>
+              <Stagger
+                presence
+                as="ul"
+                className="flex flex-col divide-y divide-border border-t border-border"
+              >
+                {overflow.map(renderRow)}
+              </Stagger>
             </Collapsible>
           ) : null}
         </div>

@@ -6,7 +6,6 @@
 // than this is the first feature a department abandons, and an abandoned tracker makes the workload
 // view lie.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { MAX_TIME_LOG_MINUTES, parseEstimateMinutes } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -219,57 +218,55 @@ export function TimeLogPanel({ cardId, canEdit, members }: TimeLogPanelProps): R
       {entries.length === 0 ? (
         <p className="text-caption text-muted-foreground">{t('work.timeLog.empty')}</p>
       ) : (
-        <AnimatePresence initial={false}>
-          <Stagger className="flex flex-col gap-1" animateKey={`log-${entries.length}`}>
-            {entries.map((entry) => {
-              const mine = entry.userId === user?.id
-              return (
-                <StaggerItem key={entry.id} exit="hidden" layout>
-                  <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-small hover:bg-muted/60">
-                    <span className="w-24 shrink-0 font-medium tabular-nums text-foreground">
-                      {formatDuration(entry.minutes, t)}
+        <Stagger presence className="flex flex-col gap-1" animateKey={`log-${entries.length}`}>
+          {entries.map((entry) => {
+            const mine = entry.userId === user?.id
+            return (
+              <StaggerItem key={entry.id} exit="hidden" layout>
+                <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-small hover:bg-muted/60">
+                  <span className="w-24 shrink-0 font-medium tabular-nums text-foreground">
+                    {formatDuration(entry.minutes, t)}
+                  </span>
+                  <span className="shrink-0 text-caption text-muted-foreground">
+                    {nameFor(entry.userId)}
+                  </span>
+                  <span className="shrink-0 text-caption text-muted-foreground">
+                    {formatDate(new Date(entry.spentOn), locale)}
+                  </span>
+                  {entry.note ? (
+                    <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
+                      {entry.note}
                     </span>
-                    <span className="shrink-0 text-caption text-muted-foreground">
-                      {nameFor(entry.userId)}
-                    </span>
-                    <span className="shrink-0 text-caption text-muted-foreground">
-                      {formatDate(new Date(entry.spentOn), locale)}
-                    </span>
-                    {entry.note ? (
-                      <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
-                        {entry.note}
-                      </span>
-                    ) : (
-                      <span className="flex-1" />
-                    )}
-                    {/* Only your own line -- the server enforces the same rule, this only hides
-                        a control that would always be refused. */}
-                    {mine ? (
-                      <IconButton
-                        aria-label={t('work.timeLog.delete')}
-                        disabled={pendingDelete === entry.id}
-                        onClick={() => {
-                          setPendingDelete(entry.id)
-                          deleteTimeLog.mutate(entry.id, {
-                            onSettled: () => setPendingDelete(null),
-                            onError: () => toast.error(t('work.timeLog.deleteFailed')),
-                          })
-                        }}
-                        className="shrink-0"
-                      >
-                        {pendingDelete === entry.id ? (
-                          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                        ) : (
-                          <Trash2 className="size-4" aria-hidden="true" />
-                        )}
-                      </IconButton>
-                    ) : null}
-                  </div>
-                </StaggerItem>
-              )
-            })}
-          </Stagger>
-        </AnimatePresence>
+                  ) : (
+                    <span className="flex-1" />
+                  )}
+                  {/* Only your own line -- the server enforces the same rule, this only hides
+                      a control that would always be refused. */}
+                  {mine ? (
+                    <IconButton
+                      aria-label={t('work.timeLog.delete')}
+                      disabled={pendingDelete === entry.id}
+                      onClick={() => {
+                        setPendingDelete(entry.id)
+                        deleteTimeLog.mutate(entry.id, {
+                          onSettled: () => setPendingDelete(null),
+                          onError: () => toast.error(t('work.timeLog.deleteFailed')),
+                        })
+                      }}
+                      className="shrink-0"
+                    >
+                      {pendingDelete === entry.id ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Trash2 className="size-4" aria-hidden="true" />
+                      )}
+                    </IconButton>
+                  ) : null}
+                </div>
+              </StaggerItem>
+            )
+          })}
+        </Stagger>
       )}
     </div>
   )

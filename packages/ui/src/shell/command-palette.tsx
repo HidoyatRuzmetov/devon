@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Command } from 'cmdk'
+import { Command, useCommandState } from 'cmdk'
 import { CornerDownLeft, Search } from 'lucide-react'
 import { Dialog, DialogContent } from '../primitives/dialog.js'
 import { Sheet, SheetContent } from '../primitives/sheet.js'
@@ -90,11 +90,129 @@ function uniqueValue(
   item: { id: string; label: string; keywords?: readonly string[] },
   seen: Map<string, number>,
 ): string {
-  const base = [item.label, ...(item.keywords ?? [])].join(' ')
+  // Trimmed because cmdk trims a `value` before it stores it (`dist/index.mjs`, `useValue`) -- an
+  // untrimmed value here would never `===` the `state.value` that `PaletteCursor` compares against.
+  const base = [item.label, ...(item.keywords ?? [])].join(' ').trim()
   const count = seen.get(base) ?? 0
   seen.set(base, count + 1)
   return count === 0 ? base : `${base} \u200b${count}`
 }
+
+/** The one moving part of the palette's selection (motion verdict F1).
+ *
+ * The previous shape rendered this pill inside *every* row and hid all but one with
+ * `hidden group-data-[selected=true]:block`. `display:none` is not unmounting: all 66 `motion.span`s
+ * carried the same `layoutId` and were mounted at once, so framer-motion's shared layout had no
+ * unmount -> mount pair to FLIP between, silently degraded to an instant 44 px jump, and still paid
+ * for 66 projection nodes on every open.
+ *
+ * So the row asks cmdk who is selected and mounts the pill *only* in the winning row -- exactly one
+ * node with this `layoutId` at any moment, which is the precondition shared layout has always had,
+ * and the same device the sidebar and the tab strip use (DESIGN.md §8, §10).
+ *
+ * It is its own component on purpose: this subscription is the only thing that re-renders when the
+ * selection moves, so an ArrowDown re-renders N near-empty cursors instead of N full rows. */
+function PaletteCursor({
+  value,
+  cursorId,
+  reduced,
+}: {
+  value: string
+  cursorId: string
+  reduced: boolean
+}): React.JSX.Element | null {
+  const selected = useCommandState((state) => state.value === value)
+  if (!selected) return null
+  return (
+    <span aria-hidden="true" className="absolute inset-0 -z-10 rounded-sm">
+      {reduced ? (
+        <span className="block size-full rounded-sm bg-accent" />
+      ) : (
+        <motion.span
+          layoutId={`${cursorId}-cursor`}
+          className="block size-full rounded-sm bg-accent"
+          transition={springSettle}
+        />
+      )}
+    </span>
+  )
+}
+
+/** One palette row. `React.memo` because `Command.Item` itself subscribes to cmdk's store for its
+ * own `aria-selected`, so it re-renders on every ArrowDown -- memoising the row body means that
+ * re-render reconciles one identical element instead of rebuilding the icon tile, the label, the
+ * hint, the keycap and the "↵" affordance for all 66 rows (verdict F2). */
+const PaletteRow = React.memo(function PaletteRow({
+  item,
+  value,
+  cursorId,
+  reduced,
+  openHintLabel,
+}: {
+  item: CommandPaletteItem
+  value: string
+  cursorId: string
+  reduced: boolean
+  openHintLabel?: string | undefined
+}) {
+  return (
+    <Command.Item
+      value={value}
+      {...(item.alwaysVisible ? { forceMount: true } : {})}
+      onSelect={item.onSelect}
+      className={cn(
+        'group relative isolate flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 py-1.5 text-body text-foreground',
+        // No `data-[selected=true]:bg-accent` any more: the fill is the gliding pill above, and
+        // painting both meant the old row stayed lit for the length of the glide. Reduced motion
+        // renders the pill without the shared layout, i.e. it appears under the selected row --
+        // identical to the tint it replaces.
+        'transition-colors duration-(--dur-micro)',
+      )}
+    >
+      <PaletteCursor value={value} cursorId={cursorId} reduced={reduced} />
+      {item.icon ? (
+        <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground group-data-[selected=true]:bg-card group-data-[selected=true]:text-foreground">
+          <item.icon className="size-4" aria-hidden="true" />
+        </span>
+      ) : null}
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex min-w-0 items-center gap-2">
+          {item.badge ? (
+            <span
+              data-shell-label
+              className="shrink-0 rounded-xs bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
+            >
+              {item.badge}
+            </span>
+          ) : null}
+          {/* No `truncate`: design.md §3.5 forbids ellipsis in the shell, and the
+              `devon/no-shell-truncate` lint rule enforces it here. A long row label wraps, which is
+              what that rule asks for. */}
+          <span data-shell-label className="min-w-0 flex-1">
+            {item.label}
+          </span>
+        </span>
+        {item.description ? (
+          <span data-shell-label className="line-clamp-1 text-caption text-muted-foreground">
+            {item.description}
+          </span>
+        ) : null}
+      </span>
+      {item.hint ? (
+        <span data-shell-label className="shrink-0 text-caption text-muted-foreground">
+          {item.hint}
+        </span>
+      ) : null}
+      {item.shortcut ? <Kbd className="shrink-0">{item.shortcut}</Kbd> : null}
+      {openHintLabel ? (
+        <span className="hidden shrink-0 items-center gap-1 text-caption text-muted-foreground group-data-[selected=true]:flex">
+          <span data-shell-label>{openHintLabel}</span>
+          <CornerDownLeft className="size-3" aria-hidden="true" />
+        </span>
+      ) : null}
+    </Command.Item>
+  )
+})
 
 function CommandPaletteBody({
   placeholder,
@@ -108,14 +226,23 @@ function CommandPaletteBody({
   query,
   onQueryChange,
 }: Omit<CommandPaletteProps, 'open' | 'onOpenChange' | 'title' | 'variant'>) {
-  // Rebuilt on every render, in render order, so the "first occurrence keeps the plain value" rule
-  // is stable between renders (the group order is).
-  const seen = new Map<string, number>()
   const reduced = useReducedMotion()
   // The cursor is one object moving between rows (a shared `layoutId`), the same device the sidebar
   // and the tab strip use -- so the palette's selection reads as the *same* mechanism the rest of
   // the shell uses, which is the whole point of a Jakob's-Law map (DESIGN.md §8).
   const cursorId = React.useId()
+  // Verdict F2: the value pass runs once per *group list*, not once per render. It is walked in
+  // render order so the "first occurrence keeps the plain value" disambiguation rule stays stable,
+  // and the resulting rows are referentially stable, which is what lets `PaletteRow`'s `React.memo`
+  // actually hold across a selection change.
+  const valuedGroups = React.useMemo(() => {
+    const seen = new Map<string, number>()
+    return groups.map((group) => ({
+      heading: group.heading,
+      forceMount: group.items.some((item) => item.alwaysVisible),
+      rows: group.items.map((item) => ({ item, value: uniqueValue(item, seen) })),
+    }))
+  }, [groups])
   return (
     <Command
       shouldFilter
@@ -161,7 +288,7 @@ function CommandPaletteBody({
                 search results, and back again. At most twice per visit to the palette, never under
                 the typing hand. */}
             <Stagger animateKey={query ? 'results' : 'sections'} delay={0}>
-              {groups.map((group) => (
+              {valuedGroups.map((group) => (
                 <StaggerItem key={`stagger-${group.heading}`}>
                   <Command.Group
                     key={group.heading}
@@ -171,87 +298,18 @@ function CommandPaletteBody({
                     // mounted too. A group of server-matched rows (the semantic-search section) would
                     // otherwise be filtered away by the client using the very query the server just
                     // answered, which is how that section rendered nothing at all the first time.
-                    {...(group.items.some((item) => item.alwaysVisible)
-                      ? { forceMount: true }
-                      : {})}
+                    {...(group.forceMount ? { forceMount: true } : {})}
                     className={GROUP_HEADING_CLASS}
                   >
-                    {group.items.map((item) => (
-                      <Command.Item
+                    {group.rows.map(({ item, value }) => (
+                      <PaletteRow
                         key={item.id}
-                        value={uniqueValue(item, seen)}
-                        {...(item.alwaysVisible ? { forceMount: true } : {})}
-                        onSelect={item.onSelect}
-                        className={cn(
-                          'group relative isolate flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 py-1.5 text-body text-foreground',
-                          // No `data-[selected=true]:bg-accent` any more: the fill is the gliding pill
-                          // below, and painting both meant the old row stayed lit for the length of the
-                          // glide. Reduced motion renders the pill without the shared layout, i.e. it
-                          // appears under the selected row -- identical to the tint it replaces.
-                          'transition-colors duration-(--dur-micro)',
-                        )}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="absolute inset-0 -z-10 hidden rounded-sm group-data-[selected=true]:block"
-                        >
-                          {reduced ? (
-                            <span className="block size-full rounded-sm bg-accent" />
-                          ) : (
-                            <motion.span
-                              layoutId={`${cursorId}-cursor`}
-                              className="block size-full rounded-sm bg-accent"
-                              transition={springSettle}
-                            />
-                          )}
-                        </span>
-                        {item.icon ? (
-                          <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground group-data-[selected=true]:bg-card group-data-[selected=true]:text-foreground">
-                            <item.icon className="size-4" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                          <span className="flex min-w-0 items-center gap-2">
-                            {item.badge ? (
-                              <span
-                                data-shell-label
-                                className="shrink-0 rounded-xs bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
-                              >
-                                {item.badge}
-                              </span>
-                            ) : null}
-                            {/* No `truncate`: design.md §3.5 forbids ellipsis in the shell, and the
-                            `devon/no-shell-truncate` lint rule enforces it here. A long row label
-                            wraps, which is what that rule asks for. */}
-                            <span data-shell-label className="min-w-0 flex-1">
-                              {item.label}
-                            </span>
-                          </span>
-                          {item.description ? (
-                            <span
-                              data-shell-label
-                              className="line-clamp-1 text-caption text-muted-foreground"
-                            >
-                              {item.description}
-                            </span>
-                          ) : null}
-                        </span>
-                        {item.hint ? (
-                          <span
-                            data-shell-label
-                            className="shrink-0 text-caption text-muted-foreground"
-                          >
-                            {item.hint}
-                          </span>
-                        ) : null}
-                        {item.shortcut ? <Kbd className="shrink-0">{item.shortcut}</Kbd> : null}
-                        {openHintLabel ? (
-                          <span className="hidden shrink-0 items-center gap-1 text-caption text-muted-foreground group-data-[selected=true]:flex">
-                            <span data-shell-label>{openHintLabel}</span>
-                            <CornerDownLeft className="size-3" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                      </Command.Item>
+                        item={item}
+                        value={value}
+                        cursorId={cursorId}
+                        reduced={reduced}
+                        openHintLabel={openHintLabel}
+                      />
                     ))}
                   </Command.Group>
                 </StaggerItem>
@@ -287,7 +345,10 @@ export function CommandPalette({
     return (
       <Sheet direction="bottom" open={open} onOpenChange={onOpenChange}>
         <SheetContent title={title} side="bottom" className="flex h-[70vh] flex-col p-0">
-          <CommandPaletteBody {...body} />
+          {/* Verdict F2: the list is built only while the palette is actually open, never kept warm
+              behind a closed overlay -- so a Ctrl/Cmd+K costs one mount, and a route change while the
+              palette is shut costs nothing at all. */}
+          {open ? <CommandPaletteBody {...body} /> : null}
         </SheetContent>
       </Sheet>
     )
@@ -300,7 +361,8 @@ export function CommandPalette({
         showClose={false}
         className="top-[12vh] flex h-125 max-h-[76vh] max-w-160 -translate-y-0 flex-col overflow-hidden p-0"
       >
-        <CommandPaletteBody {...body} />
+        {/* See the sheet branch: mounted only while open. */}
+        {open ? <CommandPaletteBody {...body} /> : null}
       </DialogContent>
     </Dialog>
   )

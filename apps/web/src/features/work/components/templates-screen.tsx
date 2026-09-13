@@ -6,7 +6,6 @@
 // person's own shortcut, visible to nobody else. `canManage` comes from the server per row, so the
 // gallery never guesses which of the two a given viewer may edit.
 import * as React from 'react'
-import { AnimatePresence } from 'motion/react'
 import { Building2, Loader2, Plus, Trash2, User } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
@@ -167,23 +166,22 @@ export default function TemplatesScreen(): React.JSX.Element {
           <h2 className="text-body font-semibold text-foreground">{title}</h2>
           <p className="text-caption text-muted-foreground">{description}</p>
         </div>
-        <AnimatePresence initial={false}>
-          <Stagger
-            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-            animateKey={`${kind}-${list.length}`}
-          >
-            {list.map((template) => (
-              <StaggerItem key={template.id} exit="hidden" layout className="h-full">
-                <TemplateCard
-                  template={template}
-                  busy={pending === template.id}
-                  onUse={() => use(template)}
-                  onDelete={() => remove(template)}
-                />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </AnimatePresence>
+        <Stagger
+          presence
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          animateKey={`${kind}-${list.length}`}
+        >
+          {list.map((template) => (
+            <StaggerItem key={template.id} exit="hidden" layout className="h-full">
+              <TemplateCard
+                template={template}
+                busy={pending === template.id}
+                onUse={() => use(template)}
+                onDelete={() => remove(template)}
+              />
+            </StaggerItem>
+          ))}
+        </Stagger>
       </section>
     )
   }
