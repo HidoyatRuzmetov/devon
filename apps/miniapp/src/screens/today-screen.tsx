@@ -5,7 +5,7 @@
 import * as React from 'react'
 import { ChevronRight, IdCard, Plus, Settings2 } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { Button, Checkbox, Input, cn, toast } from '@devon/ui'
+import { Button, Input, cn, toast } from '@devon/ui'
 import {
   createPersonalTask,
   listPersonalTasks,
@@ -24,6 +24,7 @@ import {
   ScreenList,
 } from '../components/screen.js'
 import { SectionLabel, rowSurface } from '../components/bits.js'
+import { TaskCheckRow } from '../components/task-check-row.js'
 
 function greetingKey(now: Date): string {
   const hour = now.getHours()
@@ -31,38 +32,6 @@ function greetingKey(now: Date): string {
   if (hour < 12) return 'miniapp.greeting.morning'
   if (hour < 18) return 'miniapp.greeting.afternoon'
   return 'miniapp.greeting.evening'
-}
-
-function TaskRow({
-  task,
-  onToggle,
-}: {
-  task: PersonalTask
-  onToggle: (task: PersonalTask, done: boolean) => void
-}): React.ReactElement {
-  const done = task.doneAt !== null
-  const inputId = `task-${task.id}`
-  return (
-    <div className={cn(rowSurface, 'flex items-start gap-3 py-2.5')}>
-      <Checkbox
-        id={inputId}
-        checked={done}
-        celebrate
-        onCheckedChange={(next) => onToggle(task, next === true)}
-        className="mt-0.5"
-      />
-      <label
-        htmlFor={inputId}
-        className={cn(
-          'min-w-0 flex-1 cursor-pointer text-[14px] leading-5',
-          // The catalogue's "text strikes through" half of the done moment.
-          done ? 'text-muted-foreground line-through' : 'text-foreground',
-        )}
-      >
-        {task.title}
-      </label>
-    </div>
-  )
 }
 
 export function TodayScreen(): React.ReactElement {
@@ -157,7 +126,12 @@ export function TodayScreen(): React.ReactElement {
                 <SectionLabel count={open.length}>{t('miniapp.today.open')}</SectionLabel>
                 <ScreenList>
                   {open.map((task) => (
-                    <TaskRow key={task.id} task={task} onToggle={onToggle} />
+                    <TaskCheckRow
+                      key={task.id}
+                      title={task.title}
+                      done={task.doneAt !== null}
+                      onToggle={(next) => onToggle(task, next)}
+                    />
                   ))}
                 </ScreenList>
               </>
@@ -167,7 +141,12 @@ export function TodayScreen(): React.ReactElement {
                 <SectionLabel count={done.length}>{t('miniapp.today.done')}</SectionLabel>
                 <ScreenList>
                   {done.map((task) => (
-                    <TaskRow key={task.id} task={task} onToggle={onToggle} />
+                    <TaskCheckRow
+                      key={task.id}
+                      title={task.title}
+                      done={task.doneAt !== null}
+                      onToggle={(next) => onToggle(task, next)}
+                    />
                   ))}
                 </ScreenList>
               </>
