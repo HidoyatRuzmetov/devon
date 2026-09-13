@@ -56,6 +56,12 @@ export interface StaggerItemProps {
   tabIndex?: number
   role?: React.AriaRole
   'aria-label'?: string
+  /** Forwarded to the underlying motion element. Needed because `<Stagger presence>` mounts
+   * framer-motion's `mode="popLayout"`, whose `PopChild` measures the leaving row by cloning the
+   * presence child with a ref -- so a call site that wraps its row in its own memoised component
+   * (the inbox does, to keep a tab switch from re-rendering sixty rows) has to be able to pass that
+   * ref through to the real DOM node, or the pop-out sizing silently does nothing. */
+  ref?: React.Ref<HTMLElement>
 }
 
 function containerVariants(reduced: boolean, delay: number): Variants {
@@ -124,6 +130,7 @@ export function StaggerItem({
   as = 'div',
   exit,
   layout,
+  ref,
   ...rest
 }: StaggerItemProps): React.JSX.Element {
   const reduced = React.useContext(StaggerReducedContext)
@@ -131,6 +138,7 @@ export function StaggerItem({
   return (
     <Comp
       className={className}
+      {...(ref ? { ref: ref as React.Ref<never> } : {})}
       variants={reduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS}
       {...(exit !== undefined ? { exit } : {})}
       {...(layout !== undefined ? { layout } : {})}

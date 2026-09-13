@@ -10,6 +10,7 @@
 // open, `e` to archive (Gmail's own keys); grouped by reason; an empty inbox that actually celebrates
 // zero instead of showing the same blank illustration as every other empty list.
 import * as React from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { useT } from '@devon/i18n'
 import {
@@ -55,6 +56,17 @@ import { NotificationSheet } from './notification-sheet.js'
 import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 
 const TABS: readonly InboxStatus[] = ['inbox', 'unread', 'archived']
+
+/** Which row the j/k cursor is on, by id.
+ *
+ * Motion verdict F5, the last of it. Passing the selection down as a prop meant a tab click changed
+ * a prop on a whole panel, and a panel re-render is not cheap even when every row memo bails:
+ * `AnimatePresence`'s own `PresenceChild` / `PopChild` / `PopChildMeasure` wrappers are rebuilt for
+ * each of the ~38 rows (measured: 57 ms of the 71 ms a switch cost, with the rows themselves
+ * accounting for 8.8 ms of it). Through context the panels' props never change on a tab switch at
+ * all -- the switch is purely the `hidden` attribute on two wrapper `div`s -- and a j/k press
+ * re-renders the rows, which is the only thing that actually changed. */
+const SelectedNotificationContext = React.createContext<string | null>(null)
 
 function InboxTabs({
   status,
@@ -152,38 +164,64 @@ function useListKeyboardNav({
 const InboxRow = React.memo(function InboxRow({
   notification,
   index,
-  selected,
   showReasonChip,
   onOpen,
   onArchive,
   onQuickAction,
   onSnooze,
+  ref,
 }: {
   notification: NotificationDto
   index: number
-  selected: boolean
   showReasonChip?: boolean
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
+  /** `<Stagger presence>`'s `AnimatePresence mode="popLayout"` clones its presence child with a ref
+   * so it can measure the leaving row; this component *is* that child, so the ref has to reach the
+   * `<li>` underneath. */
+  ref?: React.Ref<HTMLElement>
 }) {
-  return (
-    <NotificationRow
-      notification={notification}
-      selected={selected}
-      {...(showReasonChip === undefined ? {} : { showReasonChip })}
-      onOpen={() => onOpen(notification, index)}
-      onQuickAction={() => onQuickAction(notification)}
-      onArchive={() => onArchive(notification.id)}
-      onSnooze={(minutes) => onSnooze(notification.id, minutes)}
-    />
+  const selected = React.useContext(SelectedNotificationContext) === notification.id
+  // A context change re-renders every consumer, and there are ~76 rows mounted across the three
+  // tabs -- but only two of them ever *change* when the cursor moves. Caching the element means the
+  // other 74 re-render into the identical element and React skips their subtree entirely, which is
+  // the difference between 238 ms and ~8 ms on a tab switch.
+  //
+  // The `StaggerItem` is inside this boundary on purpose: left outside it, each list render rebuilt
+  // every `motion.li` -- a `layout` projection node apiece, wrapped by `AnimatePresence`'s own
+  // `PresenceChild`/`PopChild` -- before the row's memo could bail (motion verdict F5).
+  return React.useMemo(
+    () => (
+      <StaggerItem {...(ref ? { ref } : {})} as="li" exit="hidden" layout>
+        <NotificationRow
+          notification={notification}
+          selected={selected}
+          {...(showReasonChip === undefined ? {} : { showReasonChip })}
+          onOpen={() => onOpen(notification, index)}
+          onQuickAction={() => onQuickAction(notification)}
+          onArchive={() => onArchive(notification.id)}
+          onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+        />
+      </StaggerItem>
+    ),
+    [
+      ref,
+      notification,
+      selected,
+      showReasonChip,
+      index,
+      onOpen,
+      onQuickAction,
+      onArchive,
+      onSnooze,
+    ],
   )
 })
 
 function InboxList({
   items,
-  selectedIndex,
   onOpen,
   onArchive,
   onQuickAction,
@@ -192,7 +230,6 @@ function InboxList({
 }: {
   items: readonly NotificationDto[]
   listKey: string
-  selectedIndex: number
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
@@ -210,17 +247,15 @@ function InboxList({
       className="rounded-md border border-border bg-card"
     >
       {items.map((notification, index) => (
-        <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-          <InboxRow
-            notification={notification}
-            index={index}
-            selected={index === selectedIndex}
-            onOpen={onOpen}
-            onQuickAction={onQuickAction}
-            onArchive={onArchive}
-            onSnooze={onSnooze}
-          />
-        </StaggerItem>
+        <InboxRow
+          key={notification.id}
+          notification={notification}
+          index={index}
+          onOpen={onOpen}
+          onQuickAction={onQuickAction}
+          onArchive={onArchive}
+          onSnooze={onSnooze}
+        />
       ))}
     </Stagger>
   )
@@ -228,7 +263,6 @@ function InboxList({
 
 function GroupedInboxList({
   items,
-  selectedIndex,
   onOpen,
   onArchive,
   onQuickAction,
@@ -237,7 +271,6 @@ function GroupedInboxList({
 }: {
   items: readonly NotificationDto[]
   listKey: string
-  selectedIndex: number
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
@@ -268,18 +301,16 @@ function GroupedInboxList({
               className="rounded-md border border-border bg-card"
             >
               {group.map((notification) => (
-                <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-                  <InboxRow
-                    notification={notification}
-                    index={indexOf.get(notification.id) ?? 0}
-                    selected={indexOf.get(notification.id) === selectedIndex}
-                    showReasonChip={false}
-                    onOpen={onOpen}
-                    onQuickAction={onQuickAction}
-                    onArchive={onArchive}
-                    onSnooze={onSnooze}
-                  />
-                </StaggerItem>
+                <InboxRow
+                  key={notification.id}
+                  notification={notification}
+                  index={indexOf.get(notification.id) ?? 0}
+                  showReasonChip={false}
+                  onOpen={onOpen}
+                  onQuickAction={onQuickAction}
+                  onArchive={onArchive}
+                  onSnooze={onSnooze}
+                />
               ))}
             </Stagger>
           </section>
@@ -289,21 +320,78 @@ function GroupedInboxList({
   )
 }
 
-function InboxBody({
-  query,
-  status,
+/** One tab's list, memoised -- and deliberately unaware of which tab is showing.
+ *
+ * Motion verdict F5. All three lists stay mounted, so a tab switch has to be a visibility change and
+ * nothing else. Everything that changes on a switch (`hidden`, the entrance class) therefore lives on
+ * the wrapper *outside* this memo, and the selection reaches the rows through
+ * `SelectedNotificationContext` rather than as a prop. The result is that a tab click re-renders no
+ * panel at all: measured, a panel re-render cost 71 ms, of which 57 ms was `AnimatePresence`
+ * rebuilding its `PresenceChild`/`PopChild` wrappers around ~38 rows that had not changed. */
+const InboxTabPanel = React.memo(function InboxTabPanel({
+  tab,
+  items,
+  isPending,
+  isError,
+  onRetry,
   grouped,
-  selectedIndex,
   onOpen,
   onArchive,
   onQuickAction,
   onSnooze,
   zeroCelebrate,
 }: {
-  query: ReturnType<typeof useNotificationsQuery>
+  tab: InboxStatus
+  /** The query's *data*, never the query object: `useQuery` hands back a fresh result object on
+   * every render, and passing that object was on its own enough to make this memo a no-op -- the
+   * panel kept re-rendering (65-280 ms a switch) long after the rows themselves had stopped. */
+  items: readonly NotificationDto[] | undefined
+  isPending: boolean
+  isError: boolean
+  onRetry: () => void
+  grouped: boolean
+  onOpen: (notification: NotificationDto, index: number) => void
+  onArchive: (id: string) => void
+  onQuickAction: (notification: NotificationDto) => void
+  onSnooze: (id: string, minutes: number) => void
+  zeroCelebrate?: { play: boolean; onDone: () => void }
+}) {
+  return (
+    <InboxBody
+      items={items}
+      isPending={isPending}
+      isError={isError}
+      onRetry={onRetry}
+      status={tab}
+      grouped={grouped}
+      onOpen={onOpen}
+      onArchive={onArchive}
+      onQuickAction={onQuickAction}
+      onSnooze={onSnooze}
+      {...(zeroCelebrate ? { zeroCelebrate } : {})}
+    />
+  )
+})
+
+function InboxBody({
+  items,
+  isPending,
+  isError,
+  onRetry,
+  status,
+  grouped,
+  onOpen,
+  onArchive,
+  onQuickAction,
+  onSnooze,
+  zeroCelebrate,
+}: {
+  items: readonly NotificationDto[] | undefined
+  isPending: boolean
+  isError: boolean
+  onRetry: () => void
   status: InboxStatus
   grouped: boolean
-  selectedIndex: number
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
@@ -313,20 +401,19 @@ function InboxBody({
    * inbox) -- `inbox-screen.tsx` owns that transition detection. */
   zeroCelebrate?: { play: boolean; onDone: () => void }
 }) {
-  if (query.isPending) {
+  if (isPending || items === undefined) {
     return <StateView kind="loading" titleKey="state.loading" />
   }
-  if (query.isError) {
+  if (isError) {
     return (
       <StateView
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{ labelKey: 'state.error.action', onAction: onRetry }}
       />
     )
   }
-  const items = query.data.items
   if (items.length === 0) {
     return (
       <StateView
@@ -353,7 +440,6 @@ function InboxBody({
   // Archiving a single row is *not* a filter change, so the key is the tab, never the item count.
   const props = {
     items,
-    selectedIndex,
     onOpen,
     onArchive,
     onQuickAction,
@@ -398,6 +484,14 @@ export default function InboxScreen() {
     archived: archivedQuery,
   }
   const notificationsQuery = queryByStatus[status]
+  // Stable per tab, so a fresh `onRetry` closure per render cannot break `InboxTabPanel`'s memo.
+  const queryClient = useQueryClient()
+  const retryByStatus = React.useMemo<Record<InboxStatus, () => void>>(() => {
+    const make = (tab: InboxStatus) => () => {
+      void queryClient.refetchQueries({ queryKey: ['inbox', 'notifications', tab] })
+    }
+    return { inbox: make('inbox'), unread: make('unread'), archived: make('archived') }
+  }, [queryClient])
   const markRead = useMarkReadMutation()
   const markAllRead = useMarkAllReadMutation()
   const snooze = useSnoozeMutation()
@@ -405,6 +499,9 @@ export default function InboxScreen() {
   const archiveUndoable = useUndoableArchive()
 
   const items = notificationsQuery.data?.items ?? []
+  // The j/k cursor as an id, for `SelectedNotificationContext` (see its own note): the panels stay
+  // memoised and only the rows re-render when the selection moves.
+  const selectedId = items[selectedIndex]?.id ?? null
   const unreadCount = notificationsQuery.data?.unreadCount ?? 0
   const openNotification = items.find((n) => n.id === openId) ?? null
 
@@ -412,6 +509,12 @@ export default function InboxScreen() {
   // empty (a brand-new account, a hard refresh) is not a moment to celebrate, only clearing it out
   // is. `undefined` (query still pending) never counts as "was non-empty".
   const zeroCelebrate = useCelebrate()
+  // `useCelebrate` returns a fresh object literal every render; the panel that receives it is
+  // memoised, so it needs one identity per actual change of the flag (motion verdict F5).
+  const zeroCelebrateProp = React.useMemo(
+    () => ({ play: zeroCelebrate.play, onDone: zeroCelebrate.onDone }),
+    [zeroCelebrate.play, zeroCelebrate.onDone],
+  )
   const previousInboxCount = React.useRef<number | undefined>(undefined)
   React.useEffect(() => {
     if (status !== 'inbox' || notificationsQuery.data === undefined) return
@@ -430,22 +533,27 @@ export default function InboxScreen() {
   }, [status])
 
   // Stable identities, so `InboxRow`'s `React.memo` actually holds and a parent re-render does not
-  // re-render thirty rows (motion verdict F5).
+  // re-render sixty rows (motion verdict F5). The mutation *objects* react-query hands back are new
+  // on every render; their `.mutate` functions are not, so those are what the callbacks below close
+  // over and depend on. Depending on the objects themselves was exactly the thing that would have
+  // made every `React.memo` on this screen a no-op.
+  const { mutate: markReadMutate } = markRead
+  const { mutate: snoozeMutate } = snooze
   const handleOpen = React.useCallback(
     (notification: NotificationDto, index: number) => {
       setOpenId(notification.id)
       setSelectedIndex(index)
-      if (notification.readAt === null) markRead.mutate([notification.id])
+      if (notification.readAt === null) markReadMutate([notification.id])
     },
-    [markRead],
+    [markReadMutate],
   )
 
   const handleQuickAction = React.useCallback(
     (notification: NotificationDto) => {
-      if (notification.readAt === null) markRead.mutate([notification.id])
+      if (notification.readAt === null) markReadMutate([notification.id])
       if (notification.deepLink) navigate(notification.deepLink)
     },
-    [markRead],
+    [markReadMutate],
   )
 
   const handleArchive = React.useCallback(
@@ -463,10 +571,10 @@ export default function InboxScreen() {
 
   const handleSnooze = React.useCallback(
     (id: string, minutes: number) => {
-      snooze.mutate({ id, minutes })
+      snoozeMutate({ id, minutes })
       toast(t('inbox.row.snoozed'))
     },
-    [snooze, t],
+    [snoozeMutate, t],
   )
 
   function handleArchiveNow(id: string) {
@@ -567,34 +675,39 @@ export default function InboxScreen() {
           only an 80px bordered box below it (item handoff) -- widening the list a little and letting
           the detail pane take the rest evens that out. */}
       <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
-        <div className="min-w-0">
-          {TABS.map((tab) => (
-            <div
-              key={tab}
-              hidden={tab !== status}
-              // The list itself no longer re-staggers on a tab switch (it never unmounts), so the
-              // "a different tab is a different list" arrival DESIGN.md §10 asks for is carried by
-              // one composited entrance on the panel instead of thirty. Adding the class is what
-              // restarts the keyframe, and the reduced-motion backstop collapses it to instant.
-              className={cn(
-                'min-w-0',
-                tab === status && 'animate-[devon-rise-in_220ms_var(--ease-out)]',
-              )}
-            >
-              <InboxBody
-                query={queryByStatus[tab]}
-                status={tab}
-                grouped={grouped}
-                selectedIndex={selectedIndex}
-                onOpen={handleOpen}
-                onArchive={handleArchive}
-                onQuickAction={handleQuickAction}
-                onSnooze={handleSnooze}
-                {...(tab === 'inbox' ? { zeroCelebrate } : {})}
-              />
-            </div>
-          ))}
-        </div>
+        <SelectedNotificationContext.Provider value={selectedId}>
+          <div className="min-w-0">
+            {TABS.map((tab) => (
+              <div
+                key={tab}
+                hidden={tab !== status}
+                // Everything a tab switch changes lives here, outside `InboxTabPanel`'s memo. The list
+                // no longer re-staggers on a switch (it never unmounts), so the "a different tab is a
+                // different list" arrival DESIGN.md §10 asks for is carried by one composited entrance
+                // on the panel instead of by sixty rows; adding the class is what restarts the
+                // keyframe, and the reduced-motion backstop collapses it to an instant state change.
+                className={cn(
+                  'min-w-0',
+                  tab === status && 'animate-[devon-rise-in_220ms_var(--ease-out)]',
+                )}
+              >
+                <InboxTabPanel
+                  tab={tab}
+                  items={queryByStatus[tab].data?.items}
+                  isPending={queryByStatus[tab].isPending}
+                  isError={queryByStatus[tab].isError}
+                  onRetry={retryByStatus[tab]}
+                  grouped={grouped}
+                  onOpen={handleOpen}
+                  onArchive={handleArchive}
+                  onQuickAction={handleQuickAction}
+                  onSnooze={handleSnooze}
+                  {...(tab === 'inbox' ? { zeroCelebrate: zeroCelebrateProp } : {})}
+                />
+              </div>
+            ))}
+          </div>
+        </SelectedNotificationContext.Provider>
 
         {/* The right pane of the split at >=768; a bottom sheet carries the same content below that
             (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so

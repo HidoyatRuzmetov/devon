@@ -274,6 +274,28 @@ export function CommandPaletteController({
     if (!open) setMode('root')
   }, [open])
 
+  // Motion verdict F2, the last of it. Even with one cursor node and a memoised builder, mounting
+  // all ~63 rows on the keypress costs ~210 ms in a production build -- the `Dialog`'s 220 ms
+  // scale-in cannot start on a frame that has not been rendered yet, and DESIGN.md §2.5 gives this
+  // interaction `--dur-micro` (140 ms) "or not at all".
+  //
+  // So the palette opens with what a person is actually looking at when they press the shortcut --
+  // Recent, Oʻtish, Amallar, Sozlamalar, Hisob, about 23 rows -- and the ~40 entity rows (people,
+  // cards, projects, events, pages) are appended one frame later inside a transition. Nothing is
+  // lost: the entity rows exist to be *typed at*, and they are mounted long before a first keystroke
+  // lands. `false` again on close, so the next open is equally cheap.
+  const [entitiesReady, setEntitiesReady] = React.useState(false)
+  React.useEffect(() => {
+    if (!open) {
+      setEntitiesReady(false)
+      return
+    }
+    const frame = window.requestAnimationFrame(() => {
+      React.startTransition(() => setEntitiesReady(true))
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [open])
+
   const close = React.useCallback((): void => {
     onOpenChange(false)
   }, [onOpenChange])
@@ -378,16 +400,20 @@ export function CommandPaletteController({
         ? t('ai.search.palette.headingSemantic')
         : t('ai.search.palette.heading')
 
-    const entityGroups: CommandPaletteGroup[] = [
-      ...(searchItems.length > 0 ? [{ heading: searchHeading, items: searchItems }] : []),
-      ...(peopleItems.length > 0 ? [{ heading: t('cmd.group.people'), items: peopleItems }] : []),
-      ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
-      ...(projectItems.length > 0
-        ? [{ heading: t('cmd.group.projects'), items: projectItems }]
-        : []),
-      ...(eventItems.length > 0 ? [{ heading: t('cmd.group.events'), items: eventItems }] : []),
-      ...(pageItems.length > 0 ? [{ heading: t('cmd.group.pages'), items: pageItems }] : []),
-    ]
+    const entityGroups: CommandPaletteGroup[] = !entitiesReady
+      ? []
+      : [
+          ...(searchItems.length > 0 ? [{ heading: searchHeading, items: searchItems }] : []),
+          ...(peopleItems.length > 0
+            ? [{ heading: t('cmd.group.people'), items: peopleItems }]
+            : []),
+          ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
+          ...(projectItems.length > 0
+            ? [{ heading: t('cmd.group.projects'), items: projectItems }]
+            : []),
+          ...(eventItems.length > 0 ? [{ heading: t('cmd.group.events'), items: eventItems }] : []),
+          ...(pageItems.length > 0 ? [{ heading: t('cmd.group.pages'), items: pageItems }] : []),
+        ]
 
     // "Create" first (that is what a palette is reached for mid-task), then everything else a feature
     // registered.
@@ -521,6 +547,7 @@ export function CommandPaletteController({
     return mode === 'locale' ? localeGroups : mode === 'theme' ? themeGroups : rootGroups
   }, [
     open,
+    entitiesReady,
     mode,
     t,
     recentRoutes,
