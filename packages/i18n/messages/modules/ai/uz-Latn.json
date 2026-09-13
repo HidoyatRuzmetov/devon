@@ -2,15 +2,15 @@
   "ai": {
     "title": "AI",
     "eyebrow": "AI",
-    "description": "Boʻlimning AI yordamchilari: har biri nima qilishi, qayerda turishi, qancha turishi va foydalanish tarixi.",
+    "description": "Boshqarmaning AI yordamchilari: har biri nima qiladi, qayerda turadi, qancha turadi va kim ishlatgan.",
     "tabs": {
       "helpers": "Yordamchilar",
       "ask": "Soʻrash",
       "usage": "Foydalanish"
     },
     "command": {
-      "ask": "AI dan soʻrash",
-      "search": "Boʻlim boʻyicha qidirish"
+      "ask": "AIdan soʻrash",
+      "search": "Boshqarma boʻyicha qidirish"
     },
     "simulated": {
       "title": "Namunaviy javob.",
@@ -32,15 +32,15 @@
       },
       "spentOfCap": "Bu oy {cap}dan {spent} sarflandi",
       "resetToast": "Oylik AI byudjeti yangilandi",
-      "editLabel": "Oylik byudjet (UZS)",
+      "editLabel": "Oylik byudjet (soʻm)",
       "save": "Byudjetni saqlash",
-      "invalidAmount": "Toʻgʻri miqdor kiriting",
+      "invalidAmount": "Summani toʻgʻri kiriting.",
       "currency": "soʻm"
     },
     "flags": {
       "title": "Yordamchilar",
-      "description": "Har bir yordamchi nima qilishini oʻqing va boʻlimga keraklisini yoqing. Yoqmaguningizcha oʻchirilgan boʻladi.",
-      "headOnly": "Bularni faqat boʻlim boshligʻi oʻzgartira oladi.",
+      "description": "Har bir yordamchi nima qilishini oʻqing va boshqarmaga keraklisini yoqing. Yoqmaguningizcha hammasi oʻchiq turadi.",
+      "headOnly": "Bularni faqat boshqarma boshligʻi oʻzgartiradi.",
       "headOnlyBadge": "Faqat boshliq uchun",
       "whereLabel": "Qayerda:",
       "spentThisMonth": "Bu oy: {cost}"
@@ -48,7 +48,7 @@
     "usage": {
       "empty": {
         "title": "Hali AI chaqiruvlari yoʻq",
-        "body": "Boʻlimdan kimdir AI yordamchisini ishlatgach, foydalanish shu yerda koʻrinadi."
+        "body": "Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi."
       },
       "columns": {
         "when": "Qachon",
@@ -59,7 +59,7 @@
         "cost": "Narx",
         "latency": "Kechikish"
       },
-      "unknownUser": "Boʻlimdan chiqqan xodim",
+      "unknownUser": "Boshqarmadan chiqqan xodim",
       "status": {
         "ok": "Yaxshi",
         "empty_after_retry": "Boʻsh javob",
@@ -90,7 +90,7 @@
       "page": {
         "previous": "Oldingi",
         "next": "Keyingi",
-        "of": "{pages} sahifadan {page} chisi"
+        "of": "{pages} sahifadan {page}-si"
       }
     },
     "result": {
@@ -106,10 +106,10 @@
       "close": "Yopish"
     },
     "ask": {
-      "label": "Boʻlim maʼlumotidan soʻrang",
+      "label": "Boshqarma yozuvlaridan soʻrang",
       "placeholder": "Masalan: oylik hisobotni kim tayyorlayapti?",
       "submit": "Soʻrash",
-      "hint": "Javob faqat shu boʻlimning kartochkalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi.",
+      "hint": "Javob faqat shu boshqarmaning kartalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi.",
       "answerTitle": "Javob: {question}",
       "done": "Yopish"
     },
@@ -133,10 +133,10 @@
       },
       "indexed": "{count} ta yozuv indekslangan, {pending} tasi navbatda.",
       "rebuild": "Indeksni yangilash",
-      "rebuildHint": "Kartochkalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi.",
+      "rebuildHint": "Kartalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi.",
       "rebuilt": "{indexed} ta yozuv yangilandi, {embedded} tasiga vektor yozildi.",
       "kind": {
-        "card": "Kartochka",
+        "card": "Karta",
         "comment": "Izoh",
         "page": "Sahifa",
         "event": "Tadbir"
@@ -150,8 +150,8 @@
       "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",
       "forbidden": "Bu yordamchi oʻchirilgan yoki byudjet tugagan",
       "runFailed": "AI hozircha javob bera olmadi",
-      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun",
-      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing.",
+      "headOnly": "Bu yordamchi faqat boshqarma boshligʻi uchun",
+      "featureDisabled": "Bu yordamchi boshqarma sozlamalarida oʻchirilgan. AI sahifasidan yoqing.",
       "timeout": "AI belgilangan vaqtda javob bermadi. Qayta urinib koʻring.",
       "retry": "Qayta urinish"
     },
@@ -166,8 +166,8 @@
       "noDate": "Muddat yoʻq",
       "unknownPerson": "Nomaʼlum xodim",
       "unknownProject": "Nomaʼlum loyiha",
-      "unknownCard": "Nomaʼlum kartochka",
-      "openCard": "Kartochkani ochish",
+      "unknownCard": "Nomaʼlum karta",
+      "openCard": "Kartani ochish",
       "minutes": "{count} daqiqa",
       "needsApproval": "Tasdiq kerak",
       "risk": {
@@ -187,10 +187,10 @@
         "priority": "Muhimlik",
         "labels": "Yorliqlar",
         "project": "Loyiha",
-        "ambiguous": "Bir nechta mos keldi"
+        "ambiguous": "Bir nechta xodim mos keldi"
       },
       "subtasks": {
-        "insufficient": "Kartochkada boʻlish uchun yetarli maʼlumot yoʻq. Tavsif qoʻshib, qayta urinib koʻring.",
+        "insufficient": "Kartani boʻlish uchun matn yetarli emas. Tavsif qoʻshib, qayta urinib koʻring.",
         "total": "{count} ta qadam, jami taxminan {minutes} daqiqa."
       },
       "plan": {
@@ -210,10 +210,10 @@
       },
       "event": {
         "place": "Joy",
-        "attendees": "Taxminiy ishtirokchi",
+        "attendees": "Taxminiy ishtirokchilar soni",
         "dateOptions": "Sana variantlari",
         "checklist": "Tayyorgarlik roʻyxati",
-        "carpool": "Yoʻl-yoʻriq"
+        "carpool": "Yoʻl"
       },
       "thread": {
         "empty": "Bu muhokamada hali qaror ham, ochiq savol ham yoʻq.",
@@ -232,7 +232,7 @@
           "line": "Chiziqli",
           "pie": "Doiraviy",
           "table": "Jadval",
-          "burnup": "Oʻsish egri chizigʻi"
+          "burnup": "Oʻsish chizigʻi"
         },
         "groupBy": {
           "person": "Xodim boʻyicha",
@@ -254,14 +254,14 @@
           "brief": "Qisqa"
         },
         "answering": "{count} ta izohga javob beradi",
-        "stillNeeded": "Siz hali aytishingiz kerak:"
+        "stillNeeded": "Hali aytishingiz kerak:"
       },
       "riskAction": {
         "move_due_date": "Muddatni koʻchirish",
         "ping_assignee": "Masʼulga eslatish",
         "split_into_subtasks": "Qadamlarga boʻlish",
         "reassign": "Boshqaga topshirish",
-        "mark_blocked": "Toʻsiq deb belgilash"
+        "mark_blocked": "Toʻxtab turibdi deb belgilash"
       },
       "digest": {
         "pressure": "Bosim nuqtalari"
@@ -276,7 +276,7 @@
         "related": "Aloqador"
       },
       "ask": {
-        "notFound": "Boʻlim maʼlumotlarida bu savolga javob topilmadi.",
+        "notFound": "Boshqarma yozuvlarida bu savolga javob topilmadi.",
         "sources": "Manbalar",
         "openSource": "Manbani ochish"
       }
@@ -284,97 +284,97 @@
     "features": {
       "quickAddParse": {
         "label": "Tezkor qoʻshish tahlili",
-        "description": "Bir gapda yozilgan vazifani nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun “ertaga” yoki “jumagacha” toʻgʻri kunga tushadi.",
+        "description": "Bir gapda yozilgan ishni nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun «ertaga» yoki «jumagacha» toʻgʻri kunga tushadi.",
         "where": "Doska va shaxsiy ish joyidagi tezkor qoʻshish qatori.",
-        "example": "“Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch” → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch."
+        "example": "«Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch» → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch."
       },
       "subtaskBreakdown": {
         "label": "Quyi vazifalarga boʻlish",
-        "description": "Bitta kartochkani bajarilishi mumkin boʻlgan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi.",
-        "where": "Kartochka ichidagi roʻyxat boʻlimi va shaxsiy ish joyidagi vazifa qatori.",
-        "example": "“Oylik hisobotni tayyorlash” → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
+        "description": "Bitta kartani bajarsa boʻladigan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi.",
+        "where": "Karta ichidagi bajarish roʻyxati va shaxsiy maydondagi vazifa qatori.",
+        "example": "«Oylik hisobotni tayyorlash» → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
       },
       "planSprint": {
         "label": "Davrni rejalashtirish",
         "description": "Ochiq ishlaringizni muddat, muhimlik va qolgan vaqtingizga qarab tartiblaydi, nimadan boshlashni va nima sigʻmasligini aytadi.",
-        "where": "Shaxsiy ish joyidagi davrlar va loyiha sahifasi.",
-        "example": "Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi “sigʻmaydi”."
+        "where": "Shaxsiy maydondagi davrlar va loyiha sahifasi.",
+        "example": "Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi «sigʻmaydi»."
       },
       "deadlineRisk": {
-        "label": "Bu xavfni tushuntir",
-        "description": "Kartochkadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi.",
-        "where": "Kartochkadagi xavf belgisi yonida.",
-        "example": "“Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan” → sababi va “muddatni 22-sentabrga koʻchirish” taklifi."
+        "label": "Xavfni tushuntirish",
+        "description": "Kartadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi.",
+        "where": "Kartadagi xavf belgisi yonida.",
+        "example": "«Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan» → sababi va «muddatni 22-sentabrga koʻchirish» taklifi."
       },
       "catchUp": {
         "label": "Nimani oʻtkazib yubordim",
-        "description": "Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boʻlim boshligʻi uchun butun boʻlim boʻyicha dushanba xulosasini beradi.",
-        "where": "Bosh sahifa, shaxsiy ish joyi va loyiha sahifasi.",
-        "example": "“Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.”"
+        "description": "Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boshqarma boshligʻiga butun boshqarma boʻyicha dushanba xulosasini beradi.",
+        "where": "Bosh sahifa, shaxsiy maydon va loyiha sahifasi.",
+        "example": "«Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.»"
       },
       "draftEvent": {
-        "label": "Tadbir loyihasi",
-        "description": "Bir qatorli gʻoyani toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl-yoʻriq rejasi.",
-        "where": "Tadbir yaratish oynasi.",
-        "example": "“Chorvoqda kuz sayli” → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, avtomobil rejasi."
+        "label": "Tadbir qoralamasi",
+        "description": "Bir qatorli fikrni toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl rejasi.",
+        "where": "Tadbir qoʻshish oynasi.",
+        "example": "«Chorvoqda kuz sayli» → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, yoʻl rejasi."
       },
       "summarizeThread": {
         "label": "Muhokamani xulosalash",
         "description": "Uzoq izohlar muhokamasidan qabul qilingan qarorlar, ochiq savollar va kim nimaga vaʼda berganini ajratib beradi, har biri izohga havola bilan.",
-        "where": "Kartochka va tadbir izohlari.",
-        "example": "24 ta izoh → 3 ta qaror, 2 ta ochiq savol, “Anvar PDF-ni payshanbagacha yuboradi”."
+        "where": "Karta va tadbir izohlari.",
+        "example": "24 ta izoh → 3 ta qaror, 2 ta ochiq savol, «Anvar PDF-ni payshanbagacha yuboradi»."
       },
       "nlAnalytics": {
-        "label": "Tahlildan soʻrash",
+        "label": "Tahlilga savol berish",
         "description": "Oddiy tildagi savolni filtrga aylantiradi va raqamlar bilan javob beradi, qaysi filtr ishlatilganini koʻrsatgan holda.",
         "where": "Tahlil sahifasi.",
-        "example": "“Bu oy Data boʻlimining muddati oʻtgan ishlari” → 7 ta, filtr va diagramma bilan."
+        "example": "«Bu oy Data boʻlimining muddati oʻtgan ishlari» → 7 ta, filtr va diagramma bilan."
       },
       "translate": {
         "label": "Tarjima qilish",
-        "description": "Matnni siz tanlagan tilga tarjima qiladi, boʻlim atamalarini oʻzgartirmay. Lotin va kirill oʻrtasida model ishlatilmaydi, oʻgirish shu yerda bajariladi.",
-        "where": "Kartochka tavsifi, sahifa muharriri va shaxsiy qaydlar.",
-        "example": "Oʻzbekcha tavsif → ruscha tarjima, “muddat” va “boʻlim” atamalari saqlangan holda."
+        "description": "Matnni siz tanlagan tilga tarjima qiladi, boshqarma atamalariga tegmaydi. Lotin va kirill oʻrtasida model ishlatilmaydi — oʻgirish shu yerda bajariladi.",
+        "where": "Karta tavsifi, sahifa muharriri va shaxsiy qaydlar.",
+        "example": "Oʻzbekcha tavsif → ruscha tarjima, «muddat» va «boʻlim» atamalari saqlangan holda."
       },
       "draftReply": {
-        "label": "Javob loyihasi",
+        "label": "Javob qoralamasi",
         "description": "Muhokamaga muloyim va ishchan javob yozib beradi. Hech qachon oʻzi yubormaydi: matn izoh maydoniga tushadi, yuborishni siz hal qilasiz.",
-        "where": "Kartochka izoh maydoni va kiruvchi xabardagi eslatma.",
-        "example": "“Muddatni suraymi?” → tayyor javob va “hali aytishingiz kerak: yangi sana”."
+        "where": "Karta izoh maydoni va bildirishnomadagi belgilash.",
+        "example": "«Muddatni suraymi?» → tayyor javob va «hali aytishingiz kerak: yangi sana»."
       },
       "boardRiskDigest": {
-        "label": "Kim kechiktiryapti",
-        "description": "Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora bilan. Faqat boʻlim boshligʻi uchun.",
+        "label": "Kim kechikayotgani",
+        "description": "Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora qoʻshadi. Faqat boshqarma boshligʻi uchun.",
         "where": "Doska sarlavhasi.",
-        "example": "Beshta ish, har biriga sabab, hamda “Anvarda 11 ta ochiq ish” degan bosim nuqtasi."
+        "example": "Beshta ish, har biriga sabab, hamda «Anvarda 11 ta ochiq ish» degan bosim nuqtasi."
       },
       "suggestAssignee": {
-        "label": "Kimga topshiray",
-        "description": "Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boʻlim boshligʻi qiladi.",
-        "where": "Kartochkadagi masʼul maydoni.",
-        "example": "“Oylik hisobot” → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
+        "label": "Kimga topshirish",
+        "description": "Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boshqarma boshligʻi qiladi.",
+        "where": "Kartadagi masʼul maydoni.",
+        "example": "«Oylik hisobot» → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
       },
       "duplicateCheck": {
         "label": "Takroriy ishni topish",
         "description": "Yangi ish yozayotganingizda shunga oʻxshash ish allaqachon bor-yoʻqligini tekshiradi va havola beradi.",
-        "where": "Kartochka yaratish va tezkor qoʻshish oldindan koʻrishi.",
-        "example": "“Hisobotni tayyorlash” → “Choraklik hisobotni tayyorlash” allaqachon ochiq."
+        "where": "Karta qoʻshish va tezkor qoʻshish oynasi.",
+        "example": "«Hisobotni tayyorlash» → «Choraklik hisobotni tayyorlash» allaqachon ochiq."
       },
       "semanticAsk": {
-        "label": "Boʻlim maʼlumotidan soʻrash",
-        "description": "Savolingizga faqat boʻlimning oʻz kartochkalari, izohlari, sahifalari va tadbirlaridan javob beradi, har bir javobga havola qoʻyib. Topilmasa, “topilmadi” deydi.",
-        "where": "AI sahifasidagi “Soʻrash” boʻlimi va Ctrl+K.",
-        "example": "“Oylik hisobotni kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan."
+        "label": "Boshqarma yozuvlaridan soʻrash",
+        "description": "Savolingizga faqat boshqarmaning oʻz kartalari, izohlari, sahifalari va tadbirlaridan javob beradi va har bir javobga havola qoʻyadi. Topilmasa, «topilmadi» deydi.",
+        "where": "AI sahifasidagi «Soʻrash» boʻlimi va Ctrl+K.",
+        "example": "«Oylik hisobotni kim tayyorlayapti?» → «Nodira Karimova, muddat 18-sentabr», kartaga havola bilan."
       },
       "weeklySummary": {
         "label": "Haftalik xulosa (eskirgan)",
-        "description": "Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
+        "description": "Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
       },
       "whatDidIMiss": {
         "label": "Nimani oʻtkazib yubordim (eskirgan)",
-        "description": "Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
+        "description": "Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
       }

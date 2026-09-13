@@ -421,3 +421,77 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `events.tabs.photos` | Fotosuratlar | Suratlar |
 | `events.filters.from` | Boshlanish | Qaysi sanadan |
 | `events.filters.to` | Tugash | Qaysi sanagacha |
+
+## ai — 69 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `ai.description` | Boʻlimning AI yordamchilari: har biri nima qilishi, qayerda turishi, qancha turishi va foydalanish tarixi. | Boshqarmaning AI yordamchilari: har biri nima qiladi, qayerda turadi, qancha turadi va kim ishlatgan. |
+| `ai.command.ask` | AI dan soʻrash | AIdan soʻrash |
+| `ai.command.search` | Boʻlim boʻyicha qidirish | Boshqarma boʻyicha qidirish |
+| `ai.budget.editLabel` | Oylik byudjet (UZS) | Oylik byudjet (soʻm) |
+| `ai.budget.invalidAmount` | Toʻgʻri miqdor kiriting | Summani toʻgʻri kiriting. |
+| `ai.flags.description` | Har bir yordamchi nima qilishini oʻqing va boʻlimga keraklisini yoqing. Yoqmaguningizcha oʻchirilgan boʻladi. | Har bir yordamchi nima qilishini oʻqing va boshqarmaga keraklisini yoqing. Yoqmaguningizcha hammasi oʻchiq turadi. |
+| `ai.flags.headOnly` | Bularni faqat boʻlim boshligʻi oʻzgartira oladi. | Bularni faqat boshqarma boshligʻi oʻzgartiradi. |
+| `ai.usage.empty.body` | Boʻlimdan kimdir AI yordamchisini ishlatgach, foydalanish shu yerda koʻrinadi. | Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi. |
+| `ai.usage.unknownUser` | Boʻlimdan chiqqan xodim | Boshqarmadan chiqqan xodim |
+| `ai.usage.page.of` | {pages} sahifadan {page} chisi | {pages} sahifadan {page}-si |
+| `ai.ask.label` | Boʻlim maʼlumotidan soʻrang | Boshqarma yozuvlaridan soʻrang |
+| `ai.ask.hint` | Javob faqat shu boʻlimning kartochkalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi. | Javob faqat shu boshqarmaning kartalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi. |
+| `ai.search.rebuildHint` | Kartochkalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi. | Kartalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi. |
+| `ai.search.kind.card` | Kartochka | Karta |
+| `ai.errors.headOnly` | Bu yordamchi faqat boʻlim boshligʻi uchun | Bu yordamchi faqat boshqarma boshligʻi uchun |
+| `ai.errors.featureDisabled` | Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing. | Bu yordamchi boshqarma sozlamalarida oʻchirilgan. AI sahifasidan yoqing. |
+| `ai.preview.unknownCard` | Nomaʼlum kartochka | Nomaʼlum karta |
+| `ai.preview.openCard` | Kartochkani ochish | Kartani ochish |
+| `ai.preview.quickAdd.ambiguous` | Bir nechta mos keldi | Bir nechta xodim mos keldi |
+| `ai.preview.subtasks.insufficient` | Kartochkada boʻlish uchun yetarli maʼlumot yoʻq. Tavsif qoʻshib, qayta urinib koʻring. | Kartani boʻlish uchun matn yetarli emas. Tavsif qoʻshib, qayta urinib koʻring. |
+| `ai.preview.event.attendees` | Taxminiy ishtirokchi | Taxminiy ishtirokchilar soni |
+| `ai.preview.event.carpool` | Yoʻl-yoʻriq | Yoʻl |
+| `ai.preview.analytics.chart.burnup` | Oʻsish egri chizigʻi | Oʻsish chizigʻi |
+| `ai.preview.reply.stillNeeded` | Siz hali aytishingiz kerak: | Hali aytishingiz kerak: |
+| `ai.preview.riskAction.mark_blocked` | Toʻsiq deb belgilash | Toʻxtab turibdi deb belgilash |
+| `ai.preview.ask.notFound` | Boʻlim maʼlumotlarida bu savolga javob topilmadi. | Boshqarma yozuvlarida bu savolga javob topilmadi. |
+| `ai.features.quickAddParse.description` | Bir gapda yozilgan vazifani nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun “ertaga” yoki “jumagacha” toʻgʻri kunga tushadi. | Bir gapda yozilgan ishni nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun «ertaga» yoki «jumagacha» toʻgʻri kunga tushadi. |
+| `ai.features.quickAddParse.example` | “Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch” → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch. | «Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch» → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch. |
+| `ai.features.subtaskBreakdown.description` | Bitta kartochkani bajarilishi mumkin boʻlgan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi. | Bitta kartani bajarsa boʻladigan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi. |
+| `ai.features.subtaskBreakdown.where` | Kartochka ichidagi roʻyxat boʻlimi va shaxsiy ish joyidagi vazifa qatori. | Karta ichidagi bajarish roʻyxati va shaxsiy maydondagi vazifa qatori. |
+| `ai.features.subtaskBreakdown.example` | “Oylik hisobotni tayyorlash” → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa. | «Oylik hisobotni tayyorlash» → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa. |
+| `ai.features.planSprint.where` | Shaxsiy ish joyidagi davrlar va loyiha sahifasi. | Shaxsiy maydondagi davrlar va loyiha sahifasi. |
+| `ai.features.planSprint.example` | Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi “sigʻmaydi”. | Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi «sigʻmaydi». |
+| `ai.features.deadlineRisk.label` | Bu xavfni tushuntir | Xavfni tushuntirish |
+| `ai.features.deadlineRisk.description` | Kartochkadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi. | Kartadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi. |
+| `ai.features.deadlineRisk.where` | Kartochkadagi xavf belgisi yonida. | Kartadagi xavf belgisi yonida. |
+| `ai.features.deadlineRisk.example` | “Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan” → sababi va “muddatni 22-sentabrga koʻchirish” taklifi. | «Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan» → sababi va «muddatni 22-sentabrga koʻchirish» taklifi. |
+| `ai.features.catchUp.description` | Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boʻlim boshligʻi uchun butun boʻlim boʻyicha dushanba xulosasini beradi. | Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boshqarma boshligʻiga butun boshqarma boʻyicha dushanba xulosasini beradi. |
+| `ai.features.catchUp.where` | Bosh sahifa, shaxsiy ish joyi va loyiha sahifasi. | Bosh sahifa, shaxsiy maydon va loyiha sahifasi. |
+| `ai.features.catchUp.example` | “Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.” | «Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.» |
+| `ai.features.draftEvent.label` | Tadbir loyihasi | Tadbir qoralamasi |
+| `ai.features.draftEvent.description` | Bir qatorli gʻoyani toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl-yoʻriq rejasi. | Bir qatorli fikrni toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl rejasi. |
+| `ai.features.draftEvent.where` | Tadbir yaratish oynasi. | Tadbir qoʻshish oynasi. |
+| `ai.features.draftEvent.example` | “Chorvoqda kuz sayli” → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, avtomobil rejasi. | «Chorvoqda kuz sayli» → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, yoʻl rejasi. |
+| `ai.features.summarizeThread.where` | Kartochka va tadbir izohlari. | Karta va tadbir izohlari. |
+| `ai.features.summarizeThread.example` | 24 ta izoh → 3 ta qaror, 2 ta ochiq savol, “Anvar PDF-ni payshanbagacha yuboradi”. | 24 ta izoh → 3 ta qaror, 2 ta ochiq savol, «Anvar PDF-ni payshanbagacha yuboradi». |
+| `ai.features.nlAnalytics.label` | Tahlildan soʻrash | Tahlilga savol berish |
+| `ai.features.nlAnalytics.example` | “Bu oy Data boʻlimining muddati oʻtgan ishlari” → 7 ta, filtr va diagramma bilan. | «Bu oy Data boʻlimining muddati oʻtgan ishlari» → 7 ta, filtr va diagramma bilan. |
+| `ai.features.translate.description` | Matnni siz tanlagan tilga tarjima qiladi, boʻlim atamalarini oʻzgartirmay. Lotin va kirill oʻrtasida model ishlatilmaydi, oʻgirish shu yerda bajariladi. | Matnni siz tanlagan tilga tarjima qiladi, boshqarma atamalariga tegmaydi. Lotin va kirill oʻrtasida model ishlatilmaydi — oʻgirish shu yerda bajariladi. |
+| `ai.features.translate.where` | Kartochka tavsifi, sahifa muharriri va shaxsiy qaydlar. | Karta tavsifi, sahifa muharriri va shaxsiy qaydlar. |
+| `ai.features.translate.example` | Oʻzbekcha tavsif → ruscha tarjima, “muddat” va “boʻlim” atamalari saqlangan holda. | Oʻzbekcha tavsif → ruscha tarjima, «muddat» va «boʻlim» atamalari saqlangan holda. |
+| `ai.features.draftReply.label` | Javob loyihasi | Javob qoralamasi |
+| `ai.features.draftReply.where` | Kartochka izoh maydoni va kiruvchi xabardagi eslatma. | Karta izoh maydoni va bildirishnomadagi belgilash. |
+| `ai.features.draftReply.example` | “Muddatni suraymi?” → tayyor javob va “hali aytishingiz kerak: yangi sana”. | «Muddatni suraymi?» → tayyor javob va «hali aytishingiz kerak: yangi sana». |
+| `ai.features.boardRiskDigest.label` | Kim kechiktiryapti | Kim kechikayotgani |
+| `ai.features.boardRiskDigest.description` | Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora bilan. Faqat boʻlim boshligʻi uchun. | Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora qoʻshadi. Faqat boshqarma boshligʻi uchun. |
+| `ai.features.boardRiskDigest.example` | Beshta ish, har biriga sabab, hamda “Anvarda 11 ta ochiq ish” degan bosim nuqtasi. | Beshta ish, har biriga sabab, hamda «Anvarda 11 ta ochiq ish» degan bosim nuqtasi. |
+| `ai.features.suggestAssignee.label` | Kimga topshiray | Kimga topshirish |
+| `ai.features.suggestAssignee.description` | Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boʻlim boshligʻi qiladi. | Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boshqarma boshligʻi qiladi. |
+| `ai.features.suggestAssignee.where` | Kartochkadagi masʼul maydoni. | Kartadagi masʼul maydoni. |
+| `ai.features.suggestAssignee.example` | “Oylik hisobot” → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza. | «Oylik hisobot» → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza. |
+| `ai.features.duplicateCheck.where` | Kartochka yaratish va tezkor qoʻshish oldindan koʻrishi. | Karta qoʻshish va tezkor qoʻshish oynasi. |
+| `ai.features.duplicateCheck.example` | “Hisobotni tayyorlash” → “Choraklik hisobotni tayyorlash” allaqachon ochiq. | «Hisobotni tayyorlash» → «Choraklik hisobotni tayyorlash» allaqachon ochiq. |
+| `ai.features.semanticAsk.label` | Boʻlim maʼlumotidan soʻrash | Boshqarma yozuvlaridan soʻrash |
+| `ai.features.semanticAsk.description` | Savolingizga faqat boʻlimning oʻz kartochkalari, izohlari, sahifalari va tadbirlaridan javob beradi, har bir javobga havola qoʻyib. Topilmasa, “topilmadi” deydi. | Savolingizga faqat boshqarmaning oʻz kartalari, izohlari, sahifalari va tadbirlaridan javob beradi va har bir javobga havola qoʻyadi. Topilmasa, «topilmadi» deydi. |
+| `ai.features.semanticAsk.where` | AI sahifasidagi “Soʻrash” boʻlimi va Ctrl+K. | AI sahifasidagi «Soʻrash» boʻlimi va Ctrl+K. |
+| `ai.features.semanticAsk.example` | “Oylik hisobotni kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan. | «Oylik hisobotni kim tayyorlayapti?» → «Nodira Karimova, muddat 18-sentabr», kartaga havola bilan. |
+| `ai.features.weeklySummary.description` | Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. | Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. |
+| `ai.features.whatDidIMiss.description` | Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. | Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. |
