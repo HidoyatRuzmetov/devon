@@ -1016,6 +1016,10 @@
         "comment": "Izoh",
         "page": "Sahifa",
         "event": "Tadbir"
+      },
+      "palette": {
+        "heading": "Qidiruv natijalari",
+        "headingSemantic": "Maʼnoviy qidiruv"
       }
     },
     "errors": {

@@ -1016,6 +1016,10 @@
         "comment": "Изоҳ",
         "page": "Саҳифа",
         "event": "Тадбир"
+      },
+      "palette": {
+        "heading": "Қидирув натижалари",
+        "headingSemantic": "Маъновий қидирув"
       }
     },
     "errors": {

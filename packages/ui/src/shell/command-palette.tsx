@@ -13,6 +13,15 @@ export interface CommandPaletteItem {
   id: string
   label: string
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  /** Rendered under the label instead of the one-line layout, for a row that genuinely carries a
+   * second line -- a search snippet, an excerpt. Used by the semantic-search section; a plain
+   * navigation row never sets it. */
+  description?: string
+  /** Small text badge before the label, e.g. the kind of record a search hit is ("Vazifa"). */
+  badge?: string
+  /** Opt out of cmdk's client-side fuzzy filter for this row: the server already decided it matches
+   * the query, and re-scoring a snippet against the same query only ever removes real hits. */
+  alwaysVisible?: boolean
   /** Right-aligned context under Raycast's convention: the section a result belongs to, a person's
    * unit, a card's column. Never a second line -- palette rows stay one line tall. */
   hint?: string
@@ -44,6 +53,11 @@ export interface CommandPaletteProps {
   groups: readonly CommandPaletteGroup[]
   /** spec.md §5: "Loading (nested async pages): three 40px skeleton rows, never a spinner." */
   loading?: boolean
+  /** Controlled search text. Supply both this and `onQueryChange` when the caller needs to *see*
+   * what was typed -- the semantic-search section (SPEC §8, HANDOFFS #2) queries the server with it.
+   * Omit both and the input stays uncontrolled exactly as before. */
+  query?: string
+  onQueryChange?: (value: string) => void
   /** >=768 centred dialog vs. 390 bottom sheet (spec.md §5). The breakpoint decision belongs to the
    * caller (`apps/web`) -- this package does not sniff viewport width. */
   variant?: 'dialog' | 'sheet'
@@ -87,6 +101,8 @@ function CommandPaletteBody({
   groups,
   loading,
   openHintLabel,
+  query,
+  onQueryChange,
 }: Omit<CommandPaletteProps, 'open' | 'onOpenChange' | 'title' | 'variant'>) {
   // Rebuilt on every render, in render order, so the "first occurrence keeps the plain value" rule
   // is stable between renders (the group order is).
@@ -104,6 +120,7 @@ function CommandPaletteBody({
         <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <Command.Input
           placeholder={placeholder}
+          {...(onQueryChange ? { value: query ?? '', onValueChange: onQueryChange } : {})}
           className="h-13 w-full border-0 bg-transparent text-lead text-foreground outline-none placeholder:text-muted-foreground"
         />
       </div>
@@ -134,9 +151,10 @@ function CommandPaletteBody({
                   <Command.Item
                     key={item.id}
                     value={uniqueValue(item, seen)}
+                    {...(item.alwaysVisible ? { forceMount: true } : {})}
                     onSelect={item.onSelect}
                     className={cn(
-                      'group flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 text-body text-foreground',
+                      'group flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 py-1.5 text-body text-foreground',
                       'transition-colors duration-(--dur-micro) data-[selected=true]:bg-accent',
                     )}
                   >
@@ -145,8 +163,28 @@ function CommandPaletteBody({
                         <item.icon className="size-4" aria-hidden="true" />
                       </span>
                     ) : null}
-                    <span data-shell-label className="min-w-0 flex-1">
-                      {item.label}
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="flex min-w-0 items-center gap-2">
+                        {item.badge ? (
+                          <span
+                            data-shell-label
+                            className="shrink-0 rounded-xs bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
+                          >
+                            {item.badge}
+                          </span>
+                        ) : null}
+                        <span data-shell-label className="min-w-0 flex-1 truncate">
+                          {item.label}
+                        </span>
+                      </span>
+                      {item.description ? (
+                        <span
+                          data-shell-label
+                          className="line-clamp-1 text-caption text-muted-foreground"
+                        >
+                          {item.description}
+                        </span>
+                      ) : null}
                     </span>
                     {item.hint ? (
                       <span

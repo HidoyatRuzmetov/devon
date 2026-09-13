@@ -43,6 +43,10 @@ const manifest: FeatureManifest = {
       labelKey: 'people.table.nav',
       path: '/people/table',
       icon: Table2,
+      // The sidebar twin is hidden for a xodim, which is exactly why this row needs the gate of its
+      // own: with the twin gone there is no `navByRoute` hit to dedupe it away, so an ungated command
+      // was the one remaining way into the head's table (HANDOFFS #1).
+      action: 'people.table.read',
     },
     {
       id: 'people.me.open',

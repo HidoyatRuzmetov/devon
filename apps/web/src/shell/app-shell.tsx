@@ -44,8 +44,7 @@ import {
   useLogoutMutation,
   useMeQuery,
 } from '../lib/session.js'
-import { canAction, isAppActionId } from '@devon/contracts'
-import { useActor } from '../lib/can.js'
+import { useNavCan } from '../lib/can.js'
 import { useOnline } from '../lib/use-online.js'
 import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.js'
 import { useMediaQuery } from '../lib/use-media-query.js'
@@ -116,16 +115,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // authority (`useDepartment()`), never `role` -- which is the instance-wide role and is `member`
   // for every real boshqarma boshlig'i (I-8b). PERMISSIONS-AUDIT §3.1 found every existing nav gate
   // reading the wrong one of the two.
-  const actor = useActor()
-  const navCan = React.useCallback(
-    (action: string) =>
-      isAppActionId(action)
-        ? canAction(actor, action, {
-            departmentId: department?.departmentId ?? null,
-          }).allowed
-        : false,
-    [actor, department?.departmentId],
-  )
+  // v1.1 integration: the same predicate the command palette resolves its rows with
+  // (`lib/can.tsx`'s `useNavCan`), so the sidebar and Ctrl+K can never disagree about what a xodim
+  // may reach (HANDOFFS #1).
+  const navCan = useNavCan()
   const navCtx = {
     role,
     departmentRole: department?.role ?? null,
@@ -273,13 +266,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     />
   )
 
-  const quickAddActions = getFeatureQuickAddEntries().map((entry) => ({
-    id: entry.id,
-    label: t(entry.labelKey),
-    ...(entry.icon ? { icon: entry.icon } : {}),
-    ...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
-    onSelect: () => navigate(entry.path),
-  }))
+  // Gated on each entry's declared action, exactly like the sidebar and the palette: "+ Yangi" never
+  // offers a member a create flow the server would answer 403 to.
+  const quickAddActions = getFeatureQuickAddEntries()
+    .filter((entry) => !entry.action || navCan(entry.action))
+    .map((entry) => ({
+      id: entry.id,
+      label: t(entry.labelKey),
+      ...(entry.icon ? { icon: entry.icon } : {}),
+      ...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
+      onSelect: () => navigate(entry.path),
+    }))
 
   const trailing = (
     <>

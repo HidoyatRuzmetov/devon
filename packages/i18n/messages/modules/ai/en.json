@@ -114,6 +114,10 @@
         "comment": "Comment",
         "page": "Page",
         "event": "Event"
+      },
+      "palette": {
+        "heading": "Search results",
+        "headingSemantic": "Meaning-based search"
       }
     },
     "errors": {

@@ -22,6 +22,12 @@ export type FeatureCommandEntry = {
   labelKey: string
   path: string
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  /** v1.1 SPEC §3.1 / HANDOFFS #1: the app action this destination needs (`'work.workload.read'`).
+   * The palette resolves it through the same `can()` the sidebar and the server's route use, so a
+   * head-only command is invisible to a xodim instead of being a Ctrl+K shortcut to a 403. A plain
+   * `string` for the same reason `NavEntry.action` is one; an id the registry does not know resolves
+   * to "cannot". Omit for a destination every active member may reach. */
+  action?: string
 }
 
 /** A "create this" entry for the shell's quick-add button (UI-OVERHAUL.md §2 row 1). Declarative on
@@ -35,6 +41,8 @@ export type FeatureQuickAddEntry = {
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   /** Keycap shown in the menu, e.g. `C`. Display only -- the shell does not bind it. */
   shortcut?: string
+  /** As `FeatureCommandEntry.action`: the create permission this row needs, resolved by the shell. */
+  action?: string
 }
 
 export type FeatureManifest = {

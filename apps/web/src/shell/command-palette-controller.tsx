@@ -17,6 +17,7 @@ import {
   Globe,
   KanbanSquare,
   LogOut,
+  MessageSquareText,
   Monitor,
   Moon,
   Sun,
@@ -26,6 +27,7 @@ import { useT } from '@devon/i18n'
 import { CommandPalette, resolveNavEntries, type CommandPaletteGroup } from '@devon/ui'
 import { LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { useDepartment } from '../lib/session.js'
+import { useNavCan } from '../lib/can.js'
 import { navigate, useRoutePath } from '../lib/router.js'
 import { setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { getFeatureCommandEntries, getFeatureQuickAddEntries } from '../features/registry.js'
@@ -37,6 +39,8 @@ import type { Project } from '../features/projects/api.js'
 import { fetchPages } from '../features/pages/api.js'
 import type { PageSummary } from '../features/pages/types.js'
 import { fetchMembers, type Member } from '../features/structure/api.js'
+import { useDepartmentSearchQuery } from '../features/ai/use-ai.js'
+import { searchHitHref } from '../features/ai/types.js'
 import { NAV_ENTRIES } from './nav.js'
 
 /** How many rows a single async source contributes to the palette before typing narrows them --
@@ -46,6 +50,30 @@ const SOURCE_LIMIT = 8
 
 const RECENT_STORAGE_KEY = 'wp.palette.recent'
 const RECENT_MAX = 4
+
+/** Long enough that typing does not fire a request per keystroke, short enough that the section
+ * appears while the hand is still on the keyboard. */
+const SEARCH_DEBOUNCE_MS = 220
+
+/** SPEC §8 / HANDOFFS #2: the palette's "Qidiruv" section. `useDepartmentSearchQuery` is the same
+ * server search the Ask panel runs (`GET /ai/search`), so Ctrl+K reaches the *contents* of cards,
+ * comments, pages and events -- not only the eight most recent rows of each list the palette already
+ * prefetches. The icon per kind matches the one that kind carries everywhere else in the product. */
+const SEARCH_HIT_ICON: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+  card: KanbanSquare,
+  comment: MessageSquareText,
+  page: FileText,
+  event: CalendarDays,
+}
+
+function useDebounced(value: string, ms: number): string {
+  const [debounced, setDebounced] = React.useState(value)
+  React.useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(value), ms)
+    return () => window.clearTimeout(id)
+  }, [value, ms])
+  return debounced
+}
 
 export interface CommandPaletteControllerProps {
   open: boolean
@@ -180,8 +208,18 @@ export function CommandPaletteController({
   const t = useT()
   const [mode, setMode] = React.useState<Mode>('root')
   const recentRoutes = useRecentRoutes()
-  const { departmentId, memberships } = useDepartment()
+  const { department, departmentId, memberships } = useDepartment()
+  const navCan = useNavCan()
   const entities = usePaletteEntities(open, departmentId)
+  // HANDOFFS #2: the "Qidiruv" section. The input becomes controlled only so this file can see the
+  // query; cmdk keeps filtering every other group exactly as before.
+  const [query, setQuery] = React.useState('')
+  const debouncedQuery = useDebounced(query, SEARCH_DEBOUNCE_MS)
+  const searchQuery = useDepartmentSearchQuery(open && departmentId ? debouncedQuery : '', SOURCE_LIMIT)
+
+  React.useEffect(() => {
+    if (!open) setQuery('')
+  }, [open])
 
   React.useEffect(() => {
     if (!open) setMode('root')
@@ -201,8 +239,16 @@ export function CommandPaletteController({
   // round2 SEV2: a membership-less super_admin's palette must drop the same nine department-scoped
   // destinations the sidebar does (`nav.ts`'s `requireDepartmentFor`), or "Oʻtish" would still offer
   // a shortcut to a screen the sidebar just hid.
+  // HANDOFFS #1 (v1.1 integration): this used to resolve with `{ role, hasDepartment }` alone -- no
+  // `departmentRole`, no `can` -- so every head-only destination the sidebar correctly hid
+  // (`/people/table`, `/fields`, `/department`, `/work/workload`, `/goals`, `/automations`) was still
+  // one Ctrl+K away for a xodim, and pressing it landed them on a 403. The palette now resolves with
+  // exactly the context `app-shell.tsx` gives the sidebar (`lib/can.tsx`'s `useNavCan`), so the two
+  // can never disagree (SPEC §2, I-6).
   const navEntries = resolveNavEntries(NAV_ENTRIES, {
     role: isSuperAdmin ? 'super_admin' : 'member',
+    departmentRole: department?.role ?? null,
+    can: navCan,
     hasDepartment: memberships.length > 0,
   })
   const navByRoute = new Map(navEntries.map((entry) => [entry.route, entry]))
@@ -257,7 +303,25 @@ export function CommandPaletteController({
     icon: FileText,
     onSelect: () => go(`/pages?page=${encodeURIComponent(page.id)}`),
   }))
+  // Server-side search over the *contents* of cards, comments, pages and events -- the one thing
+  // Ctrl+K could not do before, and the reason a search for a phrase inside a card found nothing.
+  // `alwaysVisible` keeps cmdk's fuzzy filter from re-scoring a snippet the server already matched.
+  const searchItems = (searchQuery.data?.hits ?? []).map((hit) => ({
+    id: `hit:${hit.subjectType}:${hit.subjectId}`,
+    label: hit.title || t('ai.search.untitled'),
+    icon: SEARCH_HIT_ICON[hit.subjectType] ?? FileText,
+    badge: t(`ai.search.kind.${hit.subjectType}`),
+    ...(hit.snippet ? { description: hit.snippet } : {}),
+    alwaysVisible: true,
+    onSelect: () => go(searchHitHref(hit)),
+  }))
+  const searchHeading =
+    searchQuery.data?.backend === 'embeddings'
+      ? t('ai.search.palette.headingSemantic')
+      : t('ai.search.palette.heading')
+
   const entityGroups: CommandPaletteGroup[] = [
+    ...(searchItems.length > 0 ? [{ heading: searchHeading, items: searchItems }] : []),
     ...(peopleItems.length > 0 ? [{ heading: t('cmd.group.people'), items: peopleItems }] : []),
     ...(cardItems.length > 0 ? [{ heading: t('cmd.group.cards'), items: cardItems }] : []),
     ...(projectItems.length > 0 ? [{ heading: t('cmd.group.projects'), items: projectItems }] : []),
@@ -267,16 +331,23 @@ export function CommandPaletteController({
 
   // "Create" first (that is what a palette is reached for mid-task), then everything else a feature
   // registered.
+  //
+  // Both lists are gated on each entry's declared `action` (HANDOFFS #1): a manifest command like
+  // `work.workload` or `automations` names `work.workload.read` / `automations.read`, and an entry
+  // that names nothing is a destination every member may reach. Same predicate as the sidebar.
   const actionItems = [
-    ...getFeatureQuickAddEntries().map((entry) => ({
-      id: `quick:${entry.id}`,
-      label: t(entry.labelKey),
-      ...(entry.icon ? { icon: entry.icon } : {}),
-      onSelect: () => go(entry.path),
-    })),
+    ...getFeatureQuickAddEntries()
+      .filter((entry) => !entry.action || navCan(entry.action))
+      .map((entry) => ({
+        id: `quick:${entry.id}`,
+        label: t(entry.labelKey),
+        ...(entry.icon ? { icon: entry.icon } : {}),
+        onSelect: () => go(entry.path),
+      })),
     ...getFeatureCommandEntries()
       // A command that only repeats a sidebar destination is already in "Go to" above.
       .filter((entry) => !navByRoute.has(entry.path))
+      .filter((entry) => !entry.action || navCan(entry.action))
       .map((entry) => ({
         id: entry.id,
         label: t(entry.labelKey),
@@ -376,6 +447,8 @@ export function CommandPaletteController({
       hint={t('cmd.hint')}
       openHintLabel={t('shell.search.openHint')}
       groups={groups}
+      query={query}
+      onQueryChange={setQuery}
       variant={variant}
     />
   )

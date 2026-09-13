@@ -36,17 +36,46 @@ const manifest: FeatureManifest = {
   // existing entry somewhere real to land, rather than duplicating it (a second entry broke
   // `test/unit/nav.test.ts`'s exact-order assertion the first time this was tried, precisely because
   // it would be redundant).
+  // Every tab of the super admin's console. `action: 'admin.console'` is what keeps them out of a
+  // head's or a xodim's Ctrl+K -- the sidebar's own `/admin` entry is gated by `visibleWhen`, but a
+  // palette row for a sub-tab has no sidebar twin to inherit that from (v1.1 integration, HANDOFFS #1).
   commands: [
     {
       id: 'admin.departments',
       labelKey: 'admin.console.tabs.departments',
       path: '/admin/departments',
+      action: 'admin.console',
     },
-    { id: 'admin.accounts', labelKey: 'admin.console.tabs.accounts', path: '/admin/accounts' },
-    { id: 'admin.analytics', labelKey: 'admin.console.tabs.analytics', path: '/admin/analytics' },
-    { id: 'admin.audit', labelKey: 'admin.console.tabs.audit', path: '/admin/audit' },
-    { id: 'admin.health', labelKey: 'admin.console.tabs.health', path: '/admin/health' },
-    { id: 'admin.settings', labelKey: 'admin.console.tabs.settings', path: '/admin/settings' },
+    {
+      id: 'admin.accounts',
+      labelKey: 'admin.console.tabs.accounts',
+      path: '/admin/accounts',
+      action: 'admin.console',
+    },
+    {
+      id: 'admin.analytics',
+      labelKey: 'admin.console.tabs.analytics',
+      path: '/admin/analytics',
+      action: 'admin.console',
+    },
+    {
+      id: 'admin.audit',
+      labelKey: 'admin.console.tabs.audit',
+      path: '/admin/audit',
+      action: 'admin.console',
+    },
+    {
+      id: 'admin.health',
+      labelKey: 'admin.console.tabs.health',
+      path: '/admin/health',
+      action: 'admin.console',
+    },
+    {
+      id: 'admin.settings',
+      labelKey: 'admin.console.tabs.settings',
+      path: '/admin/settings',
+      action: 'admin.console',
+    },
   ],
 }
 

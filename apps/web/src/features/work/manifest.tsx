@@ -2,7 +2,7 @@
 // and command-palette entries. Every screen component is `React.lazy` so a session that never opens
 // `/work` never pays for this feature's bundle.
 import * as React from 'react'
-import { KanbanSquare } from 'lucide-react'
+import { GaugeCircle, KanbanSquare, Target } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
 import { prefetchBoard } from './hooks.js'
@@ -42,13 +42,28 @@ const manifest: FeatureManifest = {
       route: '/work',
       onPrefetch: () => void prefetchBoard(queryClient),
     },
+    // v1.1 SPEC §3.1: two of the six destinations `shell/nav.ts`'s `manage-head` group reserves ids
+    // for. Both declare a head-only action, so the entries -- and the group heading with them --
+    // simply do not exist for a xodim, resolved by the same `can()` the routes declare.
+    {
+      id: 'workload',
+      labelKey: 'work.workload.title',
+      icon: GaugeCircle,
+      route: '/work/workload',
+      action: 'work.workload.read',
+    },
+    {
+      id: 'goals',
+      labelKey: 'work.goals.title',
+      icon: Target,
+      route: '/goals',
+      action: 'goals.read',
+    },
   ],
   commands: [
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },
-    { id: 'work.workload', labelKey: 'work.workload.title', path: '/work/workload' },
     { id: 'work.templates', labelKey: 'work.templates.title', path: '/work/templates' },
-    { id: 'work.goals', labelKey: 'work.goals.title', path: '/goals' },
   ],
   // The shell's top-bar quick-add (MODULE-GUIDE.md "Web features": `quickAdd`).
   //

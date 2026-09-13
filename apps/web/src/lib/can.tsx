@@ -12,6 +12,7 @@
 import * as React from 'react'
 import {
   canAction,
+  isAppActionId,
   type ActionContext,
   type ActionSettings,
   type Actor,
@@ -165,6 +166,32 @@ export function Can({
     departmentId: departmentId ?? null,
   })
   return <>{decision.allowed ? children : fallback}</>
+}
+
+/**
+ * The capability predicate the *shell* needs: `(actionId) => boolean` over a plain `string`, because
+ * a `NavEntry` / palette row / quick-add row carries its action id as an untyped string
+ * (`@devon/ui` owns no dependency on `@devon/contracts`, DESIGN.md §1.2). An id the registry does not
+ * know answers `false` -- the fail-closed direction, so a typo hides a destination instead of
+ * leaking one.
+ *
+ * Lives here rather than inline in `app-shell.tsx` because the sidebar and the command palette must
+ * ask exactly the same question: HANDOFFS #1 was the palette resolving nav entries with no `can` at
+ * all, so `/people/table`, `/fields` and `/department` stayed one Ctrl+K away for a xodim whose
+ * sidebar correctly hid them.
+ */
+export function useNavCan(): (action: string) => boolean {
+  const actor = useActor()
+  const { departmentId } = useDepartment()
+  const settings = React.useContext(SettingsContext)
+
+  return React.useCallback(
+    (action: string) =>
+      isAppActionId(action)
+        ? canAction(actor, action, { departmentId, settings }).allowed
+        : false,
+    [actor, departmentId, settings],
+  )
 }
 
 /** True when the viewer is the boshqarma boshlig'i of the department they are working in. Prefer a
