@@ -3,6 +3,7 @@
 // do nothing` gives exact idempotence. Goes through the *production* `withContext()` wrapper (never a
 // bespoke connection), so the demo rows are written exactly as a real request would write them --
 // including the same RLS policies and the same audited-write path (I-1, I-5).
+import { createHash } from 'node:crypto'
 import { sql, inArray } from 'drizzle-orm'
 import { Client } from 'pg'
 import { withContext, type RequestContext } from '../context.js'
@@ -58,11 +59,37 @@ function demoContext(requestId: string, userAgent: string): RequestContext {
     userId: null,
     actorRole: 'super_admin',
     departmentId: DEMO_DEPARTMENT.id,
+    // v1.1: `app.current_department_role()` (migration 0904) is what the head-only write policies on
+    // `app.goals`, `app.work_templates` and `app.automation_rules` compare against -- and unlike every
+    // v1.0 policy they carry no `current_actor_role() = 'super_admin'` carve-out, by design (SPEC §2:
+    // a super admin's lens is read-only). Leaving this unset made every one of those inserts silently
+    // match zero rows, which is how the demo department ended up with no goal, no template and no
+    // automation rule. The seed IS the department's head for the rows it writes.
+    departmentRole: 'head',
     actingForUserId: null,
     viewAs: false,
     ip: '127.0.0.1',
     userAgent,
   }
+}
+
+/**
+ * The recorded-run fingerprint. `computeDemoChecksum()` covers the *fixtures*; this adds the set of
+ * seed modules that will run, because adding a module is exactly the change that must make an
+ * already-seeded database seed again.
+ *
+ * Before this, `runSeedDemo` short-circuited on the mere existence of a `seed_runs` row, so every
+ * machine that had ever run `pnpm start --demo` kept a database with none of v1.1's demo content in
+ * it -- no custom fields, no estimates, no goal, no templates, no automation rule -- and the only
+ * cure was knowing to run `seed:reset --demo` first. Every module is `on conflict do nothing`
+ * (MODULE-GUIDE.md "DB: seeds") and that is asserted by `test/seed.idempotence.test.ts`, so re-running
+ * the whole set writes exactly the rows that are missing and nothing else.
+ */
+function runFingerprint(moduleNames: readonly string[]): string {
+  return createHash('sha256')
+    .update(`${computeDemoChecksum()}|${[...moduleNames].sort().join(',')}`)
+    .digest('hex')
+    .slice(0, 16)
 }
 
 /**
@@ -76,7 +103,11 @@ export async function runSeedDemo(
 ): Promise<SeedDemoOutcome> {
   assertSeedAllowed(env)
   const databaseUrl = requireDatabaseUrl(env)
-  const checksum = computeDemoChecksum()
+  // Every module under `src/seed/modules/*.ts`, in ascending `order` (MODULE-GUIDE.md "Seeds") --
+  // `core.ts` (order 0) writes the department/users/memberships every other module's fixtures
+  // reference; this transaction/advisory-lock/checksum wrapper is the only thing that stays here.
+  const seedModules = await loadSeedModules()
+  const checksum = runFingerprint(seedModules.map((m) => m.name))
 
   return withSeedLock(databaseUrl, () =>
     withContext(demoContext(`seed-demo-${Date.now()}`, 'devon-seed/demo'), async (tx) => {
@@ -84,7 +115,7 @@ export async function runSeedDemo(
         sql`select checksum, rows_written from app.seed_runs where name = ${SEED_NAME}`,
       )
       const already = existing[0]
-      if (already) {
+      if (already && already.checksum === checksum) {
         return {
           applied: false,
           rowsWritten: 0,
@@ -93,12 +124,8 @@ export async function runSeedDemo(
         }
       }
 
-      // Every module under `src/seed/modules/*.ts`, in ascending `order` (MODULE-GUIDE.md "Seeds") --
-      // `core.ts` (order 0) writes the department/users/memberships every other module's fixtures
-      // reference; this transaction/advisory-lock/checksum wrapper is the only thing that stays here.
       // Sequential, not Promise.all: a later module's fixtures can depend on an earlier module having
       // already inserted the row they reference (the exact reason `order` exists).
-      const seedModules = await loadSeedModules()
       let rowsWritten = 0
       for (let i = 0; i < seedModules.length; i += 1) {
         rowsWritten += await seedModules[i]!.seed({ tx })
@@ -110,10 +137,14 @@ export async function runSeedDemo(
             where id = 1`,
       )
 
+      // `do update`, not `do nothing`: on a top-up run (a new module appeared) the recorded
+      // fingerprint has to move to the new one, or every subsequent run would top up again.
       await tx.raw(
         sql`insert into app.seed_runs (name, checksum, rows_written)
             values (${SEED_NAME}, ${checksum}, ${rowsWritten})
-            on conflict (name) do nothing`,
+            on conflict (name) do update
+              set checksum = excluded.checksum,
+                  rows_written = app.seed_runs.rows_written + excluded.rows_written`,
       )
 
       tx.audit({

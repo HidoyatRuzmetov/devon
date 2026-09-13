@@ -31,6 +31,10 @@ export type SeedModule = {
   reset?(ctx: SeedModuleContext): Promise<number>
 }
 
+/** A discovered module plus its filename. `demo.ts` folds the set of names into the run fingerprint,
+ * so adding a seed module is by itself enough to make an already-seeded database seed the new rows. */
+export type LoadedSeedModule = SeedModule & { name: string }
+
 const DEFAULT_MODULES_DIR = fileURLToPath(new URL('./modules', import.meta.url))
 
 /**
@@ -39,7 +43,9 @@ const DEFAULT_MODULES_DIR = fileURLToPath(new URL('./modules', import.meta.url))
  * deterministic). Throws if a file's shape does not match `SeedModule` -- a seed module with a typo in
  * `order`/`seed` should fail loudly at `seed:demo` time, not silently seed nothing.
  */
-export async function loadSeedModules(dir: string = DEFAULT_MODULES_DIR): Promise<SeedModule[]> {
+export async function loadSeedModules(
+  dir: string = DEFAULT_MODULES_DIR,
+): Promise<LoadedSeedModule[]> {
   if (!existsSync(dir)) return []
 
   const names = readdirSync(dir)
@@ -70,5 +76,5 @@ export async function loadSeedModules(dir: string = DEFAULT_MODULES_DIR): Promis
 
   return modules
     .sort((a, b) => a.mod.order - b.mod.order || a.name.localeCompare(b.name))
-    .map(({ mod }) => mod)
+    .map(({ name, mod }) => ({ ...mod, name }))
 }
