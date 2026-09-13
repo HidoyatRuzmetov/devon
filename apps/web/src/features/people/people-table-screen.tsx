@@ -29,10 +29,8 @@ import {
   PEOPLE_VIEW_URL_PARAM,
   decodePeopleViewConfig,
   encodePeopleViewConfig,
-  getIndicator,
   normalizePeopleViewConfig,
   samePeopleViewConfig,
-  type IndicatorSpec,
   type PeopleColumnFilter,
   type PeopleView,
   type PeopleViewConfig,
@@ -45,6 +43,11 @@ import {
   Input,
   PageContainer,
   PageHeader,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Reveal,
   SegmentedControl,
   Select,
   Skeleton,
@@ -56,7 +59,16 @@ import {
   normalizeForSearch,
   toast,
 } from '@devon/ui'
-import { Download, Search, Send, Table2, UserPlus, Users } from 'lucide-react'
+import {
+  BellRing,
+  Download,
+  MoreVertical,
+  Search,
+  Send,
+  Table2,
+  UserPlus,
+  Users,
+} from 'lucide-react'
 import { avatarUrl } from '../../lib/avatar.js'
 import { ApiError } from '../../lib/api-client.js'
 import { useCan } from '../../lib/can.js'
@@ -64,16 +76,26 @@ import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { useMediaQuery } from '../../lib/use-media-query.js'
 import { useOnline } from '../../lib/use-online.js'
+import { useViewportBoundedHeight } from '../../lib/use-viewport-bounded-height.js'
 import { useDepartment } from '../../lib/session.js'
 import { navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { fetchMembers, type Member } from '../structure/api.js'
 import { createCard, fetchBoard, type Card } from '../work/api.js'
-// v1.1 SPEC §5: "fields appear as columns in the people table". The `fields` feature owns the data
-// and the rendering; this screen only asks for the columns and lays them out after the indicators.
-// Which person fields appear here is the head's own `showInTable` switch on `/fields`, not a second
-// setting hidden in this screen -- and it is why a field column has no ColumnPicker entry: the
-// picker offers the indicator registry, the head's own field list offers the rest.
-import { useFieldColumns, FieldValueDisplay, type FieldColumn } from '../fields/index.js'
+// v1.1 SPEC §5: "fields appear as columns in the people table". The `fields` feature owns the data;
+// this screen asks for it and then treats every one of those fields as an ordinary column.
+//
+// v1.1 critique SEV2 #7: a field column used to be a second-class citizen rendered after the
+// indicators -- no picker entry, no sort, no filter, no resize handle, no footer figure. It is now
+// a `TableColumnSpec` like any other (`column-spec.ts`), which is what gives it all five.
+import { useFieldColumns } from '../fields/index.js'
+import { notifyMany } from '../fields/api.js'
+import {
+  columnLabel,
+  fieldColumnId,
+  fieldColumnSpec,
+  indicatorColumnSpec,
+  type TableColumnSpec,
+} from './column-spec.js'
 import { fetchIndicators, fetchPeopleContacts, peopleExportUrl } from './api.js'
 import {
   useCreateViewMutation,
@@ -220,13 +242,10 @@ export default function PeopleTableScreen(): React.JSX.Element {
   }
 
   // --- data ---------------------------------------------------------------------------------------
-  const specs: IndicatorSpec[] = React.useMemo(
-    () =>
-      config.columns
-        .map((id) => getIndicator(id))
-        .filter((spec): spec is IndicatorSpec => Boolean(spec)),
-    [config.columns],
-  )
+  //
+  // v1.1 critique SEV2 #7: one list of columns, not two. A registry indicator and a person custom
+  // field are both `TableColumnSpec`s from here down, which is what gives a field column the sort,
+  // the filter, the resize handle and the footer calculation it did not have.
 
   // `workloadHours` rides along with `workloadPct` (HANDOFFS #5): the bar's own label is hours where
   // the department estimates and an open-card count where it does not, and it cannot tell the two
@@ -234,7 +253,8 @@ export default function PeopleTableScreen(): React.JSX.Element {
   const requestedKeys = React.useMemo(
     () => [
       ...new Set([
-        ...config.columns,
+        // A `field:` id is not an indicator key, so it never goes to the indicators endpoint.
+        ...config.columns.filter((id) => !id.startsWith('field:')),
         'openCards',
         'workloadPct',
         'workloadHours',
@@ -277,6 +297,64 @@ export default function PeopleTableScreen(): React.JSX.Element {
     [membersQuery.data],
   )
   const fieldColumns = useFieldColumns(memberUserIds)
+
+  /**
+   * SEV2 #7. Every person field the head marked `showInTable`, as a column of the same kind as an
+   * indicator, plus a `userId -> value` lookup so the row cells and the footer read from one place.
+   *
+   * The picker offers all of them; `config.columns` decides which are on. A field the head has not
+   * chosen is simply not rendered -- which is the whole point: before this, a `showInTable` field
+   * was a column that could not be turned off.
+   */
+  const fieldSpecs = React.useMemo(
+    () => fieldColumns.columns.map((column) => fieldColumnSpec(column.def, locale)),
+    [fieldColumns.columns, locale],
+  )
+  const fieldValuesByColumnId = React.useMemo(() => {
+    const out = new Map<string, ReadonlyMap<string, CellValue>>()
+    for (const column of fieldColumns.columns) {
+      out.set(fieldColumnId(column.def.key), column.values as ReadonlyMap<string, CellValue>)
+    }
+    return out
+  }, [fieldColumns.columns])
+  /** `field:<key>` -> the definition id, for "ask to fill" from the column header menu. */
+  const fieldDefIdByColumnId = React.useMemo(() => {
+    const out = new Map<string, string>()
+    for (const column of fieldColumns.columns) out.set(fieldColumnId(column.def.key), column.def.id)
+    return out
+  }, [fieldColumns.columns])
+
+  /** Everything the picker may offer, registry first then the department's own. */
+  const availableColumns = React.useMemo<TableColumnSpec[]>(
+    () => [...INDICATORS.map(indicatorColumnSpec), ...fieldSpecs],
+    [fieldSpecs],
+  )
+
+  /** The chosen columns, in the head's own order, whichever kind each one is. */
+  const columnSpecs = React.useMemo<TableColumnSpec[]>(() => {
+    const byId = new Map(availableColumns.map((column) => [column.id, column]))
+    return config.columns
+      .map((id) => byId.get(id))
+      .filter((column): column is TableColumnSpec => Boolean(column))
+  }, [availableColumns, config.columns])
+
+  // SEV2 #6: the head asks a cohort to fill their fields, from the row menu, the bulk bar or a
+  // column header. One mutation, three scopes.
+  const askToFill = useMutation({
+    mutationFn: (scope: { defIds?: readonly string[]; userIds?: readonly string[] }) =>
+      notifyMany(scope, csrf),
+    onSuccess: (result) => {
+      toast.success(
+        result.asked > 0
+          ? t('people.table.askToFill.asked', { people: result.asked })
+          : result.reminded > 0
+            ? t('people.table.askToFill.reminded', { people: result.reminded })
+            : t('people.table.askToFill.nothingToAsk'),
+      )
+      void queryClient.invalidateQueries({ queryKey: ['fields'] })
+    },
+    onError: () => toast.error(t('people.table.askToFill.failed')),
+  })
 
   // --- row actions --------------------------------------------------------------------------------
   const [assignTargets, setAssignTargets] = React.useState<readonly PersonRow[]>([])
@@ -387,17 +465,30 @@ export default function PeopleTableScreen(): React.JSX.Element {
       .map((contact) => [contact.userId, contact.telegramDeepLink]),
   )
 
-  const rows: PersonRow[] = members.map((member) => ({
-    member,
-    values: (indicatorValues.get(member.userId) ?? {}) as Record<string, CellValue>,
-    cards: (cardsByUser.get(member.userId) ?? []).filter((card) => card.status === 'active'),
-  }))
+  const rows: PersonRow[] = members.map((member) => {
+    // SEV2 #7: a field's answer lives in the same `values` bag as an indicator's, under its
+    // `field:<key>` id, so sorting, filtering, the footer and the CSV all reach it the same way.
+    const values: Record<string, CellValue> = {
+      ...((indicatorValues.get(member.userId) ?? {}) as Record<string, CellValue>),
+    }
+    for (const [columnId, byUser] of fieldValuesByColumnId) {
+      values[columnId] = (byUser.get(member.userId) ?? null) as CellValue
+    }
+    return {
+      member,
+      values,
+      cards: (cardsByUser.get(member.userId) ?? []).filter((card) => card.status === 'active'),
+    }
+  })
 
   return (
     <PeopleTable
       rows={rows}
-      specs={specs}
-      fieldColumns={fieldColumns.columns}
+      specs={columnSpecs}
+      availableColumns={availableColumns}
+      fieldDefIdByColumnId={fieldDefIdByColumnId}
+      onAskToFill={(scope) => askToFill.mutate(scope)}
+      askPending={askToFill.isPending}
       config={config}
       patchConfig={patchConfig}
       capacity={capacity}
@@ -472,9 +563,14 @@ type Translate = (key: string, vars?: Record<string, string | number>) => string
 
 type PeopleTableProps = {
   rows: PersonRow[]
-  specs: IndicatorSpec[]
-  /** Person custom fields the head marked `showInTable`, in their own order, after the indicators. */
-  fieldColumns: readonly FieldColumn[]
+  /** SEV2 #7: the chosen columns, registry indicators and person custom fields alike. */
+  specs: TableColumnSpec[]
+  /** Everything the picker may offer. */
+  availableColumns: readonly TableColumnSpec[]
+  /** `field:<key>` -> definition id, for the column header's "ask to fill". */
+  fieldDefIdByColumnId: ReadonlyMap<string, string>
+  onAskToFill: (scope: { defIds?: readonly string[]; userIds?: readonly string[] }) => void
+  askPending: boolean
   config: PeopleViewConfig
   patchConfig: (patch: Partial<PeopleViewConfig>) => void
   capacity: number
@@ -509,7 +605,10 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
   const {
     rows,
     specs,
-    fieldColumns,
+    availableColumns,
+    fieldDefIdByColumnId,
+    onAskToFill,
+    askPending,
     config,
     patchConfig,
     capacity,
@@ -523,6 +622,9 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
   } = props
 
   const scrollRef = React.useRef<HTMLDivElement>(null)
+  // SEV2 #19: the scroller takes whatever is left of the viewport under whatever chrome happens to
+  // be above it, measured rather than guessed at with a fixed `calc(100vh-22rem)`.
+  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
 
   const columns = React.useMemo<ColumnDef<PersonRow>[]>(() => {
     const name: ColumnDef<PersonRow> = {
@@ -665,6 +767,27 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
     selection.length > 0 ? selection : [],
   )
 
+  /**
+   * SEV2 #6: which of this person's custom fields are still empty, as definition ids. Read off the
+   * cells the table already holds -- no extra request, and it can only ever name a field this head
+   * has chosen to look at.
+   */
+  function missingFieldsFor(row: PersonRow): string[] {
+    const out: string[] = []
+    for (const spec of specs) {
+      const defId = fieldDefIdByColumnId.get(spec.id)
+      if (!defId) continue
+      const value = row.values[spec.id]
+      const empty =
+        value === null ||
+        value === undefined ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0)
+      if (empty) out.push(defId)
+    }
+    return out
+  }
+
   function toggleSelection(userId: string): void {
     setSelection(
       selection.includes(userId) ? selection.filter((id) => id !== userId) : [...selection, userId],
@@ -686,6 +809,27 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
 
   const actions = (
     <div className="flex flex-wrap items-center gap-2">
+      {/* SEV2 #19: the search moved up here from its own full-width row. That row plus the page
+          header plus the saved-view tab strip were the 22 rem the table was being asked to survive
+          under, which left four and a half rows visible on a 900 px screen. */}
+      <div className="relative w-full max-w-72 sm:w-64">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          value={config.search}
+          onChange={(e) => patchConfig({ search: e.target.value })}
+          placeholder={t('people.table.searchPlaceholder')}
+          aria-label={t('people.table.searchPlaceholder')}
+          className="h-9 pl-9"
+        />
+      </div>
+      {config.filters.length > 0 ? (
+        <Button variant="ghost" size="sm" onClick={() => patchConfig({ filters: [] })}>
+          {t('people.table.filter.clearAll', { count: config.filters.length })}
+        </Button>
+      ) : null}
       <SegmentedControl
         size="sm"
         label={t('people.table.density.label')}
@@ -710,8 +854,12 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       <ColumnPicker
         value={config.columns}
         onChange={(next) => patchConfig({ columns: next })}
-        available={INDICATORS}
+        available={availableColumns}
         maxColumns={PEOPLE_VIEW_CAPS.maxColumns}
+        // SEV2 #7: Ism and Vazifalar are always rendered, plus every chosen column that still
+        // resolves -- which is exactly the number of columns on screen, and what the badge claimed
+        // to be counting.
+        renderedCount={specs.length + 2}
       />
       {canExport ? (
         <Button asChild variant="secondary" size="sm">
@@ -750,7 +898,6 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       <PeopleCards
         renderRows={visible}
         specs={specs}
-        fieldColumns={fieldColumns}
         capacity={capacity}
         locale={locale}
         t={t}
@@ -760,15 +907,31 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
     )
   } else {
     body = (
+      // SEV2 #19: the table got 531 px of a 900 px screen because `max-h-[calc(100vh-22rem)]` was a
+      // guess at how much chrome sat above it -- and the guess was made before the saved-view tab
+      // strip and the search row existed. `useViewportBoundedHeight` measures the element's own top
+      // instead, so the table takes whatever is actually left, at any window size, with any number
+      // of view tabs.
       <div
-        ref={scrollRef}
-        className="max-h-[calc(100vh-22rem)] overflow-auto rounded-lg border border-border"
+        // Two refs on one node: the virtualizer needs the element (`scrollRef`) and the height hook
+        // needs to observe it (`heightRef`).
+        ref={(node) => {
+          scrollRef.current = node
+          heightRef(node)
+        }}
+        style={{ maxHeight: scrollerHeight }}
+        className="overflow-auto rounded-lg border border-border"
       >
         <table className="w-full min-w-[44rem] border-collapse text-left text-small">
           <caption className="sr-only">{t('people.table.caption')}</caption>
           <thead className="sticky top-0 z-10 bg-surface-2">
             <tr className="border-b border-border">
-              <th scope="col" className="w-10 px-2 py-2">
+              {/* SEV2 #19: the checkbox and the name are pinned left. The table is 1370 px wide in
+                  a 1080 px viewport, and scrolling right used to lose the one thing a row needs in
+                  order to be read at all. `bg-surface-2` on the header cells and `bg-card` on the
+                  body cells so the pinned column has a ground of its own to sit on rather than
+                  letting the scrolled content show through it. */}
+              <th scope="col" className="sticky left-0 z-20 w-10 bg-surface-2 px-2 py-2">
                 <Checkbox
                   aria-label={t('people.table.selectAll')}
                   checked={allSelected}
@@ -777,7 +940,10 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                   }
                 />
               </th>
-              <th scope="col" className="px-3 py-2 font-medium">
+              <th
+                scope="col"
+                className="sticky left-10 z-20 border-r border-border bg-surface-2 px-3 py-2 font-medium"
+              >
                 <button
                   type="button"
                   onClick={() => toggleSort(NAME_COLUMN)}
@@ -814,9 +980,18 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                           : config.filters.filter((f) => f.columnId !== spec.id),
                       })
                     }
+                    // SEV2 #6: only a custom field can be "asked for" -- an indicator is derived,
+                    // and nobody can fill in their own overdue count.
+                    {...(fieldDefIdByColumnId.has(spec.id)
+                      ? {
+                          onAskToFill: () =>
+                            onAskToFill({ defIds: [fieldDefIdByColumnId.get(spec.id)!] }),
+                          askPending,
+                        }
+                      : {})}
                   />
                   <ColumnResizer
-                    label={t('people.table.resize', { name: t(spec.labelKey) })}
+                    label={t('people.table.resize', { name: columnLabel(spec, t) })}
                     width={config.widths[spec.id] ?? null}
                     onResize={(px) => patchConfig({ widths: { ...config.widths, [spec.id]: px } })}
                     onReset={() => {
@@ -827,16 +1002,6 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                   />
                 </th>
               ))}
-              {fieldColumns.map((column) => (
-                <th
-                  key={column.def.id}
-                  scope="col"
-                  className="px-3 py-2 font-medium whitespace-nowrap"
-                  title={column.label}
-                >
-                  {column.label}
-                </th>
-              ))}
               <th scope="col" className="w-28 px-3 py-2 text-right font-medium">
                 {t('people.table.column.actions')}
               </th>
@@ -845,7 +1010,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
           <Stagger as="tbody" animateKey={`${config.groupBy}:${config.search}`}>
             {paddingTop > 0 ? (
               <tr style={{ height: paddingTop }} aria-hidden="true">
-                <td colSpan={specs.length + fieldColumns.length + 4} />
+                <td colSpan={specs.length + 3} />
               </tr>
             ) : null}
             {visible.map((entry) => {
@@ -853,7 +1018,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                 <tr key={entry.key} className="bg-muted/60">
                   <th
                     scope="colgroup"
-                    colSpan={specs.length + fieldColumns.length + 4}
+                    colSpan={specs.length + 3}
                     className="px-3 py-1.5 text-left text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground"
                   >
                     {entry.label}
@@ -871,7 +1036,12 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                     config.density === 'compact' ? 'h-9' : 'h-11',
                   )}
                 >
-                  <td className="px-2">
+                  <td
+                    className={cn(
+                      'sticky left-0 z-10 px-2',
+                      selection.includes(entry.row.member.userId) ? 'bg-accent/40' : 'bg-card',
+                    )}
+                  >
                     <Checkbox
                       aria-label={t('people.table.selectRow', {
                         name: fullName(entry.row.member),
@@ -880,7 +1050,13 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                       onCheckedChange={() => toggleSelection(entry.row.member.userId)}
                     />
                   </td>
-                  <th scope="row" className="px-3 font-normal">
+                  <th
+                    scope="row"
+                    className={cn(
+                      'sticky left-10 z-10 border-r border-border px-3 font-normal',
+                      selection.includes(entry.row.member.userId) ? 'bg-accent/40' : 'bg-card',
+                    )}
+                  >
                     <PersonCell row={entry.row} t={t} />
                   </th>
                   <td className="px-3">
@@ -900,14 +1076,6 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                       )}
                     </td>
                   ))}
-                  {fieldColumns.map((column) => (
-                    <td key={column.def.id} className="px-3 align-middle">
-                      <FieldValueDisplay
-                        def={column.def}
-                        value={column.values.get(entry.row.member.userId) ?? null}
-                      />
-                    </td>
-                  ))}
                   <td className="px-3 text-right">
                     <RowActions
                       row={entry.row}
@@ -915,6 +1083,14 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                       canAssign={canAssign}
                       onAssign={() => props.setAssignTargets([entry.row])}
                       telegramDeepLink={props.telegramByUser.get(entry.row.member.userId)}
+                      missingFieldDefIds={missingFieldsFor(entry.row)}
+                      askPending={askPending}
+                      onAskToFill={() =>
+                        onAskToFill({
+                          defIds: missingFieldsFor(entry.row),
+                          userIds: [entry.row.member.userId],
+                        })
+                      }
                     />
                   </td>
                 </StaggerItem>
@@ -922,14 +1098,14 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
             })}
             {paddingBottom > 0 ? (
               <tr style={{ height: paddingBottom }} aria-hidden="true">
-                <td colSpan={specs.length + fieldColumns.length + 4} />
+                <td colSpan={specs.length + 3} />
               </tr>
             ) : null}
           </Stagger>
           <tfoot className="sticky bottom-0 bg-surface-2">
             <tr className="border-t border-border">
-              <td className="px-2" />
-              <td className="px-3 py-2 text-caption text-muted-foreground">
+              <td className="sticky left-0 z-10 bg-surface-2 px-2" />
+              <td className="sticky left-10 z-10 border-r border-border bg-surface-2 px-3 py-2 text-caption text-muted-foreground">
                 {t('people.table.footer', { count: modelRows.length })}
               </td>
               <td className="px-3 py-2 text-caption tabular-nums text-muted-foreground">
@@ -940,24 +1116,31 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
               {specs.map((spec) => {
                 const kind = defaultCalculation(spec)
                 if (!kind) return <td key={spec.id} className="px-3 py-2" />
-                const result = calculate(
-                  spec,
-                  kind,
-                  modelRows.map((r) => (r.original.values[spec.id] ?? null) as CellValue),
+                const values = modelRows.map(
+                  (r) => (r.original.values[spec.id] ?? null) as CellValue,
                 )
+                const result = calculate(spec, kind, values)
+                // SEV2 #7: the fill progress the head actually manages -- "6 / 27" under Taʼlim --
+                // which until now existed on /fields and nowhere in the table.
+                const text =
+                  kind === 'filled'
+                    ? t('people.table.calc.filledOf', {
+                        filled: result.value ?? 0,
+                        total: values.length,
+                      })
+                    : result.value === null
+                      ? '—'
+                      : formatIndicator(spec, result.value, t, locale)
                 return (
                   <td
                     key={spec.id}
                     className="px-3 py-2 text-caption tabular-nums text-muted-foreground"
                     title={t(`people.table.calc.${kind}`)}
                   >
-                    {result.value === null ? '—' : formatIndicator(spec, result.value, t, locale)}
+                    {text}
                   </td>
                 )
               })}
-              {fieldColumns.map((column) => (
-                <td key={column.def.id} className="px-3 py-2" />
-              ))}
               <td className="px-3 py-2" />
             </tr>
           </tfoot>
@@ -991,62 +1174,60 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
           onDelete={props.onDelete}
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative max-w-80 flex-1">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              value={config.search}
-              onChange={(e) => patchConfig({ search: e.target.value })}
-              placeholder={t('people.table.searchPlaceholder')}
-              aria-label={t('people.table.searchPlaceholder')}
-              className="pl-9"
-            />
-          </div>
-          {config.filters.length > 0 ? (
-            <Button variant="ghost" size="sm" onClick={() => patchConfig({ filters: [] })}>
-              {t('people.table.filter.clearAll', { count: config.filters.length })}
-            </Button>
-          ) : null}
-        </div>
+        {body}
+      </div>
 
-        {selection.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
-            <Users aria-hidden="true" className="size-4 text-primary" />
-            <span className="text-small font-medium">
-              {t('people.table.bulk.selected', { count: selection.length })}
-            </span>
-            {canAssign ? (
+      {/* SEV2 #19: the bulk bar FLOATS over the table rather than being inserted above it. Inline,
+          selecting two rows pushed the already-short table down another 90 px -- the one moment a
+          head needs to see more rows, not fewer. Fixed to the bottom of the viewport, out of the
+          document flow, so the table never moves under the cursor that is selecting in it. */}
+      {selection.length > 0 ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
+          <Reveal className="pointer-events-auto">
+            <div className="flex flex-wrap items-center gap-2 rounded-full border border-primary/30 bg-surface-2 px-4 py-2 shadow-2">
+              <Users aria-hidden="true" className="size-4 text-primary" />
+              <span className="text-small font-medium">
+                {t('people.table.bulk.selected', { count: selection.length })}
+              </span>
+              {canAssign ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    const chosen = rows.filter((row) => selection.includes(row.member.userId))
+                    if (chosen.length > 0) props.setAssignTargets(chosen)
+                  }}
+                >
+                  <UserPlus aria-hidden="true" className="size-4" />
+                  {t('people.table.bulk.assign', { count: selection.length })}
+                </Button>
+              ) : null}
+              {/* SEV2 #6: "ask to fill" in the bulk bar, scoped to the selection. The head has just
+                  picked the people whose cells are empty; asking them is the next thing they want. */}
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => {
-                  const chosen = rows.filter((row) => selection.includes(row.member.userId))
-                  if (chosen.length > 0) props.setAssignTargets(chosen)
-                }}
+                loading={askPending}
+                onClick={() => onAskToFill({ userIds: selection })}
               >
-                <UserPlus aria-hidden="true" className="size-4" />
-                {t('people.table.bulk.assign', { count: selection.length })}
+                <BellRing aria-hidden="true" className="size-4" />
+                {t('people.table.askToFill.bulk', { count: selection.length })}
               </Button>
-            ) : null}
-            {canExport ? (
-              <Button asChild variant="secondary" size="sm">
-                <a href={exportUrl} rel="noopener">
-                  <Download aria-hidden="true" className="size-4" />
-                  {t('people.table.bulk.export')}
-                </a>
+              {canExport ? (
+                <Button asChild variant="secondary" size="sm">
+                  <a href={exportUrl} rel="noopener">
+                    <Download aria-hidden="true" className="size-4" />
+                    {t('people.table.bulk.export')}
+                  </a>
+                </Button>
+              ) : null}
+              <Button variant="ghost" size="sm" onClick={() => setSelection([])}>
+                {t('people.table.bulk.clear')}
               </Button>
-            ) : null}
-            <Button variant="ghost" size="sm" onClick={() => setSelection([])}>
-              {t('people.table.bulk.clear')}
-            </Button>
-          </div>
-        ) : null}
-
-        {body}
-      </div>
+            </div>
+          </Reveal>
+        </div>
+      ) : null}
 
       <QuickAssignSheet
         targets={props.assignTargets.map((row) => ({
@@ -1220,18 +1401,35 @@ function ColumnResizer({
   )
 }
 
+/**
+ * v1.1 critique SEV2 #6: "notify-to-fill -- the CTO's named feature -- is unreachable from the one
+ * screen where the gap is visible. Looking at a column of two dozen em-dashes under 'Sertifikatlar',
+ * the head has no way to act."
+ *
+ * The row now carries an overflow menu with "Toʻldirishni soʻrash", scoped to *this person's*
+ * missing fields -- `missingFieldDefIds` is computed from the cells already on screen, so the ask is
+ * never sent to somebody who already answered, and the item does not appear at all for a person with
+ * nothing missing. (The server filters again on the same rule -- `fields/service.ts`'s `notifyMany`
+ * -- so this is the manners, not the enforcement.)
+ */
 function RowActions({
   row,
   t,
   canAssign,
   onAssign,
   telegramDeepLink,
+  missingFieldDefIds,
+  onAskToFill,
+  askPending,
 }: {
   row: PersonRow
   t: Translate
   canAssign: boolean
   onAssign: () => void
   telegramDeepLink: string | undefined
+  missingFieldDefIds: readonly string[]
+  onAskToFill: () => void
+  askPending: boolean
 }): React.JSX.Element {
   return (
     <span className="flex items-center justify-end gap-1">
@@ -1265,6 +1463,25 @@ function RowActions({
           </a>
         </Button>
       ) : null}
+      {missingFieldDefIds.length > 0 ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={t('people.table.action.more', { name: fullName(row.member) })}
+            >
+              <MoreVertical aria-hidden="true" className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={askPending} onSelect={onAskToFill}>
+              <BellRing aria-hidden="true" className="size-4" />
+              {t('people.table.askToFill.row', { count: missingFieldDefIds.length })}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : null}
     </span>
   )
 }
@@ -1274,7 +1491,6 @@ function RowActions({
 function PeopleCards({
   renderRows,
   specs,
-  fieldColumns,
   capacity,
   locale,
   t,
@@ -1285,8 +1501,9 @@ function PeopleCards({
     | { kind: 'group'; key: string; label: string; count: number }
     | { kind: 'person'; key: string; row: PersonRow }
   )[]
-  specs: IndicatorSpec[]
-  fieldColumns: readonly FieldColumn[]
+  /** SEV2 #7: indicators and custom fields alike, in the head's own column order -- so the three
+   * facts a phone shows are the first three columns of the table, whichever kind they are. */
+  specs: TableColumnSpec[]
   capacity: number
   locale: ReturnType<typeof useLocale>
   t: Translate
@@ -1313,7 +1530,7 @@ function PeopleCards({
               <dl className="flex flex-wrap gap-x-4 gap-y-1">
                 {shown.map((spec) => (
                   <span key={spec.id} className="flex flex-col">
-                    <dt className="text-caption text-muted-foreground">{t(spec.labelKey)}</dt>
+                    <dt className="text-caption text-muted-foreground">{columnLabel(spec, t)}</dt>
                     <dd className="text-small tabular-nums">
                       {spec.id === 'workloadPct' ? (
                         <WorkloadBar
@@ -1323,17 +1540,6 @@ function PeopleCards({
                       ) : (
                         formatIndicator(spec, entry.row.values[spec.id] ?? null, t, locale)
                       )}
-                    </dd>
-                  </span>
-                ))}
-                {fieldColumns.map((column) => (
-                  <span key={column.def.id} className="flex flex-col">
-                    <dt className="text-caption text-muted-foreground">{column.label}</dt>
-                    <dd className="text-small">
-                      <FieldValueDisplay
-                        def={column.def}
-                        value={column.values.get(entry.row.member.userId) ?? null}
-                      />
                     </dd>
                   </span>
                 ))}

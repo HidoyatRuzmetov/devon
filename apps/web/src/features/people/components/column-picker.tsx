@@ -8,7 +8,13 @@
 // gets to use them faster.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { INDICATORS, type IndicatorSource, type IndicatorSpec } from '@devon/contracts'
+import {
+  columnLabel,
+  columnDescription,
+  FIELD_COLUMN_SOURCE,
+  type TableColumnSource,
+  type TableColumnSpec,
+} from '../column-spec.js'
 import {
   Badge,
   Button,
@@ -22,8 +28,13 @@ import {
 import { ArrowDown, ArrowUp, Columns3 } from 'lucide-react'
 
 /** The registry's `source`, turned into the picker's groups. One group per place a number comes
- * from, so "why is this column here" is answerable by looking at the heading above it. */
-const GROUP_ORDER: readonly IndicatorSource[] = [
+ * from, so "why is this column here" is answerable by looking at the heading above it.
+ *
+ * v1.1 critique SEV2 #7: `field` is last on purpose. It is the department's own group -- the columns
+ * a boshqarma boshligʻi created rather than the ones the product derived -- and until this round it
+ * was not in the picker at all, which is why Taʼlim, Chet tillari and Sertifikatlar rendered as
+ * columns that could not be hidden, reordered, sorted, filtered or resized. */
+const GROUP_ORDER: readonly TableColumnSource[] = [
   'membership',
   'cards',
   'projects',
@@ -31,15 +42,24 @@ const GROUP_ORDER: readonly IndicatorSource[] = [
   'onboarding',
   'activity',
   'personal_aggregate',
+  FIELD_COLUMN_SOURCE,
 ]
 
 export type ColumnPickerProps = {
   /** Chosen column ids, in display order. `name` is implicit and never in this list. */
   value: readonly string[]
   onChange: (next: string[]) => void
-  /** Columns a member may see (the four directory facts) versus the whole registry. */
-  available: readonly IndicatorSpec[]
+  /** Every column this head may choose from -- registry indicators *and* the department's own
+   * person fields (SEV2 #7), in one list, so "which columns exist" has one answer. */
+  available: readonly TableColumnSpec[]
   maxColumns: number
+  /**
+   * SEV2 #7: "the 'Ustunlar 4' badge matches neither the 3 selected indicators nor the 6 rendered
+   * columns". The badge now counts what is actually on screen, which the table knows and this
+   * component does not (Ism and Vazifalar are always there; a chosen id whose definition has since
+   * been archived is not).
+   */
+  renderedCount: number
 }
 
 export function ColumnPicker({
@@ -47,13 +67,17 @@ export function ColumnPicker({
   onChange,
   available,
   maxColumns,
+  renderedCount,
 }: ColumnPickerProps): React.JSX.Element {
   const t = useT()
+  // Built from `available` rather than from `INDICATORS`: a custom field is not in the registry, and
+  // building the lookup from the registry is precisely why the chosen-columns list used to silently
+  // drop every field column.
   const byId = React.useMemo(() => {
-    const map = new Map<string, IndicatorSpec>()
-    for (const indicator of INDICATORS) map.set(indicator.id, indicator)
+    const map = new Map<string, TableColumnSpec>()
+    for (const column of available) map.set(column.id, column)
     return map
-  }, [])
+  }, [available])
   const chosen = value.filter((id) => byId.has(id))
   const atCap = chosen.length >= maxColumns
 
@@ -82,7 +106,7 @@ export function ColumnPicker({
         <Button variant="secondary" size="sm">
           <Columns3 aria-hidden="true" className="size-4" />
           {t('people.table.columns.action')}
-          <Badge variant="subtle">{String(chosen.length + 1)}</Badge>
+          <Badge variant="subtle">{String(renderedCount)}</Badge>
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -110,11 +134,11 @@ export function ColumnPicker({
                     className="flex min-h-11 items-center gap-2 rounded-sm border border-border px-2 py-1"
                   >
                     <span className="min-w-0 flex-1 truncate text-small">
-                      {t(indicator.labelKey)}
+                      {columnLabel(indicator, t)}
                     </span>
                     <IconButton
                       aria-label={t('people.table.columns.moveUp', {
-                        name: t(indicator.labelKey),
+                        name: columnLabel(indicator, t),
                       })}
                       disabled={index === 0}
                       onClick={() => move(id, -1)}
@@ -123,7 +147,7 @@ export function ColumnPicker({
                     </IconButton>
                     <IconButton
                       aria-label={t('people.table.columns.moveDown', {
-                        name: t(indicator.labelKey),
+                        name: columnLabel(indicator, t),
                       })}
                       disabled={index === chosen.length - 1}
                       onClick={() => move(id, 1)}
@@ -164,9 +188,12 @@ export function ColumnPicker({
                       htmlFor={`people-column-${indicator.id}`}
                       className="flex cursor-pointer flex-col py-2"
                     >
-                      <span className="text-small">{t(indicator.labelKey)}</span>
+                      <span className="text-small">{columnLabel(indicator, t)}</span>
                       <span className="text-caption text-muted-foreground">
-                        {t(indicator.descriptionKey)}
+                        {columnDescription(indicator, t) ||
+                          (indicator.source === FIELD_COLUMN_SOURCE
+                            ? t('people.table.columns.fieldDescription')
+                            : '')}
                       </span>
                     </label>
                   </li>

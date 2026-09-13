@@ -13,7 +13,9 @@ type Translate = (key: string, vars?: Record<string, string | number>) => string
 export const EMPTY_VALUE = '—'
 
 export function formatIndicator(
-  spec: IndicatorSpec,
+  /** SEV2 #7: only `format` is ever read, so a custom-field column renders through the same
+   * function as a registry indicator. */
+  spec: Pick<IndicatorSpec, 'format'>,
   value: unknown,
   t: Translate,
   locale: Locale = 'uz-Latn',

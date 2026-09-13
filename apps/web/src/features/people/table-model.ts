@@ -8,12 +8,20 @@
 import type { IndicatorSpec, PeopleColumnFilter } from '@devon/contracts'
 import { normalizeForSearch } from '@devon/ui'
 
+/**
+ * v1.1 critique SEV2 #7: everything in this file only ever needed a column's `type` and its allowed
+ * `calculations` -- it never read an id, a label key or a source. Saying so in the signature is what
+ * lets a person custom field use the same sort comparator, the same filter operators and the same
+ * footer arithmetic as a registry indicator, with no branch anywhere. See `column-spec.ts`.
+ */
+export type SpecLike = Pick<IndicatorSpec, 'type' | 'calculations'>
+
 export type CellValue = number | string | boolean | readonly string[] | null
 
 /** Sorting key: numbers sort as numbers, dates as time, booleans as 0/1, text with the Uzbek/Cyrillic
  * fold every search in this product uses, and a missing value always sorts last regardless of
  * direction -- an empty cell is not "the smallest", it is "not yet answered". */
-export function sortValue(spec: IndicatorSpec, value: CellValue): number | string | null {
+export function sortValue(spec: SpecLike, value: CellValue): number | string | null {
   if (value === null || value === undefined || value === '') return null
   switch (spec.type) {
     case 'count':
@@ -29,12 +37,7 @@ export function sortValue(spec: IndicatorSpec, value: CellValue): number | strin
   }
 }
 
-export function compareCells(
-  spec: IndicatorSpec,
-  a: CellValue,
-  b: CellValue,
-  desc: boolean,
-): number {
+export function compareCells(spec: SpecLike, a: CellValue, b: CellValue, desc: boolean): number {
   const left = sortValue(spec, a)
   const right = sortValue(spec, b)
   if (left === null && right === null) return 0
@@ -54,7 +57,7 @@ function isEmpty(value: CellValue): boolean {
 /** One filter clause against one cell. Unknown operators pass the row through rather than hiding it:
  * a filter nobody can read must never silently empty a head's table. */
 export function matchesFilter(
-  spec: IndicatorSpec,
+  spec: SpecLike,
   value: CellValue,
   filter: PeopleColumnFilter,
 ): boolean {
@@ -106,7 +109,7 @@ export type CalculationResult = { kind: Calculation; value: number | null }
 /** The footer figure for one column. `null` means "nothing to compute here", which renders as the
  * one em dash this product uses for a missing value, never as a 0 that looks like a measurement. */
 export function calculate(
-  spec: IndicatorSpec,
+  spec: SpecLike,
   kind: Calculation,
   values: readonly CellValue[],
 ): CalculationResult {
@@ -133,6 +136,6 @@ export function calculate(
 
 /** The calculation a column shows by default: the first one the registry allows, which is the most
  * meaningful one for that indicator (a count sums, a percent averages, a date takes its range). */
-export function defaultCalculation(spec: IndicatorSpec): Calculation | null {
+export function defaultCalculation(spec: SpecLike): Calculation | null {
   return (spec.calculations[0] as Calculation | undefined) ?? null
 }

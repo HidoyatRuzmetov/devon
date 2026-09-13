@@ -19,8 +19,10 @@
           "events": "Events",
           "onboarding": "Onboarding",
           "activity": "Activity",
-          "personal_aggregate": "Personal (aggregate only)"
-        }
+          "personal_aggregate": "Personal (aggregate only)",
+          "field": "Custom fields"
+        },
+        "fieldDescription": "A column this department created — the answer is filled in by the person themselves."
       },
       "column": {
         "name": "Name",
@@ -90,7 +92,8 @@
         "avg": "Average",
         "sum": "Total",
         "min": "Lowest",
-        "max": "Highest"
+        "max": "Highest",
+        "filledOf": "{filled} of {total}"
       },
       "bulk": {
         "selected": "{count} people selected",
@@ -102,7 +105,8 @@
         "assign": "Give {name} a card",
         "assignShort": "Give a card",
         "board": "Open the board column for {name}",
-        "message": "Message {name} on Telegram"
+        "message": "Message {name} on Telegram",
+        "more": "More actions for {name}"
       },
       "views": {
         "label": "Saved views",
@@ -134,7 +138,16 @@
         "body": "The people table and its indicators are for the department head. The directory is open to you.",
         "action": "Open the directory"
       },
-      "resize": "Resize the {name} column"
+      "resize": "Resize the {name} column",
+      "askToFill": {
+        "column": "Ask to fill",
+        "row": "Ask to fill {count} fields",
+        "bulk": "Ask to fill ({count})",
+        "asked": "Asked {people} people",
+        "reminded": "Reminded {people} people",
+        "nothingToAsk": "Nobody left to ask — everything is filled in.",
+        "failed": "Could not send the request"
+      }
     },
     "indicator": {
       "openCards": {

@@ -7,7 +7,8 @@
 // custom-field column exists to answer.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import type { IndicatorSpec, PeopleColumnFilter, PeopleFilterOp } from '@devon/contracts'
+import type { PeopleColumnFilter, PeopleFilterOp } from '@devon/contracts'
+import { columnDescription, columnLabel, type TableColumnSpec } from '../column-spec.js'
 import {
   Button,
   IconButton,
@@ -18,17 +19,24 @@ import {
   Select,
   cn,
 } from '@devon/ui'
-import { ArrowDown, ArrowUp, ChevronsUpDown, Filter } from 'lucide-react'
+import { ArrowDown, ArrowUp, BellRing, ChevronsUpDown, Filter } from 'lucide-react'
 
 export type ColumnHeaderProps = {
-  spec: IndicatorSpec
+  spec: TableColumnSpec
   sort: 'asc' | 'desc' | null
   onSort: () => void
   filter: PeopleColumnFilter | null
   onFilter: (next: PeopleColumnFilter | null) => void
+  /**
+   * v1.1 critique SEV2 #6: "custom-field column headers are inert text with no menu", on the one
+   * screen where a column of two dozen em dashes makes the gap visible. Present only for a
+   * custom-field column, and only for a head: asks everybody still missing that field to fill it.
+   */
+  onAskToFill?: (() => void) | undefined
+  askPending?: boolean | undefined
 }
 
-function opsFor(spec: IndicatorSpec): PeopleFilterOp[] {
+function opsFor(spec: TableColumnSpec): PeopleFilterOp[] {
   switch (spec.type) {
     case 'count':
     case 'percent':
@@ -53,8 +61,12 @@ export function ColumnHeader({
   onSort,
   filter,
   onFilter,
+  onAskToFill,
+  askPending = false,
 }: ColumnHeaderProps): React.JSX.Element {
   const t = useT()
+  const label = columnLabel(spec, t)
+  const description = columnDescription(spec, t)
   const ops = opsFor(spec)
   const [op, setOp] = React.useState<PeopleFilterOp>(filter?.op ?? ops[0]!)
   const [value, setValue] = React.useState<string>(
@@ -87,29 +99,29 @@ export function ColumnHeader({
       <button
         type="button"
         onClick={onSort}
-        title={t(spec.descriptionKey)}
+        title={description}
         className={cn(
           'inline-flex min-h-9 items-center gap-1 rounded-sm px-1 text-left font-medium',
           'transition-colors duration-(--dur-micro) ease-out hover:bg-accent',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         )}
-        aria-label={t('people.table.sortBy', { name: t(spec.labelKey) })}
+        aria-label={t('people.table.sortBy', { name: label })}
       >
-        <span className="whitespace-nowrap">{t(spec.labelKey)}</span>
+        <span className="whitespace-nowrap">{label}</span>
         <SortIcon aria-hidden="true" className="size-3.5 text-muted-foreground" />
       </button>
 
       <Popover>
         <PopoverTrigger asChild>
           <IconButton
-            aria-label={t('people.table.filterBy', { name: t(spec.labelKey) })}
+            aria-label={t('people.table.filterBy', { name: label })}
             className={cn('size-7', filter && 'bg-primary/12 text-primary')}
           >
             <Filter aria-hidden="true" className="size-3.5" />
           </IconButton>
         </PopoverTrigger>
         <PopoverContent align="start" className="flex w-72 flex-col gap-3">
-          <p className="text-small font-medium">{t(spec.labelKey)}</p>
+          <p className="text-small font-medium">{label}</p>
           <Select
             value={op}
             aria-label={t('people.table.filter.operator')}
@@ -137,6 +149,20 @@ export function ColumnHeader({
               {t('people.table.filter.apply')}
             </Button>
           </div>
+          {/* SEV2 #6: the head is looking straight at the gap this column measures, so the ask
+              lives here as well as in the field manager -- scoped to everybody still missing it. */}
+          {onAskToFill ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={askPending}
+              onClick={onAskToFill}
+              className="w-full"
+            >
+              <BellRing aria-hidden="true" className="size-4" />
+              {t('people.table.askToFill.column')}
+            </Button>
+          ) : null}
         </PopoverContent>
       </Popover>
     </span>

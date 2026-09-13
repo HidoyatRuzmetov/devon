@@ -19,8 +19,10 @@
           "events": "Tadbirlar",
           "onboarding": "Moslashuv",
           "activity": "Faollik",
-          "personal_aggregate": "Shaxsiy (faqat jamlanma)"
-        }
+          "personal_aggregate": "Shaxsiy (faqat jamlanma)",
+          "field": "Maxsus maydonlar"
+        },
+        "fieldDescription": "Boshqarma oʻzi yaratgan maydon — javobni xodimning oʻzi toʻldiradi."
       },
       "column": {
         "name": "Ism",
@@ -90,7 +92,8 @@
         "avg": "Oʻrtacha",
         "sum": "Yigʻindi",
         "min": "Eng kichigi",
-        "max": "Eng kattasi"
+        "max": "Eng kattasi",
+        "filledOf": "{total} dan {filled} ta"
       },
       "bulk": {
         "selected": "{count} ta xodim tanlandi",
@@ -102,7 +105,8 @@
         "assign": "{name}ga vazifa berish",
         "assignShort": "Vazifa berish",
         "board": "{name}ning doskadagi ustuni",
-        "message": "{name}ga Telegram orqali yozish"
+        "message": "{name}ga Telegram orqali yozish",
+        "more": "{name} uchun boshqa amallar"
       },
       "views": {
         "label": "Saqlangan koʻrinishlar",
@@ -134,7 +138,16 @@
         "body": "Xodimlar jadvali va undagi koʻrsatkichlar faqat boshqarma boshligʻiga koʻrinadi. Maʼlumotnomani ochishingiz mumkin.",
         "action": "Maʼlumotnomani ochish"
       },
-      "resize": "«{name}» ustuni kengligini oʻzgartirish"
+      "resize": "«{name}» ustuni kengligini oʻzgartirish",
+      "askToFill": {
+        "column": "Toʻldirishni soʻrash",
+        "row": "{count} ta maydonni toʻldirishni soʻrash",
+        "bulk": "Toʻldirishni soʻrash ({count})",
+        "asked": "{people} ta xodimdan soʻraldi",
+        "reminded": "{people} ta xodimga eslatildi",
+        "nothingToAsk": "Soʻraydigan hech kim qolmadi — hammasi toʻldirilgan.",
+        "failed": "Soʻrovni yuborib boʻlmadi"
+      }
     },
     "indicator": {
       "openCards": {
