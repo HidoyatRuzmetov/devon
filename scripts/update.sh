@@ -113,13 +113,19 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
+# A dry run rehearses the procedure; it must therefore be runnable somewhere that is NOT the
+# production host -- a staging box, a laptop, a review of the release plan. So the environment
+# preconditions are hard failures for a real run and warnings for a dry run.
+require() {
+  if [ "$DRY_RUN" = "1" ]; then warn "$1 (dry run: continuing)"; else echo "[update] $1" >&2; exit 1; fi
+}
 if [ "$DEPLOY_TARGET" = "compose" ]; then
-  [ -f "$COMPOSE_FILE" ] || { echo "[update] $COMPOSE_FILE not found" >&2; exit 1; }
-  [ -f .env ] || { echo "[update] .env not found -- this host has never been installed (docs/ops/INSTALL.md)" >&2; exit 1; }
-  docker compose version >/dev/null 2>&1 || { echo "[update] docker compose is not available" >&2; exit 1; }
+  [ -f "$COMPOSE_FILE" ] || require "$COMPOSE_FILE not found"
+  [ -f .env ] || require ".env not found -- this host has never been installed (docs/ops/INSTALL.md)"
+  docker compose version >/dev/null 2>&1 || require "docker compose is not available"
 else
-  command -v kubectl >/dev/null 2>&1 || { echo "[update] kubectl is not available" >&2; exit 1; }
-  kubectl cluster-info >/dev/null 2>&1 || { echo "[update] no reachable cluster in the current kubeconfig" >&2; exit 1; }
+  command -v kubectl >/dev/null 2>&1 || require "kubectl is not available"
+  kubectl cluster-info >/dev/null 2>&1 || require "no reachable cluster in the current kubeconfig"
 fi
 
 if [ -z "$HEALTH_URL" ]; then
