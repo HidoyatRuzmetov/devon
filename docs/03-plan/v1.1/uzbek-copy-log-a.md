@@ -12,7 +12,7 @@ holatlar, xatolar) va modullar: `accounts`, `departments`, `structure`, `people`
 qator uzilishlari teginilmadi.
 
 **uz-Cyrl** hech qayerda qoʻlda yozilmadi: tuzatilgan uz-Latn dan `latinToCyrillic()` bilan hosil
-qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi — `ts`/`ц` tuzogʻi,
+qilindi — har bir qiymat soʻzma-soʻz, placeholder va teglarga tegmasdan — soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi — `ts`/`ц` tuzogʻi,
 `ё`/`е`, `ъ`, `ngʻ → нғ`, lotinchaligicha qoladigan nomlar.
 
 **Har bir moduldan keyin:** `node agentic/scripts/check-i18n.mjs` va
