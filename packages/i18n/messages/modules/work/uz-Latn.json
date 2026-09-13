@@ -135,7 +135,8 @@
       "byGiver": "Kimdan: {name}",
       "reassigned": "Vazifa {name}ga oʻtkazildi",
       "giverChanged": "Topshiriq beruvchi: {name}",
-      "undo": "Qaytarish"
+      "undo": "Qaytarish",
+      "saveFailed": "Saqlab boʻlmadi. Oldingi qiymat qaytarildi."
     },
     "priority": {
       "none": "Muhimlik yoʻq",

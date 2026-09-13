@@ -31,6 +31,7 @@ import {
   labelChipColors,
   RISE_PX,
   Select,
+  Shake,
   Skeleton,
   SparkleButton,
   StateView,
@@ -668,7 +669,11 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               back. Both of these now say what happened and offer the one click that undoes it
               (DESIGN.md: undo over confirm). The previous value is captured before the mutation, so
               the undo restores exactly what was there, including "nobody". */}
-          <Field label={t('work.field.assignee')} flashedAt={assigneeFlash.flashedAt}>
+          <Field
+            label={t('work.field.assignee')}
+            flashedAt={assigneeFlash.flashedAt}
+            rejectedAt={assigneeFlash.rejectedAt}
+          >
             <MemberPicker
               members={members}
               value={card.assigneeUserId}
@@ -690,6 +695,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                         }),
                     })
                   })
+                  .catch(assigneeFlash.reject)
               }}
               placeholderKey="work.field.unassigned"
             />
@@ -734,7 +740,11 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               </AiResultPanel>
             ) : null}
           </Field>
-          <Field label={t('work.field.giver')} flashedAt={giverFlash.flashedAt}>
+          <Field
+            label={t('work.field.giver')}
+            flashedAt={giverFlash.flashedAt}
+            rejectedAt={giverFlash.rejectedAt}
+          >
             <MemberPicker
               members={members}
               value={card.giverUserId}
@@ -756,11 +766,16 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                         }),
                     })
                   })
+                  .catch(giverFlash.reject)
               }}
               placeholderKey="work.field.noGiver"
             />
           </Field>
-          <Field label={t('work.field.priority')} flashedAt={priorityFlash.flashedAt}>
+          <Field
+            label={t('work.field.priority')}
+            flashedAt={priorityFlash.flashedAt}
+            rejectedAt={priorityFlash.rejectedAt}
+          >
             <Select
               aria-label={t('work.field.priority')}
               value={card.priority}
@@ -771,11 +786,16 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                     patch: { priority: e.target.value as CardPriority },
                   })
                   .then(priorityFlash.flash)
+                  .catch(priorityFlash.reject)
               }
               options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
             />
           </Field>
-          <Field label={t('work.field.due')} flashedAt={dueFlash.flashedAt}>
+          <Field
+            label={t('work.field.due')}
+            flashedAt={dueFlash.flashedAt}
+            rejectedAt={dueFlash.rejectedAt}
+          >
             <DatePicker
               locale={locale}
               label={t('work.field.due')}
@@ -785,11 +805,16 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 void patchCard
                   .mutateAsync({ id: card.id, patch: { dueAt: dateToIso(date) } })
                   .then(dueFlash.flash)
+                  .catch(dueFlash.reject)
               }
               triggerClassName="w-full justify-start"
             />
           </Field>
-          <Field label={t('work.field.start')} flashedAt={startFlash.flashedAt}>
+          <Field
+            label={t('work.field.start')}
+            flashedAt={startFlash.flashedAt}
+            rejectedAt={startFlash.rejectedAt}
+          >
             <DatePicker
               locale={locale}
               label={t('work.field.start')}
@@ -799,6 +824,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 void patchCard
                   .mutateAsync({ id: card.id, patch: { startAt: dateToIso(date) } })
                   .then(startFlash.flash)
+                  .catch(startFlash.reject)
               }
               triggerClassName="w-full justify-start"
             />
@@ -978,9 +1004,25 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
  * happened again" token even for two flashes in the same millisecond-resolution tick being merged
  * (a flash replaying because a second edit landed within the animation's own 700ms is still exactly
  * the "this saved" acknowledgement UI-OVERHAUL.md asks for). */
-function useFieldFlash(): { flashedAt: number; flash: () => void } {
+function useFieldFlash(): {
+  flashedAt: number
+  flash: () => void
+  rejectedAt: number
+  reject: () => void
+} {
   const [flashedAt, setFlashedAt] = React.useState(0)
-  return { flashedAt, flash: React.useCallback(() => setFlashedAt(Date.now()), []) }
+  const [rejectedAt, setRejectedAt] = React.useState(0)
+  return {
+    flashedAt,
+    flash: React.useCallback(() => setFlashedAt(Date.now()), []),
+    // The other half of the optimistic contract (DESIGN.md §10): the flash says "taken", this says
+    // "put back". `usePatchCardMutation` already rolls the value back on failure -- what it had no
+    // way to do was *say so* on the one property that moved, so a refused edit silently reverted and
+    // read as the app eating the click. Attaching it also means every one of these `mutateAsync`
+    // chains now has a `catch`, which none of them did.
+    rejectedAt,
+    reject: React.useCallback(() => setRejectedAt(Date.now()), []),
+  }
 }
 
 function Field({
@@ -988,6 +1030,7 @@ function Field({
   action,
   children,
   flashedAt,
+  rejectedAt,
 }: {
   label: string
   action?: React.ReactNode
@@ -996,7 +1039,18 @@ function Field({
    * token plays one soft success-tinted wash over the control, opacity only. Reduced motion keeps
    * the wash (a colour fade is not travel) and simply holds it longer -- see `<FlashOnChange>`. */
   flashedAt?: number
+  /** The same token shape for the failing half: each new value shakes the control once, the
+   * product's one refusal gesture. Reduced motion replaces it with a destructive ring. */
+  rejectedAt?: number
 }) {
+  const [shake, setShake] = React.useState(false)
+  React.useEffect(() => {
+    if (!rejectedAt) return undefined
+    setShake(false)
+    const raf = requestAnimationFrame(() => setShake(true))
+    return () => cancelAnimationFrame(raf)
+  }, [rejectedAt])
+
   return (
     <label className="flex flex-col gap-1.5 text-small">
       <span className="flex items-center gap-2">
@@ -1010,9 +1064,11 @@ function Field({
           reduced-motion contract, used by every optimistic edit in the product rather than by this
           one panel. The flash sits around the *control* rather than the whole label, so the eye
           lands on the value that changed and not on the word for it. */}
-      <FlashOnChange value={flashedAt ?? 0} tone="saved" className="flex flex-col">
-        {children}
-      </FlashOnChange>
+      <Shake play={shake} onDone={() => setShake(false)}>
+        <FlashOnChange value={flashedAt ?? 0} tone="saved" className="flex flex-col">
+          {children}
+        </FlashOnChange>
+      </Shake>
     </label>
   )
 }

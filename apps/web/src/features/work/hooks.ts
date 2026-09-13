@@ -179,7 +179,12 @@ export function usePatchCardMutation() {
       // says it out loud in the reader's own language.
       if (err instanceof ApiError && err.errors.some((e) => e.code === 'required_field_missing')) {
         toast.error(t('fields.card.requiredBlocksDone'))
+        return
       }
+      // v1.1 motion pass: every *other* failure rolled back in complete silence. The field's own
+      // refusal shake says "no" (`card-detail.tsx`'s `useFieldFlash().reject`), and this says what
+      // happened -- DESIGN.md §4 wants both, never a gesture on its own.
+      toast.error(t('work.card.saveFailed'))
     },
     onSettled: (_data, _err, { id }) => invalidateCard(qc, id),
   })

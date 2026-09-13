@@ -4164,7 +4164,8 @@
       "byGiver": "Delegated by {name}",
       "reassigned": "Reassigned to {name}",
       "giverChanged": "Delegated by {name}",
-      "undo": "Undo"
+      "undo": "Undo",
+      "saveFailed": "Could not save it. The previous value is back."
     },
     "priority": {
       "none": "No priority",
