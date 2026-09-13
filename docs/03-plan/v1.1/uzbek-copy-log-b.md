@@ -495,3 +495,140 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `ai.features.semanticAsk.example` | “Oylik hisobotni kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan. | «Oylik hisobotni kim tayyorlayapti?» → «Nodira Karimova, muddat 18-sentabr», kartaga havola bilan. |
 | `ai.features.weeklySummary.description` | Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. | Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. |
 | `ai.features.whatDidIMiss.description` | Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. | Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan. |
+
+## admin — 132 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `admin.console.eyebrow` | Boshqaruv | BOSHQARUV |
+| `admin.console.tabs.label` | Administrator boʻlimlari | Administrator sahifalari |
+| `admin.console.tabs.departments` | Boʻlimlar | Boshqarmalar |
+| `admin.console.viewAsBanner.message` | Siz hozir bir boʻlimni koʻrinish sifatida (faqat oʻqish) koʻrmoqdasiz. | Siz hozir bir boshqarmani faqat oʻqish uchun koʻrmoqdasiz. |
+| `admin.console.viewAsBanner.exit` | Koʻrinishni yopish | Koʻrishni tugatish |
+| `admin.console.dashboard.userCount` | Foydalanuvchilar soni | Xodimlar soni |
+| `admin.console.dashboard.maintenanceActive` | Texnik xizmat rejimi yoqilgan — foydalanuvchilar tizimga kira olmaydi. | Texnik xizmat rejimi yoqilgan — super administratordan boshqa hech kim kira olmaydi. |
+| `admin.console.dashboard.reviewRequests` | Boʻlim soʻrovlarini koʻrib chiqish | Boshqarma soʻrovlarini koʻrib chiqish |
+| `admin.console.dashboard.reviewRequestsDesc` | Yangi boʻlim tashkil etish soʻrovlarini tasdiqlang yoki rad eting | Yangi boshqarma ochish soʻrovlarini tasdiqlang yoki rad eting |
+| `admin.console.dashboard.manageDepartments` | Boʻlimlarni boshqarish | Boshqarmalarni boshqarish |
+| `admin.console.dashboard.manageDepartmentsDesc` | Boʻlimlarni koʻring, toʻxtating yoki arxivlang | Boshqarmalarni koʻring, toʻxtating yoki arxivlang |
+| `admin.console.dashboard.manageAccountsDesc` | Foydalanuvchi hisoblarini bloklang, tiklang yoki oʻchiring | Hisoblarni bloklang, tiklang yoki oʻchiring |
+| `admin.console.dashboard.healthUnavailable` | Hozircha tizim holati mavjud emas. | Tizim holati hali kelmadi. |
+| `admin.console.dashboard.backupsUnconfigured` | Zaxira nusxalar sozlanmagan — bu instansiyada hech qanday zaxira olinmayapti. | Zaxira nusxalar sozlanmagan — bu serverda hech narsa zaxiralanmayapti. |
+| `admin.console.dashboard.userCountBreakdown` | Boʻlimlar kesimida | Boshqarmalar kesimida |
+| `admin.console.departments.searchPlaceholder` | Boʻlim nomi boʻyicha qidirish | Boshqarma nomi boʻyicha qidirish |
+| `admin.console.departments.empty.title` | Boʻlimlar topilmadi | Boshqarma topilmadi |
+| `admin.console.departments.memberCount` | {count} ta aʼzo | {count} ta xodim |
+| `admin.console.departments.viewAs` | Koʻrinish sifatida ochish | Ichini koʻrish |
+| `admin.console.departments.archive` | Arxivlash | Arxivga olish |
+| `admin.console.departments.stopViewingAs` | Koʻrinishni yopish | Koʻrishni tugatish |
+| `admin.console.departments.pauseDialogTitle` | Boʻlimni toʻxtatish | Boshqarmani toʻxtatish |
+| `admin.console.departments.pausedToast` | Boʻlim toʻxtatildi | Boshqarma toʻxtatildi |
+| `admin.console.departments.resumedToast` | Boʻlim qayta faollashtirildi | Boshqarma qayta ishga tushdi |
+| `admin.console.departments.archivedToast` | Boʻlim arxivlandi | Boshqarma arxivlandi |
+| `admin.console.departments.restoredToast` | Boʻlim tiklandi | Boshqarma tiklandi |
+| `admin.console.departments.viewAsStartedToast` | Koʻrinish sifatida rejim yoqildi | Koʻrish rejimi yoqildi |
+| `admin.console.departments.viewAsStoppedToast` | Koʻrinish sifatida rejim yopildi | Koʻrish rejimi yopildi |
+| `admin.console.departments.columnName` | Boʻlim | Boshqarma |
+| `admin.console.departments.columnMembers` | Aʼzolar | Xodimlar |
+| `admin.console.departments.columnCreated` | Yaratilgan | Ochilgan |
+| `admin.console.departments.drawerTitle` | Boʻlim tafsilotlari | Boshqarma haqida |
+| `admin.console.departments.memberCountLabel` | Aʼzolar | Xodimlar |
+| `admin.console.departments.createdLabel` | Yaratilgan | Ochilgan |
+| `admin.console.departments.localeLabel` | Standart til | Asosiy til |
+| `admin.console.accounts.empty.title` | Hisoblar topilmadi | Hisob topilmadi |
+| `admin.console.accounts.role.member` | Aʼzo | Xodim |
+| `admin.console.accounts.temporaryPasswordBody` | Ushbu parolni foydalanuvchiga xavfsiz usulda yetkazing. Birinchi kirishda u yangi parol oʻrnatishi soʻraladi. | Bu parolni xodimga xavfsiz yoʻl bilan yetkazing. Birinchi kirishda undan yangi parol soʻraladi. |
+| `admin.console.accounts.anonymizeDialogBody` | Foydalanuvchi maʼlumotlari anonimlashtiriladi va hisob doimiy ravishda oʻchiriladi. Bu amalni bekor qilib boʻlmaydi. | Xodimning maʼlumotlari anonimlashtiriladi va hisob butunlay oʻchiriladi. Buni ortga qaytarib boʻlmaydi. |
+| `admin.console.analytics.totalDepartments` | Jami boʻlimlar | Jami boshqarmalar |
+| `admin.console.analytics.totalPeople` | Jami foydalanuvchilar | Jami xodimlar |
+| `admin.console.analytics.cardsCreated30d` | Kartochkalar (30 kun) | Kartalar (30 kun) |
+| `admin.console.analytics.departmentsTitle` | Boʻlimlar holati | Boshqarmalar holati |
+| `admin.console.analytics.peopleTitle` | Foydalanuvchilar tarkibi | Xodimlar tarkibi |
+| `admin.console.analytics.members` | Aʼzolar | Xodimlar |
+| `admin.console.analytics.noActivity` | Hozircha faollik maʼlumotlari yoʻq | Hozircha faollik qayd etilmagan |
+| `admin.console.analytics.notAvailable` | Mavjud emas | Yoʻq |
+| `admin.console.analytics.tokensThisMonth` | Ushbu oydagi tokenlar | Bu oydagi tokenlar |
+| `admin.console.analytics.costThisMonth` | Ushbu oydagi xarajat | Bu oydagi xarajat |
+| `admin.console.audit.empty.title` | Voqealar topilmadi | Yozuv topilmadi |
+| `admin.console.audit.columnSubject` | Obʼekt | Obyekt |
+| `admin.console.audit.filter.departments` | Boʻlimlar | Boshqarmalar |
+| `admin.console.audit.verb.admin.view_as.started` | koʻrinish sifatida rejimni boshladi | boshqarma ichini koʻra boshladi |
+| `admin.console.audit.verb.admin.view_as.stopped` | koʻrinish sifatida rejimni yakunladi | boshqarma ichini koʻrishni tugatdi |
+| `admin.console.audit.verb.admin.audit.exported` | audit jurnalini yukladi | audit jurnalini yuklab oldi |
+| `admin.console.audit.verb.departments.request_created` | boʻlim soʻrovini yubordi | boshqarma soʻrovini yubordi |
+| `admin.console.audit.verb.departments.request_approved` | boʻlim soʻrovini tasdiqladi | boshqarma soʻrovini tasdiqladi |
+| `admin.console.audit.verb.departments.request_rejected` | boʻlim soʻrovini rad etdi | boshqarma soʻrovini rad etdi |
+| `admin.console.audit.verb.departments.joined` | boʻlimga qoʻshildi | boshqarmaga qoʻshildi |
+| `admin.console.audit.verb.departments.left` | boʻlimni tark etdi | boshqarmani tark etdi |
+| `admin.console.audit.verb.structure.unit_created` | boʻlinma yaratdi | boʻlim ochdi |
+| `admin.console.audit.verb.structure.unit_deleted` | boʻlinmani oʻchirdi | boʻlimni oʻchirdi |
+| `admin.console.audit.verb.setup.completed` | tizimni sozlashni yakunladi | dastlabki sozlashni yakunladi |
+| `admin.console.audit.verb.accounts.2fa_challenge_failed` | ikki bosqichli tekshiruvda xatolik qildi | ikki bosqichli tekshiruvdan oʻta olmadi |
+| `admin.console.audit.verb.admin.wipe.failed` | tizimni oʻchirishda xatolikka uchradi | tizimni oʻchira olmadi |
+| `admin.console.audit.verb.analytics.chart.unpinned` | diagrammani yechdi | diagrammani mahkamdan oldi |
+| `admin.console.audit.verb.analytics.saved_filter.created` | saqlangan filtr yaratdi | filtrni saqladi |
+| `admin.console.audit.verb.departments.deletion_requested` | boʻlimni oʻchirishni soʻradi | boshqarmani oʻchirishni soʻradi |
+| `admin.console.audit.verb.departments.join_failed` | boʻlimga qoʻshilishda xatolikka uchradi | boshqarmaga qoʻshila olmadi |
+| `admin.console.audit.verb.departments.settings_updated` | boʻlim sozlamalarini oʻzgartirdi | boshqarma sozlamalarini oʻzgartirdi |
+| `admin.console.audit.verb.events.carpool_created` | hamroh safarini yaratdi | birga borishni taklif qildi |
+| `admin.console.audit.verb.events.carpool_seat_claimed` | hamroh safaridan joy oldi | birga borishdan joy oldi |
+| `admin.console.audit.verb.events.carpool_seat_released` | hamroh safaridagi joyni boʻshatdi | birga borishdagi joyni boʻshatdi |
+| `admin.console.audit.verb.events.event_created` | tadbir yaratdi | tadbir qoʻshdi |
+| `admin.console.audit.verb.events.item_added` | olib kelinadigan narsani qoʻshdi | olib keliladigan narsani qoʻshdi |
+| `admin.console.audit.verb.events.item_claimed` | olib kelinadigan narsani oʻz zimmasiga oldi | olib keliladigan narsani oʻz zimmasiga oldi |
+| `admin.console.audit.verb.events.item_unclaimed` | olib kelinadigan narsadan voz kechdi | olib keliladigan narsadan voz kechdi |
+| `admin.console.audit.verb.events.poll_created` | soʻrovnoma yaratdi | soʻrovnoma qoʻshdi |
+| `admin.console.audit.verb.events.rsvp_changed` | tadbirga qatnashish holatini oʻzgartirdi | tadbirdagi ishtirokini oʻzgartirdi |
+| `admin.console.audit.verb.notifications.created` | bildirishnoma yaratdi | bildirishnoma yubordi |
+| `admin.console.audit.verb.notifications.department_settings_updated` | boʻlim bildirishnoma sozlamalarini oʻzgartirdi | boshqarma bildirishnoma sozlamalarini oʻzgartirdi |
+| `admin.console.audit.verb.notifications.snoozed` | bildirishnomani keyinga qoldirdi | bildirishnomani kechiktirdi |
+| `admin.console.audit.verb.pages.onboarding_template.applied` | moslashuv shablonini qoʻlladi | moslashuv andozaini qoʻlladi |
+| `admin.console.audit.verb.pages.onboarding_template.created` | moslashuv shablonini yaratdi | moslashuv andozaini yaratdi |
+| `admin.console.audit.verb.pages.onboarding_template.deleted` | moslashuv shablonini oʻchirdi | moslashuv andozaini oʻchirdi |
+| `admin.console.audit.verb.pages.onboarding_template.updated` | moslashuv shablonini oʻzgartirdi | moslashuv andozaini oʻzgartirdi |
+| `admin.console.audit.verb.pages.page.created` | sahifa yaratdi | sahifa qoʻshdi |
+| `admin.console.audit.verb.personal.canvas.created` | shaxsiy taxtachani yaratdi | shaxsiy oq taxta qoʻshdi |
+| `admin.console.audit.verb.personal.canvas.deleted` | shaxsiy taxtachani oʻchirdi | shaxsiy oq taxtani oʻchirdi |
+| `admin.console.audit.verb.personal.canvas.updated` | shaxsiy taxtachani oʻzgartirdi | shaxsiy oq taxtani oʻzgartirdi |
+| `admin.console.audit.verb.personal.note.created` | shaxsiy eslatma yaratdi | shaxsiy qayd qoʻshdi |
+| `admin.console.audit.verb.personal.note.deleted` | shaxsiy eslatmani oʻchirdi | shaxsiy qaydni oʻchirdi |
+| `admin.console.audit.verb.personal.note.updated` | shaxsiy eslatmani oʻzgartirdi | shaxsiy qaydni oʻzgartirdi |
+| `admin.console.audit.verb.personal.cycle.created` | davr yaratdi | davr boshladi |
+| `admin.console.audit.verb.personal.item.created` | shaxsiy vazifa yaratdi | shaxsiy vazifa qoʻshdi |
+| `admin.console.audit.verb.projects.project_created` | loyiha yaratdi | loyiha ochdi |
+| `admin.console.audit.verb.setup.token_issued` | sozlash tokenini oldi | sozlash kalitini oldi |
+| `admin.console.audit.verb.storage.upload_rejected` | yuklangan fayl rad etildi | yuklagan fayli rad etildi |
+| `admin.console.audit.verb.storage.upload_infected` | yuklangan faylda virus topildi | yuklagan faylida virus topildi |
+| `admin.console.audit.verb.storage.upload_scan_failed` | yuklangan faylni tekshirib boʻlmadi | yuklagan faylini tekshirib boʻlmadi |
+| `admin.console.audit.verb.structure.unit_restored` | boʻlinmani tikladi | boʻlimni tikladi |
+| `admin.console.audit.verb.structure.unit_updated` | boʻlinmani oʻzgartirdi | boʻlimni oʻzgartirdi |
+| `admin.console.audit.verb.structure.units_reordered` | boʻlinmalar tartibini oʻzgartirdi | boʻlimlar tartibini oʻzgartirdi |
+| `admin.console.audit.verb.work.card_created` | kartochka yaratdi | karta qoʻshdi |
+| `admin.console.audit.verb.work.card_restored` | kartochkani tikladi | kartani tikladi |
+| `admin.console.audit.verb.work.card_updated` | kartochkani oʻzgartirdi | kartani oʻzgartirdi |
+| `admin.console.audit.verb.work.checklist_item_added` | tekshiruv roʻyxatiga band qoʻshdi | bajarish roʻyxatiga band qoʻshdi |
+| `admin.console.audit.verb.work.comment_added` | kartochkaga izoh qoldirdi | kartaga izoh qoldirdi |
+| `admin.console.audit.verb.work.label_created` | yorliq yaratdi | yorliq qoʻshdi |
+| `admin.console.audit.subjectType.user` | Foydalanuvchi | Xodim |
+| `admin.console.audit.subjectType.department` | Boʻlim | Boshqarma |
+| `admin.console.audit.subjectType.department_request` | Boʻlim soʻrovi | Boshqarma soʻrovi |
+| `admin.console.audit.subjectType.unit` | Boʻlinma | Boʻlim |
+| `admin.console.audit.subjectType.audit_export` | Audit eksporti | Audit nusxasi |
+| `admin.console.health.detail.queue.pending` | {count} ta kutilayotgan hodisa | {count} ta hodisa navbatda |
+| `admin.console.health.detail.queue.pendingOldest` | {count} ta kutilayotgan hodisa, eng eskisi {seconds} soniya oldin | {count} ta hodisa navbatda, eng eskisi {seconds} soniya oldin |
+| `admin.console.settings.registrationBody` | Yangi foydalanuvchilar roʻyxatdan oʻtishi mumkinligini boshqaring. | Yangi xodimlar hisob ochishi mumkinmi — shuni belgilaysiz. |
+| `admin.console.settings.registrationSwitchLabel` | Yangi hisoblar roʻyxatdan oʻtishi mumkin | Yangi hisob ochish mumkin |
+| `admin.console.settings.maintenanceBody` | Yoqilganda barcha foydalanuvchilar (super administratordan tashqari) ushbu xabarni koʻradi. | Yoqilganda super administratordan boshqa hamma shu xabarni koʻradi. |
+| `admin.console.settings.maintenanceMessagePlaceholder` | Xabar matnini kiriting | Xabar matni |
+| `admin.console.settings.maintenancePreviewEmpty` | Hali xabar kiritilmagan — foydalanuvchilar standart bildirishnomani koʻradi. | Hali xabar yozilmagan — xodimlar odatdagi bildirishnomani koʻradi. |
+| `admin.console.settings.sentinelBody` | Oʻchirish tugmasini xost xizmatiga yuborish uchun ishlatiladigan maxfiy kalit. | Xost xizmatiga yuboriladigan oʻchirish buyrugʻini imzolaydigan maxfiy kalit. |
+| `admin.console.settings.wipeBody` | Ushbu tugma butun tizimni serverdan butunlay oʻchiradi. Amalni ortga qaytarib boʻlmaydi. | Bu tugma butun tizimni serverdan butunlay oʻchiradi. Buni ortga qaytarib boʻlmaydi. |
+| `admin.console.settings.wipeDialogBody` | Bu butun tizimni serverdan qaytarib boʻlmaydigan tarzda oʻchiradi: barcha boʻlimlar, hisoblar, sahifalar, kartochkalar va fayllar. Amalni ortga qaytarib boʻlmaydi. Keyingi qadamlarda tasdiqlash iborasini kiritib, hisob maʼlumotlaringizni qayta kiritasiz. | Bu butun tizimni serverdan qaytarib boʻlmaydigan tarzda oʻchiradi: hamma boshqarma, hisob, sahifa, karta va fayl. Keyingi qadamlarda tasdiqlash iborasini yozasiz va parolingizni qayta kiritasiz. |
+| `admin.console.settings.wipeStepOf` | {total} dan {step}-qadam | {total} qadamdan {step}-si |
+| `admin.console.settings.wipeReviewBody` | Hisoblash nolga yetgach uni bekor qilib boʻlmaydi, lekin hisoblash davom etayotganda hali ham bekor qilish mumkin. | Hisob nolga yetgach oʻchirishni toʻxtatib boʻlmaydi; hisob davom etayotganda esa bekor qilsangiz boʻladi. |
+| `admin.console.settings.wipeConfirmCta` | 60 soniyalik hisoblashni boshlash | 60 soniyalik hisobni boshlash |
+| `admin.console.settings.wipeStartFailedToast` | Tasdiqlash muvaffaqiyatsiz tugadi | Tasdiqlab boʻlmadi |
+| `admin.console.settings.wipeCountdownBody` | Hisoblash tugagach oʻchirish buyrugʻi xost xizmatiga yuboriladi. Hozir bekor qilishingiz mumkin. | Hisob nolga yetgach oʻchirish buyrugʻi xost xizmatiga yuboriladi. Hozir bekor qilsangiz boʻladi. |
+| `admin.console.settings.wipeExecuting` | Oʻchirish buyrugʻi yuborilmoqda... | Oʻchirish buyrugʻi yuborilmoqda… |
+| `admin.console.settings.wipeFailed` | Muvaffaqiyatsiz | Boʻlmadi |
+| `admin.console.settings.sentinelPublicKeyHint` | Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=... sifatida joylashtiring. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatilishi mumkin. | Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=… koʻrinishida yozing. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatiladi. |
