@@ -281,7 +281,15 @@
         "cta": "AI page",
         "idle": "Prepare a short briefing on the week? Every claim cites a specific card.",
         "run": "Prepare the briefing",
-        "dismiss": "Close"
+        "dismiss": "Close",
+        "refresh": "Refresh",
+        "pending": "Preparing the briefing",
+        "pendingHint": "This can take a few minutes. It will appear here when it is ready.",
+        "generatedAt": "Prepared at {time}",
+        "empty": "No briefing yet. One is prepared automatically every night, or ask for it now.",
+        "failed": "The last attempt produced nothing. Ask for the briefing again.",
+        "cooldown": "The briefing was just refreshed. Wait a little and try again.",
+        "requested": "Briefing requested — it will appear here when it is ready."
       }
     }
   },
@@ -1581,7 +1589,8 @@
       "status": "Outcome",
       "allRules": "All rules",
       "allStatuses": "All",
-      "count": "{groups} groups · {runs} runs"
+      "count": "{groups} groups · {runs} runs",
+      "countOf": "{groups} groups · showing {runs} of {total} runs"
     },
     "runsFilteredTitle": "Nothing matches this filter",
     "runsFilteredBody": "Pick another rule or another outcome.",

@@ -115,6 +115,43 @@ for (const l of cfg.locales.slice(1)) {
   }
 }
 
+// The generated catalogues have to agree with the module files this gate just merged in memory.
+//
+// Found the hard way on 2026-09-13: two new `home.head.catchUp.*` keys were added to all four module
+// files, this gate went green -- it reads the modules, by design, so that green never depends on
+// somebody remembering to re-run the merge -- and the running product rendered
+// the raw key marker on the head's dashboard, because `messages/<locale>.generated.json` is what
+// `@devon/i18n` actually loads and it was stale in the working tree.
+//
+// So the gate now checks the other half of the same sentence: the checked-in generated output must
+// equal the merge. That keeps the in-memory merge as the source of truth for *correctness* while
+// making "the gate is green" and "the app renders the string" the same claim, which is the whole
+// point of having this gate. The fix when it fails is one command, and the message says so.
+for (const l of cfg.locales) {
+  const generatedPath = join(root, cfg.messages, `${l}.generated.json`)
+  if (!existsSync(generatedPath)) {
+    errors += 1
+    console.log(
+      `[i18n] ${l}: ${cfg.messages}/${l}.generated.json is missing -- run: pnpm --filter @devon/i18n messages:merge`,
+    )
+    continue
+  }
+  const generated = flatten(JSON.parse(readFileSync(generatedPath, 'utf8')))
+  const stale = Object.keys(dict[l]).filter((k) => generated[k] !== dict[l][k])
+  const orphaned = Object.keys(generated).filter((k) => !(k in dict[l]))
+  if (stale.length || orphaned.length) {
+    errors += stale.length + orphaned.length
+    const sample = [...stale, ...orphaned].slice(0, 10).join(', ')
+    console.log(
+      `[i18n] ${l}: ${l}.generated.json is out of date with the module message files ` +
+        `(${stale.length} stale/missing, ${orphaned.length} orphaned): ${sample}` +
+        `${stale.length + orphaned.length > 10 ? ' ...' : ''}`,
+    )
+    console.log(`[i18n] ${l}: fix with -- pnpm --filter @devon/i18n messages:merge`)
+  }
+}
+
+
 const keyRe = /\bt\(\s*['"`]([a-zA-Z0-9_.-]+)['"`]/g
 const transRe = /i18nKey=['"]([a-zA-Z0-9_.-]+)['"]/g
 const used = new Map()
