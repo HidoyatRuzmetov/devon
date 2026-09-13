@@ -4,9 +4,12 @@ import { useReducedMotion } from '../lib/use-reduced-motion.js'
 import { cn } from '../lib/cn.js'
 import { S_STANDARD, S_PAGE, EASE_OUT, EASE_STANDARD } from './tokens.js'
 
+// Named for what the wash *means* at the call site, not for the token behind it: `saved` is the
+// receipt for a write that landed (which is exactly the success/on-track meaning DESIGN.md §2.1
+// reserves green for), `changed` is a neutral "this moved", `attention` is "and it needs a look".
 const TONE_CLASS = {
-  primary: 'bg-primary/18',
-  success: 'bg-success/20',
+  changed: 'bg-primary/18',
+  saved: 'bg-success/20',
   attention: 'bg-attention/25',
 } as const
 
@@ -36,7 +39,7 @@ export function FlashOnChange({
   value,
   children,
   className,
-  tone = 'primary',
+  tone = 'changed',
   enabled = true,
 }: FlashOnChangeProps): React.JSX.Element {
   const reduced = useReducedMotion()

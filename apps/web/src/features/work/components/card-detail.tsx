@@ -1010,7 +1010,7 @@ function Field({
           reduced-motion contract, used by every optimistic edit in the product rather than by this
           one panel. The flash sits around the *control* rather than the whole label, so the eye
           lands on the value that changed and not on the word for it. */}
-      <FlashOnChange value={flashedAt ?? 0} tone="success" className="flex flex-col">
+      <FlashOnChange value={flashedAt ?? 0} tone="saved" className="flex flex-col">
         {children}
       </FlashOnChange>
     </label>

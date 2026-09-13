@@ -12,7 +12,6 @@ import {
   Button,
   Card,
   Checkbox,
-  cn,
   EmptyPersonalIllustration,
   IconButton,
   Input,
