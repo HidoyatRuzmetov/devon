@@ -72,6 +72,41 @@ Top Ten ruleset) and Trivy (filesystem vuln + secret scan) and is wired into CI'
 `release` gate profiles, which install both tools before running it (`.github/workflows/ci.yml`). If
 you want to run it locally, install `semgrep` and `trivy` yourself first.
 
+## Operations
+
+Everything above is the developer loop. Running Devon on a real ministry server is a separate set of
+documents, each written to be followed under pressure by someone who did not write it. Start here:
+
+| Document | When you need it |
+|---|---|
+| [docs/ops/INSTALL.md](docs/ops/INSTALL.md) | Installing on a new ministry server, from zero: Ubuntu 24.04, Docker, the production compose file, Caddy with a real domain and automatic TLS, **every** environment variable explained, first boot, migrations, the `/setup` super-admin ceremony, smoke checks |
+| [docs/ops/UPDATE.md](docs/ops/UPDATE.md) | Upgrading a running deployment: the release channel, and the one safe order — backup first, migrations before the rollout, health gating on `/readyz`, rollback |
+| [docs/ops/RUNBOOK.md](docs/ops/RUNBOOK.md) | Everything else, with exact commands: restart, rotate secrets, restore, pause and resume, wipe, Telegram webhook setup, AI endpoint outage, disk full, certificate renewal, and an incident template |
+| [docs/ops/CHECKLIST-GO-LIVE.md](docs/ops/CHECKLIST-GO-LIVE.md) | The sign-off before real people depend on the instance. Blockers stop the launch |
+| [docs/ops/CHECKLIST-QUARTERLY-DRILL.md](docs/ops/CHECKLIST-QUARTERLY-DRILL.md) | The quarterly restore drill a human runs, as opposed to the weekly one a timer runs |
+| [docs/ops/DEPLOY.md](docs/ops/DEPLOY.md) | What production differs from dev in, and the image build step |
+| [infra/README.md](infra/README.md) | Compose profiles, TLS, the sentinel, the backup scripts |
+| [infra/k3s/README.md](infra/k3s/README.md) | The Kubernetes alternative, for a ministry that already runs a cluster |
+
+Two scripts do the reproducible halves, idempotently:
+
+```bash
+sudo bash scripts/install.sh --domain work.ministry.uz --backup-dir /var/backups/devon
+sudo -u devon bash scripts/update.sh --to v1.2.0
+```
+
+Backups are not finished until they have been restored. `infra/backup/backup.sh` takes them (daily,
+encrypted, with an off-host MinIO mirror and a retention policy), `infra/backup/verify.sh` checks
+weekly that the newest one restores at all, and `tools/backup/restore-drill.mjs` goes further every
+Sunday: it restores the newest backup into a **scratch** database and the MinIO mirror into a
+**scratch** bucket, then compares every table's row count against the manifest recorded at dump time,
+confirms the migration ledger and the RLS policies survived, and writes a dated report under
+`agentic/ledger/backups/`. Run it by hand any time:
+
+```bash
+node tools/backup/restore-drill.mjs          # exits non-zero if the newest backup is not trustworthy
+```
+
 ## Layout
 
 ```
