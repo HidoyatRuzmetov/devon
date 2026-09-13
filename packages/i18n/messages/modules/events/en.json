@@ -111,7 +111,9 @@
       "submitUpdate": "Save changes",
       "validation": {
         "endsBeforeStarts": "The end time must be after the start time"
-      }
+      },
+      "aiDraftCarpool": "Travel",
+      "aiDraftPickDate": "Which date shall we take?"
     },
     "diff": {
       "title": "What changed",
@@ -174,7 +176,8 @@
       "summaryFailed": "Could not summarize this discussion",
       "summaryAccept": "Insert into comment",
       "summaryEdit": "Insert to edit",
-      "summaryDiscard": "Discard"
+      "summaryDiscard": "Discard",
+      "viewerFallback": "You"
     },
     "carpool": {
       "title": "Carpooling",

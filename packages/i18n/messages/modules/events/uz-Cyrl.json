@@ -111,7 +111,9 @@
       "submitUpdate": "Ўзгаришларни сақлаш",
       "validation": {
         "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлиши керак"
-      }
+      },
+      "aiDraftCarpool": "Йўл-йўриқ",
+      "aiDraftPickDate": "Қайси санани оламиз?"
     },
     "diff": {
       "title": "Нималар ўзгарди",
@@ -174,7 +176,8 @@
       "summaryFailed": "Муҳокамани қисқача баён қилиб бўлмади",
       "summaryAccept": "Изоҳга қўшиш",
       "summaryEdit": "Қўшиб, таҳрирлаш",
-      "summaryDiscard": "Рад этиш"
+      "summaryDiscard": "Рад этиш",
+      "viewerFallback": "Сиз"
     },
     "carpool": {
       "title": "Бирга бориш",

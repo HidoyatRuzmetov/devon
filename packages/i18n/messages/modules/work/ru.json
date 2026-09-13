@@ -248,7 +248,11 @@
       "summarize": "Подвести итог через ИИ",
       "summarizePreviewTitle": "Итог от ИИ",
       "summarizeCitations": "На основе {count} комментариев",
-      "postSummary": "Опубликовать как комментарий"
+      "postSummary": "Опубликовать как комментарий",
+      "viewerYou": "Вы",
+      "draftReply": "Написать черновик ответа",
+      "draftReplyPreviewTitle": "Черновик ответа",
+      "useDraft": "Вставить в поле комментария"
     },
     "actions": {
       "create": "Новая задача"

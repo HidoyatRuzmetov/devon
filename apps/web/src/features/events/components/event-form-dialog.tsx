@@ -12,7 +12,6 @@
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import {
-  AiPreviewPanel,
   Button,
   Checkbox,
   Dialog,
@@ -27,7 +26,10 @@ import {
   toast,
 } from '@devon/ui'
 import { Check } from 'lucide-react'
-import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import { EventDraftPreview } from '../../ai/components/previews.js'
+import { parseFeatureOutput, type DraftEventOutput } from '../../ai/outputs.js'
 import { EVENT_CATEGORIES, type EventDto } from '../schemas.js'
 
 export type EventFormValues = {
@@ -137,39 +139,111 @@ function StepIndicator({
 /** The "Draft with AI" affordance: one line in, a full draft out. Create-mode only -- an existing
  * event already has real content, and re-drafting it from scratch is a different feature (not asked
  * for here) than starting one from nothing. */
+/**
+ * The event draft assistant (AI-AUDIT F6).
+ *
+ * v1.0 asked the model for a title, a description, a checklist, poll options and a carpool plan,
+ * rendered all five in the preview, and then applied two of them: `onApply({ title, description })`.
+ * A person who read an eight-item preparation list and pressed Accept got a title and a paragraph.
+ * That is the exact shape of "the AI feels random" (AI-AUDIT 0.2).
+ *
+ * v1.1 applies everything it shows. The form itself holds a title, a description, a place, a start
+ * and an end and a capacity, so those land in their own fields -- including the date option the
+ * person picked, which is new: the model proposes two to four, and choosing one is a click rather
+ * than retyping a datetime. The preparation checklist and the travel note have no field of their own
+ * in this dialog (checklists and carpools are created after the event exists), so they are appended
+ * to the description under their own headings rather than dropped -- visible, editable, and part of
+ * what the organiser is about to publish.
+ */
 function AiDraftAssistant({
   category,
   onApply,
 }: {
   category: string
-  onApply: (fields: { title: string; description: string }) => void
+  onApply: (fields: Partial<EventFormValues>) => void
 }) {
   const t = useT()
   const locale = useLocale()
   const [idea, setIdea] = React.useState('')
   const [open, setOpen] = React.useState(false)
+  const [chosenDate, setChosenDate] = React.useState(0)
   const runMutation = useRunAiFeatureMutation('draft_event')
+  const aiSettings = useAiSettingsQuery()
 
-  const draft =
-    runMutation.data && typeof runMutation.data.data === 'object' && runMutation.data.data
-      ? (runMutation.data.data as {
-          title: string
-          description: string
-          checklist: string[]
-          pollOptions: string[]
-          carpoolPlan: string
-        })
-      : undefined
+  const draft = runMutation.data
+    ? parseFeatureOutput<DraftEventOutput>('draft_event', runMutation.data.data)
+    : null
+
+  // AI-AUDIT fix 12, the same defect the event thread summary had: the entry point must be gated on
+  // the department's own flag and budget, not merely rendered and left to 403.
+  const aiEnabled =
+    aiSettings.data !== undefined &&
+    aiSettings.data.flags['draft_event'] === true &&
+    aiSettings.data.budgetStatus !== 'hard_stop'
 
   function handleRun() {
     if (!idea.trim()) return
     setOpen(true)
-    runMutation.mutate({ idea: idea.trim(), category, locale })
+    setChosenDate(0)
+    runMutation.mutate({
+      locale,
+      idea: idea.trim(),
+      category,
+      today: new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Tashkent',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date()),
+      departmentSize: 12,
+      recentEventTitles: [],
+    })
+  }
+
+  /** The description the form receives: the model's own paragraph, plus the two blocks that have no
+   * field of their own, each under a translated heading. */
+  function composeDescription(output: DraftEventOutput): string {
+    const blocks = [output.description]
+    if (output.checklist.length > 0) {
+      blocks.push(
+        `${t('events.form.aiDraftChecklist')}:\n` +
+          output.checklist.map((line) => `- ${line}`).join('\n'),
+      )
+    }
+    if (output.carpool.needed && output.carpool.note) {
+      blocks.push(`${t('events.form.aiDraftCarpool')}:\n${output.carpool.note}`)
+    }
+    return blocks.join('\n\n')
+  }
+
+  function fieldsFrom(output: DraftEventOutput): Partial<EventFormValues> {
+    const option = output.dateOptions[chosenDate] ?? output.dateOptions[0]
+    const fields: Partial<EventFormValues> = {
+      title: output.title,
+      description: composeDescription(output),
+      capacity: String(output.estimatedAttendees),
+    }
+    if (output.location) fields.place = output.location
+    if (option) {
+      // `datetime-local` wants a local wall-clock string, which is exactly what the model produced
+      // (a date and an HH:MM in the department's own timezone) -- no conversion, no drift.
+      const startsAt = `${option.date}T${option.startTime}`
+      const end = new Date(`${startsAt}:00`)
+      end.setMinutes(end.getMinutes() + option.durationMin)
+      const pad = (n: number) => String(n).padStart(2, '0')
+      fields.startsAt = startsAt
+      fields.endsAt = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`
+    }
+    return fields
   }
 
   function apply() {
-    if (draft) onApply({ title: draft.title, description: draft.description })
+    if (draft) onApply(fieldsFrom(draft))
     setOpen(false)
+  }
+
+  if (!aiEnabled) {
+    return null
   }
 
   return (
@@ -199,50 +273,49 @@ function AiDraftAssistant({
       </div>
 
       {open ? (
-        <AiPreviewPanel
+        <AiResultPanel
           title={t('events.form.aiDraftButton')}
           status={runMutation.isPending ? 'pending' : runMutation.isError ? 'error' : 'ready'}
-          pendingLabel={t('events.form.aiDraftPending')}
           errorMessage={t('events.form.aiDraftFailed')}
           acceptLabel={t('events.form.aiDraftAccept')}
           editLabel={t('events.form.aiDraftEdit')}
-          discardLabel={t('events.form.aiDraftDiscard')}
-          retryLabel={t('events.actions.retry')}
+          {...(runMutation.data ? { meta: runMutation.data.meta } : {})}
           onRetry={handleRun}
           onAccept={apply}
-          onEdit={apply}
+          // AI-AUDIT fix 11: v1.0 wired `onEdit` to the same `apply()` as `onAccept`, so the two
+          // buttons did the identical thing. Edit now fills the form and stays in the dialog with
+          // the panel open, which is what "edit this draft" means.
+          onEdit={() => {
+            if (draft) onApply(fieldsFrom(draft))
+          }}
           onDiscard={() => setOpen(false)}
-          {...(runMutation.data
-            ? { costLine: t('ai.result.tokens', { count: runMutation.data.meta.totalTokens }) }
-            : {})}
         >
           {draft ? (
-            <div className="flex flex-col gap-2">
-              <p className="font-medium text-foreground">{draft.title}</p>
-              <p className="whitespace-pre-wrap">{draft.description}</p>
-              {draft.checklist.length > 0 ? (
-                <div>
-                  <p className="text-caption font-medium text-muted-foreground">
-                    {t('events.form.aiDraftChecklist')}
-                  </p>
-                  <ul className="list-inside list-disc text-small text-muted-foreground">
-                    {draft.checklist.map((line, i) => (
-                      <li key={i}>{line}</li>
+            <div className="flex flex-col gap-3">
+              <EventDraftPreview output={draft} />
+              {draft.dateOptions.length > 1 ? (
+                <fieldset className="flex flex-col gap-1.5">
+                  <legend className="text-caption text-muted-foreground">
+                    {t('events.form.aiDraftPickDate')}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {draft.dateOptions.map((option, index) => (
+                      <Button
+                        key={`${option.date}-${option.startTime}`}
+                        type="button"
+                        size="sm"
+                        variant={index === chosenDate ? 'primary' : 'secondary'}
+                        onClick={() => setChosenDate(index)}
+                      >
+                        {option.label}
+                      </Button>
                     ))}
-                  </ul>
-                </div>
+                  </div>
+                </fieldset>
               ) : null}
-              {draft.pollOptions.length > 0 ? (
-                <p className="text-caption text-muted-foreground">
-                  {t('events.form.aiDraftPoll', { options: draft.pollOptions.join(', ') })}
-                </p>
-              ) : null}
-              <p className="text-caption text-muted-foreground">
-                {t('events.form.aiDraftFollowUp')}
-              </p>
             </div>
           ) : null}
-        </AiPreviewPanel>
+        </AiResultPanel>
       ) : null}
     </div>
   )
@@ -326,10 +399,7 @@ export function EventFormDialog({
               {!event ? (
                 <AiDraftAssistant
                   category={values.category}
-                  onApply={({ title, description }) => {
-                    set('title', title)
-                    set('description', description)
-                  }}
+                  onApply={(fields) => setValues((v) => ({ ...v, ...fields }))}
                 />
               ) : null}
 

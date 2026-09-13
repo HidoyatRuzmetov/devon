@@ -248,7 +248,11 @@
       "summarize": "AI bilan xulosalash",
       "summarizePreviewTitle": "AI xulosasi",
       "summarizeCitations": "{count} ta izoh asosida",
-      "postSummary": "Izoh sifatida joylash"
+      "postSummary": "Izoh sifatida joylash",
+      "viewerYou": "Siz",
+      "draftReply": "Javob loyihasini yozish",
+      "draftReplyPreviewTitle": "Javob loyihasi",
+      "useDraft": "Izoh maydoniga qoʻyish"
     },
     "actions": {
       "create": "Yangi vazifa"

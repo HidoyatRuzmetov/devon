@@ -248,7 +248,11 @@
       "summarize": "Summarise with AI",
       "summarizePreviewTitle": "AI summary",
       "summarizeCitations": "Based on {count} comment(s)",
-      "postSummary": "Post as a comment"
+      "postSummary": "Post as a comment",
+      "viewerYou": "You",
+      "draftReply": "Draft a reply",
+      "draftReplyPreviewTitle": "Reply draft",
+      "useDraft": "Put it in the comment box"
     },
     "actions": {
       "create": "New card"

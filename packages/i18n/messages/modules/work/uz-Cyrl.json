@@ -248,7 +248,11 @@
       "summarize": "AI билан хулосалаш",
       "summarizePreviewTitle": "AI хулосаси",
       "summarizeCitations": "{count} та изоҳ асосида",
-      "postSummary": "Изоҳ сифатида жойлаш"
+      "postSummary": "Изоҳ сифатида жойлаш",
+      "viewerYou": "Сиз",
+      "draftReply": "Жавоб лойиҳасини ёзиш",
+      "draftReplyPreviewTitle": "Жавоб лойиҳаси",
+      "useDraft": "Изоҳ майдонига қўйиш"
     },
     "actions": {
       "create": "Янги вазифа"
