@@ -214,6 +214,10 @@ services:
     environment:
       CENTRIFUGO_HTTP_SERVER_ADDRESS: "0.0.0.0" # container-internal bind; only the host port is published
       CENTRIFUGO_HTTP_API_INSECURE: "false"
+      # v6 ships `health.enabled: false`, so the healthcheck below answered 404 forever and the
+      # container never left "health: starting" -- which would have hung anything waiting on
+      # `condition: service_healthy` (verified against the pinned image's own `defaultconfig -d`).
+      CENTRIFUGO_HEALTH_ENABLED: "true"
       CENTRIFUGO_HTTP_API_KEY: ${CENTRIFUGO_API_KEY:-devon_local_dev_centrifugo_api_change_me}
       CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-devon_local_dev_centrifugo_change_me}
       # The browser connects same-origin in production (Caddy proxies /connection/*) and to

@@ -70,7 +70,40 @@ if (!existsSync(composeFile)) {
   fail('infra/docker-compose.yml not found yet -- this lands with the infra work item. `pnpm start` cannot boot Postgres/Valkey without it.')
 }
 const compose = (...a) => ['compose', '-f', 'infra/docker-compose.yml', ...a]
-run('docker', compose('up', '-d', 'postgres', 'valkey'), 'starting Postgres + Valkey (docker compose)')
+run(
+  'docker',
+  compose('up', '-d', 'postgres', 'valkey', 'centrifugo'),
+  'starting Postgres + Valkey + Centrifugo (docker compose)',
+)
+
+// --- 1b. realtime (v1.1 SPEC §10, EPIC-018) -------------------------------------------------
+//
+// Without these four variables `modules/realtime/config.ts` reports `enabled: false`, which is the
+// correct answer for a deployment that runs no broker -- but it is the wrong answer for `pnpm start`,
+// which has just started one. The board then renders its "Jonli rejim oʻchiq" pill forever and no
+// developer ever sees presence, live card moves or the editing indicator.
+//
+// Filled in only where the shell or `.env` has said nothing, so a real deployment's own values always
+// win. The two placeholder secrets are the same ones `infra/docker-compose.yml` already defaults the
+// container to -- they are local-development placeholders with `change_me` in the name, not secrets
+// (I-17), and a production boot sets all four in `.env` exactly as it sets `DATABASE_URL`.
+const CENTRIFUGO_PORT = process.env.CENTRIFUGO_PORT || '8000'
+const REALTIME_DEV_DEFAULTS = {
+  CENTRIFUGO_WS_URL: `ws://127.0.0.1:${CENTRIFUGO_PORT}/connection/websocket`,
+  CENTRIFUGO_API_URL: `http://127.0.0.1:${CENTRIFUGO_PORT}/api`,
+  CENTRIFUGO_API_KEY: 'devon_local_dev_centrifugo_api_change_me',
+  CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: 'devon_local_dev_centrifugo_change_me',
+}
+const filledRealtime = []
+for (const [key, value] of Object.entries(REALTIME_DEV_DEFAULTS)) {
+  if (!process.env[key]) {
+    process.env[key] = value
+    filledRealtime.push(key)
+  }
+}
+if (filledRealtime.length > 0) {
+  log(`realtime: using local development defaults for ${filledRealtime.join(', ')}`)
+}
 
 // --- 2. wait for readiness -------------------------------------------------
 async function waitFor(label, checkFn, timeoutMs = 60_000, intervalMs = 1000) {
@@ -80,12 +113,31 @@ async function waitFor(label, checkFn, timeoutMs = 60_000, intervalMs = 1000) {
     if (checkFn()) { log(`${label} is ready.`); return }
     await new Promise((res) => setTimeout(res, intervalMs))
   }
-  fail(`${label} did not become ready within ${timeoutMs / 1000}s.`)
+  // Rejects rather than exiting, so a caller that considers this service optional can `.catch()` it.
+  // Every caller that does not is still fatal: an unhandled rejection here ends the boot.
+  throw new Error(`${label} did not become ready within ${timeoutMs / 1000}s.`)
+}
+
+/** The two services nothing works without: a readable message and a clean exit, never a stack trace
+ * (this script's whole premise -- "a civil-servant-hostile stack trace should never be the first
+ * thing a new contributor sees"). */
+async function requireReady(label, checkFn, timeoutMs) {
+  try {
+    await waitFor(label, checkFn, timeoutMs)
+  } catch (err) {
+    fail(err instanceof Error ? err.message : String(err))
+  }
 }
 
 const pgUser = process.env.POSTGRES_APP_USER || 'devon_app'
-await waitFor('Postgres', () => check('docker', compose('exec', '-T', 'postgres', 'pg_isready', '-U', pgUser)).ok)
-await waitFor('Valkey', () => check('docker', compose('exec', '-T', 'valkey', 'valkey-cli', 'ping')).stdout === 'PONG')
+await requireReady('Postgres', () => check('docker', compose('exec', '-T', 'postgres', 'pg_isready', '-U', pgUser)).ok)
+await requireReady('Valkey', () => check('docker', compose('exec', '-T', 'valkey', 'valkey-cli', 'ping')).stdout === 'PONG')
+// Never fatal: a broker that will not start should cost the board its live pill, not the whole app.
+await waitFor(
+  'Centrifugo',
+  () => check('docker', compose('exec', '-T', 'centrifugo', 'wget', '-qO-', 'http://127.0.0.1:8000/health')).ok,
+  30_000,
+).catch(() => log('Centrifugo did not answer in time -- continuing with realtime off.'))
 
 // --- 3. apply migrations (the apply step of @devon/db migrate:verify) -----
 run('pnpm', ['--filter', '@devon/db', 'migrate:apply'], 'applying database migrations')
