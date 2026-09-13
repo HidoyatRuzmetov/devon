@@ -104,7 +104,6 @@ export function formatNumber(
   return new Intl.NumberFormat(locale, options).format(n)
 }
 
-
 /** Full month names, January-first, capitalised for standalone display ("Sentabr 2026", a section
  * header or a calendar title). Not delegated to `Intl.DateTimeFormat(locale, { month: 'long' })`:
  * verified against a real embedded-Chromium build that ships reduced CLDR data for `uz-Latn` --

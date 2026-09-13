@@ -179,7 +179,10 @@ function CommandPaletteBody({
                             {item.badge}
                           </span>
                         ) : null}
-                        <span data-shell-label className="min-w-0 flex-1 truncate">
+                        {/* No `truncate`: design.md §3.5 forbids ellipsis in the shell, and the
+                            `devon/no-shell-truncate` lint rule enforces it here. A long row label
+                            wraps, which is what that rule asks for. */}
+                        <span data-shell-label className="min-w-0 flex-1">
                           {item.label}
                         </span>
                       </span>

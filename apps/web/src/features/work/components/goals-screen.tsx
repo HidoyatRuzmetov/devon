@@ -80,7 +80,9 @@ export function GoalCard({
         <Target className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-body font-medium text-foreground">{goal.title}</h3>
-          <p className="text-caption text-muted-foreground">{t(GOAL_METRIC_LABEL_KEYS[goal.metric])}</p>
+          <p className="text-caption text-muted-foreground">
+            {t(GOAL_METRIC_LABEL_KEYS[goal.metric])}
+          </p>
         </div>
         {canManage ? (
           <IconButton

@@ -102,7 +102,7 @@ const THEMES = ['light', 'dark']
 // -- "always in their own language, never translated", so these never change with the active locale).
 const LOCALES = ['uz-Latn', 'ru']
 const LOCALE_ARIA_LABEL = { 'uz-Latn': 'Interfeys tili', ru: 'Язык интерфейса' }
-const LOCALE_AUTONYM = { 'uz-Latn': "Oʻzbekcha (lotin)", ru: 'Русский' }
+const LOCALE_AUTONYM = { 'uz-Latn': 'Oʻzbekcha (lotin)', ru: 'Русский' }
 
 /** Two clicks, exactly as design.md §4.3/AC-4 describes it: open the trigger (found by its current
  * accessible name -- `fromLocale`, the locale this page is already rendering in), then the target
@@ -114,7 +114,9 @@ async function switchLocale(page, fromLocale, toLocale) {
   const trigger = page.getByRole('button', { name: LOCALE_ARIA_LABEL[fromLocale], exact: true })
   await trigger.click()
   await page.getByRole('menuitemradio', { name: LOCALE_AUTONYM[toLocale], exact: true }).click()
-  await page.getByRole('button', { name: LOCALE_ARIA_LABEL[toLocale], exact: true }).waitFor({ timeout: 5_000 })
+  await page
+    .getByRole('button', { name: LOCALE_ARIA_LABEL[toLocale], exact: true })
+    .waitFor({ timeout: 5_000 })
 }
 
 async function loadRoutes() {
@@ -128,7 +130,10 @@ async function loadRoutes() {
  * context. Factored out of `main()` so a session can be run once per credential (head, super admin)
  * per size/theme/locale cell without duplicating the sign-in/locale/capture/restore choreography.
  */
-async function captureSession(browser, { credentials, role, routesForSession, size, theme, locale, failures }) {
+async function captureSession(
+  browser,
+  { credentials, role, routesForSession, size, theme, locale, failures },
+) {
   if (routesForSession.length === 0) return
 
   const context = await browser.newContext({

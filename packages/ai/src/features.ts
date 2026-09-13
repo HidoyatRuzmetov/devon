@@ -109,9 +109,12 @@ export async function runFeature<T = unknown>(
   const input = parsedInput.data as { locale: Locale }
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: `${spec.systemPrompt(input)}
+    {
+      role: 'system',
+      content: `${spec.systemPrompt(input)}
 
-${CALL_ONCE_RULE}` },
+${CALL_ONCE_RULE}`,
+    },
     ...(options.priorMessages ?? []),
     { role: 'user', content: spec.buildUserContent(input) },
   ]

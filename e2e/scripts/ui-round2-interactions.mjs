@@ -44,7 +44,10 @@ async function main() {
   const browser = await chromium.launch()
 
   // ---- desktop, light ----
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' })
+  const ctx = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: 'light',
+  })
   await ctx.addInitScript(() => {
     try {
       window.localStorage.setItem('devon_theme', 'light')
@@ -56,7 +59,10 @@ async function main() {
   try {
     await page.goto(`${BASE}/work`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(1200)
-    const card = page.locator('[data-testid="card-tile"], article, [role="button"]').filter({ hasText: 'Oylik hisobotni tayyorlash' }).first()
+    const card = page
+      .locator('[data-testid="card-tile"], article, [role="button"]')
+      .filter({ hasText: 'Oylik hisobotni tayyorlash' })
+      .first()
     await card.click({ timeout: 8000 })
     await page.waitForTimeout(900)
     await shot(page, 'card-detail__1440__light')
@@ -68,11 +74,20 @@ async function main() {
         .map((x) => ({
           tag: x.el.tagName,
           cls: String(x.el.className).slice(0, 120),
-          rect: [Math.round(x.r.x), Math.round(x.r.y), Math.round(x.r.width), Math.round(x.r.height)],
+          rect: [
+            Math.round(x.r.x),
+            Math.round(x.r.y),
+            Math.round(x.r.width),
+            Math.round(x.r.height),
+          ],
           bg: x.cs.backgroundColor,
           z: x.cs.zIndex,
         }))
-      return { found, scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth }
+      return {
+        found,
+        scrollWidth: document.documentElement.scrollWidth,
+        innerWidth: window.innerWidth,
+      }
     })
     note(`card-detail fixed layers: ${JSON.stringify(overlay)}`)
     await page.keyboard.press('Escape')
@@ -123,7 +138,9 @@ async function main() {
     await person.hover()
     await page.waitForTimeout(1200)
     await shot(page, 'people-hovercard__1440__light')
-    const hc = await page.evaluate(() => document.querySelectorAll('[data-radix-popper-content-wrapper]').length)
+    const hc = await page.evaluate(
+      () => document.querySelectorAll('[data-radix-popper-content-wrapper]').length,
+    )
     note(`people hovercard popper count: ${hc}`)
   } catch (e) {
     note(`hovercard FAILED: ${String(e).slice(0, 200)}`)
@@ -167,7 +184,9 @@ async function main() {
   try {
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(900)
-    const themeBtn = page.locator('header button, [role="banner"] button').filter({ has: page.locator('svg') })
+    const themeBtn = page
+      .locator('header button, [role="banner"] button')
+      .filter({ has: page.locator('svg') })
     const vt = await page.evaluate(() => typeof document.startViewTransition === 'function')
     note(`startViewTransition available: ${vt}`)
     const toggle = page.getByRole('button', { name: /mavzu|тема|theme|Yorug|Tund/i }).first()
@@ -183,7 +202,12 @@ async function main() {
   await ctx.close()
 
   // ---- 390: toast over the bottom tab bar ----
-  const m = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: 'light', hasTouch: true, isMobile: true })
+  const m = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    colorScheme: 'light',
+    hasTouch: true,
+    isMobile: true,
+  })
   await m.addInitScript(() => {
     try {
       window.localStorage.setItem('devon_theme', 'light')
@@ -200,8 +224,22 @@ async function main() {
     const geom = await mp.evaluate(() => {
       const toast = document.querySelector('[data-sonner-toaster]')
       const bar = document.querySelector('nav[class*="fixed"], [data-testid="bottom-tab-bar"]')
-      const g = (el) => (el ? (({ x, y, width, height }) => ({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) }))(el.getBoundingClientRect()) : null)
-      return { toast: g(toast), toastStyle: toast ? { bottom: getComputedStyle(toast).bottom, offset: toast.style.cssText.slice(0, 200) } : null, bar: g(bar) }
+      const g = (el) =>
+        el
+          ? (({ x, y, width, height }) => ({
+              x: Math.round(x),
+              y: Math.round(y),
+              width: Math.round(width),
+              height: Math.round(height),
+            }))(el.getBoundingClientRect())
+          : null
+      return {
+        toast: g(toast),
+        toastStyle: toast
+          ? { bottom: getComputedStyle(toast).bottom, offset: toast.style.cssText.slice(0, 200) }
+          : null,
+        bar: g(bar),
+      }
     })
     note(`mobile toast geometry: ${JSON.stringify(geom)}`)
     // celebration check: does the row survive long enough to animate?
@@ -213,7 +251,11 @@ async function main() {
   await m.close()
 
   // ---- reduced motion ----
-  const r = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', reducedMotion: 'reduce' })
+  const r = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    colorScheme: 'light',
+    reducedMotion: 'reduce',
+  })
   try {
     const rp = await signIn(r)
     await rp.goto(`${BASE}/work`, { waitUntil: 'networkidle' })

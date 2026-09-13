@@ -187,9 +187,7 @@ export function useNavCan(): (action: string) => boolean {
 
   return React.useCallback(
     (action: string) =>
-      isAppActionId(action)
-        ? canAction(actor, action, { departmentId, settings }).allowed
-        : false,
+      isAppActionId(action) ? canAction(actor, action, { departmentId, settings }).allowed : false,
     [actor, departmentId, settings],
   )
 }

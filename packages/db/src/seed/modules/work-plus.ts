@@ -330,7 +330,10 @@ function groupByUser<T extends { userId: string }>(rows: readonly T[]): Map<stri
 
 /** `count` of an `insert ... on conflict do nothing ... returning id` -- the number of rows this run
  * actually wrote, which is what `runSeedDemo` sums. */
-async function insertCount(ctx: SeedModuleContext, statement: ReturnType<typeof sql>): Promise<number> {
+async function insertCount(
+  ctx: SeedModuleContext,
+  statement: ReturnType<typeof sql>,
+): Promise<number> {
   const rows = await ctx.tx.raw<{ id: string }>(statement)
   return rows.length
 }

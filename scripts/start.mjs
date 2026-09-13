@@ -18,7 +18,10 @@ import { dirname, join } from 'node:path'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url))) // scripts/.. == repo root
 const log = (msg) => console.log(`[start] ${msg}`)
-const fail = (msg, code = 1) => { console.error(`[start] ERROR: ${msg}`); process.exit(code) }
+const fail = (msg, code = 1) => {
+  console.error(`[start] ERROR: ${msg}`)
+  process.exit(code)
+}
 
 // Windows needs shell:true to resolve .cmd/.ps1 shims (pnpm, docker CLI plugins). Node's
 // spawn(sync) warns (DEP0190) if shell:true is combined with a separate args array, because the
@@ -40,7 +43,10 @@ function loadDotEnv() {
     if (i === -1) continue
     const key = t.slice(0, i).trim()
     let value = t.slice(i + 1).trim()
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1)
     }
     if (process.env[key] === undefined) process.env[key] = value
@@ -55,7 +61,8 @@ function run(cmd, cmdArgs, label) {
   log(`${label} ...`)
   const [c, a] = spawnArgs(cmd, cmdArgs)
   const r = spawnSync(c, a, { stdio: 'inherit', shell: isWin, cwd: root, env: process.env })
-  if (r.status !== 0) fail(`${label} failed (exit ${r.status ?? 'signal ' + r.signal}).`, r.status || 1)
+  if (r.status !== 0)
+    fail(`${label} failed (exit ${r.status ?? 'signal ' + r.signal}).`, r.status || 1)
 }
 
 function check(cmd, cmdArgs) {
@@ -67,7 +74,9 @@ function check(cmd, cmdArgs) {
 // --- 1. Postgres + Valkey via infra/docker-compose.yml (W8) ---------------
 const composeFile = join(root, 'infra', 'docker-compose.yml')
 if (!existsSync(composeFile)) {
-  fail('infra/docker-compose.yml not found yet -- this lands with the infra work item. `pnpm start` cannot boot Postgres/Valkey without it.')
+  fail(
+    'infra/docker-compose.yml not found yet -- this lands with the infra work item. `pnpm start` cannot boot Postgres/Valkey without it.',
+  )
 }
 const compose = (...a) => ['compose', '-f', 'infra/docker-compose.yml', ...a]
 run(
@@ -110,7 +119,10 @@ async function waitFor(label, checkFn, timeoutMs = 60_000, intervalMs = 1000) {
   const started = Date.now()
   log(`waiting for ${label} ...`)
   while (Date.now() - started < timeoutMs) {
-    if (checkFn()) { log(`${label} is ready.`); return }
+    if (checkFn()) {
+      log(`${label} is ready.`)
+      return
+    }
     await new Promise((res) => setTimeout(res, intervalMs))
   }
   // Rejects rather than exiting, so a caller that considers this service optional can `.catch()` it.
@@ -130,12 +142,22 @@ async function requireReady(label, checkFn, timeoutMs) {
 }
 
 const pgUser = process.env.POSTGRES_APP_USER || 'devon_app'
-await requireReady('Postgres', () => check('docker', compose('exec', '-T', 'postgres', 'pg_isready', '-U', pgUser)).ok)
-await requireReady('Valkey', () => check('docker', compose('exec', '-T', 'valkey', 'valkey-cli', 'ping')).stdout === 'PONG')
+await requireReady(
+  'Postgres',
+  () => check('docker', compose('exec', '-T', 'postgres', 'pg_isready', '-U', pgUser)).ok,
+)
+await requireReady(
+  'Valkey',
+  () => check('docker', compose('exec', '-T', 'valkey', 'valkey-cli', 'ping')).stdout === 'PONG',
+)
 // Never fatal: a broker that will not start should cost the board its live pill, not the whole app.
 await waitFor(
   'Centrifugo',
-  () => check('docker', compose('exec', '-T', 'centrifugo', 'wget', '-qO-', 'http://127.0.0.1:8000/health')).ok,
+  () =>
+    check(
+      'docker',
+      compose('exec', '-T', 'centrifugo', 'wget', '-qO-', 'http://127.0.0.1:8000/health'),
+    ).ok,
   30_000,
 ).catch(() => log('Centrifugo did not answer in time -- continuing with realtime off.'))
 
@@ -148,15 +170,30 @@ if (demo) {
 }
 
 // --- 5. start api + web (turbo, persistent dev tasks) ----------------------
-log(`starting api + web${demo ? ' (demo tenant seeded -- look for the "Namoyish/Demo" chip in the header)' : ''} ...`)
+log(
+  `starting api + web${demo ? ' (demo tenant seeded -- look for the "Namoyish/Demo" chip in the header)' : ''} ...`,
+)
 // --env-mode=loose: turbo 2's default is `strict`, which filters every spawned task's environment
 // down to the `env`/`globalEnv` allowlist in turbo.json -- and this repo has no such allowlist (env
 // vars are centralised in `.env`, loaded above by `loadDotEnv()`, not hand-mirrored per task). Without
 // this flag apps/api boots with DATABASE_URL/CSRF_SECRET (and every other .env value) undefined,
 // because turbo silently strips them before the child process ever starts (found running `pnpm start`
 // end-to-end, 2026-09).
-const turboArgs = ['exec', 'turbo', 'run', 'dev', '--env-mode=loose', '--filter=@devon/api', '--filter=@devon/web']
+const turboArgs = [
+  'exec',
+  'turbo',
+  'run',
+  'dev',
+  '--env-mode=loose',
+  '--filter=@devon/api',
+  '--filter=@devon/web',
+]
 const [devCmd, devArgs] = spawnArgs('pnpm', turboArgs)
-const child = spawn(devCmd, devArgs, { stdio: 'inherit', shell: isWin, cwd: root, env: process.env })
+const child = spawn(devCmd, devArgs, {
+  stdio: 'inherit',
+  shell: isWin,
+  cwd: root,
+  env: process.env,
+})
 child.on('exit', (code) => process.exit(code ?? 0))
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => child.kill(sig))

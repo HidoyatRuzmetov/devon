@@ -215,7 +215,10 @@ export function CommandPaletteController({
   // query; cmdk keeps filtering every other group exactly as before.
   const [query, setQuery] = React.useState('')
   const debouncedQuery = useDebounced(query, SEARCH_DEBOUNCE_MS)
-  const searchQuery = useDepartmentSearchQuery(open && departmentId ? debouncedQuery : '', SOURCE_LIMIT)
+  const searchQuery = useDepartmentSearchQuery(
+    open && departmentId ? debouncedQuery : '',
+    SOURCE_LIMIT,
+  )
 
   React.useEffect(() => {
     if (!open) setQuery('')

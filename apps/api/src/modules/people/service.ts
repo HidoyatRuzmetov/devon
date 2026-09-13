@@ -182,8 +182,7 @@ async function compute(
         // are "how full is this week", which is why they are one column and not two.
         const estimatedCards = cards.estimatedCardsOpen.get(userId) ?? 0
         const estimatedHours = cards.estimatedHoursOpen.get(userId) ?? 0
-        const capacityHours =
-          cards.weeklyCapacityHours.get(userId) ?? DEFAULT_WEEKLY_CAPACITY_HOURS
+        const capacityHours = cards.weeklyCapacityHours.get(userId) ?? DEFAULT_WEEKLY_CAPACITY_HOURS
         set('workloadHours', estimatedCards > 0 ? Math.round(estimatedHours * 10) / 10 : null)
         set(
           'workloadPct',
