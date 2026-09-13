@@ -30,12 +30,12 @@ const manifest: FeatureManifest = {
       action: 'fields.definition.manage',
     },
   ],
+  // Only the *member* half needs a palette entry of its own. `/fields` already reaches the palette
+  // through its sidebar entry above, which carries the head-only action id -- a second, ungated
+  // command for the same route would be the one way a xodim could be offered a destination the
+  // sidebar just hid (`command-palette-controller.tsx` drops a command that repeats a nav route, so
+  // this is also simply redundant today).
   commands: [
-    {
-      id: 'fields.manager.open',
-      labelKey: 'fields.manager.nav',
-      path: '/fields',
-    },
     {
       id: 'fields.my.open',
       labelKey: 'fields.my.title',
