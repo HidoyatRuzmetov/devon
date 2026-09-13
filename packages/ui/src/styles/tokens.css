@@ -530,3 +530,46 @@
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------------------------------------
+   v1.1 critique SEV1 #5 -- the sidebar's own scroller.
+
+   At 1440x900 the nav held 968 px of content in 683 px of space, so the head's three newest
+   destinations (Maydonlar, Qoidalar, Boʻlim sozlamalari) sat below the fold with no fade, no
+   chevron and no affordance at all. The only hint was the browser's own light-grey scrollbar,
+   rendered on a near-black sidebar, which is off-token and glaring in dark.
+
+   Two rules. The scrollbar is drawn in sidebar tokens in both themes (Firefox via
+   `scrollbar-color`, Chromium/WebKit via `::-webkit-scrollbar`), and it only appears while the
+   pointer is over the nav or a child has focus -- a permanent bar on a 264 px column is noise.
+   The fade itself is a real element in `sidebar.tsx`, not a mask, so it never clips a focus ring.
+   ------------------------------------------------------------------------------------------------ */
+.devon-nav-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color var(--dur-standard) var(--ease-standard);
+}
+.devon-nav-scroller:hover,
+.devon-nav-scroller:focus-within {
+  scrollbar-color: var(--color-sidebar-accent) transparent;
+}
+.devon-nav-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+.devon-nav-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+.devon-nav-scroller::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color var(--dur-standard) var(--ease-standard);
+}
+.devon-nav-scroller:hover::-webkit-scrollbar-thumb,
+.devon-nav-scroller:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--color-sidebar-accent);
+}
+.devon-nav-scroller:hover::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-sidebar-muted);
+}

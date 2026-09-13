@@ -34,6 +34,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
+  cn,
   toast,
   useCelebrate,
   useReducedMotion,
@@ -237,12 +238,30 @@ function HelpersTab() {
   const patchMutation = usePatchAiSettingsMutation()
   const isHead = department?.role === 'head'
 
+  // v1.1 critique SEV2 #22. This was `<input type="number">`, which the browser exposes as a
+  // spinbutton -- and with only `min={0}` set, assistive tech read `aria-valuemin="0"
+  // aria-valuemax="0"` while the field held 2000000, an out-of-range announcement some screen
+  // readers refuse input on entirely. It also showed the raw digits `2000000` one row under a
+  // summary line reading `2 000 000 soʻm`, so the same number was formatted two ways in one card,
+  // against DESIGN.md §5's locale-separator rule.
+  //
+  // A formatted text input with `inputMode="numeric"` is the fix: no spinbutton role, no broken
+  // range, the locale's own group separator applied on blur, and the soʻm suffix inside the field
+  // where the number is, not in a caption beside it. The field holds digits while it has focus (a
+  // separator under the caret is hostile to typing) and formats the moment it loses focus.
   const [budgetInput, setBudgetInput] = React.useState('')
+  const [budgetFocused, setBudgetFocused] = React.useState(false)
   React.useEffect(() => {
     if (settingsQuery.data?.budgetUzsPerMonth !== undefined) {
-      setBudgetInput(String(settingsQuery.data.budgetUzsPerMonth))
+      setBudgetInput(formatNumber(settingsQuery.data.budgetUzsPerMonth, locale))
     }
-  }, [settingsQuery.data])
+  }, [settingsQuery.data, locale])
+
+  /** Digits only: every separator this app or a paste could produce (space, NBSP, narrow NBSP,
+   * comma, apostrophe) is stripped before the number is read. */
+  function budgetDigits(raw: string): string {
+    return raw.replace(/[^0-9]/g, '')
+  }
 
   // round2 SEV3 "toggling a flag gives only the Switch's own motion, no row acknowledgement": a
   // per-row token, bumped once the patch actually lands (not on click, since a head's toggle can
@@ -275,7 +294,8 @@ function HelpersTab() {
   }
 
   function saveBudget() {
-    const value = Number(budgetInput)
+    const digits = budgetDigits(budgetInput)
+    const value = digits.length > 0 ? Number(digits) : Number.NaN
     if (!Number.isFinite(value) || value < 0) {
       toast(t('ai.budget.invalidAmount'))
       return
@@ -318,14 +338,49 @@ function HelpersTab() {
             <label htmlFor="ai-budget-input" className="text-small font-medium text-foreground">
               {t('ai.budget.editLabel')}
             </label>
-            <input
-              id="ai-budget-input"
-              type="number"
-              min={0}
-              value={budgetInput}
-              onChange={(e) => setBudgetInput(e.target.value)}
-              className="h-11 w-48 rounded-sm border border-border bg-card px-3 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            />
+            <div className="relative w-56">
+              <input
+                id="ai-budget-input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                enterKeyHint="done"
+                value={budgetInput}
+                aria-describedby="ai-budget-suffix"
+                onFocus={() => {
+                  setBudgetFocused(true)
+                  setBudgetInput((raw) => budgetDigits(raw))
+                }}
+                onBlur={() => {
+                  setBudgetFocused(false)
+                  setBudgetInput((raw) => {
+                    const digits = budgetDigits(raw)
+                    return digits.length > 0 ? formatNumber(Number(digits), locale) : ''
+                  })
+                }}
+                onChange={(e) => setBudgetInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.currentTarget.blur()
+                    saveBudget()
+                  }
+                }}
+                className="h-11 w-full rounded-sm border border-border bg-card py-0 pl-3 pr-16 text-body tabular-nums text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              {/* The unit lives inside the field, so the number and what it is measured in are one
+                  object. It is a description rather than a label, so a screen reader hears
+                  "Oylik byudjet ... soʻm" and not two competing names. */}
+              <span
+                id="ai-budget-suffix"
+                className={cn(
+                  'pointer-events-none absolute inset-y-0 right-3 flex items-center text-small',
+                  budgetFocused ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              >
+                {t('ai.budget.currency')}
+              </span>
+            </div>
           </div>
           <Button onClick={saveBudget} loading={patchMutation.isPending}>
             {t('ai.budget.save')}
@@ -341,6 +396,7 @@ function HelpersTab() {
         <Stagger as="ul" className="flex flex-col divide-y divide-border">
           {visibleFeatures.map((feature) => {
             const spend = settings.spendByFeature?.[feature]
+            const perCall = settings.estimatedCostUzsPerCall?.[feature]
             return (
               <StaggerItem
                 as="li"
@@ -387,11 +443,24 @@ function HelpersTab() {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-3">
-                  {spend !== undefined && spend > 0 ? (
-                    <span className="text-caption tabular-nums text-muted-foreground">
-                      {formatUzs(spend, locale)}
-                    </span>
-                  ) : null}
+                  {/* SEV3 #30. This used to render `spendByFeature` alone -- month-to-date spend
+                      with no unit -- so five of the thirteen helpers showed nothing at all (nobody
+                      had run them) and the other eight showed a bare figure that could have meant
+                      per call, per month or an average. Two different facts, both labelled:
+                      the estimated price of asking once, always present; and what this department
+                      has actually spent this month, when there is any. */}
+                  <div className="flex flex-col items-end gap-0.5 text-caption tabular-nums text-muted-foreground">
+                    {perCall !== undefined && perCall > 0 ? (
+                      <span title={t('ai.catalogue.costEstimated')}>
+                        {t('ai.catalogue.costPerCall', { cost: formatUzs(perCall, locale) })}
+                      </span>
+                    ) : null}
+                    {spend !== undefined && spend > 0 ? (
+                      <span className="text-foreground">
+                        {t('ai.flags.spentThisMonth', { cost: formatUzs(spend, locale) })}
+                      </span>
+                    ) : null}
+                  </div>
                   <Switch
                     id={`flag-${feature}`}
                     checked={settings.flags[feature] === true}

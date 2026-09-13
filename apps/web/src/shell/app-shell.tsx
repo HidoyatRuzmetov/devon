@@ -50,9 +50,19 @@ import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.j
 import { useMediaQuery } from '../lib/use-media-query.js'
 import { useThemePreference, setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { navigate, RouterLink, useRoutePath } from '../lib/router.js'
-import { WORDMARK, SIDEBAR_COLLAPSED_STORAGE_KEY } from '../lib/constants.js'
+import {
+  WORDMARK,
+  SIDEBAR_COLLAPSED_STORAGE_KEY,
+  SIDEBAR_GROUPS_STORAGE_KEY,
+} from '../lib/constants.js'
 import { getFeatureQuickAddEntries, useFeatureSidebarCounts } from '../features/registry.js'
-import { MOBILE_TAB_SHORT_LABEL_KEYS, NAV_ENTRIES, NAV_GROUPS, mobileTabEntries } from './nav.js'
+import {
+  DEFAULT_COLLAPSED_GROUPS_HEAD,
+  MOBILE_TAB_SHORT_LABEL_KEYS,
+  NAV_ENTRIES,
+  NAV_GROUPS,
+  mobileTabEntries,
+} from './nav.js'
 import { CommandPaletteController } from './command-palette-controller.js'
 import { PaletteProvider } from './palette-context.js'
 import { useShellShortcuts } from './use-shell-shortcuts.js'
@@ -64,6 +74,20 @@ function readCollapsed(): boolean {
     return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === '1'
   } catch {
     return false
+  }
+}
+
+/** SEV1 #5: `null` means "this person has never expressed a preference", which is what lets the
+ * head's first-run default apply without ever overriding a choice they did make. */
+function readCollapsedGroups(): string[] | null {
+  try {
+    const raw = window.localStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY)
+    if (raw === null) return null
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return null
+    return parsed.filter((id): id is string => typeof id === 'string')
+  } catch {
+    return null
   }
 }
 
@@ -84,6 +108,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(readCollapsed)
+  const [collapsedGroups, setCollapsedGroups] = React.useState<string[] | null>(readCollapsedGroups)
   const [paletteOpen, setPaletteOpen] = React.useState(false)
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
 
@@ -128,6 +153,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
   const visibleEntries = resolveNavEntries(NAV_ENTRIES, navCtx)
   const inboxCount = counts['inbox'] ?? 0
+
+  // SEV1 #5. A head's nav has six groups where a xodim's has four, which is exactly the 285 px of
+  // overflow the CTO hit at 1440x900. A head therefore starts with the three working groups folded
+  // (a folded group still shows the row you are standing on); a xodim starts with nothing folded.
+  // The moment anyone toggles a group their own set is persisted and this default is never
+  // consulted again.
+  const effectiveCollapsedGroups =
+    collapsedGroups ?? (department?.role === 'head' ? DEFAULT_COLLAPSED_GROUPS_HEAD : [])
+
+  function toggleNavGroup(groupId: string): void {
+    setCollapsedGroups((prev) => {
+      const current =
+        prev ?? (department?.role === 'head' ? [...DEFAULT_COLLAPSED_GROUPS_HEAD] : [])
+      const next = current.includes(groupId)
+        ? current.filter((id) => id !== groupId)
+        : [...current, groupId]
+      try {
+        window.localStorage.setItem(SIDEBAR_GROUPS_STORAGE_KEY, JSON.stringify(next))
+      } catch {
+        // A private window with site data blocked still gets a working sidebar -- it just does not
+        // remember the fold between visits.
+      }
+      return next
+    })
+  }
 
   // TECH-SPEC §11 "pause switch": every page renders the maintenance message except the super
   // admin's own console (`/admin*`) and login/setup, which never reach `AppShell` at all
@@ -211,6 +261,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       wordmark={WORDMARK}
       creditText={t('shell.credit')}
       collapsed={isDesktop ? collapsed : false}
+      collapsedGroupIds={effectiveCollapsedGroups}
+      onToggleGroup={toggleNavGroup}
       header={
         memberships.length > 0 ? (
           <DepartmentSwitcher

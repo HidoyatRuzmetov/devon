@@ -141,6 +141,13 @@ export const aiSettingsSchema = z.object({
   // expensive helper instead of switching off AI. Absent (not empty) for a member, same rule as the
   // four money fields above.
   spendByFeature: z.record(z.string(), z.number().int().min(0)).optional(),
+  /** v1.1 critique SEV3 #30: the estimated cost of ONE call of each helper, in soʻm, derived from
+   * that helper's own prompt and tool schema (`@devon/ai`'s `estimatedCostUzsPerCall`). Distinct
+   * from `spendByFeature`, which is what the department has actually spent this month -- a helper
+   * nobody has run yet has a price but no spend, which is exactly the case that used to render as a
+   * blank. Visible to everyone: "what does this cost to ask" is not a money secret, it is the
+   * catalogue's own description of the tool. */
+  estimatedCostUzsPerCall: z.record(z.string(), z.number().int().min(0)),
   // v1.1 SPEC §8 "Honesty": is a real key configured at all? Everyone sees this -- a member pressing
   // a sparkle button deserves to know the answer is simulated before they trust it.
   simulated: z.boolean(),

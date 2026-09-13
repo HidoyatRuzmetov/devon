@@ -38,7 +38,7 @@
       "collapseAllColumns": "Collapse every column"
     },
     "quickAdd": {
-      "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
+      "placeholder": "Quick add: \"Nodira: prepare the monthly report by friday\"",
       "created": "\"{title}\" created",
       "error": "Could not create the card",
       "unknownAssignee": "No member matches \"{name}\"",

@@ -65,20 +65,28 @@ export const NAV_ENTRIES: readonly NavEntry[] = requireDepartmentFor([
 export const NAV_GROUPS: readonly NavGroup[] = [
   // No heading: the top of a sidebar never needs one to be understood.
   { id: 'top', entryIds: ['home', 'inbox'] },
+  // v1.1 critique SEV1 #5: every labelled group folds. At 1440x900 the head's nav is 968 px of
+  // content in 683 px of space, so BOSHQARUV was cut at "Maqsadlar" (at "Цели" in Russian) and the
+  // head's three newest destinations sat below the fold with no affordance at all. Folding is the
+  // fix a person can apply themselves; `DEFAULT_COLLAPSED_GROUPS_HEAD` below is the fix that is
+  // already applied the first time they sign in.
   {
     id: 'work',
     labelKey: 'shell.nav.group.work',
     entryIds: ['work', 'projects', 'personal'],
+    collapsible: true,
   },
   {
     id: 'team',
     labelKey: 'shell.nav.group.team',
     entryIds: ['events', 'people', 'structure'],
+    collapsible: true,
   },
   {
     id: 'knowledge',
     labelKey: 'shell.nav.group.knowledge',
     entryIds: ['pages', 'analytics', 'ai'],
+    collapsible: true,
   },
   /**
    * v1.1 SPEC §3.1 -- **Boshqaruv**: the boshqarma boshlig'i's half of the product. This is the
@@ -96,13 +104,27 @@ export const NAV_GROUPS: readonly NavGroup[] = [
     id: 'manage-head',
     labelKey: 'shell.nav.group.manageHead',
     entryIds: ['people-table', 'workload', 'goals', 'fields', 'automations', 'department-settings'],
+    collapsible: true,
   },
   {
     id: 'manage',
     labelKey: 'shell.nav.group.manage',
     entryIds: ['departments', 'department-requests', 'account-settings', 'admin'],
+    collapsible: true,
   },
 ]
+
+/**
+ * v1.1 critique SEV1 #5. A xodim's nav has four groups and fits; a boshqarma boshligʻi's has six
+ * and does not. So the head starts with the three *working* groups folded and Boshqaruv open --
+ * which is the same statement SPEC §3 makes about the product ("the head's home is for management,
+ * the member's home is for working"), applied to the nav. A folded group still shows the row you
+ * are standing on, so a head who is on the board sees Vazifalar in ISH regardless.
+ *
+ * This is only the first-run default: the moment anyone toggles a group the whole set is persisted
+ * per user and this is never consulted again.
+ */
+export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['work', 'team', 'knowledge']
 
 /** The five areas the bottom tab bar carries at 390 px (UI-OVERHAUL.md §2: "bottom tab bar for the
  * five most used areas"). Everything else stays one tap away behind ☰, which opens the full sidebar

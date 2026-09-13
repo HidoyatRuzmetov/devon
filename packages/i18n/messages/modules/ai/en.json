@@ -34,14 +34,16 @@
       "resetToast": "The monthly AI budget has reset",
       "editLabel": "Monthly budget (UZS)",
       "save": "Save the budget",
-      "invalidAmount": "Enter a valid amount"
+      "invalidAmount": "Enter a valid amount",
+      "currency": "UZS"
     },
     "flags": {
       "title": "Helpers",
       "description": "Read what each helper does and switch on the ones this department needs. Every one is off until you switch it on.",
       "headOnly": "Only the head of the department can change these.",
       "headOnlyBadge": "Head only",
-      "whereLabel": "Where:"
+      "whereLabel": "Where:",
+      "spentThisMonth": "This month: {cost}"
     },
     "usage": {
       "empty": {
@@ -81,7 +83,7 @@
     },
     "ask": {
       "label": "Ask the department's own records",
-      "placeholder": "For example: who is preparing the EGDI package?",
+      "placeholder": "For example: who is preparing the monthly report?",
       "submit": "Ask",
       "hint": "The answer comes only from this department's cards, comments, pages and events. Every answer carries a link to its source.",
       "answerTitle": "Answer: {question}",
@@ -264,7 +266,7 @@
         "label": "Break into steps",
         "description": "Splits one card into steps someone can actually do, each with a rough time.",
         "where": "The checklist section inside a card, and the personal workspace row.",
-        "example": "“Prepare the EGDI package” → gather data, draft the schedule, agree with the unit, final copy."
+        "example": "“Prepare the monthly report” → gather data, draft the schedule, agree with the unit, final copy."
       },
       "planSprint": {
         "label": "Plan the period",
@@ -324,7 +326,7 @@
         "label": "Who should take this",
         "description": "Proposes three candidates by workload and experience. The reason is only ever workload or experience, never a judgement. The head chooses.",
         "where": "The owner field on a card.",
-        "example": "“EGDI report” → Nodira (4 items on this subject), Anvar (heavily loaded), Dilnoza."
+        "example": "“Monthly report” → Nodira (4 items on this subject), Anvar (heavily loaded), Dilnoza."
       },
       "duplicateCheck": {
         "label": "Find duplicates",
@@ -336,7 +338,7 @@
         "label": "Ask the department's own records",
         "description": "Answers a question using only this department's cards, comments, pages and events, citing each source. If it is not there, it says so.",
         "where": "The “Ask” section on the AI page, and Ctrl+K.",
-        "example": "“Who is preparing the EGDI package?” → “Nodira Karimova, deadline 18 September”, linked to the card."
+        "example": "“Who is preparing the monthly report?” → “Nodira Karimova, deadline 18 September”, linked to the card."
       },
       "weeklySummary": {
         "label": "Weekly summary (retired)",
@@ -350,6 +352,10 @@
         "where": "No screen of its own any more.",
         "example": "Appears in older usage records."
       }
+    },
+    "catalogue": {
+      "costPerCall": "~{cost} / request",
+      "costEstimated": "Estimated cost of one request — depends on how much it is given to read."
     }
   }
 }

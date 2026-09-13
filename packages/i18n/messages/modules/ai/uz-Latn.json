@@ -30,18 +30,20 @@
         "soft_cap": "Chegaraga yaqin",
         "hard_stop": "Byudjet tugadi"
       },
-      "spentOfCap": "Bu oy {cap} dan {spent} sarflandi",
+      "spentOfCap": "Bu oy {cap}dan {spent} sarflandi",
       "resetToast": "Oylik AI byudjeti yangilandi",
       "editLabel": "Oylik byudjet (UZS)",
       "save": "Byudjetni saqlash",
-      "invalidAmount": "Toʻgʻri miqdor kiriting"
+      "invalidAmount": "Toʻgʻri miqdor kiriting",
+      "currency": "soʻm"
     },
     "flags": {
       "title": "Yordamchilar",
       "description": "Har bir yordamchi nima qilishini oʻqing va boʻlimga keraklisini yoqing. Yoqmaguningizcha oʻchirilgan boʻladi.",
       "headOnly": "Bularni faqat boʻlim boshligʻi oʻzgartira oladi.",
       "headOnlyBadge": "Faqat boshliq uchun",
-      "whereLabel": "Qayerda:"
+      "whereLabel": "Qayerda:",
+      "spentThisMonth": "Bu oy: {cost}"
     },
     "usage": {
       "empty": {
@@ -81,7 +83,7 @@
     },
     "ask": {
       "label": "Boʻlim maʼlumotidan soʻrang",
-      "placeholder": "Masalan: EGDI paketini kim tayyorlayapti?",
+      "placeholder": "Masalan: oylik hisobotni kim tayyorlayapti?",
       "submit": "Soʻrash",
       "hint": "Javob faqat shu boʻlimning kartochkalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi.",
       "answerTitle": "Javob: {question}",
@@ -264,7 +266,7 @@
         "label": "Quyi vazifalarga boʻlish",
         "description": "Bitta kartochkani bajarilishi mumkin boʻlgan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi.",
         "where": "Kartochka ichidagi roʻyxat boʻlimi va shaxsiy ish joyidagi vazifa qatori.",
-        "example": "“EGDI paketini tayyorlash” → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
+        "example": "“Oylik hisobotni tayyorlash” → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
       },
       "planSprint": {
         "label": "Davrni rejalashtirish",
@@ -324,7 +326,7 @@
         "label": "Kimga topshiray",
         "description": "Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boʻlim boshligʻi qiladi.",
         "where": "Kartochkadagi masʼul maydoni.",
-        "example": "“EGDI hisoboti” → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
+        "example": "“Oylik hisobot” → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
       },
       "duplicateCheck": {
         "label": "Takroriy ishni topish",
@@ -336,7 +338,7 @@
         "label": "Boʻlim maʼlumotidan soʻrash",
         "description": "Savolingizga faqat boʻlimning oʻz kartochkalari, izohlari, sahifalari va tadbirlaridan javob beradi, har bir javobga havola qoʻyib. Topilmasa, “topilmadi” deydi.",
         "where": "AI sahifasidagi “Soʻrash” boʻlimi va Ctrl+K.",
-        "example": "“EGDI paketini kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan."
+        "example": "“Oylik hisobotni kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan."
       },
       "weeklySummary": {
         "label": "Haftalik xulosa (eskirgan)",
@@ -350,6 +352,10 @@
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
       }
+    },
+    "catalogue": {
+      "costPerCall": "~{cost} / soʻrov",
+      "costEstimated": "Bitta soʻrovning taxminiy narxi — soʻrov hajmiga qarab."
     }
   }
 }

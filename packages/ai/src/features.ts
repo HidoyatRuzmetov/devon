@@ -28,6 +28,8 @@ import { suggestAssigneeSpec } from './prompts/suggest-assignee.js'
 import { summarizeThreadSpec } from './prompts/summarize-thread.js'
 import { translateSpec } from './prompts/translate.js'
 import { normalizeUzLatnDeep } from './uz.js'
+import { estimateTokens } from './trim.js'
+import { tokensToCostUzs } from './budget.js'
 import type {
   AiFeature,
   AiProvider,
@@ -66,6 +68,49 @@ const BY_TOOL_NAME = new Map(Object.values(REGISTRY).map((spec) => [spec.toolNam
 
 export function getFeatureSpec(feature: AiFeature): FeatureSpec<{ locale: Locale }, unknown> {
   return REGISTRY[feature]
+}
+
+/**
+ * v1.1 critique SEV3 #30 -- "five of the thirteen helpers show no price at all, and the eight that
+ * do show a bare figure with no unit of measure".
+ *
+ * The eight that showed something were showing *this month's spend*, which is why a helper nobody
+ * had run yet showed nothing: a spend of zero is not a price. What a head opening `/ai` actually
+ * wants is "what does one call of this cost", and that is knowable before anybody runs it, from the
+ * feature's own declared shape.
+ *
+ * The estimate is deliberately built only out of what a `FeatureSpec` states about itself and never
+ * out of a live call:
+ *
+ *   * the **tool schema** and its description -- sent verbatim on every call of this feature, and
+ *     the single largest static part of the request (`catch_up`'s is by far the biggest in the
+ *     product, which is exactly why it should read as the most expensive helper);
+ *   * the **few-shot examples and instructions** carried in the system prompt, approximated by the
+ *     spec's own `defaultMaxTokens` floor below;
+ *   * the **completion budget** (`defaultMaxTokens`), the ceiling on what comes back.
+ *
+ * So it is an upper-ish bound on one call, honest about being an estimate ("~30 soʻm / soʻrov"), and
+ * it moves when a prompt is rewritten -- which is the property that makes it worth showing at all.
+ * The department's real per-feature spend is still rendered separately; the two answer different
+ * questions.
+ */
+export function estimatedTokensPerCall(feature: AiFeature): number {
+  const spec = REGISTRY[feature]
+  const schema = estimateTokens(JSON.stringify(spec.parameters))
+  const description = estimateTokens(spec.toolDescription)
+  // The system prompt is built from the caller's input, so it cannot be measured without one. This
+  // floor is the part that does not vary: the role sentence, the constraint block and the few-shot
+  // examples every `composePrompt` emits.
+  const promptFloor = 600
+  return schema + description + promptFloor + spec.defaultMaxTokens
+}
+
+/** The same estimate in soʻm, at the configured per-million price. */
+export function estimatedCostUzsPerCall(
+  feature: AiFeature,
+  pricePerMillionUzs?: number,
+): number {
+  return tokensToCostUzs(estimatedTokensPerCall(feature), pricePerMillionUzs)
 }
 
 export type RunFeatureOptions = {

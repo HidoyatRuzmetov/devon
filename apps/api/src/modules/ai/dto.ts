@@ -1,6 +1,6 @@
 // Row -> API DTO mapping for the AI module (snake_case Postgres rows -> camelCase wire shapes),
 // exactly the same seam every other module's `dto.ts` already draws.
-import { checkBudget } from '@devon/ai'
+import { AI_FEATURES, checkBudget, estimatedCostUzsPerCall } from '@devon/ai'
 import type { AiSettingsDto, SearchBackendDto, TraceDto } from './schemas.js'
 import type { AiSettingsRow, TraceRow } from './repo.js'
 
@@ -41,6 +41,12 @@ export function settingsToDto(
     available,
     unavailableReason: available ? null : 'circuit_open',
     spendByFeature: extra.spendByFeature,
+    // v1.1 critique SEV3 #30: a price for EVERY helper, not just the ones somebody has already run.
+    // Computed from each feature's own tool schema and completion budget, so it is a property of the
+    // catalogue rather than of this department's history.
+    estimatedCostUzsPerCall: Object.fromEntries(
+      AI_FEATURES.map((feature) => [feature, estimatedCostUzsPerCall(feature)]),
+    ),
     simulated: extra.simulated,
     search: extra.search,
   }

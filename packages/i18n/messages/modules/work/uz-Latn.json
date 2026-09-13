@@ -38,7 +38,7 @@
       "collapseAllColumns": "Barcha ustunlarni yigʻish"
     },
     "quickAdd": {
-      "placeholder": "Tez qoʻshish: \"Nodira: EGDI paketi, juma\"",
+      "placeholder": "Tez qoʻshish: \"Nodira: oylik hisobotni juma kuniga tayyorla\"",
       "created": "\"{title}\" yaratildi",
       "error": "Vazifani yaratib boʻlmadi",
       "unknownAssignee": "\"{name}\" nomli xodim topilmadi",

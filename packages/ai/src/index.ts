@@ -30,6 +30,8 @@ export {
   runFeature,
   buildOfflineRespond,
   getFeatureSpec,
+  estimatedTokensPerCall,
+  estimatedCostUzsPerCall,
   FEATURE_REGISTRY,
   type RunFeatureOptions,
   type RunFeatureResult,

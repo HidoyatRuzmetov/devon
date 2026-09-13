@@ -127,6 +127,10 @@ export const aiSettingsSchema = z.object({
   unavailableReason: z.enum(['circuit_open']).nullable().optional(),
   /** AI-AUDIT §5 fix 15 -- head-only. */
   spendByFeature: z.record(z.string(), z.number().int()).optional(),
+  /** SEV3 #30: the estimated cost of one call of each helper, in soʻm. Everyone sees it -- it is
+   * part of what the helper *is*, not part of what the department spent. `.default({})` so a server
+   * that predates this field still renders (the price simply does not show). */
+  estimatedCostUzsPerCall: z.record(z.string(), z.number().int()).default({}),
   /** No key configured: every answer in this deployment comes from the offline simulator. */
   simulated: z.boolean(),
   search: searchBackendSchema,

@@ -10,6 +10,9 @@ export const WORDMARK = 'WorkPortal'
 export const LOCALE_STORAGE_KEY = 'devon_locale'
 export const THEME_STORAGE_KEY = 'devon_theme'
 export const SIDEBAR_COLLAPSED_STORAGE_KEY = 'devon_sidebar_collapsed'
+/** v1.1 critique SEV1 #5: which sidebar groups this person keeps folded, as a JSON array of group
+ * ids. Per-viewer chrome, so `localStorage` is the right home -- nothing here is department data. */
+export const SIDEBAR_GROUPS_STORAGE_KEY = 'devon_sidebar_groups'
 export const LOCALE_COOKIE_NAME = 'wp_locale'
 /** `useDepartment()`'s switcher stub (`src/lib/session.ts`) -- a client-only override of `Me.
  * activeDepartmentId` until a real "switch department" endpoint exists. Per-browser, not per-account:
