@@ -592,3 +592,101 @@ export async function embedPendingTick(ctx: RequestContext): Promise<number> {
   }
   return embedded
 }
+
+
+// --- the Friday department briefing (AI-AUDIT §5 fix 17) ------------------------------------
+
+/**
+ * Narrates a department's week for the Telegram group digest, using the same `catch_up` prompt the
+ * head dashboard uses at `scope: 'department'`.
+ *
+ * v1.0's weekly department digest (`modules/notifications/jobs.ts`) was a hand-built count string
+ * that never called `@devon/ai` at all, while TECH-SPEC §8 promised "weekly summary per person and
+ * per department (drafts the digest)". This is that wiring, and it is deliberately the only place
+ * the notifications module has to know about AI: it hands over a department id and a fallback, and
+ * gets back a string.
+ *
+ * **Never throws, and never blocks a digest.** A department with the helper off, no budget left, no
+ * head, no API key, or a GLM outage gets `fallbackText` -- the count line it has always had. A
+ * Friday digest that fails to send because an AI call failed would be strictly worse than one that
+ * reads a little plainer.
+ */
+export async function narrateDepartmentWeek(
+  ctx: RequestContext,
+  params: {
+    departmentId: string
+    locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en'
+    fallbackText: string
+  },
+): Promise<string> {
+  try {
+    const { snapshot, head, departmentName } = await withContext(ctx, async (tx) => ({
+      snapshot: await repo.departmentWeekSnapshot(tx, params.departmentId),
+      head: await repo.headUserId(tx, params.departmentId),
+      departmentName: await repo.departmentName(tx, params.departmentId),
+    }))
+    if (!head) return params.fallbackText
+    // `catch_up`'s `subjectName` is `min(1)`: a department with no name would fail the feature's own
+    // input schema and cost a pointless validation round trip, so the id stands in for it.
+    const subjectName = departmentName || params.departmentId
+
+    const now = new Date()
+    const weekAgo = new Date(now.getTime() - 7 * 86_400_000)
+    const outcome = await runFeatureForActor(ctx, {
+      departmentId: params.departmentId,
+      userId: head,
+      feature: 'catch_up',
+      input: {
+        locale: params.locale,
+        scope: 'department',
+        window: 'week',
+        subjectName,
+        viewerName: subjectName,
+        period: {
+          start: weekAgo.toISOString().slice(0, 10),
+          end: now.toISOString().slice(0, 10),
+        },
+        counts: {
+          done: snapshot.done.length,
+          doneLastPeriod: snapshot.doneLastPeriodCount,
+          created: snapshot.createdCount,
+          overdue: snapshot.overdue.length,
+        },
+        done: snapshot.done,
+        overdue: snapshot.overdue,
+        dueThisWeek: [],
+        assignedToMe: [],
+        mentions: [],
+        comments: [],
+        loadPerPerson: snapshot.loadPerPerson,
+        eventsAhead: [],
+      },
+    })
+
+    const data = outcome.data as {
+      headline?: unknown
+      wins?: { text?: unknown }
+      risks?: { text?: unknown }[]
+      overloaded?: { name?: unknown; text?: unknown }[]
+      lookingAhead?: { text?: unknown }
+    }
+    const lines: string[] = []
+    if (typeof data.headline === 'string' && data.headline) lines.push(data.headline)
+    if (typeof data.wins?.text === 'string' && data.wins.text) lines.push(data.wins.text)
+    for (const risk of data.risks ?? []) {
+      if (typeof risk?.text === 'string' && risk.text) lines.push(`- ${risk.text}`)
+    }
+    for (const person of data.overloaded ?? []) {
+      if (typeof person?.name === 'string' && typeof person?.text === 'string') {
+        lines.push(`- ${person.name}: ${person.text}`)
+      }
+    }
+    if (typeof data.lookingAhead?.text === 'string' && data.lookingAhead.text) {
+      lines.push(data.lookingAhead.text)
+    }
+    // An answer with nothing in it is not an answer: fall back rather than send an empty message.
+    return lines.length > 0 ? lines.join('\n') : params.fallbackText
+  } catch {
+    return params.fallbackText
+  }
+}

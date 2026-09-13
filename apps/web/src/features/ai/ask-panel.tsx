@@ -63,7 +63,7 @@ function SearchResults({ query }: { query: string }): React.JSX.Element {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.retry', onAction: () => void searchQuery.refetch() }}
+        action={{ labelKey: 'state.error.action', onAction: () => void searchQuery.refetch() }}
       />
     )
   }

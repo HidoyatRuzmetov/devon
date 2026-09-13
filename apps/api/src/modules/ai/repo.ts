@@ -204,3 +204,102 @@ export async function listTraces(
     limit ${limit}
   `)
 }
+
+
+// --- the Friday department briefing (AI-AUDIT §5 fix 17) ------------------------------------
+
+/** The head of a department, or `null` when it has none. The weekly digest bills its one AI call to
+ * that person, because the briefing is theirs: a trace with no owner would be unattributable in the
+ * Usage tab, and inventing a system user would put a row in `app.users` that nobody is. */
+export async function headUserId(tx: Tx, departmentId: string): Promise<string | null> {
+  const rows = await tx.raw<{ user_id: string }>(sql`
+    select user_id from app.memberships
+    where department_id = ${departmentId} and role = 'head' and status = 'active'
+      and deleted_at is null
+    order by created_at asc
+    limit 1
+  `)
+  return rows[0]?.user_id ?? null
+}
+
+export type DepartmentWeekSnapshot = {
+  done: { id: string; title: string }[]
+  overdue: { id: string; title: string }[]
+  createdCount: number
+  doneLastPeriodCount: number
+  loadPerPerson: { name: string; openCount: number; overdueCount: number }[]
+}
+
+/**
+ * Everything the Friday briefing is allowed to talk about, in four set-based queries -- never one
+ * per person, never one per card (I-9). Bounded lists: a briefing that cites forty cards is not a
+ * briefing, and the prompt's own schema caps them anyway.
+ */
+export async function departmentWeekSnapshot(
+  tx: Tx,
+  departmentId: string,
+): Promise<DepartmentWeekSnapshot> {
+  const done = await tx.raw<{ id: string; title: string }>(sql`
+    select id, title from app.cards
+    where department_id = ${departmentId} and deleted_at is null
+      and status = 'done' and done_at >= now() - interval '7 days'
+    order by done_at desc
+    limit 30
+  `)
+  const overdue = await tx.raw<{ id: string; title: string }>(sql`
+    select id, title from app.cards
+    where department_id = ${departmentId} and deleted_at is null
+      and status = 'active' and due_at is not null and due_at < now()
+    order by due_at asc
+    limit 20
+  `)
+  const counts = await tx.raw<{ created: number; done_last: number }>(sql`
+    select
+      count(*) filter (where created_at >= now() - interval '7 days')::int as created,
+      count(*) filter (
+        where status = 'done'
+          and done_at >= now() - interval '14 days'
+          and done_at < now() - interval '7 days'
+      )::int as done_last
+    from app.cards
+    where department_id = ${departmentId} and deleted_at is null
+  `)
+  const load = await tx.raw<{ name: string; open_count: number; overdue_count: number }>(sql`
+    select coalesce(nullif(trim(concat_ws(' ', u.family_name, u.given_name)), ''), '') as name,
+           count(*) filter (where c.status = 'active')::int as open_count,
+           count(*) filter (
+             where c.status = 'active' and c.due_at is not null and c.due_at < now()
+           )::int as overdue_count
+    from app.memberships m
+    join app.users u on u.id = m.user_id
+    left join app.cards c
+      on c.assignee_user_id = m.user_id and c.department_id = m.department_id
+     and c.deleted_at is null
+    where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
+    group by u.family_name, u.given_name
+    order by overdue_count desc, open_count desc
+    limit 40
+  `)
+  return {
+    done,
+    overdue,
+    createdCount: counts[0]?.created ?? 0,
+    doneLastPeriodCount: counts[0]?.done_last ?? 0,
+    loadPerPerson: load
+      .filter((row) => row.name !== '')
+      .map((row) => ({
+        name: row.name,
+        openCount: row.open_count,
+        overdueCount: row.overdue_count,
+      })),
+  }
+}
+
+/** The department's own name, for the briefing's subject line. Falls back to an empty string, which
+ * the prompt's schema rejects -- so the caller substitutes something before it gets that far. */
+export async function departmentName(tx: Tx, departmentId: string): Promise<string> {
+  const rows = await tx.raw<{ name: string }>(sql`
+    select name from app.departments where id = ${departmentId}
+  `)
+  return rows[0]?.name ?? ''
+}

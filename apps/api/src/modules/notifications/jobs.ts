@@ -22,6 +22,7 @@ import { deliverNotification as deliver } from './delivery.js'
 import { listGroupsForKind } from '../telegram/repo.js'
 import { getBot, sendPlainMessage } from '../telegram/transport.js'
 import { departmentDigestText, personalDigestText, summarizeCounts } from './registry.js'
+import { narrateDepartmentWeek } from '../ai/service.js'
 import type { LocalizedText } from './schemas.js'
 import { queueDeadLetterGauge, queuePendingGauge } from '../../lib/metrics.js'
 
@@ -141,7 +142,29 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     // In the department's own default locale, not a hard-coded bilingual string (the group is that
     // department's, and `listGroupsForKind` now brings the locale back with the chat id).
     const locale = isLocalizedKey(group.locale) ? group.locale : 'uz-Latn'
-    const text = departmentDigestText(totals, locale)
+    // AI-AUDIT §5 fix 17: TECH-SPEC §8 promised a drafted department digest and v1.0 sent a hand
+    // built count line that never called `@devon/ai`. It does now -- and `narrateDepartmentWeek`
+    // never throws and never blocks: with the helper off, no budget, no head or GLM unreachable it
+    // hands back exactly this count line, so the Friday digest still goes out.
+    // nosemgrep: query-in-loop -- see this file's header comment above.
+    const text = await narrateDepartmentWeek(
+      {
+        requestId: `notifications-digest-${group.departmentId}`,
+        userId: null,
+        actorRole: 'super_admin',
+        departmentId: group.departmentId,
+        departmentRole: 'head',
+        actingForUserId: null,
+        viewAs: false,
+        ip: '127.0.0.1',
+        userAgent: 'devon-notifications/weekly-digest',
+      },
+      {
+        departmentId: group.departmentId,
+        locale,
+        fallbackText: departmentDigestText(totals, locale),
+      },
+    )
     // H8.1: timeout- and circuit-breaker-bound (`sendPlainMessage`), same as every other Telegram
     // send in this codebase -- previously called `bot.api.sendMessage` directly with neither, so a
     // wedged socket here could hold this cron's single-threaded `for` loop open indefinitely and a

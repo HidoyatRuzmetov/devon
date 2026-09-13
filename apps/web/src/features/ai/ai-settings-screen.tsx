@@ -260,7 +260,7 @@ function HelpersTab() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.retry', onAction: () => void settingsQuery.refetch() }}
+        action={{ labelKey: 'state.error.action', onAction: () => void settingsQuery.refetch() }}
       />
     )
   }
@@ -435,7 +435,7 @@ function UsageTab() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.retry', onAction: () => void usageQuery.refetch() }}
+        action={{ labelKey: 'state.error.action', onAction: () => void usageQuery.refetch() }}
       />
     )
   }

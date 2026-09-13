@@ -190,16 +190,35 @@ function kindFilter(kind: SearchSubjectKind | undefined): SQL {
 }
 
 /**
- * Full-text search with a trigram fallback, in one statement.
+ * Keyword search, in one statement, over three arms.
  *
- * `websearch_to_tsquery('simple', …)` handles the phrase/negation syntax people already know from
- * every search box, and `'simple'` (no stemming, no stop words) is the only dictionary that treats
- * uz-Latn, uz-Cyrl, ru and en alike -- Postgres ships no Uzbek dictionary, and stemming Russian while
- * leaving Uzbek raw would make the index quietly better in one of four locales.
+ * **Why not just `websearch_to_tsquery`.** Uzbek is agglutinative: a person searching "hisobot"
+ * expects "Oylik hisobot*ni* tayyorlash", and `simple` (the only dictionary that treats uz-Latn,
+ * uz-Cyrl, ru and en alike -- Postgres ships no Uzbek one, and stemming Russian while leaving Uzbek
+ * raw would make the index quietly better in one of four locales) does no stemming at all. Measured
+ * against the demo department: `websearch_to_tsquery('simple','hisobot')` matched **zero** of the
+ * four cards whose titles contain the word. That is not a tuning detail, it is the difference
+ * between a search box that works in Uzbek and one that does not.
  *
- * The trigram arm is not a nicety: it is what answers a misspelt or truncated query ("hisobt",
- * "EGDl"), which is most of what a real person types into a palette. Rows found by both arms keep the
- * FTS score, which is the stronger signal.
+ * So the arms are:
+ *
+ * A note on why the word splitter uses a POSIX character class rather than the usual backslash-s:
+ * this query lives inside a tagged template literal, where a backslash escape either loses its
+ * backslash or is rejected by the bundler outright. The first version of this splitter therefore
+ * split on the bare letter "s" -- "hisobotni kim" became "hi" and "obotni kim", and `to_tsquery`
+ * 500'd on the fragment. Found by running it, not by reading it.
+ *
+ *  1. **Prefix FTS.** Each word of the query becomes `word:*` in a `to_tsquery`, which is exactly
+ *     the suffix-insensitivity an agglutinative language needs and costs nothing extra -- the same
+ *     GIN index answers it. The words are stripped to letters and digits first, so nothing the
+ *     person typed can reach `to_tsquery` as syntax.
+ *  2. **Substring on the title**, through the `gin_trgm_ops` index: what answers a two-word query
+ *     against a long title, and what a person means by "search" before they mean anything else.
+ *  3. **Trigram similarity on the title**: the misspelt and truncated queries ("hisobt", "EGDl")
+ *     that are most of what really gets typed into a palette.
+ *
+ * A row found by more than one arm keeps its best score (`max`), so the ranking is the strongest
+ * signal available rather than whichever arm happened to be listed first.
  */
 export async function searchText(
   tx: Tx,
@@ -209,28 +228,53 @@ export async function searchText(
   kind?: SearchSubjectKind,
 ): Promise<SearchHitRow[]> {
   return tx.raw<SearchHitRow>(sql`
-    with q as (select websearch_to_tsquery('simple', ${query}) as tsq, ${query}::text as raw)
-    select subject_type, subject_id, title, snippet, score, via
+    with q as (
+      select
+        ${query}::text as raw,
+        (
+          select string_agg(word || ':*', ' & ')
+          from unnest(
+            regexp_split_to_array(
+              trim(regexp_replace(lower(${query}::text), '[^[:alnum:]]+', ' ', 'g')),
+              -- A POSIX character class, deliberately: see this function doc comment above.
+              '[[:space:]]+'
+            )
+          ) as word
+          where word <> ''
+        ) as prefix_query
+    )
+    select subject_type, subject_id, title, snippet, max(score) as score,
+           (array_agg(via order by score desc))[1] as via
     from (
       select d.subject_type, d.subject_id, d.title,
              left(d.body, 240) as snippet,
-             ts_rank(d.tsv, q.tsq)::float8 as score,
+             greatest(ts_rank(d.tsv, to_tsquery('simple', q.prefix_query)), 0.01)::float8 as score,
              'fts' as via
       from app.ai_search_documents d, q
       where d.department_id = ${departmentId}
-        and q.tsq is not null
-        and d.tsv @@ q.tsq
+        and q.prefix_query is not null
+        and d.tsv @@ to_tsquery('simple', q.prefix_query)
         ${kindFilter(kind)}
       union all
       select d.subject_type, d.subject_id, d.title,
              left(d.body, 240) as snippet,
-             (similarity(d.title, q.raw) * 0.5)::float8 as score,
+             0.6::float8 as score,
+             'fts' as via
+      from app.ai_search_documents d, q
+      where d.department_id = ${departmentId}
+        and d.title ilike '%' || q.raw || '%'
+        ${kindFilter(kind)}
+      union all
+      select d.subject_type, d.subject_id, d.title,
+             left(d.body, 240) as snippet,
+             similarity(d.title, q.raw)::float8 as score,
              'trigram' as via
       from app.ai_search_documents d, q
       where d.department_id = ${departmentId}
         and similarity(d.title, q.raw) > 0.25
         ${kindFilter(kind)}
     ) hits
+    group by subject_type, subject_id, title, snippet
     order by score desc, title asc
     limit ${limit}
   `)
