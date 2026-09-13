@@ -1,0 +1,35 @@
+[Unit]
+Description=Devon (WorkPortal) weekly restore drill -- restores the newest backup and the MinIO mirror into scratch and compares them (HARDENING H19.1)
+Documentation=file:/opt/devon/docs/ops/RUNBOOK.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/devon
+# Deeper than devon-backup-verify.service, which only checks that the schemas came back. This one
+# compares every table's row count against the manifest taken at dump time, checks that the RLS
+# policies and the migration ledger survived, and pulls the off-host MinIO mirror back into a
+# scratch bucket. It writes a dated report under agentic/ledger/backups/ (see --report below to
+# put it somewhere else) and exits non-zero on any failed check.
+#
+# --skip-migrate-verify: the migrate:verify suite starts its own Testcontainers Postgres and is
+# already run by CI on every push; leave it out of the unattended weekly job and keep it for the
+# quarterly drill (docs/ops/CHECKLIST-QUARTERLY-DRILL.md), which a human watches.
+ExecStart=/usr/bin/node /opt/devon/tools/backup/restore-drill.mjs --skip-migrate-verify
+User=devon
+Group=devon
+# BACKUP_DIR must match the backup job's. Keep it OUTSIDE /opt/devon if the sentinel's wipe switch
+# is armed -- a wipe deletes the project directory and everything under it (docs/ops/RUNBOOK.md).
+Environment=BACKUP_DIR=/var/backups/devon
+# Needed only if backups are encrypted (they should be, H19.1). Put the real value in a root-owned
+# 0600 drop-in, never here: systemctl edit devon-restore-drill.service
+# EnvironmentFile=/etc/devon/backup.env
+TimeoutStartSec=3600
+Nice=10
+IOSchedulingClass=idle
+# A non-zero exit means the newest backup did NOT restore correctly -- wire this into whatever
+# alerting the host has (e.g. OnFailure= pointing at a notify unit).
+
+[Install]
+WantedBy=multi-user.target

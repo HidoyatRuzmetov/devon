@@ -1,0 +1,46 @@
+# `kubectl apply -k infra/k3s` -- "Helm-lite": plain manifests plus kustomize's image and namespace
+# handling, no templating language and no chart repository to host on a ministry network.
+#
+# Deliberately NOT in this list, because each one needs its own decision or its own lifecycle:
+#   secret.yaml                      - never committed; create it first (secret.example.yaml)
+#   migrate-job.yaml                 - a Job's pod template is immutable; run it per release
+#   optional/traefik-middleware.yaml - Traefik CRD; apply BEFORE the Ingress or routes 503
+#   optional/cert-manager-issuer.yaml- cert-manager CRD; pointless on an air-gapped network
+#   optional/clamav.yaml             - heavy, and the API refuses production boot without it
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: devon
+
+resources:
+  - namespace.yaml
+  - config.yaml
+  - postgres.yaml
+  - valkey.yaml
+  - minio.yaml
+  - centrifugo.yaml
+  - api.yaml
+  - worker.yaml
+  - web.yaml
+  - ingress.yaml
+
+# `labels:` (not the deprecated `commonLabels:`) -- with includeSelectors omitted, the label is
+# added to metadata only and never merged into a Deployment's immutable `selector`, so applying a
+# later kustomize change cannot fail with "field is immutable" on a running deployment.
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: devon
+
+# Point at the registry the ministry actually pulls from, and pin by digest for a real release --
+# a tag can be repointed by the registry, a digest cannot (H18.1):
+#   kustomize edit set image devon-api=registry.example.uz/devon/api@sha256:...
+images:
+  - name: devon-api
+    newName: devon-api
+    newTag: local
+  - name: devon-worker
+    newName: devon-worker
+    newTag: local
+  - name: devon-web
+    newName: devon-web
+    newTag: local

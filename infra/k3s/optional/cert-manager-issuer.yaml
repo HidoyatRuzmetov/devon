@@ -1,0 +1,26 @@
+# cert-manager ClusterIssuer. A CRD, so it is NOT in kustomization.yaml (see traefik-middleware.yaml
+# for the same reason). Install cert-manager first, then apply this:
+#
+#   kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.yaml
+#   kubectl -n cert-manager wait --for=condition=available deploy --all --timeout=5m
+#   kubectl apply -f infra/k3s/optional/cert-manager-issuer.yaml
+#
+# ACME needs the host to be reachable from the public internet on :80 for the HTTP-01 challenge. An
+# air-gapped ministry network cannot satisfy that -- there, skip cert-manager entirely, drop the
+# `cert-manager.io/cluster-issuer` annotation from ingress.yaml, and create the TLS secret from the
+# ministry CA's own PEM files (the command is in ingress.yaml's header).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: devon-issuer
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # A real mailbox someone reads: this is where expiry warnings go.
+    email: devops@example.ministry.uz
+    privateKeySecretRef:
+      name: devon-issuer-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: traefik

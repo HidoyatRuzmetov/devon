@@ -1,0 +1,55 @@
+# The built SPA, served by apps/web's own nginx-unprivileged image on :8080 (not :80 -- that image
+# runs as a non-root user and cannot bind a privileged port).
+apiVersion: v1
+kind: Service
+metadata:
+  name: devon-web
+  namespace: devon
+  labels: { app.kubernetes.io/name: web, app.kubernetes.io/part-of: devon }
+spec:
+  selector: { app.kubernetes.io/name: web }
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devon-web
+  namespace: devon
+  labels: { app.kubernetes.io/name: web, app.kubernetes.io/part-of: devon }
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  selector:
+    matchLabels: { app.kubernetes.io/name: web }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: web, app.kubernetes.io/part-of: devon }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: web
+          image: devon-web:local
+          ports:
+            - { name: http, containerPort: 8080 }
+          readinessProbe:
+            httpGet: { path: /, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { cpu: 500m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false # nginx writes its temp/cache paths
+            capabilities: { drop: ['ALL'] }

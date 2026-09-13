@@ -1,0 +1,94 @@
+# Postgres 17 + pgvector, the exact digest infra/docker-compose.yml pins (H18.1: a tag can be
+# repointed by the registry, a digest cannot).
+#
+# SINGLE-NODE ONLY. This StatefulSet is one replica on a local-path PVC -- k3s's default storage
+# class binds it to whichever node it first scheduled on, and Postgres would corrupt itself if two
+# replicas ever ran. For anything beyond one node, or for a ministry that already runs a managed
+# Postgres, DELETE this file from kustomization.yaml and point the app at the external database
+# instead (README.md → "External database").
+apiVersion: v1
+kind: Service
+metadata:
+  name: devon-postgres
+  namespace: devon
+  labels: { app.kubernetes.io/name: postgres, app.kubernetes.io/part-of: devon }
+spec:
+  clusterIP: None
+  selector: { app.kubernetes.io/name: postgres }
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: devon-postgres
+  namespace: devon
+  labels: { app.kubernetes.io/name: postgres, app.kubernetes.io/part-of: devon }
+spec:
+  serviceName: devon-postgres
+  replicas: 1
+  selector:
+    matchLabels: { app.kubernetes.io/name: postgres }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: postgres, app.kubernetes.io/part-of: devon }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:0.8.6-pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+          args:
+            - postgres
+            - -c
+            - shared_preload_libraries=pg_stat_statements
+            - -c
+            - pg_stat_statements.track=all
+            - -c
+            - pg_stat_statements.max=10000
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: devon-config, key: POSTGRES_DB } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: devon-secrets, key: POSTGRES_SUPERUSER_PASSWORD } }
+            # The image's entrypoint initialises into $PGDATA; a subdirectory of the mount keeps
+            # `lost+found` (and anything else the volume ships with) out of the data directory.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - { name: postgres, containerPort: 5432 }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+          readinessProbe:
+            exec: { command: ['pg_isready', '-U', 'postgres'] }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          livenessProbe:
+            exec: { command: ['pg_isready', '-U', 'postgres'] }
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          resources:
+            requests: { cpu: 250m, memory: 512Mi }
+            limits: { cpu: '2', memory: 2Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false # initdb writes under /var/run/postgresql
+            capabilities: { drop: ['ALL'] }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 20Gi
