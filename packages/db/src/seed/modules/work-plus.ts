@@ -223,6 +223,12 @@ const AUTOMATIONS: readonly {
   triggerConfig: unknown
   actions: unknown
   enabled: boolean
+  /** Kept in step with `AUTOMATION_RUNS` below by `assertRunCountsMatch()`: the rule card says
+   * "N marta ishlagan" from these columns while the log underneath lists the runs themselves, and a
+   * card reading "0 marta ishlagan / Hali ishga tushmagan" above nine visible runs is the kind of
+   * contradiction a viewer spots in one second. */
+  runCount: number
+  lastRunDays: number | null
 }[] = [
   // Deliberately OFF in the demo, and the reason is the lesson: `notify_head` fires once per card,
   // the scan dedupes per rule per card per day but not per tick, and this department carries 77
@@ -236,6 +242,8 @@ const AUTOMATIONS: readonly {
     triggerConfig: { filter: 'label:"Muhim"' },
     actions: [{ kind: 'notify_head' }],
     enabled: false,
+    runCount: 3,
+    lastRunDays: -8,
   },
   {
     id: demoId('workplus.rule.muhim'),
@@ -244,6 +252,8 @@ const AUTOMATIONS: readonly {
     triggerConfig: { field: 'labels', filter: 'label:"Muhim"' },
     actions: [{ kind: 'set_priority', priority: 'high' }],
     enabled: true,
+    runCount: 6,
+    lastRunDays: -1,
   },
   {
     id: demoId('workplus.rule.yangi'),
@@ -257,6 +267,8 @@ const AUTOMATIONS: readonly {
       },
     ],
     enabled: false,
+    runCount: 0,
+    lastRunDays: null,
   },
 ]
 
@@ -357,6 +369,24 @@ const AUTOMATION_RUNS: readonly {
     atDays: -8,
   },
 ]
+
+/**
+ * The rule card's "N marta ishlagan" and the log underneath it are two renderings of the same fact,
+ * and nothing in the database makes them agree -- `run_count` is a counter the engine bumps, the log
+ * is rows it writes. A seed can set them apart by hand without anything failing; the only place that
+ * mistake shows up is on screen, in front of the audience. So it fails here instead, at import time.
+ */
+function assertRunCountsMatch(): void {
+  for (const rule of AUTOMATIONS) {
+    const logged = AUTOMATION_RUNS.filter((r) => r.ruleId === rule.id).length
+    if (logged !== rule.runCount) {
+      throw new Error(
+        `work-plus seed: rule "${rule.name}" claims runCount ${rule.runCount} but the run log has ${logged} rows`,
+      )
+    }
+  }
+}
+assertRunCountsMatch()
 
 // --- focus list (A9), time logs (A3) and reminders (7.4) ----------------------------------------
 const FOCUS_PINS: readonly { id: string; userId: string; cardId: string; position: number }[] = [
@@ -545,13 +575,13 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   const ruleValues = sql.join(
     AUTOMATIONS.map(
       (a) =>
-        sql`(${a.id}::uuid, ${DEPARTMENT_ID}::uuid, ${a.name}, ${a.trigger}::app.automation_trigger, ${JSON.stringify(a.triggerConfig)}::jsonb, ${JSON.stringify(a.actions)}::jsonb, ${a.enabled}::boolean, ${HEAD_USER_ID}::uuid)`,
+        sql`(${a.id}::uuid, ${DEPARTMENT_ID}::uuid, ${a.name}, ${a.trigger}::app.automation_trigger, ${JSON.stringify(a.triggerConfig)}::jsonb, ${JSON.stringify(a.actions)}::jsonb, ${a.enabled}::boolean, ${a.runCount}::int, ${a.lastRunDays === null ? null : daysFromNow(a.lastRunDays).toISOString()}::timestamptz, ${HEAD_USER_ID}::uuid)`,
     ),
     sql`, `,
   )
   written += await insertCount(
     ctx,
-    sql`insert into app.automation_rules (id, department_id, name, trigger, trigger_config, actions, enabled, created_by_user_id)
+    sql`insert into app.automation_rules (id, department_id, name, trigger, trigger_config, actions, enabled, run_count, last_run_at, created_by_user_id)
         values ${ruleValues}
         on conflict do nothing
         returning id`,

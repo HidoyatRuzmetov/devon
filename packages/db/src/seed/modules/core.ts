@@ -17,7 +17,14 @@ import {
   DEMO_USERS,
   demoPasswordHash,
 } from '../fixtures.js'
+import { demoDaysFromNow } from '../clock.js'
 import type { SeedModuleContext } from '../module-loader.js'
+
+/** The two personas have been here since long before the quarter the demo shows. Without this they
+ * inherited `joined_at`'s `default now()` and the department's members list read "Qoʻshilgan sana:
+ * <today>" against colleagues who joined in May -- the boshqarma boshligʻi appearing to have joined
+ * his own department this morning. */
+const FOUNDED_AT = demoDaysFromNow(-118) // ~4 months before the demo's "today"
 
 /** Every Imkoniyatlar switch key, on. Mirrors `FEATURE_KEYS` in `packages/contracts/src/
  * features.ts` -- see the comment at the call site for why it is mirrored rather than imported. */
@@ -56,6 +63,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         title: user.title,
         role: user.role,
         locale: 'uz-Latn' as const,
+        createdAt: FOUNDED_AT,
       })),
     )
     .onConflictDoNothing()
@@ -92,6 +100,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
       name: DEMO_DEPARTMENT.name,
       slug: DEMO_DEPARTMENT.slug,
       localeDefault: DEMO_DEPARTMENT.localeDefault,
+      createdAt: FOUNDED_AT,
       // v1.1 SPEC 7: "the demo department has them all on". A demo is a tour -- every switch off by
       // default is right for a real boshqarma discovering the product, and wrong for the one
       // instance whose job is to show what the product can do.
@@ -119,6 +128,7 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
         departmentId: membership.departmentId,
         userId: membership.userId,
         role: membership.role,
+        joinedAt: FOUNDED_AT,
       })),
     )
     .onConflictDoNothing()
