@@ -224,7 +224,7 @@ export function PlanPreview({
 
 // --- F4 deadline_risk (the explainer) -----------------------------------------------------------
 
-const RISK_TONE = { high: 'destructive', medium: 'warning', low: 'neutral' } as const
+const RISK_TONE = { overdue: 'destructive', at_risk: 'warning', none: 'neutral' } as const
 
 export function RiskExplainPreview({
   output,

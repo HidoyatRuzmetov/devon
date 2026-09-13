@@ -1018,9 +1018,9 @@
       "minutes": "{count} мин",
       "needsApproval": "Нужно согласование",
       "risk": {
-        "high": "Высокий риск",
-        "medium": "Средний риск",
-        "low": "Низкий риск"
+        "none": "Без риска",
+        "at_risk": "Срок приближается",
+        "overdue": "Просрочено"
       },
       "severity": {
         "high": "Серьёзно",
@@ -1733,7 +1733,9 @@
       "submitUpdate": "Сохранить изменения",
       "validation": {
         "endsBeforeStarts": "Окончание должно быть позже начала"
-      }
+      },
+      "aiDraftCarpool": "Поездка",
+      "aiDraftPickDate": "Какую дату берём?"
     },
     "diff": {
       "title": "Что изменилось",
@@ -1796,7 +1798,8 @@
       "summaryFailed": "Не удалось составить краткое изложение",
       "summaryAccept": "Вставить в комментарий",
       "summaryEdit": "Вставить и отредактировать",
-      "summaryDiscard": "Отклонить"
+      "summaryDiscard": "Отклонить",
+      "viewerFallback": "Вы"
     },
     "carpool": {
       "title": "Совместные поездки",
@@ -2442,21 +2445,21 @@
         "title": "План периода от AI",
         "editAria": "Измените предложенный порядок, по одной задаче в строке",
         "focusBadge": "Начните отсюда",
-        "emptyBucket": "Сначала добавьте задачу в этот период"
-      },
-      "weeklySummary": {
-        "action": "Еженедельная сводка",
-        "title": "Еженедельная сводка от AI",
-        "acceptLabel": "Сохранить как заметку",
-        "editAria": "Измените сводку",
-        "subjectSelf": "Вы",
-        "periodLabel": "последние 7 дней",
-        "noteTitle": "Еженедельная сводка",
-        "savedToast": "Добавлено в заметки"
+        "emptyBucket": "Сначала добавьте задачу в этот период",
+        "appliedToast": "План применён"
       },
       "translate": {
         "action": "Перевести на {locale}",
         "title": "Перевод на {locale}"
+      },
+      "catchUp": {
+        "subjectSelf": "Вы",
+        "noteTitle": "Итоги недели",
+        "savedToast": "Итоги сохранены в заметки",
+        "action": "Что я пропустил",
+        "title": "Последняя неделя",
+        "acceptLabel": "Сохранить в заметки",
+        "editAria": "Редактировать текст итогов"
       }
     }
   },
@@ -2521,7 +2524,12 @@
       "planPreviewTitle": "Предпросмотр плана ИИ",
       "applyFocus": "Применить главную задачу",
       "focus": "Начните с: {title}",
-      "planApplied": "Главная задача обновлена"
+      "planApplied": "Главная задача обновлена",
+      "viewerYou": "Вы",
+      "catchUp": "Что изменилось",
+      "catchUpPreviewTitle": "Проект за последнюю неделю",
+      "catchUpDone": "Закрыть",
+      "applyPlan": "Применить план"
     }
   },
   "structure": {
@@ -2750,7 +2758,8 @@
       "aiPreviewTitle": "Карточка, распознанная ИИ",
       "aiError": "Не удалось распознать текст",
       "aiMeta": "{tokens} токенов · {ms} мс",
-      "dialogHint": "Введите название. Можно так: «Нодира: отчёт, пятница» — исполнитель и срок распознаются сами."
+      "dialogHint": "Введите название. Можно так: «Нодира: отчёт, пятница» — исполнитель и срок распознаются сами.",
+      "duplicateTitle": "Похожее дело уже есть"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -2951,7 +2960,17 @@
       "summarize": "Подвести итог через ИИ",
       "summarizePreviewTitle": "Итог от ИИ",
       "summarizeCitations": "На основе {count} комментариев",
-      "postSummary": "Опубликовать как комментарий"
+      "postSummary": "Опубликовать как комментарий",
+      "viewerYou": "Вы",
+      "draftReply": "Написать черновик ответа",
+      "draftReplyPreviewTitle": "Черновик ответа",
+      "useDraft": "Вставить в поле комментария",
+      "explainRisk": "Объяснить этот риск",
+      "explainRiskPreviewTitle": "Почему стоит отметка риска",
+      "suggestAssignee": "Кому поручить",
+      "suggestAssigneePreviewTitle": "Предложенные исполнители",
+      "boardDigest": "Кто задерживает",
+      "boardDigestPreviewTitle": "Самые рискованные дела на доске"
     },
     "actions": {
       "create": "Новая задача"

@@ -1018,9 +1018,9 @@
       "minutes": "{count} дақиқа",
       "needsApproval": "Тасдиқ керак",
       "risk": {
-        "high": "Юқори хавф",
-        "medium": "Ўртача хавф",
-        "low": "Паст хавф"
+        "none": "Хавф йўқ",
+        "at_risk": "Муддат яқинлашмоқда",
+        "overdue": "Муддати ўтган"
       },
       "severity": {
         "high": "Жиддий",
@@ -1733,7 +1733,9 @@
       "submitUpdate": "Ўзгаришларни сақлаш",
       "validation": {
         "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлиши керак"
-      }
+      },
+      "aiDraftCarpool": "Йўл-йўриқ",
+      "aiDraftPickDate": "Қайси санани оламиз?"
     },
     "diff": {
       "title": "Нималар ўзгарди",
@@ -1796,7 +1798,8 @@
       "summaryFailed": "Муҳокамани қисқача баён қилиб бўлмади",
       "summaryAccept": "Изоҳга қўшиш",
       "summaryEdit": "Қўшиб, таҳрирлаш",
-      "summaryDiscard": "Рад этиш"
+      "summaryDiscard": "Рад этиш",
+      "viewerFallback": "Сиз"
     },
     "carpool": {
       "title": "Бирга бориш",
@@ -2442,21 +2445,21 @@
         "title": "AI давр режаси",
         "editAria": "Таклиф этилган тартибни таҳрирланг, ҳар бир вазифа алоҳида қаторда",
         "focusBadge": "Бундан бошланг",
-        "emptyBucket": "Аввал бу даврга вазифа қўшинг"
-      },
-      "weeklySummary": {
-        "action": "Ҳафталик хулоса",
-        "title": "AI ҳафталик хулосаси",
-        "acceptLabel": "Қайд сифатида сақлаш",
-        "editAria": "Хулосани таҳрирланг",
-        "subjectSelf": "Сиз",
-        "periodLabel": "сўнгги 7 кун",
-        "noteTitle": "Ҳафталик хулоса",
-        "savedToast": "Қайдларга қўшилди"
+        "emptyBucket": "Аввал бу даврга вазифа қўшинг",
+        "appliedToast": "Режа қўлланилди"
       },
       "translate": {
         "action": "{locale} тилига таржима қилиш",
         "title": "{locale} тилига таржима"
+      },
+      "catchUp": {
+        "subjectSelf": "Сиз",
+        "noteTitle": "Ҳафталик хулоса",
+        "savedToast": "Хулоса қайдларга сақланди",
+        "action": "Нимани ўтказиб юбордим",
+        "title": "Охирги ҳафта",
+        "acceptLabel": "Қайдларга сақлаш",
+        "editAria": "Хулоса матнини таҳрирлаш"
       }
     }
   },
@@ -2521,7 +2524,12 @@
       "planPreviewTitle": "AI режа кўриниши",
       "applyFocus": "Асосий картани қўллаш",
       "focus": "Шундан бошланг: {title}",
-      "planApplied": "Асосий карта янгиланди"
+      "planApplied": "Асосий карта янгиланди",
+      "viewerYou": "Сиз",
+      "catchUp": "Нима ўзгарди",
+      "catchUpPreviewTitle": "Лойиҳада охирги ҳафта",
+      "catchUpDone": "Ёпиш",
+      "applyPlan": "Режани қўллаш"
     }
   },
   "structure": {
@@ -2750,7 +2758,8 @@
       "aiPreviewTitle": "AI аниқлаган карта",
       "aiError": "Матнни аниқлаб бўлмади",
       "aiMeta": "{tokens} токен · {ms} мс",
-      "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади."
+      "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади.",
+      "duplicateTitle": "Бунга ўхшаш иш аллақачон бор"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -2951,7 +2960,17 @@
       "summarize": "AI билан хулосалаш",
       "summarizePreviewTitle": "AI хулосаси",
       "summarizeCitations": "{count} та изоҳ асосида",
-      "postSummary": "Изоҳ сифатида жойлаш"
+      "postSummary": "Изоҳ сифатида жойлаш",
+      "viewerYou": "Сиз",
+      "draftReply": "Жавоб лойиҳасини ёзиш",
+      "draftReplyPreviewTitle": "Жавоб лойиҳаси",
+      "useDraft": "Изоҳ майдонига қўйиш",
+      "explainRisk": "Бу хавфни тушунтир",
+      "explainRiskPreviewTitle": "Хавф нима учун қўйилди",
+      "suggestAssignee": "Кимга топширай",
+      "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
+      "boardDigest": "Ким кечиктиряпти",
+      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
     },
     "actions": {
       "create": "Янги вазифа"

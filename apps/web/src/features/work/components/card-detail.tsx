@@ -358,8 +358,10 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
         card: {
           id: card.id,
           title: card.title,
-          // The server's verdict, passed through. The prompt is explicit that it may not re-decide.
-          riskLevel: card.risk === 'overdue' ? 'high' : card.risk === 'at_risk' ? 'medium' : 'low',
+          // The server's verdict, passed through *unchanged*. `computeRisk()` already decided, the
+          // prompt is explicit that it may not re-decide, and re-spelling the three values into a
+          // generic severity scale on the way is how this call started failing its own input schema.
+          riskLevel: card.risk,
           dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
           today,
           checklistTotal: card.checklist.length,

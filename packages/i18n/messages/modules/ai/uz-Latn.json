@@ -137,9 +137,9 @@
       "minutes": "{count} daqiqa",
       "needsApproval": "Tasdiq kerak",
       "risk": {
-        "high": "Yuqori xavf",
-        "medium": "Oʻrtacha xavf",
-        "low": "Past xavf"
+        "none": "Xavf yoʻq",
+        "at_risk": "Muddat yaqinlashmoqda",
+        "overdue": "Muddati oʻtgan"
       },
       "severity": {
         "high": "Jiddiy",

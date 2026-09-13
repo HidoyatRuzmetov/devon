@@ -137,9 +137,9 @@
       "minutes": "{count} min",
       "needsApproval": "Needs approval",
       "risk": {
-        "high": "High risk",
-        "medium": "Medium risk",
-        "low": "Low risk"
+        "none": "No risk",
+        "at_risk": "Deadline approaching",
+        "overdue": "Overdue"
       },
       "severity": {
         "high": "Serious",

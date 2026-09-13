@@ -22,7 +22,10 @@ import type { AiFeatureId } from './types.js'
 
 const localeSchema = z.enum(['uz-Latn', 'uz-Cyrl', 'ru', 'en'])
 const confidenceSchema = z.enum(['high', 'medium', 'low'])
-const riskLevelSchema = z.enum(['high', 'medium', 'low'])
+// `@devon/ai`'s own `riskLevelSchema`, mirrored exactly: these are the three values
+// `computeRisk()` produces on the server, not a generic severity scale. Guessing high/medium/low
+// here made every `deadline_risk` call fail its input schema with a 422 -- found live.
+const riskLevelSchema = z.enum(['none', 'at_risk', 'overdue'])
 const prioritySchema = z.enum(['none', 'low', 'medium', 'high', 'urgent'])
 const idSchema = z.string().min(1)
 const isoDateSchema = z.string()

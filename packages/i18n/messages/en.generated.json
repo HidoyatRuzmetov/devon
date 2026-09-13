@@ -1018,9 +1018,9 @@
       "minutes": "{count} min",
       "needsApproval": "Needs approval",
       "risk": {
-        "high": "High risk",
-        "medium": "Medium risk",
-        "low": "Low risk"
+        "none": "No risk",
+        "at_risk": "Deadline approaching",
+        "overdue": "Overdue"
       },
       "severity": {
         "high": "Serious",
@@ -1733,7 +1733,9 @@
       "submitUpdate": "Save changes",
       "validation": {
         "endsBeforeStarts": "The end time must be after the start time"
-      }
+      },
+      "aiDraftCarpool": "Travel",
+      "aiDraftPickDate": "Which date shall we take?"
     },
     "diff": {
       "title": "What changed",
@@ -1796,7 +1798,8 @@
       "summaryFailed": "Could not summarize this discussion",
       "summaryAccept": "Insert into comment",
       "summaryEdit": "Insert to edit",
-      "summaryDiscard": "Discard"
+      "summaryDiscard": "Discard",
+      "viewerFallback": "You"
     },
     "carpool": {
       "title": "Carpooling",
@@ -2442,21 +2445,21 @@
         "title": "AI period plan",
         "editAria": "Edit the suggested order, one to-do per line",
         "focusBadge": "Start here",
-        "emptyBucket": "Add a to-do to this period first"
-      },
-      "weeklySummary": {
-        "action": "Weekly summary",
-        "title": "AI weekly summary",
-        "acceptLabel": "Save as a note",
-        "editAria": "Edit the summary",
-        "subjectSelf": "You",
-        "periodLabel": "the last 7 days",
-        "noteTitle": "Weekly summary",
-        "savedToast": "Added to Notes"
+        "emptyBucket": "Add a to-do to this period first",
+        "appliedToast": "The plan has been applied"
       },
       "translate": {
         "action": "Translate to {locale}",
         "title": "Translation to {locale}"
+      },
+      "catchUp": {
+        "subjectSelf": "You",
+        "noteTitle": "The week in review",
+        "savedToast": "Saved to your notes",
+        "action": "What did I miss",
+        "title": "The past week",
+        "acceptLabel": "Save to notes",
+        "editAria": "Edit the summary text"
       }
     }
   },
@@ -2521,7 +2524,12 @@
       "planPreviewTitle": "AI plan preview",
       "applyFocus": "Apply focus card",
       "focus": "Start with: {title}",
-      "planApplied": "Focus card updated"
+      "planApplied": "Focus card updated",
+      "viewerYou": "You",
+      "catchUp": "What changed",
+      "catchUpPreviewTitle": "This project, the past week",
+      "catchUpDone": "Close",
+      "applyPlan": "Apply the plan"
     }
   },
   "structure": {
@@ -2750,7 +2758,8 @@
       "aiPreviewTitle": "AI-parsed card",
       "aiError": "Could not parse that text",
       "aiMeta": "{tokens} tokens · {ms} ms",
-      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood."
+      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood.",
+      "duplicateTitle": "Something similar already exists"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -2951,7 +2960,17 @@
       "summarize": "Summarise with AI",
       "summarizePreviewTitle": "AI summary",
       "summarizeCitations": "Based on {count} comment(s)",
-      "postSummary": "Post as a comment"
+      "postSummary": "Post as a comment",
+      "viewerYou": "You",
+      "draftReply": "Draft a reply",
+      "draftReplyPreviewTitle": "Reply draft",
+      "useDraft": "Put it in the comment box",
+      "explainRisk": "Explain this risk",
+      "explainRiskPreviewTitle": "Why this card is at risk",
+      "suggestAssignee": "Who should take this",
+      "suggestAssigneePreviewTitle": "Suggested owners",
+      "boardDigest": "Who is running late",
+      "boardDigestPreviewTitle": "The riskiest work on the board"
     },
     "actions": {
       "create": "New card"

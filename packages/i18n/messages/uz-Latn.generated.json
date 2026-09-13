@@ -1018,9 +1018,9 @@
       "minutes": "{count} daqiqa",
       "needsApproval": "Tasdiq kerak",
       "risk": {
-        "high": "Yuqori xavf",
-        "medium": "Oʻrtacha xavf",
-        "low": "Past xavf"
+        "none": "Xavf yoʻq",
+        "at_risk": "Muddat yaqinlashmoqda",
+        "overdue": "Muddati oʻtgan"
       },
       "severity": {
         "high": "Jiddiy",
@@ -1733,7 +1733,9 @@
       "submitUpdate": "Oʻzgarishlarni saqlash",
       "validation": {
         "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak"
-      }
+      },
+      "aiDraftCarpool": "Yoʻl-yoʻriq",
+      "aiDraftPickDate": "Qaysi sanani olamiz?"
     },
     "diff": {
       "title": "Nimalar oʻzgardi",
@@ -1796,7 +1798,8 @@
       "summaryFailed": "Muhokamani qisqacha bayon qilib boʻlmadi",
       "summaryAccept": "Izohga qoʻshish",
       "summaryEdit": "Qoʻshib, tahrirlash",
-      "summaryDiscard": "Rad etish"
+      "summaryDiscard": "Rad etish",
+      "viewerFallback": "Siz"
     },
     "carpool": {
       "title": "Birga borish",
@@ -2442,21 +2445,21 @@
         "title": "AI davr rejasi",
         "editAria": "Taklif etilgan tartibni tahrirlang, har bir vazifa alohida qatorda",
         "focusBadge": "Bundan boshlang",
-        "emptyBucket": "Avval bu davrga vazifa qoʻshing"
-      },
-      "weeklySummary": {
-        "action": "Haftalik xulosa",
-        "title": "AI haftalik xulosasi",
-        "acceptLabel": "Qayd sifatida saqlash",
-        "editAria": "Xulosani tahrirlang",
-        "subjectSelf": "Siz",
-        "periodLabel": "soʻnggi 7 kun",
-        "noteTitle": "Haftalik xulosa",
-        "savedToast": "Qaydlarga qoʻshildi"
+        "emptyBucket": "Avval bu davrga vazifa qoʻshing",
+        "appliedToast": "Reja qoʻllanildi"
       },
       "translate": {
         "action": "{locale} tiliga tarjima qilish",
         "title": "{locale} tiliga tarjima"
+      },
+      "catchUp": {
+        "subjectSelf": "Siz",
+        "noteTitle": "Haftalik xulosa",
+        "savedToast": "Xulosa qaydlarga saqlandi",
+        "action": "Nimani oʻtkazib yubordim",
+        "title": "Oxirgi hafta",
+        "acceptLabel": "Qaydlarga saqlash",
+        "editAria": "Xulosa matnini tahrirlash"
       }
     }
   },
@@ -2521,7 +2524,12 @@
       "planPreviewTitle": "AI reja koʻrinishi",
       "applyFocus": "Asosiy kartani qoʻllash",
       "focus": "Shundan boshlang: {title}",
-      "planApplied": "Asosiy karta yangilandi"
+      "planApplied": "Asosiy karta yangilandi",
+      "viewerYou": "Siz",
+      "catchUp": "Nima oʻzgardi",
+      "catchUpPreviewTitle": "Loyihada oxirgi hafta",
+      "catchUpDone": "Yopish",
+      "applyPlan": "Rejani qoʻllash"
     }
   },
   "structure": {
@@ -2750,7 +2758,8 @@
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matnni aniqlab boʻlmadi",
       "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi."
+      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
+      "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -2951,7 +2960,17 @@
       "summarize": "AI bilan xulosalash",
       "summarizePreviewTitle": "AI xulosasi",
       "summarizeCitations": "{count} ta izoh asosida",
-      "postSummary": "Izoh sifatida joylash"
+      "postSummary": "Izoh sifatida joylash",
+      "viewerYou": "Siz",
+      "draftReply": "Javob loyihasini yozish",
+      "draftReplyPreviewTitle": "Javob loyihasi",
+      "useDraft": "Izoh maydoniga qoʻyish",
+      "explainRisk": "Bu xavfni tushuntir",
+      "explainRiskPreviewTitle": "Xavf nima uchun qoʻyildi",
+      "suggestAssignee": "Kimga topshiray",
+      "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
+      "boardDigest": "Kim kechiktiryapti",
+      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
     },
     "actions": {
       "create": "Yangi vazifa"

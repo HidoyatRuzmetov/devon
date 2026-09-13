@@ -568,7 +568,7 @@ function BoardRiskDigest({
         cards: atRisk.slice(0, 40).map((card) => ({
           id: card.id,
           title: card.title,
-          riskLevel: card.risk === 'overdue' ? 'high' : 'medium',
+          riskLevel: card.risk,
           assigneeName: nameFor(card.assigneeUserId),
           dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
           daysOverdue: card.dueAt
