@@ -217,3 +217,47 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `automations.builder.followupDueInDays` | Necha kunda | Necha kundan keyin |
 | `automations.runsPage.of` | {pages} sahifadan {page} chisi | {pages} sahifadan {page}-si |
 | `automations.forbiddenAction` | Ishlarni koʻrish | Doskani ochish |
+
+## calendar — 39 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `calendar.title` | Kalendar | Taqvim |
+| `calendar.eyebrow` | REJA VA ESLATMALAR | TAQVIM |
+| `calendar.description` | Tadbirlar va kartochka muddatlari — bir joyda, telefoningizdagi kalendarda va eslatmalarda. | Tadbirlar va karta muddatlari bir joyda — telefoningizdagi taqvimda va eslatmalarda. |
+| `calendar.actions.undo` | Qaytarish | Bekor qilish |
+| `calendar.forbidden.body` | Kalendar obunalari shaxsiy. Hisobingizga kirganingizni tekshiring. | Taqvim obunalari shaxsiy. Oʻz hisobingizga kirganingizni tekshiring. |
+| `calendar.offline.body` | Internet tiklanganda kun tartibi oʻzi yangilanadi. | Aloqa tiklangach kun tartibi oʻzi yangilanadi. |
+| `calendar.agenda.description` | Sizning tadbirlaringiz va muddati kelayotgan kartochkalaringiz. | Tadbirlaringiz va muddati yaqinlashgan kartalaringiz. |
+| `calendar.agenda.kind.card` | Kartochka | Karta |
+| `calendar.agenda.empty.body` | Tadbir yarating yoki kartochkaga muddat qoʻying — bu yerda koʻrinadi. | Tadbir qoʻshing yoki kartaga muddat belgilang — shu yerda koʻrinadi. |
+| `calendar.agenda.error.body` | Ulanishda muammo boʻldi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
+| `calendar.feeds.title` | Kalendar obunalari | Taqvim obunalari |
+| `calendar.feeds.description` | Maxfiy havola orqali WorkPortal kalendaringizni telefoningizga yoki Outlookka ulang. | Maxfiy havola orqali WorkPortal taqvimingizni telefoningizga yoki Outlookka ulang. |
+| `calendar.feeds.secretWarning` | Bu havola — kalit. Havolaga ega har kim sizning tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻzingizning ilovangizga qoʻying. | Bu havola — kalit. Havolaga ega har kim tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻz ilovangizga kiriting. |
+| `calendar.feeds.create.labelPlaceholder` | Masalan: iPhone kalendari | Masalan: iPhone taqvimi |
+| `calendar.feeds.create.submit` | Obuna yaratish | Obuna qoʻshish |
+| `calendar.feeds.create.creating` | Yaratilmoqda… | Qoʻshilmoqda… |
+| `calendar.feeds.kind.tasks` | Faqat kartochka muddatlari | Faqat karta muddatlari |
+| `calendar.feeds.kind.allHelp` | Tadbirlar ham, muddati bor kartochkalar ham. | Tadbirlar ham, muddati bor kartalar ham. |
+| `calendar.feeds.kind.tasksHelp` | Faqat sizga biriktirilgan, muddati bor kartochkalar. | Faqat sizga biriktirilgan, muddati bor kartalar. |
+| `calendar.feeds.url.webcalHelp` | iPhone, Apple Calendar va Outlook uchun — bosilganda kalendar ilovasi ochiladi. | iPhone, Apple Calendar va Outlook uchun — bosilganda taqvim ilovasi ochiladi. |
+| `calendar.feeds.meta.created` | Yaratilgan {date} | Qoʻshilgan {date} |
+| `calendar.feeds.rotate.confirmTitle` | Havolani yangilaymizmi? | Havola yangilansinmi? |
+| `calendar.feeds.rotate.confirmBody` | Eski havola shu zahoti ishlamay qoladi. Yangi havolani kalendar ilovangizga qaytadan qoʻyishingiz kerak boʻladi. | Eski havola shu zahoti ishlamay qoladi. Yangi havolani taqvim ilovangizga qaytadan kiritishingiz kerak boʻladi. |
+| `calendar.feeds.rotate.confirm` | Ha, yangilansin | Yangilash |
+| `calendar.feeds.empty.body` | Obuna yarating — tadbirlaringiz telefoningizdagi kalendarda ham koʻrinadi. | Obuna qoʻshing — tadbirlaringiz telefoningizdagi taqvimda ham koʻrinadi. |
+| `calendar.feeds.empty.action` | Obuna yaratish | Obuna qoʻshish |
+| `calendar.feeds.error.body` | Ulanishda muammo boʻldi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
+| `calendar.push.description` | Muddat yaqinlashganda yoki sizni eslatib oʻtishganda — WorkPortal ochiq boʻlmasa ham xabar keladi. | Muddat yaqinlashganda yoki sizni belgilashganda xabar keladi — WorkPortal ochiq boʻlmasa ham. |
+| `calendar.push.what.mentioned` | Izohda sizni eslatib oʻtishsa | Izohda sizni belgilashsa |
+| `calendar.push.what.assigned` | Sizga kartochka biriktirilsa | Sizga karta biriktirilsa |
+| `calendar.push.what.due` | Kartochka muddati yaqinlashsa | Karta muddati yaqinlashsa |
+| `calendar.push.quietHours.note` | Tinch soatlaringizda xabar kelmaydi — kirish qutisi sozlamalaridagi vaqtga boʻysunadi. | Tinch soatlaringizda xabar kelmaydi — bildirishnoma sozlamalaringizdagi vaqt qoʻllanadi. |
+| `calendar.push.state.off` | Bu qurilmada oʻchirilgan | Bu qurilmada oʻchiq |
+| `calendar.push.unsupported.body` | Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhoneʼda WorkPortalni avval «Bosh ekranga qoʻshish» kerak. | Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhoneʼda avval WorkPortalni bosh ekranga qoʻshing. |
+| `calendar.push.denied.title` | Brauzer eslatmalarni bloklagan | Brauzer bildirishnomalarni toʻsib qoʻygan |
+| `calendar.push.denied.body` | Manzil satridagi qulf belgisini bosing va bu sayt uchun bildirishnomalarga ruxsat bering, soʻng qaytadan urinib koʻring. | Manzil satridagi qulf belgisini bosing, bu sayt uchun bildirishnomalarga ruxsat bering va qayta urinib koʻring. |
+| `calendar.push.error.body` | Ulanishda muammo boʻldi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
+| `calendar.addTo.label` | Kalendarga qoʻshish | Taqvimga qoʻshish |
+| `calendar.addTo.hint` | Tadbirni oʻz kalendaringizga koʻchiradi. | Tadbirni oʻz taqvimingizga koʻchiradi. |

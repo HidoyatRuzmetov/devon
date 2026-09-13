@@ -1594,9 +1594,9 @@
     "forbiddenAction": "Doskani ochish"
   },
   "calendar": {
-    "title": "Kalendar",
-    "eyebrow": "REJA VA ESLATMALAR",
-    "description": "Tadbirlar va kartochka muddatlari — bir joyda, telefoningizdagi kalendarda va eslatmalarda.",
+    "title": "Taqvim",
+    "eyebrow": "TAQVIM",
+    "description": "Tadbirlar va karta muddatlari bir joyda — telefoningizdagi taqvimda va eslatmalarda.",
     "tabs": {
       "agenda": "Kun tartibi",
       "feeds": "Obunalar",
@@ -1608,19 +1608,19 @@
       "copy": "Nusxa olish",
       "copied": "Nusxa olindi",
       "open": "Ochish",
-      "undo": "Qaytarish"
+      "undo": "Bekor qilish"
     },
     "forbidden": {
       "title": "Bu sahifa siz uchun ochiq emas",
-      "body": "Kalendar obunalari shaxsiy. Hisobingizga kirganingizni tekshiring."
+      "body": "Taqvim obunalari shaxsiy. Oʻz hisobingizga kirganingizni tekshiring."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet tiklanganda kun tartibi oʻzi yangilanadi."
+      "body": "Aloqa tiklangach kun tartibi oʻzi yangilanadi."
     },
     "agenda": {
       "title": "Yaqin kunlar",
-      "description": "Sizning tadbirlaringiz va muddati kelayotgan kartochkalaringiz.",
+      "description": "Tadbirlaringiz va muddati yaqinlashgan kartalaringiz.",
       "range": {
         "label": "Davr",
         "week": "7 kun",
@@ -1629,7 +1629,7 @@
       },
       "kind": {
         "event": "Tadbir",
-        "card": "Kartochka"
+        "card": "Karta"
       },
       "today": "Bugun",
       "tomorrow": "Ertaga",
@@ -1637,7 +1637,7 @@
       "allDay": "Kun boʻyi",
       "empty": {
         "title": "Yaqin kunlarda hech narsa yoʻq",
-        "body": "Tadbir yarating yoki kartochkaga muddat qoʻying — bu yerda koʻrinadi.",
+        "body": "Tadbir qoʻshing yoki kartaga muddat belgilang — shu yerda koʻrinadi.",
         "action": "Tadbirlarga oʻtish"
       },
       "loading": {
@@ -1645,39 +1645,39 @@
       },
       "error": {
         "title": "Kun tartibini ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "feeds": {
-      "title": "Kalendar obunalari",
-      "description": "Maxfiy havola orqali WorkPortal kalendaringizni telefoningizga yoki Outlookka ulang.",
-      "secretWarning": "Bu havola — kalit. Havolaga ega har kim sizning tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻzingizning ilovangizga qoʻying.",
+      "title": "Taqvim obunalari",
+      "description": "Maxfiy havola orqali WorkPortal taqvimingizni telefoningizga yoki Outlookka ulang.",
+      "secretWarning": "Bu havola — kalit. Havolaga ega har kim tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻz ilovangizga kiriting.",
       "create": {
         "title": "Yangi obuna",
         "label": "Nomi",
-        "labelPlaceholder": "Masalan: iPhone kalendari",
+        "labelPlaceholder": "Masalan: iPhone taqvimi",
         "kind": "Nimalar kirsin",
-        "submit": "Obuna yaratish",
-        "creating": "Yaratilmoqda…"
+        "submit": "Obuna qoʻshish",
+        "creating": "Qoʻshilmoqda…"
       },
       "kind": {
         "all": "Hammasi",
         "events": "Faqat tadbirlar",
-        "tasks": "Faqat kartochka muddatlari",
-        "allHelp": "Tadbirlar ham, muddati bor kartochkalar ham.",
+        "tasks": "Faqat karta muddatlari",
+        "allHelp": "Tadbirlar ham, muddati bor kartalar ham.",
         "eventsHelp": "Faqat siz qatnashadigan tadbirlar.",
-        "tasksHelp": "Faqat sizga biriktirilgan, muddati bor kartochkalar."
+        "tasksHelp": "Faqat sizga biriktirilgan, muddati bor kartalar."
       },
       "url": {
         "https": "Havola (https)",
         "webcal": "Webcal havolasi",
         "caldav": "CalDAV havolasi",
         "httpsHelp": "Google Calendar → «URL orqali qoʻshish» uchun.",
-        "webcalHelp": "iPhone, Apple Calendar va Outlook uchun — bosilganda kalendar ilovasi ochiladi.",
+        "webcalHelp": "iPhone, Apple Calendar va Outlook uchun — bosilganda taqvim ilovasi ochiladi.",
         "caldavHelp": "DAVx5, Thunderbird va Evolution uchun. Faqat oʻqish."
       },
       "meta": {
-        "created": "Yaratilgan {date}",
+        "created": "Qoʻshilgan {date}",
         "rotated": "Yangilangan {date}",
         "lastAccessed": "Oxirgi marta oʻqilgan {date}",
         "neverAccessed": "Hali bir marta ham oʻqilmagan",
@@ -1685,9 +1685,9 @@
       },
       "rotate": {
         "action": "Havolani yangilash",
-        "confirmTitle": "Havolani yangilaymizmi?",
-        "confirmBody": "Eski havola shu zahoti ishlamay qoladi. Yangi havolani kalendar ilovangizga qaytadan qoʻyishingiz kerak boʻladi.",
-        "confirm": "Ha, yangilansin",
+        "confirmTitle": "Havola yangilansinmi?",
+        "confirmBody": "Eski havola shu zahoti ishlamay qoladi. Yangi havolani taqvim ilovangizga qaytadan kiritishingiz kerak boʻladi.",
+        "confirm": "Yangilash",
         "cancel": "Bekor qilish",
         "toast": "Havola yangilandi"
       },
@@ -1698,36 +1698,36 @@
       "copyToast": "Havola nusxalandi",
       "empty": {
         "title": "Hali obuna yoʻq",
-        "body": "Obuna yarating — tadbirlaringiz telefoningizdagi kalendarda ham koʻrinadi.",
-        "action": "Obuna yaratish"
+        "body": "Obuna qoʻshing — tadbirlaringiz telefoningizdagi taqvimda ham koʻrinadi.",
+        "action": "Obuna qoʻshish"
       },
       "loading": {
         "title": "Obunalar yuklanmoqda"
       },
       "error": {
         "title": "Obunalarni ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "push": {
       "title": "Brauzer eslatmalari",
-      "description": "Muddat yaqinlashganda yoki sizni eslatib oʻtishganda — WorkPortal ochiq boʻlmasa ham xabar keladi.",
+      "description": "Muddat yaqinlashganda yoki sizni belgilashganda xabar keladi — WorkPortal ochiq boʻlmasa ham.",
       "what": {
         "title": "Nima uchun xabar keladi",
-        "mentioned": "Izohda sizni eslatib oʻtishsa",
-        "assigned": "Sizga kartochka biriktirilsa",
-        "due": "Kartochka muddati yaqinlashsa",
+        "mentioned": "Izohda sizni belgilashsa",
+        "assigned": "Sizga karta biriktirilsa",
+        "due": "Karta muddati yaqinlashsa",
         "decision": "Sizdan qaror kutilsa"
       },
       "quietHours": {
-        "note": "Tinch soatlaringizda xabar kelmaydi — kirish qutisi sozlamalaridagi vaqtga boʻysunadi."
+        "note": "Tinch soatlaringizda xabar kelmaydi — bildirishnoma sozlamalaringizdagi vaqt qoʻllanadi."
       },
       "enable": "Eslatmalarni yoqish",
       "enabling": "Yoqilmoqda…",
       "disable": "Bu qurilmada oʻchirish",
       "state": {
         "on": "Bu qurilmada yoqilgan",
-        "off": "Bu qurilmada oʻchirilgan"
+        "off": "Bu qurilmada oʻchiq"
       },
       "devices": {
         "title": "Ulangan qurilmalar",
@@ -1738,11 +1738,11 @@
       },
       "unsupported": {
         "title": "Bu brauzer eslatmalarni qoʻllamaydi",
-        "body": "Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhoneʼda WorkPortalni avval «Bosh ekranga qoʻshish» kerak."
+        "body": "Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhone uchun avval WorkPortalni bosh ekranga qoʻshing."
       },
       "denied": {
-        "title": "Brauzer eslatmalarni bloklagan",
-        "body": "Manzil satridagi qulf belgisini bosing va bu sayt uchun bildirishnomalarga ruxsat bering, soʻng qaytadan urinib koʻring."
+        "title": "Brauzer bildirishnomalarni toʻsib qoʻygan",
+        "body": "Manzil satridagi qulf belgisini bosing, bu sayt uchun bildirishnomalarga ruxsat bering va qayta urinib koʻring."
       },
       "disabledOnServer": {
         "title": "Bu serverda eslatmalar sozlanmagan",
@@ -1758,17 +1758,17 @@
       },
       "error": {
         "title": "Sozlamalarni ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "addTo": {
-      "label": "Kalendarga qoʻshish",
+      "label": "Taqvimga qoʻshish",
       "google": "Google Calendar",
       "outlook": "Outlook.com",
       "office365": "Microsoft 365",
       "yahoo": "Yahoo Calendar",
       "ics": "Fayl (.ics)",
-      "hint": "Tadbirni oʻz kalendaringizga koʻchiradi.",
+      "hint": "Tadbirni oʻz taqvimingizga koʻchiradi.",
       "error": "Havolalarni tayyorlab boʻlmadi"
     }
   },
