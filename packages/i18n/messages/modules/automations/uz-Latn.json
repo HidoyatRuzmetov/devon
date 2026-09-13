@@ -18,7 +18,7 @@
     "emptyBody": "Birinchi qoidani qoʻshing — masalan, muddati oʻtgan kartani boshliqqa xabar qilsin.",
     "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
     "forbiddenBody": "Qoidalarni faqat boshqarma boshligʻi sozlaydi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling.",
-    "runsTitle": "Bajarilishlar tarixi",
+    "runsTitle": "Ishga tushishlar tarixi",
     "runsDescription": "Har bir ishga tushish — nima qilingani yoki nega oʻtkazib yuborilgani bilan.",
     "runsEmptyTitle": "Hali hech narsa ishga tushmagan",
     "runsEmptyBody": "Qoida ishga tushganda shu yerda koʻrinadi.",
@@ -92,7 +92,7 @@
     "run": {
       "status": {
         "applied": "Bajarildi",
-        "skipped": "Oʻtkazildi",
+        "skipped": "Oʻtkazib yuborildi",
         "failed": "Xato"
       },
       "reason": {

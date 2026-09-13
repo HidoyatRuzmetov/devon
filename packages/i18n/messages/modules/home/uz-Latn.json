@@ -30,18 +30,18 @@
         "body": "{done}/{total} bajarildi",
         "photo": "Suratingizni qoʻshing",
         "department": "Boshqarmaga qoʻshiling",
-        "work": "Birinchi kartangizni oching",
+        "work": "Birinchi kartangizni qoʻshing",
         "event": "Tadbirga ishtirokni belgilang",
         "focus": "Diqqat vaqtini oʻtkazing",
         "done": "Hammasi bajarildi"
       },
       "kpi": {
-        "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
+        "onTimeQuestion": "Ishlaringizning qanchasi muddatida bajarilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
       "sectionTiles": "Bugun",
       "givenOverdue": {
-        "title": "Men bergan ishlar kechikdi",
+        "title": "Kechikkan topshiriqlarim",
         "body": "Men bergan {count} ta ish muddatidan oʻtdi",
         "empty": "Men bergan ishlarning hammasi muddatida",
         "cta": "Men bergan ishlar"
@@ -66,13 +66,13 @@
         "title": "Kechikayotgan ishlar",
         "meaning": "Eng koʻp kechikkan besh xodim. Ismni bosing — jadvalga oʻtasiz.",
         "cta": "Xodimlar jadvali",
-        "empty": "Kechikkan vazifa yoʻq. Boshqarma muddatlarga ulgurmoqda."
+        "empty": "Kechikkan ish yoʻq. Boshqarma muddatlarga ulgurmoqda."
       },
       "load": {
         "title": "Bu hafta yuklama",
         "meaning": "Har bir xodimning ochiq kartalari haftalik sigʻimiga nisbatan.",
         "cta": "Yuklama",
-        "empty": "Hozircha ochiq vazifa yoʻq."
+        "empty": "Hozircha ochiq ish yoʻq."
       },
       "projects": {
         "title": "Loyihalar",

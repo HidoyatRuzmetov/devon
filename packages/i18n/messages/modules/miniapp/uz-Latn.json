@@ -1,7 +1,7 @@
 {
   "miniapp": {
     "title": "WorkPortal",
-    "devMode": "Demo rejim — Telegram emas, brauzer oynasi",
+    "devMode": "Namoyish rejimi — Telegram emas, brauzer oynasi",
     "noDepartment": "Boshqarma tanlanmagan",
     "action": {
       "back": "Orqaga",
@@ -56,7 +56,7 @@
     "priority": {
       "none": "Oddiy",
       "low": "Past",
-      "medium": "Oʻrta",
+      "medium": "Oʻrtacha",
       "high": "Yuqori",
       "urgent": "Shoshilinch"
     },
@@ -65,10 +65,10 @@
       "member": "Xodim"
     },
     "reason": {
-      "assigned": "Topshirildi",
-      "mentioned": "Sizni belgilashdi",
+      "assigned": "Topshiriq",
+      "mentioned": "Belgilash",
       "due": "Muddat",
-      "updated": "Yangilandi",
+      "updated": "Yangilanish",
       "rsvp": "Tadbir",
       "poll": "Soʻrovnoma",
       "decision": "Qaror",
@@ -221,7 +221,7 @@
     },
     "fields": {
       "title": "Maʼlumotlarim",
-      "eyebrow": "SOʻRALGAN MAYDONLAR",
+      "eyebrow": "MAYDONLAR",
       "requested": "Soʻraldi",
       "missing": "Toʻldirilmagan",
       "save": "Saqlash",
@@ -240,9 +240,9 @@
       "bot": "Bot",
       "noBot": "Bot nomi hali koʻrsatilmagan. Buni tizim administratori qoʻshadi.",
       "appUrl": "Mini ilova manzili",
-      "copy": "Nusxalash",
-      "copied": "Nusxalandi",
-      "copyFailed": "Nusxalab boʻlmadi",
+      "copy": "Nusxa olish",
+      "copied": "Nusxa olindi",
+      "copyFailed": "Nusxa olinmadi",
       "checklist": "Sozlash roʻyxati",
       "done": "Tayyor",
       "todo": "Qoldi",

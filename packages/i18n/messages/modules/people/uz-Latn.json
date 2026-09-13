@@ -56,9 +56,9 @@
         "member": "Xodim"
       },
       "density": {
-        "label": "Qator balandligi",
+        "label": "Zichlik",
         "comfortable": "Keng",
-        "compact": "Zich"
+        "compact": "Ixcham"
       },
       "groupBy": {
         "label": "Guruhlash",
@@ -167,7 +167,7 @@
         "description": "Soʻnggi 30 kunda yakunlangan vazifalar"
       },
       "onTimeRate90d": {
-        "label": "Oʻz vaqtida",
+        "label": "Muddatida",
         "description": "Soʻnggi 90 kunda muddatida yakunlangan vazifalar ulushi"
       },
       "workloadHours": {
@@ -305,7 +305,7 @@
         "week": "Hafta",
         "done": "Bajarilgan",
         "created": "Olingan",
-        "onTimeRate": "Oʻz vaqtida, %",
+        "onTimeRate": "Muddatida, %",
         "finished": "Yakunlangan",
         "project": "Loyiha",
         "open": "Ochiq",
@@ -317,8 +317,8 @@
           "empty": "Soʻnggi 12 haftada yakunlangan ish yoʻq."
         },
         "onTime": {
-          "title": "Oʻz vaqtida bajarish",
-          "question": "Muddati bor ishlarning qanchasi vaqtida topshirildi?",
+          "title": "Muddatida bajarish",
+          "question": "Muddati bor ishlarning qanchasi muddatida bajarildi?",
           "empty": "Muddati belgilangan yakunlangan ish hali yoʻq."
         },
         "load": {
@@ -371,7 +371,7 @@
         "rsvp": {
           "yes": "Boraman",
           "no": "Bormayman",
-          "maybe": "Aniq emas",
+          "maybe": "Balki",
           "waitlist": "Navbatda"
         },
         "empty": {

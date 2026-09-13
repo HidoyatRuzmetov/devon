@@ -46,7 +46,7 @@
       "aiPreviewTitle": "AI аниқлаган карта",
       "aiError": "Матн тушунарсиз бўлди",
       "aiMeta": "{tokens} токен · {ms} мс",
-      "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади.",
+      "dialogHint": "Номини ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади.",
       "fromTemplate": "Андозадан яратиш",
       "duplicateTitle": "Бунга ўхшаш иш аллақачон бор"
     },
@@ -89,7 +89,7 @@
       "emptyChip": "{field}: бўш"
     },
     "field": {
-      "title": "Сарлавҳа",
+      "title": "Номи",
       "description": "Тавсиф",
       "assignee": "Кимга",
       "giver": "Кимдан",
@@ -132,12 +132,12 @@
       "readOnly": "Бу картани сиз ўзгартира олмайсиз — фақат ўқиш учун. Уни берган, бажараётган ва қўшган ходим ҳамда бошқарма бошлиғи таҳрирлайди.",
       "assignedTo": "Кимга: {name}",
       "byGiver": "Кимдан: {name}",
-      "reassigned": "Вазифа {name}га ўтказилди",
+      "reassigned": "Карта {name}га ўтказилди",
       "giverChanged": "Топшириқ берувчи: {name}",
       "undo": "Бекор қилиш"
     },
     "priority": {
-      "none": "Муҳимлик йўқ",
+      "none": "Белгиланмаган",
       "low": "Паст",
       "medium": "Ўртача",
       "high": "Юқори",
@@ -192,7 +192,7 @@
         "person": "Ходим бўйича",
         "project": "Лойиҳа бўйича"
       },
-      "zoomLabel": "Масштаб",
+      "zoomLabel": "Миқйос",
       "zoom": {
         "day": "Кун",
         "week": "Ҳафта",
@@ -260,18 +260,18 @@
       "useDraft": "Изоҳ майдонига қўйиш",
       "explainRisk": "Хавфни тушунтириш",
       "explainRiskPreviewTitle": "Бу карта нега хавф остида",
-      "suggestAssignee": "Кимга бериш керак",
+      "suggestAssignee": "Кимга топшириш",
       "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
       "boardDigest": "Ким кечикйапти",
       "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
     },
     "actions": {
-      "create": "Янги вазифа"
+      "create": "Янги карта"
     },
     "estimate": {
       "label": "Баҳоланган вақт",
       "placeholder": "2 соат 30 дақиқа",
-      "hint": "Масалан: 2, 1,5 соат, 3 кун ёки 90 дақиқа.",
+      "hint": "Масалан: 2 соат, 1,5 соат, 3 кун ёки 90 дақиқа.",
       "understood": "Тушунилди: {value}",
       "unreadable": "Бу вақт тушунарсиз. Масалан: 2 соат 30 дақиқа.",
       "clamped": "Энг кўпи 400 соат. Бундан ошса, картани бўлакларга ажратинг.",
@@ -289,7 +289,7 @@
       "timeSummary": "{logged}/{estimate}"
     },
     "chip": {
-      "blocked": "Блокланган",
+      "blocked": "Тўхтаб турибди",
       "blockedBy": "{count} та картани кутмоқда",
       "repeats": "Такрорланади"
     },
@@ -499,9 +499,9 @@
       "capacityFailed": "Сиғимни сақлаб бўлмади",
       "capacityInvalid": "0 дан 168 гача сон ёзинг.",
       "legendTitle": "Ранглар нимани билдиради",
-      "legendFreeHours": "Сиғимнинг 80% идан кам",
+      "legendFreeHours": "Сиғимнинг 80%идан кам",
       "legendNearHours": "80–100%",
-      "legendOverHours": "100% дан ортиқ",
+      "legendOverHours": "100%дан ортиқ",
       "legendFreeCount": "{near} тадан кам карта",
       "legendNearCount": "{near}–{over} та карта",
       "legendOverCount": "{over} тадан ортиқ карта",
@@ -510,7 +510,7 @@
       "warningNoEstimate": "{count} та карта баҳоланмаган",
       "warningOpenLink": "Рўйхатни очиш",
       "modeCountBadge": "Карта сони бўйича",
-      "modeCountWhy": "Очиқ ишнинг атиги {pct}% и баҳоланган, шунинг учун ранглар соат эмас, карта сони бўйича.",
+      "modeCountWhy": "Очиқ ишнинг атиги {pct}%и баҳоланган, шунинг учун ранглар соат эмас, карта сони бўйича.",
       "modeHoursBadge": "Соат бўйича",
       "currentWeek": "Бу ҳафта",
       "cellSummaryCount": "{name}, {week}: {cards} та карта ({allowance} тагача)"
@@ -539,7 +539,7 @@
       "fieldTargetHint": "Рақам: карталар сони, фоиз ёки соат.",
       "fieldFilter": "Қайси карталар",
       "fieldFilterHint": "Бўш қолдирилса — бошқарманинг барча карталари.",
-      "fieldFilterPlaceholder": "label:murojaat",
+      "fieldFilterPlaceholder": "label:мурожаат",
       "fieldDueOn": "Муддат",
       "metric": {
         "cardsDone": "Бажарилган карталар сони",
@@ -563,7 +563,7 @@
       "saved": "Мақсад сақланди",
       "saveFailed": "Мақсадни сақлаб бўлмади",
       "percentTarget": "(мақсад: {target}%)",
-      "capUsed": "чегаранинг {pct}% и",
+      "capUsed": "чегаранинг {pct}%и",
       "overCap": "Чегарадан {over} тага ошиб кетди",
       "forbiddenAction": "Доскани очиш"
     }

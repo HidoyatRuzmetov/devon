@@ -57,14 +57,14 @@
         "status": "Holat",
         "tokens": "Tokenlar",
         "cost": "Narx",
-        "latency": "Kechikish"
+        "latency": "Javob vaqti"
       },
       "unknownUser": "Boshqarmadan chiqqan xodim",
       "status": {
-        "ok": "Yaxshi",
+        "ok": "Bajarildi",
         "empty_after_retry": "Boʻsh javob",
         "schema_invalid_after_retry": "Notoʻgʻri javob",
-        "provider_error": "Provayder xatosi",
+        "provider_error": "Server xatosi",
         "blocked_budget": "Byudjet toʻxtatdi",
         "blocked_flag": "Yordamchi oʻchirilgan",
         "timeout": "Vaqt tugadi"
@@ -343,7 +343,7 @@
         "example": "«Muddatni suraymi?» → tayyor javob va «hali aytishingiz kerak: yangi sana»."
       },
       "boardRiskDigest": {
-        "label": "Kim kechikayotgani",
+        "label": "Kim kechikyapti",
         "description": "Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora qoʻshadi. Faqat boshqarma boshligʻi uchun.",
         "where": "Doska sarlavhasi.",
         "example": "Beshta ish, har biriga sabab, hamda «Anvarda 11 ta ochiq ish» degan bosim nuqtasi."

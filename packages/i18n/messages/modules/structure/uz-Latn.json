@@ -6,7 +6,7 @@
     },
     "units": {
       "title": "Tuzilma",
-      "subtitle": "{departmentName} boʻlimlari va lavozimlari",
+      "subtitle": "{departmentName} boʻlimlari va ulardagi oʻrinlar",
       "empty": {
         "title": "Hali boʻlim yoʻq",
         "body": "Birinchi boʻlimni qoʻshing, keyin xodimlarni unga joylashtirasiz.",
@@ -31,7 +31,7 @@
       "colourAuto": "Avtomatik",
       "settingsNotice": {
         "structureEdit": "Hozircha tuzilmani faqat boshqarma boshligʻi tahrirlay oladi",
-        "selfAssign": "Hozircha lavozimlarni faqat boshqarma boshligʻi belgilay oladi"
+        "selfAssign": "Hozircha boʻlimdagi oʻrinlarni faqat boshqarma boshligʻi belgilay oladi"
       },
       "dragHint": "Tortib tartibini oʻzgartiring",
       "expandBranch": "Ichki boʻlimlarni yoyish",
@@ -77,7 +77,7 @@
       "assignDialog": {
         "title": "«{unitName}» boʻlimiga tayinlash",
         "person": "Xodim",
-        "role": "Lavozim",
+        "role": "Boʻlimdagi oʻrni",
         "submit": "Tayinlash",
         "cancel": "Bekor qilish"
       },

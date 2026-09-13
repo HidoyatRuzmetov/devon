@@ -46,7 +46,7 @@
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matn tushunarsiz boʻldi",
       "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
+      "dialogHint": "Nomini yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
       "fromTemplate": "Andozadan yaratish",
       "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
     },
@@ -89,7 +89,7 @@
       "emptyChip": "{field}: boʻsh"
     },
     "field": {
-      "title": "Sarlavha",
+      "title": "Nomi",
       "description": "Tavsif",
       "assignee": "Kimga",
       "giver": "Kimdan",
@@ -132,12 +132,12 @@
       "readOnly": "Bu kartani siz oʻzgartira olmaysiz — faqat oʻqish uchun. Uni bergan, bajarayotgan va qoʻshgan xodim hamda boshqarma boshligʻi tahrirlaydi.",
       "assignedTo": "Kimga: {name}",
       "byGiver": "Kimdan: {name}",
-      "reassigned": "Vazifa {name}ga oʻtkazildi",
+      "reassigned": "Karta {name}ga oʻtkazildi",
       "giverChanged": "Topshiriq beruvchi: {name}",
       "undo": "Bekor qilish"
     },
     "priority": {
-      "none": "Muhimlik yoʻq",
+      "none": "Belgilanmagan",
       "low": "Past",
       "medium": "Oʻrtacha",
       "high": "Yuqori",
@@ -192,7 +192,7 @@
         "person": "Xodim boʻyicha",
         "project": "Loyiha boʻyicha"
       },
-      "zoomLabel": "Masshtab",
+      "zoomLabel": "Miqyos",
       "zoom": {
         "day": "Kun",
         "week": "Hafta",
@@ -260,18 +260,18 @@
       "useDraft": "Izoh maydoniga qoʻyish",
       "explainRisk": "Xavfni tushuntirish",
       "explainRiskPreviewTitle": "Bu karta nega xavf ostida",
-      "suggestAssignee": "Kimga berish kerak",
+      "suggestAssignee": "Kimga topshirish",
       "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
       "boardDigest": "Kim kechikyapti",
       "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
     },
     "actions": {
-      "create": "Yangi vazifa"
+      "create": "Yangi karta"
     },
     "estimate": {
       "label": "Baholangan vaqt",
       "placeholder": "2 soat 30 daqiqa",
-      "hint": "Masalan: 2, 1,5 soat, 3 kun yoki 90 daqiqa.",
+      "hint": "Masalan: 2 soat, 1,5 soat, 3 kun yoki 90 daqiqa.",
       "understood": "Tushunildi: {value}",
       "unreadable": "Bu vaqt tushunarsiz. Masalan: 2 soat 30 daqiqa.",
       "clamped": "Eng koʻpi 400 soat. Bundan oshsa, kartani boʻlaklarga ajrating.",
@@ -289,7 +289,7 @@
       "timeSummary": "{logged}/{estimate}"
     },
     "chip": {
-      "blocked": "Bloklangan",
+      "blocked": "Toʻxtab turibdi",
       "blockedBy": "{count} ta kartani kutmoqda",
       "repeats": "Takrorlanadi"
     },
@@ -499,9 +499,9 @@
       "capacityFailed": "Sigʻimni saqlab boʻlmadi",
       "capacityInvalid": "0 dan 168 gacha son yozing.",
       "legendTitle": "Ranglar nimani bildiradi",
-      "legendFreeHours": "Sigʻimning 80% idan kam",
+      "legendFreeHours": "Sigʻimning 80%idan kam",
       "legendNearHours": "80–100%",
-      "legendOverHours": "100% dan ortiq",
+      "legendOverHours": "100%dan ortiq",
       "legendFreeCount": "{near} tadan kam karta",
       "legendNearCount": "{near}–{over} ta karta",
       "legendOverCount": "{over} tadan ortiq karta",
@@ -510,7 +510,7 @@
       "warningNoEstimate": "{count} ta karta baholanmagan",
       "warningOpenLink": "Roʻyxatni ochish",
       "modeCountBadge": "Karta soni boʻyicha",
-      "modeCountWhy": "Ochiq ishning atigi {pct}% i baholangan, shuning uchun ranglar soat emas, karta soni boʻyicha.",
+      "modeCountWhy": "Ochiq ishning atigi {pct}%i baholangan, shuning uchun ranglar soat emas, karta soni boʻyicha.",
       "modeHoursBadge": "Soat boʻyicha",
       "currentWeek": "Bu hafta",
       "cellSummaryCount": "{name}, {week}: {cards} ta karta ({allowance} tagacha)"
@@ -563,7 +563,7 @@
       "saved": "Maqsad saqlandi",
       "saveFailed": "Maqsadni saqlab boʻlmadi",
       "percentTarget": "(maqsad: {target}%)",
-      "capUsed": "chegaraning {pct}% i",
+      "capUsed": "chegaraning {pct}%i",
       "overCap": "Chegaradan {over} taga oshib ketdi",
       "forbiddenAction": "Doskani ochish"
     }

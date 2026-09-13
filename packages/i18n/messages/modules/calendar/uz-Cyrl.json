@@ -101,7 +101,7 @@
         "action": "Ўчириш",
         "toast": "Обуна ўчирилди"
       },
-      "copyToast": "Ҳавола нусхаланди",
+      "copyToast": "Ҳаволадан нусха олинди",
       "empty": {
         "title": "Ҳали обуна йўқ",
         "body": "Обуна қўшинг — тадбирларингиз телефонингиздаги тақвимда ҳам кўринади.",
@@ -170,7 +170,7 @@
     "addTo": {
       "label": "Тақвимга қўшиш",
       "google": "Google Calendar",
-      "outlook": "Outlook.cом",
+      "outlook": "Outlook.com",
       "office365": "Microsoft 365",
       "yahoo": "Yahoo Calendar",
       "ics": "Файл (.ics)",

@@ -55,7 +55,7 @@
     "actions": {
       "export": "Yuklab olish",
       "exportCsv": "CSV yuklab olish",
-      "exportPng": "Rasm yuklab olish",
+      "exportPng": "PNG yuklab olish",
       "pin": "Bosh sahifaga mahkamlash",
       "unpin": "Mahkamlashni olib tashlash",
       "viewAsTable": "Jadval koʻrinishi",
