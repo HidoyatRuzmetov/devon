@@ -462,6 +462,24 @@ Chapdagisi grammatik jihatdan toʻgʻri boʻlishi mumkin; lekin u tarjima ekanin
 | Deep link | **havola** | ҳавола | Foydalanuvchiga «deep link» degan tushuncha yoʻq |
 | Request id | **soʻrov raqami** | сўров рақами | |
 
+#### v1.1 tahririda qaror qilingan atamalar (A qismi: qobiq, accounts, departments, structure, people, work, projects, fields)
+
+| en | uz-Latn | Qaror va sabab |
+|---|---|---|
+| Card (doskadagi obyekt) | **karta** | Obyekt ustidagi amal — karta: `karta qoʻshish`, `arxivga olish`, `kartani koʻchirish`, `karta maydonlari`, `karta andozasi`. §5 toast jadvali va §12.2 shuni talab qiladi. |
+| Task (odamga berilgan ish) | **vazifa** | Sahifa nomi (`Vazifalar`), `Mening vazifalarim`, `Vazifa berish`, bildirishnoma matni. Bitta ekranda ikkisi aralashmasin: doskada karta turadi, odamga vazifa beriladi. |
+| Session (kirilgan qurilma) | **qurilma** | `seans` — ruscha *сеанс*; odam ekranda qurilmani koʻradi. `Kirilgan qurilmalar`, `Hamma qurilmadan chiqish`. |
+| Copy (amal) | **nusxa olish** / **…ni nusxalash** | Obyektsiz tugma — `Nusxa olish`; obyekt bilan — `Havolani nusxalash`, `Taklifni nusxalash`. Toast esa hamma joyda §5 boʻyicha `Nusxa olindi`. |
+| Danger zone | **Xavfli amallar** | «Xavfli hudud» — *danger zone* soʻzma-soʻz; sahifada amallar turadi, hudud emas. |
+| Role in a unit | **oʻrni** | `Boʻlimdagi oʻrni`. `rol` oʻzlashmasi shart emas, `lavozim` esa boshqa maydon (job title). |
+| Project member | **ishtirokchi** | Boshqarmada `xodim`, loyihada `ishtirokchi`. `aʼzo` faqat «boshqarmaga aʼzo emassiz» kabi holat bildirganda qoladi. |
+| Revert (saqlangan koʻrinish) | **asliga qaytarish** | §5 dagi undo/redo juftligiga tegmaydi: undo — `Bekor qilish`, redo — `Qaytarish`. |
+| Recurrence period | **oraligʻi** | `davr` shaxsiy ish maydonidagi sprint nomi (§12.2) — takrorlanish oynasida toʻqnashmasin. |
+| Draft (AI javobi) | **qoralama** | `loyiha` bu mahsulotda project; `Javob loyihasi` ikki maʼnoni chalkashtiradi. |
+| Arrow (klaviatura / diagramma) | **oʻq tugmalari** / **chiziq** | `strelka` — ruscha. |
+| Export PNG / CSV | **PNG yuklab olish**, **CSV yuklab olish** | §11/29 ning tuzilma sxemasiga ham tatbiqi («PNG sifatida saqlash» emas). |
+| Nav landmark (aria) | **Asosiy sahifalar** | `boʻlim` tashkiliy boʻlinma nomi; yon panel aria yozuvida u boshqarma almashtirgich yonida turib chalkashtiradi. |
+
 #### Saqlanadigan oʻzlashmalar
 
 Hamma ishlatadigan soʻzlarni oʻzbekchalashtirmang: **fayl, havola, sozlamalar, filtr, arxiv,
@@ -506,6 +524,18 @@ roʻyxat boʻyicha qoʻlda tekshiriladi. Shunda ikki yozuv **bir xil gapni** ayt
    tekshiring.
 7. **Placeholder va teglar teginilmaydi:** `{count}`, `{name}`, `{date}` — hech qachon
    tarjima qilinmaydi va kirillchaga oʻgirilmaydi.
+8. **`ngʻ` — `нғ`, `нгъ` emas.** Transliteratorning `ng` digrafi `n` ni yutib yuboradi va
+   modifikator harfni `ъ` ga aylantiradi: `qorongʻi` → ❌ `қоронгъи`, toʻgʻrisi **`қоронғи`**.
+   `ngʻ` har doim `n` + `gʻ`.
+9. **`menyu`, `tayyor` kabi soʻzlar.** `menyu → меню` (`менйу` emas), `tayyor → тайёр`
+   (`таййор` emas) — `й` dan keyin `ё` yoziladi.
+10. **Lotincha nom + kirillcha qoʻshimcha.** Nom lotinchaligicha qoladi, qoʻshimcha kirillchada:
+    `WorkPortalдан фойдаланиш`, `Telegramда ёзиш`.
+11. **Filtr kalit soʻzlari va format niqoblari lotinchada qoladi:** `field:`, `label:`,
+    `assignee:`, `due:`, `YYYY-MM-DD`. Bular odam yozadigan sintaksis, soʻz emas —
+    `фиэлд:` yoki `ЙЙЙЙ-ММ-ДД` ishlamaydi.
+12. **Til nomlari tarjima qilinmaydi:** `Русский`, `English` va til almashtirgichdagi
+    `Oʻzbekcha (lotin)` ikkala yozuvda ham bir xil qoladi.
 
 ### 13.3 Tartib
 
@@ -575,3 +605,11 @@ Bu qoʻllanma yangi soʻz tanlaganda — qatorni shu yerga qoʻshing: sana, soʻ
 | 2026-09-13 | `capabilities` = **imkoniyatlar**, `weekly capacity` = **haftalik sigʻim** | Ikkalasi `imkoniyat` deb atalgan edi |
 | 2026-09-13 | `objective/subjective` loyiha kartalari → **Boshqarma vazifalari / Oʻz vazifalarim** | Hozirgi «Umumiy/Shaxsiy vazifalar» maʼnoni yoʻqotgan |
 | 2026-09-13 | Undo = **Bekor qilish**, redo = **Qaytarish** | `work.card.undo` ikkisini almashtirib yuborgan |
+| 2026-09-13 | Doskadagi obyekt = **karta**, odamga berilgan ish = **vazifa** | `work` moduli ikkisini bitta ekranda aralashtirgan edi («Karta qoʻshish» tugmasi ostida «Vazifalar yoʻq») |
+| 2026-09-13 | `seans` → **qurilma** | Ruscha *сеанс*; odam ekranda qurilma nomini koʻradi |
+| 2026-09-13 | Tugmada **`Nusxa olish`** / **`…ni nusxalash`**, toastda doim **`Nusxa olindi`** | Uch modul uch xil yozgan edi: `Nusxalash`, `Nusxa olish`, `nusxalandi` |
+| 2026-09-13 | `Xavfli hudud` → **Xavfli amallar** | *Danger zone* soʻzma-soʻz; sahifada amallar turadi |
+| 2026-09-13 | Boʻlimdagi `rol` → **oʻrni**; loyihada `aʼzo` → **ishtirokchi** | `lavozim` (job title) bilan toʻqnashardi; boshqarmada esa `xodim` |
+| 2026-09-13 | Saqlangan koʻrinishni tiklash = **Asliga qaytarish** | §5 dagi undo (`Bekor qilish`) / redo (`Qaytarish`) juftligiga tegmasin |
+| 2026-09-13 | Takrorlanish `davr` → **oraligʻi**; AI `javob loyihasi` → **qoralama** | `davr` — shaxsiy sprint, `loyiha` — project; ikkalasi band |
+| 2026-09-13 | `strelka` → **oʻq tugmalari** / **chiziq**; `PNG sifatida saqlash` → **PNG yuklab olish** | Ruscha oʻzlashma va §11/29 ning sxemaga tatbiqi |
