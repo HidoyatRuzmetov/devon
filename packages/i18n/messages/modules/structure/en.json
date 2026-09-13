@@ -1,6 +1,9 @@
 {
   "structure": {
-    "nav": { "units": "Structure", "people": "People" },
+    "nav": {
+      "units": "Structure",
+      "people": "People"
+    },
     "units": {
       "title": "Structure",
       "subtitle": "Units and roles in {departmentName}",
@@ -33,7 +36,10 @@
       "dragHint": "Drag to reorder",
       "expandBranch": "Expand sub-units",
       "collapseBranch": "Collapse sub-units",
-      "view": { "tree": "List", "chart": "Org chart" },
+      "view": {
+        "tree": "List",
+        "chart": "Org chart"
+      },
       "chart": {
         "exportPng": "Export as PNG",
         "noHead": "No head assigned yet",
@@ -46,7 +52,9 @@
         "resetView": "Reset view",
         "closePanel": "Close"
       },
-      "validation": { "nameRequired": "Enter a name" },
+      "validation": {
+        "nameRequired": "Enter a name"
+      },
       "addDialog": {
         "title": "New unit",
         "namePlaceholder": "e.g. Monitoring group",
@@ -57,7 +65,11 @@
       }
     },
     "roles": {
-      "roleLabel": { "head": "Unit head", "deputy": "Deputy", "member": "Member" },
+      "roleLabel": {
+        "head": "Unit head",
+        "deputy": "Deputy",
+        "member": "Member"
+      },
       "join": "Join this unit",
       "joinAs": "Join as {role}",
       "leave": "Leave this unit",
@@ -80,10 +92,14 @@
     "people": {
       "title": "People",
       "subtitle": "Everyone in {departmentName}, grouped by unit",
-      "empty": { "title": "No members yet" },
+      "empty": {
+        "title": "No members yet"
+      },
       "searchPlaceholder": "Search people",
       "unassignedGroup": "Unassigned",
-      "memberCard": { "noUnit": "No unit assigned" },
+      "memberCard": {
+        "noUnit": "No unit assigned"
+      },
       "filters": {
         "label": "Filter by unit",
         "all": "All",
@@ -100,9 +116,28 @@
         "filterByUnitAria": "View only «{unit}»",
         "copyLink": "Copy link",
         "copyLinkAria": "Copy a link to {name}'s profile",
-        "linkCopied": "Link copied"
+        "linkCopied": "Link copied",
+        "openProfile": "Open profile"
+      },
+      "openTable": "Indicator table",
+      "layout": {
+        "label": "Layout",
+        "cards": "Cards",
+        "table": "Table"
+      },
+      "table": {
+        "caption": "The department roster",
+        "name": "Name",
+        "unit": "Unit",
+        "unitRole": "Role in the unit",
+        "title": "Title",
+        "noRole": "Not set",
+        "noTitle": "Not set"
       }
     },
-    "common": { "head": "Head", "member": "Member" }
+    "common": {
+      "head": "Head",
+      "member": "Member"
+    }
   }
 }

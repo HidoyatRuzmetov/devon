@@ -151,3 +151,28 @@ export {
   type FilterableCard,
   type FilterContext,
 } from './filter-grammar.js'
+
+export {
+  DEFAULT_PEOPLE_COLUMNS,
+  DEFAULT_PEOPLE_VIEW_CONFIG,
+  PEOPLE_VIEW_CAPS,
+  PEOPLE_VIEW_URL_PARAM,
+  decodePeopleViewConfig,
+  encodePeopleViewConfig,
+  normalizePeopleViewConfig,
+  peopleColumnFilterSchema,
+  peopleFilterOpSchema,
+  peopleViewConfigSchema,
+  peopleViewDensitySchema,
+  peopleViewGroupBySchema,
+  peopleViewSchema,
+  peopleViewSortSchema,
+  samePeopleViewConfig,
+  type PeopleColumnFilter,
+  type PeopleFilterOp,
+  type PeopleView,
+  type PeopleViewConfig,
+  type PeopleViewDensity,
+  type PeopleViewGroupBy,
+  type PeopleViewSort,
+} from './people-views.js'

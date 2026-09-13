@@ -1,6 +1,9 @@
 {
   "structure": {
-    "nav": { "units": "Тузилма", "people": "Ходимлар" },
+    "nav": {
+      "units": "Тузилма",
+      "people": "Ходимлар"
+    },
     "units": {
       "title": "Тузилма",
       "subtitle": "{departmentName} бўлимлари ва лавозимлари",
@@ -33,7 +36,10 @@
       "dragHint": "Тартибини ўзгартириш учун тортинг",
       "expandBranch": "Ички бўлимларни ёйиш",
       "collapseBranch": "Ички бўлимларни йиғиш",
-      "view": { "tree": "Рўйхат", "chart": "Тузилма схемаси" },
+      "view": {
+        "tree": "Рўйхат",
+        "chart": "Тузилма схемаси"
+      },
       "chart": {
         "exportPng": "PNG сифатида сақлаш",
         "noHead": "Бошлиғи ҳали тайинланмаган",
@@ -46,7 +52,9 @@
         "resetView": "Кўринишни тиклаш",
         "closePanel": "Ёпиш"
       },
-      "validation": { "nameRequired": "Номини киритинг" },
+      "validation": {
+        "nameRequired": "Номини киритинг"
+      },
       "addDialog": {
         "title": "Янги бўлим",
         "namePlaceholder": "Масалан, Мониторинг гуруҳи",
@@ -57,7 +65,11 @@
       }
     },
     "roles": {
-      "roleLabel": { "head": "Бўлим бошлиғи", "deputy": "Ўринбосар", "member": "Аъзо" },
+      "roleLabel": {
+        "head": "Бўлим бошлиғи",
+        "deputy": "Ўринбосар",
+        "member": "Аъзо"
+      },
       "join": "Ушбу бўлимга қўшилиш",
       "joinAs": "{role} сифатида қўшилиш",
       "leave": "Бўлимдан чиқиш",
@@ -80,10 +92,14 @@
     "people": {
       "title": "Ходимлар",
       "subtitle": "{departmentName} жамоаси, бўлимлар бўйича",
-      "empty": { "title": "Ҳали аъзо йўқ" },
+      "empty": {
+        "title": "Ҳали аъзо йўқ"
+      },
       "searchPlaceholder": "Ходимни қидириш",
       "unassignedGroup": "Бўлимсиз",
-      "memberCard": { "noUnit": "Бўлим белгиланмаган" },
+      "memberCard": {
+        "noUnit": "Бўлим белгиланмаган"
+      },
       "filters": {
         "label": "Бўлим бўйича филтр",
         "all": "Барчаси",
@@ -100,9 +116,28 @@
         "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш",
         "copyLink": "Ҳаволани нусхалаш",
         "copyLinkAria": "{name} профилига ҳаволани нусхалаш",
-        "linkCopied": "Ҳавола нусхаланди"
+        "linkCopied": "Ҳавола нусхаланди",
+        "openProfile": "Профилни очиш"
+      },
+      "openTable": "Кўрсаткичлар жадвали",
+      "layout": {
+        "label": "Кўриниш",
+        "cards": "Карточкалар",
+        "table": "Жадвал"
+      },
+      "table": {
+        "caption": "Бўлим ходимлари рўйхати",
+        "name": "Исм",
+        "unit": "Бўлим",
+        "unitRole": "Бўлимдаги роли",
+        "title": "Лавозим",
+        "noRole": "Белгиланмаган",
+        "noTitle": "Кўрсатилмаган"
       }
     },
-    "common": { "head": "Бошлиғи", "member": "Аъзо" }
+    "common": {
+      "head": "Бошлиғи",
+      "member": "Аъзо"
+    }
   }
 }

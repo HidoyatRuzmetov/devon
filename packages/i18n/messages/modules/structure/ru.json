@@ -1,6 +1,9 @@
 {
   "structure": {
-    "nav": { "units": "Структура", "people": "Сотрудники" },
+    "nav": {
+      "units": "Структура",
+      "people": "Сотрудники"
+    },
     "units": {
       "title": "Структура",
       "subtitle": "Отделы и роли в «{departmentName}»",
@@ -33,7 +36,10 @@
       "dragHint": "Перетащите, чтобы изменить порядок",
       "expandBranch": "Развернуть подотделы",
       "collapseBranch": "Свернуть подотделы",
-      "view": { "tree": "Список", "chart": "Оргсхема" },
+      "view": {
+        "tree": "Список",
+        "chart": "Оргсхема"
+      },
       "chart": {
         "exportPng": "Сохранить как PNG",
         "noHead": "Руководитель ещё не назначен",
@@ -46,7 +52,9 @@
         "resetView": "Сбросить масштаб",
         "closePanel": "Закрыть"
       },
-      "validation": { "nameRequired": "Введите название" },
+      "validation": {
+        "nameRequired": "Введите название"
+      },
       "addDialog": {
         "title": "Новый отдел",
         "namePlaceholder": "Например, Группа мониторинга",
@@ -57,7 +65,11 @@
       }
     },
     "roles": {
-      "roleLabel": { "head": "Руководитель отдела", "deputy": "Заместитель", "member": "Участник" },
+      "roleLabel": {
+        "head": "Руководитель отдела",
+        "deputy": "Заместитель",
+        "member": "Участник"
+      },
       "join": "Присоединиться к отделу",
       "joinAs": "Присоединиться как «{role}»",
       "leave": "Покинуть отдел",
@@ -80,10 +92,14 @@
     "people": {
       "title": "Сотрудники",
       "subtitle": "Команда «{departmentName}», по отделам",
-      "empty": { "title": "Пока нет ни одного сотрудника" },
+      "empty": {
+        "title": "Пока нет ни одного сотрудника"
+      },
       "searchPlaceholder": "Поиск сотрудника",
       "unassignedGroup": "Без отдела",
-      "memberCard": { "noUnit": "Отдел не указан" },
+      "memberCard": {
+        "noUnit": "Отдел не указан"
+      },
       "filters": {
         "label": "Фильтр по отделу",
         "all": "Все",
@@ -100,9 +116,28 @@
         "filterByUnitAria": "Показать только «{unit}»",
         "copyLink": "Скопировать ссылку",
         "copyLinkAria": "Скопировать ссылку на профиль {name}",
-        "linkCopied": "Ссылка скопирована"
+        "linkCopied": "Ссылка скопирована",
+        "openProfile": "Открыть профиль"
+      },
+      "openTable": "Таблица показателей",
+      "layout": {
+        "label": "Вид",
+        "cards": "Карточки",
+        "table": "Таблица"
+      },
+      "table": {
+        "caption": "Список сотрудников отдела",
+        "name": "Имя",
+        "unit": "Отдел",
+        "unitRole": "Роль в отделе",
+        "title": "Должность",
+        "noRole": "Не указана",
+        "noTitle": "Не указана"
       }
     },
-    "common": { "head": "Руководитель", "member": "Участник" }
+    "common": {
+      "head": "Руководитель",
+      "member": "Участник"
+    }
   }
 }

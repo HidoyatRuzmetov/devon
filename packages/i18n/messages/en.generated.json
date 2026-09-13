@@ -197,7 +197,8 @@
       "decisions": {
         "title": "Waiting on you",
         "meaning": "Cards you handed out that are past their due date.",
-        "cta": "Open the board"
+        "cta": "Open the board",
+        "empty": "Nothing is waiting on you right now."
       },
       "overdue": {
         "title": "Running late",
@@ -230,7 +231,27 @@
         "cta": "People table",
         "empty": "Everyone has finished onboarding."
       },
-      "indicatorsNote": "{count} indicators are available for the table and person pages."
+      "indicatorsNote": "{count} indicators are available for the table and person pages.",
+      "risk": {
+        "title": "At risk",
+        "meaning": "Unfinished work whose date falls within two days.",
+        "cta": "Open the board",
+        "empty": "Nothing is at risk in the next two days."
+      },
+      "drillNote": "Every number here opens the person or the card behind it.",
+      "arrange": {
+        "action": "Layout",
+        "heading": "Arrange the tiles",
+        "hint": "Reorder them or hide the ones you do not need — your choice stays on this device.",
+        "show": "Show the {name} tile",
+        "moveUp": "Move the {name} tile up",
+        "moveDown": "Move the {name} tile down",
+        "reset": "Restore the default layout",
+        "allHidden": {
+          "title": "Every tile is hidden",
+          "body": "Nothing is left on the management view. Restore the default layout, or tick the tiles you want back."
+        }
+      }
     }
   },
   "state": {
@@ -2375,10 +2396,25 @@
       "caption": "People and their selected indicators",
       "columns": {
         "action": "Columns",
-        "heading": "Choose indicators"
+        "heading": "Choose indicators",
+        "cap": "Up to {max} columns — anything wider stops being a table anyone reads.",
+        "chosen": "Chosen columns",
+        "moveUp": "Move the {name} column left",
+        "moveDown": "Move the {name} column right",
+        "group": {
+          "membership": "Directory",
+          "cards": "Tasks",
+          "projects": "Projects",
+          "events": "Events",
+          "onboarding": "Onboarding",
+          "activity": "Activity",
+          "personal_aggregate": "Personal (aggregate only)"
+        }
       },
       "column": {
-        "name": "Name"
+        "name": "Name",
+        "tasks": "Tasks",
+        "actions": "Actions"
       },
       "empty": {
         "title": "No colleagues yet",
@@ -2387,7 +2423,106 @@
       "footer": "{count} people",
       "workload": {
         "value": "{open} / {capacity}"
-      }
+      },
+      "searchPlaceholder": "Search by name, title or unit",
+      "footerTasks": "{count} open tasks",
+      "noTasks": "No open tasks",
+      "moreTasks": "+{count} more",
+      "sortBy": "Sort by {name}",
+      "filterBy": "Filter by {name}",
+      "selectAll": "Select every row",
+      "selectRow": "Select the row for {name}",
+      "export": "Download CSV",
+      "group": {
+        "none": "No unit"
+      },
+      "unitRole": {
+        "head": "Unit head",
+        "deputy": "Deputy",
+        "member": "Member"
+      },
+      "density": {
+        "label": "Row height",
+        "comfortable": "Comfortable",
+        "compact": "Compact"
+      },
+      "groupBy": {
+        "label": "Group by",
+        "unit": "By unit",
+        "unitRole": "By role",
+        "none": "No grouping"
+      },
+      "filter": {
+        "operator": "Condition",
+        "value": "Value",
+        "valuePlaceholder": "Enter a value",
+        "datePlaceholder": "YYYY-MM-DD",
+        "clear": "Clear",
+        "apply": "Apply",
+        "clearAll": "Clear {count} filters",
+        "op": {
+          "gte": "At least",
+          "lte": "At most",
+          "eq": "Equals",
+          "contains": "Contains",
+          "in": "One of",
+          "before": "Before",
+          "after": "After",
+          "empty": "Empty",
+          "filled": "Filled in"
+        }
+      },
+      "calc": {
+        "count": "Rows",
+        "filled": "Filled in",
+        "avg": "Average",
+        "sum": "Total",
+        "min": "Lowest",
+        "max": "Highest"
+      },
+      "bulk": {
+        "selected": "{count} people selected",
+        "export": "Download the selection",
+        "clear": "Clear the selection",
+        "assign": "Give a card ({count})"
+      },
+      "action": {
+        "assign": "Give {name} a card",
+        "assignShort": "Give a card",
+        "board": "Open the board column for {name}",
+        "message": "Message {name} on Telegram"
+      },
+      "views": {
+        "label": "Saved views",
+        "base": "Default",
+        "menu": "Actions for the {name} view",
+        "isDefault": "The department default",
+        "makeDefault": "Make it the department default",
+        "share": "Share with the other heads",
+        "unshare": "Keep it to myself",
+        "delete": "Delete this view",
+        "saveAs": "New view",
+        "saveAsHeading": "Save this table",
+        "namePlaceholder": "View name",
+        "shareLabel": "Visible to the other heads",
+        "defaultLabel": "Make it the department default",
+        "saveAsSubmit": "Save",
+        "dirty": "Changed",
+        "revert": "Put it back",
+        "saveOver": "Save",
+        "saved": "{name} saved",
+        "deleted": "{name} deleted"
+      },
+      "noResults": {
+        "title": "Nobody matches",
+        "body": "The filters or the search are too narrow. Try clearing them.",
+        "action": "Clear the filters"
+      },
+      "denied": {
+        "body": "The people table and its indicators are for the department head. The directory is open to you.",
+        "action": "Open the directory"
+      },
+      "resize": "Resize the {name} column"
     },
     "indicator": {
       "openCards": {
@@ -2476,6 +2611,199 @@
         "hoursMinutes": "{hours} h {minutes} min",
         "yes": "Yes",
         "no": "No"
+      }
+    },
+    "assign": {
+      "title": "Give a card",
+      "subtitle": "The card goes to this person, given by you.",
+      "close": "Close",
+      "noTitle": "No title recorded",
+      "cancel": "Cancel",
+      "submit": "Give the card",
+      "done": "Card given to {name}",
+      "field": {
+        "title": "Card title",
+        "titleHint": "Keep it short and plain — this is what they see on the board.",
+        "titleRequired": "Enter a card title.",
+        "titlePlaceholder": "For example: prepare the report",
+        "due": "Due",
+        "duePlaceholder": "No due date",
+        "priority": "Priority"
+      },
+      "priority": {
+        "none": "None",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "doneMany": "Card given to {count} people",
+      "plusOthers": "+{count} more"
+    },
+    "person": {
+      "back": "Back to the list",
+      "you": "You",
+      "noTitle": "No title recorded",
+      "own": {
+        "title": "My profile",
+        "description": "Your work indicators, tasks and recorded details."
+      },
+      "meta": {
+        "formalName": "Full name",
+        "unit": "Unit",
+        "noUnit": "Not set",
+        "unitRole": "Role in the unit",
+        "noUnitRole": "Not set",
+        "joined": "Joined",
+        "lastActive": "Last active",
+        "never": "Never signed in",
+        "telegram": "Telegram"
+      },
+      "action": {
+        "assign": "Give a card",
+        "board": "Board column",
+        "message": "Message on Telegram"
+      },
+      "tab": {
+        "overview": "Overview",
+        "tasks": "Tasks",
+        "projects": "Projects",
+        "events": "Events",
+        "onboarding": "Onboarding",
+        "fields": "Fields",
+        "activity": "Activity"
+      },
+      "chart": {
+        "week": "Week",
+        "done": "Done",
+        "created": "Received",
+        "onTimeRate": "On time, %",
+        "finished": "Finished",
+        "project": "Project",
+        "open": "Open",
+        "overdue": "Overdue",
+        "noProject": "No project",
+        "throughput": {
+          "title": "Weekly throughput",
+          "question": "How much work is finished each week?",
+          "empty": "Nothing finished in the last 12 weeks."
+        },
+        "onTime": {
+          "title": "On-time delivery",
+          "question": "How much of the dated work landed on time?",
+          "empty": "No finished work with a due date yet."
+        },
+        "load": {
+          "title": "Load by project",
+          "question": "Which projects is the open work in?",
+          "empty": "No open work."
+        }
+      },
+      "risk": {
+        "title": "Work at risk",
+        "question": "What is not going to make its date?",
+        "empty": "Nothing falls due in the next two days."
+      },
+      "tasks": {
+        "roleLabel": "Which work",
+        "statusLabel": "Status",
+        "noDue": "No due date",
+        "role": {
+          "assignee": "Given to them",
+          "giver": "Given by them"
+        },
+        "status": {
+          "active": "Open",
+          "done": "Done",
+          "all": "Everything"
+        },
+        "empty": {
+          "title": "No tasks",
+          "body": "Nothing matches this choice."
+        }
+      },
+      "projects": {
+        "owner": "Owner",
+        "member": "Member",
+        "progress": "{done} of {total} tasks done",
+        "progressAria": "{title} — progress",
+        "target": "Target date: {date}",
+        "empty": {
+          "title": "Not on any project",
+          "body": "This person is not part of an active project yet."
+        }
+      },
+      "events": {
+        "rsvpRate": "Event participation",
+        "polls": "Polls",
+        "pollsValue": "{voted} of {total}",
+        "driver": "Driver",
+        "passenger": "Passenger",
+        "rsvp": {
+          "yes": "Going",
+          "no": "Not going",
+          "maybe": "Maybe",
+          "waitlist": "Waitlisted"
+        },
+        "empty": {
+          "title": "No event participation",
+          "body": "No answers to any event in the last two months."
+        }
+      },
+      "onboarding": {
+        "title": "Onboarding steps",
+        "note": "These steps come from signals the department can already see. Personal workspace content is never shown.",
+        "done": "Done",
+        "pending": "Pending",
+        "step": {
+          "photo": "Photo added",
+          "work": "First card received",
+          "event": "Signed up for an event",
+          "telegram": "Telegram linked"
+        }
+      },
+      "fields": {
+        "required": "Required",
+        "missing": "Not filled in",
+        "missingCount": "{count} required fields are still empty.",
+        "ask": "Ask them to fill it",
+        "asked": "Request sent",
+        "askFailed": "The request could not be sent. Try again shortly.",
+        "fillOwn": "Fill it in myself",
+        "empty": {
+          "title": "No fields yet",
+          "body": "The department head can create person fields under Fields."
+        },
+        "unavailable": {
+          "title": "Fields are not connected yet",
+          "body": "Person fields are not switched on for this department."
+        }
+      },
+      "activity": {
+        "empty": {
+          "title": "No activity",
+          "body": "No work activity has been recorded for this person yet."
+        },
+        "kind": {
+          "created": "Created a card",
+          "status": "Changed a card status",
+          "assigned": "Assigned a card",
+          "due": "Changed a due date",
+          "checklist": "Updated a checklist",
+          "comment": "Left a comment",
+          "card_assigned": "Received a card",
+          "event_rsvp": "Answered an event"
+        }
+      },
+      "denied": {
+        "title": "This page is not open to you",
+        "body": "Person pages are for the department head. You can open your own.",
+        "action": "My profile"
+      },
+      "missing": {
+        "title": "Person not found",
+        "body": "They are not active in this department, or the link is stale.",
+        "action": "People list"
       }
     }
   },
@@ -2917,7 +3245,23 @@
         "filterByUnitAria": "View only «{unit}»",
         "copyLink": "Copy link",
         "copyLinkAria": "Copy a link to {name}'s profile",
-        "linkCopied": "Link copied"
+        "linkCopied": "Link copied",
+        "openProfile": "Open profile"
+      },
+      "openTable": "Indicator table",
+      "layout": {
+        "label": "Layout",
+        "cards": "Cards",
+        "table": "Table"
+      },
+      "table": {
+        "caption": "The department roster",
+        "name": "Name",
+        "unit": "Unit",
+        "unitRole": "Role in the unit",
+        "title": "Title",
+        "noRole": "Not set",
+        "noTitle": "Not set"
       }
     },
     "common": {

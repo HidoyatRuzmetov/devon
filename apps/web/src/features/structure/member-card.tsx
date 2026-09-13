@@ -16,7 +16,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { KanbanSquare, Link as LinkIcon, Users } from 'lucide-react'
+import { IdCard, KanbanSquare, Link as LinkIcon, Users } from 'lucide-react'
 import { avatarUrl } from '../../lib/avatar.js'
 import { navigate } from '../../lib/router.js'
 import type { Member, Unit } from './api.js'
@@ -27,7 +27,20 @@ const ROLE_KEY = {
   member: 'structure.roles.roleLabel.member',
 } as const
 
+/**
+ * DESIGN.md §5: "Ism Familiya" in casual lists, "Familiya Ism Otasining ismi" in formal contexts.
+ * WALKTHROUGH-FINDINGS §6 caught the directory using the formal order while the board, the people
+ * table, the card detail and every mention chip use the casual one -- the same colleague read as two
+ * different people depending on the screen. A browsable staff list is a casual list, so this is the
+ * casual order and `formalName` below is kept for the places that really are a record.
+ */
 export function fullName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
+  return [m.givenName, m.familyName].filter(Boolean).join(' ')
+}
+
+/** The official order, for the one place on this card that is a personnel record rather than a
+ * list entry: the hover card's own headline (and the CSV export, which builds its own copy). */
+export function formalName(m: Pick<Member, 'givenName' | 'familyName' | 'patronymic'>): string {
   return [m.familyName, m.givenName, m.patronymic].filter(Boolean).join(' ')
 }
 
@@ -36,6 +49,7 @@ export function MemberCard({
   unit,
   compact = false,
   onFilterByUnit,
+  profileHref,
 }: {
   member: Member
   /** The bo'lim this member belongs to, when known -- surfaced only in the hover card's detail, never
@@ -51,10 +65,27 @@ export function MemberCard({
    * `structure-screen.tsx`'s compact org-chart rows implicitly do by never rendering the hover card at
    * all) and the card simply has one action, same as before -- never a broken affordance. */
   onFilterByUnit?: ((unitId: string) => void) | undefined
+  /** v1.1 SPEC §6 / WALKTHROUGH-FINDINGS §6 ("person cards are not clickable at all"): where this
+   * person's page lives, when the viewer is allowed to open it. A head gets one for every colleague;
+   * a xodim gets one only for their own row, because SPEC §2.2 gives members a directory, not each
+   * other's pages. Omitted = the card stays a plain card, never a link that answers 403. */
+  profileHref?: string | undefined
 }) {
   const t = useT()
+  const Face = profileHref ? 'a' : 'div'
+  const faceProps = profileHref
+    ? {
+        href: profileHref,
+        onClick: (event: React.MouseEvent) => {
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+          event.preventDefault()
+          navigate(profileHref)
+        },
+      }
+    : {}
   const body = (
-    <div
+    <Face
+      {...faceProps}
       className={
         compact
           ? 'flex items-center gap-2 rounded-sm border border-border bg-card px-2 py-1.5'
@@ -88,13 +119,21 @@ export function MemberCard({
             <p className="truncate text-caption text-muted-foreground">{member.title}</p>
           ) : null}
         </div>
-        {member.unitRole ? (
-          <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
-            {t(ROLE_KEY[member.unitRole])}
-          </Badge>
-        ) : null}
+        {/* WALKTHROUGH-FINDINGS §6: "you cannot tell who the head is" -- the boshqarma boshligʻi was
+            identifiable only by a free-text job title. The department role is the fact, so it is the
+            badge; the unit role stays beside it when the person also leads or sits in a boʻlim. */}
+        <span className="flex shrink-0 items-center gap-1.5">
+          {member.membershipRole === 'head' ? (
+            <Badge tone="info">{t('departments.members.roleHead')}</Badge>
+          ) : null}
+          {member.unitRole ? (
+            <Badge tone={member.unitRole === 'head' ? 'info' : 'neutral'}>
+              {t(ROLE_KEY[member.unitRole])}
+            </Badge>
+          ) : null}
+        </span>
       </div>
-    </div>
+    </Face>
   )
 
   if (compact) return body
@@ -137,7 +176,7 @@ export function MemberCard({
             hueSeed={member.unitId ?? member.userId}
           />
           <div className="min-w-0">
-            <p className="truncate text-body font-medium text-foreground">{fullName(member)}</p>
+            <p className="truncate text-body font-medium text-foreground">{formalName(member)}</p>
             {member.title ? (
               <p className="truncate text-small text-muted-foreground">{member.title}</p>
             ) : null}
@@ -169,6 +208,17 @@ export function MemberCard({
             deep link into this exact profile (`people-screen.tsx` reads `?member=` back out and
             scrolls/highlights the matching card), not a fabricated mailto/tg: link. */}
         <div className="mt-3 flex gap-2">
+          {profileHref ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1"
+              onClick={() => navigate(profileHref)}
+            >
+              <IdCard className="size-4" aria-hidden="true" />
+              {t('structure.people.hoverCard.openProfile')}
+            </Button>
+          ) : null}
           <Button
             variant="secondary"
             size="sm"
