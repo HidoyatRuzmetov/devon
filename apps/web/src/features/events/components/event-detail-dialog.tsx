@@ -32,6 +32,7 @@ import { ApiError } from '../../../lib/api-client.js'
 import { fetchEventIcs } from '../api.js'
 import { useEventQuery, useRsvpsQuery, useUpdateEventMutation } from '../hooks.js'
 import { downloadIcs } from '../lib/ics-download.js'
+import { AddToCalendarMenu } from '../../calendar/components/add-to-calendar-menu.js'
 import { eventFormValuesToUpdateInput } from '../lib/event-form-mapping.js'
 import type { EventDto, EventStatus, RsvpDto } from '../schemas.js'
 import { EventIllustration } from '../illustrations/index.js'
@@ -251,10 +252,21 @@ function EventHeader({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" onClick={onExportIcs} loading={exporting}>
-            <Download className="size-3.5" aria-hidden="true" />
-            {t('events.ics.exportEvent')}
-          </Button>
+          {/* v1.1 EPIC-019: one "Kalendarga qoʻshish" menu instead of a bare .ics download -- Google,
+              Microsoft 365, Outlook.com and Yahoo, plus the same `.ics` file this button used to be
+              (`onIcs` keeps the events feature's own download path, so there is still exactly one
+              way to get the file). */}
+          <AddToCalendarMenu
+            eventId={event.id}
+            onIcs={onExportIcs}
+            icsBusy={exporting}
+            trigger={
+              <Button variant="secondary" size="sm">
+                <Download className="size-3.5" aria-hidden="true" />
+                {t('calendar.addTo.label')}
+              </Button>
+            }
+          />
           {event.canManage && event.status !== 'cancelled' && event.status !== 'done' ? (
             <>
               <Button variant="secondary" size="sm" onClick={onEdit}>

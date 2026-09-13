@@ -8,6 +8,13 @@ import { useT } from '@devon/i18n'
 import { RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { Collapsible, IconButton, PageHeader, cn } from '@devon/ui'
+import {
+  useCardSignalSource,
+  usePresence,
+  useRealtimeChannels,
+} from '../../../lib/realtime/index.js'
+import { useMeQuery } from '../../../lib/session.js'
+import { LiveStatusPill, PresenceAvatars } from '../../calendar/components/live-indicators.js'
 import { useBoardQuery } from '../hooks.js'
 import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'
@@ -46,6 +53,21 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
   const [mobileChromeOpen, setMobileChromeOpen] = React.useState(false)
   const hasCollapsibleChrome = (showQuickAdd || Boolean(filterLayout)) && !isDesktop
 
+  // v1.1 EPIC-018: who else is on this board right now, and whether what you are looking at is live
+  // at all. Both come from `lib/realtime`, both degrade to nothing when Centrifugo is off -- the
+  // pill then says so in words and the board keeps its four-second poll (see `hooks.ts`).
+  //
+  // The channel is the *department's* board channel, not one per view: Board, Table, Timeline and
+  // Mine are four lenses on the same cards, so a colleague reading the table is as present to you as
+  // one reading the board. Pretending otherwise would split a five-person department into six empty
+  // rooms.
+  const channels = useRealtimeChannels()
+  const watchers = usePresence(channels?.board ?? null)
+  // One subscription and one expiry timer for every "somebody is editing this" badge on the screen,
+  // mounted here because this shell wraps all six work views (`lib/realtime/signals-store.ts`).
+  const viewerId = useMeQuery().data?.user.id ?? null
+  useCardSignalSource(channels?.board ?? null, viewerId)
+
   return (
     <div className="flex h-full flex-col gap-4">
       <PageHeader
@@ -53,16 +75,20 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
         title={t('work.title')}
         description={t('work.description')}
         actions={
-          hasCollapsibleChrome ? (
-            <IconButton
-              aria-label={t('work.filterChrome.toggle')}
-              aria-expanded={mobileChromeOpen}
-              aria-controls="work-shell-mobile-chrome"
-              onClick={() => setMobileChromeOpen((v) => !v)}
-            >
-              <SlidersHorizontal className="size-4" aria-hidden="true" />
-            </IconButton>
-          ) : null
+          <div className="flex items-center gap-2">
+            <PresenceAvatars members={watchers} />
+            <LiveStatusPill />
+            {hasCollapsibleChrome ? (
+              <IconButton
+                aria-label={t('work.filterChrome.toggle')}
+                aria-expanded={mobileChromeOpen}
+                aria-controls="work-shell-mobile-chrome"
+                onClick={() => setMobileChromeOpen((v) => !v)}
+              >
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+              </IconButton>
+            ) : null}
+          </div>
         }
         tabs={
           <nav className="flex flex-wrap gap-1 border-b border-border" aria-label={t('work.title')}>

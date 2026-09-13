@@ -4,7 +4,7 @@
 // every feature today.
 import * as React from 'react'
 import { useT, useLocale, formatDateTime } from '@devon/i18n'
-import { ArrowLeft, Check, Loader2, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Loader2, Plus, Share2, Trash2 } from 'lucide-react'
 import {
   Button,
   Card,
@@ -18,6 +18,9 @@ import {
   toast,
   toastWithUndo,
 } from '@devon/ui'
+import { useSharesOfCanvas } from '../../lib/realtime/canvas-hooks.js'
+import { CanvasShareDialog } from '../calendar/components/canvas-share-dialog.js'
+import { SharedCanvasPanel } from '../calendar/components/shared-canvas-panel.js'
 import { CanvasEditor } from './canvas-editor.js'
 import {
   useCanvasQuery,
@@ -171,6 +174,13 @@ function CanvasDetail({
   // (and its effects run) unconditionally, above every early return, per the rules of hooks.
   const versionRef = React.useRef(0)
 
+  // v1.1 EPIC-018. The canvas itself stays owner-only for ever; *sharing* publishes a revocable copy
+  // into one project or event (`lib/realtime/canvas-api.ts` states the rule in full). So this screen
+  // gains exactly two things: a button that explains that bargain before it is taken, and a panel
+  // per live share showing what colleagues can see and who is on it right now.
+  const [sharing, setSharing] = React.useState(false)
+  const { shares } = useSharesOfCanvas(id)
+
   React.useEffect(() => {
     if (canvasQuery.data) setTitle(canvasQuery.data.title)
     // Keyed on the one field each effect actually reacts to, not the whole (frequently-refetched) query object.
@@ -231,6 +241,9 @@ function CanvasDetail({
             </>
           )}
         </span>
+        <IconButton aria-label={t('realtime.canvas.share.action')} onClick={() => setSharing(true)}>
+          <Share2 className="size-4" aria-hidden="true" />
+        </IconButton>
         <IconButton
           aria-label={t('personal.canvas.delete')}
           onClick={() => deleteCanvasMutation.mutate(canvas.id, { onSuccess: onDeleted })}
@@ -238,6 +251,13 @@ function CanvasDetail({
           <Trash2 className="size-4" aria-hidden="true" />
         </IconButton>
       </div>
+
+      {shares.map((share) => (
+        <SharedCanvasPanel key={share.id} share={share} />
+      ))}
+
+      <CanvasShareDialog open={sharing} onOpenChange={setSharing} canvasId={canvas.id} />
+
       <CanvasEditor
         scene={canvas.scene}
         stickies={canvas.stickies}

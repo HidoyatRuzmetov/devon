@@ -58,6 +58,27 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
  * rather than dressed up as an owner check (D11). */
 const AUTHENTICATED_ROUTES: readonly string[] = [
   'GET /api/v1/accounts/avatar/:userId/:uploadId/:size',
+  // EPIC-018 realtime (v1.1 SPEC §10). "May this signed-in person open a WebSocket at all" is not a
+  // department question: the connection carries no department of its own, and every *channel* on it
+  // is authorised separately -- `POST /realtime/subscribe-token` runs `can()` per channel, and
+  // `GET /realtime/presence` runs the identical check before it answers. Saying `authenticated` here
+  // is D11's rule applied honestly: dressing a connection token up as a `department_child` check
+  // would look stricter and decide nothing extra.
+  'GET /api/v1/realtime/config',
+  'GET /api/v1/realtime/presence',
+  // EPIC-019: the web-push service worker's own source. Authenticated rather than public so an
+  // anonymous visitor cannot enumerate this deployment's client code -- `register()` and the
+  // browser's periodic update checks both fetch it `credentials: 'same-origin'`, so the session
+  // cookie is on the request. The script itself is the same bytes for every person and contains
+  // nothing department-shaped, which is exactly why `authenticated` is the honest subject here
+  // rather than a `department_child` check that would decide nothing (D11).
+  'GET /api/v1/realtime/sw.js',
+  'GET /api/v1/realtime/token',
+  'POST /api/v1/realtime/subscribe-token',
+  // EPIC-019 web push: the VAPID *public* key identifies this deployment to a push service. It is
+  // public by protocol; keeping it behind a session simply means an anonymous visitor learns nothing
+  // about the box at all.
+  'GET /api/v1/push/key',
 ]
 
 function routesOfKind(

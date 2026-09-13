@@ -68,6 +68,23 @@ describe('global CSRF guard (H1.4)', () => {
         'POST /api/v1/setup/:token',
         'POST /api/v1/telegram/webhook/:secret',
         'PUT /api/v1/storage/uploads',
+        // v1.1 EPIC-019 CalDAV-lite. Every one of these is `public: true` for the same reason the
+        // ICS feed is: a calendar client (iOS, Thunderbird, Evolution) carries no session cookie,
+        // so the 256-bit secret in the path is the only credential, and the session cookie grants
+        // these routes exactly nothing. CSRF protects against a cross-site request riding ambient
+        // cookie authority -- there is none here to ride, and an attacker who already knows the
+        // secret does not need the victim's browser.
+        //
+        // PROPFIND/REPORT/GET are reads. PUT and DELETE exist only so a write-capable client is
+        // told "read-only calendar" (403, unconditionally, before the body is looked at) rather
+        // than "server broken" (404) -- they change nothing, ever, for any caller.
+        'PROPFIND /api/v1/caldav/:secret/',
+        'PROPFIND /api/v1/caldav/:secret/calendar/',
+        'REPORT /api/v1/caldav/:secret/calendar/',
+        'PUT /api/v1/caldav/:secret/calendar/',
+        'PUT /api/v1/caldav/:secret/calendar/:resource',
+        'DELETE /api/v1/caldav/:secret/calendar/',
+        'DELETE /api/v1/caldav/:secret/calendar/:resource',
       ].sort(),
     )
     // Sanity: the table really is the whole route table, not an empty list.

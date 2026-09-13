@@ -1,0 +1,181 @@
+{
+  "calendar": {
+    "title": "Kalendar",
+    "eyebrow": "REJA VA ESLATMALAR",
+    "description": "Tadbirlar va kartochka muddatlari — bir joyda, telefoningizdagi kalendarda va eslatmalarda.",
+    "tabs": {
+      "agenda": "Kun tartibi",
+      "feeds": "Obunalar",
+      "push": "Eslatmalar"
+    },
+    "actions": {
+      "retry": "Qayta urinish",
+      "close": "Yopish",
+      "copy": "Nusxa olish",
+      "copied": "Nusxa olindi",
+      "open": "Ochish",
+      "undo": "Qaytarish"
+    },
+    "forbidden": {
+      "title": "Bu sahifa siz uchun ochiq emas",
+      "body": "Kalendar obunalari shaxsiy. Hisobingizga kirganingizni tekshiring."
+    },
+    "offline": {
+      "title": "Aloqa yoʻq",
+      "body": "Internet tiklanganda kun tartibi oʻzi yangilanadi."
+    },
+    "agenda": {
+      "title": "Yaqin kunlar",
+      "description": "Sizning tadbirlaringiz va muddati kelayotgan kartochkalaringiz.",
+      "range": {
+        "label": "Davr",
+        "week": "7 kun",
+        "month": "30 kun",
+        "quarter": "90 kun"
+      },
+      "kind": {
+        "event": "Tadbir",
+        "card": "Kartochka"
+      },
+      "today": "Bugun",
+      "tomorrow": "Ertaga",
+      "noPlace": "Joyi koʻrsatilmagan",
+      "allDay": "Kun boʻyi",
+      "empty": {
+        "title": "Yaqin kunlarda hech narsa yoʻq",
+        "body": "Tadbir yarating yoki kartochkaga muddat qoʻying — bu yerda koʻrinadi.",
+        "action": "Tadbirlarga oʻtish"
+      },
+      "loading": {
+        "title": "Kun tartibi yuklanmoqda"
+      },
+      "error": {
+        "title": "Kun tartibini ochib boʻlmadi",
+        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+      }
+    },
+    "feeds": {
+      "title": "Kalendar obunalari",
+      "description": "Maxfiy havola orqali WorkPortal kalendaringizni telefoningizga yoki Outlookka ulang.",
+      "secretWarning": "Bu havola — kalit. Havolaga ega har kim sizning tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻzingizning ilovangizga qoʻying.",
+      "create": {
+        "title": "Yangi obuna",
+        "label": "Nomi",
+        "labelPlaceholder": "Masalan: iPhone kalendari",
+        "kind": "Nimalar kirsin",
+        "submit": "Obuna yaratish",
+        "creating": "Yaratilmoqda…"
+      },
+      "kind": {
+        "all": "Hammasi",
+        "events": "Faqat tadbirlar",
+        "tasks": "Faqat kartochka muddatlari",
+        "allHelp": "Tadbirlar ham, muddati bor kartochkalar ham.",
+        "eventsHelp": "Faqat siz qatnashadigan tadbirlar.",
+        "tasksHelp": "Faqat sizga biriktirilgan, muddati bor kartochkalar."
+      },
+      "url": {
+        "https": "Havola (https)",
+        "webcal": "Webcal havolasi",
+        "caldav": "CalDAV havolasi",
+        "httpsHelp": "Google Calendar → «URL orqali qoʻshish» uchun.",
+        "webcalHelp": "iPhone, Apple Calendar va Outlook uchun — bosilganda kalendar ilovasi ochiladi.",
+        "caldavHelp": "DAVx5, Thunderbird va Evolution uchun. Faqat oʻqish."
+      },
+      "meta": {
+        "created": "Yaratilgan {date}",
+        "rotated": "Yangilangan {date}",
+        "lastAccessed": "Oxirgi marta oʻqilgan {date}",
+        "neverAccessed": "Hali bir marta ham oʻqilmagan",
+        "accessCount": "{count} marta oʻqilgan"
+      },
+      "rotate": {
+        "action": "Havolani yangilash",
+        "confirmTitle": "Havolani yangilaymizmi?",
+        "confirmBody": "Eski havola shu zahoti ishlamay qoladi. Yangi havolani kalendar ilovangizga qaytadan qoʻyishingiz kerak boʻladi.",
+        "confirm": "Ha, yangilansin",
+        "cancel": "Bekor qilish",
+        "toast": "Havola yangilandi"
+      },
+      "revoke": {
+        "action": "Oʻchirish",
+        "toast": "Obuna oʻchirildi"
+      },
+      "copyToast": "Havola nusxalandi",
+      "empty": {
+        "title": "Hali obuna yoʻq",
+        "body": "Obuna yarating — tadbirlaringiz telefoningizdagi kalendarda ham koʻrinadi.",
+        "action": "Obuna yaratish"
+      },
+      "loading": {
+        "title": "Obunalar yuklanmoqda"
+      },
+      "error": {
+        "title": "Obunalarni ochib boʻlmadi",
+        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+      }
+    },
+    "push": {
+      "title": "Brauzer eslatmalari",
+      "description": "Muddat yaqinlashganda yoki sizni eslatib oʻtishganda — WorkPortal ochiq boʻlmasa ham xabar keladi.",
+      "what": {
+        "title": "Nima uchun xabar keladi",
+        "mentioned": "Izohda sizni eslatib oʻtishsa",
+        "assigned": "Sizga kartochka biriktirilsa",
+        "due": "Kartochka muddati yaqinlashsa",
+        "decision": "Sizdan qaror kutilsa"
+      },
+      "quietHours": {
+        "note": "Tinch soatlaringizda xabar kelmaydi — kirish qutisi sozlamalaridagi vaqtga boʻysunadi."
+      },
+      "enable": "Eslatmalarni yoqish",
+      "enabling": "Yoqilmoqda…",
+      "disable": "Bu qurilmada oʻchirish",
+      "state": {
+        "on": "Bu qurilmada yoqilgan",
+        "off": "Bu qurilmada oʻchirilgan"
+      },
+      "devices": {
+        "title": "Ulangan qurilmalar",
+        "thisDevice": "Shu qurilma",
+        "added": "Qoʻshilgan {date}",
+        "lastSeen": "Oxirgi faollik {date}",
+        "unknown": "Nomaʼlum brauzer"
+      },
+      "unsupported": {
+        "title": "Bu brauzer eslatmalarni qoʻllamaydi",
+        "body": "Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhoneʼda WorkPortalni avval «Bosh ekranga qoʻshish» kerak."
+      },
+      "denied": {
+        "title": "Brauzer eslatmalarni bloklagan",
+        "body": "Manzil satridagi qulf belgisini bosing va bu sayt uchun bildirishnomalarga ruxsat bering, soʻng qaytadan urinib koʻring."
+      },
+      "disabledOnServer": {
+        "title": "Bu serverda eslatmalar sozlanmagan",
+        "body": "Tizim administratori VAPID kalitlarini yoqmaguncha brauzer eslatmalari ishlamaydi."
+      },
+      "toast": {
+        "enabled": "Eslatmalar yoqildi",
+        "disabled": "Eslatmalar oʻchirildi",
+        "failed": "Eslatmalarni yoqib boʻlmadi"
+      },
+      "loading": {
+        "title": "Sozlamalar yuklanmoqda"
+      },
+      "error": {
+        "title": "Sozlamalarni ochib boʻlmadi",
+        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+      }
+    },
+    "addTo": {
+      "label": "Kalendarga qoʻshish",
+      "google": "Google Calendar",
+      "outlook": "Outlook.com",
+      "office365": "Microsoft 365",
+      "yahoo": "Yahoo Calendar",
+      "ics": "Fayl (.ics)",
+      "hint": "Tadbirni oʻz kalendaringizga koʻchiradi.",
+      "error": "Havolalarni tayyorlab boʻlmadi"
+    }
+  }
+}

@@ -37,6 +37,7 @@ import {
   MoveRight,
 } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
+import { useCardSignals } from '../../../lib/realtime/index.js'
 import {
   Avatar,
   Badge,
@@ -99,6 +100,48 @@ export interface CardTileProps {
 
 function isDragPayload(data: Record<string, unknown>): data is DragPayload {
   return data['type'] === CARD_DRAG_TYPE
+}
+
+/** v1.1 EPIC-018: "Anvar is editing this" / "Nodira is writing a comment", live, on the tile.
+ *
+ * Reads the shared signal store (one subscription and one expiry timer for the whole board -- see
+ * `lib/realtime/signals-store.ts`), so a card nobody is touching costs this component nothing and
+ * never re-renders because of it. Renders nothing at all when nobody is on the card: an indicator
+ * that is always present has stopped being an indicator.
+ *
+ * A dot plus a name, not an avatar: the tile already carries the assignee's face, and a second face
+ * meaning something entirely different is how a board becomes unreadable. */
+function LiveSignalStrip({ cardId }: { cardId: string }): React.JSX.Element | null {
+  const t = useT()
+  const signals = useCardSignals(cardId)
+  if (signals.length === 0) return null
+
+  const typing = signals.filter((s) => s.kind === 'comment_typing')
+  const editing = signals.filter((s) => s.kind === 'card_editing')
+  const primary = editing[0] ?? typing[0]!
+  const label =
+    editing.length > 0
+      ? primary.name
+        ? t('realtime.signal.editingBy', { name: primary.name })
+        : t('realtime.signal.editing')
+      : typing.length > 1
+        ? t('realtime.signal.typingMany', { count: typing.length })
+        : primary.name
+          ? t('realtime.signal.typingBy', { name: primary.name })
+          : t('realtime.signal.typing')
+
+  return (
+    <p
+      aria-live="polite"
+      className="flex items-center gap-1.5 text-caption text-primary motion-safe:animate-[devon-fade-in_220ms_var(--ease-out)]"
+    >
+      <span
+        aria-hidden="true"
+        className="size-1.5 shrink-0 rounded-full bg-primary motion-safe:animate-pulse"
+      />
+      {label}
+    </p>
+  )
 }
 
 export function CardTile({
@@ -336,6 +379,8 @@ export function CardTile({
           {canMove ? <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} /> : null}
         </div>
       </div>
+
+      <LiveSignalStrip cardId={card.id} />
 
       {project ? (
         <Chip tone="outline">

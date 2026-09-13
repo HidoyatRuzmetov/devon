@@ -1,0 +1,95 @@
+{
+  "realtime": {
+    "status": {
+      "live": "Jonli",
+      "liveHint": "Oʻzgarishlar shu zahoti koʻrinadi.",
+      "connecting": "Ulanmoqda…",
+      "connectingHint": "Jonli ulanish tiklanmoqda.",
+      "off": "Jonli rejim oʻchiq",
+      "offHint": "Bu server jonli yangilanishsiz ishlayapti — sahifa bir necha soniyada bir yangilanadi.",
+      "error": "Jonli ulanish uzildi",
+      "errorHint": "Sahifa bir necha soniyada bir yangilanib turadi."
+    },
+    "presence": {
+      "label": "Hozir bu yerda",
+      "nobody": "Hozir bu yerda boshqa hech kim yoʻq",
+      "one": "{name} ham shu doskani koʻrib turibdi",
+      "many": "{name} va yana {count} kishi shu doskani koʻrib turibdi",
+      "more": "yana {count}"
+    },
+    "signal": {
+      "editing": "Tahrirlanmoqda",
+      "editingBy": "{name} tahrirlayapti",
+      "typing": "Izoh yozilmoqda",
+      "typingBy": "{name} izoh yozyapti",
+      "typingMany": "{count} kishi izoh yozyapti"
+    },
+    "canvas": {
+      "share": {
+        "action": "Doskani ulashish",
+        "title": "Doskani ulashish",
+        "description": "Shaxsiy doskangizning nusxasi loyiha yoki tadbir sahifasida koʻrinadi. Asl doskangiz shaxsiyligicha qoladi.",
+        "privacyNote": "Ulashilganda doskangizning nusxasi olinadi. Keyingi oʻzgarishlaringiz nusxaga oʻtmaydi — nusxani shu yerdan tahrirlaysiz. Ulashuvni istalgan vaqtda qaytarib olasiz.",
+        "scope": "Qayerga",
+        "scopeProject": "Loyiha",
+        "scopeEvent": "Tadbir",
+        "target": "Tanlang",
+        "targetPlaceholder": "Loyiha yoki tadbirni tanlang",
+        "allowEdit": "Qatnashchilar tahrirlay olsin",
+        "allowEditHelp": "Oʻchirilsa — faqat koʻradilar, kursorlari koʻrinmaydi.",
+        "submit": "Ulashish",
+        "sharing": "Ulashilmoqda…",
+        "toast": "Doska ulashildi",
+        "noTargets": {
+          "title": "Ulashadigan joy yoʻq",
+          "body": "Avval biror loyihaga qoʻshiling yoki tadbirga yoziling."
+        },
+        "failed": {
+          "notParticipant": "Bu loyiha yoki tadbir sizniki emas — avval unga qoʻshiling.",
+          "generic": "Doskani ulashib boʻlmadi. Qayta urinib koʻring."
+        },
+        "onlyMine": "Roʻyxatda faqat siz qatnashadigan loyiha va tadbirlar koʻrsatilgan."
+      },
+      "revoke": {
+        "action": "Ulashuvni qaytarib olish",
+        "confirmTitle": "Ulashuvni qaytarib olamizmi?",
+        "confirmBody": "Nusxa hamma uchun yopiladi. Shaxsiy doskangizga hech narsa boʻlmaydi.",
+        "confirm": "Ha, yopilsin",
+        "cancel": "Bekor qilish",
+        "toast": "Ulashuv qaytarib olindi"
+      },
+      "shared": {
+        "badge": "Ulashilgan",
+        "toProject": "{name} loyihasiga ulashilgan",
+        "toEvent": "{name} tadbiriga ulashilgan",
+        "readOnly": "Faqat koʻrish uchun",
+        "editable": "Qatnashchilar tahrirlay oladi",
+        "openOriginal": "Shaxsiy doskani ochish"
+      },
+      "cursors": {
+        "label": "Jonli kursorlar",
+        "nobody": "Hozir bu doskada boshqa hech kim yoʻq"
+      },
+      "conflict": {
+        "title": "Doskani kimdir sizdan oldin oʻzgartirdi",
+        "body": "Eng soʻnggi holat yuklandi. Oʻzgarishingizni qaytadan kiriting.",
+        "action": "Yangilash"
+      },
+      "empty": {
+        "title": "Bu doska hali ulashilmagan",
+        "body": "Ulashsangiz — loyiha yoki tadbir qatnashchilari uni birga koʻradi va tahrirlaydi."
+      },
+      "loading": {
+        "title": "Doska yuklanmoqda"
+      },
+      "error": {
+        "title": "Doskani ochib boʻlmadi",
+        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+      },
+      "forbidden": {
+        "title": "Bu doska sizga ochiq emas",
+        "body": "Uni faqat ulashilgan loyiha yoki tadbir qatnashchilari koʻradi."
+      }
+    }
+  }
+}

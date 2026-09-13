@@ -88,6 +88,12 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.page_versions': 'department_owned',
   'app.onboarding_templates': 'department_owned',
   'app.onboarding_runs': 'department_owned',
+
+  // EPIC-018/EPIC-019 realtime + calendar + web push (v1.1 SPEC §10, migration 1800).
+  'app.shared_canvases': 'department_owned',
+  'app.calendar_feeds': 'global',
+  'app.push_subscriptions': 'user_owned',
+  'app.push_vapid_keys': 'global',
 })
 
 /**
@@ -147,6 +153,17 @@ export const GLOBAL_ALLOWLIST: Readonly<Record<string, string>> = Object.freeze(
     'EPIC-013: the sentinel ed25519 keypair signs a host-level command that also removes the whole ' +
     'deployment, not one department -- reachable only behind {kind:"instance"}, same reasoning as ' +
     'app.wipe_requests immediately above.',
+  'app.calendar_feeds':
+    'EPIC-019: a calendar application carries no cookie, so the URL secret is the credential and ' +
+    'has to be resolved to a user id before any user context exists -- the same bootstrap shape as ' +
+    'app.sessions and app.telegram_links above. Per-user visibility is enforced by can() plus an ' +
+    'explicit user_id predicate on every authenticated query (modules/calendar/repo.ts), exactly as ' +
+    'it is for those two.',
+  'app.push_vapid_keys':
+    'EPIC-019: one VAPID keypair identifies this whole deployment to every browser push service ' +
+    '(Mozilla/Google/Apple), not one department or one user -- singleton instance configuration, ' +
+    'exactly like app.instance_settings. Never read by a request handler on behalf of a caller: ' +
+    'only the push sender loads it, and only the public half ever leaves the server.',
 })
 
 export type TenancyCoverageResult = {

@@ -17,6 +17,7 @@ import { toast } from '@devon/ui'
 import { useT } from '@devon/i18n'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
+import { useIsLive } from '../../lib/realtime/index.js'
 import * as api from './api.js'
 import type { Board, Card, CardDetail, CardStatus, Label, SavedView } from './api.js'
 
@@ -37,15 +38,27 @@ const LABELS_KEY = ['work', 'labels'] as const
 const VIEWS_KEY = ['work', 'views'] as const
 const ARCHIVE_KEY = (userId: string) => ['work', 'archive', userId] as const
 
-// Polling stands in for real-time push (TECH-SPEC's outbox worker has no client-facing WS/SSE
-// transport yet -- `packages/db/src/events-worker.ts` only drives server-side subscribers). A short
-// interval keeps the board's "a second browser sees it within a second" outcome true in spirit
-// without inventing a transport this build doesn't have; swapping this for a subscription later
-// changes nothing else in this file.
+// The four-second poll that stood in for real-time push until v1.1 (EPIC-018 built the transport:
+// `lib/realtime` + Centrifugo). It is still here, and deliberately so -- Centrifugo is an optional
+// service (`infra/docker-compose.yml` puts it behind a profile), so a deployment without it must
+// keep working exactly as it did. `useLiveRefetchInterval` is the whole switch: when the socket is
+// actually connected, the board stops polling and rides invalidations from
+// `useRealtimeBridge`; when it is off, connecting or broken, the poll comes straight back.
+//
+// Keyed on "connected", not on "configured": a socket that dropped an hour ago must not leave the
+// board silently frozen on stale data.
 const BOARD_POLL_MS = 4000
 
+function useLiveRefetchInterval(): number | false {
+  return useIsLive() ? false : BOARD_POLL_MS
+}
+
 export function useBoardQuery(): UseQueryResult<Board, Error> {
-  return useQuery({ queryKey: BOARD_KEY, queryFn: api.fetchBoard, refetchInterval: BOARD_POLL_MS })
+  return useQuery({
+    queryKey: BOARD_KEY,
+    queryFn: api.fetchBoard,
+    refetchInterval: useLiveRefetchInterval(),
+  })
 }
 
 /** H5.2 "prefetch on hover/focus" -- `nav.ts` calls this on the "Ishlar" sidebar entry's hover/
@@ -58,7 +71,7 @@ export function useCardsQuery(query: api.CardListQuery): UseQueryResult<Card[], 
   return useQuery({
     queryKey: [...CARDS_KEY, query],
     queryFn: async () => (await api.fetchCards(query)).items,
-    refetchInterval: BOARD_POLL_MS,
+    refetchInterval: useLiveRefetchInterval(),
   })
 }
 

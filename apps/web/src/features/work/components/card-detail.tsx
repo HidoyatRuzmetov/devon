@@ -13,6 +13,7 @@ import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, Link2, Plus, Trash2, X } from 'lucide-react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
+import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
 import {
   AiPreviewPanel,
   Avatar,
@@ -962,6 +963,17 @@ function Comments({
   const [text, setText] = React.useState('')
   const addComment = useAddCommentMutation(cardId)
 
+  // v1.1 EPIC-018: tell colleagues a comment is being written, while it is being written.
+  //
+  // The trigger is "there is unsent text", not "a key was pressed": a person who typed three words
+  // and then went to read the card is still writing a comment, and a signal that expired while they
+  // were thinking would flicker. `useSignalWhile` throttles to one call every four seconds and
+  // sends the "stopped" signal the moment the box empties or the panel closes -- so posting the
+  // comment clears the indicator, because `submit()` empties `text`.
+  useSignalWhile('comment_typing', cardId, text.trim().length > 0)
+  const signals = useCardSignals(cardId)
+  const typists = signals.filter((s) => s.kind === 'comment_typing')
+
   const summarizeEnabled = useAiFeatureEnabled('summarize_thread')
   const summarizeAi = useRunAiFeatureMutation('summarize_thread')
   const [summary, setSummary] = React.useState<{
@@ -1102,6 +1114,23 @@ function Comments({
           >
             {summary ? <p className="whitespace-pre-wrap">{summary.text}</p> : null}
           </AiPreviewPanel>
+        ) : null}
+
+        {typists.length > 0 ? (
+          <p
+            aria-live="polite"
+            className="flex items-center gap-1.5 text-caption text-primary motion-safe:animate-[devon-fade-in_220ms_var(--ease-out)]"
+          >
+            <span
+              aria-hidden="true"
+              className="size-1.5 shrink-0 rounded-full bg-primary motion-safe:animate-pulse"
+            />
+            {typists.length > 1
+              ? t('realtime.signal.typingMany', { count: typists.length })
+              : typists[0]!.name
+                ? t('realtime.signal.typingBy', { name: typists[0]!.name })
+                : t('realtime.signal.typing')}
+          </p>
         ) : null}
 
         <div className="flex gap-2">

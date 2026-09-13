@@ -185,12 +185,55 @@ services:
     logging: *default-logging
     # Centrifugo 6 takes its whole config from CENTRIFUGO_* env vars -- no mounted config file needed,
     # which keeps this item's TOUCHES to docker-compose.yml (no infra/centrifugo.json to own or drift).
+    #
+    # EPIC-018 (v1.1 SPEC §10) filled this in. The variable NAMES below are v6's, verified against the
+    # pinned image itself (`docker run --rm centrifugo/centrifugo:v6 centrifugo defaultconfig -d`),
+    # not against v4/v5 documentation: v6 nests the config (`client.token.hmac_secret_key`,
+    # `http_api.key`, `channel.namespaces`) and derives each env var from that path. The two v5-era
+    # names this file used to carry (CENTRIFUGO_TOKEN_HMAC_SECRET_KEY, CENTRIFUGO_API_KEY) would have
+    # been silently ignored by this image, leaving a broker that accepted unsigned tokens.
+    #
+    # The four namespaces are the product's whole realtime surface (`apps/api/src/modules/realtime/
+    # channels.ts` is the only place that builds or parses these names):
+    #
+    #   dept:<id>       department data changed -- a card moved, a project changed. Ids only, no
+    #                   content; the client re-fetches through the ordinary authorised endpoint.
+    #   board:<id>      who is on the board (presence) and who is editing/typing (ephemeral signals).
+    #   personal#<id>   one person's inbox. `#` is Centrifugo's user-limited boundary, so the broker
+    #                   itself refuses the channel to any connection whose token subject differs --
+    #                   a second lock on top of the API's own check.
+    #   canvas:<id>     a canvas its owner published to a project or an event: live cursors and
+    #                   sticky sync. The ONLY namespace where a browser may publish, because a cursor
+    #                   at 10 Hz through the API would be a request per frame -- and publications from
+    #                   clients carry Centrifugo's own `info` (name, avatar), so a participant cannot
+    #                   forge a colleague's cursor even here.
+    #
+    # Every `allow_*_for_client` stays false unless named, which is what makes a subscription
+    # impossible without a per-channel token from `POST /api/v1/realtime/subscribe-token`.
     command: ["centrifugo"]
     environment:
-      CENTRIFUGO_ADDRESS: "0.0.0.0" # container-internal bind; only the host port below is published
+      CENTRIFUGO_HTTP_SERVER_ADDRESS: "0.0.0.0" # container-internal bind; only the host port is published
       CENTRIFUGO_HTTP_API_INSECURE: "false"
-      CENTRIFUGO_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-devon_local_dev_centrifugo_change_me}
-      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-devon_local_dev_centrifugo_api_change_me}
+      CENTRIFUGO_HTTP_API_KEY: ${CENTRIFUGO_API_KEY:-devon_local_dev_centrifugo_api_change_me}
+      CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:-devon_local_dev_centrifugo_change_me}
+      # The browser connects same-origin in production (Caddy proxies /connection/*) and to
+      # 127.0.0.1:5173 in development; anything else is refused at the WebSocket handshake.
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: ${CENTRIFUGO_ALLOWED_ORIGINS:-http://127.0.0.1:5173 http://localhost:5173}
+      CENTRIFUGO_CLIENT_ALLOW_ANONYMOUS_CONNECT_WITHOUT_TOKEN: "false"
+      # Valkey rather than the in-memory default: presence ("who is on the board") has to be the same
+      # answer whichever API/Centrifugo replica a browser happens to reach, and the `valkey` service
+      # is already running for rate limits. It is also why `depends_on` below waits for it.
+      CENTRIFUGO_ENGINE_TYPE: redis
+      CENTRIFUGO_ENGINE_REDIS_ADDRESS: redis://valkey:6379
+      CENTRIFUGO_ENGINE_REDIS_PREFIX: devon
+      CENTRIFUGO_CHANNEL_NAMESPACES: >-
+        [{"name":"dept","presence":false,"join_leave":false,"history_size":0},
+         {"name":"board","presence":true,"join_leave":true,"force_push_join_leave":true,
+          "allow_presence_for_subscriber":true},
+         {"name":"personal","presence":false,"allow_user_limited_channels":true,
+          "allow_subscribe_for_client":true},
+         {"name":"canvas","presence":true,"join_leave":true,"force_push_join_leave":true,
+          "allow_presence_for_subscriber":true,"allow_publish_for_subscriber":true}]
     ports:
       - "${CENTRIFUGO_PORT:-8000}:8000"
     healthcheck:

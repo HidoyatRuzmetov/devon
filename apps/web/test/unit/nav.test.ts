@@ -18,10 +18,17 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
   // from `canAction`). A context with no `can` -- as in the first three cases below -- does no action
   // gating at all, which is why the head-only entries still appear there; the dedicated block at the
   // bottom of this file is where the real head/member split is asserted.
+  //
+  // v1.1 EPIC-019 adds `calendar` (the agenda, the secret ICS/CalDAV subscriptions and the web-push
+  // opt-in). It sorts between `analytics` and `departments` by directory name, and it is visible to
+  // every signed-in role for the same reason `personal` and `inbox` are: everything on it is the
+  // person's own, scoped by a `{kind:'personal'}` subject on every route behind it, so there is
+  // nothing for a role to gate.
   const featureEntryIds = [
     'account-settings',
     'ai',
     'analytics',
+    'calendar',
     'departments',
     'department-settings',
     'events',
@@ -54,6 +61,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'account-settings',
       'ai',
       'analytics',
+      'calendar',
       'departments',
       'department-requests',
       'department-settings',
@@ -116,6 +124,7 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
       'pages',
       'analytics',
       'ai',
+      'calendar',
     ]) {
       expect(ids).toContain(id)
     }
