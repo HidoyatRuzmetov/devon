@@ -7,7 +7,7 @@ test('@smoke locale switch on /login is exactly 2 clicks and updates every visib
   page,
 }) => {
   await page.goto('/login')
-  await expect(page.getByRole('heading', { name: 'Tizimga kirish' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Hisobga kirish' })).toBeVisible()
 
   // Click 1: open the locale menu.
   await page.getByRole('button', { name: 'Interfeys tili' }).click()

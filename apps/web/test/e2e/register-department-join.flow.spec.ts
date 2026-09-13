@@ -23,7 +23,7 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
 
   // 1. Register the future head through the real form (accounts/register-screen.tsx).
   await page.goto('/register')
-  await page.getByLabel('Ism').fill('Aziza')
+  await page.getByLabel('Ism', { exact: true }).fill('Aziza')
   await page.getByLabel('Familiya').fill('Karimova')
   await page.getByLabel('Login').fill(headLogin)
   await page.getByLabel('Parol').fill(headPassword)
@@ -36,7 +36,7 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   //    `/departments/new` exercises the same real stepper without depending on the landing cards'
   //    exact clickable element shape.
   await page.goto('/departments/new')
-  await page.getByLabel('Boʻlim nomi').fill(departmentName)
+  await page.getByLabel('Boshqarma nomi').fill(departmentName)
   await page.getByRole('button', { name: 'Keyingisi' }).click()
   await page.getByRole('button', { name: 'Keyingisi' }).click()
   await page.getByRole('button', { name: 'Soʻrov yuborish' }).click()
@@ -81,7 +81,7 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   const memberPage = await memberContext.newPage()
 
   await memberPage.goto('/register')
-  await memberPage.getByLabel('Ism').fill('Bekzod')
+  await memberPage.getByLabel('Ism', { exact: true }).fill('Bekzod')
   await memberPage.getByLabel('Familiya').fill('Yusupov')
   await memberPage.getByLabel('Login').fill(memberLogin)
   await memberPage.getByLabel('Parol').fill(memberPassword)
@@ -92,7 +92,7 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   await expect(memberPage.getByText(departmentName)).toBeVisible()
   await memberPage.getByLabel('Parol').fill(approved.joinPassword)
   await memberPage.getByRole('button', { name: 'Qoʻshilish' }).click()
-  await expect(memberPage.getByText('Boʻlimga qoʻshildingiz')).toBeVisible()
+  await expect(memberPage.getByText('Boshqarmaga qoʻshildingiz')).toBeVisible()
 
   await memberContext.close()
 

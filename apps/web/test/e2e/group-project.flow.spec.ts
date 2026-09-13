@@ -56,8 +56,8 @@ test('@flow group project: objective + subjective tasks complete and progress re
 
   // Real UI: the project page renders (title, and both task-scope tabs).
   await headPage.goto(`/projects/view?id=${project.id}`)
-  await expect(headPage.getByText('Umumiy vazifalar')).toBeVisible()
-  await expect(headPage.getByText('Shaxsiy vazifalar')).toBeVisible()
+  await expect(headPage.getByText('Boshqarma vazifalari')).toBeVisible()
+  await expect(headPage.getByText('Oʻz vazifalarim')).toBeVisible()
 
   // One objective task, one subjective task, both for this project.
   const objectiveRes = await authedPost(headContext, '/api/v1/cards', {
