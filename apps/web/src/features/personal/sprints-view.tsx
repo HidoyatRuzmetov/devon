@@ -12,7 +12,6 @@ import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import { Plus, RotateCcw, Sparkles, Target } from 'lucide-react'
 import {
-  AiPreviewPanel,
   Badge,
   Button,
   Card,
@@ -34,11 +33,7 @@ import {
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../ai/components/previews.js'
-import {
-  parseFeatureOutput,
-  type CatchUpOutput,
-  type PlanSprintOutput,
-} from '../ai/outputs.js'
+import { parseFeatureOutput, type CatchUpOutput, type PlanSprintOutput } from '../ai/outputs.js'
 import type { RunMeta } from '../ai/types.js'
 import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
@@ -313,7 +308,10 @@ export function SprintsView() {
     if (planAi.editing) {
       // The person rearranged the titles by hand; match them back to real to-dos in the order they
       // left them.
-      for (const title of planDraft.split('\n').map((line) => line.trim()).filter(Boolean)) {
+      for (const title of planDraft
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)) {
         const match = pool.find((tk) => !used.has(tk.id) && tk.title === title)
         if (match) {
           used.add(match.id)

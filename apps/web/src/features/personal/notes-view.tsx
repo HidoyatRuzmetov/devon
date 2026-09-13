@@ -4,7 +4,6 @@ import * as React from 'react'
 import { useT, useLocale, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { Check, Pin, PinOff, Plus, Trash2 } from 'lucide-react'
 import {
-  AiPreviewPanel,
   Button,
   Card,
   EmptyPersonalIllustration,
@@ -15,7 +14,6 @@ import {
   Stagger,
   StaggerItem,
   StateView,
-  Textarea,
   cn,
   toastWithUndo,
 } from '@devon/ui'

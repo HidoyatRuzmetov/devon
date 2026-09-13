@@ -124,11 +124,7 @@ export function QuickAddPreview({
 
 // --- F2 subtask_breakdown -----------------------------------------------------------------------
 
-export function SubtasksPreview({
-  output,
-}: {
-  output: SubtaskBreakdownOutput
-}): React.JSX.Element {
+export function SubtasksPreview({ output }: { output: SubtaskBreakdownOutput }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   if (output.insufficientInput) {
@@ -149,7 +145,9 @@ export function SubtasksPreview({
             <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
               {t('ai.preview.minutes', { count: formatNumber(item.estimateMin, locale) })}
             </span>
-            {item.needsApproval ? <Badge tone="warning">{t('ai.preview.needsApproval')}</Badge> : null}
+            {item.needsApproval ? (
+              <Badge tone="warning">{t('ai.preview.needsApproval')}</Badge>
+            ) : null}
           </StaggerItem>
         ))}
       </Stagger>
@@ -226,11 +224,7 @@ export function PlanPreview({
 
 const RISK_TONE = { overdue: 'destructive', at_risk: 'warning', none: 'neutral' } as const
 
-export function RiskExplainPreview({
-  output,
-}: {
-  output: DeadlineRiskOutput
-}): React.JSX.Element {
+export function RiskExplainPreview({ output }: { output: DeadlineRiskOutput }): React.JSX.Element {
   const t = useT()
   const dateText = useDateText()
   return (
@@ -244,9 +238,7 @@ export function RiskExplainPreview({
         <ArrowRight className="size-4 shrink-0 text-primary" aria-hidden="true" />
         <span className="text-foreground">{output.actionLabel}</span>
         {output.actionPayload.suggestedDueDate ? (
-          <span className="tabular-nums">
-            {dateText(output.actionPayload.suggestedDueDate)}
-          </span>
+          <span className="tabular-nums">{dateText(output.actionPayload.suggestedDueDate)}</span>
         ) : null}
       </p>
     </div>
@@ -372,11 +364,7 @@ export function CatchUpPreview({
 
 // --- F6 draft_event -----------------------------------------------------------------------------
 
-export function EventDraftPreview({
-  output,
-}: {
-  output: DraftEventOutput
-}): React.JSX.Element {
+export function EventDraftPreview({ output }: { output: DraftEventOutput }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const dateText = useDateText()
@@ -591,7 +579,9 @@ export function AnalyticsAnswerPreview({
       ) : null}
 
       <div className="flex flex-col gap-1 rounded-sm border border-border bg-muted/30 px-3 py-2">
-        <span className="text-caption text-muted-foreground">{t('ai.preview.analytics.filter')}</span>
+        <span className="text-caption text-muted-foreground">
+          {t('ai.preview.analytics.filter')}
+        </span>
         <code className="break-all font-mono text-caption text-foreground">
           {output.filterText || t('ai.preview.analytics.noFilter')}
         </code>
@@ -613,11 +603,7 @@ export function AnalyticsAnswerPreview({
 
 // --- F9 translate -------------------------------------------------------------------------------
 
-export function TranslatePreview({
-  output,
-}: {
-  output: TranslateOutput
-}): React.JSX.Element {
+export function TranslatePreview({ output }: { output: TranslateOutput }): React.JSX.Element {
   const t = useT()
   return (
     <div className="flex flex-col gap-2">
@@ -641,11 +627,7 @@ export function TranslatePreview({
 
 // --- N-1 draft_reply ----------------------------------------------------------------------------
 
-export function DraftReplyPreview({
-  output,
-}: {
-  output: DraftReplyOutput
-}): React.JSX.Element {
+export function DraftReplyPreview({ output }: { output: DraftReplyOutput }): React.JSX.Element {
   const t = useT()
   return (
     <div className="flex flex-col gap-2.5">
@@ -687,7 +669,10 @@ export function BoardRiskDigestPreview({
 }: {
   output: BoardRiskDigestOutput
   cardTitle: (id: string) => string | null
-  onAction?: (cardId: string, action: BoardRiskDigestOutput['entries'][number]['suggestedAction']) => void
+  onAction?: (
+    cardId: string,
+    action: BoardRiskDigestOutput['entries'][number]['suggestedAction'],
+  ) => void
 }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
@@ -763,11 +748,7 @@ export function AssigneeSuggestionsPreview({
     <div className="flex flex-col gap-2">
       <Stagger as="ol" className="flex flex-col divide-y divide-border">
         {output.suggestions.map((suggestion) => (
-          <StaggerItem
-            as="li"
-            key={suggestion.userId}
-            className="flex items-start gap-3 py-2"
-          >
+          <StaggerItem as="li" key={suggestion.userId} className="flex items-start gap-3 py-2">
             <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-caption tabular-nums text-muted-foreground">
               {formatNumber(suggestion.rank, locale)}
             </span>

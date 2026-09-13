@@ -9,7 +9,7 @@
 // SVG for six milestones per project at this build's scale.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarClock, CheckCircle2, ChevronLeft } from 'lucide-react'
+import { CalendarClock, ChevronLeft } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Avatar,
@@ -36,11 +36,7 @@ import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
-import {
-  parseFeatureOutput,
-  type CatchUpOutput,
-  type PlanSprintOutput,
-} from '../../ai/outputs.js'
+import { parseFeatureOutput, type CatchUpOutput, type PlanSprintOutput } from '../../ai/outputs.js'
 import type { RunMeta } from '../../ai/types.js'
 import { fetchCards } from '../../work/api.js'
 import type { Card } from '../../work/api.js'
@@ -93,7 +89,6 @@ function TaskRow({ card }: { card: Card }) {
     </div>
   )
 }
-
 
 export default function ProjectPageScreen() {
   const t = useT()

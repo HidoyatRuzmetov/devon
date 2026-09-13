@@ -67,7 +67,10 @@ export function useDepartmentSearchQuery(query: string, limit = 12) {
 }
 
 export function useSearchBackendQuery() {
-  return useQuery({ queryKey: ['ai', 'search', 'backend'] as const, queryFn: api.fetchSearchBackend })
+  return useQuery({
+    queryKey: ['ai', 'search', 'backend'] as const,
+    queryFn: api.fetchSearchBackend,
+  })
 }
 
 export function useAskMutation() {

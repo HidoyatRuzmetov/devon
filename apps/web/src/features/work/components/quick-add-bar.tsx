@@ -92,7 +92,10 @@ export function QuickAddBar({
     aiSettings.data.budgetStatus !== 'hard_stop'
   const duplicateEnabled = aiSettings.data?.flags['duplicate_check'] === true
 
-  const labels = labelsQuery.data ?? []
+  // Its own `useMemo` rather than a bare `?? []`: a fresh array literal on every render would make
+  // `labelById` below rebuild every render too, which is exactly what the exhaustive-deps rule is
+  // pointing at.
+  const labels = React.useMemo(() => labelsQuery.data ?? [], [labelsQuery.data])
   const memberById = React.useMemo(
     () => new Map(members.map((m) => [m.userId, m] as const)),
     [members],

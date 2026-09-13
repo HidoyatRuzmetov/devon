@@ -88,9 +88,10 @@ export function AskPanel(): React.JSX.Element {
 
   const [question, setQuestion] = React.useState('')
   const [submitted, setSubmitted] = React.useState('')
-  const [answer, setAnswer] = React.useState<
-    { output: SemanticAskOutput; response: AskResponse } | null
-  >(null)
+  const [answer, setAnswer] = React.useState<{
+    output: SemanticAskOutput
+    response: AskResponse
+  } | null>(null)
   const [failed, setFailed] = React.useState(false)
 
   // The "what was found" list is a plain search over whatever is currently typed, debounced, and is

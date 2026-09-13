@@ -6,10 +6,10 @@
 //
 // AI wiring (UI-OVERHAUL.md's brief for this area, TECH-SPEC §8): quick-add parsing cleans up a
 // free-typed line before it becomes a to-do, and subtask breakdown turns one to-do into a checklist --
-// both go through `<AiPreviewPanel>`'s Accept/Edit/Discard, never applying themselves.
+// both go through the AI result panel's Accept/Edit/Discard, never applying themselves.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import {
   Card,
   Input,

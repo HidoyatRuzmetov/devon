@@ -198,11 +198,13 @@ export async function embedPending(
     await withContext(ctx, (tx) =>
       searchRepo.writeEmbeddings(
         tx,
-        rows.map((row, i) => ({
-          id: row.id,
-          contentHash: row.content_hash,
-          vector: vectors[i] ?? [],
-        })).filter((row) => row.vector.length === aiConfig.embeddingsDimensions),
+        rows
+          .map((row, i) => ({
+            id: row.id,
+            contentHash: row.content_hash,
+            vector: vectors[i] ?? [],
+          }))
+          .filter((row) => row.vector.length === aiConfig.embeddingsDimensions),
         probe.model!,
       ),
     )

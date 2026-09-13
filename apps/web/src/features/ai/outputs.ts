@@ -98,9 +98,7 @@ export const catchUpOutputSchema = z.object({
       severity: z.enum(['high', 'medium']),
     }),
   ),
-  overloaded: z.array(
-    z.object({ name: z.string(), openCount: z.number(), text: z.string() }),
-  ),
+  overloaded: z.array(z.object({ name: z.string(), openCount: z.number(), text: z.string() })),
   lookingAhead: blockSchema,
   items: z.array(
     z.object({

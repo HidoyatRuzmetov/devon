@@ -513,7 +513,14 @@ export default function BoardScreen() {
 function BoardRiskDigest({
   board,
 }: {
-  board: { members: readonly { userId: string }[]; columns: readonly { member: { userId: string; givenName: string; familyName: string }; cards: readonly Card[] }[]; unassigned: readonly Card[] }
+  board: {
+    members: readonly { userId: string }[]
+    columns: readonly {
+      member: { userId: string; givenName: string; familyName: string }
+      cards: readonly Card[]
+    }[]
+    unassigned: readonly Card[]
+  }
 }) {
   const t = useT()
   const locale = useLocale()

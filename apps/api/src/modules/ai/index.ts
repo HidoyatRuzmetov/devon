@@ -331,7 +331,9 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         return reply.send(outcome as unknown as AskResponse)
       } catch (err) {
         if (err instanceof AiFeatureDisabledError) {
-          return sendProblem(reply, 'forbidden', { errors: [{ path: 'feature', code: 'disabled' }] })
+          return sendProblem(reply, 'forbidden', {
+            errors: [{ path: 'feature', code: 'disabled' }],
+          })
         }
         if (err instanceof AiBudgetExceededError) {
           return sendProblem(reply, 'forbidden', { errors: [{ path: 'budget', code: 'exceeded' }] })
@@ -358,9 +360,7 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      return reply.send(
-        await service.rebuildSearchIndex(toDbContext(req), activeDepartmentId(req)),
-      )
+      return reply.send(await service.rebuildSearchIndex(toDbContext(req), activeDepartmentId(req)))
     },
   )
 

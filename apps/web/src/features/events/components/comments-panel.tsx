@@ -142,7 +142,9 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
   // The digest is written *for* the reader ("siz soʻragan savolga hali javob yoʻq"), which needs the
   // reader's name -- never invented, always the session's own.
   const { user } = useSession()
-  const viewerName = user ? `${user.givenName} ${user.familyName}`.trim() : t('events.comments.viewerFallback')
+  const viewerName = user
+    ? `${user.givenName} ${user.familyName}`.trim()
+    : t('events.comments.viewerFallback')
   const commentsQuery = useCommentsQuery(eventId, true)
   const addMutation = useAddCommentMutation(eventId)
   const deleteMutation = useDeleteCommentMutation(eventId)

@@ -593,7 +593,6 @@ export async function embedPendingTick(ctx: RequestContext): Promise<number> {
   return embedded
 }
 
-
 // --- the Friday department briefing (AI-AUDIT §5 fix 17) ------------------------------------
 
 /**

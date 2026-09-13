@@ -205,7 +205,6 @@ export async function listTraces(
   `)
 }
 
-
 // --- the Friday department briefing (AI-AUDIT §5 fix 17) ------------------------------------
 
 /** The head of a department, or `null` when it has none. The weekly digest bills its one AI call to

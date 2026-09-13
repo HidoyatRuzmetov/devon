@@ -112,11 +112,7 @@ export function ConfidenceChip({
   const t = useT()
   // A high-confidence field needs no chip at all: chrome on every row is chrome nobody reads.
   if (level === 'high') return null
-  return (
-    <Badge tone={level === 'low' ? 'warning' : 'neutral'}>
-      {t(`ai.confidence.${level}`)}
-    </Badge>
-  )
+  return <Badge tone={level === 'low' ? 'warning' : 'neutral'}>{t(`ai.confidence.${level}`)}</Badge>
 }
 
 /** One labelled row of a parsed result. The label column is fixed so a column of them reads as a

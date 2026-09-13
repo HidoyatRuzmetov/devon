@@ -45,10 +45,7 @@ export type AiTraceFeatureId = z.infer<typeof aiTraceFeatureSchema>
  * `catch_up` is not here: the feature is every member's own "what did I miss", and only its
  * `scope: 'department'` variant is managerial (checked separately, on the server).
  */
-export const HEAD_ONLY_FEATURES: readonly AiFeatureId[] = [
-  'board_risk_digest',
-  'suggest_assignee',
-]
+export const HEAD_ONLY_FEATURES: readonly AiFeatureId[] = ['board_risk_digest', 'suggest_assignee']
 
 /** i18n message keys use camelCase, never the snake_case `AiFeatureId` values directly: `plan_sprint`
  * flattened straight into a message key (`ai.features.plan_sprint.label`) trips the banned-word scan
@@ -241,7 +238,9 @@ export function searchHitHref(hit: Pick<SearchHit, 'subjectType' | 'subjectId'>)
 
 /** `card:<uuid>` → a hit-shaped object the link helper above understands. Returns `null` for a ref
  * the model made up, which is the point: an invented citation renders as plain text, never a link. */
-export function parseRef(ref: string): { subjectType: SearchHit['subjectType']; subjectId: string } | null {
+export function parseRef(
+  ref: string,
+): { subjectType: SearchHit['subjectType']; subjectId: string } | null {
   const [kind, id] = ref.split(':')
   if (!id) return null
   if (kind !== 'card' && kind !== 'comment' && kind !== 'page' && kind !== 'event') return null

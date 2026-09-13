@@ -25,6 +25,9 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'GET /api/v1/people/indicators',
   'GET /api/v1/people/indicators/registry',
   'POST /api/v1/labels',
+  // EPIC-016: rebuilding the AI search index re-embeds the department's rows, so its only visible
+  // effect is on AI spend -- it belongs with the budget, which is the head's.
+  'POST /api/v1/ai/search/reindex',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

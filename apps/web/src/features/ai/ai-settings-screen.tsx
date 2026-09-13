@@ -193,9 +193,7 @@ function SearchBackendCard({ search, isHead }: { search: AiSettings['search']; i
           {t(`ai.search.backend.${search.backend}`)}
         </Badge>
       </div>
-      <p className="text-small text-muted-foreground">
-        {t(`ai.search.reason.${search.reason}`)}
-      </p>
+      <p className="text-small text-muted-foreground">{t(`ai.search.reason.${search.reason}`)}</p>
       <p className="text-caption tabular-nums text-muted-foreground">
         {t('ai.search.indexed', {
           count: formatNumber(search.indexedCount, locale),
