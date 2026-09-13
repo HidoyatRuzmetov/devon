@@ -14,6 +14,10 @@ const CalendarScreen = React.lazy(() => import('./components/calendar-screen.js'
 const MineScreen = React.lazy(() => import('./components/mine-screen.js'))
 const ArchiveScreen = React.lazy(() => import('./components/archive-screen.js'))
 const CardPageScreen = React.lazy(() => import('./components/card-page-screen.js'))
+// v1.1 SPEC §7: the three screens the work-plus features earned of their own.
+const WorkloadScreen = React.lazy(() => import('./components/workload-screen.js'))
+const TemplatesScreen = React.lazy(() => import('./components/templates-screen.js'))
+const GoalsScreen = React.lazy(() => import('./components/goals-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'work',
@@ -25,6 +29,9 @@ const manifest: FeatureManifest = {
     { path: '/work/mine', component: MineScreen, titleKey: 'work.view.mine' },
     { path: '/work/archive', component: ArchiveScreen, titleKey: 'work.view.archive' },
     { path: '/work/card', component: CardPageScreen, titleKey: 'work.card.peekTitle' },
+    { path: '/work/workload', component: WorkloadScreen, titleKey: 'work.workload.title' },
+    { path: '/work/templates', component: TemplatesScreen, titleKey: 'work.templates.title' },
+    { path: '/goals', component: GoalsScreen, titleKey: 'work.goals.title' },
   ],
   // H5.2 "prefetch on hover/focus": warms the board query before the click that navigates here.
   sidebar: [
@@ -39,6 +46,9 @@ const manifest: FeatureManifest = {
   commands: [
     { id: 'work.mine', labelKey: 'work.view.mine', path: '/work/mine' },
     { id: 'work.table', labelKey: 'work.view.table', path: '/work/table' },
+    { id: 'work.workload', labelKey: 'work.workload.title', path: '/work/workload' },
+    { id: 'work.templates', labelKey: 'work.templates.title', path: '/work/templates' },
+    { id: 'work.goals', labelKey: 'work.goals.title', path: '/goals' },
   ],
   // The shell's top-bar quick-add (MODULE-GUIDE.md "Web features": `quickAdd`).
   //

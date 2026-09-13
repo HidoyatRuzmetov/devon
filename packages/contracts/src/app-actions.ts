@@ -312,6 +312,42 @@ export const APP_ACTIONS = {
     action: 'read',
     subject: 'department_managed',
   },
+  /** Moving somebody else's card to another person or another week is a management act; the
+   * workload grid's drag is the same reassignment `work.card.reassign` is, so it reduces to the
+   * same `owned` rule and the head passes it for every card. */
+  'work.workload.assign': { area: 'work', action: 'update', subject: 'owned' },
+  /** A member may set their own weekly capacity (SPEC §7 A4: "members may set their own capacity");
+   * the head may set anyone's, which is why this is `owned` with the subject person as the owner
+   * set rather than `department_managed`. */
+  'work.capacity.edit': { area: 'work', action: 'update', subject: 'owned' },
+  /** A3: logging your own time, and reading the log on a card you can see. */
+  'work.timeLog.read': { area: 'work', action: 'read', subject: 'department_child' },
+  'work.timeLog.add': { area: 'work', action: 'create', subject: 'department_child' },
+  /** A10: a dependency is an edit of the blocked card, so the blocked card's owner set decides. */
+  'work.dependency.edit': { area: 'work', action: 'update', subject: 'owned' },
+  /** A7: making a card repeat changes what the department will be doing for months, so it follows
+   * the card's own ownership rather than being open to every colleague. */
+  'work.recurrence.edit': { area: 'work', action: 'update', subject: 'owned' },
+  /** 7.2: everyone sees the gallery (it is how work gets started), everyone may save a personal
+   * template, and only the head curates the department ones. */
+  'work.template.read': { area: 'work', action: 'read', subject: 'department_child' },
+  'work.template.savePersonal': {
+    area: 'work',
+    action: 'create',
+    subject: 'department_child',
+  },
+  'work.template.manageDepartment': {
+    area: 'work',
+    action: 'update',
+    subject: 'department_managed',
+  },
+  /** A8: the bulk bar acts card by card; each card is still checked with `work.card.edit`, so this
+   * id only decides whether the bar exists at all. */
+  'work.bulk.edit': { area: 'work', action: 'update', subject: 'department_child' },
+  /** A9: the focus list ("Diqqat markazi") is the viewer's own pinned five. */
+  'work.focus.manage': { area: 'work', action: 'update', subject: 'personal' },
+  /** 7.4: a reminder is something you set for yourself on a card you can see. */
+  'work.reminder.manage': { area: 'work', action: 'update', subject: 'personal' },
 
   // --- projects (audit §4.5) ---------------------------------------------------------------------
   'projects.read': {

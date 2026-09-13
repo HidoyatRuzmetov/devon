@@ -1,0 +1,105 @@
+{
+  "automations": {
+    "eyebrow": "AVTOMATLASHTIRISH",
+    "title": "Qoidalar",
+    "description": "«Shunday boʻlsa — shuni qil». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
+    "create": "Qoida qoʻshish",
+    "newTitle": "Yangi qoida",
+    "created": "Qoida qoʻshildi",
+    "createFailed": "Qoidani qoʻshib boʻlmadi",
+    "toggleFailed": "Qoidani oʻzgartirib boʻlmadi",
+    "deleted": "«{name}» oʻchirildi",
+    "deleteFailed": "Qoidani oʻchirib boʻlmadi",
+    "pauseAll": "Hammasini toʻxtatish",
+    "pausedAll": "{count} ta qoida toʻxtatildi",
+    "pauseFailed": "Qoidalarni toʻxtatib boʻlmadi",
+    "atLimit": "Yoqilgan qoidalar soni {max} tadan oshmaydi. Yangisini qoʻshish uchun birortasini oʻchiring.",
+    "emptyTitle": "Qoida yoʻq",
+    "emptyBody": "Birinchi qoidani qoʻshing — masalan, muddati oʻtgan kartani boshliqqa xabar qilsin.",
+    "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
+    "forbiddenBody": "Qoidalarni faqat boshqarma boshligʻi sozlaydi.",
+    "runsTitle": "Bajarilishlar tarixi",
+    "runsDescription": "Har bir ishga tushish — nima qilingani yoki nega oʻtkazib yuborilgani bilan.",
+    "runsEmptyTitle": "Hali hech narsa ishga tushmagan",
+    "runsEmptyBody": "Qoida ishga tushganda shu yerda koʻrinadi.",
+    "rule": {
+      "sentence": "{trigger} → {actions}",
+      "toggle": "«{name}» qoidasini yoqish yoki oʻchirish",
+      "delete": "«{name}» qoidasini oʻchirish",
+      "lastError": "Oxirgi xato: {error}",
+      "runCount": "{count} marta ishlagan",
+      "lastRun": "Oxirgi marta: {at}",
+      "neverRun": "Hali ishga tushmagan"
+    },
+    "trigger": {
+      "cardCreated": "Karta yaratilganda",
+      "cardStatusChanged": "Holati oʻzgarganda",
+      "cardAssigned": "Karta biriktirilganda",
+      "cardDueSoon": "Muddati yaqinlashganda",
+      "cardOverdue": "Muddati oʻtganda",
+      "cardFieldChanged": "Maydon oʻzgarganda"
+    },
+    "action": {
+      "assign": "xodimga biriktirish",
+      "setPriority": "muhimlikni belgilash",
+      "addLabel": "yorliq qoʻshish",
+      "notifyUser": "xodimga xabar berish",
+      "notifyHead": "boshliqqa xabar berish",
+      "setStatus": "holatini oʻzgartirish",
+      "addChecklist": "tekshirish roʻyxatini qoʻshish",
+      "createFollowup": "davomi uchun karta yaratish"
+    },
+    "builder": {
+      "nameLabel": "Qoida nomi",
+      "namePlaceholder": "Masalan: muddati oʻtganini boshliqqa bildirish",
+      "whenLegend": "Qachon",
+      "thenLegend": "Nima qilinsin",
+      "triggerLabel": "Hodisa",
+      "toStatusLabel": "Qaysi holatga oʻtganda",
+      "anyStatus": "Har qanday holat",
+      "daysAheadLabel": "Necha kun oldin",
+      "daysAheadHint": "1 dan 14 kungacha.",
+      "fieldLabel": "Qaysi maydon",
+      "field": {
+        "priority": "Muhimlik",
+        "labels": "Yorliqlar",
+        "dueAt": "Muddat",
+        "estimate": "Baho"
+      },
+      "filterLabel": "Qaysi kartalarga",
+      "filterHint": "Boʻsh qoldirilsa — barcha kartalarga.",
+      "filterPlaceholder": "label:murojaat",
+      "actionLabel": "Amal",
+      "addAction": "Yana amal qoʻshish",
+      "actionLimit": "Bitta qoidada 5 tadan koʻp amal boʻlmaydi",
+      "removeAction": "Amalni olib tashlash",
+      "whoLabel": "Kimga",
+      "choosePerson": "Xodimni tanlang",
+      "priorityLabel": "Muhimlik",
+      "labelLabel": "Yorliq",
+      "chooseLabel": "Yorliqni tanlang",
+      "statusLabel": "Holat",
+      "checklistLabel": "Tekshirish roʻyxati",
+      "checklistHint": "Har bir band — alohida qator.",
+      "followupTitle": "Yangi karta nomi",
+      "followupDueInDays": "Necha kunda",
+      "invalid": "Qoida toʻliq emas — maydonlarni tekshiring."
+    },
+    "run": {
+      "status": {
+        "applied": "Bajarildi",
+        "skipped": "Oʻtkazildi",
+        "failed": "Xato"
+      },
+      "reason": {
+        "chainDepth": "Zanjir juda uzun — toʻxtatildi",
+        "loopGuard": "Halqa aniqlandi — qoida ikkinchi marta ishlamadi",
+        "noValidActions": "Bajariladigan amal qolmadi",
+        "statusDidNotMatch": "Holat mos kelmadi",
+        "filterDidNotMatch": "Karta filtrga tushmadi",
+        "alreadyAppliedToday": "Bugun allaqachon bajarilgan",
+        "other": "Oʻtkazib yuborildi"
+      }
+    }
+  }
+}

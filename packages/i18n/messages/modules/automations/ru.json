@@ -1,0 +1,105 @@
+{
+  "automations": {
+    "eyebrow": "АВТОМАТИЗАЦИЯ",
+    "title": "Правила",
+    "description": "«Если произошло — сделай». Превратите повторяющуюся ручную работу в правило.",
+    "create": "Добавить правило",
+    "newTitle": "Новое правило",
+    "created": "Правило добавлено",
+    "createFailed": "Не удалось добавить правило",
+    "toggleFailed": "Не удалось изменить правило",
+    "deleted": "«{name}» удалено",
+    "deleteFailed": "Не удалось удалить правило",
+    "pauseAll": "Остановить все",
+    "pausedAll": "Остановлено правил: {count}",
+    "pauseFailed": "Не удалось остановить правила",
+    "atLimit": "Включённых правил не больше {max}. Отключите одно, чтобы добавить новое.",
+    "emptyTitle": "Правил нет",
+    "emptyBody": "Добавьте первое — например, сообщать начальнику о просроченной карточке.",
+    "forbiddenTitle": "Страница для начальника управления",
+    "forbiddenBody": "Правила настраивает только начальник управления.",
+    "runsTitle": "История срабатываний",
+    "runsDescription": "Каждое срабатывание — с тем, что сделано или почему пропущено.",
+    "runsEmptyTitle": "Пока ничего не срабатывало",
+    "runsEmptyBody": "Когда правило сработает, это появится здесь.",
+    "rule": {
+      "sentence": "{trigger} → {actions}",
+      "toggle": "Включить или выключить правило «{name}»",
+      "delete": "Удалить правило «{name}»",
+      "lastError": "Последняя ошибка: {error}",
+      "runCount": "Сработало {count} раз",
+      "lastRun": "Последний раз: {at}",
+      "neverRun": "Ещё не срабатывало"
+    },
+    "trigger": {
+      "cardCreated": "Когда карточка создана",
+      "cardStatusChanged": "Когда изменился статус",
+      "cardAssigned": "Когда карточка назначена",
+      "cardDueSoon": "Когда приближается срок",
+      "cardOverdue": "Когда срок прошёл",
+      "cardFieldChanged": "Когда изменилось поле"
+    },
+    "action": {
+      "assign": "назначить сотруднику",
+      "setPriority": "задать приоритет",
+      "addLabel": "добавить метку",
+      "notifyUser": "уведомить сотрудника",
+      "notifyHead": "уведомить начальника",
+      "setStatus": "изменить статус",
+      "addChecklist": "добавить чек-лист",
+      "createFollowup": "создать карточку-продолжение"
+    },
+    "builder": {
+      "nameLabel": "Название правила",
+      "namePlaceholder": "Например: сообщать начальнику о просрочке",
+      "whenLegend": "Когда",
+      "thenLegend": "Что сделать",
+      "triggerLabel": "Событие",
+      "toStatusLabel": "При переходе в статус",
+      "anyStatus": "Любой статус",
+      "daysAheadLabel": "За сколько дней",
+      "daysAheadHint": "От 1 до 14 дней.",
+      "fieldLabel": "Какое поле",
+      "field": {
+        "priority": "Приоритет",
+        "labels": "Метки",
+        "dueAt": "Срок",
+        "estimate": "Оценка"
+      },
+      "filterLabel": "К каким карточкам",
+      "filterHint": "Пусто — ко всем карточкам.",
+      "filterPlaceholder": "label:обращение",
+      "actionLabel": "Действие",
+      "addAction": "Добавить ещё действие",
+      "actionLimit": "В одном правиле не больше 5 действий",
+      "removeAction": "Убрать действие",
+      "whoLabel": "Кому",
+      "choosePerson": "Выберите сотрудника",
+      "priorityLabel": "Приоритет",
+      "labelLabel": "Метка",
+      "chooseLabel": "Выберите метку",
+      "statusLabel": "Статус",
+      "checklistLabel": "Чек-лист",
+      "checklistHint": "Каждый пункт — с новой строки.",
+      "followupTitle": "Название новой карточки",
+      "followupDueInDays": "Через сколько дней",
+      "invalid": "Правило заполнено не полностью — проверьте поля."
+    },
+    "run": {
+      "status": {
+        "applied": "Выполнено",
+        "skipped": "Пропущено",
+        "failed": "Ошибка"
+      },
+      "reason": {
+        "chainDepth": "Цепочка слишком длинная — остановлено",
+        "loopGuard": "Обнаружен цикл — правило не сработало второй раз",
+        "noValidActions": "Не осталось выполнимых действий",
+        "statusDidNotMatch": "Статус не совпал",
+        "filterDidNotMatch": "Карточка не прошла фильтр",
+        "alreadyAppliedToday": "Сегодня уже выполнялось",
+        "other": "Пропущено"
+      }
+    }
+  }
+}

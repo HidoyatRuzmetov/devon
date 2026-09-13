@@ -52,6 +52,24 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'POST /api/v1/fields/defs/:id/archive',
   'POST /api/v1/fields/defs/:id/restore',
   'POST /api/v1/fields/defs/:id/notify',
+  // v1.1 SPEC §7 (work-plus). The workload grid is head-only by decision (§2.2: "a member sees
+  // their own load on Home and on their own person page. No leaderboard anywhere") -- a member's
+  // own row comes from `GET /api/v1/work/workload/mine`, which is `department_child` and cannot be
+  // widened to anybody else.
+  'GET /api/v1/work/workload',
+  'POST /api/v1/work/workload/move',
+  // A11: a goal is management data -- what the department is being measured on, and by whom.
+  'GET /api/v1/goals',
+  'POST /api/v1/goals',
+  'PATCH /api/v1/goals/:id',
+  'DELETE /api/v1/goals/:id',
+  // EPIC-017: a xodim never learns that a rule exists; they only see its effect.
+  'GET /api/v1/automations',
+  'POST /api/v1/automations',
+  'PATCH /api/v1/automations/:id',
+  'DELETE /api/v1/automations/:id',
+  'GET /api/v1/automations/runs',
+  'POST /api/v1/automations/pause-all',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

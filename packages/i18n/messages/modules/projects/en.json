@@ -25,7 +25,9 @@
       "template": "Template",
       "milestones": "Milestones",
       "objective": "Shared cards",
-      "subjective": "Personal cards"
+      "subjective": "Personal cards",
+      "galleryTemplate": "Template",
+      "galleryTemplateHint": "Milestones and starting cards are created for you."
     },
     "status": {
       "planning": "Planning",
@@ -41,7 +43,9 @@
       "fromScratch": "From scratch",
       "submit": "Create",
       "success": "Project created",
-      "error": "Could not create the project"
+      "error": "Could not create the project",
+      "fromGallery": "From the template gallery",
+      "templateUnreadable": "Could not read the template"
     },
     "milestone": {
       "addPlaceholder": "Enter a milestone title",

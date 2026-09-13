@@ -28,6 +28,7 @@ import {
 
 const RISK_ICON = { AlertCircle, Clock3 } as const
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
+import { FocusList } from './focus-list.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
 
@@ -167,9 +168,15 @@ export default function MineScreen() {
   const cardsQuery = useCardsQuery({ q: combinedQuery, limit: 100 })
 
   const cards = cardsQuery.data ?? []
-  const overdue = cards.filter((c) => c.risk === 'overdue')
-  const atRisk = cards.filter((c) => c.risk === 'at_risk')
-  const rest = cards.filter((c) => c.risk === 'none')
+  // WALKTHROUGH-FINDINGS: "QOLGANLARI (14)" mixed struck-through completed cards in with work that
+  // is simply not due yet -- two opposite states under one heading, and the count told you nothing.
+  // Completed work now has its own group, and it comes last: the three groups above it are the ones
+  // that need a decision today.
+  const open = cards.filter((c) => c.status === 'active')
+  const overdue = open.filter((c) => c.risk === 'overdue')
+  const atRisk = open.filter((c) => c.risk === 'at_risk')
+  const rest = open.filter((c) => c.risk === 'none')
+  const completed = cards.filter((c) => c.status !== 'active')
 
   let body: React.ReactNode
   if (cardsQuery.isPending) {
@@ -221,13 +228,30 @@ export default function MineScreen() {
           collapsed={collapsedGroups.has('rest')}
           onToggleCollapsed={toggleGroupCollapsed}
         />
+        <Group
+          groupKey="completed"
+          titleKey="work.mine.completed"
+          cards={completed}
+          locale={locale}
+          animateKey={combinedQuery}
+          // Collapsed on arrival: finished work is reassurance, not a to-do list.
+          collapsed={!collapsedGroups.has('completed')}
+          onToggleCollapsed={toggleGroupCollapsed}
+        />
       </div>
     )
   }
 
   return (
     <>
-      <WorkShell filterLayout="mine">{body}</WorkShell>
+      <WorkShell filterLayout="mine">
+        <div className="flex flex-col gap-6">
+          {/* A9: the pinned five come first -- a focus list that sits below three other groups is
+              not a focus list. */}
+          <FocusList variant="bare" />
+          {body}
+        </div>
+      </WorkShell>
       <CardPeekDialog />
     </>
   )

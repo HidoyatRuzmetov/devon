@@ -6,6 +6,7 @@
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
+import { recurrenceRuleSchema, type RecurrenceRule } from '@devon/contracts'
 import type { CardDTO, MemberSummary, SavedViewLayout } from './schemas.js'
 
 // --- row shapes returned by hand-written SQL (snake_case, as Postgres sends them) ------------------
@@ -36,6 +37,14 @@ type CardRow = {
   checklist_total: number
   checklist_done: number
   comment_count: number
+  // v1.1 SPEC §7 -- all five computed by `cardSelect()`'s lateral joins, in the same query.
+  estimate_min: number | null
+  logged_min: number
+  blocked_by_open: number
+  blocks_count: number
+  recurrence: unknown
+  recurrence_series_id: string | null
+  focus_pinned: boolean
 }
 
 function computeRisk(row: Pick<CardRow, 'status' | 'due_at'>): 'none' | 'at_risk' | 'overdue' {
@@ -75,16 +84,47 @@ function toCardDTO(row: CardRow): CardDTO {
     createdAt: new Date(row.created_at).toISOString(),
     updatedAt: new Date(row.updated_at).toISOString(),
     version: row.version,
+    // v1.1 SPEC §7. `recurrence` is parsed rather than trusted: the column is jsonb and a rule
+    // written by an older build (or by hand) must not reach the client as a shape the contract
+    // does not describe -- an unreadable rule reads as "no repeat", which is the fail-safe answer.
+    estimateMin: row.estimate_min === null ? null : Number(row.estimate_min),
+    loggedMin: Number(row.logged_min ?? 0),
+    blockedByOpenCount: Number(row.blocked_by_open ?? 0),
+    blocksCount: Number(row.blocks_count ?? 0),
+    recurrence: parseRecurrence(row.recurrence),
+    recurrenceSeriesId: row.recurrence_series_id,
+    focusPinned: row.focus_pinned === true,
   }
 }
 
-const CARD_SELECT = sql`
+/** `null` for anything `recurrenceRuleSchema` does not accept -- see `toCardDTO`'s note. */
+export function parseRecurrence(value: unknown): RecurrenceRule | null {
+  if (value === null || value === undefined) return null
+  const parsed = recurrenceRuleSchema.safeParse(value)
+  return parsed.success ? parsed.data : null
+}
+
+/**
+ * The card projection every read in this module shares. A function rather than a constant because
+ * two of its columns are answers to "…for **this** viewer" (the focus pin) and the rest have to
+ * arrive in the same round trip as the card itself (I-14: never a follow-up query per card).
+ *
+ * Five lateral joins on a table bounded at 5000 rows: each is an index lookup on the child table's
+ * `card_id`, which is what `card_time_logs_card_idx`, `card_dependencies_edge_key`,
+ * `card_dependencies_blocker_idx` and `focus_pins_person_card_key` exist for.
+ */
+function cardSelect(viewerUserId: string | null): SQL {
+  return sql`
   select c.id, c.kind, c.title, c.description, c.assignee_user_id, c.giver_user_id, c.project_id,
     c.project_scope, c.status, c.priority, c.start_at, c.due_at, c.done_at, c.archived_at,
     c.order_key, c.labels, c.watchers, c.links, c.created_by_user_id, c.created_at, c.updated_at,
-    c.version,
+    c.version, c.estimate_min, c.recurrence, c.recurrence_series_id,
     coalesce(cl.total, 0) as checklist_total, coalesce(cl.done, 0) as checklist_done,
-    coalesce(cm.cnt, 0) as comment_count
+    coalesce(cm.cnt, 0) as comment_count,
+    coalesce(tl.logged, 0) as logged_min,
+    coalesce(db.open_blockers, 0) as blocked_by_open,
+    coalesce(bl.blocking, 0) as blocks_count,
+    coalesce(fp.pinned, false) as focus_pinned
   from app.cards c
   left join lateral (
     select count(*) as total, count(*) filter (where done_at is not null) as done
@@ -93,7 +133,28 @@ const CARD_SELECT = sql`
   left join lateral (
     select count(*) as cnt from app.card_comments where card_id = c.id and deleted_at is null
   ) cm on true
+  left join lateral (
+    select coalesce(sum(minutes), 0) as logged
+    from app.card_time_logs where card_id = c.id and deleted_at is null
+  ) tl on true
+  left join lateral (
+    -- A blocker that is done no longer blocks: the chip has to mean "still waiting", or every
+    -- finished dependency would leave a permanent red mark on a card nobody is waiting for.
+    select count(*) as open_blockers
+    from app.card_dependencies d
+    join app.cards b on b.id = d.blocked_by_card_id and b.deleted_at is null and b.status = 'active'
+    where d.card_id = c.id
+  ) db on true
+  left join lateral (
+    select count(*) as blocking from app.card_dependencies where blocked_by_card_id = c.id
+  ) bl on true
+  left join lateral (
+    select true as pinned from app.focus_pins
+    where card_id = c.id and user_id = ${viewerUserId}
+    limit 1
+  ) fp on true
 `
+}
 
 export async function getMembers(
   ctx: RequestContext,
@@ -176,7 +237,7 @@ export async function listCards(
   return withContext(ctx, async (tx) => {
     const statusFilter = options.excludeArchived ? sql`and c.status != 'archived'` : sql``
     const rows = await tx.raw<CardRow>(
-      sql`${CARD_SELECT}
+      sql`${cardSelect(ctx.userId)}
           where c.department_id = ${departmentId} and c.deleted_at is null ${statusFilter}
           order by c.due_at asc nulls last, c.order_key asc
           limit 5000`,
@@ -192,7 +253,7 @@ export async function getCard(
 ): Promise<CardDTO | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<CardRow>(
-      sql`${CARD_SELECT}
+      sql`${cardSelect(ctx.userId)}
           where c.department_id = ${departmentId} and c.id = ${cardId} and c.deleted_at is null`,
     )
     return rows[0] ? toCardDTO(rows[0]) : null
@@ -379,6 +440,14 @@ type CreateCardInput = {
   projectScope: CardRow['project_scope'] | undefined
   orderKey: string | undefined
   createdByUserId: string
+  // v1.1 SPEC §7 (A3/A7). `recurrenceSeriesId`/`recurrenceIndex` are only ever passed by the
+  // recurrence job creating the next instance of an existing series; a card created by a person is
+  // always the head of its own series, which `createCard` stamps below.
+  estimateMin?: number | null | undefined
+  recurrence?: RecurrenceRule | null | undefined
+  recurrenceSeriesId?: string | null | undefined
+  recurrenceIndex?: number | null | undefined
+  source?: 'manual' | 'ai' | 'telegram' | 'template' | undefined
 }
 
 export async function createCard(ctx: RequestContext, input: CreateCardInput): Promise<CardDTO> {
@@ -398,7 +467,8 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
       sql`insert into app.cards (
             id, department_id, kind, title, description, assignee_user_id, giver_user_id,
             project_id, project_scope, priority, start_at, due_at, labels, links,
-            order_key, created_by_user_id
+            order_key, created_by_user_id, estimate_min, recurrence, recurrence_series_id,
+            recurrence_index, source
           ) values (
             ${id}, ${input.departmentId}, ${input.kind ?? 'task'}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
@@ -406,7 +476,12 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
             ${input.projectId ?? null}, ${input.projectScope ?? 'none'}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
             ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,
-            ${input.orderKey ?? 'a0'}, ${input.createdByUserId}
+            ${input.orderKey ?? 'a0'}, ${input.createdByUserId},
+            ${input.estimateMin ?? null},
+            ${input.recurrence ? JSON.stringify(input.recurrence) : null}::jsonb,
+            ${input.recurrenceSeriesId ?? (input.recurrence ? id : null)},
+            ${input.recurrenceIndex ?? (input.recurrence ? 1 : null)},
+            ${input.source ?? 'manual'}
           )`,
     )
     await tx.raw(
@@ -432,7 +507,7 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
       departmentId: input.departmentId,
     })
 
-    const rows = await tx.raw<CardRow>(sql`${CARD_SELECT} where c.id = ${id}`)
+    const rows = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${id}`)
     return toCardDTO(rows[0]!)
   })
 }
@@ -450,6 +525,8 @@ type PatchCardInput = {
   links?: CardRow['links'] | undefined
   watchers?: string[] | undefined
   orderKey?: string | undefined
+  estimateMin?: number | null | undefined
+  recurrence?: RecurrenceRule | null | undefined
 }
 
 export type PatchCardResult =
@@ -466,7 +543,7 @@ export async function patchCard(
 ): Promise<PatchCardResult> {
   return withContext(ctx, async (tx) => {
     const before = await tx.raw<CardRow>(
-      sql`${CARD_SELECT} where c.department_id = ${departmentId} and c.id = ${cardId} and c.deleted_at is null`,
+      sql`${cardSelect(ctx.userId)} where c.department_id = ${departmentId} and c.id = ${cardId} and c.deleted_at is null`,
     )
     const beforeRow = before[0]
     if (!beforeRow) return { ok: false, reason: 'not_found' }
@@ -495,6 +572,19 @@ export async function patchCard(
     if (patch.watchers !== undefined)
       sets.push(sql`watchers = ${sql.param(patch.watchers)}::uuid[]`)
     if (patch.orderKey !== undefined) sets.push(sql`order_key = ${patch.orderKey}`)
+    if (patch.estimateMin !== undefined) sets.push(sql`estimate_min = ${patch.estimateMin}`)
+    if (patch.recurrence !== undefined) {
+      sets.push(
+        sql`recurrence = ${patch.recurrence ? JSON.stringify(patch.recurrence) : null}::jsonb`,
+      )
+      // Turning a plain card into a repeating one makes it the head of its own series; turning the
+      // repeat off leaves the pointer alone, so the instances already created keep their lineage
+      // (stopping a repeat must never orphan work somebody has already started).
+      if (patch.recurrence) {
+        sets.push(sql`recurrence_series_id = coalesce(recurrence_series_id, ${cardId})`)
+        sets.push(sql`recurrence_index = coalesce(recurrence_index, 1)`)
+      }
+    }
     if (patch.status !== undefined) {
       sets.push(sql`status = ${patch.status}`)
       sets.push(
@@ -568,6 +658,10 @@ export async function patchCard(
     if (patch.title !== undefined && patch.title !== beforeRow.title) changes.push('title')
     if (patch.description !== undefined) changes.push('description')
     if (patch.labels !== undefined) changes.push('labels')
+    if (patch.estimateMin !== undefined && patch.estimateMin !== beforeRow.estimate_min) {
+      changes.push('estimate')
+    }
+    if (patch.recurrence !== undefined) changes.push('recurrence')
 
     // A reassignment is its own event, not a shade of "updated": the new assignee needs "this is
     // yours now" in their inbox, which is a different sentence and a different urgency from the
@@ -601,7 +695,7 @@ export async function patchCard(
       })
     }
 
-    const after = await tx.raw<CardRow>(sql`${CARD_SELECT} where c.id = ${cardId}`)
+    const after = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${cardId}`)
     return { ok: true, card: toCardDTO(after[0]!) }
   })
 }
@@ -822,7 +916,7 @@ export async function listArchiveForMember(
 ): Promise<CardDTO[]> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<CardRow>(
-      sql`${CARD_SELECT}
+      sql`${cardSelect(ctx.userId)}
           where c.department_id = ${departmentId} and c.assignee_user_id = ${memberUserId}
             and c.status = 'archived' and c.deleted_at is null
           order by c.archived_at desc`,

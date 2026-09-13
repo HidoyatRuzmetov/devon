@@ -7,7 +7,8 @@ import { SlidersHorizontal } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
-import { Collapsible, IconButton, PageHeader, cn } from '@devon/ui'
+import { Collapsible, IconButton, PageHeader, SegmentedControl, cn } from '@devon/ui'
+import { replaceSearchParam } from '../../../lib/router.js'
 import {
   useCardSignalSource,
   usePresence,
@@ -38,6 +39,19 @@ export interface WorkShellProps {
   children: React.ReactNode
 }
 
+/** v1.1 SPEC §7 (A9) -- "Me mode": `assignee:@me` is a clause the filter grammar already
+ * understands, so the toggle simply adds or removes that one token from `?q=`. Every view that reads
+ * `q` (board, table, timeline, calendar) then filters without learning a second mechanism, and the
+ * state survives a tab switch because it rides in the URL the tab links already carry. */
+const ME_CLAUSE = 'assignee:@me'
+
+function withoutMeClause(q: string): string {
+  return q
+    .split(/\s+/)
+    .filter((token) => token.length > 0 && token !== ME_CLAUSE)
+    .join(' ')
+}
+
 export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkShellProps) {
   const t = useT()
   const path = useRoutePath()
@@ -45,6 +59,13 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
   const board = useBoardQuery()
   const qs = search.get('q')
   const searchSuffix = qs ? `?q=${encodeURIComponent(qs)}` : ''
+  const meMode = (qs ?? '').split(/\s+/).includes(ME_CLAUSE)
+
+  function setMeMode(next: 'all' | 'mine'): void {
+    const rest = withoutMeClause(qs ?? '')
+    const combined = next === 'mine' ? `${rest} ${ME_CLAUSE}`.trim() : rest
+    replaceSearchParam('q', combined === '' ? null : combined)
+  }
 
   // round2 SEV2: at 390 the chrome above the board (title, six tabs, quick-add, filter row,
   // "Kengaytirilgan") ate ~500px before any column started -- below 768 the quick-add bar and filter
@@ -91,23 +112,41 @@ export function WorkShell({ filterLayout, showQuickAdd = true, children }: WorkS
           </div>
         }
         tabs={
-          <nav className="flex flex-wrap gap-1 border-b border-border" aria-label={t('work.title')}>
-            {TABS.map((tab) => (
-              <RouterLink
-                key={tab.path}
-                href={`${tab.path}${tab.layout === 'archive' ? '' : searchSuffix}`}
-                className={cn(
-                  'relative -mb-px inline-flex min-h-11 items-center whitespace-nowrap px-3 text-body font-medium transition-colors duration-(--dur-micro)',
-                  path === tab.path
-                    ? 'border-b-2 border-primary text-foreground'
-                    : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground',
-                )}
-                aria-current={path === tab.path ? 'page' : undefined}
-              >
-                {t(tab.labelKey)}
-              </RouterLink>
-            ))}
-          </nav>
+          <div className="flex flex-wrap items-end justify-between gap-2 border-b border-border">
+            <nav className="flex flex-wrap gap-1" aria-label={t('work.title')}>
+              {TABS.map((tab) => (
+                <RouterLink
+                  key={tab.path}
+                  href={`${tab.path}${tab.layout === 'archive' ? '' : searchSuffix}`}
+                  className={cn(
+                    'relative -mb-px inline-flex min-h-11 items-center whitespace-nowrap px-3 text-body font-medium transition-colors duration-(--dur-micro)',
+                    path === tab.path
+                      ? 'border-b-2 border-primary text-foreground'
+                      : 'border-b-2 border-transparent text-muted-foreground hover:text-foreground',
+                  )}
+                  aria-current={path === tab.path ? 'page' : undefined}
+                >
+                  {t(tab.labelKey)}
+                </RouterLink>
+              ))}
+            </nav>
+            {/* A9: "Mening" -- a visible segmented control on every work view, not a setting buried in
+              a menu (WALKTHROUGH-FINDINGS 2.1's own complaint about the board's hidden me/everyone
+              switch). `/work/mine` is already nothing but my cards, so it needs no toggle. */}
+            {filterLayout && filterLayout !== 'mine' ? (
+              <SegmentedControl
+                size="sm"
+                className="mb-1"
+                value={meMode ? 'mine' : 'all'}
+                onValueChange={setMeMode}
+                label={t('work.board.scopeLabel')}
+                options={[
+                  { value: 'all', label: t('work.board.scopeAll') },
+                  { value: 'mine', label: t('work.board.scopeMine') },
+                ]}
+              />
+            ) : null}
+          </div>
         }
       />
       {isDesktop ? (

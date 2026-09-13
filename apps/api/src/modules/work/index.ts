@@ -3,9 +3,8 @@
 // `req.actor.departmentId` (this build's one active department per session -- EPIC-002 has not
 // shipped a switcher yet, see `apps/api/src/lib/actor.ts`).
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
-import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
-import { can, matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
+import { matchesFilterQuery, parseFilterQuery, type FilterableCard } from '@devon/contracts'
 import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -19,7 +18,16 @@ import {
   missingRequiredCardFields,
   type CardFieldValues,
 } from '../fields/filter-values.js'
+import {
+  departmentChildSubject,
+  departmentManagedSubject,
+  requireCardOwnership,
+  requireDepartmentId,
+  withCanEdit,
+} from './guards.js'
+import { startWorkJobs, type WorkJobsHandle } from './jobs.js'
 import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
+import { registerWorkPlusRoutes } from './plus-routes.js'
 import * as repo from './repo.js'
 import {
   archiveListSchema,
@@ -43,82 +51,11 @@ import {
   type CardDTO,
 } from './schemas.js'
 
-function departmentChildSubject(departmentId: string | null) {
-  return {
-    kind: 'department_child' as const,
-    departmentId: departmentId ?? '',
-  }
-}
-
-/** v1.1 SPEC §2.2 (D6d): the department's label vocabulary is head-shaped -- one shared set of names
- * everyone files work under, not something any member may add to. */
-function departmentManagedSubject(departmentId: string | null) {
-  return {
-    kind: 'department_managed' as const,
-    departmentId: departmentId ?? '',
-  }
-}
-
-/**
- * v1.1 SPEC §2.1 (D6a/b/c/e). The route-level `can()` has already proven membership; this is the
- * per-object half of the same decision, made by the same function (`can()` with `{kind:'owned'}`),
- * never a hand-rolled `role === 'head'`.
- *
- * Answers 404 for a card that is not this department's -- identical to what every read route says
- * about a foreign id (H1.2) -- and 403 for a real card the caller neither gave, was given, nor
- * created. Returns the owner set on success so a caller that needs it (the watcher route) can refine
- * further.
- */
-async function requireCardOwnership(
-  req: FastifyRequest,
-  reply: FastifyReply,
-  departmentId: string,
-  cardId: string,
-): Promise<{ ok: true; ownerUserIds: string[] } | { ok: false }> {
-  const owners = await repo.getCardOwners(contextFromRequest(req), departmentId, cardId)
-  if (!owners) {
-    sendProblem(reply, 'not_found')
-    return { ok: false }
-  }
-  const decision = can(req.actor, 'update', {
-    kind: 'owned',
-    departmentId,
-    ownerUserIds: owners.ownerUserIds,
-  })
-  if (!decision.allowed) {
-    sendProblem(reply, 'forbidden')
-    return { ok: false }
-  }
-  return { ok: true, ownerUserIds: owners.ownerUserIds }
-}
-
-/** Stamps the server's answer to "may this viewer edit this card?" onto every card DTO that leaves
- * this module, so the board, the table and the card sheet hide or disable exactly what the server
- * would refuse (PERMISSIONS-AUDIT Step 5). Pure JS over rows already loaded -- no extra query. */
-function withCanEdit<T extends CardDTO>(cards: T[], actorUserId: string, isHead: boolean): T[] {
-  return cards.map((card) => ({
-    ...card,
-    canEdit:
-      isHead ||
-      card.createdByUserId === actorUserId ||
-      card.giverUserId === actorUserId ||
-      card.assigneeUserId === actorUserId,
-  }))
-}
-
-/** `''` (no membership) never satisfies `can()` for any real department id, so this is a safe,
- * fail-closed default -- a request with no active department is denied, never accidentally scoped to
- * "no filter at all". */
-function requireDepartmentId(req: {
-  actor: { departmentId: string | null } | null
-}): string | null {
-  return req.actor?.departmentId ?? null
-}
-
 function toFilterable(
   card: CardDTO,
   projectNames: Map<string, string>,
   labelNames: Map<string, string>,
+  unitNames: Map<string, string>,
   fieldValues?: CardFieldValues,
 ): FilterableCard {
   const values = fieldValues?.get(card.id)
@@ -133,11 +70,28 @@ function toFilterable(
     dueAt: card.dueAt,
     projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
     labelNames: card.labels.map((id) => labelNames.get(id) ?? '').filter(Boolean),
-    unitName: null, // EPIC-003 (structure/bo'limlar) has not shipped yet
+    // v1.1: EPIC-003 shipped, so `unit:` clauses finally match something. The board already loads
+    // each member's boʻlim in one join (`repo.getMembers`), so the caller passes that map in rather
+    // than this module issuing a second lookup per card (I-14).
+    unitName: card.assigneeUserId ? (unitNames.get(card.assigneeUserId) ?? null) : null,
   }
 }
 
+let workJobs: WorkJobsHandle | null = null
+
 const workRoutes: FastifyPluginAsyncZod = async (app) => {
+  // v1.1 SPEC §7 (A7, 7.4): the recurring-card generator and the card-reminder sender. Started from
+  // this module's own plugin body, never from `app.ts` (MODULE-GUIDE.md) and never under
+  // `NODE_ENV=test`, where there is no Postgres for a timer to reach.
+  app.addHook('onReady', async () => {
+    if (app.devonConfig.NODE_ENV === 'test') return
+    if (workJobs === null) workJobs = await startWorkJobs(app.devonConfig.DATABASE_URL, app.log)
+  })
+  app.addHook('onClose', async () => {
+    if (workJobs) await workJobs.stop().catch(() => {})
+    workJobs = null
+  })
+
   app.get(
     '/board',
     {
@@ -217,6 +171,9 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         withContext(ctx, (tx) => cardFieldValues(tx, departmentId)),
       ])
       const labelNames = new Map(labels.map((l) => [l.id, l.name]))
+      const unitNames = new Map(
+        members.filter((m) => m.unitName).map((m) => [m.userId, m.unitName!]),
+      )
       const resolveUserIds = (token: string): string[] => {
         const needle = token.replace(/^@/, '').toLowerCase()
         return members
@@ -232,10 +189,14 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (req.query.q && req.query.q.trim().length > 0) {
         const query = parseFilterQuery(req.query.q)
         filtered = cards.filter((c) =>
-          matchesFilterQuery(toFilterable(c, projectNames, labelNames, fieldValues), query, {
-            meUserId: req.actor!.userId,
-            resolveUserIds,
-          }),
+          matchesFilterQuery(
+            toFilterable(c, projectNames, labelNames, unitNames, fieldValues),
+            query,
+            {
+              meUserId: req.actor!.userId,
+              resolveUserIds,
+            },
+          ),
         )
       }
       if (req.query.mine) {
@@ -302,6 +263,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         projectScope: req.body.projectScope,
         orderKey: req.body.orderKey,
         createdByUserId: req.actor!.userId,
+        estimateMin: req.body.estimateMin,
+        recurrence: req.body.recurrence,
       })
       return reply.code(201).send({
         ...withCanEdit([card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
@@ -811,6 +774,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       })
     },
   )
+
+  // v1.1 SPEC §7 -- dependencies, estimates and the time log, recurrence, templates, the bulk bar,
+  // the focus list, reminders, capacity, the workload grid and the department's goals. Registered
+  // on this same instance (a plain call, not a nested `app.register`) so every route it adds is
+  // seen by the root `onRoute` permission guard exactly like the ones above.
+  await registerWorkPlusRoutes(app)
 }
 
 export default workRoutes

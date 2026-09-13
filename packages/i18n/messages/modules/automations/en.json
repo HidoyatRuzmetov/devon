@@ -1,0 +1,105 @@
+{
+  "automations": {
+    "eyebrow": "AUTOMATION",
+    "title": "Rules",
+    "description": "“When this happens, do that.” Turn repeated manual work into a rule.",
+    "create": "Add a rule",
+    "newTitle": "New rule",
+    "created": "Rule added",
+    "createFailed": "Could not add the rule",
+    "toggleFailed": "Could not change the rule",
+    "deleted": "“{name}” deleted",
+    "deleteFailed": "Could not delete the rule",
+    "pauseAll": "Pause all",
+    "pausedAll": "{count} rules paused",
+    "pauseFailed": "Could not pause the rules",
+    "atLimit": "At most {max} rules can be enabled. Turn one off to add another.",
+    "emptyTitle": "No rules yet",
+    "emptyBody": "Add the first one — for example, tell the head when a card goes overdue.",
+    "forbiddenTitle": "This page is for the head of the department",
+    "forbiddenBody": "Only the head of the department configures automation rules.",
+    "runsTitle": "Run log",
+    "runsDescription": "Every run — with what it did, or why it was skipped.",
+    "runsEmptyTitle": "Nothing has run yet",
+    "runsEmptyBody": "Once a rule fires, it shows up here.",
+    "rule": {
+      "sentence": "{trigger} → {actions}",
+      "toggle": "Enable or disable the rule “{name}”",
+      "delete": "Delete the rule “{name}”",
+      "lastError": "Last error: {error}",
+      "runCount": "Ran {count} times",
+      "lastRun": "Last run: {at}",
+      "neverRun": "Has not run yet"
+    },
+    "trigger": {
+      "cardCreated": "When a card is created",
+      "cardStatusChanged": "When the status changes",
+      "cardAssigned": "When a card is assigned",
+      "cardDueSoon": "When the due date is near",
+      "cardOverdue": "When a card goes overdue",
+      "cardFieldChanged": "When a field changes"
+    },
+    "action": {
+      "assign": "assign to a colleague",
+      "setPriority": "set the priority",
+      "addLabel": "add a label",
+      "notifyUser": "notify a colleague",
+      "notifyHead": "notify the head",
+      "setStatus": "change the status",
+      "addChecklist": "add a checklist",
+      "createFollowup": "create a follow-up card"
+    },
+    "builder": {
+      "nameLabel": "Rule name",
+      "namePlaceholder": "For example: tell the head about overdue work",
+      "whenLegend": "When",
+      "thenLegend": "Then",
+      "triggerLabel": "Event",
+      "toStatusLabel": "When it moves to",
+      "anyStatus": "Any status",
+      "daysAheadLabel": "How many days ahead",
+      "daysAheadHint": "Between 1 and 14 days.",
+      "fieldLabel": "Which field",
+      "field": {
+        "priority": "Priority",
+        "labels": "Labels",
+        "dueAt": "Due date",
+        "estimate": "Estimate"
+      },
+      "filterLabel": "Which cards",
+      "filterHint": "Leave empty to match every card.",
+      "filterPlaceholder": "label:request",
+      "actionLabel": "Action",
+      "addAction": "Add another action",
+      "actionLimit": "A rule holds at most 5 actions",
+      "removeAction": "Remove this action",
+      "whoLabel": "Who",
+      "choosePerson": "Choose a colleague",
+      "priorityLabel": "Priority",
+      "labelLabel": "Label",
+      "chooseLabel": "Choose a label",
+      "statusLabel": "Status",
+      "checklistLabel": "Checklist",
+      "checklistHint": "One item per line.",
+      "followupTitle": "Title of the new card",
+      "followupDueInDays": "Due in days",
+      "invalid": "The rule is incomplete — check the fields."
+    },
+    "run": {
+      "status": {
+        "applied": "Applied",
+        "skipped": "Skipped",
+        "failed": "Failed"
+      },
+      "reason": {
+        "chainDepth": "The chain went too deep — stopped",
+        "loopGuard": "A loop was detected — the rule did not run twice",
+        "noValidActions": "No action was left to apply",
+        "statusDidNotMatch": "The status did not match",
+        "filterDidNotMatch": "The card did not match the filter",
+        "alreadyAppliedToday": "Already applied today",
+        "other": "Skipped"
+      }
+    }
+  }
+}

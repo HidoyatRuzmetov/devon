@@ -25,7 +25,9 @@
       "template": "Шаблон",
       "milestones": "Босқичлар",
       "objective": "Умумий вазифалар",
-      "subjective": "Шахсий вазифалар"
+      "subjective": "Шахсий вазифалар",
+      "galleryTemplate": "Андоза",
+      "galleryTemplateHint": "Босқичлар ва бошланғич карталар автоматик яратилади."
     },
     "status": {
       "planning": "Режалаштирилмоқда",
@@ -41,7 +43,9 @@
       "fromScratch": "Бошидан",
       "submit": "Яратиш",
       "success": "Лойиҳа яратилди",
-      "error": "Лойиҳани яратиб бўлмади"
+      "error": "Лойиҳани яратиб бўлмади",
+      "fromGallery": "Андозалар галереясидан",
+      "templateUnreadable": "Андозани ўқиб бўлмади"
     },
     "milestone": {
       "addPlaceholder": "Босқич номини киритинг",

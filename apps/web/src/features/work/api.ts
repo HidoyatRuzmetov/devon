@@ -3,6 +3,7 @@
 // the way `src/lib/api-client.ts`'s own doc comment shows. Every response is validated at the fetch
 // boundary -- a card is never trusted as `any` past this file.
 import { z } from 'zod'
+import { recurrenceRuleSchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
 
 export const cardKindSchema = z.enum(['task', 'project_task'])
@@ -70,6 +71,24 @@ export const cardSchema = z.object({
    * field existed still parses, and absent is treated as "yes" (the old behaviour) rather than as a
    * silent lock-out. */
   canEdit: z.boolean().optional(),
+
+  // --- v1.1 SPEC §7 (work-plus). Every one of these is computed server-side in the same query that
+  // loads the card, and every one is optional so a response from a pre-v1.1 server still parses.
+  /** A3: the estimate in minutes; `null` = nobody has estimated this card. */
+  estimateMin: z.number().int().nullable().optional(),
+  /** A3: minutes logged against the card by everybody, summed. */
+  loggedMin: z.number().int().optional(),
+  /** A10: how many of the cards this one waits for are still open -- `> 0` paints the "Bloklangan"
+   * chip on the tile, in the table and on the Gantt bar. */
+  blockedByOpenCount: z.number().int().optional(),
+  /** A10: how many cards wait for this one. */
+  blocksCount: z.number().int().optional(),
+  /** A7: the repeat rule, when this card heads a recurring series. */
+  recurrence: recurrenceRuleSchema.nullable().optional(),
+  recurrenceSeriesId: z.string().nullable().optional(),
+  /** A9: true when *this viewer* has the card in their own focus list. Viewer-specific by design --
+   * a focus list is personal and nobody else's pin ever shows here. */
+  focusPinned: z.boolean().optional(),
 })
 export type Card = z.infer<typeof cardSchema>
 
@@ -211,6 +230,11 @@ export type CreateCardInput = {
   projectId?: string | null
   projectScope?: Card['projectScope']
   orderKey?: string
+  /** A3: quick-add and the composer both accept an estimate up front -- a card estimated when it is
+   * created is the only kind that reliably gets estimated at all. */
+  estimateMin?: number | null
+  /** A7: create the card already repeating. */
+  recurrence?: z.infer<typeof recurrenceRuleSchema> | null
 }
 
 export function createCard(input: CreateCardInput, csrfToken: string): Promise<CardDetail> {
@@ -231,6 +255,10 @@ export type PatchCardInput = Partial<{
   watchers: string[]
   orderKey: string
   version: number
+  /** A3 / A7: `null` clears the estimate; `null` stops the series (instances already created stay --
+   * stopping a repeat never retroactively removes work somebody has started). */
+  estimateMin: number | null
+  recurrence: z.infer<typeof recurrenceRuleSchema> | null
 }>
 
 export function patchCard(

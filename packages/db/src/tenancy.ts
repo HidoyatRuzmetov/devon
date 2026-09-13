@@ -94,6 +94,20 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.calendar_feeds': 'global',
   'app.push_subscriptions': 'user_owned',
   'app.push_vapid_keys': 'global',
+  // v1.1 SPEC §7 work-plus (migration 0905): estimates, dependencies, the light time log,
+  // reminders, templates, the focus list, per-person capacity and department goals. Every one of
+  // them carries its own `department_id` and its own policy in `0905_work_plus.sql`.
+  'app.card_dependencies': 'department_owned',
+  'app.card_time_logs': 'department_owned',
+  'app.card_reminders': 'department_owned',
+  'app.work_templates': 'department_owned',
+  'app.focus_pins': 'department_owned',
+  'app.work_capacity': 'department_owned',
+  'app.goals': 'department_owned',
+
+  // EPIC-017 automations (migration 1100).
+  'app.automation_rules': 'department_owned',
+  'app.automation_runs': 'department_owned',
 })
 
 /**

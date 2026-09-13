@@ -7,46 +7,24 @@
 // transform-based offset, which browsers do not reliably honour on a genuine table-row element.
 import * as React from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { AnimatePresence, motion } from 'motion/react'
-import {
-  AlertCircle,
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  Clock3,
-  Tag,
-  UserRound,
-  X,
-} from 'lucide-react'
+import { motion } from 'motion/react'
+import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, Clock3 } from 'lucide-react'
 import { useT, useLocale } from '@devon/i18n'
 import {
   Badge,
-  Button,
   Checkbox,
   DatePicker,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   Input,
   Select,
   Skeleton,
-  springSettle,
   StateView,
   cn,
-  toastWithUndo,
   useReducedMotion,
 } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
-import {
-  useCardsQuery,
-  useLabelsQuery,
-  useMembers,
-  usePatchCardMutation,
-  useRestoreCardMutation,
-} from '../hooks.js'
+import { useCardsQuery, useLabelsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
 import {
   PRIORITY_LABEL_KEY,
   RISK_BADGE_CLASSNAME,
@@ -58,8 +36,9 @@ import {
 const RISK_ICON = { AlertCircle, Clock3 } as const
 import { MemberPicker } from './member-picker.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
+import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { WorkShell } from './work-shell.js'
-import type { Card, CardPriority, Label, MemberSummary } from '../api.js'
+import type { Card, CardPriority, MemberSummary } from '../api.js'
 
 const PRIORITIES: readonly CardPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
 const PRIORITY_ORDER: Record<CardPriority, number> = {
@@ -164,17 +143,13 @@ export default function TableScreen() {
   // (`vite.config.ts`'s note) rather than via a blanket `compiler: true`.
   'use memo'
   const t = useT()
-  const reducedMotion = useReducedMotion()
   const search = useSearchParams()
   const q = search.get('q') ?? ''
   const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
   const members = useMembers()
   const labels = useLabelsQuery().data ?? []
-  const patchCard = usePatchCardMutation()
-  const restoreCard = useRestoreCardMutation()
   const [density, setDensity] = useLocalStorageDensity()
   const [sort, setSort] = React.useState<SortState | null>(null)
-  const [selected, setSelected] = React.useState<ReadonlySet<string>>(new Set())
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(280)
   const scrollElRef = React.useRef<HTMLDivElement | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
@@ -215,58 +190,25 @@ export default function TableScreen() {
     })
   }
 
-  // Selection is cleared whenever the underlying id set changes shape (a filter narrows the list, a
-  // poll removes an archived card) so the bulk bar never quietly acts on rows no longer shown.
-  const cardIds = React.useMemo(() => cards.map((c) => c.id).join(','), [cards])
-  React.useEffect(() => {
-    setSelected((prev) => {
-      const ids = new Set(cardIds ? cardIds.split(',') : [])
-      const next = new Set([...prev].filter((id) => ids.has(id)))
-      return next.size === prev.size ? prev : next
-    })
-  }, [cardIds])
+  // v1.1 SPEC §7 (A8): selection lives in the shared `useCardSelection` hook, which prunes itself
+  // whenever the underlying list changes shape (a filter narrows it, a poll removes an archived
+  // card) so the toolbar never acts on a row that is no longer on screen.
+  const sortedIds = React.useMemo(() => sorted.map((c) => c.id), [sorted])
+  const { selected, toggle: toggleRow, selectRange, selectAll, clear } = useCardSelection(sortedIds)
+  // Shift-click range select needs to know which row the last plain click landed on.
+  const lastClickedRef = React.useRef<string | null>(null)
 
-  function toggleRow(id: string, checked: boolean) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (checked) next.add(id)
-      else next.delete(id)
-      return next
-    })
-  }
-  function toggleAll(checked: boolean) {
-    setSelected(checked ? new Set(sorted.map((c) => c.id)) : new Set())
+  function onRowToggle(id: string, checked: boolean, shiftKey: boolean): void {
+    if (shiftKey && lastClickedRef.current) {
+      selectRange(lastClickedRef.current, id, sortedIds)
+      return
+    }
+    lastClickedRef.current = id
+    toggleRow(id, checked)
   }
 
-  const selectedCards = sorted.filter((c) => selected.has(c.id))
-
-  async function bulkAssign(userId: string | null) {
-    const ids = [...selected]
-    // TECH-SPEC §16 "no query in a loop": each card's PATCH is independent, so one `Promise.all`
-    // (not an awaited loop) is both correct and as fast as the slowest single request.
-    await Promise.all(
-      ids.map((id) => patchCard.mutateAsync({ id, patch: { assigneeUserId: userId } })),
-    )
-  }
-
-  async function bulkAddLabel(labelId: string) {
-    const targets = selectedCards.filter((c) => !c.labels.includes(labelId))
-    await Promise.all(
-      targets.map((c) =>
-        patchCard.mutateAsync({ id: c.id, patch: { labels: [...c.labels, labelId] } }),
-      ),
-    )
-  }
-
-  async function bulkArchive() {
-    const ids = [...selected]
-    await Promise.all(ids.map((id) => patchCard.mutateAsync({ id, patch: { status: 'archived' } })))
-    setSelected(new Set())
-    toastWithUndo({
-      message: t('work.table.bulk.archived', { count: ids.length }),
-      undoLabel: t('action.undo'),
-      onUndo: () => void Promise.all(ids.map((id) => restoreCard.mutateAsync(id))),
-    })
+  function toggleAll(checked: boolean): void {
+    selectAll(checked, sortedIds)
   }
 
   const virtualizer = useVirtualizer({
@@ -389,7 +331,7 @@ export default function TableScreen() {
                   card={card}
                   members={members}
                   checked={selected.has(card.id)}
-                  onCheckedChange={(v) => toggleRow(card.id, v)}
+                  onCheckedChange={(v, shiftKey) => onRowToggle(card.id, v, shiftKey)}
                   top={vRow.start}
                   height={vRow.size}
                 />
@@ -399,7 +341,7 @@ export default function TableScreen() {
                   card={card}
                   members={members}
                   checked={selected.has(card.id)}
-                  onCheckedChange={(v) => toggleRow(card.id, v)}
+                  onCheckedChange={(v, shiftKey) => onRowToggle(card.id, v, shiftKey)}
                   top={vRow.start}
                   height={vRow.size}
                 />
@@ -420,28 +362,14 @@ export default function TableScreen() {
                 sliding up from the header's bottom edge (springSettle, the same spring the app's
                 sheets settle with) reads as "this appeared because you selected something" instead
                 of a layout flicker. */}
-            <AnimatePresence>
-              {selected.size > 0 ? (
-                <motion.div
-                  key="bulk-bar"
-                  className="absolute inset-x-0 top-0"
-                  initial={reducedMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={reducedMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
-                  transition={reducedMotion ? { duration: 0.15 } : springSettle}
-                >
-                  <BulkBar
-                    count={selected.size}
-                    members={members}
-                    labels={labels}
-                    onAssign={(id) => void bulkAssign(id)}
-                    onAddLabel={(id) => void bulkAddLabel(id)}
-                    onArchive={() => void bulkArchive()}
-                    onClear={() => setSelected(new Set())}
-                  />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+            <MultitaskToolbarSlot show={selected.size > 0}>
+              <MultitaskToolbar
+                ids={[...selected]}
+                members={members}
+                labels={labels}
+                onClear={clear}
+              />
+            </MultitaskToolbarSlot>
             {selected.size === 0 ? (
               <div
                 role="group"
@@ -478,78 +406,6 @@ export default function TableScreen() {
   )
 }
 
-function BulkBar({
-  count,
-  members,
-  labels,
-  onAssign,
-  onAddLabel,
-  onArchive,
-  onClear,
-}: {
-  count: number
-  members: MemberSummary[]
-  labels: Label[] | undefined
-  onAssign: (userId: string | null) => void
-  onAddLabel: (labelId: string) => void
-  onArchive: () => void
-  onClear: () => void
-}) {
-  const t = useT()
-  return (
-    <div className="flex w-full flex-wrap items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-1.5 shadow-1">
-      <span className="text-small font-medium text-foreground">
-        {t('work.table.bulk.selectedCount', { count })}
-      </span>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary">
-            <UserRound className="size-3.5" aria-hidden="true" />
-            {t('work.table.bulk.assign')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
-          <DropdownMenuItem onSelect={() => onAssign(null)}>
-            {t('work.field.unassigned')}
-          </DropdownMenuItem>
-          {members.map((m) => (
-            <DropdownMenuItem key={m.userId} onSelect={() => onAssign(m.userId)}>
-              {fullName(m)}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary" disabled={!labels || labels.length === 0}>
-            <Tag className="size-3.5" aria-hidden="true" />
-            {t('work.table.bulk.addLabel')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
-          {(labels ?? []).map((l) => (
-            <DropdownMenuItem key={l.id} onSelect={() => onAddLabel(l.id)}>
-              <span
-                className="size-2 shrink-0 rounded-full"
-                style={{ backgroundColor: l.colour }}
-                aria-hidden="true"
-              />
-              {l.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Button size="sm" variant="secondary" onClick={onArchive}>
-        {t('work.card.archive')}
-      </Button>
-      <Button size="sm" variant="ghost" className="ml-auto" onClick={onClear}>
-        <X className="size-3.5" aria-hidden="true" />
-        {t('work.table.bulk.clear')}
-      </Button>
-    </div>
-  )
-}
-
 function TableRow({
   card,
   members,
@@ -561,7 +417,7 @@ function TableRow({
   card: Card
   members: MemberSummary[]
   checked: boolean
-  onCheckedChange: (checked: boolean) => void
+  onCheckedChange: (checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
@@ -573,6 +429,8 @@ function TableRow({
   const locale = useLocale()
   const reduced = useReducedMotion()
   const patchCard = usePatchCardMutation()
+  // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
+  const shiftRef = React.useRef(false)
   const [title, setTitle] = React.useState(card.title)
   React.useEffect(() => setTitle(card.title), [card.title])
   // round2 SEV1: the title cell used to be an `<Input>` at all times, which cannot ellipsize -- a
@@ -646,7 +504,10 @@ function TableRow({
       ) : null}
       <Checkbox
         checked={checked}
-        onCheckedChange={(v) => onCheckedChange(v === true)}
+        onPointerDown={(e) => {
+          shiftRef.current = e.shiftKey
+        }}
+        onCheckedChange={(v) => onCheckedChange(v === true, shiftRef.current)}
         aria-label={card.title}
       />
       {editingTitle ? (
@@ -748,7 +609,7 @@ function MobileTableRow({
   card: Card
   members: MemberSummary[]
   checked: boolean
-  onCheckedChange: (checked: boolean) => void
+  onCheckedChange: (checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
@@ -756,6 +617,8 @@ function MobileTableRow({
   'use memo'
   const t = useT()
   const reduced = useReducedMotion()
+  // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
+  const shiftRef = React.useRef(false)
   const assignee = members.find((m) => m.userId === card.assigneeUserId)
   const metaParts = [
     assignee ? fullName(assignee) : t('work.field.unassigned'),
@@ -795,7 +658,10 @@ function MobileTableRow({
       ) : null}
       <Checkbox
         checked={checked}
-        onCheckedChange={(v) => onCheckedChange(v === true)}
+        onPointerDown={(e) => {
+          shiftRef.current = e.shiftKey
+        }}
+        onCheckedChange={(v) => onCheckedChange(v === true, shiftRef.current)}
         aria-label={card.title}
       />
       <div className="min-w-0 flex-1">
