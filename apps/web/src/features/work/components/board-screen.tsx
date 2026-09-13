@@ -626,6 +626,7 @@ function BoardRiskDigest({
           {...(digest ? { meta: digest.meta } : {})}
           // Read-only: each row already carries its own action, and a single Accept over a ranked
           // list of five different problems would mean nothing.
+          readOnly
           onDiscard={() => {
             setDigest(null)
             digestAi.reset()

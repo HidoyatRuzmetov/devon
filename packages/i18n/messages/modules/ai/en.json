@@ -76,7 +76,8 @@
       "retry": "Try again",
       "latency": "{ms} ms",
       "costLine": "{cost} · {tokens} tokens · {ms} ms",
-      "cachedLine": "Cached answer · {tokens} tokens · nothing new charged"
+      "cachedLine": "Cached answer · {tokens} tokens · nothing new charged",
+      "close": "Close"
     },
     "ask": {
       "label": "Ask the department's own records",

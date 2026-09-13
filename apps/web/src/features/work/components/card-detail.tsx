@@ -515,7 +515,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           errorMessage={t('work.quickAdd.aiError')}
           {...(riskExplain ? { meta: riskExplain.meta } : {})}
           // Read-only by design: this helper explains a verdict the server already reached. There is
-          // nothing to accept, and a disabled-looking Accept on it would read as a bug.
+          // nothing to accept, and an Accept button over an explanation would read as a bug.
+          readOnly
           onDiscard={() => {
             setRiskExplain(null)
             riskAi.reset()
@@ -659,6 +660,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 // No Accept: the head chooses a person from the list, one click per row. A single
                 // "Accept" over a ranked list of three people would mean "take the first", which is
                 // precisely the decision the guard rail says the head must make (AI-AUDIT N-3).
+                readOnly
                 onDiscard={() => {
                   setAssigneeSuggestions(null)
                   assigneeAi.reset()

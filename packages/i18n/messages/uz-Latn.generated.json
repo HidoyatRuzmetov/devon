@@ -957,7 +957,8 @@
       "retry": "Qayta urinish",
       "latency": "{ms} ms",
       "costLine": "{cost} · {tokens} token · {ms} ms",
-      "cachedLine": "Saqlangan javob · {tokens} token · yangi toʻlovsiz"
+      "cachedLine": "Saqlangan javob · {tokens} token · yangi toʻlovsiz",
+      "close": "Yopish"
     },
     "ask": {
       "label": "Boʻlim maʼlumotidan soʻrang",

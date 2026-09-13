@@ -238,8 +238,14 @@ function simulate(input: QuickAddInput): QuickAddOutput {
       title = title.replace(new RegExp(`${needle}\\p{L}*\\s*:?,?`, 'giu'), ' ')
     }
   }
-  if (phrase)
-    title = title.replace(new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ')
+  if (phrase) {
+    // The matched date phrase *plus whatever Uzbek glued onto it*: "jumagacha" matches the phrase
+    // "juma" and, without the trailing letter class, leaves a stranded "gacha" in the title. The
+    // same trailing-letters trick the member-name removal above already uses, for the same reason --
+    // this is an agglutinative language, and a word boundary is not where a Latin reader expects it.
+    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    title = title.replace(new RegExp(`${escaped}\\p{L}*`, 'giu'), ' ')
+  }
   title = title
     .replace(/(shoshilinch|zudlik bilan|zudlik|срочно|urgent|asap|muhim|важно|important)/gi, ' ')
     .replace(/[,;]\s*$/, '')

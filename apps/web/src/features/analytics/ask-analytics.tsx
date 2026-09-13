@@ -23,74 +23,104 @@ import { parseFeatureOutput, type NlAnalyticsOutput } from '../ai/outputs.js'
 import { ApiError } from '../../lib/api-client.js'
 import type { AnalyticsSummary } from './types.js'
 
-/**
- * The numbers behind the answer, computed from the summary this screen has already fetched -- never
- * a second request, and never a number the model produced.
- *
- * This is the honest half of "answer with the numbers": the model decides *what was asked*
- * (`metric` + `groupBy`), and the department's own aggregates decide *what the answer is*. A model
- * that invents "7 overdue" is a model a ministry cannot use; a model that says "you asked for overdue
- * items grouped by unit" and then reads 7 off the real aggregate is one it can.
- *
- * Returns `null` when the question maps to something this screen's summary does not carry, which is
- * the correct answer far more often than a fabricated total would be.
- */
-function answerFrom(
-  summary: AnalyticsSummary,
-  output: NlAnalyticsOutput,
-): { rows: { label: string; value: number }[]; total: number } | null {
-  const pick = (person: { openCount: number; overdueCount: number }): number | null => {
-    if (output.metric === 'overdue_cards') return person.overdueCount
-    if (output.metric === 'open_cards') return person.openCount
-    return null
-  }
-
-  if (output.groupBy === 'person') {
-    const rows = summary.loadPerPerson
-      .map((person) => ({ label: person.name, value: pick(person) }))
-      .filter((row): row is { label: string; value: number } => row.value !== null)
-    if (rows.length === 0) return null
-    return { rows, total: rows.reduce((sum, row) => sum + row.value, 0) }
-  }
-
-  if (output.groupBy === 'unit') {
-    const rows = summary.loadPerUnit
-      .map((unit) => ({ label: unit.unitName ?? '', value: pick(unit) }))
-      .filter((row): row is { label: string; value: number } => row.value !== null)
-    if (rows.length === 0) return null
-    return { rows, total: rows.reduce((sum, row) => sum + row.value, 0) }
-  }
-
-  if (output.groupBy === 'project') {
-    const rows = summary.projectProgress.map((project) => ({
-      label: project.title,
-      value: output.metric === 'done_cards' ? project.doneTasks : project.totalTasks,
-    }))
-    if (rows.length === 0) return null
-    return { rows, total: rows.reduce((sum, row) => sum + row.value, 0) }
-  }
-
-  // Ungrouped: one number for the whole department.
-  if (output.metric === 'overdue_cards') {
-    const total = summary.loadPerPerson.reduce((sum, person) => sum + person.overdueCount, 0)
-    return { rows: [], total }
-  }
-  if (output.metric === 'open_cards') {
-    const total = summary.loadPerPerson.reduce((sum, person) => sum + person.openCount, 0)
-    return { rows: [], total }
-  }
-  if (output.metric === 'done_cards') {
-    return { rows: [], total: summary.throughput.reduce((sum, week) => sum + week.count, 0) }
-  }
-  return null
-}
-
 function errorKey(err: unknown): string {
   if (err instanceof ApiError) {
     if (err.code === 'validation_failed') return 'analytics.ask.errors.invalid'
     if (err.code === 'forbidden') return 'analytics.ask.errors.forbidden'
   }
   return 'analytics.ask.errors.failed'
+}
+
+/**
+ * The numbers behind the answer, read off the summary this screen has already fetched -- never a
+ * second request, and never a number the model produced.
+ *
+ * This is the honest half of "answer with the numbers": the model decides *what was asked*, and the
+ * department's own aggregates decide *what the answer is*. A model that invents "7 overdue" is one a
+ * ministry cannot use; a model that says "you asked for the overdue/open split" and then reads 7 off
+ * the real aggregate is one it can.
+ *
+ * `metric` is a section of `AnalyticsSummary`, not a generic measure -- which is exactly why this is
+ * a lookup and not an aggregation. Returns `null` when the question maps to something this summary
+ * does not carry, which is a better answer than a fabricated total.
+ */
+function answerFrom(
+  summary: AnalyticsSummary,
+  output: NlAnalyticsOutput,
+): { rows: { label: string; value: number }[]; total: number } | null {
+  const sum = (rows: { value: number }[]): number => rows.reduce((n, row) => n + row.value, 0)
+  const nonEmpty = (rows: { label: string; value: number }[]) =>
+    rows.length > 0 ? { rows, total: sum(rows) } : null
+
+  switch (output.metric) {
+    case 'throughput': {
+      const rows = summary.throughput.map((week) => ({
+        label: week.weekStart,
+        value: week.count,
+      }))
+      return nonEmpty(rows)
+    }
+    case 'onTimeRate': {
+      const overall = summary.onTimeRate.overall
+      if (overall === null) return null
+      return { rows: [], total: Math.round(overall * 100) }
+    }
+    case 'openVsOverdue': {
+      // The one metric where `groupBy` genuinely changes the answer: the same open/overdue split,
+      // per person, per unit, or as one number for the department.
+      if (output.groupBy === 'person') {
+        return nonEmpty(
+          summary.loadPerPerson.map((person) => ({
+            label: person.name,
+            value: person.overdueCount,
+          })),
+        )
+      }
+      if (output.groupBy === 'unit') {
+        return nonEmpty(
+          summary.loadPerUnit.map((unit) => ({
+            label: unit.unitName ?? '',
+            value: unit.overdueCount,
+          })),
+        )
+      }
+      const overdue = summary.loadPerPerson.reduce((n, person) => n + person.overdueCount, 0)
+      return { rows: [], total: overdue }
+    }
+    case 'loadPerPerson':
+      return nonEmpty(
+        summary.loadPerPerson.map((person) => ({ label: person.name, value: person.openCount })),
+      )
+    case 'loadPerUnit':
+      return nonEmpty(
+        summary.loadPerUnit.map((unit) => ({ label: unit.unitName ?? '', value: unit.openCount })),
+      )
+    case 'projectProgress':
+      return nonEmpty(
+        summary.projectProgress.map((project) => ({
+          label: project.title,
+          value: Math.round(project.progress * 100),
+        })),
+      )
+    case 'eventsParticipation':
+      return nonEmpty(
+        summary.eventsParticipation.map((event) => ({
+          label: event.title,
+          value: Math.round(event.rsvpRate * 100),
+        })),
+      )
+    case 'pollTurnout':
+      return nonEmpty(
+        summary.pollTurnout.map((poll) => ({
+          label: poll.question,
+          value: Math.round(poll.turnoutRate * 100),
+        })),
+      )
+    default:
+      // No metric: the question mapped to a filter but not to a number this screen holds. The
+      // restatement and the filter are still shown -- the preview just does not claim a total.
+      return null
+  }
 }
 
 export function AskAnalytics({

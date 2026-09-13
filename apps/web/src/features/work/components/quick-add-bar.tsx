@@ -129,7 +129,14 @@ export function QuickAddBar({
         text: value.trim(),
         // The four inputs v1.0 never supplied, which is why the feature "felt random":
         today: todayInTashkent(),
-        members: members.map((m) => ({ userId: m.userId, fullName: fullName(m) })),
+        // The full member ref the feature asks for: `givenName` on its own is what makes
+        // "Nodiraga" resolvable, since Uzbek declines the given name and not the full name.
+        members: members.map((m) => ({
+          userId: m.userId,
+          fullName: fullName(m),
+          givenName: m.givenName,
+          handle: null,
+        })),
         labels: labels.map((l) => ({ id: l.id, name: l.name })),
         projects: [],
         defaultAssigneeUserId,

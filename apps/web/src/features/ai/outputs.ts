@@ -148,16 +148,20 @@ export type SummarizeThreadOutput = z.infer<typeof summarizeThreadOutputSchema>
 
 export const nlAnalyticsOutputSchema = z.object({
   filterText: z.string(),
+  // `@devon/ai`'s `ANALYTICS_METRICS`, mirrored exactly. These are the names of the sections the
+  // analytics screen already computes -- not a generic metric vocabulary -- which is what makes
+  // "answer with the numbers" a lookup rather than a second aggregation. Guessing snake_case names
+  // here silently produced a preview with no numbers in it at all; found live.
   metric: z
     .enum([
-      'open_cards',
-      'done_cards',
-      'overdue_cards',
-      'created_cards',
-      'cycle_time_days',
-      'on_time_pct',
-      'focus_minutes',
-      'event_rsvp_rate',
+      'throughput',
+      'onTimeRate',
+      'openVsOverdue',
+      'loadPerPerson',
+      'loadPerUnit',
+      'projectProgress',
+      'eventsParticipation',
+      'pollTurnout',
     ])
     .nullable(),
   groupBy: z.enum(['person', 'unit', 'project', 'label', 'status', 'none']),
