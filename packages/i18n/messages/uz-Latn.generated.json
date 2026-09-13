@@ -2965,11 +2965,11 @@
     "table": {
       "title": "Xodimlar jadvali",
       "nav": "Xodimlar jadvali",
-      "description": "Boʻlim xodimlari va ularning koʻrsatkichlari bitta jadvalda.",
+      "description": "Boshqarma xodimlari va siz tanlagan koʻrsatkichlar — bitta jadvalda.",
       "caption": "Xodimlar va tanlangan koʻrsatkichlar jadvali",
       "columns": {
         "action": "Ustunlar",
-        "heading": "Koʻrsatkichlarni tanlang",
+        "heading": "Koʻrsatkichlar",
         "cap": "Koʻpi bilan {max} ta ustun — undan kengi oʻqilmaydigan jadvalga aylanadi.",
         "chosen": "Tanlangan ustunlar",
         "moveUp": "«{name}» ustunini chapga surish",
@@ -2982,7 +2982,7 @@
           "onboarding": "Moslashuv",
           "activity": "Faollik",
           "personal_aggregate": "Shaxsiy (faqat jamlanma)",
-          "field": "Maxsus maydonlar"
+          "field": "Maydonlar"
         },
         "fieldDescription": "Boshqarma oʻzi yaratgan maydon — javobni xodimning oʻzi toʻldiradi."
       },
@@ -2993,7 +2993,7 @@
       },
       "empty": {
         "title": "Hozircha xodim yoʻq",
-        "body": "Boʻlimga birinchi xodim qoʻshilganda jadval shu yerda toʻlib boradi."
+        "body": "Boshqarmaga birinchi xodim qoʻshilishi bilan jadval toʻla boshlaydi."
       },
       "footer": "{count} ta xodim",
       "workload": {
@@ -3025,13 +3025,13 @@
       "groupBy": {
         "label": "Guruhlash",
         "unit": "Boʻlim boʻyicha",
-        "unitRole": "Roli boʻyicha",
+        "unitRole": "Oʻrni boʻyicha",
         "none": "Guruhlamaslik"
       },
       "filter": {
         "operator": "Shart",
         "value": "Qiymat",
-        "valuePlaceholder": "Qiymat kiriting",
+        "valuePlaceholder": "Qiymat yozing",
         "datePlaceholder": "YYYY-MM-DD",
         "clear": "Tozalash",
         "apply": "Qoʻllash",
@@ -3040,7 +3040,7 @@
           "gte": "Kamida",
           "lte": "Koʻpi bilan",
           "eq": "Teng",
-          "contains": "Ichida bor",
+          "contains": "Soʻz bor",
           "in": "Roʻyxatda",
           "before": "Shu sanadan oldin",
           "after": "Shu sanadan keyin",
@@ -3055,18 +3055,18 @@
         "sum": "Yigʻindi",
         "min": "Eng kichigi",
         "max": "Eng kattasi",
-        "filledOf": "{total} dan {filled} ta"
+        "filledOf": "{total} tadan {filled} tasi"
       },
       "bulk": {
         "selected": "{count} ta xodim tanlandi",
         "export": "Tanlanganlarni yuklab olish",
-        "clear": "Tanlovni bekor qilish",
+        "clear": "Tanlovni tozalash",
         "assign": "Vazifa berish ({count})"
       },
       "action": {
         "assign": "{name}ga vazifa berish",
         "assignShort": "Vazifa berish",
-        "board": "{name}ning doskadagi ustuni",
+        "board": "{name}ning doskadagi ustunini ochish",
         "message": "{name}ga Telegram orqali yozish",
         "more": "{name} uchun boshqa amallar"
       },
@@ -3074,8 +3074,8 @@
         "label": "Saqlangan koʻrinishlar",
         "base": "Standart",
         "menu": "«{name}» koʻrinishi amallari",
-        "isDefault": "Boʻlim uchun standart",
-        "makeDefault": "Boʻlim uchun standart qilish",
+        "isDefault": "Boshqarma uchun standart",
+        "makeDefault": "Boshqarma uchun standart qilish",
         "share": "Boshqa boshliqlarga ochish",
         "unshare": "Faqat oʻzimga qoldirish",
         "delete": "Koʻrinishni oʻchirish",
@@ -3083,10 +3083,10 @@
         "saveAsHeading": "Shu jadvalni saqlash",
         "namePlaceholder": "Koʻrinish nomi",
         "shareLabel": "Boshqa boshliqlar ham koʻrsin",
-        "defaultLabel": "Boʻlim uchun standart boʻlsin",
+        "defaultLabel": "Boshqarma uchun standart boʻlsin",
         "saveAsSubmit": "Saqlash",
-        "dirty": "Oʻzgartirildi",
-        "revert": "Qaytarish",
+        "dirty": "Oʻzgardi",
+        "revert": "Asliga qaytarish",
         "saveOver": "Saqlash",
         "saved": "«{name}» saqlandi",
         "deleted": "«{name}» oʻchirildi"
@@ -3134,11 +3134,11 @@
       },
       "workloadHours": {
         "label": "Yuklama (soat)",
-        "description": "Shu haftaga rejalashtirilgan soatlar — vaqt baholari yoqilganda"
+        "description": "Shu haftaga rejalashtirilgan soatlar — taxminiy vaqt yoqilganda"
       },
       "workloadPct": {
         "label": "Yuklama",
-        "description": "Ochiq vazifalarning haftalik imkoniyatga nisbati"
+        "description": "Ochiq vazifalarning haftalik sigʻimga nisbati"
       },
       "cardsGivenOpen": {
         "label": "Berilgan vazifalar",
@@ -3149,8 +3149,8 @@
         "description": "Ishtirok etayotgan faol loyihalar"
       },
       "projectsOwned": {
-        "label": "Rahbarlik qilmoqda",
-        "description": "Egasi sifatida yuritayotgan loyihalari"
+        "label": "Rahbar loyihalari",
+        "description": "Oʻzi rahbarlik qilayotgan loyihalar"
       },
       "eventsRsvpRate90d": {
         "label": "Tadbirlarda ishtirok",
@@ -3162,11 +3162,11 @@
       },
       "focusMinutes7d": {
         "label": "Diqqat vaqti",
-        "description": "Soʻnggi yetti kundagi jamlangan fokus daqiqalari. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi."
+        "description": "Soʻnggi yetti kundagi jamlangan diqqat daqiqalari. Shaxsiy ish maydonining mazmuni hech qachon koʻrinmaydi."
       },
       "lastActiveAt": {
         "label": "Oxirgi faollik",
-        "description": "Tizimda oxirgi marta koʻringan vaqti"
+        "description": "Oxirgi marta qachon kirgani"
       },
       "onboardingPct": {
         "label": "Moslashuv",
@@ -3177,8 +3177,8 @@
         "description": "Xodim biriktirilgan boʻlim"
       },
       "unitRole": {
-        "label": "Boʻlimdagi roli",
-        "description": "Boʻlim ichidagi lavozim belgisi"
+        "label": "Boʻlimdagi oʻrni",
+        "description": "Boʻlim ichidagi oʻrni"
       },
       "title": {
         "label": "Lavozim",
@@ -3186,7 +3186,7 @@
       },
       "joinedAt": {
         "label": "Qoʻshilgan sana",
-        "description": "Boʻlimga qoʻshilgan sana"
+        "description": "Boshqarmaga qoʻshilgan sana"
       },
       "telegramLinked": {
         "label": "Telegram",
@@ -3202,7 +3202,7 @@
     },
     "assign": {
       "title": "Vazifa berish",
-      "subtitle": "Vazifa shu xodimga biriktiriladi, beruvchi esa siz boʻlasiz.",
+      "subtitle": "Vazifani shu xodimga siz berasiz.",
       "close": "Yopish",
       "noTitle": "Lavozim koʻrsatilmagan",
       "cancel": "Bekor qilish",
@@ -3211,7 +3211,7 @@
       "field": {
         "title": "Vazifa nomi",
         "titleHint": "Qisqa va aniq yozing — xodim buni doskada koʻradi.",
-        "titleRequired": "Vazifa nomini kiriting.",
+        "titleRequired": "Vazifa nomini yozing.",
         "titlePlaceholder": "Masalan: Hisobotni tayyorlash",
         "due": "Muddati",
         "duePlaceholder": "Muddat belgilanmagan",
@@ -3234,13 +3234,13 @@
       "noTitle": "Lavozim koʻrsatilmagan",
       "own": {
         "title": "Mening profilim",
-        "description": "Ish boʻyicha koʻrsatkichlaringiz, vazifalaringiz va maʼlumotlaringiz."
+        "description": "Ish koʻrsatkichlaringiz, vazifalaringiz va qayd etilgan maʼlumotlaringiz."
       },
       "meta": {
         "formalName": "Toʻliq ism",
         "unit": "Boʻlim",
         "noUnit": "Belgilanmagan",
-        "unitRole": "Boʻlimdagi roli",
+        "unitRole": "Boʻlimdagi oʻrni",
         "noUnitRole": "Belgilanmagan",
         "joined": "Qoʻshilgan",
         "lastActive": "Oxirgi faollik",
@@ -3266,7 +3266,7 @@
       "chart": {
         "week": "Hafta",
         "done": "Bajarilgan",
-        "created": "Berilgan",
+        "created": "Olingan",
         "onTimeRate": "Oʻz vaqtida, %",
         "finished": "Yakunlangan",
         "project": "Loyiha",
@@ -3310,13 +3310,13 @@
         },
         "empty": {
           "title": "Vazifa yoʻq",
-          "body": "Bu tanlov boʻyicha hech qanday vazifa topilmadi."
+          "body": "Bu tanlovga mos vazifa yoʻq."
         }
       },
       "projects": {
         "owner": "Rahbar",
         "member": "Ishtirokchi",
-        "progress": "{done} / {total} vazifa bajarilgan",
+        "progress": "{done}/{total} vazifa bajarilgan",
         "progressAria": "{title} — bajarilgan qismi",
         "target": "Rejadagi muddat: {date}",
         "empty": {
@@ -3327,7 +3327,7 @@
       "events": {
         "rsvpRate": "Tadbirlarda ishtirok",
         "polls": "Soʻrovnomalar",
-        "pollsValue": "{voted} / {total}",
+        "pollsValue": "{voted}/{total}",
         "driver": "Haydovchi",
         "passenger": "Yoʻlovchi",
         "rsvp": {
@@ -3343,7 +3343,7 @@
       },
       "onboarding": {
         "title": "Moslashuv qadamlari",
-        "note": "Bu qadamlar boʻlimga koʻrinadigan belgilardan olinadi. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi.",
+        "note": "Bu qadamlar boshqarmaga koʻrinadigan belgilardan olinadi. Shaxsiy ish maydonining mazmuni hech qachon koʻrinmaydi.",
         "done": "Bajarildi",
         "pending": "Kutilmoqda",
         "step": {
@@ -3359,15 +3359,15 @@
         "missingCount": "{count} ta majburiy maydon toʻldirilmagan.",
         "ask": "Toʻldirishni soʻrash",
         "asked": "Soʻrov yuborildi",
-        "askFailed": "Soʻrovni yuborib boʻlmadi. Birozdan soʻng qayta urinib koʻring.",
+        "askFailed": "Soʻrovni yuborib boʻlmadi. Birozdan keyin qayta urinib koʻring.",
         "fillOwn": "Oʻzim toʻldiraman",
         "empty": {
-          "title": "Maydonlar yaratilmagan",
-          "body": "Boshqarma boshligʻi «Maydonlar» boʻlimida xodimlar uchun maydon yaratishi mumkin."
+          "title": "Hali maydon yoʻq",
+          "body": "Boshqarma boshligʻi «Maydonlar» sahifasida xodimlar uchun maydon qoʻshadi."
         },
         "unavailable": {
           "title": "Maydonlar hali ulanmagan",
-          "body": "Bu boʻlimda xodim maydonlari hozircha yoqilmagan."
+          "body": "Bu boshqarmada xodim maydonlari hozircha yoqilmagan."
         },
         "reminded": "Eslatma yuborildi"
       },
@@ -3377,11 +3377,11 @@
           "body": "Bu xodimning ish boʻyicha harakatlari hali qayd etilmagan."
         },
         "kind": {
-          "created": "Vazifa yaratdi",
+          "created": "Vazifa qoʻshdi",
           "status": "Vazifa holatini oʻzgartirdi",
-          "assigned": "Vazifani biriktirdi",
+          "assigned": "Vazifani berdi",
           "due": "Muddatni oʻzgartirdi",
-          "checklist": "Nazorat roʻyxatini yangiladi",
+          "checklist": "Bajarish roʻyxatini yangiladi",
           "comment": "Izoh qoldirdi",
           "card_assigned": "Vazifa oldi",
           "event_rsvp": "Tadbirga javob berdi"
@@ -3394,7 +3394,7 @@
       },
       "missing": {
         "title": "Xodim topilmadi",
-        "body": "Bu xodim boʻlimda faol emas yoki havola eskirgan.",
+        "body": "Bu xodim boshqarmada faol emas yoki havola eskirgan.",
         "action": "Xodimlar roʻyxati"
       }
     }

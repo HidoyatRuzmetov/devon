@@ -215,3 +215,49 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `structure.people.table.unitRole` | Boʻlimdagi roli | Boʻlimdagi oʻrni | «roli» — oʻzlashmasi shart emas |
 | `structure.common.head` | Boshligʻi | Boshliq | belgida egalik qoʻshimchasi keraksiz |
 | `structure.common.member` | Aʼzo | Xodim | §12.2 Member = xodim |
+
+## Modul: people (`packages/i18n/messages/modules/people/`)
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `people.table.description` | Boʻlim xodimlari va ularning koʻrsatkichlari bitta jadvalda. | Boshqarma xodimlari va siz tanlagan koʻrsatkichlar — bitta jadvalda. | §12.2 boshqarma; «ularning koʻrsatkichlari» — kim tanlashini aytmaydi |
+| `people.table.columns.heading` | Koʻrsatkichlarni tanlang | Koʻrsatkichlar | §4 menyu sarlavhasi — ot |
+| `people.table.columns.group.field` | Maxsus maydonlar | Maydonlar | TERMS §12.2: Custom fields = `maydonlar` |
+| `people.table.empty.body` | Boʻlimga birinchi xodim qoʻshilganda jadval shu yerda toʻlib boradi. | Boshqarmaga birinchi xodim qoʻshilishi bilan jadval toʻla boshlaydi. | §12.2 boshqarma; «shu yerda toʻlib boradi» — «shu yerda» ortiqcha |
+| `people.table.groupBy.unitRole` | Roli boʻyicha | Oʻrni boʻyicha | «rol» oʻrniga `oʻrni` — structure moduli bilan bir xil |
+| `people.table.filter.valuePlaceholder` | Qiymat kiriting | Qiymat yozing | §11/26 matn «yoziladi» |
+| `people.table.filter.op.contains` | Ichida bor | Soʻz bor | §11/39 «Ichida bor» — hech kim aytmaydi |
+| `people.table.calc.filledOf` | {total} dan {filled} ta | {total} tadan {filled} tasi | §10 maxraj «{total} tadan {filled} tasi» |
+| `people.table.bulk.clear` | Tanlovni bekor qilish | Tanlovni tozalash | §5 «Bekor qilish» — undo yozuvi; tanlov tozalanadi |
+| `people.table.action.board` | {name}ning doskadagi ustuni | {name}ning doskadagi ustunini ochish | §3 aria-label toʻliq amalni aytadi |
+| `people.table.views.isDefault` | Boʻlim uchun standart | Boshqarma uchun standart | §12.2 boshqarma |
+| `people.table.views.makeDefault` | Boʻlim uchun standart qilish | Boshqarma uchun standart qilish | §12.2 boshqarma |
+| `people.table.views.defaultLabel` | Boʻlim uchun standart boʻlsin | Boshqarma uchun standart boʻlsin | §12.2 boshqarma |
+| `people.table.views.dirty` | Oʻzgartirildi | Oʻzgardi | chip qisqaroq |
+| `people.table.views.revert` | Qaytarish | Asliga qaytarish | §5 `Qaytarish` — redo; bu yerda saqlangan holatga qaytiladi |
+| `people.indicator.workloadHours.description` | Shu haftaga rejalashtirilgan soatlar — vaqt baholari yoqilganda | Shu haftaga rejalashtirilgan soatlar — taxminiy vaqt yoqilganda | TERMS: estimate = `taxminiy vaqt` |
+| `people.indicator.workloadPct.description` | Ochiq vazifalarning haftalik imkoniyatga nisbati | Ochiq vazifalarning haftalik sigʻimga nisbati | §12.2 weekly capacity = `haftalik sigʻim` (`imkoniyat` — feature toggle) |
+| `people.indicator.projectsOwned.label` | Rahbarlik qilmoqda | Rahbar loyihalari | ustun sarlavhasi — ot birikma, feʼl emas |
+| `people.indicator.projectsOwned.description` | Egasi sifatida yuritayotgan loyihalari | Oʻzi rahbarlik qilayotgan loyihalar | «egasi sifatida yuritayotgan» — kitobiy |
+| `people.indicator.focusMinutes7d.description` | Soʻnggi yetti kundagi jamlangan fokus daqiqalari. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi. | Soʻnggi yetti kundagi jamlangan diqqat daqiqalari. Shaxsiy ish maydonining mazmuni hech qachon koʻrinmaydi. | §12.2 `fokus` → `diqqat` |
+| `people.indicator.lastActiveAt.description` | Tizimda oxirgi marta koʻringan vaqti | Oxirgi marta qachon kirgani | §11/8 `tizim` |
+| `people.indicator.unitRole.label` | Boʻlimdagi roli | Boʻlimdagi oʻrni | «roli» → `oʻrni` |
+| `people.indicator.unitRole.description` | Boʻlim ichidagi lavozim belgisi | Boʻlim ichidagi oʻrni | «lavozim belgisi» — lavozim boshqa maydon |
+| `people.indicator.joinedAt.description` | Boʻlimga qoʻshilgan sana | Boshqarmaga qoʻshilgan sana | §12.2 boshqarma |
+| `people.assign.subtitle` | Vazifa shu xodimga biriktiriladi, beruvchi esa siz boʻlasiz. | Vazifani shu xodimga siz berasiz. | §11/14 majhul «biriktiriladi, beruvchi esa siz boʻlasiz» → bitta aniq gap |
+| `people.assign.field.titleRequired` | Vazifa nomini kiriting. | Vazifa nomini yozing. | §11/26 matn «yoziladi» |
+| `people.person.own.description` | Ish boʻyicha koʻrsatkichlaringiz, vazifalaringiz va maʼlumotlaringiz. | Ish koʻrsatkichlaringiz, vazifalaringiz va qayd etilgan maʼlumotlaringiz. | «Ish boʻyicha koʻrsatkichlar» — ortiqcha yuklama |
+| `people.person.meta.unitRole` | Boʻlimdagi roli | Boʻlimdagi oʻrni | «roli» → `oʻrni` |
+| `people.person.chart.created` | Berilgan | Olingan | *Received* — xodim vazifani oladi, bermaydi |
+| `people.person.tasks.empty.body` | Bu tanlov boʻyicha hech qanday vazifa topilmadi. | Bu tanlovga mos vazifa yoʻq. | §7 filtr natijasi boʻsh: nima yoʻqligini ayting |
+| `people.person.projects.progress` | {done} / {total} vazifa bajarilgan | {done}/{total} vazifa bajarilgan | §10 nisbat chiziqchasi atrofida probel yoʻq |
+| `people.person.events.pollsValue` | {voted} / {total} | {voted}/{total} | §10 nisbat chiziqchasi atrofida probel yoʻq |
+| `people.person.onboarding.note` | Bu qadamlar boʻlimga koʻrinadigan belgilardan olinadi. Shaxsiy ish maydoni mazmuni hech qachon koʻrinmaydi. | Bu qadamlar boshqarmaga koʻrinadigan belgilardan olinadi. Shaxsiy ish maydonining mazmuni hech qachon koʻrinmaydi. | §12.2 boshqarma |
+| `people.person.fields.askFailed` | Soʻrovni yuborib boʻlmadi. Birozdan soʻng qayta urinib koʻring. | Soʻrovni yuborib boʻlmadi. Birozdan keyin qayta urinib koʻring. | §9 «soʻng» → «keyin» |
+| `people.person.fields.empty.title` | Maydonlar yaratilmagan | Hali maydon yoʻq | §7 boʻsh holat nima yoʻqligini aytadi |
+| `people.person.fields.empty.body` | Boshqarma boshligʻi «Maydonlar» boʻlimida xodimlar uchun maydon yaratishi mumkin. | Boshqarma boshligʻi «Maydonlar» sahifasida xodimlar uchun maydon qoʻshadi. | «boʻlimida» — bu sahifa; §11/4 maydon «qoʻshiladi» |
+| `people.person.fields.unavailable.body` | Bu boʻlimda xodim maydonlari hozircha yoqilmagan. | Bu boshqarmada xodim maydonlari hozircha yoqilmagan. | §12.2 boshqarma |
+| `people.person.activity.kind.created` | Vazifa yaratdi | Vazifa qoʻshdi | §11/4 karta «qoʻshiladi» |
+| `people.person.activity.kind.assigned` | Vazifani biriktirdi | Vazifani berdi | modul boʻylab bitta feʼl: vazifa «beriladi» |
+| `people.person.activity.kind.checklist` | Nazorat roʻyxatini yangiladi | Bajarish roʻyxatini yangiladi | §12.2 checklist = `bajarish roʻyxati` |
+| `people.person.missing.body` | Bu xodim boʻlimda faol emas yoki havola eskirgan. | Bu xodim boshqarmada faol emas yoki havola eskirgan. | §12.2 boshqarma |
