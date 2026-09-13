@@ -313,3 +313,56 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `personal.ai.discard` | Rad etish | Kerak emas |
 | `personal.ai.disclaimer` | AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi. | AI takliflari xato boʻlishi mumkin — siz tasdiqlamaguningizcha hech narsa qoʻshilmaydi. |
 | `personal.ai.catchUp.savedToast` | Xulosa qaydlarga saqlandi | Qaydlarga saqlandi |
+
+## miniapp — 48 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `miniapp.devMode` | Namunaviy rejim — Telegram emas, brauzer seansi | Demo rejim — Telegram emas, brauzer oynasi |
+| `miniapp.noDepartment` | Boʻlim tanlanmagan | Boshqarma tanlanmagan |
+| `miniapp.tab.focus` | Fokus | Diqqat |
+| `miniapp.tab.focusShort` | Fokus | Diqqat |
+| `miniapp.error.title` | Nimadir xato ketdi | Yuklab boʻlmadi |
+| `miniapp.error.body` | Maʼlumotni yuklab boʻlmadi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
+| `miniapp.offline.body` | Internet aloqasi uzilgan. Ulanish tiklangach, qayta urinib koʻring. | Aloqa tiklangach qayta urinib koʻring. |
+| `miniapp.forbidden.title` | Ruxsat yoʻq | Bu sahifa boshliq uchun |
+| `miniapp.forbidden.body` | Bu sahifa boʻlim boshligʻi uchun. Agar bu xato boʻlsa, boshligʻingizga murojaat qiling. | Bu sahifani boshqarma boshligʻi koʻradi. Xato boʻlsa, boshligʻingizga ayting. |
+| `miniapp.reason.mentioned` | Eslatildingiz | Sizni belgilashdi |
+| `miniapp.reason.digest` | Kunlik xulosa | Xulosa |
+| `miniapp.inbox.markedRead` | Oʻqildi deb belgilandi | Oʻqildi |
+| `miniapp.inbox.markAllRead` | Hammasini oʻqildi deb belgilash | Hammasini oʻqilgan deb belgilash |
+| `miniapp.inbox.snooze` | Ertaga | Kechiktirish |
+| `miniapp.inbox.archive` | Arxivlash | Arxivga olish |
+| `miniapp.board.team` | Boʻlim | Boshqarma |
+| `miniapp.board.myCards` | Mening kartochkalarim | Kartalarim |
+| `miniapp.board.openTotal` | Boʻlimda ochiq | Boshqarmada ochiq |
+| `miniapp.board.overdueTotal` | Boʻlimda kechikkan | Boshqarmada kechikkan |
+| `miniapp.board.empty.body` | Sizga hali kartochka biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi. | Sizga hali karta biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi. |
+| `miniapp.board.emptyTeam.title` | Boʻlim doskasi boʻsh | Boshqarma doskasi boʻsh |
+| `miniapp.board.emptyTeam.body` | Boʻlimda hali ochiq kartochka yoʻq. | Boshqarmada hali ochiq karta yoʻq. |
+| `miniapp.card.title` | Kartochka | Karta |
+| `miniapp.card.updateFailed` | Yangilab boʻlmadi | Kartani yangilab boʻlmadi |
+| `miniapp.card.readOnly` | Bu kartochkani faqat oʻqiy olasiz. | Bu kartani faqat oʻqiy olasiz. |
+| `miniapp.card.checklist` | Nazorat roʻyxati | Bajarish roʻyxati |
+| `miniapp.card.commentPlaceholder` | Izoh yozing… | Izoh yozing |
+| `miniapp.events.eyebrow` | Boʻlim tadbirlari | TADBIRLAR |
+| `miniapp.events.going` | {count} ta boradi | {count} kishi boradi |
+| `miniapp.events.capacity` | {used} / {total} joy | {used}/{total} joy |
+| `miniapp.events.empty.body` | Boʻlimda yaqin kunlarda tadbir rejalashtirilmagan. | Boshqarmada yaqin kunlarda tadbir rejalashtirilmagan. |
+| `miniapp.carpool.title` | Yoʻlovchi olish | Birga borish |
+| `miniapp.carpool.seats` | {free} / {total} joy boʻsh | {free}/{total} joy boʻsh |
+| `miniapp.carpool.empty` | Bu tadbirga mashina taklif qilinmagan. | Bu tadbirga hech kim mashina taklif qilmagan. |
+| `miniapp.focus.title` | Fokus | Diqqat vaqti |
+| `miniapp.focus.eyebrow` | Shaxsiy maydon | SHAXSIY |
+| `miniapp.focus.reset` | Vaqtni tiklash | Qaytadan |
+| `miniapp.focus.stats` | Fokus vaqti | Diqqat vaqti |
+| `miniapp.focus.ringAria` | {phase} bosqichi qoldigʻi | {phase} bosqichida qolgan vaqt |
+| `miniapp.focus.alertMuted` | Bildirishnomalar oʻchirilgan — xabar yuborilmadi. | Bildirishnomalar oʻchiq — xabar yuborilmadi. |
+| `miniapp.focus.phase.focus` | Fokus | Diqqat |
+| `miniapp.fields.title` | Mening maʼlumotlarim | Maʼlumotlarim |
+| `miniapp.fields.eyebrow` | Boʻlim soʻragan maydonlar | SOʻRALGAN MAYDONLAR |
+| `miniapp.fields.readOnly` | Bu maydonni boʻlim boshligʻi toʻldiradi. | Bu maydonni boshqarma boshligʻi toʻldiradi. |
+| `miniapp.fields.numberInvalid` | Faqat raqam kiriting | Raqam kiriting. |
+| `miniapp.fields.empty.body` | Boʻlim sizdan hech qanday maʼlumot soʻramagan. | Boshqarma sizdan hech narsa soʻramagan. |
+| `miniapp.setup.title` | Telegram sozlamasi | Telegram sozlamalari |
+| `miniapp.setup.step.group_connected.title` | Boʻlim guruhi ulangan | Boshqarma guruhi ulangan |

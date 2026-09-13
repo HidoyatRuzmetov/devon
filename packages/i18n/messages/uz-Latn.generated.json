@@ -2592,8 +2592,8 @@
   },
   "miniapp": {
     "title": "WorkPortal",
-    "devMode": "Namunaviy rejim — Telegram emas, brauzer seansi",
-    "noDepartment": "Boʻlim tanlanmagan",
+    "devMode": "Demo rejim — Telegram emas, brauzer oynasi",
+    "noDepartment": "Boshqarma tanlanmagan",
     "action": {
       "back": "Orqaga",
       "retry": "Qayta urinish",
@@ -2609,8 +2609,8 @@
       "boardShort": "Doska",
       "events": "Tadbirlar",
       "eventsShort": "Tadbir",
-      "focus": "Fokus",
-      "focusShort": "Fokus"
+      "focus": "Diqqat",
+      "focusShort": "Diqqat"
     },
     "greeting": {
       "morning": "Xayrli tong",
@@ -2623,16 +2623,16 @@
       "body": "Bu yerda koʻrsatadigan narsa yoʻq."
     },
     "error": {
-      "title": "Nimadir xato ketdi",
-      "body": "Maʼlumotni yuklab boʻlmadi. Qayta urinib koʻring."
+      "title": "Yuklab boʻlmadi",
+      "body": "Aloqa uzildi. Qayta urinib koʻring."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet aloqasi uzilgan. Ulanish tiklangach, qayta urinib koʻring."
+      "body": "Aloqa tiklangach qayta urinib koʻring."
     },
     "forbidden": {
-      "title": "Ruxsat yoʻq",
-      "body": "Bu sahifa boʻlim boshligʻi uchun. Agar bu xato boʻlsa, boshligʻingizga murojaat qiling."
+      "title": "Bu sahifa boshliq uchun",
+      "body": "Bu sahifani boshqarma boshligʻi koʻradi. Xato boʻlsa, boshligʻingizga ayting."
     },
     "unlinked": {
       "title": "Hisob ulanmagan",
@@ -2657,13 +2657,13 @@
     },
     "reason": {
       "assigned": "Topshirildi",
-      "mentioned": "Eslatildingiz",
+      "mentioned": "Sizni belgilashdi",
       "due": "Muddat",
       "updated": "Yangilandi",
       "rsvp": "Tadbir",
       "poll": "Soʻrovnoma",
       "decision": "Qaror",
-      "digest": "Kunlik xulosa",
+      "digest": "Xulosa",
       "system": "Tizim"
     },
     "today": {
@@ -2684,12 +2684,12 @@
       "eyebrow": "{count} ta oʻqilmagan",
       "unread": "Yangi",
       "markRead": "Oʻqildi",
-      "markedRead": "Oʻqildi deb belgilandi",
-      "markAllRead": "Hammasini oʻqildi deb belgilash",
+      "markedRead": "Oʻqildi",
+      "markAllRead": "Hammasini oʻqilgan deb belgilash",
       "allRead": "Hammasi oʻqildi",
-      "snooze": "Ertaga",
+      "snooze": "Kechiktirish",
       "snoozed": "Ertaga eslatiladi",
-      "archive": "Arxivlash",
+      "archive": "Arxivga olish",
       "archived": "Arxivlandi",
       "actionFailed": "Amalni bajarib boʻlmadi",
       "empty": {
@@ -2701,24 +2701,24 @@
       "title": "Doska",
       "viewAria": "Doska koʻrinishi",
       "mine": "Mening ustunim",
-      "team": "Boʻlim",
-      "myCards": "Mening kartochkalarim",
+      "team": "Boshqarma",
+      "myCards": "Kartalarim",
       "you": "siz",
       "openCount": "{count} ta ochiq",
       "overdueCount": "{count} ta kechikkan",
-      "openTotal": "Boʻlimda ochiq",
-      "overdueTotal": "Boʻlimda kechikkan",
+      "openTotal": "Boshqarmada ochiq",
+      "overdueTotal": "Boshqarmada kechikkan",
       "empty": {
         "title": "Ustuningiz boʻsh",
-        "body": "Sizga hali kartochka biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi."
+        "body": "Sizga hali karta biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi."
       },
       "emptyTeam": {
-        "title": "Boʻlim doskasi boʻsh",
-        "body": "Boʻlimda hali ochiq kartochka yoʻq."
+        "title": "Boshqarma doskasi boʻsh",
+        "body": "Boshqarmada hali ochiq karta yoʻq."
       }
     },
     "card": {
-      "title": "Kartochka",
+      "title": "Karta",
       "eyebrow": "Doska",
       "open": "Ochiq",
       "done": "Bajarildi",
@@ -2726,13 +2726,13 @@
       "markedDone": "Bajarildi",
       "reopen": "Qayta ochish",
       "reopened": "Qayta ochildi",
-      "updateFailed": "Yangilab boʻlmadi",
+      "updateFailed": "Kartani yangilab boʻlmadi",
       "noDescription": "Tavsif yozilmagan",
-      "readOnly": "Bu kartochkani faqat oʻqiy olasiz.",
-      "checklist": "Nazorat roʻyxati",
+      "readOnly": "Bu kartani faqat oʻqiy olasiz.",
+      "checklist": "Bajarish roʻyxati",
       "comments": "Izohlar",
       "noComments": "Hali izoh yoʻq",
-      "commentPlaceholder": "Izoh yozing…",
+      "commentPlaceholder": "Izoh yozing",
       "send": "Yuborish",
       "commentAdded": "Izoh qoʻshildi",
       "commentFailed": "Izohni yuborib boʻlmadi"
@@ -2740,10 +2740,10 @@
     "events": {
       "title": "Tadbirlar",
       "one": "Tadbir",
-      "eyebrow": "Boʻlim tadbirlari",
+      "eyebrow": "TADBIRLAR",
       "organizer": "Tashkilotchi: {name}",
-      "going": "{count} ta boradi",
-      "capacity": "{used} / {total} joy",
+      "going": "{count} kishi boradi",
+      "capacity": "{used}/{total} joy",
       "rsvpAria": "Javobingiz",
       "rsvpFailed": "Javobni saqlab boʻlmadi",
       "cancelled": "Tadbir bekor qilindi",
@@ -2760,7 +2760,7 @@
       },
       "empty": {
         "title": "Rejadagi tadbir yoʻq",
-        "body": "Boʻlimda yaqin kunlarda tadbir rejalashtirilmagan."
+        "body": "Boshqarmada yaqin kunlarda tadbir rejalashtirilmagan."
       },
       "missing": {
         "title": "Tadbir topilmadi",
@@ -2768,13 +2768,13 @@
       }
     },
     "carpool": {
-      "title": "Yoʻlovchi olish",
-      "seats": "{free} / {total} joy boʻsh",
+      "title": "Birga borish",
+      "seats": "{free}/{total} joy boʻsh",
       "claim": "Joy band qilish",
       "claimed": "Joy band qilindi",
       "release": "Joydan voz kechish",
       "released": "Joy boʻshatildi",
-      "empty": "Bu tadbirga mashina taklif qilinmagan.",
+      "empty": "Bu tadbirga hech kim mashina taklif qilmagan.",
       "failed": "Joyni oʻzgartirib boʻlmadi"
     },
     "polls": {
@@ -2788,46 +2788,46 @@
       "empty": "Bu tadbirda soʻrovnoma yoʻq."
     },
     "focus": {
-      "title": "Fokus",
-      "eyebrow": "Shaxsiy maydon",
+      "title": "Diqqat vaqti",
+      "eyebrow": "SHAXSIY",
       "start": "Boshlash",
       "stop": "Toʻxtatish",
-      "reset": "Vaqtni tiklash",
+      "reset": "Qaytadan",
       "minutes": "{count} daq",
-      "stats": "Fokus vaqti",
+      "stats": "Diqqat vaqti",
       "today": "Bugun",
       "week": "Shu hafta",
       "phaseAria": "Bosqich",
-      "ringAria": "{phase} bosqichi qoldigʻi",
+      "ringAria": "{phase} bosqichida qolgan vaqt",
       "botNote": "Vaqt tugaganda bot Telegramda xabar beradi. Vazifa nomi hech qachon yuborilmaydi.",
       "alertNotLinked": "Telegram ulanmagani uchun xabar yuborilmadi.",
-      "alertMuted": "Bildirishnomalar oʻchirilgan — xabar yuborilmadi.",
+      "alertMuted": "Bildirishnomalar oʻchiq — xabar yuborilmadi.",
       "startFailed": "Boshlab boʻlmadi",
       "saveFailed": "Saqlab boʻlmadi",
       "phase": {
-        "focus": "Fokus",
+        "focus": "Diqqat",
         "short_break": "Qisqa tanaffus",
         "long_break": "Uzoq tanaffus"
       }
     },
     "fields": {
-      "title": "Mening maʼlumotlarim",
-      "eyebrow": "Boʻlim soʻragan maydonlar",
+      "title": "Maʼlumotlarim",
+      "eyebrow": "SOʻRALGAN MAYDONLAR",
       "requested": "Soʻraldi",
       "missing": "Toʻldirilmagan",
       "save": "Saqlash",
       "saved": "Saqlandi",
       "saveFailed": "Saqlab boʻlmadi",
-      "readOnly": "Bu maydonni boʻlim boshligʻi toʻldiradi.",
+      "readOnly": "Bu maydonni boshqarma boshligʻi toʻldiradi.",
       "yes": "Ha",
-      "numberInvalid": "Faqat raqam kiriting",
+      "numberInvalid": "Raqam kiriting.",
       "empty": {
         "title": "Soʻralgan maydon yoʻq",
-        "body": "Boʻlim sizdan hech qanday maʼlumot soʻramagan."
+        "body": "Boshqarma sizdan hech narsa soʻramagan."
       }
     },
     "setup": {
-      "title": "Telegram sozlamasi",
+      "title": "Telegram sozlamalari",
       "bot": "Bot",
       "noBot": "Bot nomi hali koʻrsatilmagan. Buni tizim administratori qoʻshadi.",
       "appUrl": "Mini ilova manzili",
@@ -2860,7 +2860,7 @@
           "body": "Har bir xodim oʻz hisobini oʻzi ulaydi — buni siz ular uchun qila olmaysiz."
         },
         "group_connected": {
-          "title": "Boʻlim guruhi ulangan",
+          "title": "Boshqarma guruhi ulangan",
           "body": "Tadbir va soʻrovnoma eʼlonlari uchun botni guruhga qoʻshing."
         }
       }
