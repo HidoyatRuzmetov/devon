@@ -11,7 +11,7 @@
 import * as React from 'react'
 import { AnimatePresence } from 'motion/react'
 import { Loader2, Plus, Target, Trash2 } from 'lucide-react'
-import { goalProgress, isCeilingMetric, type GoalMetric } from '@devon/contracts'
+import type { GoalMetric } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Button,
@@ -34,6 +34,7 @@ import {
 } from '@devon/ui'
 import { useDepartment } from '../../../lib/session.js'
 import { useCreateGoalMutation, useDeleteGoalMutation, useGoalsQuery } from '../hooks-plus.js'
+import { goalProgress, goalProgressTone, isCeilingMetric } from '../lib/goal-format.js'
 import type { Goal } from '../api-plus.js'
 
 const METRICS: readonly GoalMetric[] = [
@@ -55,17 +56,6 @@ const METRIC_HINT_KEY: Record<GoalMetric, string> = {
   on_time_rate: 'work.goals.metricHint.onTimeRate',
   estimate_hours: 'work.goals.metricHint.estimateHours',
   open_cards_max: 'work.goals.metricHint.openCardsMax',
-}
-
-/** A ceiling goal ("no more than 10 open") is full at zero and empty at the target -- so its bar
- * reads the other way round and its colour has to follow, or a green bar would mean the opposite
- * thing on two cards sitting side by side. */
-function progressTone(goal: Goal): 'success' | 'warning' | 'destructive' | 'primary' {
-  const ratio = goalProgress(goal.metric, goal.currentValue, goal.targetValue)
-  if (ratio >= 1) return 'success'
-  if (ratio >= 0.6) return 'primary'
-  if (ratio >= 0.3) return 'warning'
-  return 'destructive'
 }
 
 export function GoalCard({
@@ -131,7 +121,7 @@ export function GoalCard({
         <Progress
           value={Math.round(ratio * 100)}
           label={t('work.goals.progressLabel', { title: goal.title })}
-          tone={progressTone(goal)}
+          tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
         />
       </div>
 

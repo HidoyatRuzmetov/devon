@@ -169,7 +169,11 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
                     <span className="flex-1" />
                   )}
                   {reminder.sentAt ? (
-                    <Chip tone="success" leading={<Check className="size-3" />}>
+                    <Chip
+                      tone="neutral"
+                      leading={<Check className="size-3" />}
+                      className="text-muted-foreground"
+                    >
                       {t('work.reminders.sent')}
                     </Chip>
                   ) : (

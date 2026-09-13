@@ -1,0 +1,105 @@
+{
+  "automations": {
+    "eyebrow": "АВТОМАТЛАШТИРИШ",
+    "title": "Қоидалар",
+    "description": "«Шундай бўлса — шуни қил». Такрорланувчи қўл меҳнатини қоидага айлантиринг.",
+    "create": "Қоида қўшиш",
+    "newTitle": "Янги қоида",
+    "created": "Қоида қўшилди",
+    "createFailed": "Қоидани қўшиб бўлмади",
+    "toggleFailed": "Қоидани ўзгартириб бўлмади",
+    "deleted": "«{name}» ўчирилди",
+    "deleteFailed": "Қоидани ўчириб бўлмади",
+    "pauseAll": "Ҳаммасини тўхтатиш",
+    "pausedAll": "{count} та қоида тўхтатилди",
+    "pauseFailed": "Қоидаларни тўхтатиб бўлмади",
+    "atLimit": "Ёқилган қоидалар сони {max} тадан ошмайди. Янгисини қўшиш учун бирортасини ўчиринг.",
+    "emptyTitle": "Қоида йўқ",
+    "emptyBody": "Биринчи қоидани қўшинг — масалан, муддати ўтган картани бошлиққа хабар қилсин.",
+    "forbiddenTitle": "Бу саҳифа бошқарма бошлиғи учун",
+    "forbiddenBody": "Қоидаларни фақат бошқарма бошлиғи созлайди.",
+    "runsTitle": "Бажарилишлар тарихи",
+    "runsDescription": "Ҳар бир ишга тушиш — нима қилингани ёки нега ўтказиб юборилгани билан.",
+    "runsEmptyTitle": "Ҳали ҳеч нарса ишга тушмаган",
+    "runsEmptyBody": "Қоида ишга тушганда шу ерда кўринади.",
+    "rule": {
+      "sentence": "{trigger} → {actions}",
+      "toggle": "«{name}» қоидасини ёқиш ёки ўчириш",
+      "delete": "«{name}» қоидасини ўчириш",
+      "lastError": "Охирги хато: {error}",
+      "runCount": "{count} марта ишлаган",
+      "lastRun": "Охирги марта: {at}",
+      "neverRun": "Ҳали ишга тушмаган"
+    },
+    "trigger": {
+      "cardCreated": "Карта яратилганда",
+      "cardStatusChanged": "Ҳолати ўзгарганда",
+      "cardAssigned": "Карта бириктирилганда",
+      "cardDueSoon": "Муддати яқинлашганда",
+      "cardOverdue": "Муддати ўтганда",
+      "cardFieldChanged": "Майдон ўзгарганда"
+    },
+    "action": {
+      "assign": "ходимга бириктириш",
+      "setPriority": "муҳимликни белгилаш",
+      "addLabel": "ёрлиқ қўшиш",
+      "notifyUser": "ходимга хабар бериш",
+      "notifyHead": "бошлиққа хабар бериш",
+      "setStatus": "ҳолатини ўзгартириш",
+      "addChecklist": "текшириш рўйхатини қўшиш",
+      "createFollowup": "давоми учун карта яратиш"
+    },
+    "builder": {
+      "nameLabel": "Қоида номи",
+      "namePlaceholder": "Масалан: муддати ўтганини бошлиққа билдириш",
+      "whenLegend": "Қачон",
+      "thenLegend": "Нима қилинсин",
+      "triggerLabel": "Ҳодиса",
+      "toStatusLabel": "Қайси ҳолатга ўтганда",
+      "anyStatus": "Ҳар қандай ҳолат",
+      "daysAheadLabel": "Неча кун олдин",
+      "daysAheadHint": "1 дан 14 кунгача.",
+      "fieldLabel": "Қайси майдон",
+      "field": {
+        "priority": "Муҳимлик",
+        "labels": "Ёрлиқлар",
+        "dueAt": "Муддат",
+        "estimate": "Баҳо"
+      },
+      "filterLabel": "Қайси карталарга",
+      "filterHint": "Бўш қолдирилса — барча карталарга.",
+      "filterPlaceholder": "label:мурожаат",
+      "actionLabel": "Амал",
+      "addAction": "Яна амал қўшиш",
+      "actionLimit": "Битта қоидада 5 тадан кўп амал бўлмайди",
+      "removeAction": "Амални олиб ташлаш",
+      "whoLabel": "Кимга",
+      "choosePerson": "Ходимни танланг",
+      "priorityLabel": "Муҳимлик",
+      "labelLabel": "Ёрлиқ",
+      "chooseLabel": "Ёрлиқни танланг",
+      "statusLabel": "Ҳолат",
+      "checklistLabel": "Текшириш рўйхати",
+      "checklistHint": "Ҳар бир банд — алоҳида қатор.",
+      "followupTitle": "Янги карта номи",
+      "followupDueInDays": "Неча кунда",
+      "invalid": "Қоида тўлиқ эмас — майдонларни текширинг."
+    },
+    "run": {
+      "status": {
+        "applied": "Бажарилди",
+        "skipped": "Ўтказилди",
+        "failed": "Хато"
+      },
+      "reason": {
+        "chainDepth": "Занжир жуда узун — тўхтатилди",
+        "loopGuard": "Ҳалқа аниқланди — қоида иккинчи марта ишламади",
+        "noValidActions": "Бажариладиган амал қолмади",
+        "statusDidNotMatch": "Ҳолат мос келмади",
+        "filterDidNotMatch": "Карта филтрга тушмади",
+        "alreadyAppliedToday": "Бугун аллақачон бажарилган",
+        "other": "Ўтказиб юборилди"
+      }
+    }
+  }
+}
