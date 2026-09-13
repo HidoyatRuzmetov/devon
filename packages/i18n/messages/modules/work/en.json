@@ -517,8 +517,9 @@
         "openCardsMax": "A ceiling: open cards should stay at or under it."
       },
       "emptyTitle": "No goals set",
-      "emptyBody": "Goals appear here once the head of the department sets one.",
-      "emptyBodyHead": "Set the first goal — progress is computed from the cards."
+      "emptyBodyHead": "Set the first goal — progress is computed from the cards.",
+      "forbiddenTitle": "This page is for the head of the department",
+      "forbiddenBody": "Only the head of the department sees and sets goals."
     }
   },
   "common": {

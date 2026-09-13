@@ -64,7 +64,10 @@ function PinRow({
           type="button"
           onClick={() => replaceSearchParam('card', card.id)}
           className={cn(
-            'min-w-0 flex-1 truncate text-left text-small hover:underline',
+            'min-w-0 flex-1 text-left text-small hover:underline',
+            // Two lines rather than one hard truncation: at 390 the five trailing controls left
+            // "Hafta yaku..." on screen, which is not a task anybody can recognise.
+            'line-clamp-2 break-words',
             card.status === 'active' ? 'text-foreground' : 'text-muted-foreground line-through',
           )}
         >
@@ -76,7 +79,7 @@ function PinRow({
           </Badge>
         ) : null}
         {card.dueAt ? (
-          <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+          <span className="hidden shrink-0 text-caption tabular-nums text-muted-foreground sm:inline">
             {formatDate(new Date(card.dueAt), locale)}
           </span>
         ) : null}

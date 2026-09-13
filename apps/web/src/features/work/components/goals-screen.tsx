@@ -6,8 +6,10 @@
 // weekly manual updating stops being updated, and then lies). `currentValue`, `progress` and
 // `matchedCards` all arrive computed; this screen renders them and never does the arithmetic itself.
 //
-// Head-only to create, edit and remove; every member can read them, because a department's goals are
-// the one thing everybody should be able to see without asking.
+// Head-only throughout. SPEC §2.2 puts `goals.read` on `department_managed` and migration 0905's
+// `goals_read` policy agrees, so a member is refused at both boundaries -- which means this screen
+// must show them the designed no-permission state rather than firing a request that comes back 403
+// and rendering "Maʼlumotlarni yuklab boʻlmadi" (seen live as demo.xodim before this guard).
 import * as React from 'react'
 import { AnimatePresence } from 'motion/react'
 import { Loader2, Plus, Target, Trash2 } from 'lucide-react'
@@ -290,7 +292,8 @@ export default function GoalsScreen(): React.JSX.Element {
   const t = useT()
   const { department } = useDepartment()
   const isHead = department?.role === 'head'
-  const query = useGoalsQuery()
+  // Gated on `isHead`, so a member issues no request at all.
+  const query = useGoalsQuery(isHead)
   const deleteGoal = useDeleteGoalMutation()
   const createGoal = useCreateGoalMutation()
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -326,7 +329,15 @@ export default function GoalsScreen(): React.JSX.Element {
   }
 
   let body: React.ReactNode
-  if (query.isPending) {
+  if (!isHead) {
+    body = (
+      <StateView
+        kind="forbidden"
+        titleKey="work.goals.forbiddenTitle"
+        bodyKey="work.goals.forbiddenBody"
+      />
+    )
+  } else if (query.isPending) {
     body = (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
         {[1, 2, 3].map((i) => (
@@ -348,10 +359,8 @@ export default function GoalsScreen(): React.JSX.Element {
       <StateView
         kind="empty"
         titleKey="work.goals.emptyTitle"
-        bodyKey={isHead ? 'work.goals.emptyBodyHead' : 'work.goals.emptyBody'}
-        {...(isHead
-          ? { action: { labelKey: 'work.goals.create', onAction: () => setDialogOpen(true) } }
-          : {})}
+        bodyKey="work.goals.emptyBodyHead"
+        action={{ labelKey: 'work.goals.create', onAction: () => setDialogOpen(true) }}
       />
     )
   } else {

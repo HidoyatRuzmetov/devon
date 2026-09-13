@@ -3145,8 +3145,9 @@
         "openCardsMax": "Bu — yuqori chegara: ochiq kartalar shundan oshmasin."
       },
       "emptyTitle": "Maqsad qoʻyilmagan",
-      "emptyBody": "Boshqarma boshligʻi maqsad qoʻyganda shu yerda koʻrinadi.",
-      "emptyBodyHead": "Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi."
+      "emptyBodyHead": "Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi.",
+      "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
+      "forbiddenBody": "Maqsadlarni faqat boshqarma boshligʻi koʻradi va qoʻyadi."
     }
   },
   "common": {
