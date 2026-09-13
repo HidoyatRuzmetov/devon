@@ -29,33 +29,39 @@ import {
   HEAD_USER_ID,
   MEMBER_USER_ID,
   labelId,
+  standaloneCardCount,
 } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import { asUser } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 960
 
-/** The same fixed "now" `work.ts` builds its cards around, so a due date here lands where that
- * module's dates do rather than drifting with the clock of whichever machine seeds. */
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+/** The same "now" `work.ts` builds its cards around (`../clock.ts`), so a due date here lands where
+ * that module's dates do rather than drifting with the clock of whichever machine seeds. */
+const NOW = DEMO_NOW
 const DAY_MS = 24 * 60 * 60 * 1000
 const daysFromNow = (days: number): Date => new Date(NOW.getTime() + days * DAY_MS)
 const isoDate = (days: number): string => daysFromNow(days).toISOString().slice(0, 10)
 
-/** `work.ts`'s own id scheme, repeated here so this module can point at those cards by name.
- * `(assigneeIndex, n)` with `n < 12` is always present -- every member gets at least 12 cards. */
+/** `work.ts`'s own id scheme, repeated here so this module can point at those cards by name. Which
+ * `(assigneeIndex, n)` pairs exist is `work-fixtures.ts`'s `standaloneCardCount` to decide, and this
+ * module reads that same function rather than assuming a fixed column height -- the assumption it
+ * used to make ("every member gets at least 12 cards") is exactly what broke when the demo dropped
+ * from ~230 cards to ~65. Index 1 (`demo.xodim`) is guaranteed the tallest column, which is why every
+ * dependency/focus/time-log fixture below lives there. */
 const workCardId = (assigneeIndex: number, n: number): string =>
   demoId(`work.card.standalone.${assigneeIndex}.${n}`)
 
 // --- estimates (A3) -----------------------------------------------------------------------------
 //
-// Spread over the first ten cards of every member's column so the workload grid has hours in every
-// cell and the people table's Yuklama column shows hours rather than a bare open count (HANDOFFS #5).
-// 30..300 minutes, deterministic per card.
+// Every card in every member's column gets one, so the workload grid has hours in every cell and the
+// people table's Yuklama column shows hours rather than a bare open count (HANDOFFS #5). 30..300
+// minutes, deterministic per card.
 const ESTIMATES: readonly { cardId: string; minutes: number }[] = ALL_WORK_MEMBER_IDS.flatMap(
   (_userId, i) =>
-    Array.from({ length: 10 }, (__, n) => ({
+    Array.from({ length: standaloneCardCount(i) }, (__, n) => ({
       cardId: workCardId(i, n),
       minutes: 30 + ((i * 3 + n * 5) % 10) * 30,
     })),
@@ -176,11 +182,14 @@ const GOALS: readonly {
 }[] = [
   {
     id: demoId('workplus.goal.oylik'),
-    title: 'Sentabrda 120 ta vazifa yakunlansin',
-    description: 'Boʻlimning oylik sur’ati — kartalardan oʻzi hisoblanadi.',
+    // Targets are scaled to the department that actually exists. "120 ta vazifa" against a board of
+    // 85 cards read 4% on the goals screen -- a progress bar that only ever says "we are failing" is
+    // worse than no goal at all, and it is the first thing a manager notices.
+    title: 'Shu oyda 25 ta vazifa yakunlansin',
+    description: 'Boʻlimning oylik surʼati — kartalardan oʻzi hisoblanadi.',
     metric: 'cards_done',
     filter: '',
-    targetValue: 120,
+    targetValue: 25,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },
@@ -196,11 +205,11 @@ const GOALS: readonly {
   },
   {
     id: demoId('workplus.goal.muhim'),
-    title: 'Ochiq «Muhim» ishlar 100 tadan oshmasin',
+    title: 'Ochiq «Muhim» ishlar 15 tadan oshmasin',
     description: 'Yuqori chegara: ochiq muhim ishlar soni shu raqamdan past turishi kerak.',
     metric: 'open_cards_max',
     filter: 'label:"Muhim"',
-    targetValue: 100,
+    targetValue: 15,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },
@@ -214,6 +223,12 @@ const AUTOMATIONS: readonly {
   triggerConfig: unknown
   actions: unknown
   enabled: boolean
+  /** Kept in step with `AUTOMATION_RUNS` below by `assertRunCountsMatch()`: the rule card says
+   * "N marta ishlagan" from these columns while the log underneath lists the runs themselves, and a
+   * card reading "0 marta ishlagan / Hali ishga tushmagan" above nine visible runs is the kind of
+   * contradiction a viewer spots in one second. */
+  runCount: number
+  lastRunDays: number | null
 }[] = [
   // Deliberately OFF in the demo, and the reason is the lesson: `notify_head` fires once per card,
   // the scan dedupes per rule per card per day but not per tick, and this department carries 77
@@ -227,6 +242,8 @@ const AUTOMATIONS: readonly {
     triggerConfig: { filter: 'label:"Muhim"' },
     actions: [{ kind: 'notify_head' }],
     enabled: false,
+    runCount: 3,
+    lastRunDays: -8,
   },
   {
     id: demoId('workplus.rule.muhim'),
@@ -235,6 +252,8 @@ const AUTOMATIONS: readonly {
     triggerConfig: { field: 'labels', filter: 'label:"Muhim"' },
     actions: [{ kind: 'set_priority', priority: 'high' }],
     enabled: true,
+    runCount: 6,
+    lastRunDays: -1,
   },
   {
     id: demoId('workplus.rule.yangi'),
@@ -248,8 +267,126 @@ const AUTOMATIONS: readonly {
       },
     ],
     enabled: false,
+    runCount: 0,
+    lastRunDays: null,
   },
 ]
+
+// --- the automation run log (EPIC-017) ----------------------------------------------------------
+//
+// A rule with an empty run log is a promise, not a feature: the head cannot tell a rule that is
+// working quietly from a rule that has never fired. These rows are the answer to "what has this
+// actually done for me this week?" -- and they are also why one rule ships switched off, because the
+// log itself shows what happened the day it was on.
+//
+// `detail` stays machine-readable (`{ actions: [...] }` / `{ reason: 'filter_did_not_match' }`) and is
+// rendered in four locales by the client, exactly as `1100_automations.sql` requires -- never prose in
+// one language.
+const AUTOMATION_RUNS: readonly {
+  id: string
+  ruleId: string
+  cardId: string | null
+  status: 'applied' | 'skipped' | 'failed'
+  detail: unknown
+  atDays: number
+}[] = [
+  // The rule that is on and earning its keep: "Muhim" goes on a card, the priority follows.
+  {
+    id: demoId('workplus.run.muhim.1'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(1, 1),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -1,
+  },
+  {
+    id: demoId('workplus.run.muhim.2'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(4, 2),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -2,
+  },
+  {
+    id: demoId('workplus.run.muhim.3'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(6, 0),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -3,
+  },
+  // Not every trigger is a match, and saying so is the point: a silent rule and a broken rule look
+  // identical until the log distinguishes them.
+  {
+    id: demoId('workplus.run.muhim.4'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(9, 1),
+    status: 'skipped',
+    detail: { reason: 'filter_did_not_match' },
+    atDays: -3,
+  },
+  {
+    id: demoId('workplus.run.muhim.5'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(2, 0),
+    status: 'applied',
+    detail: { actions: ['set_priority'] },
+    atDays: -5,
+  },
+  {
+    id: demoId('workplus.run.muhim.6'),
+    ruleId: demoId('workplus.rule.muhim'),
+    cardId: workCardId(12, 0),
+    status: 'skipped',
+    detail: { reason: 'already_applied_today' },
+    atDays: -5,
+  },
+  // The overdue-notifier, on the one morning it was switched on. Two cards told the boshliq something
+  // he wanted to know; the third was the same card again, and the daily dedupe caught it. That
+  // morning is why the rule now ships disabled -- see `AUTOMATIONS` above.
+  {
+    id: demoId('workplus.run.kechikkan.1'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(3, 1),
+    status: 'applied',
+    detail: { actions: ['notify_head'] },
+    atDays: -8,
+  },
+  {
+    id: demoId('workplus.run.kechikkan.2'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(1, 3),
+    status: 'applied',
+    detail: { actions: ['notify_head'] },
+    atDays: -8,
+  },
+  {
+    id: demoId('workplus.run.kechikkan.3'),
+    ruleId: demoId('workplus.rule.kechikkan'),
+    cardId: workCardId(1, 3),
+    status: 'skipped',
+    detail: { reason: 'already_applied_today' },
+    atDays: -8,
+  },
+]
+
+/**
+ * The rule card's "N marta ishlagan" and the log underneath it are two renderings of the same fact,
+ * and nothing in the database makes them agree -- `run_count` is a counter the engine bumps, the log
+ * is rows it writes. A seed can set them apart by hand without anything failing; the only place that
+ * mistake shows up is on screen, in front of the audience. So it fails here instead, at import time.
+ */
+function assertRunCountsMatch(): void {
+  for (const rule of AUTOMATIONS) {
+    const logged = AUTOMATION_RUNS.filter((r) => r.ruleId === rule.id).length
+    if (logged !== rule.runCount) {
+      throw new Error(
+        `work-plus seed: rule "${rule.name}" claims runCount ${rule.runCount} but the run log has ${logged} rows`,
+      )
+    }
+  }
+}
+assertRunCountsMatch()
 
 // --- focus list (A9), time logs (A3) and reminders (7.4) ----------------------------------------
 const FOCUS_PINS: readonly { id: string; userId: string; cardId: string; position: number }[] = [
@@ -441,14 +578,30 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   const ruleValues = sql.join(
     AUTOMATIONS.map(
       (a) =>
-        sql`(${a.id}::uuid, ${DEPARTMENT_ID}::uuid, ${a.name}, ${a.trigger}::app.automation_trigger, ${JSON.stringify(a.triggerConfig)}::jsonb, ${JSON.stringify(a.actions)}::jsonb, ${a.enabled}::boolean, ${HEAD_USER_ID}::uuid)`,
+        sql`(${a.id}::uuid, ${DEPARTMENT_ID}::uuid, ${a.name}, ${a.trigger}::app.automation_trigger, ${JSON.stringify(a.triggerConfig)}::jsonb, ${JSON.stringify(a.actions)}::jsonb, ${a.enabled}::boolean, ${a.runCount}::int, ${a.lastRunDays === null ? null : daysFromNow(a.lastRunDays).toISOString()}::timestamptz, ${HEAD_USER_ID}::uuid)`,
     ),
     sql`, `,
   )
   written += await insertCount(
     ctx,
-    sql`insert into app.automation_rules (id, department_id, name, trigger, trigger_config, actions, enabled, created_by_user_id)
+    sql`insert into app.automation_rules (id, department_id, name, trigger, trigger_config, actions, enabled, run_count, last_run_at, created_by_user_id)
         values ${ruleValues}
+        on conflict do nothing
+        returning id`,
+  )
+
+  // --- automation run log
+  const runValues = sql.join(
+    AUTOMATION_RUNS.map(
+      (r) =>
+        sql`(${r.id}::uuid, ${DEPARTMENT_ID}::uuid, ${r.ruleId}::uuid, ${r.cardId}::uuid, ${r.status}::app.automation_run_status, ${JSON.stringify(r.detail)}::jsonb, ${daysFromNow(r.atDays).toISOString()}::timestamptz)`,
+    ),
+    sql`, `,
+  )
+  written += await insertCount(
+    ctx,
+    sql`insert into app.automation_runs (id, department_id, rule_id, card_id, status, detail, at)
+        values ${runValues}
         on conflict do nothing
         returning id`,
   )

@@ -18,15 +18,16 @@ import { DEPARTMENT_ID } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 import type { Tx } from '../../context.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 700
 
 const HEAD = DEMO_USERS.find((u) => u.role === 'head')!
 const MEMBER = DEMO_USERS.find((u) => u.role === 'member')!
-// `work.ts`'s own seed fixes "now" at this instant so its cards' `created_at`/`done_at`/`due_at` are
-// reproducible across runs -- this module's daily history has to end on the same reference day for
-// its open/overdue snapshot to line up with what those cards actually look like "today".
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+// `work.ts` dates its cards around the same shared "now" (`../clock.ts`) -- this module's daily
+// history has to end on that same reference day for its open/overdue snapshot to line up with what
+// those cards actually look like "today".
+const NOW = DEMO_NOW
 const HISTORY_DAYS = 84 // 12 weeks (TECH-SPEC §9's own default window)
 
 async function setSeedUser(tx: Tx, userId: string | null): Promise<void> {

@@ -1,7 +1,7 @@
-// EPIC-002 demo seed: three departments total (the foundation's one from `core.ts` plus two more) and
-// one pending `department_requests` row, per this item's brief ("3 departments (one pending request),
-// ~40 users"). `order: 20` -- after `accounts.ts` (10), whose `EXTRA_USERS` this module assigns to
-// memberships.
+// EPIC-002 demo seed: three departments total (the foundation's one from `core.ts` plus two more),
+// one pending `department_requests` row for the super admin's queue, and two pending join requests
+// waiting for the demo department's own boshqarma boshligʻi. `order: 20` -- after `accounts.ts` (10),
+// whose `EXTRA_USERS` this module assigns to memberships.
 //
 // RLS on `app.departments`/`app.memberships` requires `department_id = current_setting('app.department_id')`
 // on every write (`migrations/0005_rls.sql`) -- the single `tx` this module receives is bound to the
@@ -69,10 +69,18 @@ const NEW_DEPARTMENTS: NewDeptSpec[] = [
   },
 ]
 
-/** Exported for `structure.ts` (order 100), which places every one of these people in a boʻlim --
- * v1.1 critique SEV2 #24's "26 of 27 people sit in BOʻLIMSIZ". Recomputing the list there would be
- * two chances to disagree about who is in the demo department. */
-export const CORE_EXTRA_MEMBER_INDEXES = Array.from({ length: 10 }, (_, i) => i + 26) // 26..35
+/**
+ * Two people waiting at the demo department's door: `app.memberships` rows with
+ * `status = 'pending_approval'`, which is exactly what `GET /departments/:id/join-requests` lists for
+ * the boshqarma boshligʻi (`repo.ts`'s `listJoinRequests`). They are what makes the head's very first
+ * screen have something on it to *decide*, rather than only something to read.
+ *
+ * This used to be ten *active* memberships instead -- ten people with generated names and logins like
+ * `dilnoza.rashidov27` sitting in the flagship department's board next to the sixteen the story is
+ * about. Volume bought nothing and cost the whole cast its credibility; the rest of this pool now
+ * fills out the two other departments, where the demo only ever reads a headcount.
+ */
+const JOIN_REQUEST_USER_INDEXES = [26, 27]
 const PENDING_REQUEST_USER_INDEX = 36
 const PENDING_REQUEST_ID = demoId('department_request.licensing')
 
@@ -84,8 +92,8 @@ function membershipIdsFor(spec: NewDeptSpec): { headId: string; memberIds: strin
   }
 }
 
-const coreExtraMembershipIds = (): string[] =>
-  CORE_EXTRA_MEMBER_INDEXES.map((idx) => demoId(`membership.core.member.${idx}`))
+const joinRequestMembershipIds = (): string[] =>
+  JOIN_REQUEST_USER_INDEXES.map((idx) => demoId(`membership.core.member.${idx}`))
 
 async function createDepartmentWithHead(tx: Tx, spec: NewDeptSpec): Promise<number> {
   const departmentId = demoId(spec.key)
@@ -183,20 +191,23 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   )
   rows += updatedCore.length
 
-  // Ten more members join the existing demo department.
-  const coreMembershipIds = coreExtraMembershipIds()
-  const coreMemberships = CORE_EXTRA_MEMBER_INDEXES.map((idx, i) => ({
-    id: coreMembershipIds[i]!,
+  // Two join requests waiting for the demo department's head. `joined_at` is what the queue sorts and
+  // labels by ("2 kun oldin soʻradi"), so the two carry different, believable dates.
+  const requestIds = joinRequestMembershipIds()
+  const joinRequests = JOIN_REQUEST_USER_INDEXES.map((idx, i) => ({
+    id: requestIds[i]!,
     departmentId: DEMO_DEPARTMENT.id,
     userId: extraUserId(EXTRA_USERS[idx]!),
     role: 'member' as const,
+    status: 'pending_approval' as const,
+    joinedAt: new Date(i === 0 ? '2026-09-04T05:20:00Z' : '2026-09-05T11:40:00Z'),
   }))
-  const insertedCoreMemberships = await tx.drizzle
+  const insertedJoinRequests = await tx.drizzle
     .insert(schema.memberships)
-    .values(coreMemberships)
+    .values(joinRequests)
     .onConflictDoNothing()
     .returning({ id: schema.memberships.id })
-  rows += insertedCoreMemberships.length
+  rows += insertedJoinRequests.length
 
   // One pending department creation request (TECH-SPEC §2.2), from a user who belongs to no
   // department yet -- the "Litsenziyalash boshqarmasi" (licensing) request the super admin's approval
@@ -242,12 +253,12 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
     .returning({ id: departmentRequests.id })
   rows += deletedRequest.length
 
-  // The ten extra memberships in the core department -- the GUC already matches it.
-  const deletedCoreMemberships = await tx.drizzle
+  // The two pending join requests in the demo department -- the GUC already matches it.
+  const deletedJoinRequests = await tx.drizzle
     .delete(schema.memberships)
-    .where(inArray(schema.memberships.id, coreExtraMembershipIds()))
+    .where(inArray(schema.memberships.id, joinRequestMembershipIds()))
     .returning({ id: schema.memberships.id })
-  rows += deletedCoreMemberships.length
+  rows += deletedJoinRequests.length
 
   // The two departments this module created, in reverse creation order.
   for (const spec of [...NEW_DEPARTMENTS].reverse()) {

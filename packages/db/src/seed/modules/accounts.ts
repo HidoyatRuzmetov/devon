@@ -107,10 +107,49 @@ const TITLES = [
   'Boʻlim boshligʻi oʻrinbosari',
 ]
 
+/**
+ * The handful of these accounts that a viewer actually reads by name -- the two people waiting at the
+ * demo department's door (`departments.ts`'s join-request queue) and the one asking for a whole new
+ * boshqarma (its pending `department_requests` row). Everybody else in this pool fills out the two
+ * *other* departments, where the demo never zooms in past a headcount; these three are on screen with
+ * their names showing, so they are written by hand rather than assembled from the pools below.
+ *
+ * Overriding by index rather than appending keeps this module's user count exactly where it was,
+ * which is what `test/seed.idempotence.test.ts`'s `EXPECTED_USERS` asserts.
+ */
+const NAMED: Readonly<Record<number, Omit<ExtraUser, 'key' | 'locale'>>> = {
+  26: {
+    login: 'aziza.raximova',
+    givenName: 'Aziza',
+    familyName: 'Raximova',
+    patronymic: 'Baxtiyorovna',
+    title: 'Yetakchi mutaxassis',
+  },
+  27: {
+    login: 'doniyor.eshonqulov',
+    givenName: 'Doniyor',
+    familyName: 'Eshonqulov',
+    patronymic: 'Ravshanovich',
+    title: 'Dasturchi',
+  },
+  36: {
+    login: 'murod.hakimov',
+    givenName: 'Murod',
+    familyName: 'Hakimov',
+    patronymic: 'Sodiqovich',
+    title: 'Boshqarma boshligʻi',
+  },
+}
+
 function buildExtraUsers(): ExtraUser[] {
   const users: ExtraUser[] = []
   const count = 38
   for (let i = 0; i < count; i += 1) {
+    const named = NAMED[i]
+    if (named) {
+      users.push({ key: `user.extra.${i}`, ...named, locale: 'uz-Latn' })
+      continue
+    }
     const isMale = i % 2 === 0
     const given = isMale ? GIVEN_M[i % GIVEN_M.length]! : GIVEN_F[i % GIVEN_F.length]!
     const family = FAMILY[i % FAMILY.length]!

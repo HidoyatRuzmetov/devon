@@ -8,6 +8,7 @@
 // `DEMO_DEPARTMENT.id` for the whole seed transaction.
 import { sql } from 'drizzle-orm'
 import { DEMO_DEPARTMENT, DEMO_USERS } from '../fixtures.js'
+import { ALL_WORK_MEMBER_IDS, NEWCOMER_INDEX, NEWCOMER_JOINED_AT } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
@@ -233,6 +234,25 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
     returning id
   `)
   rows += templateInserted.length
+
+  // One run of that template, genuinely in progress. Feruza Xolmatova joined on 2026-08-31
+  // (`work-fixtures.ts`'s `NEWCOMER_JOINED_AT`) and the checklist fired for her the same morning: two
+  // of its items became cards in her column (`work.ts` gives index 15 exactly two, titled from
+  // `TITLES_NEWCOMER`), and the rest are still ahead of her. An onboarding feature whose runs table is
+  // empty is a feature nobody can tell is switched on.
+  //
+  // This table used to be described here as "a pure runtime ledger, never seeded" -- which was true
+  // and was also why the demo had a newcomer with no onboarding and an onboarding with no newcomer.
+  const runInserted = await tx.raw<{ id: string }>(sql`
+    insert into app.onboarding_runs (id, department_id, template_id, user_id, created_task_count, created_at)
+    values (
+      ${demoId('pages.onboarding-run.newcomer')}, ${DEPT}, ${templateId},
+      ${ALL_WORK_MEMBER_IDS[NEWCOMER_INDEX]!}, 2, ${NEWCOMER_JOINED_AT.toISOString()}::timestamptz
+    )
+    on conflict (id) do nothing
+    returning id
+  `)
+  rows += runInserted.length
 
   return rows
 }

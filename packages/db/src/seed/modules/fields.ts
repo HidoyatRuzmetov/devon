@@ -17,6 +17,7 @@ import { WORK_DEMO_USERS } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 import * as schema from '../../schema/fields.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 950
 
@@ -170,33 +171,52 @@ const DEFS = [
   },
 ] as const
 
-/** Six of the sixteen colleagues have answered "Taʼlim"; four of them also listed languages. The rest
- * are deliberately blank, because an empty progress bar is the whole point of the demo: the head
- * presses "Soʻrash" and something actually happens. */
+/** Fourteen of the sixteen colleagues have answered "Taʼlim" and eleven of them also listed
+ * languages: a field the department has actually adopted looks like a progress bar near the end, not
+ * near the start. The two who have not answered are the newcomer, who joined six days ago, and
+ * Ulugʻbek, who has simply not got round to it -- which is what gives the head's "Toʻldirishni
+ * soʻrash" button two real people to ask instead of a hypothetical. */
 const EDUCATION_ANSWERS: readonly [number, string][] = [
   [0, 'ilmiy_daraja'],
   [1, 'magistr'],
   [2, 'bakalavr'],
   [3, 'magistr'],
+  [4, 'magistr'],
   [5, 'bakalavr'],
+  [6, 'magistr'],
   [7, 'magistr'],
+  [8, 'bakalavr'],
+  [9, 'ilmiy_daraja'],
+  [10, 'bakalavr'],
+  [11, 'magistr'],
+  [12, 'bakalavr'],
+  [13, 'magistr'],
 ]
 
 const LANGUAGE_ANSWERS: readonly [number, string[]][] = [
   [0, ['ruscha', 'inglizcha']],
   [1, ['ruscha']],
+  [2, ['inglizcha']],
   [3, ['inglizcha', 'turkcha']],
-  [5, ['ruscha', 'inglizcha']],
+  [4, ['ruscha', 'inglizcha']],
+  [5, ['ruscha']],
+  [6, ['inglizcha']],
+  [8, ['ruscha']],
+  [9, ['ruscha', 'inglizcha']],
+  [11, ['ruscha']],
+  [12, ['inglizcha', 'turkcha']],
 ]
 
-/** Two people the head is still waiting on -- one asked three days ago (so the reminder sweep has
- * something real to find) and one asked this morning. */
+/** The two people the head is still waiting on. Feruza (index 15) is the newcomer -- her row is the
+ * one the presenter presses "Soʻrash" on, and the Telegram message that arrives is the moment the
+ * demo is built around. Ulugʻbek (14) was asked three days ago, so the reminder sweep has something
+ * real to find as well. */
 const OPEN_REQUESTS: readonly [number, number][] = [
-  [4, 3],
-  [6, 0],
+  [15, 1],
+  [14, 3],
 ]
 
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+const NOW = DEMO_NOW
 
 function daysAgo(days: number): Date {
   return new Date(NOW.getTime() - days * 24 * 60 * 60_000)
