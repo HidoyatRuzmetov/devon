@@ -555,10 +555,27 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
       ),
     )
   }
-  deleted += await byIds(
-    'app.automation_rules',
-    AUTOMATIONS.map((a) => a.id),
+  // v1.1 critique SEV2 #24, found running the reseed the fix itself asks for: `seed:reset --demo`
+  // died on `automation_runs_rule_id_fkey`. The engine writes a run row per card whenever a seeded
+  // rule fires -- 79 of them on the demo box -- and those rows are nobody's to name: no seed module
+  // wrote them, so no seed module's `reset()` deleted them, and the rule they point at could never
+  // be removed. "Reseed before the demo" was therefore impossible on any instance where the
+  // automations had ever actually run.
+  //
+  // A rule's runs are part of that rule, not independent data: deleting the rule and keeping its
+  // history would leave rows referring to something that no longer exists. So the runs of exactly
+  // these rule ids go first, by `rule_id` rather than by a list of ids this module would have to
+  // have predicted. Same shape as `accounts.ts`'s sessions/memberships sweep, and for the same
+  // reason -- the app wrote rows the seed did not.
+  const automationIds = AUTOMATIONS.map((a) => a.id)
+  const purgedRuns = await tx.raw<{ id: string }>(
+    sql`delete from app.automation_runs
+        where rule_id = any(${sql.raw(`array[${automationIds.map((id) => `'${id}'`).join(',')}]::uuid[]`)})
+        returning id`,
   )
+  deleted += purgedRuns.length
+
+  deleted += await byIds('app.automation_rules', automationIds)
   deleted += await byIds(
     'app.goals',
     GOALS.map((g) => g.id),

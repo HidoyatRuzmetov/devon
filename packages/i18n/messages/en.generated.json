@@ -17,7 +17,9 @@
         "work": "Cards",
         "personal": "Personal",
         "events": "Events",
-        "inbox": "Inbox"
+        "inbox": "Inbox",
+        "peopleTable": "People",
+        "workload": "Load"
       }
     },
     "skip": "Skip to main content",
@@ -155,7 +157,7 @@
       "dueFromMe": {
         "title": "Due from me",
         "body": "{open} open, {overdue} overdue",
-        "cta": "View my work"
+        "cta": "Assigned to me"
       },
       "needsMyDecision": {
         "title": "Needs my decision",
@@ -190,7 +192,20 @@
         "onTimeQuestion": "What share of the work you completed was delivered on time?",
         "focusQuestion": "How much focused time did you get this week?"
       },
-      "sectionTiles": "Today"
+      "sectionTiles": "Today",
+      "givenOverdue": {
+        "title": "Work I gave out is late",
+        "body": "{count} items I gave out are past their date",
+        "empty": "Everything I gave out is on time",
+        "cta": "Work I gave out"
+      },
+      "myLoad": {
+        "title": "My load",
+        "hours": "{hours} h of {capacity} h",
+        "cards": "{count} cards this week",
+        "meaning": "Your work due this week against your own weekly capacity.",
+        "meaningCards": "Less than half the department's work is estimated, so this counts cards, not hours."
+      }
     },
     "head": {
       "section": "Management view",
@@ -257,7 +272,8 @@
         "meaning": "The goals furthest behind come first. Progress is computed from the cards themselves.",
         "cta": "All goals",
         "empty": "No goals yet. Set the first one — progress computes itself.",
-        "progressAria": "{title} — progress"
+        "progressAria": "{title} — progress",
+        "ofCap": "of cap"
       },
       "catchUp": {
         "title": "AI briefing",
@@ -390,7 +406,10 @@
         "checkHealthDesc": "Watch the database, queue, storage and other services",
         "healthTitle": "System health",
         "healthSeeAll": "See all",
-        "healthUnavailable": "Health status is unavailable right now."
+        "healthUnavailable": "Health status is unavailable right now.",
+        "backupsUnconfigured": "Backups are not configured — nothing on this instance is being backed up.",
+        "backupsConfigure": "Configure",
+        "userCountBreakdown": "By department"
       },
       "departments": {
         "searchPlaceholder": "Search by department name",
@@ -951,14 +970,16 @@
       "resetToast": "The monthly AI budget has reset",
       "editLabel": "Monthly budget (UZS)",
       "save": "Save the budget",
-      "invalidAmount": "Enter a valid amount"
+      "invalidAmount": "Enter a valid amount",
+      "currency": "UZS"
     },
     "flags": {
       "title": "Helpers",
       "description": "Read what each helper does and switch on the ones this department needs. Every one is off until you switch it on.",
       "headOnly": "Only the head of the department can change these.",
       "headOnlyBadge": "Head only",
-      "whereLabel": "Where:"
+      "whereLabel": "Where:",
+      "spentThisMonth": "This month: {cost}"
     },
     "usage": {
       "empty": {
@@ -981,7 +1002,31 @@
         "schema_invalid_after_retry": "Malformed answer",
         "provider_error": "Provider error",
         "blocked_budget": "Stopped by the budget",
-        "blocked_flag": "Helper switched off"
+        "blocked_flag": "Helper switched off",
+        "timeout": "Timed out"
+      },
+      "latencySeconds": "{seconds} s",
+      "filter": {
+        "feature": "Helper",
+        "status": "Outcome",
+        "range": "Period",
+        "allFeatures": "All",
+        "allStatuses": "All",
+        "days7": "Last 7 days",
+        "days30": "Last 30 days",
+        "days90": "Last 90 days",
+        "allTime": "All time",
+        "count": "{shown} of {total}"
+      },
+      "filtered": {
+        "title": "Nothing matches this filter",
+        "body": "Pick another helper, another outcome or a wider period.",
+        "action": "Clear the filters"
+      },
+      "page": {
+        "previous": "Previous",
+        "next": "Next",
+        "of": "Page {page} of {pages}"
       }
     },
     "result": {
@@ -998,7 +1043,7 @@
     },
     "ask": {
       "label": "Ask the department's own records",
-      "placeholder": "For example: who is preparing the EGDI package?",
+      "placeholder": "For example: who is preparing the monthly report?",
       "submit": "Ask",
       "hint": "The answer comes only from this department's cards, comments, pages and events. Every answer carries a link to its source.",
       "answerTitle": "Answer: {question}",
@@ -1042,7 +1087,9 @@
       "forbidden": "This helper is switched off, or the budget is spent",
       "runFailed": "AI could not answer just now",
       "headOnly": "This helper is for the head of the department only",
-      "featureDisabled": "This helper is switched off in the department settings. Turn it on from the AI page."
+      "featureDisabled": "This helper is switched off in the department settings. Turn it on from the AI page.",
+      "timeout": "The AI did not answer within the time allowed. Try again.",
+      "retry": "Try again"
     },
     "translateTarget": {
       "label": "Into which language",
@@ -1181,7 +1228,7 @@
         "label": "Break into steps",
         "description": "Splits one card into steps someone can actually do, each with a rough time.",
         "where": "The checklist section inside a card, and the personal workspace row.",
-        "example": "“Prepare the EGDI package” → gather data, draft the schedule, agree with the unit, final copy."
+        "example": "“Prepare the monthly report” → gather data, draft the schedule, agree with the unit, final copy."
       },
       "planSprint": {
         "label": "Plan the period",
@@ -1241,7 +1288,7 @@
         "label": "Who should take this",
         "description": "Proposes three candidates by workload and experience. The reason is only ever workload or experience, never a judgement. The head chooses.",
         "where": "The owner field on a card.",
-        "example": "“EGDI report” → Nodira (4 items on this subject), Anvar (heavily loaded), Dilnoza."
+        "example": "“Monthly report” → Nodira (4 items on this subject), Anvar (heavily loaded), Dilnoza."
       },
       "duplicateCheck": {
         "label": "Find duplicates",
@@ -1253,7 +1300,7 @@
         "label": "Ask the department's own records",
         "description": "Answers a question using only this department's cards, comments, pages and events, citing each source. If it is not there, it says so.",
         "where": "The “Ask” section on the AI page, and Ctrl+K.",
-        "example": "“Who is preparing the EGDI package?” → “Nodira Karimova, deadline 18 September”, linked to the card."
+        "example": "“Who is preparing the monthly report?” → “Nodira Karimova, deadline 18 September”, linked to the card."
       },
       "weeklySummary": {
         "label": "Weekly summary (retired)",
@@ -1267,6 +1314,15 @@
         "where": "No screen of its own any more.",
         "example": "Appears in older usage records."
       }
+    },
+    "catalogue": {
+      "costPerCall": "~{cost} / request",
+      "costEstimated": "Estimated cost of one request — depends on how much it is given to read."
+    },
+    "pending": {
+      "hint": "This can take up to a minute.",
+      "cancel": "Cancel",
+      "cancelled": "The request was cancelled."
     }
   },
   "analytics": {
@@ -1427,7 +1483,7 @@
     "emptyTitle": "No rules yet",
     "emptyBody": "Add the first one — for example, tell the head when a card goes overdue.",
     "forbiddenTitle": "This page is for the head of the department",
-    "forbiddenBody": "Only the head of the department configures automation rules.",
+    "forbiddenBody": "Only the department head sets up rules. Ask your department head if you need access.",
     "runsTitle": "Run log",
     "runsDescription": "Every run — with what it did, or why it was skipped.",
     "runsEmptyTitle": "Nothing has run yet",
@@ -1439,7 +1495,11 @@
       "lastError": "Last error: {error}",
       "runCount": "Ran {count} times",
       "lastRun": "Last run: {at}",
-      "neverRun": "Has not run yet"
+      "neverRun": "Has not run yet",
+      "edit": "Edit the rule {name}",
+      "duplicate": "Duplicate the rule {name}",
+      "copyOf": "{name} — copy",
+      "suppressed": "This rule is off now — those {count} runs happened while it was on, and nothing fires for new cards."
     },
     "trigger": {
       "cardCreated": "When a card is created",
@@ -1509,8 +1569,29 @@
         "filterDidNotMatch": "The card did not match the filter",
         "alreadyAppliedToday": "Already applied today",
         "other": "Skipped"
-      }
-    }
+      },
+      "batch": "{count} cards"
+    },
+    "editTitle": "Edit rule",
+    "save": "Save",
+    "saved": "Rule saved",
+    "saveFailed": "Could not save the rule",
+    "runsFilter": {
+      "rule": "Rule",
+      "status": "Outcome",
+      "allRules": "All rules",
+      "allStatuses": "All",
+      "count": "{groups} groups · {runs} runs"
+    },
+    "runsFilteredTitle": "Nothing matches this filter",
+    "runsFilteredBody": "Pick another rule or another outcome.",
+    "runsClearFilters": "Clear the filters",
+    "runsPage": {
+      "previous": "Previous",
+      "next": "Next",
+      "of": "Page {page} of {pages}"
+    },
+    "forbiddenAction": "Open the board"
   },
   "calendar": {
     "title": "Calendar",
@@ -1834,7 +1915,8 @@
       "transferredToast": "Headship transferred",
       "transferDialogTitle": "Transfer headship",
       "removeDialogTitle": "Remove member from the department",
-      "leaveDialogTitle": "Leave the department"
+      "leaveDialogTitle": "Leave the department",
+      "rowMenuAria": "Actions for {name}"
     },
     "settings": {
       "title": "Department settings",
@@ -1858,7 +1940,9 @@
       "requestDeletion": "Request department deletion",
       "requestDeletionConfirm": "The super admin will review this request. This cannot be undone.",
       "deletionRequested": "Deletion requested",
-      "typedConfirmLabel": "Type \"{name}\" to confirm"
+      "typedConfirmLabel": "Type \"{name}\" to confirm",
+      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department head manages these.",
+      "readOnlyNotice": "Your department head manages these settings. You can see them, but not change them."
     },
     "switcher": {
       "label": "Switch department",
@@ -2897,8 +2981,10 @@
           "events": "Events",
           "onboarding": "Onboarding",
           "activity": "Activity",
-          "personal_aggregate": "Personal (aggregate only)"
-        }
+          "personal_aggregate": "Personal (aggregate only)",
+          "field": "Custom fields"
+        },
+        "fieldDescription": "A column this department created — the answer is filled in by the person themselves."
       },
       "column": {
         "name": "Name",
@@ -2968,7 +3054,8 @@
         "avg": "Average",
         "sum": "Total",
         "min": "Lowest",
-        "max": "Highest"
+        "max": "Highest",
+        "filledOf": "{filled} of {total}"
       },
       "bulk": {
         "selected": "{count} people selected",
@@ -2980,7 +3067,8 @@
         "assign": "Give {name} a card",
         "assignShort": "Give a card",
         "board": "Open the board column for {name}",
-        "message": "Message {name} on Telegram"
+        "message": "Message {name} on Telegram",
+        "more": "More actions for {name}"
       },
       "views": {
         "label": "Saved views",
@@ -3012,7 +3100,16 @@
         "body": "The people table and its indicators are for the department head. The directory is open to you.",
         "action": "Open the directory"
       },
-      "resize": "Resize the {name} column"
+      "resize": "Resize the {name} column",
+      "askToFill": {
+        "column": "Ask to fill",
+        "row": "Ask to fill {count} fields",
+        "bulk": "Ask to fill ({count})",
+        "asked": "Asked {people} people",
+        "reminded": "Reminded {people} people",
+        "nothingToAsk": "Nobody left to ask — everything is filled in.",
+        "failed": "Could not send the request"
+      }
     },
     "indicator": {
       "openCards": {
@@ -3188,7 +3285,8 @@
           "title": "Load by project",
           "question": "Which projects is the open work in?",
           "empty": "No open work."
-        }
+        },
+        "notEnoughData": "Not enough data yet — reports fill out after twelve weeks."
       },
       "risk": {
         "title": "Work at risk",
@@ -3268,7 +3366,8 @@
         "unavailable": {
           "title": "Fields are not connected yet",
           "body": "Person fields are not switched on for this department."
-        }
+        },
+        "reminded": "Reminder sent"
       },
       "activity": {
         "empty": {
@@ -3819,7 +3918,8 @@
       "searchPlaceholder": "Search people",
       "unassignedGroup": "Unassigned",
       "memberCard": {
-        "noUnit": "No unit assigned"
+        "noUnit": "No unit assigned",
+        "openActions": "{name} — open actions"
       },
       "filters": {
         "label": "Filter by unit",
@@ -3835,10 +3935,12 @@
         "unit": "Unit",
         "openBoardColumn": "Open board column",
         "filterByUnitAria": "View only «{unit}»",
-        "copyLink": "Copy link",
+        "copyLink": "Link",
         "copyLinkAria": "Copy a link to {name}'s profile",
         "linkCopied": "Link copied",
-        "openProfile": "Open profile"
+        "openProfile": "Open profile",
+        "assignTask": "Give a card",
+        "message": "Message on Telegram"
       },
       "openTable": "Indicator table",
       "layout": {
@@ -3954,7 +4056,7 @@
       "collapseAllColumns": "Collapse every column"
     },
     "quickAdd": {
-      "placeholder": "Quick add: \"Nodira: EGDI package, friday\"",
+      "placeholder": "Quick add: \"Nodira: prepare the monthly report by friday\"",
       "created": "\"{title}\" created",
       "error": "Could not create the card",
       "unknownAssignee": "No member matches \"{name}\"",
@@ -4001,7 +4103,8 @@
         "friday": "friday",
         "saturday": "saturday",
         "sunday": "sunday"
-      }
+      },
+      "emptyChip": "{field}: empty"
     },
     "field": {
       "title": "Title",
@@ -4021,7 +4124,8 @@
       "activity": "Activity",
       "project": "Project",
       "labels": "Labels",
-      "unit": "Unit"
+      "unit": "Unit",
+      "estimate": "Estimate"
     },
     "card": {
       "peekTitle": "Card details",
@@ -4411,7 +4515,23 @@
       "capacityLabel": "Weekly capacity (hours)",
       "capacitySaved": "Capacity saved",
       "capacityFailed": "Could not save the capacity",
-      "capacityInvalid": "Enter between 0 and 168 hours"
+      "capacityInvalid": "Enter between 0 and 168 hours",
+      "legendTitle": "What the colours mean",
+      "legendFreeHours": "Under 80% of capacity",
+      "legendNearHours": "80–100%",
+      "legendOverHours": "Over 100%",
+      "legendFreeCount": "Fewer than {near} cards",
+      "legendNearCount": "{near}–{over} cards",
+      "legendOverCount": "More than {over} cards",
+      "warningTitle": "This grid is not showing all the work",
+      "warningNoDue": "{count} cards have no due date",
+      "warningNoEstimate": "{count} cards have no estimate",
+      "warningOpenLink": "Open the list",
+      "modeCountBadge": "By card count",
+      "modeCountWhy": "Only {pct}% of the open work is estimated, so the colour is counted in cards, not hours.",
+      "modeHoursBadge": "By hours",
+      "currentWeek": "This week",
+      "cellSummaryCount": "{name}, {week}: {cards} cards (allowance {allowance})"
     },
     "goals": {
       "title": "Goals",
@@ -4454,7 +4574,16 @@
       "emptyTitle": "No goals set",
       "emptyBodyHead": "Set the first goal — progress is computed from the cards.",
       "forbiddenTitle": "This page is for the head of the department",
-      "forbiddenBody": "Only the head of the department sees and sets goals."
+      "forbiddenBody": "Only the department head sees and sets goals. Ask your department head if you need access.",
+      "edit": "Edit the goal {title}",
+      "editTitle": "Edit goal",
+      "save": "Save",
+      "saved": "Goal saved",
+      "saveFailed": "Could not save the goal",
+      "percentTarget": "(target: {target}%)",
+      "capUsed": "{pct}% of the cap",
+      "overCap": "{over} over the cap",
+      "forbiddenAction": "Open the board"
     }
   },
   "common": {

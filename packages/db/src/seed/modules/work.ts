@@ -412,27 +412,40 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   const rows = buildAllStandaloneRows()
   let deleted = 0
 
+  // v1.1 critique SEV2 #24, found running the reseed the fix itself asks for. These three deletes
+  // named only the ids this module *seeded* -- but a demo box is a box people (and agents driving
+  // the real API) have used: every comment written on a seeded card, every checklist item ticked
+  // onto one, and every activity row the engine appended when an automation fired belongs to a card
+  // this module is about to delete, and none of them had an id any seed module could have predicted.
+  // `card_activity_card_id_fkey` therefore blocked the card delete on any instance where the product
+  // had actually been used, which is every instance worth reseeding.
+  //
+  // Deleting by `card_id` rather than by id is both correct and narrower than it looks: the cards
+  // named here are exactly the ones about to be removed, so nothing survives that could refer to
+  // them. Same shape as `accounts.ts`'s memberships sweep and `work-plus.ts`'s automation runs.
+  const cardIds = idsOf(rows.cards)
+
   const deletedActivity = await tx.drizzle
     .delete(workSchema.cardActivity)
-    .where(inArray(workSchema.cardActivity.id, idsOf(rows.activity)))
+    .where(inArray(workSchema.cardActivity.cardId, cardIds))
     .returning({ id: workSchema.cardActivity.id })
   deleted += deletedActivity.length
 
   const deletedComments = await tx.drizzle
     .delete(workSchema.cardComments)
-    .where(inArray(workSchema.cardComments.id, idsOf(rows.comments)))
+    .where(inArray(workSchema.cardComments.cardId, cardIds))
     .returning({ id: workSchema.cardComments.id })
   deleted += deletedComments.length
 
   const deletedChecklist = await tx.drizzle
     .delete(workSchema.cardChecklistItems)
-    .where(inArray(workSchema.cardChecklistItems.id, idsOf(rows.checklist)))
+    .where(inArray(workSchema.cardChecklistItems.cardId, cardIds))
     .returning({ id: workSchema.cardChecklistItems.id })
   deleted += deletedChecklist.length
 
   const deletedCards = await tx.drizzle
     .delete(workSchema.cards)
-    .where(inArray(workSchema.cards.id, idsOf(rows.cards)))
+    .where(inArray(workSchema.cards.id, cardIds))
     .returning({ id: workSchema.cards.id })
   deleted += deletedCards.length
 

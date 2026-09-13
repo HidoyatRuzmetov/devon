@@ -16,7 +16,7 @@
 // `unit_roles_scope`/`memberships_write`/`departments_write` all compare `department_id` (or `id`) to
 // `app.current_department_id()`, which `demo.ts`'s shared transaction leaves pointed at
 // `DEMO_DEPARTMENT` -- so those rows are written and deleted under `scope.ts`'s `asDepartment`.
-import { inArray } from 'drizzle-orm'
+import { inArray, sql } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import * as structureSchema from '../../schema/structure.js'
 import { ALL_WORK_MEMBER_IDS } from '../work-fixtures.js'
@@ -413,6 +413,14 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
         ),
       )
       .returning({ id: schema.memberships.id })
+
+    // v1.1 critique SEV2 #24, found running the reseed the fix itself asks for. The analytics
+    // rollup job writes an `app.analytics_daily` row per department per day; nothing in any seed
+    // module names those rows, so nothing deleted them, and `analytics_daily_department_id_fkey`
+    // blocked this department delete on every instance where the job had ever run. Exactly the
+    // shape `accounts.ts`'s memberships sweep documents: the app wrote rows the seed did not, and
+    // the department is about to be gone either way.
+    await tx.raw(sql`delete from app.analytics_daily where department_id = ${ATI_DEPARTMENT_ID}`)
 
     const deletedDepartments = await tx.drizzle
       .delete(schema.departments)

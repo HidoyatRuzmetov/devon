@@ -119,7 +119,7 @@
         "copyLinkAria": "Copy a link to {name}'s profile",
         "linkCopied": "Link copied",
         "openProfile": "Open profile",
-        "assignTask": "Assign a task",
+        "assignTask": "Give a card",
         "message": "Message on Telegram"
       },
       "openTable": "Indicator table",
