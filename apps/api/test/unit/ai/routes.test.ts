@@ -121,7 +121,12 @@ describe('POST /api/v1/ai/features/:feature/run', () => {
     await app.close()
   })
 
-  it('rejects an unknown feature id (schema validation, not a 500)', async () => {
+  // v1.1 integration: a made-up feature id never reaches schema validation any more, because this
+  // caller has no department and `plugins/authorize.ts` now refuses at `preValidation` (see that
+  // file). What the test is actually for -- "a nonsense id is a 4xx, never a 500" -- is unchanged,
+  // and is now asserted for both callers: refused for one who may not run features at all, and
+  // 422'd for one who may.
+  it('rejects an unknown feature id with a 4xx, never a 500', async () => {
     const state = createFakeState()
     const user = await seedUser(state, { login: 'nodira', password: PASSWORD })
     const { app } = await buildTestApp(state)
@@ -133,27 +138,44 @@ describe('POST /api/v1/ai/features/:feature/run', () => {
       headers: { cookie, 'x-csrf-token': csrf },
       payload: { input: {} },
     })
-    expect(res.statusCode).toBe(422)
+    expect(res.statusCode).toBe(403)
+    expect(res.json().code).toBe('forbidden')
     await app.close()
   })
 
-  // H7.4 "AI input length": checked in the route's own `preValidation` (index.ts), ahead of both
-  // schema validation and the permission preHandler -- proven here by asserting the 422 fires for a
-  // completely unauthenticated caller too, exactly like the app-wide JSON-depth/body-size limits.
-  it('rejects an oversized input before authentication or permission checks even run', async () => {
-    const { app } = await buildTestApp()
-    const res = await app.inject({
-      method: 'POST',
+  // H7.4 "AI input length" is the route's own `preValidation` hook (index.ts). v1.1 integration made
+  // `plugins/authorize.ts` a *global* `preValidation` hook, and Fastify runs a phase's global hooks
+  // before a route's own -- so the size guard is now reached only by a caller who is allowed to run
+  // the feature at all, which is exactly the caller who could otherwise spend the department's
+  // tokens. Refusing a stranger (401) and a member with no department (403) without measuring their
+  // payload is the cheaper answer of the two and reveals less.
+  //
+  // This fake-state harness cannot mint a member *with* a department (`fake-deps.ts`: memberships
+  // are always `[]`, see this file's header), so the 422 itself is proven where a real department
+  // exists -- `packages/ai`'s own limit tests and the integration profile. What is asserted here is
+  // the ordering that changed.
+  it('refuses an oversized input at the door, before it is ever measured', async () => {
+    const oversized = {
+      method: 'POST' as const,
       url: '/api/v1/ai/features/translate/run',
       // Default AI_MAX_INPUT_BYTES is 32 KiB; comfortably over that, well under the app-wide
-      // HTTP_BODY_LIMIT_BYTES (1 MiB) so this exercises the AI-specific limit, not the generic one.
+      // HTTP_BODY_LIMIT_BYTES (1 MiB) so this would exercise the AI-specific limit, not the generic one.
       payload: { input: { text: 'x'.repeat(64 * 1024) } },
-    })
-    expect(res.statusCode).toBe(422)
-    expect(res.json()).toMatchObject({
-      code: 'validation_failed',
-      errors: [{ path: 'input', code: 'too_large' }],
-    })
+    }
+
+    const anonymous = await buildTestApp()
+    const anonRes = await anonymous.app.inject(oversized)
+    expect(anonRes.statusCode).toBe(401)
+    expect(anonRes.json()).not.toHaveProperty('errors')
+    await anonymous.app.close()
+
+    const state = createFakeState()
+    const user = await seedUser(state, { login: 'nodira', password: PASSWORD })
+    const { app } = await buildTestApp(state)
+    const { cookie, csrf } = await signIn(app, user.login)
+    const res = await app.inject({ ...oversized, headers: { cookie, 'x-csrf-token': csrf } })
+    expect(res.statusCode).toBe(403)
+    expect(res.json().code).toBe('forbidden')
     await app.close()
   })
 })

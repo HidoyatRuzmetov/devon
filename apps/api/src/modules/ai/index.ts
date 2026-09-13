@@ -197,14 +197,19 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         body: runFeatureBodySchema,
         response: { 200: runFeatureResponseSchema },
       },
-      // H7.4 "AI input length": checked in `preValidation`, ahead of the permission `preHandler` and
-      // ahead of `@devon/ai`'s own per-feature `inputSchema` (which only runs once `input` has
-      // already been hashed for the cache key and is about to reach a provider call) -- an oversized
-      // body is rejected before spending either a permission lookup or a provider call on it, the
-      // same "cheapest checks first" posture `app.ts`'s app-wide body-size/JSON-depth limits already
-      // have. `req.body` here is the parsed JSON object (parsing happens before `preValidation`) but
-      // not yet Zod-validated against `runFeatureBodySchema`, so `input` may not even be an object
-      // yet -- the guard below only measures it when it plausibly is one.
+      // H7.4 "AI input length": checked ahead of `@devon/ai`'s own per-feature `inputSchema` (which
+      // only runs once `input` has already been hashed for the cache key and is about to reach a
+      // provider call) -- an oversized body never costs a provider call.
+      //
+      // v1.1 integration: `plugins/authorize.ts` is a *global* `preValidation` hook now, and Fastify
+      // runs a phase's global hooks before a route's own -- so this guard is reached only by a caller
+      // who may run the feature, which is exactly the caller who could otherwise spend the
+      // department's tokens. A stranger is refused without their payload being measured at all,
+      // which is cheaper still.
+      //
+      // `req.body` here is the parsed JSON object (parsing happens before `preValidation`) but not
+      // yet Zod-validated against `runFeatureBodySchema`, so `input` may not even be an object yet --
+      // the guard below only measures it when it plausibly is one.
       preValidation: async (req, reply) => {
         const body = req.body as { input?: unknown } | undefined
         if (body && typeof body === 'object' && 'input' in body) {

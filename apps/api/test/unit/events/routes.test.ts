@@ -79,10 +79,21 @@ describe('POST /api/v1/events', () => {
     await app.close()
   })
 
-  it('still 422s a malformed body for an unauthenticated caller (schema validation runs before the permission preHandler, same as every other route)', async () => {
+  // v1.1 integration: this used to assert 422 -- schema validation ran ahead of the permission
+  // check, so a caller with no session learned the shape of the body before being told they may not
+  // send one. `plugins/authorize.ts` now runs at `preValidation` (its own comment has the
+  // `/admin/wipe/start` case that forced the change), so the refusal comes first and the body is
+  // never judged. The assertion is deliberately the stronger one: a stranger gets exactly "who are
+  // you", and nothing about this endpoint.
+  it('refuses an unauthenticated caller before it parses their body -- no schema hints for a stranger', async () => {
     const { app } = await buildTestApp()
     const res = await app.inject({ method: 'POST', url: '/api/v1/events', payload: {} })
-    expect(res.statusCode).toBe(422)
+    expect(res.statusCode).toBe(401)
+    expect(res.json()).toMatchObject({ code: 'unauthenticated' })
+    // The point of the test: no field-by-field validation report, which is what would name this
+    // endpoint's body. (`title` in the payload above is an RFC 9457 member of every Problem, so the
+    // absence of `errors` is the honest assertion here.)
+    expect(res.json()).not.toHaveProperty('errors')
     await app.close()
   })
 })

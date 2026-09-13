@@ -196,10 +196,26 @@ export default fp(async function authorizePlugin(app: FastifyInstance) {
     }
   })
 
-  app.addHook('preHandler', async (req, reply) => {
-    // Fastify runs the global `preHandler` chain ahead of a 404 too (no matched route -> no
-    // `config`), so an admin-scoped `setNotFoundHandler` can call `denyForSubject` itself (see
-    // `src/modules/admin.ts`) instead of this hook ever seeing a permission for it.
+  /**
+   * `preValidation`, not `preHandler`: **refuse first, then read the body.**
+   *
+   * Found live in the v1.1 integration walk, hitting every head-only route as `demo.xodim`. The
+   * permission check ran after schema validation, so a xodim POSTing `{}` to `/admin/wipe/start` got
+   * back `422 {"errors":[{"path":"/phrase"},{"path":"/password"}]}` -- the field names of the wipe
+   * switch, handed to someone who may not touch it -- and the same for `/automations/pause-all`,
+   * `/fields/defs`, `/people/views` and `PUT /departments/:id/features`. The action was never
+   * performed (a valid body answered 403), so this is disclosure rather than a breach; refusing
+   * before parsing is still the right order, and it is one line.
+   *
+   * Safe at this phase because `req.params` is populated by the router before any hook runs, and no
+   * `subject()` in this codebase reads `req.body` or `req.query` -- the shapes a subject is built
+   * from are the actor and the path (grep-checked; `MODULE-GUIDE.md` states the contract).
+   *
+   * Fastify runs the global chain ahead of a 404 too (no matched route -> no `config`), so an
+   * admin-scoped `setNotFoundHandler` can call `denyForSubject` itself (see `src/modules/admin.ts`)
+   * instead of this hook ever seeing a permission for it.
+   */
+  app.addHook('preValidation', async (req, reply) => {
     const permission = req.routeOptions.config?.permission
     if (!permission) return
     if ('public' in permission && permission.public) return

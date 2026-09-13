@@ -85,7 +85,12 @@ export default fp(async function csrfGuardPlugin(app: FastifyInstance) {
     }
   })
 
-  app.addHook('preHandler', async (req, reply) => {
+  // `preValidation`, for the same reason `authorize.ts` is: a request this guard is going to refuse
+  // should not have its body parsed and schema-checked first, because the validation error is itself
+  // a description of the endpoint. Registered after `session` and `authorize` in `app.ts`, and
+  // Fastify runs same-phase hooks in registration order, so the sequence is unchanged:
+  // authenticate -> authorise -> prove intent -> validate -> handle.
+  app.addHook('preValidation', async (req, reply) => {
     if (SAFE_METHODS.has(req.method)) return
     // No session -> no ambient authority to forge with. (`authorize.ts` has already answered 401 for
     // every route that needed one; a public route is meant to be reachable without a cookie.)

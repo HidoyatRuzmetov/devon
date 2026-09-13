@@ -40,7 +40,12 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
   app.decorateRequest('sessionId', null)
   app.decorateRequest('csrfHash', null)
 
-  app.addHook('preHandler', async (req) => {
+  // `preValidation`, in lockstep with `authorize.ts`: the permission check moved to that phase so a
+  // request is refused before its body is parsed (see that file's comment), and a permission check
+  // needs `req.actor`. Nothing here reads a validated body or query -- it reads cookies -- so the
+  // phase is free. `app.ts` registers this plugin before `authorize`, and Fastify runs same-phase
+  // hooks in registration order, so the actor still exists by the time the permission is resolved.
+  app.addHook('preValidation', async (req) => {
     const cookieName = app.devonConfig.SESSION_COOKIE_NAME
     const raw = req.cookies[cookieName]
     if (!raw) return
