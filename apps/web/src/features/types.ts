@@ -4,7 +4,7 @@
 // what `@devon/ui`'s `NavEntry`/`CommandPaletteGroup` already expect, so the shell never needs a
 // feature-specific adapter.
 import type * as React from 'react'
-import type { NavEntry } from '@devon/ui'
+import type { NavContext, NavEntry } from '@devon/ui'
 
 export type FeatureRoute = {
   /** Exact pathname this route matches, e.g. `/people`. No params/wildcards in this first version --
@@ -28,6 +28,12 @@ export type FeatureCommandEntry = {
    * `string` for the same reason `NavEntry.action` is one; an id the registry does not know resolves
    * to "cannot". Omit for a destination every active member may reach. */
   action?: string
+  /** v1.1 critique SEV2 #11: the session condition this entry needs, evaluated against the same
+   * `NavContext` the sidebar's own `visibleWhen` gets. Some entries are gated by *state* rather than
+   * by permission -- "Boʻlim yaratish" is the whole example: creating a department raises a
+   * super-admin approval request, and SPEC §2.2 says the CTA exists only in the no-department state.
+   * `can()` has nothing to say about that, because it is not a permission question. */
+  visibleWhen?: (ctx: NavContext) => boolean
 }
 
 /** A "create this" entry for the shell's quick-add button (UI-OVERHAUL.md §2 row 1). Declarative on
@@ -43,6 +49,8 @@ export type FeatureQuickAddEntry = {
   shortcut?: string
   /** As `FeatureCommandEntry.action`: the create permission this row needs, resolved by the shell. */
   action?: string
+  /** As `FeatureCommandEntry.visibleWhen`. */
+  visibleWhen?: (ctx: NavContext) => boolean
 }
 
 export type FeatureManifest = {

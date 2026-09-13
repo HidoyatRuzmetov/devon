@@ -68,6 +68,12 @@ const manifest: FeatureManifest = {
       id: 'departments.create',
       labelKey: 'departments.landing.createCta',
       path: '/departments/new',
+      // v1.1 critique SEV2 #11: Ctrl+K offered "Boʻlim yaratish" to a xodim who is already in a
+      // department. SPEC §2.2 puts that CTA in the no-department state only -- creating a department
+      // raises a super-admin approval request, so this is a real mis-trigger, not clutter. The
+      // `/departments` page was fixed in the wave; the palette was not, because a palette entry had
+      // no way to say this. Now it does.
+      visibleWhen: (ctx) => ctx.hasDepartment === false,
     },
     {
       id: 'departments.join',

@@ -38,6 +38,18 @@ export interface AvatarProps extends React.ComponentPropsWithoutRef<typeof Avata
   alt: string
   /** Initials fallback, e.g. `initialsFromName(user.givenName, user.familyName)`. */
   initials: string
+  /**
+   * v1.1 critique SEV2 #21. An avatar carries the person's name for a screen reader through the
+   * `sr-only` span below -- correct when the avatar is the *only* representation of that person
+   * (a stacked RSVP row, a board tile's assignee chip). It is wrong the moment the name is also
+   * rendered as visible text beside it, which is what every dashboard tile and member row does: the
+   * accessibility tree then reads "Farrux Saidov Farrux Saidov 7", dozens of times per screen.
+   *
+   * `decorative` says "the name is already on screen next to me", and the avatar drops out of the
+   * accessibility tree entirely. `alt` is still required and still used for the image element, so
+   * nothing is lost if the surrounding markup is ever restructured.
+   */
+  decorative?: boolean
   /** A stable id (user id, unit id) used to pick a consistent unit hue for the initials fallback. */
   hueSeed?: string
   size?: 'xs' | 'sm' | 'md' | 'lg'
@@ -55,9 +67,10 @@ const SIZE_CLASS = {
 export const Avatar = React.forwardRef<
   React.ComponentRef<typeof AvatarPrimitive.Root>,
   AvatarProps
->(({ className, src, alt, initials, hueSeed, size = 'md', ...props }, ref) => (
+>(({ className, src, alt, initials, hueSeed, size = 'md', decorative, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
+    {...(decorative ? { 'aria-hidden': true } : {})}
     className={cn(
       'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-medium text-white',
       SIZE_CLASS[size],
@@ -81,7 +94,7 @@ export const Avatar = React.forwardRef<
     <AvatarPrimitive.Fallback delayMs={src ? 400 : 0} aria-hidden="true">
       {initials}
     </AvatarPrimitive.Fallback>
-    <span className="sr-only">{alt}</span>
+    {decorative ? null : <span className="sr-only">{alt}</span>}
   </AvatarPrimitive.Root>
 ))
 Avatar.displayName = 'Avatar'

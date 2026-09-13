@@ -24,7 +24,13 @@ import {
   Users,
 } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { CommandPalette, resolveNavEntries, type CommandPaletteGroup } from '@devon/ui'
+import {
+  CommandPalette,
+  resolveNavEntries,
+  type CommandPaletteGroup,
+  type CommandPaletteItem,
+  type NavContext,
+} from '@devon/ui'
 import { LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { useDepartment } from '../lib/session.js'
 import { useNavCan } from '../lib/can.js'
@@ -196,6 +202,25 @@ function usePaletteEntities(open: boolean, departmentId: string | null): Palette
   }
 }
 
+/** v1.1 critique SEV2 #11. Two manifest registrations pointing at the same destination are one
+ * action -- `events` declares "Tadbir yaratish" as both a `command` and a `quickAdd`, and the
+ * AMALLAR section listed it twice. The destination is the identity; the first registration keeps its
+ * icon and label. `path` is dropped from the item afterwards because `CommandPaletteItem` has no
+ * such field -- it exists only to compare on. */
+type PathedItem = CommandPaletteItem & { path: string }
+
+function dedupeByPath(items: readonly PathedItem[]): Omit<PathedItem, 'path'>[] {
+  const seen = new Set<string>()
+  const out: Omit<PathedItem, 'path'>[] = []
+  for (const item of items) {
+    if (seen.has(item.path)) continue
+    seen.add(item.path)
+    const { path: _path, ...rest } = item
+    out.push(rest)
+  }
+  return out
+}
+
 export function CommandPaletteController({
   open,
   onOpenChange,
@@ -338,11 +363,32 @@ export function CommandPaletteController({
   // Both lists are gated on each entry's declared `action` (HANDOFFS #1): a manifest command like
   // `work.workload` or `automations` names `work.workload.read` / `automations.read`, and an entry
   // that names nothing is a destination every member may reach. Same predicate as the sidebar.
-  const actionItems = [
+  //
+  // v1.1 critique SEV2 #11, both halves:
+  //   * `visibleWhen` is honoured here exactly as the sidebar honours it, so "Boʻlim yaratish"
+  //     disappears for anybody who already has a department;
+  //   * the list is deduped **by destination**. `events` registers "Tadbir yaratish" once as a
+  //     `command` and once as a `quickAdd` -- both are the same act, so the palette showed it twice
+  //     in one section. The path is what an action *is*; two entries pointing at `/events?new=1` are
+  //     one action with two registrations, and the first one wins.
+  const navContextForEntries = {
+    role: isSuperAdmin ? ('super_admin' as const) : ('member' as const),
+    departmentRole: department?.role ?? null,
+    can: navCan,
+    hasDepartment: memberships.length > 0,
+  }
+  const entryAllowed = (entry: { action?: string; visibleWhen?: (ctx: NavContext) => boolean }) => {
+    if (entry.action && !navCan(entry.action)) return false
+    if (entry.visibleWhen && !entry.visibleWhen(navContextForEntries)) return false
+    return true
+  }
+
+  const actionItems = dedupeByPath([
     ...getFeatureQuickAddEntries()
-      .filter((entry) => !entry.action || navCan(entry.action))
+      .filter(entryAllowed)
       .map((entry) => ({
         id: `quick:${entry.id}`,
+        path: entry.path,
         label: t(entry.labelKey),
         ...(entry.icon ? { icon: entry.icon } : {}),
         onSelect: () => go(entry.path),
@@ -350,14 +396,15 @@ export function CommandPaletteController({
     ...getFeatureCommandEntries()
       // A command that only repeats a sidebar destination is already in "Go to" above.
       .filter((entry) => !navByRoute.has(entry.path))
-      .filter((entry) => !entry.action || navCan(entry.action))
+      .filter(entryAllowed)
       .map((entry) => ({
         id: entry.id,
+        path: entry.path,
         label: t(entry.labelKey),
         ...(entry.icon ? { icon: entry.icon } : {}),
         onSelect: () => go(entry.path),
       })),
-  ]
+  ])
 
   const rootGroups: CommandPaletteGroup[] = [
     ...(recentItems.length > 0 ? [{ heading: t('cmd.group.recent'), items: recentItems }] : []),

@@ -174,6 +174,9 @@ function PersonRow({
         <Avatar
           size="sm"
           alt={name}
+          // SEV2 #21: the name is rendered as text one element away, so the avatar's own screen-
+          // reader label made every tile row read "Farrux Saidov Farrux Saidov 7".
+          decorative
           hueSeed={member.userId}
           initials={initialsFromName(member.givenName, member.familyName)}
           src={avatarUrl(member.avatarKey, 64)}

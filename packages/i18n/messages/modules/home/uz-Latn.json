@@ -4,7 +4,7 @@
       "dueFromMe": {
         "title": "Mendan kutilmoqda",
         "body": "{open} ta ochiq, {overdue} tasi muddatidan oʻtgan",
-        "cta": "Ishlarimni koʻrish"
+        "cta": "Menga topshirilganlar"
       },
       "needsMyDecision": {
         "title": "Mening qarorim kerak",
@@ -39,7 +39,13 @@
         "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
-      "sectionTiles": "Bugungi holat"
+      "sectionTiles": "Bugungi holat",
+      "givenOverdue": {
+        "title": "Men bergan ishlar kechikdi",
+        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
+        "empty": "Men bergan ishlarning hammasi muddatida",
+        "cta": "Men bergan ishlar"
+      }
     },
     "head": {
       "section": "Boshqaruv koʻrinishi",

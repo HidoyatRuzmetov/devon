@@ -4,7 +4,7 @@
       "dueFromMe": {
         "title": "Due from me",
         "body": "{open} open, {overdue} overdue",
-        "cta": "View my work"
+        "cta": "Assigned to me"
       },
       "needsMyDecision": {
         "title": "Needs my decision",
@@ -39,7 +39,13 @@
         "onTimeQuestion": "What share of the work you completed was delivered on time?",
         "focusQuestion": "How much focused time did you get this week?"
       },
-      "sectionTiles": "Today"
+      "sectionTiles": "Today",
+      "givenOverdue": {
+        "title": "Work I gave out is late",
+        "body": "{count} items I gave out are past their date",
+        "empty": "Everything I gave out is on time",
+        "cta": "Work I gave out"
+      }
     },
     "head": {
       "section": "Management view",

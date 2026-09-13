@@ -142,7 +142,8 @@
       "transferredToast": "Headship transferred",
       "transferDialogTitle": "Transfer headship",
       "removeDialogTitle": "Remove member from the department",
-      "leaveDialogTitle": "Leave the department"
+      "leaveDialogTitle": "Leave the department",
+      "rowMenuAria": "Actions for {name}"
     },
     "settings": {
       "title": "Department settings",
@@ -166,7 +167,8 @@
       "requestDeletion": "Request department deletion",
       "requestDeletionConfirm": "The super admin will review this request. This cannot be undone.",
       "deletionRequested": "Deletion requested",
-      "typedConfirmLabel": "Type \"{name}\" to confirm"
+      "typedConfirmLabel": "Type \"{name}\" to confirm",
+      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department head manages these."
     },
     "switcher": {
       "label": "Switch department",

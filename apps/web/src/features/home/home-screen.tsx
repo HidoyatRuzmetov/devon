@@ -385,6 +385,8 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
                 open: formatNumber(p.openCount, locale),
                 overdue: formatNumber(p.overdueCount, locale),
               }}
+              // v1.1 critique SEV3 #32: two tiles linked with the identical label "Ishlarimni
+              // koʻrish" to two different destinations. A link's label has to name where it goes.
               ctaKey="home.dashboard.dueFromMe.cta"
               onCta={() => navigate('/work/mine')}
               tone={p.overdueCount > 0 ? 'attention' : 'neutral'}
@@ -394,22 +396,31 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
             {p.givenOverdueCount > 0 ? (
               <DashboardTile
                 icon={Gavel}
-                titleKey="home.dashboard.needsMyDecision.title"
+                // SEV3 #32: the tile was headed "Mening qarorim kerak" -- a decision queue -- and
+                // its body delivered "Men topshirgan N ta ish muddatidan oʻtib ketgan", which is a
+                // chase list for work this person *gave out*. Renamed to what it actually holds, and
+                // its link now names its own destination instead of repeating the tile above it.
+                titleKey="home.dashboard.givenOverdue.title"
                 value={p.givenOverdueCount}
-                bodyKey="home.dashboard.needsMyDecision.body"
+                bodyKey="home.dashboard.givenOverdue.body"
                 bodyParams={{
                   count: formatNumber(p.givenOverdueCount, locale),
                 }}
-                ctaKey="home.dashboard.dueFromMe.cta"
-                onCta={() => navigate('/work')}
+                ctaKey="home.dashboard.givenOverdue.cta"
+                // `giver:@me` is the shared filter grammar's own way of saying "work I gave out",
+                // so this lands on a real, shareable, server-evaluated list rather than a screen
+                // that has to be taught a new query parameter.
+                onCta={() =>
+                  navigate(`/work/table?q=${encodeURIComponent('giver:@me status:active')}`)
+                }
                 tone="attention"
               />
             ) : (
               <DashboardTile
                 icon={Gavel}
-                titleKey="home.dashboard.needsMyDecision.title"
+                titleKey="home.dashboard.givenOverdue.title"
                 value={0}
-                bodyKey="home.dashboard.needsMyDecision.empty"
+                bodyKey="home.dashboard.givenOverdue.empty"
               />
             )}
           </StaggerItem>

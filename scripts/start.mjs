@@ -189,9 +189,16 @@ if (demo) {
   run('pnpm', ['--filter', '@devon/db', 'seed:demo'], 'seeding the demo tenant')
 }
 
-// --- 5. start api + web (turbo, persistent dev tasks) ----------------------
+// --- 5. start api + web + miniapp (turbo, persistent dev tasks) -------------
+//
+// v1.1 critique SEV2 #27: `apps/miniapp` was never in this list, so EPIC-015 shipped a Telegram Mini
+// App that nobody demoing -- or reviewing -- the product could open. `/miniapp/` on the web dev
+// server returns the 404 page, because the Mini App is its own Vite app on its own port, and the
+// only way to see it was to know to boot a separate worktree on 5299. It is a first-class part of
+// the product; it starts with the product.
+const miniappPort = Number(process.env['MINIAPP_PORT'] ?? 5199)
 log(
-  `starting api + web${demo ? ' (demo tenant seeded -- look for the "Namoyish/Demo" chip in the header)' : ''} ...`,
+  `starting api + web + miniapp${demo ? ' (demo tenant seeded -- look for the "Namoyish/Demo" chip in the header)' : ''} ...`,
 )
 // --env-mode=loose: turbo 2's default is `strict`, which filters every spawned task's environment
 // down to the `env`/`globalEnv` allowlist in turbo.json -- and this repo has no such allowlist (env
@@ -207,7 +214,19 @@ const turboArgs = [
   '--env-mode=loose',
   '--filter=@devon/api',
   '--filter=@devon/web',
+  '--filter=@devon/miniapp',
 ]
+// SEV2 #27: print where the Mini App actually is, next to the web URL, and how to open it in a
+// normal browser. The dev stub replaces Telegram's *environment* (theme params, the viewport sheet,
+// the back button, haptics, `start_param`), never the identity -- the session still comes from the
+// `devon_sid` cookie of whoever is signed in at `/login` on the same origin, and the app shows a
+// visible "namunaviy rejim" strip when that is what happened. There is deliberately no
+// "skip verification" flag (`apps/miniapp/README.md`).
+log(`  web      http://localhost:5173`)
+log(`  mini app http://localhost:${miniappPort}/`)
+log(`           sign in at http://localhost:5173/login first -- the Mini App reuses that session,`)
+log(`           and runs against the documented dev stub outside Telegram (apps/miniapp/README.md).`)
+
 const [devCmd, devArgs] = spawnArgs('pnpm', turboArgs)
 const child = spawn(devCmd, devArgs, {
   stdio: 'inherit',

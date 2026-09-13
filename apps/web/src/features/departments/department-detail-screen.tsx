@@ -114,9 +114,18 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* v1.1 critique SEV2 #16. A xodim was shown this card with the imperative "Aʼzolar nimani
+          oʻzi bajara olishini belgilang" and nothing at all saying the toggles were read-only --
+          while the Imkoniyatlar card directly below it did exactly the right thing ("Ularni boʻlim
+          boshligʻi boshqaradi"). Same treatment now: a statement rather than an instruction, and the
+          same "your head manages these" caption. */}
       <SectionCard
         title={t('departments.settings.permissionsTitle')}
-        description={t('departments.settings.permissionsDescription')}
+        description={
+          isHead
+            ? t('departments.settings.permissionsDescription')
+            : t('departments.settings.permissionsReadOnlyDescription')
+        }
         actions={
           isHead ? (
             <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
@@ -472,6 +481,7 @@ function JoinRequestsCard({ id }: { id: string }) {
                     <Avatar
                       size="sm"
                       alt={name}
+                      decorative
                       initials={initialsFromName(r.givenName, r.familyName)}
                       hueSeed={r.userId}
                     />
@@ -627,6 +637,8 @@ function MemberRow({
         <Avatar
           size="sm"
           alt={name}
+          // SEV2 #21: the row prints the name immediately below.
+          decorative
           initials={initialsFromName(member.givenName, member.familyName)}
           hueSeed={member.userId}
         />
@@ -641,7 +653,11 @@ function MemberRow({
           {hasMenu ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <IconButton aria-label={t('departments.members.title')}>
+                {/* SEV2 #21: every one of the 26 row menus carried the accessible name
+                    "Aʼzolar" -- the section heading -- so a screen-reader user could not tell whose
+                    menu they were about to open. Named after its member, the same pattern the
+                    people table already gets right ("Nodira Karimovaga vazifa berish"). */}
+                <IconButton aria-label={t('departments.members.rowMenuAria', { name })}>
                   <MoreVertical className="size-4" aria-hidden="true" />
                 </IconButton>
               </DropdownMenuTrigger>

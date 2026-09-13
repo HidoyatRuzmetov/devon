@@ -466,6 +466,7 @@ function Row({
       <StaggerItem className="sticky left-0 z-10 flex items-center gap-2 bg-card py-1.5 pr-3">
         <Avatar
           alt={name}
+          decorative
           {...(row.member.avatarKey ? { src: row.member.avatarKey } : {})}
           initials={initialsFromName(row.member.givenName, row.member.familyName)}
           hueSeed={row.member.userId}

@@ -43,14 +43,33 @@ export function AmbientGradient({
     <div
       aria-hidden="true"
       className={cn('pointer-events-none absolute inset-0 -z-10 overflow-hidden', className)}
+      // v1.1 critique SEV2 #14 -- the hard-edged grey rectangle behind the greeting, measured at
+      // 354 px of drifting layer inside a 343 px clipping box.
+      //
+      // The gradients do fade to transparent inside their own boxes. What put an edge back was the
+      // 24 s drift itself: `devon-ambient-drift` translates by up to 4% and scales to 1.06, which
+      // walks a still-opaque part of each radial into the clip boundary. At 1440 that reads as a
+      // faint seam; at 390, where the box is a third as wide, it reads as a misplaced panel; in dark
+      // it is glaring, because the ambient colours are lighter than the ground they sit on.
+      //
+      // Two changes, and the second is the belt to the first's braces. The layers below are inset
+      // *outwards* so their own edges are always outside the visible box; and this mask fades the
+      // composite to nothing at all four edges, so no matter what the animation does underneath, the
+      // pixel the clip boundary paints is transparent. `-webkit-mask-image` for Safari, which still
+      // needs the prefix for mask-image on a composited layer.
+      style={{
+        maskImage: 'radial-gradient(130% 115% at 50% 0%, black 0%, black 45%, transparent 92%)',
+        WebkitMaskImage:
+          'radial-gradient(130% 115% at 50% 0%, black 0%, black 45%, transparent 92%)',
+      }}
     >
       <span
-        className={cn('absolute inset-0 block', !reduced && 'devon-ambient-drift')}
+        className={cn('absolute -inset-[14%] block', !reduced && 'devon-ambient-drift')}
         style={{ backgroundImage: primary }}
       />
       <span
         className={cn(
-          'absolute inset-0 block',
+          'absolute -inset-[14%] block',
           !reduced && 'devon-ambient-drift devon-ambient-drift-slow',
         )}
         style={{ backgroundImage: accent }}
