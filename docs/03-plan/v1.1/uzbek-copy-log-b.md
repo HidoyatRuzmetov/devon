@@ -632,3 +632,78 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `admin.console.settings.wipeExecuting` | Oʻchirish buyrugʻi yuborilmoqda... | Oʻchirish buyrugʻi yuborilmoqda… |
 | `admin.console.settings.wipeFailed` | Muvaffaqiyatsiz | Boʻlmadi |
 | `admin.console.settings.sentinelPublicKeyHint` | Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=... sifatida joylashtiring. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatilishi mumkin. | Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=… koʻrinishida yozing. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatiladi. |
+
+## apps/api/src/modules/telegram/templates.ts — 18 ta satr oʻzgardi
+
+Botning oʻz jadvali (`tb()`), i18n kataloglaridan alohida. `uz-Cyrl` bloki tuzatilgan
+`uz-Latn` dan `latinToCyrillic()` bilan qaytadan hosil qilindi.
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `maintenance` | Tizim hozir texnik xizmat rejimida. Birozdan so‘ng qaytadan urinib ko‘ring. | Ilova hozir texnik xizmatda. Birozdan soʻng qaytadan urinib koʻring. |
+| `link.prompt_needed` | Ushbu buyruq faqat hisobingiz ulangandan keyin ishlaydi. Ilovadagi Sozlamalar boʻlimidan ulang. | Bu buyruq hisobingiz ulangandan keyin ishlaydi. Ilovaning Sozlamalar boʻlimidan ulang. |
+| `link.success` | Xush kelibsiz, {name}! Telegram hisobingiz ulandi. Endi eslatmalarni shu yerda olasiz. | Xush kelibsiz, {name}. Telegram hisobingiz ulandi — eslatmalar endi shu yerga keladi. |
+| `unlinked.confirm` | Telegram ulanishi bekor qilindi. Endi bu yerga eslatmalar kelmaydi. | Telegram uzildi. Endi bu yerga eslatma kelmaydi. |
+| `today.empty` | Bugun uchun hech qanday eslatma yoʻq. Zoʻr kun tilaymiz! | Bugun uchun eslatma yoʻq. |
+| `mytasks.header` | Sizga tegishli oxirgi bildirishnomalar: | Soʻnggi bildirishnomalaringiz: |
+| `events.header` | Yaqinlashib kelayotgan tadbirlar: | Yaqin tadbirlar: |
+| `events.empty` | Hozircha rejalashtirilgan tadbirlar yoʻq. | Rejadagi tadbir yoʻq. |
+| `mute.usage` | Namuna: /mute 120 (daqiqalarda, 0 — darhol yoqish) | Namuna: /mute 120 — 120 daqiqaga oʻchiradi. Darhol yoqish uchun: /mute 0 |
+| `group.connected` | "{department}" boʻlimi ushbu guruhga ulandi. Endi bu yerga tadbirlar, soʻrovnomalar va eʼlonlar keladi. | «{department}» shu guruhga ulandi. Endi tadbirlar, soʻrovnomalar va eʼlonlar shu yerga keladi. |
+| `group.connect_usage` | Guruhni ulash uchun: /connect <kod> (kodni boʻlim boshligʻidan soʻrang) | Guruhni ulash uchun: /connect <kod>. Kodni boshqarma boshligʻidan soʻrang. |
+| `help` | Buyruqlar: /today — bugungi eslatmalar, /mytasks — oxirgi bildirishnomalar, /events — tadbirlar, /mute <daqiqa> — bildirishnomalarni oʻchirish. | Buyruqlar: /today — bugungi eslatmalar, /mytasks — soʻnggi bildirishnomalar, /events — yaqin tadbirlar, /mute <daqiqa> — bildirishnomalarni oʻchirish. |
+| `button.mark_done` | Bajarildi deb belgilash | Bajarildi |
+| `security.code` | Tasdiqlash kodingiz: {code}<br>Ushbu kodni hech kimga aytmang — uni faqat siz kiritishingiz kerak. {minutes} daqiqa amal qiladi. | Tasdiqlash kodingiz: {code}<br>Kodni hech kimga aytmang — uni faqat siz kiritasiz. {minutes} daqiqa amal qiladi. |
+| `miniapp.open_focus` | Fokus | Diqqat vaqti |
+| `miniapp.app_intro` | WorkPortal ilovasini shu yerda oching: vazifalar, bildirishnomalar, tadbirlar va fokus vaqti — hammasi Telegram ichida. | WorkPortal ilovasini shu yerda oching: vazifalar, bildirishnomalar, tadbirlar va diqqat vaqti — hammasi Telegram ichida. |
+| `miniapp.not_available` | Ilova hali sozlanmagan. Boʻlim boshligʻidan Telegram sozlamalarini tekshirishni soʻrang. | Ilova hali sozlanmagan. Boshqarma boshligʻidan Telegram sozlamalarini tekshirishni soʻrang. |
+| `miniapp.focus_done` | Fokus vaqti tugadi: {minutes} daqiqa. Endi qisqa tanaffus qiling. | Diqqat vaqti tugadi: {minutes} daqiqa. Endi qisqa tanaffus qiling. |
+
+## apps/api/src/modules/notifications/registry.ts — 7 ta satr oʻzgardi
+
+Bildirishnoma matnlari (inbox qatori ham, Telegram xabari ham shu jadvaldan quriladi). Bu fayl
+toʻrt tilni `plain(uzLatn, uzCyrl, ru, en)` bilan yozadi, shuning uchun kirillchasi ham shu yerda
+qoʻlda tekshirildi.
+
+| kalit | oldin | keyin | sabab |
+|---|---|---|---|
+| `accounts.password.reset_by_head` body | sizga vaqtinchalik parol berdi. Kirgandan soʻng darhol yangi parol oʻrnating. | …Kirganingizdan soʻng darhol yangi parol oʻrnating. | Lotinchasi «Kirgandan», kirillchasi «Кирганингиздан» deb turardi — ikki yozuv bir gapni aytishi shart. |
+| `structure.unit_role_assigned` title | Yangi vazifa roli | Boʻlimda yangi rol | Gap boʻlimdagi rol haqida; «vazifa roli» degan tushuncha yoʻq. |
+| `work.card.reassigned` body | ushbu vazifani sizga biriktirdi. | bu vazifani sizga biriktirdi. | §11.19. |
+| `events.carpool.created` title | Yoʻlda joy taklifi | Mashinada joy bor | Soʻzma-soʻz tarjima; odam «mashinamda joy bor» deydi. |
+| `fields.request` body | ushbu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish. | bu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish. | §11.19. |
+| `label.assignee` | ijrochi | masʼul | TERMS.md `assignee` = masʼul; «ijrochi» UI ning qolganidan farq qilardi. |
+| `REASON_LABEL.mentioned` | eslatish | belgilash | Eslatma — oʻzingiz qoʻygan; izohda sizni **belgilashadi** (`inbox.reason.mentioned` bilan bir xil). |
+
+## apps/api/src/modules/automations/engine.ts — 1 ta satr oʻzgardi
+
+| kalit | oldin | keyin | sabab |
+|---|---|---|---|
+| qoida ishga tushgani haqidagi bildirishnoma | «{title}» kartochkasi boʻyicha qoida ishga tushdi. | «{title}» kartasi boʻyicha qoida ishga tushdi. | `kartochka` → `karta` (§12.2), kirillchasi ham. |
+
+## Keyinroq qoʻshilgan tuzatish
+
+| modul | kalit | oldin | keyin | sabab |
+|---|---|---|---|---|
+| calendar | `calendar.push.unsupported.body` | …iPhoneʼda WorkPortalni avval «Bosh ekranga qoʻshish» kerak. | …iPhone uchun avval WorkPortalni bosh ekranga qoʻshing. | Koʻrsatma buyruq shaklida boʻlsin; qolaversa lotincha nomga yopishgan hamza kirillchada `ъ` ga aylanib ketardi (`iPhoneъда`). |
+
+## Qamrov
+
+| guruh | modullar |
+|---|---|
+| B (bu hujjat) | `admin`, `ai`, `analytics`, `automations`, `calendar`, `events`, `home`, `inbox`, `miniapp`, `pages`, `personal`, `telegram` + `apps/api` ning uchta oʻzbekcha matnli fayli |
+| A | `accounts`, `departments`, `fields`, `people`, `projects`, `realtime`, `structure`, `work` va `packages/i18n/messages/uz-*.json` qobiq katalogi |
+
+`packages/i18n/messages/modules/` ostida boshqa papka yoʻq — ikki guruh butun roʻyxatni qoplaydi.
+`notifications`, `goals`, `workload` nomli modul papkasi mavjud emas: bildirishnomalar `inbox` da,
+maqsad va yuklama `home`/`analytics` da yashaydi va oʻsha yerda tahrirlandi.
+
+## Tekshiruv
+
+- `node agentic/scripts/check-i18n.mjs` — yashil (`keys=3365 used=1942 errors=0`)
+- `pnpm --filter @devon/i18n test:unit` — 12 fayl, 78 test, yashil
+- `node agentic/scripts/gate.mjs --profile fast` — typecheck, lint, unit, i18n, secrets: hammasi PASS,
+  bittasi ham `skipped` emas
+- `uz-Cyrl` har bir modul uchun tuzatilgan `uz-Latn` dan `latinToCyrillic()` bilan qaytadan hosil
+  qilindi, soʻng §13.2 roʻyxati boʻyicha qoʻlda oʻqildi (`ц`, `йй`, `ъ`, oʻzlashmalar, lotincha
+  qoladigan tokenlar).

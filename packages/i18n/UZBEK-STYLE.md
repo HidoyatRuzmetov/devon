@@ -575,3 +575,43 @@ Bu qoʻllanma yangi soʻz tanlaganda — qatorni shu yerga qoʻshing: sana, soʻ
 | 2026-09-13 | `capabilities` = **imkoniyatlar**, `weekly capacity` = **haftalik sigʻim** | Ikkalasi `imkoniyat` deb atalgan edi |
 | 2026-09-13 | `objective/subjective` loyiha kartalari → **Boshqarma vazifalari / Oʻz vazifalarim** | Hozirgi «Umumiy/Shaxsiy vazifalar» maʼnoni yoʻqotgan |
 | 2026-09-13 | Undo = **Bekor qilish**, redo = **Qaytarish** | `work.card.undo` ikkisini almashtirib yuborgan |
+
+---
+
+## 17. B guruh qarorlari (2026-09-13)
+
+`events`, `personal`, `inbox`, `telegram`, `miniapp`, `analytics`, `pages`, `ai`, `admin`,
+`automations`, `calendar`, `home` modullari va API tarafidagi oʻzbekcha satrlar tahrir qilinganda
+qabul qilingan, TERMS.md jim boʻlgan qarorlar. §12 bilan bir xil kuchga ega.
+
+| Sana | Qaror | Sabab |
+|---|---|---|
+| 2026-09-13 | `calendar` = **taqvim** (`kalendar` emas) | §13.2 kirillcha uchun allaqachon `тақвим` deb belgilagan edi; lotinchasi `kalendar` boʻlib qolgani ikki yozuvni ikki soʻzga ajratardi. Mahsulot nomlari (`Google Calendar`, `Apple Calendar`) oʻzgarmaydi. |
+| 2026-09-13 | Telegram bot amrlari — **buyruq** | `/today`, `/mute` haqiqatan ham buyruq. TERMS.md `buyruq` dagi taqiq `Ctrl+K` oynasiga tegishli (u qidiruv, buyruqlar zanjiri emas), botga emas. |
+| 2026-09-13 | `mention` (ot, chip, sabab yozuvi) = **belgilash** | `eslatish` — oʻzingiz qoʻygan eslatma; sizni izohda **belgilashadi**. `inbox.reason.mentioned` va `REASON_LABEL.mentioned` ikkalasi ham tuzatildi. |
+| 2026-09-13 | `assignee` (bildirishnoma oʻzgarish roʻyxatida) = **masʼul** | TERMS.md `masʼul`; `ijrochi` zavod uslubi va UI ning qolgan qismidan farq qilardi. |
+| 2026-09-13 | Sana/vaqt filtri chegaralari = **Qaysi sanadan / Qaysi sanagacha**, soat uchun **Qaysi soatdan / Qaysi soatgacha** | §11.38 ning davomi: tinch soatlar formasida ham hodisaning boshlanishi emas, chegara soʻraladi. |
+| 2026-09-13 | `email` = **e-pochta** | «Elektron pochta» rasmiy blankda yaxshi, kanal yozuvi uchun uzun. |
+| 2026-09-13 | `digest frequency` = **xulosa davriyligi** | `chastota` — fizika soʻzi. |
+| 2026-09-13 | `unpin` = **mahkamlashni olib tashlash** | `Bekor qilish` undo uchun band (§5). |
+| 2026-09-13 | `photos` = **suratlar** | `fotosurat` rasmiy hujjat uslubi; tadbir sahifasida `surat` tabiiy. |
+| 2026-09-13 | `italic` = **kursiv**, `session` (Pomodoro) = **seans** | Ikkalasi ham tirik oʻzlashma (§12 «Saqlanadigan oʻzlashmalar»), oʻzbekchalashtirilsa sunʼiy chiqadi. |
+| 2026-09-13 | Pomodoro `pause` = **toʻxtatib turish**, `stop` = **tugatish** | `Pauza` va `Toʻxtatish` bir ekranda ikki xil toʻxtashni anglatib chalkashtirardi. |
+| 2026-09-13 | Carpool bildirishnomasi sarlavhasi = **Mashinada joy bor** | «Yoʻlda joy taklifi» — soʻzma-soʻz tarjima; odam «mashinamda joy bor» deydi. |
+| 2026-09-13 | AI tadbir qoralamasidagi `travel` = **yoʻl** | «Yoʻl-yoʻriq» — koʻrsatma degani, safar emas. |
+| 2026-09-13 | `eyebrow` yozuvlari bir soʻzga keltirildi: `BILIM` (pages), `FAQAT SIZGA` (personal), `TAQVIM` (calendar), `HISOBOTLAR` (analytics), `BOSHQARUV` (admin) | §4: eyebrow — boʻlim nomi, tavsif emas («REJA VA ESLATMALAR», «FAQAT SIZ UCHUN» tavsif edi). |
+| 2026-09-13 | Super administrator panelida ijara birligi **boshqarma**, ichki boʻlinma **boʻlim** | Panel ularni teskari nomlagan edi: ijara birligi `boʻlim`, boʻlinma `boʻlinma`. |
+
+### 17.1 uz-Cyrl ni hosil qilishda lotincha qoladigan tokenlar
+
+`latinToCyrillic()` dan oʻtkazilmaydigan (§13.2 item 5 ning kengaytirilgan roʻyxati):
+ICU `{placeholder}` lar va teglar; filtr sintaksisi (`assignee:@me`, `status:active`, `due:<today`,
+`label:` kalitining oʻzi); havolalar va fayl yoʻllari (`infra/sentinel/sentinel.conf`);
+`kalit=qiymat` shakli (`public_key=`); bot buyruqlari (`/connect`, `/setmenubutton`);
+`SCREAMING_SNAKE` muhit oʻzgaruvchilari (`TELEGRAM_BOT_TOKEN`); klaviatura qisqartmalari (`Ctrl+K`);
+mahsulot nomlari (`Telegram`, `WorkPortal`, `Google Calendar`, `Outlook`, `iPhone`, `CalDAV`,
+`DAVx5`, `Webcal`, `VAPID`, `embeddings`) — bunda kirillcha qoʻshimcha nomga yopishib keladi:
+`Telegramда`, `Outlookка`.
+
+Qoʻlda tekshirilgan kirillcha tuzoqlar: `ts → ц` faqat ruscha oʻzlashmada (`муддатсиз` toʻgʻri,
+`муддациз` xato), `yy → йё` (`tayyor → тайёр`, `таййор` emas), `byudjet → бюджет`.
