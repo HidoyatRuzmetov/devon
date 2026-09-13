@@ -55,3 +55,43 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `setup.used.body` | Tizim administratori allaqachon yaratilgan. | Tizim administratori yaratib boʻlingan. | Sarlavhada `allaqachon` bor — takrorlanmaydi |
 | `auth.tagline` | Boʻlimingiz ishini bir joyda olib boring | Boshqarma ishini bir joydan olib boring | §12.2 boshqarma; «bir joyda olib boring» → «bir joydan» |
 
+
+## Modul: accounts (`packages/i18n/messages/modules/accounts/`)
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `accounts.login2fa.body` | Autentifikatsiya ilovasidagi 6 xonali kodni yoki tiklash kodlaringizdan birini kiriting. | Autentifikatsiya ilovasidagi 6 xonali kodni yoki zaxira kodlaringizdan birini kiriting. | «tiklash kodi» / «zaxira kod» bitta ekranda ikki xil atalgan edi |
+| `accounts.register.loginHint` | Kichik lotin harflar, raqamlar, nuqta, tire | Kichik lotin harflari, raqamlar, nuqta, tire | izofa: «lotin harflar» → «lotin harflari» |
+| `accounts.register.email` | Elektron pochta (ixtiyoriy) | E-pochta (ixtiyoriy) | qobiq bilan bir xil soʻz (`login.identifier` — «e-pochta») |
+| `accounts.register.patronymic` | Sharif (ixtiyoriy) | Otasining ismi (ixtiyoriy) | «Sharif» yolgʻiz — rasmiy formada «Otasining ismi»; `setup.patronymic` bilan bir xil |
+| `accounts.register.error.generic` | Roʻyxatdan oʻtib boʻlmadi. Maʼlumotlarni tekshirib, qayta urinib koʻring. | Roʻyxatdan oʻtib boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring. | §11/7 `maʼlumotlar` toʻldiruvchi — gap maydonlar haqida |
+| `accounts.sessions.title` | Qurilmalar va seanslar | Kirilgan qurilmalar | «seans» — ruscha kalka; odam qurilmani koʻradi |
+| `accounts.sessions.subtitle` | Hisobingizga kirilgan barcha qurilmalar roʻyxati. | Hisobingizga hozir kirib turgan qurilmalar. | «roʻyxati» ortiqcha; ekranning oʻzi roʻyxat |
+| `accounts.sessions.empty.title` | Faol seanslar yoʻq | Kirilgan qurilma yoʻq | «seans» olib tashlandi |
+| `accounts.sessions.current` | Joriy qurilma | Shu qurilma | §11/21 `joriy` → `shu` |
+| `accounts.sessions.revokeAllConfirm` | Barcha qurilmalardan, jumladan joriy qurilmadan ham chiqasiz. Davom etasizmi? | Hamma qurilmadan chiqasiz — shu qurilmadan ham. Davom etasizmi? | §11/21 `joriy`; «jumladan» — rasmiy hujjat uslubi |
+| `accounts.twoFactor.subtitle` | Autentifikatsiya ilovasi orqali hisobingizni qoʻshimcha himoya qiling. | Autentifikatsiya ilovasi bilan hisobingizni qoʻshimcha himoyalang. | «qoʻshimcha himoya qiling» → bitta feʼl |
+| `accounts.twoFactor.enroll.step1` | 1-qadam: QR yoki kodni skanerlang | 1-qadam: QR kodni skanerlang yoki kalitni kiriting | inglizchada ikki yoʻl bor edi, tarjimada bittasi yoʻqolgan |
+| `accounts.twoFactor.enroll.error` | Kod notoʻgʻri. Ilovadagi vaqt toʻgʻriligini tekshiring. | Kod notoʻgʻri. Qurilmangizdagi vaqtni tekshiring. | xato ilovada emas, qurilma soatida |
+| `accounts.twoFactor.enroll.recoveryBody` | Bu kodlar faqat bir marta koʻrsatiladi. Telefoningiz yoʻqolsa, ulardan foydalanib kirishingiz mumkin. | Bu kodlar faqat shu yerda koʻrsatiladi. Telefoningiz yoʻqolsa, shulardan biri bilan kirasiz. | «bir marta koʻrsatiladi» → aslida faqat shu ekranda |
+| `accounts.twoFactor.enroll.recoveryCopied` | Kodlar nusxalandi | Kodlardan nusxa olindi | §5 nusxa toasti hamma joyda «Nusxa olindi» |
+| `accounts.twoFactor.disableDialog.title` | 2FAʼni oʻchirish | Ikki bosqichli tekshiruvni oʻchirish | «2FAʼni» — kirillchada «2ФАъни» boʻlib chiqadi; toʻliq nom tabiiyroq |
+| `accounts.twoFactor.disableDialog.passwordLabel` | Parolingizni tasdiqlang | Parolingiz | §4 maydon yozuvi — ot, buyruq emas |
+| `accounts.password.title` | Parolni almashtirish | Parolni oʻzgartirish | «almashtirish» — narsa almashtiriladi; parol oʻzgartiriladi |
+| `accounts.password.current` | Joriy parol | Hozirgi parol | §11/21 `joriy` → `hozirgi` |
+| `accounts.password.success` | Parol yangilandi | Parol oʻzgartirildi | toast sarlavhadagi feʼlni takrorlaydi |
+| `accounts.password.error` | Joriy parol notoʻgʻri | Hozirgi parol notoʻgʻri | §11/21 `joriy` |
+| `accounts.delete.warning` | Hisobingiz 30 kundan soʻng butunlay oʻchiriladi va shaxsiy maʼlumotlaringiz anonimlashtiriladi. Bu muddat ichida bekor qilishingiz mumkin. | Hisobingiz 30 kundan keyin butunlay oʻchadi, shaxsiy maʼlumotlaringiz esa anonimlashtiriladi. Shu muddat ichida bekor qila olasiz. | «oʻchiriladi va … anonimlashtiriladi» — ikki ish bitta zanjirda; «mumkin» → «ola siz» |
+| `accounts.delete.scheduled` | Hisobingiz {date} sanasida oʻchiriladi. | Hisobingiz {date} kuni oʻchiriladi. | §9 «{date} sanasida» → «{date} kuni» |
+| `accounts.admin.resetPassword.confirm` | Bu foydalanuvchi uchun vaqtinchalik parol yaratilsin va barcha seanslari yopilsinmi? | Bu xodimga vaqtinchalik parol berilsinmi? Hamma qurilmasidan chiqariladi. | §11/3 `foydalanuvchi` → `xodim`; «seans» → qurilma |
+| `accounts.admin.resetPassword.success` | Vaqtinchalik parol yaratildi | Vaqtinchalik parol berildi | tugma «berish» deydi — toast ham shunday desin |
+| `accounts.admin.resetPassword.copy` | Nusxalash | Nusxa olish | qobiq bilan bir xil: «Nusxa olish» |
+| `accounts.admin.resetPassword.copied` | Nusxalandi | Nusxa olindi | §5 «Nusxa olindi» |
+| `accounts.settings.subtitle` | Profil, seanslar, ikki bosqichli tekshiruv va parol shu yerda boshqariladi. | Profil, qurilmalar, ikki bosqichli tekshiruv va parol — hammasi shu yerda. | «shu yerda boshqariladi» — majhul va sovuq |
+| `accounts.settings.dangerZone` | Xavfli hudud | Xavfli amallar | «Xavfli hudud» — *danger zone* soʻzma-soʻz; bu yerda amallar turadi |
+| `accounts.photo.hint` | JPEG, PNG yoki WebP, 5 MB gacha. Surat koʻrsatilishidan oldin zararli dasturlarga tekshiriladi va oʻlchami moslanadi. | JPEG, PNG yoki WebP, 5 MB gacha. Surat zararli dasturga tekshiriladi va oʻlchamga keltiriladi. | «zararli dasturlarga tekshiriladi» kelishik xatosi; «koʻrsatilishidan oldin» ortiqcha |
+| `accounts.photo.registerFailedToast` | Hisobingiz yaratildi, lekin suratni yuklab boʻlmadi. Uni Hisob sozlamalarida qoʻshishingiz mumkin. | Hisob yaratildi, lekin surat yuklanmadi. Uni «Hisob sozlamalari»dan qoʻshasiz. | §14 obyekt nomi qoʻshtirnoqda; «mumkin» → aniq feʼl |
+| `accounts.photo.error.type` | JPEG, PNG yoki WebP formatidagi rasm tanlang. | JPEG, PNG yoki WebP suratini tanlang. | «rasm»/«surat» bitta ekranda ikki xil edi |
+| `accounts.photo.error.tooLarge` | Fayl hajmi 5 MB dan katta. | Fayl 5 MB dan katta. Kichikrogʻini tanlang. | §6 xato nima qilishni ham aytadi |
+| `accounts.photo.error.invalidImage` | Bu fayl yaroqli rasm emas. | Bu fayl surat emas. Boshqa fayl tanlang. | §6 nima qilishni ayting; «yaroqli rasm emas» — texnik |
+| `accounts.photo.error.unavailable` | Surat yuklash hozircha ishlamayapti. Bir necha daqiqadan soʻng qayta urinib koʻring. | Surat yuklash hozircha ishlamayapti. Bir necha daqiqadan keyin qayta urinib koʻring. | §9 «soʻng» → «keyin» |
