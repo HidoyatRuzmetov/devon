@@ -5,9 +5,24 @@
 // signed in is the API that verified the HMAC (I-6).
 import * as React from 'react'
 import type { MiniappSession } from '@devon/contracts'
-import { resolveLocale, setLocale } from '@devon/i18n'
+import { isLocale, resolveLocale, setLocale, type Locale } from '@devon/i18n'
 import { ApiError, signIn } from './api.js'
 import { tg } from './telegram.js'
+
+/**
+ * `?locale=ru` on the URL, when it names one of the four.
+ *
+ * The screenshot harness and the four-locale review pass need a way to see every screen in every
+ * language without editing an account's saved locale, so this wins over the account's own choice for
+ * as long as the parameter is on the URL -- and only then. Exported here rather than duplicated in
+ * `main.tsx`, because "who decides the locale" has to be one answer: `main.tsx` applies it before the
+ * first paint, and `SessionProvider` below has to know not to overwrite it a moment later.
+ */
+export function forcedLocale(): Locale | null {
+  if (typeof window === 'undefined') return null
+  const value = new URLSearchParams(window.location.search).get('locale')
+  return value && isLocale(value) ? value : null
+}
 
 export type SessionState =
   | { status: 'loading' }
@@ -38,7 +53,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }): Re
         if (cancelled) return
         // The account's own saved locale wins over Telegram's client language: a xodim who set the
         // product to Russian means it (DESIGN.md §5, and the same rule `apps/web`'s locale boot uses).
-        setLocale(resolveLocale({ user: session.user.locale }))
+        // An explicit `?locale=` wins over both -- see `forcedLocale()`.
+        if (!forcedLocale()) setLocale(resolveLocale({ user: session.user.locale }))
         setState({ status: 'ready', session })
       })
       .catch((error: unknown) => {

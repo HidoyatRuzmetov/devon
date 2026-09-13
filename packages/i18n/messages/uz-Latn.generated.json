@@ -2052,7 +2052,7 @@
     "setup": {
       "title": "Telegram sozlamasi",
       "bot": "Bot",
-      "noBot": "Bot hali sozlanmagan. Buni tizim administratori qiladi.",
+      "noBot": "Bot nomi hali koʻrsatilmagan. Buni tizim administratori qoʻshadi.",
       "appUrl": "Mini ilova manzili",
       "copy": "Nusxalash",
       "copied": "Nusxalandi",

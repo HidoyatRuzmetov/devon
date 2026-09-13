@@ -90,9 +90,9 @@ export function SetupScreen(): React.ReactElement {
               </div>
             </section>
 
-            <SectionLabel count={data.steps.filter((step) => step.done).length}>
-              {t('miniapp.setup.checklist')}
-            </SectionLabel>
+            {/* The total, not the done count -- every other `SectionLabel` in this app counts the
+                rows under it, and each row already says "Tayyor" or "Qoldi" for itself. */}
+            <SectionLabel count={data.steps.length}>{t('miniapp.setup.checklist')}</SectionLabel>
             <ol className="flex flex-col gap-2">
               {data.steps.map((step) => (
                 <li

@@ -102,11 +102,19 @@ let cached: { app: TelegramWebApp; real: boolean } | null = null
 
 function resolve(): { app: TelegramWebApp; real: boolean } {
   if (cached) return cached
-  const real = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined
+  const sdk = typeof window !== 'undefined' ? window.Telegram?.WebApp : undefined
   // `initData` is empty when the page is opened outside a Mini App context even though the SDK is
-  // present (Telegram's own script loads on any page). That is the honest test for "are we really
-  // inside Telegram", not the existence of the global.
-  cached = real ? { app: real, real: real.initData !== '' } : { app: createStub(), real: false }
+  // present -- `telegram-web-app.js` is loaded by `index.html` and initialises on any page. That is
+  // the honest test for "are we really inside Telegram", not the existence of the global.
+  //
+  // And when it is empty, the stub wins over the SDK object, deliberately. An SDK that Telegram
+  // never launched reports *defaults*, not observations: `colorScheme: 'light'` whatever the OS
+  // says, no `start_param`, and version 6.0, so every method beyond the oldest few warns and does
+  // nothing. The stub reports what can actually be observed in that browser -- the host's colour
+  // scheme, `?startapp=`, the window height -- which is the whole point of the documented dev path.
+  // Using the SDK here instead is how `?theme=dark` and `?startapp=inbox` silently stop working.
+  const launched = sdk !== undefined && sdk.initData !== ''
+  cached = launched ? { app: sdk, real: true } : { app: createStub(), real: false }
   return cached
 }
 

@@ -41,10 +41,35 @@ export class ApiError extends Error {
   }
 }
 
+/** The double-submit companion cookie (`apps/api/src/lib/cookies.ts`), deliberately NOT HttpOnly. */
+const CSRF_COOKIE = 'devon_csrf'
+
 let csrfToken: string | null = null
 
 export function setCsrfToken(token: string | null): void {
   csrfToken = token && token !== '' ? token : null
+}
+
+/**
+ * The token to double-submit on a mutating call.
+ *
+ * Two sources, in this order, and both are needed:
+ *
+ *  - the value `POST /session` answered with. Inside Telegram this is the only readable one: some
+ *    webviews hand the page a cookie jar `document.cookie` cannot see even though `fetch` sends it.
+ *  - the `devon_csrf` cookie. This is what makes the *first* call work at all. `plugins/csrf-guard.ts`
+ *    checks every unsafe method on any request that already carries a session -- and in the documented
+ *    browser dev path the session cookie exists before the Mini App has ever run, so the sign-in
+ *    exchange itself is checked. Without this fallback the app cannot boot in a browser at all
+ *    (403 on `POST /session`), and inside Telegram a sheet relaunched on a still-valid cookie hits
+ *    exactly the same wall.
+ */
+function currentCsrfToken(): string | null {
+  if (csrfToken) return csrfToken
+  if (typeof document === 'undefined') return null
+  const match = new RegExp(`(?:^|;\\s*)${CSRF_COOKIE}=([^;]*)`).exec(document.cookie)
+  const value = match?.[1] ? decodeURIComponent(match[1]) : null
+  return value && value !== '' ? value : null
 }
 
 type RequestOptions = {
@@ -88,7 +113,10 @@ async function request<T>(
   // Double-submit CSRF, exactly as `apps/api/src/lib/csrf.ts` requires. The token comes from the
   // sign-in response, never from `document.cookie` -- some Telegram webviews hand a page a cookie
   // jar that `document.cookie` cannot read even though `fetch` sends it.
-  if (method !== 'GET' && csrfToken) headers['x-csrf-token'] = csrfToken
+  if (method !== 'GET') {
+    const token = currentCsrfToken()
+    if (token) headers['x-csrf-token'] = token
+  }
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)

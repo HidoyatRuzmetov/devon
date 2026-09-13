@@ -2,6 +2,7 @@ import * as React from 'react'
 import { createRoot } from 'react-dom/client'
 import { getLocale, resolveLocale, setLocale, subscribeLocale } from '@devon/i18n'
 import { App } from './app.js'
+import { forcedLocale } from './lib/session.js'
 import { tg } from './lib/telegram.js'
 import './styles.css'
 
@@ -11,10 +12,11 @@ import './styles.css'
 // `?locale=` is honoured too -- the screenshot harness and the four-locale review pass need a way to
 // force one without touching an account.
 function bootLocale(): void {
-  const forced = new URLSearchParams(window.location.search).get('locale')
-  // `resolveLocale` is the only sanctioned way to turn an untrusted tag into a Locale: it knows that
-  // `uz-UZ-Cyrl` is uz-Cyrl and that anything unrecognised is uz-Latn, so no caller has to.
-  setLocale(resolveLocale({ stored: forced, header: navigator.language }))
+  // `forcedLocale()` (the same function `SessionProvider` consults before it applies the account's
+  // own saved locale, so the two cannot disagree) or, failing that, the Telegram client's language
+  // for the very first frame. `resolveLocale` is the only sanctioned way to turn an untrusted tag
+  // into a Locale: it knows `uz-UZ-Cyrl` is uz-Cyrl and that anything unrecognised is uz-Latn.
+  setLocale(forcedLocale() ?? resolveLocale({ header: navigator.language }))
 }
 
 function applyDocumentLocale(): void {

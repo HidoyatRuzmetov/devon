@@ -238,7 +238,7 @@
     "setup": {
       "title": "Telegram setup",
       "bot": "Bot",
-      "noBot": "The bot is not configured yet. Your system administrator does that.",
+      "noBot": "The bot's username is not set yet. Your system administrator adds it.",
       "appUrl": "Mini App address",
       "copy": "Copy",
       "copied": "Copied",
