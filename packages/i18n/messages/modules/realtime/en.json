@@ -43,7 +43,12 @@
         "noTargets": {
           "title": "Nowhere to share it",
           "body": "Join a project or sign up for an event first."
-        }
+        },
+        "failed": {
+          "notParticipant": "That project or event isn't yours — join it first.",
+          "generic": "Couldn't share the canvas. Try again."
+        },
+        "onlyMine": "The list shows only projects and events you take part in."
       },
       "revoke": {
         "action": "Take the share back",

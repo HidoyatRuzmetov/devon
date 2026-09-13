@@ -82,7 +82,13 @@ function feedDto(row: FeedRow, publicUrl: string): z.infer<typeof feedSchema> {
     id: row.id,
     kind: row.kind,
     label: row.label,
-    url: path,
+    // Absolute, not the bare `path`. This URL's whole purpose is to be pasted into software that is
+    // not this application -- Google Calendar's "add by URL", Outlook's "subscribe from web" -- and a
+    // relative path there resolves against *their* origin and 404s. Verified in the browser: the
+    // subscriptions screen used to hand a person `/api/v1/calendar/feed/<secret>.ics`, which is
+    // unusable everywhere it was meant to be used. `webcalUrl` and `caldavUrl` below were already
+    // absolute, which is what made the inconsistency visible.
+    url: `${origin}${path}`,
     // `webcal://` is what makes one click in Apple Calendar and Outlook desktop *subscribe* rather
     // than download a dead snapshot -- the single most common way an ICS feed gets used wrongly.
     webcalUrl: `webcal://${origin.replace(/^https?:\/\//, '')}${path}`,

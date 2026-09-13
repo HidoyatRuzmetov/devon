@@ -102,10 +102,15 @@ export function SharedCanvasPanel({ share }: { share: SharedCanvasSummary }): Re
     )
   }
 
-  const scopeLabel =
-    share.scope === 'project'
-      ? t('realtime.canvas.shared.toProject', { name: share.title })
-      : t('realtime.canvas.shared.toEvent', { name: share.title })
+  // `targetTitle`, not `title`: `title` is the *canvas's* name, and using it here produced "Reja
+  // doskasi loyihasiga ulashilgan" -- "shared to the Reja doskasi project" -- naming the canvas as
+  // though it were the project. The fallback is the id-less generic badge above, never a wrong name.
+  const targetName = share.targetTitle
+  const scopeLabel = !targetName
+    ? t('realtime.canvas.shared.badge')
+    : share.scope === 'project'
+      ? t('realtime.canvas.shared.toProject', { name: targetName })
+      : t('realtime.canvas.shared.toEvent', { name: targetName })
 
   return (
     <Card className="flex flex-col gap-3">

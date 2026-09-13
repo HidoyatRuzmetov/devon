@@ -1,0 +1,14 @@
+export POSTGRES_MIGRATOR_PASSWORD=rtcal_migrator_pw
+export POSTGRES_APP_PASSWORD=rtcal_app_pw
+export MIGRATION_DATABASE_URL="postgres://postgres:devon_local_dev_root@127.0.0.1:55605/devon"
+export DATABASE_URL="postgres://devon_app:rtcal_app_pw@127.0.0.1:55605/devon"
+export API_PORT=3099
+export WEB_PORT=5199
+export DEVON_PUBLIC_URL="http://127.0.0.1:5199"
+export CSRF_SECRET=devon_local_dev_csrf_secret_change_in_production
+export STORAGE_DRIVER=local
+export STORAGE_LOCAL_DIR=.data/storage-rtcal
+export CENTRIFUGO_WS_URL="ws://127.0.0.1:8010/connection/websocket"
+export CENTRIFUGO_API_URL="http://127.0.0.1:8010"
+export CENTRIFUGO_API_KEY=devon_local_dev_centrifugo_api_change_me
+export CENTRIFUGO_TOKEN_HMAC_SECRET_KEY=devon_local_dev_centrifugo_change_me

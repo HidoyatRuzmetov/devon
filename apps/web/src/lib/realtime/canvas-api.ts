@@ -21,6 +21,8 @@ export const sharedCanvasSchema = z.object({
   ownerUserId: z.string(),
   scope: canvasScopeSchema,
   targetId: z.string(),
+  /** The project's or event's own title -- what "shared to X" names. `''` if the target is gone. */
+  targetTitle: z.string(),
   title: z.string(),
   scene: z.unknown(),
   stickies: z.unknown(),

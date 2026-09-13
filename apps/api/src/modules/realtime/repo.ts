@@ -16,6 +16,14 @@ export type SharedCanvasRow = {
   ownerUserId: string
   scope: SharedCanvasScope
   targetId: string
+  /** The project's or event's own title, resolved in the same statement that reads the share.
+   *
+   * Without it a client has exactly two strings -- the canvas's title and a target *id* -- and
+   * "shared to X" is unanswerable, so the screen ends up naming the canvas where it meant to name
+   * the project (found in the browser: "Reja doskasi loyihasiga ulashilgan", which reads as "shared
+   * to the Reja doskasi project" and is simply wrong). `''` when the target has since been deleted;
+   * the share is then still listed, just not attributed. */
+  targetTitle: string
   title: string
   scene: unknown
   stickies: unknown
@@ -34,6 +42,7 @@ type SharedCanvasSqlRow = {
   owner_user_id: string
   scope: SharedCanvasScope
   target_id: string
+  target_title: string | null
   title: string
   scene: unknown
   stickies: unknown
@@ -57,6 +66,7 @@ function toSharedCanvas(r: SharedCanvasSqlRow): SharedCanvasRow {
     ownerUserId: r.owner_user_id,
     scope: r.scope,
     targetId: r.target_id,
+    targetTitle: r.target_title ?? '',
     title: r.title,
     scene: r.scene,
     stickies: r.stickies,
@@ -123,6 +133,7 @@ export async function upsertShare(
     }),
     async (tx) => {
       const rows = await tx.raw<SharedCanvasSqlRow>(sql`
+        with written as (
         insert into app.shared_canvases
           (department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene, stickies,
            allow_edit, updated_by_user_id)
@@ -141,6 +152,14 @@ export async function upsertShare(
                       version = app.shared_canvases.version + 1
         returning id, department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene,
                   stickies, allow_edit, created_at, updated_at, updated_by_user_id, revoked_at, version
+      )
+      -- target_title on the write's own response, so a client that renders the row it just created
+      -- names the project rather than falling back to an empty string until the next refetch. The
+      -- two joins are on primary keys of at most one row each; this is still one statement.
+      select w.*, coalesce(p.title, e.title) as target_title
+      from written w
+      left join app.projects p on w.scope = 'project' and p.id = w.target_id
+      left join app.events e on w.scope = 'event' and e.id = w.target_id
       `)
       const row = rows[0]
       if (!row) throw new Error('realtime: canvas share upsert returned no row')
@@ -173,10 +192,14 @@ export async function getShare(
 ): Promise<SharedCanvasRow | null> {
   return withContext(toRequestContext(ctx, { departmentId, departmentRole }), async (tx) => {
     const rows = await tx.raw<SharedCanvasSqlRow>(sql`
-      select id, department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene,
-             stickies, allow_edit, created_at, updated_at, updated_by_user_id, revoked_at, version
-      from app.shared_canvases
-      where id = ${id} and revoked_at is null
+      select sc.id, sc.department_id, sc.source_canvas_id, sc.owner_user_id, sc.scope,
+             sc.target_id, sc.title, sc.scene, sc.stickies, sc.allow_edit, sc.created_at,
+             sc.updated_at, sc.updated_by_user_id, sc.revoked_at, sc.version,
+             coalesce(p.title, e.title) as target_title
+      from app.shared_canvases sc
+      left join app.projects p on sc.scope = 'project' and p.id = sc.target_id
+      left join app.events e on sc.scope = 'event' and e.id = sc.target_id
+      where sc.id = ${id} and sc.revoked_at is null
       limit 1
     `)
     return rows[0] ? toSharedCanvas(rows[0]) : null
@@ -192,11 +215,15 @@ export async function listShares(
 ): Promise<SharedCanvasRow[]> {
   return withContext(toRequestContext(ctx, { departmentId, departmentRole }), async (tx) => {
     const rows = await tx.raw<SharedCanvasSqlRow>(sql`
-      select id, department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene,
-             stickies, allow_edit, created_at, updated_at, updated_by_user_id, revoked_at, version
-      from app.shared_canvases
-      where revoked_at is null
-      order by updated_at desc
+      select sc.id, sc.department_id, sc.source_canvas_id, sc.owner_user_id, sc.scope,
+             sc.target_id, sc.title, sc.scene, sc.stickies, sc.allow_edit, sc.created_at,
+             sc.updated_at, sc.updated_by_user_id, sc.revoked_at, sc.version,
+             coalesce(p.title, e.title) as target_title
+      from app.shared_canvases sc
+      left join app.projects p on sc.scope = 'project' and p.id = sc.target_id
+      left join app.events e on sc.scope = 'event' and e.id = sc.target_id
+      where sc.revoked_at is null
+      order by sc.updated_at desc
       limit 200
     `)
     return rows.map(toSharedCanvas)
@@ -221,6 +248,7 @@ export async function updateShareDoc(
     }),
     async (tx) => {
       const rows = await tx.raw<SharedCanvasSqlRow>(sql`
+        with written as (
         update app.shared_canvases
         set scene = ${JSON.stringify(params.scene ?? {})}::jsonb,
             stickies = ${JSON.stringify(params.stickies ?? [])}::jsonb,
@@ -230,6 +258,14 @@ export async function updateShareDoc(
         where id = ${params.id} and revoked_at is null
         returning id, department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene,
                   stickies, allow_edit, created_at, updated_at, updated_by_user_id, revoked_at, version
+      )
+      -- target_title on the write's own response, so a client that renders the row it just created
+      -- names the project rather than falling back to an empty string until the next refetch. The
+      -- two joins are on primary keys of at most one row each; this is still one statement.
+      select w.*, coalesce(p.title, e.title) as target_title
+      from written w
+      left join app.projects p on w.scope = 'project' and p.id = w.target_id
+      left join app.events e on w.scope = 'event' and e.id = w.target_id
       `)
       const row = rows[0]
       if (!row) return null
@@ -257,11 +293,20 @@ export async function revokeShare(
     }),
     async (tx) => {
       const rows = await tx.raw<SharedCanvasSqlRow>(sql`
+        with written as (
         update app.shared_canvases
         set revoked_at = now(), updated_at = now(), version = version + 1
         where id = ${params.id} and revoked_at is null
         returning id, department_id, source_canvas_id, owner_user_id, scope, target_id, title, scene,
                   stickies, allow_edit, created_at, updated_at, updated_by_user_id, revoked_at, version
+      )
+      -- target_title on the write's own response, so a client that renders the row it just created
+      -- names the project rather than falling back to an empty string until the next refetch. The
+      -- two joins are on primary keys of at most one row each; this is still one statement.
+      select w.*, coalesce(p.title, e.title) as target_title
+      from written w
+      left join app.projects p on w.scope = 'project' and p.id = w.target_id
+      left join app.events e on w.scope = 'event' and e.id = w.target_id
       `)
       const row = rows[0]
       if (!row) return null

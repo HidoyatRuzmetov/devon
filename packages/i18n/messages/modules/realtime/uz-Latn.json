@@ -43,7 +43,12 @@
         "noTargets": {
           "title": "Ulashadigan joy yoʻq",
           "body": "Avval biror loyihaga qoʻshiling yoki tadbirga yoziling."
-        }
+        },
+        "failed": {
+          "notParticipant": "Bu loyiha yoki tadbir sizniki emas — avval unga qoʻshiling.",
+          "generic": "Doskani ulashib boʻlmadi. Qayta urinib koʻring."
+        },
+        "onlyMine": "Roʻyxatda faqat siz qatnashadigan loyiha va tadbirlar koʻrsatilgan."
       },
       "revoke": {
         "action": "Ulashuvni qaytarib olish",

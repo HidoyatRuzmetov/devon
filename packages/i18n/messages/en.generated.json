@@ -1184,6 +1184,185 @@
     },
     "chartEmpty": "No data yet"
   },
+  "calendar": {
+    "title": "Calendar",
+    "eyebrow": "PLAN AND REMINDERS",
+    "description": "Events and card due dates in one place — in the calendar on your phone, and in reminders.",
+    "tabs": {
+      "agenda": "Agenda",
+      "feeds": "Subscriptions",
+      "push": "Reminders"
+    },
+    "actions": {
+      "retry": "Retry",
+      "close": "Close",
+      "copy": "Copy",
+      "copied": "Copied",
+      "open": "Open",
+      "undo": "Undo"
+    },
+    "forbidden": {
+      "title": "This page isn't open to you",
+      "body": "Calendar subscriptions are personal. Check that you're signed in to your own account."
+    },
+    "offline": {
+      "title": "No connection",
+      "body": "The agenda will refresh itself once you're back online."
+    },
+    "agenda": {
+      "title": "The days ahead",
+      "description": "Your events and the cards whose due date is coming up.",
+      "range": {
+        "label": "Period",
+        "week": "7 days",
+        "month": "30 days",
+        "quarter": "90 days"
+      },
+      "kind": {
+        "event": "Event",
+        "card": "Card"
+      },
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "noPlace": "No place given",
+      "allDay": "All day",
+      "empty": {
+        "title": "Nothing in the days ahead",
+        "body": "Create an event or give a card a due date and it will show up here.",
+        "action": "Go to events"
+      },
+      "loading": {
+        "title": "Loading your agenda"
+      },
+      "error": {
+        "title": "Couldn't open your agenda",
+        "body": "Something went wrong with the connection. Try again."
+      }
+    },
+    "feeds": {
+      "title": "Calendar subscriptions",
+      "description": "Connect your WorkPortal calendar to your phone or Outlook with a secret link.",
+      "secretWarning": "This link is a key. Anyone who has it can read your events and due dates. Only paste it into your own app.",
+      "create": {
+        "title": "New subscription",
+        "label": "Name",
+        "labelPlaceholder": "For example: iPhone calendar",
+        "kind": "What to include",
+        "submit": "Create subscription",
+        "creating": "Creating…"
+      },
+      "kind": {
+        "all": "Everything",
+        "events": "Events only",
+        "tasks": "Card due dates only",
+        "allHelp": "Both events and cards that have a due date.",
+        "eventsHelp": "Only the events you take part in.",
+        "tasksHelp": "Only cards assigned to you that have a due date."
+      },
+      "url": {
+        "https": "Link (https)",
+        "webcal": "Webcal link",
+        "caldav": "CalDAV link",
+        "httpsHelp": "For Google Calendar → \"Add from URL\".",
+        "webcalHelp": "For iPhone, Apple Calendar and Outlook — opens the calendar app straight away.",
+        "caldavHelp": "For DAVx5, Thunderbird and Evolution. Read-only."
+      },
+      "meta": {
+        "created": "Created {date}",
+        "rotated": "Renewed {date}",
+        "lastAccessed": "Last read {date}",
+        "neverAccessed": "Never read yet",
+        "accessCount": "Read {count} times"
+      },
+      "rotate": {
+        "action": "Renew the link",
+        "confirmTitle": "Renew this link?",
+        "confirmBody": "The old link stops working immediately. You'll have to paste the new one into your calendar app again.",
+        "confirm": "Yes, renew it",
+        "cancel": "Cancel",
+        "toast": "Link renewed"
+      },
+      "revoke": {
+        "action": "Delete",
+        "toast": "Subscription deleted"
+      },
+      "copyToast": "Link copied",
+      "empty": {
+        "title": "No subscriptions yet",
+        "body": "Create one and your events will show up in the calendar on your phone.",
+        "action": "Create a subscription"
+      },
+      "loading": {
+        "title": "Loading subscriptions"
+      },
+      "error": {
+        "title": "Couldn't open your subscriptions",
+        "body": "Something went wrong with the connection. Try again."
+      }
+    },
+    "push": {
+      "title": "Browser reminders",
+      "description": "You'll hear about it when a due date is near or someone mentions you — even with WorkPortal closed.",
+      "what": {
+        "title": "What you'll be told about",
+        "mentioned": "Someone mentions you in a comment",
+        "assigned": "A card is assigned to you",
+        "due": "A card's due date is near",
+        "decision": "A decision is waiting on you"
+      },
+      "quietHours": {
+        "note": "Nothing arrives during your quiet hours — they follow the times in your inbox settings."
+      },
+      "enable": "Turn reminders on",
+      "enabling": "Turning on…",
+      "disable": "Turn off on this device",
+      "state": {
+        "on": "On for this device",
+        "off": "Off for this device"
+      },
+      "devices": {
+        "title": "Connected devices",
+        "thisDevice": "This device",
+        "added": "Added {date}",
+        "lastSeen": "Last active {date}",
+        "unknown": "Unknown browser"
+      },
+      "unsupported": {
+        "title": "This browser can't do reminders",
+        "body": "Use a recent Chrome, Edge or Firefox. On iPhone, add WorkPortal to your Home Screen first."
+      },
+      "denied": {
+        "title": "Your browser has blocked notifications",
+        "body": "Click the lock in the address bar, allow notifications for this site, then try again."
+      },
+      "disabledOnServer": {
+        "title": "Reminders aren't set up on this server",
+        "body": "Browser reminders stay off until an administrator enables the VAPID keys."
+      },
+      "toast": {
+        "enabled": "Reminders are on",
+        "disabled": "Reminders are off",
+        "failed": "Couldn't turn reminders on"
+      },
+      "loading": {
+        "title": "Loading your settings"
+      },
+      "error": {
+        "title": "Couldn't open your settings",
+        "body": "Something went wrong with the connection. Try again."
+      }
+    },
+    "addTo": {
+      "label": "Add to calendar",
+      "google": "Google Calendar",
+      "outlook": "Outlook.com",
+      "office365": "Microsoft 365",
+      "yahoo": "Yahoo Calendar",
+      "ics": "File (.ics)",
+      "hint": "Copies the event into your own calendar.",
+      "error": "Couldn't prepare the links"
+    }
+  },
   "departments": {
     "title": "Departments",
     "subtitle": "Your departments, and ways to join more",
@@ -2339,6 +2518,99 @@
       "applyFocus": "Apply focus card",
       "focus": "Start with: {title}",
       "planApplied": "Focus card updated"
+    }
+  },
+  "realtime": {
+    "status": {
+      "live": "Live",
+      "liveHint": "Changes show up the moment they happen.",
+      "connecting": "Connecting…",
+      "connectingHint": "Restoring the live connection.",
+      "off": "Live mode is off",
+      "offHint": "This server runs without live updates — the page refreshes itself every few seconds.",
+      "error": "The live connection dropped",
+      "errorHint": "The page will keep refreshing itself every few seconds."
+    },
+    "presence": {
+      "label": "Here right now",
+      "nobody": "Nobody else is here right now",
+      "one": "{name} is looking at this board too",
+      "many": "{name} and {count} others are looking at this board",
+      "more": "{count} more"
+    },
+    "signal": {
+      "editing": "Being edited",
+      "editingBy": "{name} is editing this",
+      "typing": "Writing a comment",
+      "typingBy": "{name} is writing a comment",
+      "typingMany": "{count} people are writing a comment"
+    },
+    "canvas": {
+      "share": {
+        "action": "Share this canvas",
+        "title": "Share this canvas",
+        "description": "A copy of your private canvas appears on the project or event page. The original stays private.",
+        "privacyNote": "Sharing makes a copy. Later changes to your private canvas don't reach it — you edit the copy from here. You can take the share back at any moment.",
+        "scope": "Where",
+        "scopeProject": "Project",
+        "scopeEvent": "Event",
+        "target": "Choose",
+        "targetPlaceholder": "Choose a project or an event",
+        "allowEdit": "Let participants edit it",
+        "allowEditHelp": "Turn this off and they only look — no cursors either.",
+        "submit": "Share",
+        "sharing": "Sharing…",
+        "toast": "Canvas shared",
+        "noTargets": {
+          "title": "Nowhere to share it",
+          "body": "Join a project or sign up for an event first."
+        },
+        "failed": {
+          "notParticipant": "That project or event isn't yours — join it first.",
+          "generic": "Couldn't share the canvas. Try again."
+        },
+        "onlyMine": "The list shows only projects and events you take part in."
+      },
+      "revoke": {
+        "action": "Take the share back",
+        "confirmTitle": "Take the share back?",
+        "confirmBody": "The copy closes for everyone. Nothing happens to your private canvas.",
+        "confirm": "Yes, close it",
+        "cancel": "Cancel",
+        "toast": "Share taken back"
+      },
+      "shared": {
+        "badge": "Shared",
+        "toProject": "Shared to the {name} project",
+        "toEvent": "Shared to the {name} event",
+        "readOnly": "Read-only",
+        "editable": "Participants can edit it",
+        "openOriginal": "Open the private canvas"
+      },
+      "cursors": {
+        "label": "Live cursors",
+        "nobody": "Nobody else is on this canvas right now"
+      },
+      "conflict": {
+        "title": "Somebody changed this canvas before you",
+        "body": "The newest version is loaded. Make your change again.",
+        "action": "Refresh"
+      },
+      "empty": {
+        "title": "This canvas isn't shared yet",
+        "body": "Share it and the people in that project or event can look at it and edit it with you."
+      },
+      "loading": {
+        "title": "Loading the canvas"
+      },
+      "error": {
+        "title": "Couldn't open the canvas",
+        "body": "Something went wrong with the connection. Try again."
+      },
+      "forbidden": {
+        "title": "This canvas isn't open to you",
+        "body": "Only the people in the project or event it was shared to can see it."
+      }
     }
   },
   "structure": {
