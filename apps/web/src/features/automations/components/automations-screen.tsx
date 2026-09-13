@@ -27,7 +27,9 @@ import { useT, useLocale, formatDateTime } from '@devon/i18n'
 import {
   Badge,
   Button,
+  Celebrate,
   Chip,
+  cn,
   Dialog,
   DialogContent,
   IconButton,
@@ -38,7 +40,6 @@ import {
   StaggerItem,
   StateView,
   Switch,
-  cn,
   toast,
   toastWithUndo,
 } from '@devon/ui'
@@ -118,6 +119,8 @@ function RuleCard({
   onEdit,
   onDuplicate,
   busy,
+  celebrate,
+  onCelebrateDone,
 }: {
   rule: AutomationRule
   onToggle: (enabled: boolean) => void
@@ -125,16 +128,25 @@ function RuleCard({
   onEdit: () => void
   onDuplicate: () => void
   busy: boolean
+  /** Fires once on the card of the rule that was just saved. The builder closes on success, so a
+   * burst inside it would play behind a sheet nobody is looking at any more -- it belongs on the
+   * rule that appeared (or changed) in the list. */
+  celebrate?: boolean
+  onCelebrateDone?: () => void
 }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   return (
     <article
       className={cn(
-        'flex flex-col gap-3 rounded-md border bg-card p-4',
+        'relative flex flex-col gap-3 rounded-md border bg-card p-4',
         rule.enabled ? 'border-border' : 'border-dashed border-border opacity-70',
       )}
     >
+      <Celebrate
+        play={celebrate ?? false}
+        {...(onCelebrateDone ? { onDone: onCelebrateDone } : {})}
+      />
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
@@ -378,6 +390,8 @@ export default function AutomationsScreen(): React.JSX.Element {
   const pauseAll = usePauseAllMutation()
 
   const [builderOpen, setBuilderOpen] = React.useState(false)
+  // The rule whose save just landed, cleared by its own card once the burst has played.
+  const [savedRuleId, setSavedRuleId] = React.useState<string | null>(null)
   const [pending, setPending] = React.useState<string | null>(null)
   // SEV2 #9: `null` = create; a rule = edit it; a `{ draft }` = duplicate it (a new rule, seeded).
   const [builderRule, setBuilderRule] = React.useState<AutomationRule | null>(null)
@@ -432,6 +446,7 @@ export default function AutomationsScreen(): React.JSX.Element {
         {
           onSuccess: () => {
             closeBuilder()
+            setSavedRuleId(builderRule.id)
             toast.success(t('automations.saved'))
           },
           onError: () => toast.error(t('automations.saveFailed')),
@@ -440,8 +455,9 @@ export default function AutomationsScreen(): React.JSX.Element {
       return
     }
     createRule.mutate(body, {
-      onSuccess: () => {
+      onSuccess: (created) => {
         closeBuilder()
+        setSavedRuleId(created.id)
         toast.success(t('automations.created'))
       },
       onError: () => toast.error(t('automations.createFailed')),
@@ -519,6 +535,8 @@ export default function AutomationsScreen(): React.JSX.Element {
               <RuleCard
                 rule={rule}
                 busy={pending === rule.id}
+                celebrate={savedRuleId === rule.id}
+                onCelebrateDone={() => setSavedRuleId(null)}
                 onToggle={(enabled) => toggle(rule, enabled)}
                 onDelete={() => remove(rule)}
                 onEdit={() => {

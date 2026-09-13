@@ -266,10 +266,16 @@ export function PomodoroPanel() {
           <SettingsSheet settings={settings} />
         </div>
 
+        {/* DESIGN.md §10 "Pomodoro | Animated ring stroke, phase colour crossfade | 1 s per tick".
+            The default `settle` tween eased the arc over 220 ms and then held it still for 780 ms,
+            once a second, for twenty-five minutes -- a lurch, not a clock. `sweep="tick"` runs the
+            arc linearly over exactly the tick interval, so it reads as a second hand. The phase
+            colour crossfade comes from the ring itself. */}
         <ProgressRing
           value={ringValue}
           size={220}
           strokeWidth={10}
+          sweep={state.phase === 'idle' ? 'settle' : 'tick'}
           label={t(PHASE_LABEL_KEY[state.phase])}
           toneClassName={PHASE_RING_TONE[state.phase]}
         >

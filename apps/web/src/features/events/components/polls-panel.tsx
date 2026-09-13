@@ -6,15 +6,17 @@ import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import {
   Badge,
   Button,
+  Celebrate,
   Checkbox,
+  cn,
   Field,
   Input,
   Select,
   Skeleton,
   StateView,
-  cn,
   toast,
   toastWithUndo,
+  useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
 import { Plus, X } from 'lucide-react'
@@ -77,6 +79,10 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
   // from here is reverting to whatever the previous ballot was. A first-ever vote has no previous
   // ballot to revert to, so it gets the plain confirmation instead of an undo it can't fulfil.
   const previousSelected = poll.options.filter((o) => o.votedByMe).map((o) => o.id)
+  // A vote is a small commitment somebody just made -- the same shape as an RSVP, which has carried
+  // the burst since v1.0. Kept to the *first* vote on a poll: changing a ballot already has the undo
+  // toast, and a celebration on every edit would be the product cheering at indecision.
+  const voteCelebrate = useCelebrate()
 
   const handleVote = async () => {
     if (selected.length === 0) return
@@ -96,6 +102,7 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
           },
         })
       } else {
+        voteCelebrate.fire()
         toast(t('events.polls.votedToast'))
       }
     } catch {
@@ -142,14 +149,17 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
             </label>
           ))}
           <div className="flex justify-end">
-            <Button
-              size="sm"
-              onClick={handleVote}
-              loading={voteMutation.isPending}
-              disabled={selected.length === 0}
-            >
-              {t('events.polls.vote')}
-            </Button>
+            <span className="relative inline-flex">
+              <Button
+                size="sm"
+                onClick={handleVote}
+                loading={voteMutation.isPending}
+                disabled={selected.length === 0}
+              >
+                {t('events.polls.vote')}
+              </Button>
+              <Celebrate play={voteCelebrate.play} onDone={voteCelebrate.onDone} />
+            </span>
           </div>
         </div>
       ) : (

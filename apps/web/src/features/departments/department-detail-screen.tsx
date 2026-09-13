@@ -12,6 +12,7 @@ import {
   Avatar,
   Badge,
   Button,
+  Celebrate,
   DataList,
   DataRow,
   DropdownMenu,
@@ -19,6 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   IconButton,
+  initialsFromName,
   Input,
   PageHeader,
   RadioGroup,
@@ -31,7 +33,6 @@ import {
   Tabs,
   TabsList,
   TabsTrigger,
-  initialsFromName,
   toast,
 } from '@devon/ui'
 import { Copy, Lock, MoreVertical, RefreshCw } from 'lucide-react'
@@ -412,10 +413,16 @@ function JoinRequestsCard({ id }: { id: string }) {
     void queryClient.invalidateQueries({ queryKey: ['departments', 'members', id] })
   }
 
+  // Approving somebody into the boshqarma is the moment a person joins a team -- the one decision on
+  // this screen worth marking. Rejection and undo get the toast alone: nothing is celebrated about
+  // saying no.
+  const [approvedUserId, setApprovedUserId] = React.useState<string | null>(null)
+
   const decide = useMutation({
     mutationFn: (input: { userId: string; decision: 'approve' | 'reject' | 'undo' }) =>
       decideJoinRequest(id, input.userId, input.decision, meQuery.data?.csrfToken ?? ''),
     onSuccess: (_result, input) => {
+      if (input.decision === 'approve') setApprovedUserId(input.userId)
       invalidate()
       if (input.decision === 'undo') {
         toast(t('departments.joinRequests.undone'))
@@ -506,13 +513,19 @@ function JoinRequestsCard({ id }: { id: string }) {
                       >
                         {t('departments.joinRequests.reject')}
                       </Button>
-                      <Button
-                        size="sm"
-                        disabled={decide.isPending}
-                        onClick={() => decide.mutate({ userId: r.userId, decision: 'approve' })}
-                      >
-                        {t('departments.joinRequests.approve')}
-                      </Button>
+                      <span className="relative inline-flex">
+                        <Button
+                          size="sm"
+                          disabled={decide.isPending}
+                          onClick={() => decide.mutate({ userId: r.userId, decision: 'approve' })}
+                        >
+                          {t('departments.joinRequests.approve')}
+                        </Button>
+                        <Celebrate
+                          play={approvedUserId === r.userId}
+                          onDone={() => setApprovedUserId(null)}
+                        />
+                      </span>
                     </div>
                   }
                 >

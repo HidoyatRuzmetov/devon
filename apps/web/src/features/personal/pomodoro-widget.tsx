@@ -168,6 +168,7 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
               value={ringValue}
               size={16}
               strokeWidth={2}
+              sweep="tick"
               label={t(PHASE_LABEL_KEY[state.phase])}
               toneClassName={PHASE_RING_TONE[state.phase]}
             />

@@ -31,6 +31,8 @@ import { FIELD_CAPS } from '@devon/contracts'
 import {
   Badge,
   Button,
+  Celebrate,
+  cn,
   IconButton,
   PageContainer,
   PageHeader,
@@ -41,7 +43,6 @@ import {
   StaggerItem,
   StateView,
   Switch,
-  cn,
   toast,
   toastWithUndo,
 } from '@devon/ui'
@@ -164,10 +165,16 @@ export default function FieldsScreen(): React.JSX.Element {
     onError: (err) => reportError(err, 'fields.manager.reorderFailed'),
   })
 
+  // The burst belongs to the button that was pressed, so the row id travels with it rather than a
+  // single screen-level `useCelebrate` firing on whichever card happens to render first.
+  const [askedDefId, setAskedDefId] = React.useState<string | null>(null)
+
   const notify = useMutation({
     mutationFn: (id: string) => notifyToFill(id, csrfToken),
-    onSuccess: (result) => {
+    onSuccess: (result, id) => {
       refresh()
+      // "Nobody to ask" is not a win -- only an ask or a nudge that actually went out is.
+      if (result.asked > 0 || result.reminded > 0) setAskedDefId(id)
       toast.success(
         result.asked > 0
           ? t('fields.manager.asked', { count: result.asked })
@@ -434,17 +441,23 @@ export default function FieldsScreen(): React.JSX.Element {
                             : ''}
                         </p>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={notify.isPending || progress.filled >= progress.total}
-                        onClick={() => notify.mutate(def.id)}
-                      >
-                        <BellRing aria-hidden="true" className="size-4" />
-                        {progress.openRequests > 0
-                          ? t('fields.manager.nudge')
-                          : t('fields.manager.ask')}
-                      </Button>
+                      <span className="relative inline-flex shrink-0">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={notify.isPending || progress.filled >= progress.total}
+                          onClick={() => notify.mutate(def.id)}
+                        >
+                          <BellRing aria-hidden="true" className="size-4" />
+                          {progress.openRequests > 0
+                            ? t('fields.manager.nudge')
+                            : t('fields.manager.ask')}
+                        </Button>
+                        <Celebrate
+                          play={askedDefId === def.id}
+                          onDone={() => setAskedDefId(null)}
+                        />
+                      </span>
                     </div>
                   ) : null}
                 </article>

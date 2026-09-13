@@ -17,6 +17,7 @@ import type { GoalMetric } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Button,
+  Celebrate,
   Chip,
   Dialog,
   DialogContent,
@@ -29,11 +30,12 @@ import {
   Skeleton,
   Stagger,
   StaggerItem,
-  StatNumber,
   StateView,
+  StatNumber,
   Textarea,
   toast,
   toastWithUndo,
+  useCelebrate,
 } from '@devon/ui'
 import { useDepartment } from '../../../lib/session.js'
 import { navigate } from '../../../lib/router.js'
@@ -104,6 +106,18 @@ export function GoalCard({
   const locale = useLocale()
   const ratio = goalProgress(goal.metric, goal.currentValue, goal.targetValue)
   const fill = goalBarFill(goal.metric, goal.currentValue, goal.targetValue)
+  // A goal's progress is recomputed from the department's own cards on every read, so "reached"
+  // arrives on a refetch rather than on a click -- which is exactly why it needs a moment of its
+  // own: without one, the single most satisfying number in the product changes while nobody is
+  // looking at it. The burst fires on the *crossing* only, never on a card that was already
+  // complete when it mounted.
+  const reached = ratio >= 1
+  const reachedCelebrate = useCelebrate()
+  const wasReached = React.useRef<boolean | null>(null)
+  React.useEffect(() => {
+    if (wasReached.current !== null && reached && !wasReached.current) reachedCelebrate.fire()
+    wasReached.current = reached
+  }, [reached, reachedCelebrate])
   const ceiling = isCeilingMetric(goal.metric)
   const percent = isPercentMetric(goal.metric)
   const overCap = ceiling && goal.targetValue > 0 && goal.currentValue > goal.targetValue
@@ -177,11 +191,14 @@ export function GoalCard({
               : `${Math.round(ratio * 100)}%`}
           </span>
         </div>
-        <Progress
-          value={Math.round(fill * 100)}
-          label={t('work.goals.progressLabel', { title: goal.title })}
-          tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
-        />
+        <span className="relative block">
+          <Progress
+            value={Math.round(fill * 100)}
+            label={t('work.goals.progressLabel', { title: goal.title })}
+            tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
+          />
+          <Celebrate play={reachedCelebrate.play} onDone={reachedCelebrate.onDone} />
+        </span>
         {overCap ? (
           <p className="flex items-center gap-1.5 text-caption text-destructive">
             <AlertTriangle aria-hidden="true" className="size-3.5 shrink-0" />

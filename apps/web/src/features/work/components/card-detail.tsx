@@ -24,6 +24,7 @@ import {
   Chip,
   Collapsible,
   DatePicker,
+  FlashOnChange,
   IconButton,
   initialsFromName,
   Input,
@@ -991,34 +992,27 @@ function Field({
   label: string
   action?: React.ReactNode
   children: React.ReactNode
-  /** round2 SEV2 "property edits commit with no feedback": a token from `useFieldFlash` -- each new
-   * value plays one soft success-tinted sweep behind the field, transform/opacity only, then removes
-   * itself. Reduced motion still gets the sweep (it is a colour fade, not a translate/scale), just at
-   * `--dur-micro` instead of the fuller `--dur-standard`. */
+  /** round2 SEV2 "property edits commit with no feedback": a token from `useFieldFlash`. Each new
+   * token plays one soft success-tinted wash over the control, opacity only. Reduced motion keeps
+   * the wash (a colour fade is not travel) and simply holds it longer -- see `<FlashOnChange>`. */
   flashedAt?: number
 }) {
-  const reduced = useReducedMotion()
   return (
-    <label className="relative flex flex-col gap-1.5 text-small">
+    <label className="flex flex-col gap-1.5 text-small">
       <span className="flex items-center gap-2">
         <span className="text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {label}
         </span>
         {action ? <span className="ml-auto">{action}</span> : null}
       </span>
-      <AnimatePresence>
-        {flashedAt ? (
-          <motion.span
-            key={flashedAt}
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -mx-2 -my-1 rounded-sm bg-success/20"
-            initial={{ opacity: 0.9 }}
-            animate={{ opacity: 0 }}
-            transition={{ duration: reduced ? 0.15 : 0.7, ease: 'easeOut' }}
-          />
-        ) : null}
-      </AnimatePresence>
-      {children}
+      {/* v1.1 motion pass: this was a bespoke `AnimatePresence` sweep written here, and the same
+          gesture is now `<FlashOnChange>` in `packages/ui/src/motion` -- one implementation, one
+          reduced-motion contract, used by every optimistic edit in the product rather than by this
+          one panel. The flash sits around the *control* rather than the whole label, so the eye
+          lands on the value that changed and not on the word for it. */}
+      <FlashOnChange value={flashedAt ?? 0} tone="success" className="flex flex-col">
+        {children}
+      </FlashOnChange>
     </label>
   )
 }
