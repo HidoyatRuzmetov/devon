@@ -10,7 +10,7 @@
         "manage": "Tizim",
         "manageHead": "Boshqaruv"
       },
-      "aria": "Asosiy boʻlimlar",
+      "aria": "Asosiy sahifalar",
       "primary": "Asosiy menyu",
       "short": {
         "home": "Asosiy",
@@ -73,27 +73,27 @@
     },
     "demo": {
       "chip": {
-        "label": "Demo maʼlumotlar",
+        "label": "Namoyish maʼlumotlari",
         "short": "Demo"
       },
-      "popover": "Namoyish rejimi. Bu tizimdagi barcha maʼlumotlar sinov uchun yaratilgan."
+      "popover": "Namoyish rejimi. Bu yerdagi hamma narsa sinov uchun kiritilgan."
     },
     "department": {
-      "aria": "Boʻlimni almashtirish",
-      "heading": "Boʻlimlaringiz",
-      "empty": "Boʻlim tanlanmagan",
-      "add": "Boʻlim yaratish yoki qoʻshilish",
+      "aria": "Boshqarmani almashtirish",
+      "heading": "Boshqarmalaringiz",
+      "empty": "Boshqarma tanlanmagan",
+      "add": "Boshqarma yaratish yoki qoʻshilish",
       "role": {
         "head": "Boshliq",
         "member": "Xodim"
       }
     },
     "quickAdd": {
-      "aria": "Yangi yaratish",
+      "aria": "Yangi qoʻshish",
       "label": "Yangi"
     },
     "inbox": {
-      "aria": "Xabarlar"
+      "aria": "Bildirishnomalar"
     },
     "breadcrumb": {
       "aria": "Sahifa yoʻli"
@@ -110,7 +110,7 @@
       "account": "Hisob",
       "recent": "Yaqinda",
       "actions": "Amallar",
-      "people": "Kishilar",
+      "people": "Xodimlar",
       "cards": "Kartalar",
       "events": "Tadbirlar",
       "pages": "Sahifalar",
@@ -122,7 +122,7 @@
       "locale": "Interfeys tilini oʻzgartirish",
       "theme": "Mavzuni oʻzgartirish",
       "shortcuts": "Klaviatura yorliqlari",
-      "signout": "Tizimdan chiqish"
+      "signout": "Chiqish"
     },
     "empty": {
       "message": "Hech narsa topilmadi",
@@ -140,17 +140,17 @@
     },
     "empty": {
       "member": {
-        "title": "Bu yerda sizning ishlaringiz koʻrinadi",
-        "body": "Hozircha hech narsa yoʻq. Istalgan sahifani qidiruv orqali topishingiz mumkin."
+        "title": "Ishlaringiz shu yerda koʻrinadi",
+        "body": "Hozircha ish yoʻq. Istalgan sahifani qidiruvdan topasiz."
       },
-      "action": "Qidirishni ochish",
+      "action": "Qidiruvni ochish",
       "admin": {
-        "title": "Tizim ishga tushdi",
-        "body": "Boʻlimlar hali yaratilmagan. Tizim holatini boshqaruv sahifasida koʻrishingiz mumkin.",
+        "title": "WorkPortal ishga tushdi",
+        "body": "Hali birorta boshqarma yaratilmagan. Tizim holatini boshqaruv sahifasida koʻrasiz.",
         "action": "Boshqaruvga oʻtish"
       },
       "demo": {
-        "title": "Namoyish boʻlimi tayyor"
+        "title": "Namoyish boshqarmasi tayyor"
       }
     },
     "dashboard": {
@@ -287,14 +287,14 @@
   },
   "state": {
     "error": {
-      "title": "Maʼlumotlarni yuklab boʻlmadi",
+      "title": "Yuklab boʻlmadi",
       "body": "Qayta urinib koʻring. Xatolik takrorlansa, soʻrov raqamini administratorga yuboring.",
       "action": "Qayta urinish",
       "requestId": "Soʻrov raqami: {id}"
     },
     "denied": {
       "title": "Bu sahifa sizga ochiq emas",
-      "body": "Bu sahifa faqat tizim administratori uchun. Kirish kerak boʻlsa, boʻlim boshligʻiga murojaat qiling.",
+      "body": "Bu sahifa faqat tizim administratori uchun. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling.",
       "action": "Bosh sahifaga qaytish"
     },
     "offline": {
@@ -316,30 +316,30 @@
     "undo": "Bekor qilish"
   },
   "login": {
-    "title": "Tizimga kirish",
+    "title": "Hisobga kirish",
     "identifier": "Login yoki e-pochta",
     "password": "Parol",
     "submit": "Kirish",
     "error": "Login yoki parol notoʻgʻri",
-    "locked": "Hisob vaqtincha bloklandi. 15 daqiqadan soʻng qayta urinib koʻring.",
-    "signedOut": "Siz tizimdan chiqdingiz",
+    "locked": "Hisob vaqtincha yopildi. 15 daqiqadan keyin qayta urinib koʻring.",
+    "signedOut": "Hisobdan chiqdingiz",
     "offline": "Aloqa tiklangach, qayta urinib koʻring.",
     "showPassword": "Parolni koʻrsatish",
     "hidePassword": "Parolni yashirish",
     "forgot": {
       "link": "Parolni unutdingizmi?",
       "title": "Parolni tiklash",
-      "body": "Parolni oʻzingiz tiklay olmaysiz — boʻlim boshligʻingiz sizga vaqtinchalik parol beradi.",
+      "body": "Parolni oʻzingiz tiklay olmaysiz — vaqtinchalik parolni boshqarma boshligʻi beradi.",
       "loginLabel": "Loginingiz",
-      "askHead": "Parolni tiklashni soʻrash",
-      "sent": "Soʻrovingiz yuborildi. Boʻlim boshligʻingiz sizga vaqtinchalik parol beradi — undan keyin darhol yangi parol oʻrnating.",
+      "askHead": "Boshliqdan soʻrash",
+      "sent": "Soʻrov yuborildi. Boshqarma boshligʻi vaqtinchalik parol beradi — kirganingizdan keyin darhol yangisini qoʻying.",
       "telegram": "Telegram ulangan boʻlsa, boshliq bergan parol bot orqali ham keladi.",
-      "admin": "Agar siz boʻlim boshligʻi boʻlsangiz, tizim administratoriga murojaat qiling."
+      "admin": "Oʻzingiz boshqarma boshligʻi boʻlsangiz, tizim administratoriga murojaat qiling."
     }
   },
   "setup": {
-    "eyebrow": "BIRINCHI ISHGA TUSHIRISH",
-    "title": "Tizim administratorini yarating",
+    "eyebrow": "ILK SOZLASH",
+    "title": "Tizim administratorini yaratish",
     "body": "Bu havola faqat bir marta ishlaydi.",
     "family": "Familiya",
     "given": "Ism",
@@ -349,11 +349,11 @@
     "copyAction": "Nusxa olish",
     "done": {
       "title": "Administrator hisobi yaratildi",
-      "action": "Tizimga kirish"
+      "action": "Kirish"
     },
     "used": {
-      "title": "Bu havola allaqachon ishlatilgan",
-      "body": "Tizim administratori allaqachon yaratilgan.",
+      "title": "Havola allaqachon ishlatilgan",
+      "body": "Tizim administratori yaratib boʻlingan.",
       "action": "Kirish sahifasiga oʻtish"
     }
   },
@@ -785,7 +785,7 @@
     }
   },
   "auth": {
-    "tagline": "Boʻlimingiz ishini bir joyda olib boring",
+    "tagline": "Boshqarma ishini bir joydan olib boring",
     "credit": "Raqamli texnologiyalar vazirligi tizimi",
     "backToLogin": "Kirish sahifasiga qaytish"
   },
