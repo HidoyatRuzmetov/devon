@@ -248,6 +248,13 @@ fi
 # ------------------------------------------------------------------------------------------------
 step "done"
 # ------------------------------------------------------------------------------------------------
+if [ "$DRY_RUN" = "1" ]; then
+  cat <<DRYDONE
+[update] DRY RUN ONLY -- nothing above was executed and $CURRENT_REF is still what is running.
+[update] Re-run without --dry-run to perform the update.
+DRYDONE
+  exit 0
+fi
 cat <<DONE
 [update] $CURRENT_REF -> $TARGET_REF is live and answering on /readyz.
 

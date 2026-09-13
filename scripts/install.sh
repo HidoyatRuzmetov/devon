@@ -70,7 +70,16 @@ do_it() {
 # ------------------------------------------------------------------------------------------------
 say "checking the host ..."
 
-[ "$(id -u)" = "0" ] || die "run this with sudo: sudo bash scripts/install.sh"
+# A dry run changes nothing, so it does not need root -- and being able to rehearse the installer
+# from an unprivileged shell (or a throwaway ubuntu:24.04 container) is how you find out what it
+# will do to a ministry host before it does it.
+if [ "$(id -u)" != "0" ]; then
+  if [ "$DRY_RUN" = "1" ]; then
+    warn "not running as root; --dry-run changes nothing, so continuing. A real run needs sudo."
+  else
+    die "run this with sudo: sudo bash scripts/install.sh"
+  fi
+fi
 
 if [ -r /etc/os-release ]; then
   # shellcheck disable=SC1091
@@ -413,12 +422,18 @@ fi
 # ------------------------------------------------------------------------------------------------
 # done
 # ------------------------------------------------------------------------------------------------
+if [ -n "$DOMAIN" ]; then
+  PUBLIC_URL_SUMMARY="is https://${DOMAIN} -- check it is exactly what DNS resolves to"
+else
+  PUBLIC_URL_SUMMARY="is still a placeholder; it must be the real hostname, with scheme, no trailing slash"
+fi
+
 cat <<NEXT
 
 [install] Host is prepared. What is left is the part that needs a human:
 
   1. Read and finish ${ENV_FILE}
-       - DEVON_PUBLIC_URL       ${DOMAIN:+= https://$DOMAIN}${DOMAIN:-must be the real hostname}
+       - DEVON_PUBLIC_URL       ${PUBLIC_URL_SUMMARY}
        - AI_API_KEY             the GLM key, or delete the line to run without AI
        - TELEGRAM_*             all three, or none
        - CADDY_TLS_MODE         'internal' (offline CA) or the two DEVON_TLS_* file paths
