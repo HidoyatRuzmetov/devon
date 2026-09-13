@@ -20,11 +20,12 @@ import {
   projectIdFor,
 } from '../work-fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 100
 
-/** The same fixed "today" `work.ts` builds its cards around. */
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+/** The same "today" every other module reads (`../clock.ts`). */
+const NOW = DEMO_NOW
 const DAY_MS = 24 * 60 * 60 * 1000
 function daysFromNow(days: number): Date {
   return new Date(NOW.getTime() + days * DAY_MS)

@@ -17,6 +17,7 @@ import { WORK_DEMO_USERS } from '../work-fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 import * as schema from '../../schema/fields.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 950
 
@@ -215,7 +216,7 @@ const OPEN_REQUESTS: readonly [number, number][] = [
   [14, 3],
 ]
 
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+const NOW = DEMO_NOW
 
 function daysAgo(days: number): Date {
   return new Date(NOW.getTime() - days * 24 * 60 * 60_000)

@@ -39,19 +39,20 @@ import {
   standaloneCardTitle,
 } from '../work-fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 90
 
-/** "Today" in the demo dataset: Sunday 6 September 2026. Every other seed module anchors to the same
- * instant, so a due date written here lands where `events.ts`'s dates and `analytics.ts`'s last
- * history day do, rather than drifting with the clock of whichever machine runs the seed. */
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+/** "Today" in the demo dataset, from the one place it is decided (`../clock.ts`). Every other seed
+ * module reads the same constant, so a due date written here lands where `events.ts`'s dates and
+ * `analytics.ts`'s last history day do, rather than drifting with the clock of whichever machine runs
+ * the seed -- and moving the demo forward is one line, not eight. */
+const NOW = DEMO_NOW
 const DAY_MS = 24 * 60 * 60 * 1000
 const PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const
 
-/** How far back the quarter reaches. 88 days before 2026-09-06 is 2026-06-10 -- four days more than
- * `analytics.ts`'s 84-day window, so the oldest cards are already open on the chart's first day
- * instead of the chart opening at zero. */
+/** How far back the quarter reaches: four days more than `analytics.ts`'s 84-day window, so the
+ * oldest cards are already open on the chart's first day instead of the chart opening at zero. */
 const QUARTER_DAYS = 88
 
 function daysFromNow(days: number): Date {

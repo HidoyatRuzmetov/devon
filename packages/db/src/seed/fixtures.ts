@@ -1,8 +1,9 @@
-// The demo dataset itself. Deliberately small: `ac.md` puts "the full §14 demo dataset (40 users, 250
-// cards, events, AI traces)" out of scope for this item -- EPIC-000 ships the seed *framework*, its
-// idempotence and the demo chip; realistic volume arrives with the epics that own those objects. One
-// department, one head, one member is enough to prove the mechanism (deterministic ids, ON CONFLICT DO
-// NOTHING, the data-driven demo chip) generically.
+// The foundation of the demo dataset: the one department and the two accounts a presenter signs in
+// as. Everything else about "Raqamli xizmatlar boshqarmasi" -- the other fourteen colleagues, the
+// three bo'limlar, the quarter of work -- is `work-fixtures.ts`'s, because this file predates those
+// epics and their modules own their own rows (MODULE-GUIDE.md "DB: seeds"). The two users here are
+// still the *personas*: `demo.boshliq` is the boshqarma boshligʻi the head half of the demo is given
+// from, `demo.xodim` is the colleague the other half is given from.
 import { createHash } from 'node:crypto'
 import { hash } from '@node-rs/argon2'
 import { demoId } from './ids.js'
@@ -70,7 +71,10 @@ export const DEMO_USERS: readonly DemoUserFixture[] = [
     login: 'demo.boshliq',
     givenName: 'Anvar',
     familyName: 'Aliyev',
-    title: 'Boʻlim boshligʻi',
+    // He heads the whole boshqarma, not one of its bo'limlar -- the two boʻlim boshligʻi are Jasur
+    // Qodirov and Dilnoza Rahimova (`work-fixtures.ts`), and the People page shows all three titles
+    // side by side, so they have to be different words.
+    title: 'Boshqarma boshligʻi',
     role: 'head',
   },
   {
@@ -78,7 +82,9 @@ export const DEMO_USERS: readonly DemoUserFixture[] = [
     login: 'demo.xodim',
     givenName: 'Nodira',
     familyName: 'Karimova',
-    title: 'Xodim',
+    // "Xodim" is a role, not a job: on the People page it was the one card that said nothing about
+    // what the person does, next to fifteen that did.
+    title: 'Yetakchi mutaxassis',
     role: 'member',
   },
 ]

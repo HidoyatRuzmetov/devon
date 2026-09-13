@@ -34,12 +34,13 @@ import {
 import { demoId } from '../ids.js'
 import { asUser } from '../scope.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import { DEMO_NOW } from '../clock.js'
 
 export const order = 960
 
-/** The same fixed "now" `work.ts` builds its cards around, so a due date here lands where that
- * module's dates do rather than drifting with the clock of whichever machine seeds. */
-const NOW = new Date('2026-09-06T09:00:00.000Z')
+/** The same "now" `work.ts` builds its cards around (`../clock.ts`), so a due date here lands where
+ * that module's dates do rather than drifting with the clock of whichever machine seeds. */
+const NOW = DEMO_NOW
 const DAY_MS = 24 * 60 * 60 * 1000
 const daysFromNow = (days: number): Date => new Date(NOW.getTime() + days * DAY_MS)
 const isoDate = (days: number): string => daysFromNow(days).toISOString().slice(0, 10)
@@ -181,11 +182,14 @@ const GOALS: readonly {
 }[] = [
   {
     id: demoId('workplus.goal.oylik'),
-    title: 'Sentabrda 120 ta vazifa yakunlansin',
-    description: 'Boʻlimning oylik sur’ati — kartalardan oʻzi hisoblanadi.',
+    // Targets are scaled to the department that actually exists. "120 ta vazifa" against a board of
+    // 85 cards read 4% on the goals screen -- a progress bar that only ever says "we are failing" is
+    // worse than no goal at all, and it is the first thing a manager notices.
+    title: 'Shu oyda 25 ta vazifa yakunlansin',
+    description: 'Boʻlimning oylik surʼati — kartalardan oʻzi hisoblanadi.',
     metric: 'cards_done',
     filter: '',
-    targetValue: 120,
+    targetValue: 25,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },
@@ -201,11 +205,11 @@ const GOALS: readonly {
   },
   {
     id: demoId('workplus.goal.muhim'),
-    title: 'Ochiq «Muhim» ishlar 100 tadan oshmasin',
+    title: 'Ochiq «Muhim» ishlar 15 tadan oshmasin',
     description: 'Yuqori chegara: ochiq muhim ishlar soni shu raqamdan past turishi kerak.',
     metric: 'open_cards_max',
     filter: 'label:"Muhim"',
-    targetValue: 100,
+    targetValue: 15,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },
