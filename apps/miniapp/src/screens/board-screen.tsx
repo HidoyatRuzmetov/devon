@@ -9,12 +9,7 @@
 import * as React from 'react'
 import { AlertTriangle, ChevronRight } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import {
-  Badge,
-  cn,
-  SegmentedControl,
-  strikethroughClass,
-} from '@devon/ui'
+import { Badge, cn, SegmentedControl, strikethroughClass } from '@devon/ui'
 import { getBoardPeek } from '../lib/api.js'
 import { useQuery } from '../lib/use-query.js'
 import { useSession } from '../lib/session.js'

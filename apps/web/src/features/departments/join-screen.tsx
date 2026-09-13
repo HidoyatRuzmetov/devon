@@ -9,7 +9,15 @@
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
-import { BlurFade, Button, Input, JoinDepartmentIllustration, StateView } from '@devon/ui'
+import {
+  BlurFade,
+  Button,
+  Collapsible,
+  Input,
+  JoinDepartmentIllustration,
+  Shake,
+  StateView,
+} from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useSession } from '../../lib/session.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
@@ -24,6 +32,7 @@ export default function JoinScreen() {
   const [key, setKey] = React.useState(params.get('key') ?? '')
   const [password, setPassword] = React.useState('')
   const [outcome, setOutcome] = React.useState<'success' | 'pending' | null>(null)
+  const [shake, setShake] = React.useState(false)
 
   const keyFromLink = params.get('key')
   const previewQuery = useQuery({
@@ -40,6 +49,19 @@ export default function JoinScreen() {
       void queryClient.invalidateQueries({ queryKey: ['me'] })
     },
   })
+
+  // Declared before the early returns below, because a hook may not be called conditionally. Keyed
+  // on `failureCount` rather than on the message, so a second attempt that fails the same way is
+  // still answered -- two refusals are two refusals.
+  const failureCount = mutation.failureCount
+  React.useEffect(() => {
+    if (failureCount > 0) {
+      setShake(false)
+      const raf = requestAnimationFrame(() => setShake(true))
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+  }, [failureCount])
 
   if (session.isLoading) return <StateView kind="loading" titleKey="state.loading" />
 
@@ -67,7 +89,7 @@ export default function JoinScreen() {
     )
   }
 
-  const errorKey =
+  const errorKey: string | null =
     mutation.error instanceof ApiError
       ? mutation.error.code === 'rate_limited'
         ? 'departments.join.rateLimited'
@@ -97,59 +119,63 @@ export default function JoinScreen() {
         <h1 className="text-h2 text-foreground">{t('departments.join.byForm.title')}</h1>
       )}
 
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!mutation.isPending && session.isAuthenticated) mutation.mutate()
-        }}
-        noValidate
-      >
-        {!keyFromLink ? (
+      <Shake play={shake} onDone={() => setShake(false)}>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!mutation.isPending && session.isAuthenticated) mutation.mutate()
+          }}
+          noValidate
+        >
+          {!keyFromLink ? (
+            <label className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">
+                {t('departments.join.byForm.keyLabel')}
+              </span>
+              <Input
+                required
+                value={key}
+                onChange={(e) => setKey(e.target.value.toUpperCase())}
+                className="font-mono uppercase"
+              />
+            </label>
+          ) : null}
+
           <label className="flex flex-col gap-1.5">
             <span className="text-small text-foreground">
-              {t('departments.join.byForm.keyLabel')}
+              {t('departments.join.byForm.passwordLabel')}
             </span>
             <Input
+              type="password"
               required
-              value={key}
-              onChange={(e) => setKey(e.target.value.toUpperCase())}
-              className="font-mono uppercase"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </label>
-        ) : null}
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">
-            {t('departments.join.byForm.passwordLabel')}
-          </span>
-          <Input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
+          {/* Same two beats as `/login` and `/register`: the message opens rather than appears, and
+            the form answers with the product's one refusal gesture. */}
+          <Collapsible open={Boolean(errorKey)}>
+            <p role="alert" className="text-small text-destructive">
+              {errorKey ? t(errorKey) : null}
+            </p>
+          </Collapsible>
 
-        {errorKey ? (
-          <p role="alert" className="text-small text-destructive">
-            {t(errorKey)}
-          </p>
-        ) : null}
-
-        {!session.isAuthenticated ? (
-          <p className="text-small text-muted-foreground">
-            {t('accounts.login.registerPrompt')}{' '}
-            <a href={`/login`} className="text-foreground underline underline-offset-2">
-              {t('accounts.register.loginLink')}
-            </a>
-          </p>
-        ) : (
-          <Button type="submit" size="lg" loading={mutation.isPending}>
-            {t('departments.join.submit')}
-          </Button>
-        )}
-      </form>
+          {!session.isAuthenticated ? (
+            <p className="text-small text-muted-foreground">
+              {t('accounts.login.registerPrompt')}{' '}
+              <a href={`/login`} className="text-foreground underline underline-offset-2">
+                {t('accounts.register.loginLink')}
+              </a>
+            </p>
+          ) : (
+            <Button type="submit" size="lg" loading={mutation.isPending}>
+              {t('departments.join.submit')}
+            </Button>
+          )}
+        </form>
+      </Shake>
     </BlurFade>
   )
 }

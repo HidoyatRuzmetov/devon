@@ -14,12 +14,7 @@
 // same coin-sized `Celebrate` burst fires from it on completion (DESIGN.md §2.5's second celebration
 // moment). If `@devon/ui` ever grows a labelled, full-row checkbox, this is the thing to delete.
 import * as React from 'react'
-import {
-  AnimatedCheck,
-  Celebrate,
-  cn,
-  Strikethrough,
-} from '@devon/ui'
+import { AnimatedCheck, Celebrate, cn, Strikethrough } from '@devon/ui'
 import { rowSurface } from './bits.js'
 
 export function TaskCheckRow({

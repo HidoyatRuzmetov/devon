@@ -17,11 +17,12 @@ import {
   Avatar,
   Button,
   IconButton,
+  initialsFromName,
   Skeleton,
   SparkleButton,
   StateView,
+  Swap,
   Textarea,
-  initialsFromName,
   toast,
 } from '@devon/ui'
 import { Trash2 } from 'lucide-react'
@@ -172,12 +173,7 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
 
   let commentsBody: React.ReactNode
   if (commentsQuery.isPending) {
-    commentsBody = (
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-14 w-full" />
-        <Skeleton className="h-14 w-full" />
-      </div>
-    )
+    commentsBody = null
   } else if (commentsQuery.isError) {
     commentsBody = (
       <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
@@ -248,7 +244,21 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
         </div>
       </form>
 
-      {commentsBody}
+      {/* DESIGN.md §10 "Skeleton → content": the two rows the thread is about to have, crossfading
+          into the thread itself. `<Swap>` keeps both layers in one grid cell while they trade, so
+          the composer above never shifts, and drops the skeleton once its fade is done, so a thread
+          with a single comment settles to one row rather than holding a two-row gap. */}
+      <Swap
+        pending={commentsQuery.isPending}
+        fallback={
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+          </div>
+        }
+      >
+        {commentsBody}
+      </Swap>
     </div>
   )
 }

@@ -145,8 +145,10 @@ function InboxList({
   onArchive,
   onQuickAction,
   onSnooze,
+  listKey,
 }: {
   items: readonly NotificationDto[]
+  listKey: string
   selectedIndex: number
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
@@ -158,7 +160,7 @@ function InboxList({
     // reverses its entrance variant, `layout` slides the remaining rows up to close the gap --
     // `AnimatePresence` is what lets it play at all before the row actually leaves the DOM.
     <AnimatePresence initial={false}>
-      <Stagger as="ul" className="rounded-md border border-border bg-card">
+      <Stagger as="ul" animateKey={listKey} className="rounded-md border border-border bg-card">
         {items.map((notification, index) => (
           <StaggerItem key={notification.id} as="li" exit="hidden" layout>
             <NotificationRow
@@ -183,8 +185,10 @@ function GroupedInboxList({
   onArchive,
   onQuickAction,
   onSnooze,
+  listKey,
 }: {
   items: readonly NotificationDto[]
+  listKey: string
   selectedIndex: number
   onOpen: (notification: NotificationDto, index: number) => void
   onArchive: (id: string) => void
@@ -210,7 +214,11 @@ function GroupedInboxList({
               <span className="text-caption text-muted-foreground">{group.length}</span>
             </div>
             <AnimatePresence initial={false}>
-              <Stagger as="ul" className="rounded-md border border-border bg-card">
+              <Stagger
+                as="ul"
+                animateKey={listKey}
+                className="rounded-md border border-border bg-card"
+              >
                 {group.map((notification) => (
                   <StaggerItem key={notification.id} as="li" exit="hidden" layout>
                     <NotificationRow
@@ -292,7 +300,18 @@ function InboxBody({
       />
     )
   }
-  const props = { items, selectedIndex, onOpen, onArchive, onQuickAction, onSnooze }
+  // The tab is the filter here: switching Inbox -> Archive -> All swaps the whole list for a
+  // different one, and DESIGN.md §10 re-enters a list "on first render and on filter change".
+  // Archiving a single row is *not* a filter change, so the key is the tab, never the item count.
+  const props = {
+    items,
+    selectedIndex,
+    onOpen,
+    onArchive,
+    onQuickAction,
+    onSnooze,
+    listKey: status,
+  }
   return grouped ? <GroupedInboxList {...props} /> : <InboxList {...props} />
 }
 

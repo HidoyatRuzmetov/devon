@@ -5,7 +5,7 @@ import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Eye, EyeOff, Send } from 'lucide-react'
 import { useT } from '@devon/i18n'
-import { Button, IconButton, Input } from '@devon/ui'
+import { Button, IconButton, Input, Shake } from '@devon/ui'
 import { login as apiLogin, requestPasswordReset, verifyTwoFactorLogin } from '../lib/api-client.js'
 import { useForcedState } from '../lib/forced-state.js'
 import { useOnline } from '../lib/use-online.js'
@@ -13,25 +13,13 @@ import { Link, navigate, useSearchParams } from '../lib/router.js'
 import { ForcedStateBlock } from '../shell/forced-state-block.js'
 
 // A failed attempt gets the same "no, try again" shake every native form control gives a rejected
-// input -- one quick horizontal wag, never a colour change alone (DESIGN.md §2.5: motion carries
-// what a state change means; the destructive-toned text below it is the *designed replacement* this
-// shake reduces to under `prefers-reduced-motion`, per the same section's "replace, never delete").
-// A local, unnamed keyframe rather than a new entry in `packages/ui/src/motion` (DESIGN.md §10's
-// catalogue): this is the one screen in the product that ever rejects a submission this way, so a
-// shared primitive would ship for a single caller -- flagged in this item's notes for promotion if a
-// second screen ever wants it.
-const SHAKE_STYLE = `
-@keyframes wp-auth-shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
-}
-.wp-auth-shake { animation: wp-auth-shake var(--dur-standard, 220ms) var(--ease-emphasized, ease) 2; }
-@media (prefers-reduced-motion: reduce) {
-  .wp-auth-shake { animation: none; }
-}
-`
+// input -- one quick horizontal wag, never a colour change alone (DESIGN.md §2.5).
+//
+// v1.0 shipped this as a local keyframe here, with a note: "the one screen in the product that ever
+// rejects a submission this way ... flagged for promotion if a second screen ever wants it". Three
+// do now -- register, join, and every field with inline validation -- so the gesture is
+// `<Shake>` in `packages/ui/src/motion`, and its reduced-motion replacement (a destructive ring that
+// fades in place, rather than nothing at all) comes with it.
 
 export function LoginRoute() {
   const t = useT()
@@ -181,172 +169,162 @@ export function LoginRoute() {
 
   if (challengeToken) {
     return (
-      <div
-        className={
-          `mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm` +
-          (shake ? ' wp-auth-shake' : '')
-        }
-        onAnimationEnd={() => setShake(false)}
-      >
-        <style>{SHAKE_STYLE}</style>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-h2 text-foreground">{t('accounts.login2fa.title')}</h1>
-          <p className="text-small text-muted-foreground">{t('accounts.login2fa.body')}</p>
+      <Shake play={shake} onDone={() => setShake(false)} className="mx-auto w-full max-w-105">
+        <div className="flex w-full flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-h2 text-foreground">{t('accounts.login2fa.title')}</h1>
+            <p className="text-small text-muted-foreground">{t('accounts.login2fa.body')}</p>
+          </div>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+            <label className="flex flex-col gap-1.5">
+              <span data-shell-label className="text-small text-foreground">
+                {t('accounts.login2fa.code')}
+              </span>
+              <Input
+                name="code"
+                inputMode="text"
+                autoComplete="one-time-code"
+                autoFocus
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+              />
+            </label>
+            {failed ? (
+              <p role="alert" data-shell-label className="text-small text-destructive">
+                {t('accounts.login2fa.error')}
+              </p>
+            ) : null}
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full"
+              loading={twoFaMutation.isPending}
+              disabled={!online}
+            >
+              {t('accounts.login2fa.submit')}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setChallengeToken(null)
+                setCode('')
+                setFailed(false)
+                setShake(false)
+              }}
+            >
+              {t('accounts.login2fa.back')}
+            </Button>
+          </form>
         </div>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-          <label className="flex flex-col gap-1.5">
-            <span data-shell-label className="text-small text-foreground">
-              {t('accounts.login2fa.code')}
-            </span>
-            <Input
-              name="code"
-              inputMode="text"
-              autoComplete="one-time-code"
-              autoFocus
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-          </label>
-          {failed ? (
-            <p role="alert" data-shell-label className="text-small text-destructive">
-              {t('accounts.login2fa.error')}
-            </p>
-          ) : null}
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            loading={twoFaMutation.isPending}
-            disabled={!online}
-          >
-            {t('accounts.login2fa.submit')}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setChallengeToken(null)
-              setCode('')
-              setFailed(false)
-              setShake(false)
-            }}
-          >
-            {t('accounts.login2fa.back')}
-          </Button>
-        </form>
-      </div>
+      </Shake>
     )
   }
 
   return (
-    <div
-      className={
-        `mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm` +
-        (shake ? ' wp-auth-shake' : '')
-      }
-      onAnimationEnd={() => setShake(false)}
-    >
-      <style>{SHAKE_STYLE}</style>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-h2 text-foreground">{t('login.title')}</h1>
-      </div>
-
-      {signedOut ? (
-        <p
-          data-shell-label
-          role="status"
-          className="rounded-sm bg-muted px-3 py-2 text-small text-foreground"
-        >
-          {t('login.signedOut')}
-        </p>
-      ) : null}
-
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-        <label className="flex flex-col gap-1.5">
-          <span data-shell-label className="text-small text-foreground">
-            {t('login.identifier')}
-          </span>
-          <Input
-            name="identifier"
-            autoComplete="username"
-            autoFocus
-            required
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-          />
-        </label>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="flex items-center justify-between gap-2">
-            <label
-              htmlFor={passwordFieldId}
-              data-shell-label
-              className="text-small text-foreground"
-            >
-              {t('login.password')}
-            </label>
-            <button
-              type="button"
-              data-shell-label
-              className="text-small text-primary underline-offset-2 hover:underline"
-              onClick={() => setView('forgot')}
-            >
-              {t('login.forgot.link')}
-            </button>
-          </span>
-          <div className="relative">
-            <Input
-              id={passwordFieldId}
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pr-11"
-            />
-            <IconButton
-              type="button"
-              aria-label={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
-              className="absolute right-1 top-1/2 -translate-y-1/2"
-              onClick={() => setShowPassword((v) => !v)}
-            >
-              {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-            </IconButton>
-          </div>
+    <Shake play={shake} onDone={() => setShake(false)} className="mx-auto w-full max-w-105">
+      <div className="flex w-full flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-h2 text-foreground">{t('login.title')}</h1>
         </div>
 
-        {failed ? (
-          <p role="alert" data-shell-label className="text-small text-destructive">
-            {t('login.error')}
+        {signedOut ? (
+          <p
+            data-shell-label
+            role="status"
+            className="rounded-sm bg-muted px-3 py-2 text-small text-foreground"
+          >
+            {t('login.signedOut')}
           </p>
         ) : null}
 
-        {!online ? (
-          <p data-shell-label className="text-small text-muted-foreground">
-            {t('login.offline')}
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <label className="flex flex-col gap-1.5">
+            <span data-shell-label className="text-small text-foreground">
+              {t('login.identifier')}
+            </span>
+            <Input
+              name="identifier"
+              autoComplete="username"
+              autoFocus
+              required
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+            />
+          </label>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-center justify-between gap-2">
+              <label
+                htmlFor={passwordFieldId}
+                data-shell-label
+                className="text-small text-foreground"
+              >
+                {t('login.password')}
+              </label>
+              <button
+                type="button"
+                data-shell-label
+                className="text-small text-primary underline-offset-2 hover:underline"
+                onClick={() => setView('forgot')}
+              >
+                {t('login.forgot.link')}
+              </button>
+            </span>
+            <div className="relative">
+              <Input
+                id={passwordFieldId}
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-11"
+              />
+              <IconButton
+                type="button"
+                aria-label={t(showPassword ? 'login.hidePassword' : 'login.showPassword')}
+                className="absolute right-1 top-1/2 -translate-y-1/2"
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+              </IconButton>
+            </div>
+          </div>
+
+          {failed ? (
+            <p role="alert" data-shell-label className="text-small text-destructive">
+              {t('login.error')}
+            </p>
+          ) : null}
+
+          {!online ? (
+            <p data-shell-label className="text-small text-muted-foreground">
+              {t('login.offline')}
+            </p>
+          ) : null}
+
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            loading={mutation.isPending}
+            disabled={!online}
+          >
+            {t('login.submit')}
+          </Button>
+
+          <p className="text-center text-small text-muted-foreground">
+            {t('accounts.login.registerPrompt')}{' '}
+            <Link to="/register" className="text-foreground underline underline-offset-2">
+              {t('accounts.login.registerLink')}
+            </Link>
           </p>
-        ) : null}
-
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full"
-          loading={mutation.isPending}
-          disabled={!online}
-        >
-          {t('login.submit')}
-        </Button>
-
-        <p className="text-center text-small text-muted-foreground">
-          {t('accounts.login.registerPrompt')}{' '}
-          <Link to="/register" className="text-foreground underline underline-offset-2">
-            {t('accounts.login.registerLink')}
-          </Link>
-        </p>
-      </form>
-    </div>
+        </form>
+      </div>
+    </Shake>
   )
 }

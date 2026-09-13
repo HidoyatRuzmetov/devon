@@ -11,13 +11,7 @@ import {
   Link2,
   Trash2,
 } from 'lucide-react'
-import {
-  Checkbox,
-  cn,
-  IconButton,
-  SparkleButton,
-  strikethroughClass,
-} from '@devon/ui'
+import { Checkbox, cn, IconButton, SparkleButton, strikethroughClass } from '@devon/ui'
 import type { TaskNode } from './task-tree.js'
 
 export type TaskRowProps = {

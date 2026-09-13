@@ -10,7 +10,7 @@
 import * as React from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
-import { Button, Input, initialsFromName, toast } from '@devon/ui'
+import { Button, Collapsible, initialsFromName, Input, Shake, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { navigate, Link } from '../../lib/router.js'
 import { AVATAR_MAX_BYTES, isAvatarContentType, registerAccount, uploadAvatar } from './api.js'
@@ -32,6 +32,19 @@ export default function RegisterScreen() {
   const [photo, setPhoto] = React.useState<File | null>(null)
   const [photoErrorKey, setPhotoErrorKey] = React.useState<string | null>(null)
   const [errorKey, setErrorKey] = React.useState<string | null>(null)
+  const [shake, setShake] = React.useState(false)
+  // Fires on every new rejection, including a second attempt that fails the same way.
+  const previousError = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    const had = previousError.current
+    previousError.current = errorKey
+    if (errorKey && errorKey !== had) {
+      setShake(false)
+      const raf = requestAnimationFrame(() => setShake(true))
+      return () => cancelAnimationFrame(raf)
+    }
+    return undefined
+  }, [errorKey])
 
   function selectPhoto(file: File) {
     if (!isAvatarContentType(file.type)) {
@@ -95,112 +108,120 @@ export default function RegisterScreen() {
         <p className="text-small text-muted-foreground">{t('accounts.register.subtitle')}</p>
       </div>
 
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-        <div className="grid grid-cols-2 gap-3">
+      <Shake play={shake} onDone={() => setShake(false)}>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">{t('accounts.register.givenName')}</span>
+              <Input required value={givenName} onChange={(e) => setGivenName(e.target.value)} />
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-small text-foreground">
+                {t('accounts.register.familyName')}
+              </span>
+              <Input required value={familyName} onChange={(e) => setFamilyName(e.target.value)} />
+            </label>
+          </div>
+
           <label className="flex flex-col gap-1.5">
-            <span className="text-small text-foreground">{t('accounts.register.givenName')}</span>
-            <Input required value={givenName} onChange={(e) => setGivenName(e.target.value)} />
+            <span className="text-small text-foreground">{t('accounts.register.patronymic')}</span>
+            <Input value={patronymic} onChange={(e) => setPatronymic(e.target.value)} />
           </label>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">{t('accounts.photo.optional')}</span>
+            <AvatarPicker
+              currentSrc={null}
+              file={photo}
+              alt={t('accounts.photo.alt')}
+              initials={initialsFromName(givenName, familyName)}
+              hueSeed={login || 'new-account'}
+              onSelect={selectPhoto}
+              onRemove={() => {
+                setPhoto(null)
+                setPhotoErrorKey(null)
+              }}
+              errorKey={photoErrorKey}
+              disabled={mutation.isPending}
+            />
+          </div>
+
           <label className="flex flex-col gap-1.5">
-            <span className="text-small text-foreground">{t('accounts.register.familyName')}</span>
-            <Input required value={familyName} onChange={(e) => setFamilyName(e.target.value)} />
+            <span className="text-small text-foreground">{t('accounts.register.jobTitle')}</span>
+            <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
           </label>
-        </div>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.patronymic')}</span>
-          <Input value={patronymic} onChange={(e) => setPatronymic(e.target.value)} />
-        </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">{t('accounts.register.login')}</span>
+            <Input
+              required
+              autoComplete="username"
+              value={login}
+              onChange={(e) => setLogin(e.target.value.toLowerCase())}
+            />
+            <span className="text-small text-muted-foreground">
+              {t('accounts.register.loginHint')}
+            </span>
+          </label>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.photo.optional')}</span>
-          <AvatarPicker
-            currentSrc={null}
-            file={photo}
-            alt={t('accounts.photo.alt')}
-            initials={initialsFromName(givenName, familyName)}
-            hueSeed={login || 'new-account'}
-            onSelect={selectPhoto}
-            onRemove={() => {
-              setPhoto(null)
-              setPhotoErrorKey(null)
-            }}
-            errorKey={photoErrorKey}
-            disabled={mutation.isPending}
-          />
-        </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">{t('accounts.register.email')}</span>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.jobTitle')}</span>
-          <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
-        </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">{t('accounts.register.password')}</span>
+            <Input
+              type="password"
+              required
+              minLength={12}
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <span className="text-small text-muted-foreground">
+              {t('accounts.register.passwordHint')}
+            </span>
+            <PasswordStrengthMeter password={password} />
+          </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.login')}</span>
-          <Input
-            required
-            autoComplete="username"
-            value={login}
-            onChange={(e) => setLogin(e.target.value.toLowerCase())}
-          />
-          <span className="text-small text-muted-foreground">
-            {t('accounts.register.loginHint')}
-          </span>
-        </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-small text-foreground">{t('accounts.register.locale')}</span>
+            <select
+              className="h-11 w-full rounded-sm border border-border bg-card px-3 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={locale}
+              onChange={(e) => setLocale(e.target.value as Locale)}
+            >
+              {LOCALES.map((l) => (
+                <option key={l} value={l}>
+                  {LOCALE_LABEL[l]}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.email')}</span>
-          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
+          {/* The message arrives with a height animation and the form answers with the product's one
+            refusal gesture, so a rejected submission is a thing that happened rather than a line of
+            red text that was suddenly there. Both reduce per DESIGN.md §2.5 -- the collapse becomes
+            instant, the shake becomes a destructive ring. */}
+          <Collapsible open={Boolean(errorKey)}>
+            <p role="alert" className="text-small text-destructive">
+              {errorKey ? t(errorKey) : null}
+            </p>
+          </Collapsible>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.password')}</span>
-          <Input
-            type="password"
-            required
-            minLength={12}
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <span className="text-small text-muted-foreground">
-            {t('accounts.register.passwordHint')}
-          </span>
-          <PasswordStrengthMeter password={password} />
-        </label>
+          <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
+            {t('accounts.register.submit')}
+          </Button>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-small text-foreground">{t('accounts.register.locale')}</span>
-          <select
-            className="h-11 w-full rounded-sm border border-border bg-card px-3 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as Locale)}
-          >
-            {LOCALES.map((l) => (
-              <option key={l} value={l}>
-                {LOCALE_LABEL[l]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {errorKey ? (
-          <p role="alert" className="text-small text-destructive">
-            {t(errorKey)}
+          <p className="text-center text-small text-muted-foreground">
+            {t('accounts.register.loginPrompt')}{' '}
+            <Link to="/login" className="text-foreground underline underline-offset-2">
+              {t('accounts.register.loginLink')}
+            </Link>
           </p>
-        ) : null}
-
-        <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
-          {t('accounts.register.submit')}
-        </Button>
-
-        <p className="text-center text-small text-muted-foreground">
-          {t('accounts.register.loginPrompt')}{' '}
-          <Link to="/login" className="text-foreground underline underline-offset-2">
-            {t('accounts.register.loginLink')}
-          </Link>
-        </p>
-      </form>
+        </form>
+      </Shake>
     </div>
   )
 }
