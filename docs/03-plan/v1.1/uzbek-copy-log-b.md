@@ -49,3 +49,104 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `telegram.group.codeBody` | Guruhda ushbu kod bilan /connect buyrugʻini yuboring. | Guruhda shu kod bilan /connect yuboring. |
 | `telegram.group.codeExpires` | Kod {time} da eskiradi | Kod {time} gacha amal qiladi |
 | `telegram.group.empty.body` | Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodidan foydalaning. | Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodini oling. |
+
+## inbox — 22 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `inbox.markAllRead` | Barchasini oʻqilgan deb belgilash | Hammasini oʻqilgan deb belgilash |
+| `inbox.empty.inbox.title` | Hammasi tekshirildi | Hammasi koʻrib chiqilgan |
+| `inbox.empty.inbox.body` | Hozircha eʼtibor talab qiladigan narsa yoʻq. Xotirjam boʻling. | Hozircha javobingizni kutayotgan bildirishnoma yoʻq. |
+| `inbox.empty.unread.title` | Oʻqilmagan narsa yoʻq | Oʻqilmagan bildirishnoma yoʻq |
+| `inbox.empty.unread.body` | Barcha bildirishnomalarni koʻrib chiqdingiz. | Hammasini oʻqib chiqdingiz. |
+| `inbox.empty.archived.title` | Arxivlangan bildirishnoma yoʻq | Arxivda bildirishnoma yoʻq |
+| `inbox.empty.archived.body` | Arxivlagan bildirishnomalaringiz shu yerda koʻrinadi. | Arxivga olgan bildirishnomalaringiz shu yerda turadi. |
+| `inbox.reason.mentioned` | Eslatish | Belgilash |
+| `inbox.channel.email` | Elektron pochta | E-pochta |
+| `inbox.row.archive` | Arxivlash | Arxivga olish |
+| `inbox.preferences.body` | Qanday bildirishnomalar va qayerga kelishini tanlang. | Qaysi bildirishnoma qayerga kelishini oʻzingiz tanlang. |
+| `inbox.preferences.digestFrequency` | Xulosa chastotasi | Xulosa davriyligi |
+| `inbox.preferences.digestMode.off` | Oʻchirilgan | Oʻchiq |
+| `inbox.preferences.quietHours.usingDepartmentDefault` | Boʻlimning andozasi qoʻllanmoqda: {range} | Boshqarma sozlamasi qoʻllanmoqda: {range} |
+| `inbox.preferences.quietHours.usingPersonal` | Shaxsiy vaqtingiz: {range} | Oʻzingiz belgilagan vaqt: {range} |
+| `inbox.preferences.quietHours.start` | Boshlanishi | Qaysi soatdan |
+| `inbox.preferences.quietHours.end` | Tugashi | Qaysi soatgacha |
+| `inbox.preferences.quietHours.weekends` | Dam olish kunlarini ham qamrab olsin | Dam olish kunlari ham |
+| `inbox.preferences.quietHours.tooLoud` | Bu oraliq boʻlim andozasidan kamida shuncha tinch boʻlishi kerak. | Bu oraliq boshqarma belgilagan tinch soatlarni toʻliq qamrab olishi kerak. |
+| `inbox.preferences.quietHours.useDefault` | Boʻlim andozasidan foydalanish | Boshqarma sozlamasiga qaytish |
+| `inbox.preferences.calendar.title` | Taqvim lentasi | Taqvim ulanishi |
+| `inbox.preferences.saved` | Sozlamalar saqlandi | Saqlandi |
+
+## pages — 24 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `pages.eyebrow` | Bilim bazasi | BILIM |
+| `pages.kind.brief` | Qisqacha maʼlumot | Qisqacha |
+| `pages.empty.title` | Hali sahifalar yoʻq | Hali sahifa yoʻq |
+| `pages.empty.body` | Boʻlimingiz uchun birinchi sahifani yarating — masalan, "Biz qanday ishlaymiz". | Birinchi sahifani qoʻshing — masalan, «Biz qanday ishlaymiz». |
+| `pages.backToList` | Sahifalar roʻyxatiga qaytish | Sahifalarga qaytish |
+| `pages.editor.autosaving` | Saqlanmoqda... | Saqlanmoqda… |
+| `pages.editor.toolbar.italic` | Qiya | Kursiv |
+| `pages.editor.toolbar.taskList` | Roʻyxat (belgilash mumkin) | Bajarish roʻyxati |
+| `pages.editor.toolbar.mention` | Kishini eslatish | Xodimni belgilash |
+| `pages.editor.toolbar.translate` | Belgilanganni tarjima qilish | Tanlangan matnni tarjima qilish |
+| `pages.editor.contentPlaceholder` | Yozishni boshlang yoki buyruqlar uchun "/" bosing… | Matn yozing yoki amallar uchun «/» kiriting |
+| `pages.editor.translate.selectFirst` | Avval matnni belgilang, keyin tarjima qiling | Avval tarjima qilinadigan matnni tanlang |
+| `pages.editor.translate.title` | Belgilanganni tarjima qilish | Tanlangan matnni tarjima qilish |
+| `pages.editor.translate.accept` | Belgilanganni almashtirish | Matnni almashtirish |
+| `pages.editor.translate.errors.invalid` | Belgilangan matnni tekshirib, qayta urinib koʻring | Tanlangan matnni tekshirib, qayta urinib koʻring |
+| `pages.versions.empty` | Hali versiyalar yoʻq | Hali saqlangan versiya yoʻq |
+| `pages.versions.restore` | Ushbu versiyani tiklash | Shu versiyani tiklash |
+| `pages.versions.current` | Joriy | Hozirgi |
+| `pages.diff.noChanges` | Bu versiyalar orasida farq yoʻq | Bu ikki versiya orasida farq yoʻq |
+| `pages.conflict.body` | Boshqa birov shu orada oʻzgartirish kiritdi. Sahifani qayta yuklab, oʻzgarishlaringizni qayta kiriting. | Shu orada boshqa xodim oʻzgartirdi. Sahifani qayta oching va yozganlaringizni qaytadan kiriting. |
+| `pages.onboarding.subtitle` | Yangi xodim boʻlimga qoʻshilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar roʻyxatiga qoʻshiladi. | Yangi xodim boshqarmaga qoʻshilganda, bu bandlar uning shaxsiy vazifalar roʻyxatiga oʻzi qoʻshiladi. |
+| `pages.onboarding.ownerRole.head` | Boʻlim rahbari | Boshqarma boshligʻi |
+| `pages.onboarding.empty` | Hali moslashuv roʻyxati yoʻq | Moslashuv roʻyxati hali tuzilmagan |
+| `pages.undo` | Qaytarish | Bekor qilish |
+
+## home — 40 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `home.dashboard.dueFromMe.body` | {open} ta ochiq, {overdue} tasi muddatidan oʻtgan | {open} ta ochiq, {overdue} tasi kechikkan |
+| `home.dashboard.needsMyDecision.title` | Mening qarorim kerak | Qarorimni kutmoqda |
+| `home.dashboard.needsMyDecision.body` | Men topshirgan {count} ta ish muddatidan oʻtib ketgan | Men topshirgan {count} ta ish kechikdi |
+| `home.dashboard.needsMyDecision.empty` | Hozircha qaror kerak boʻlgan narsa yoʻq | Qaror kutayotgan ish yoʻq |
+| `home.dashboard.aroundMe.body` | {count} ta tadbirga qatnashishni tasdiqlagansiz | {count} ta tadbirga boraman deb belgilagansiz |
+| `home.dashboard.aroundMe.cta` | Tadbirlarni koʻrish | Tadbirlar |
+| `home.dashboard.pinned.empty` | Hali hech narsa mahkamlanmagan | Mahkamlangan diagramma yoʻq |
+| `home.dashboard.pinned.cta` | Tahlil sahifasini ochish | Tahlilni ochish |
+| `home.dashboard.personal.onTimeRate` | Bajarilganlarning oʻz vaqtidaligi | Muddatida bajarilgani |
+| `home.dashboard.personal.focusMinutes` | Bu hafta fokus daqiqalari | Bu haftadagi diqqat daqiqalari |
+| `home.dashboard.onboarding.title` | Boshlash | Ilk qadamlar |
+| `home.dashboard.onboarding.department` | Boʻlimga qoʻshiling | Boshqarmaga qoʻshiling |
+| `home.dashboard.onboarding.work` | Birinchi ishingizni oching | Birinchi kartangizni oching |
+| `home.dashboard.onboarding.event` | Tadbirga yoziling | Tadbirga ishtirokni belgilang |
+| `home.dashboard.onboarding.focus` | Fokus seansini oʻtkazing | Diqqat vaqtini oʻtkazing |
+| `home.dashboard.sectionTiles` | Bugungi holat | Bugun |
+| `home.dashboard.givenOverdue.body` | Men topshirgan {count} ta ish muddatidan oʻtib ketgan | Men bergan {count} ta ish muddatidan oʻtdi |
+| `home.dashboard.myLoad.title` | Mening yuklamam | Yuklamam |
+| `home.dashboard.myLoad.hours` | {capacity} soatdan {hours} soat | {hours}/{capacity} soat |
+| `home.dashboard.myLoad.meaning` | Bu haftaga muddati belgilangan ishlaringizning haftalik imkoniyatingizga nisbati. | Bu haftaga muddati belgilangan ishlaringiz haftalik sigʻimingizga nisbatan. |
+| `home.dashboard.myLoad.meaningCards` | Boʻlimda ishlarning yarmidan kami baholangan, shuning uchun bu soat emas, karta soni. | Boshqarmada ishlarning yarmidan kami baholangan, shuning uchun bu yerda soat emas, karta sanaladi. |
+| `home.head.decisions.meaning` | Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan. | Siz bergan va muddati oʻtgan kartalar — qaror sizdan. |
+| `home.head.overdue.empty` | Kechikkan vazifa yoʻq. Boʻlim muddatlarga ulgurmoqda. | Kechikkan vazifa yoʻq. Boshqarma muddatlarga ulgurmoqda. |
+| `home.head.load.meaning` | Ochiq vazifalarning haftalik imkoniyatga nisbati. | Har bir xodimning ochiq kartalari haftalik sigʻimiga nisbatan. |
+| `home.head.load.cta` | Yuklamani koʻrish | Yuklama |
+| `home.head.projects.meaning` | Eng orqada qolgan loyihalar birinchi turadi. | Eng orqada qolgan loyihalar yuqorida. |
+| `home.head.events.meaning` | Yetti kun ichidagi tadbirlar va roziligini bildirganlar soni. | Yetti kun ichidagi tadbirlar va ishtirok etaman deganlar soni. |
+| `home.head.events.empty` | Yaqin kunlarda tadbir rejalashtirilmagan. | Yetti kun ichida tadbir rejalashtirilmagan. |
+| `home.head.indicatorsNote` | Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud. | Jadval va xodim sahifalari uchun {count} ta koʻrsatkich bor. |
+| `home.head.drillNote` | Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi. | Har bir raqam ortidagi xodim yoki karta ochiladi. |
+| `home.head.arrange.heading` | Kartochkalarni joylashtiring | Kartalarni joylashtirish |
+| `home.head.arrange.show` | «{name}» kartochkasini koʻrsatish | «{name}» kartasini koʻrsatish |
+| `home.head.arrange.moveUp` | «{name}» kartochkasini yuqoriga surish | «{name}» kartasini yuqoriga surish |
+| `home.head.arrange.moveDown` | «{name}» kartochkasini pastga surish | «{name}» kartasini pastga surish |
+| `home.head.arrange.allHidden.title` | Barcha kartochkalar yashirilgan | Hamma kartalar yashirilgan |
+| `home.head.arrange.allHidden.body` | Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartochkalarni belgilang. | Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartalarni belgilang. |
+| `home.head.goals.meaning` | Eng orqada qolgan maqsadlar oldinda. Progress kartalardan oʻzi hisoblanadi. | Eng orqada qolgan maqsadlar yuqorida. Bajarilgani kartalardan oʻzi hisoblanadi. |
+| `home.head.goals.empty` | Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi. | Maqsad qoʻyilmagan. Birinchisini qoʻying — bajarilgani oʻzi hisoblanadi. |
+| `home.head.catchUp.meaning` | Boʻlimning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan. | Boshqarmaning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan. |
+| `home.head.catchUp.idle` | Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi. | Hafta boʻyicha qisqa xulosa tayyorlansinmi? Har bir fikr aniq kartaga tayanadi. |

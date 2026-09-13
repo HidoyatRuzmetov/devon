@@ -1,53 +1,53 @@
 {
   "pages": {
     "title": "Sahifalar",
-    "eyebrow": "Bilim bazasi",
+    "eyebrow": "BILIM",
     "create": "Yangi sahifa",
     "untitled": "Nomsiz sahifa",
     "newTitlePlaceholder": "Sahifa nomi",
     "kind": {
       "how_we_work": "Biz qanday ishlaymiz",
       "onboarding": "Moslashuv",
-      "brief": "Qisqacha maʼlumot",
+      "brief": "Qisqacha",
       "note": "Qayd"
     },
     "empty": {
-      "title": "Hali sahifalar yoʻq",
-      "body": "Boʻlimingiz uchun birinchi sahifani yarating — masalan, \"Biz qanday ishlaymiz\"."
+      "title": "Hali sahifa yoʻq",
+      "body": "Birinchi sahifani qoʻshing — masalan, «Biz qanday ishlaymiz»."
     },
-    "backToList": "Sahifalar roʻyxatiga qaytish",
+    "backToList": "Sahifalarga qaytish",
     "delete": "Sahifani oʻchirish",
     "deleted": "Sahifa oʻchirildi",
     "editor": {
       "titlePlaceholder": "Sarlavha",
       "save": "Saqlash",
       "saved": "Saqlandi",
-      "autosaving": "Saqlanmoqda...",
+      "autosaving": "Saqlanmoqda…",
       "toolbar": {
         "bold": "Qalin",
-        "italic": "Qiya",
+        "italic": "Kursiv",
         "heading1": "Sarlavha 1",
         "heading2": "Sarlavha 2",
         "bulletList": "Belgili roʻyxat",
         "orderedList": "Raqamli roʻyxat",
-        "taskList": "Roʻyxat (belgilash mumkin)",
+        "taskList": "Bajarish roʻyxati",
         "callout": "Eslatma bloki",
-        "mention": "Kishini eslatish",
+        "mention": "Xodimni belgilash",
         "blockquote": "Iqtibos",
         "codeBlock": "Kod bloki",
-        "translate": "Belgilanganni tarjima qilish"
+        "translate": "Tanlangan matnni tarjima qilish"
       },
-      "contentPlaceholder": "Yozishni boshlang yoki buyruqlar uchun \"/\" bosing…",
+      "contentPlaceholder": "Matn yozing yoki amallar uchun «/» kiriting",
       "translate": {
-        "selectFirst": "Avval matnni belgilang, keyin tarjima qiling",
-        "title": "Belgilanganni tarjima qilish",
+        "selectFirst": "Avval tarjima qilinadigan matnni tanlang",
+        "title": "Tanlangan matnni tarjima qilish",
         "pending": "Tarjima qilinmoqda…",
-        "accept": "Belgilanganni almashtirish",
+        "accept": "Matnni almashtirish",
         "edit": "Tahrirlash",
         "discard": "Bekor qilish",
         "retry": "Qayta urinish",
         "errors": {
-          "invalid": "Belgilangan matnni tekshirib, qayta urinib koʻring",
+          "invalid": "Tanlangan matnni tekshirib, qayta urinib koʻring",
           "forbidden": "Tarjima oʻchirilgan yoki AI byudjeti tugagan",
           "failed": "AI bu safar tarjima qila olmadi"
         }
@@ -55,25 +55,25 @@
     },
     "versions": {
       "title": "Versiyalar tarixi",
-      "empty": "Hali versiyalar yoʻq",
-      "restore": "Ushbu versiyani tiklash",
+      "empty": "Hali saqlangan versiya yoʻq",
+      "restore": "Shu versiyani tiklash",
       "restored": "Versiya tiklandi",
       "viewDiff": "Farqni koʻrish",
-      "current": "Joriy",
+      "current": "Hozirgi",
       "by": "Muallif: {name}"
     },
     "diff": {
       "added": "Qoʻshilgan",
       "removed": "Oʻchirilgan",
-      "noChanges": "Bu versiyalar orasida farq yoʻq"
+      "noChanges": "Bu ikki versiya orasida farq yoʻq"
     },
     "conflict": {
       "title": "Sahifa allaqachon yangilangan",
-      "body": "Boshqa birov shu orada oʻzgartirish kiritdi. Sahifani qayta yuklab, oʻzgarishlaringizni qayta kiriting."
+      "body": "Shu orada boshqa xodim oʻzgartirdi. Sahifani qayta oching va yozganlaringizni qaytadan kiriting."
     },
     "onboarding": {
       "title": "Moslashuv roʻyxati",
-      "subtitle": "Yangi xodim boʻlimga qoʻshilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar roʻyxatiga qoʻshiladi.",
+      "subtitle": "Yangi xodim boshqarmaga qoʻshilganda, bu bandlar uning shaxsiy vazifalar roʻyxatiga oʻzi qoʻshiladi.",
       "enable": "Yoqish",
       "enabled": "Yoqilgan",
       "disabled": "Oʻchirilgan",
@@ -83,15 +83,15 @@
       "itemPlaceholder": "Nima qilish kerak?",
       "ownerRole": {
         "newcomer": "Yangi xodim",
-        "head": "Boʻlim rahbari",
+        "head": "Boshqarma boshligʻi",
         "buddy": "Yordamchi hamkasb"
       },
-      "empty": "Hali moslashuv roʻyxati yoʻq",
+      "empty": "Moslashuv roʻyxati hali tuzilmagan",
       "save": "Saqlash",
       "saved": "Saqlandi",
       "removeItem": "Bandni oʻchirish"
     },
     "moreActions": "Yana amallar",
-    "undo": "Qaytarish"
+    "undo": "Bekor qilish"
   }
 }
