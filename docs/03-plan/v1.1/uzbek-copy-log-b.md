@@ -366,3 +366,58 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `miniapp.fields.empty.body` | Boʻlim sizdan hech qanday maʼlumot soʻramagan. | Boshqarma sizdan hech narsa soʻramagan. |
 | `miniapp.setup.title` | Telegram sozlamasi | Telegram sozlamalari |
 | `miniapp.setup.step.group_connected.title` | Boʻlim guruhi ulangan | Boshqarma guruhi ulangan |
+
+## events — 50 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `events.description` | Boʻlim birgalikda qiladigan har bir ishni rejalashtiring, ishtirokni belgilang. | Boshqarma birga qiladigan ishlarni rejalashtiring va ishtirokni belgilang. |
+| `events.actions.create` | Tadbir yaratish | Tadbir qoʻshish |
+| `events.actions.moreActions` | Qoʻshimcha amallar | Yana amallar |
+| `events.empty.title` | Hozircha tadbirlar yoʻq | Hali tadbir yoʻq |
+| `events.empty.body` | Jamoangiz uchun birinchi tadbirni shu yerda yarating. | Birinchi tadbirni qoʻshing — hamma shu yerda ishtirokini belgilaydi. |
+| `events.empty.action` | Tadbir yaratish | Tadbir qoʻshish |
+| `events.error.body` | Nimadir xato ketdi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
+| `events.forbidden.title` | Ruxsat yoʻq | Tadbirlar boshqarma xodimlari uchun |
+| `events.forbidden.body` | Tadbirlarni koʻrish uchun boʻlim aʼzosi boʻlishingiz kerak. | Tadbirlarni boshqarma xodimlari koʻradi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling. |
+| `events.offline.body` | Internet tiklanganda tadbirlar roʻyxati yangilanadi. | Aloqa tiklangach tadbirlar roʻyxati yangilanadi. |
+| `events.category.team_building` | Jamoa qurish | Jamoani jipslashtirish |
+| `events.card.capacity` | {going} / {capacity} joy | {going}/{capacity} joy |
+| `events.card.deadline` | Roʻyxatdan oʻtish: {date} | Javob muddati: {date} |
+| `events.form.stepBasics` | Asosiy maʼlumot | Asosiy |
+| `events.form.aiIdeaLabel` | Bir qatorli ideya | Bir qatorli fikr |
+| `events.form.aiDraftDiscard` | Rad etish | Kerak emas |
+| `events.form.aiDraftFollowUp` | Roʻyxat, soʻrovnoma va birga borish rejasini tadbirni yaratgandan keyin uning sahifasida qoʻshing. | Roʻyxat, soʻrovnoma va birga borishni tadbir qoʻshilgandan keyin uning sahifasida sozlaysiz. |
+| `events.form.placePlaceholder` | Masalan, boʻlim yigʻilishlar zali | Masalan, boshqarma yigʻilishlar zali |
+| `events.form.rsvpDeadlineLabel` | Roʻyxatdan oʻtish muddati | Javob muddati |
+| `events.form.costNotePlaceholder` | Masalan, transport boʻlim hisobidan | Masalan, transport boshqarma hisobidan |
+| `events.form.submitCreate` | Tadbirni yaratish | Tadbirni qoʻshish |
+| `events.form.validation.endsBeforeStarts` | Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak | Tugash vaqti boshlanish vaqtidan keyin boʻlsin. |
+| `events.form.aiDraftCarpool` | Yoʻl-yoʻriq | Yoʻl |
+| `events.cancelDialog.body` | "{title}" bekor qilinadi va roʻyxatdan oʻtgan {count} kishiga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi. | «{title}» bekor qilinadi va ishtirokini belgilagan {count} kishiga xabar boradi. Buni ortga qaytarib boʻlmaydi. |
+| `events.cancelDialog.reasonPlaceholder` | Xodimlarga tushuntiring | Xodimlarga nima boʻlganini tushuntiring |
+| `events.cancelDialog.confirm` | Ha, bekor qilish | Tadbirni bekor qilish |
+| `events.cancelDialog.keepEvent` | Yoʻq, saqlab qolish | Saqlab qolish |
+| `events.rsvp.status.yes` | Ha, boraman | Boraman |
+| `events.rsvp.status.maybe` | Ehtimol | Balki |
+| `events.rsvp.deadlinePassed` | Roʻyxatdan oʻtish muddati tugagan | Javob muddati tugagan |
+| `events.rsvp.eventFull` | Joylar toʻlgan, navbatga yozildingiz | Joylar toʻlgan — navbatga yozildingiz |
+| `events.rsvp.myStatus` | Sizning javobingiz: {status} | Javobingiz: {status} |
+| `events.comments.summarize` | Muhokamani qisqacha ifodalash | Qisqacha xulosa |
+| `events.comments.summaryPending` | Qisqacha bayon tuzilmoqda… | Xulosa tayyorlanmoqda… |
+| `events.comments.summaryFailed` | Muhokamani qisqacha bayon qilib boʻlmadi | Muhokamadan xulosa chiqarib boʻlmadi |
+| `events.comments.summaryDiscard` | Rad etish | Kerak emas |
+| `events.carpool.empty` | Hozircha birga borish takliflari yoʻq | Hali mashina taklif qilinmagan |
+| `events.carpool.seatsTaken` | {claimed} / {seats} oʻrin band | {claimed}/{seats} oʻrin band |
+| `events.items.empty` | Hozircha buyumlar roʻyxati boʻsh | Roʻyxat hali boʻsh |
+| `events.polls.create` | Soʻrovnoma yaratish | Soʻrovnoma qoʻshish |
+| `events.polls.yourVote` | Sizning ovozingiz | Ovozingiz |
+| `events.polls.createdBy` | Yaratdi: {name} | Qoʻshdi: {name} |
+| `events.photos.title` | Fotosuratlar | Suratlar |
+| `events.photos.empty` | Hozircha fotosurat yoʻq | Hali surat yoʻq |
+| `events.feedback.average` | Oʻrtacha baho: {rating} / 5 | Oʻrtacha baho: {rating}/5 |
+| `events.feedback.yours` | Sizning bahoyingiz | Bahoyingiz |
+| `events.ics.exportMine` | Mening tadbirlarim (.ics) | Tadbirlarim (.ics) |
+| `events.tabs.photos` | Fotosuratlar | Suratlar |
+| `events.filters.from` | Boshlanish | Qaysi sanadan |
+| `events.filters.to` | Tugash | Qaysi sanagacha |

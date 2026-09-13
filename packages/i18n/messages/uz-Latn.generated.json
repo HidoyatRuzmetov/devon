@@ -2032,44 +2032,44 @@
   "events": {
     "title": "Tadbirlar",
     "eyebrow": "TADBIRLAR",
-    "description": "Boʻlim birgalikda qiladigan har bir ishni rejalashtiring, ishtirokni belgilang.",
+    "description": "Boshqarma birga qiladigan ishlarni rejalashtiring va ishtirokni belgilang.",
     "view": {
       "list": "Roʻyxat",
       "calendar": "Taqvim"
     },
     "actions": {
-      "create": "Tadbir yaratish",
+      "create": "Tadbir qoʻshish",
       "edit": "Tahrirlash",
       "save": "Saqlash",
       "cancelEvent": "Tadbirni bekor qilish",
-      "moreActions": "Qoʻshimcha amallar",
+      "moreActions": "Yana amallar",
       "close": "Yopish",
       "retry": "Qayta urinish",
       "back": "Orqaga",
       "undo": "Bekor qilish"
     },
     "empty": {
-      "title": "Hozircha tadbirlar yoʻq",
-      "body": "Jamoangiz uchun birinchi tadbirni shu yerda yarating.",
-      "action": "Tadbir yaratish"
+      "title": "Hali tadbir yoʻq",
+      "body": "Birinchi tadbirni qoʻshing — hamma shu yerda ishtirokini belgilaydi.",
+      "action": "Tadbir qoʻshish"
     },
     "loading": {
       "title": "Tadbirlar yuklanmoqda"
     },
     "error": {
       "title": "Tadbirlarni yuklab boʻlmadi",
-      "body": "Nimadir xato ketdi. Qayta urinib koʻring."
+      "body": "Aloqa uzildi. Qayta urinib koʻring."
     },
     "forbidden": {
-      "title": "Ruxsat yoʻq",
-      "body": "Tadbirlarni koʻrish uchun boʻlim aʼzosi boʻlishingiz kerak."
+      "title": "Tadbirlar boshqarma xodimlari uchun",
+      "body": "Tadbirlarni boshqarma xodimlari koʻradi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet tiklanganda tadbirlar roʻyxati yangilanadi."
+      "body": "Aloqa tiklangach tadbirlar roʻyxati yangilanadi."
     },
     "category": {
-      "team_building": "Jamoa qurish",
+      "team_building": "Jamoani jipslashtirish",
       "sports": "Sport",
       "volunteering": "Koʻngillilik",
       "social": "Ijtimoiy",
@@ -2088,9 +2088,9 @@
       "organizer": "Tashkilotchi: {name}",
       "going": "{count} kishi boradi",
       "waitlisted": "{count} kishi navbatda",
-      "capacity": "{going} / {capacity} joy",
+      "capacity": "{going}/{capacity} joy",
       "unlimitedCapacity": "Joylar soni cheklanmagan",
-      "deadline": "Roʻyxatdan oʻtish: {date}",
+      "deadline": "Javob muddati: {date}",
       "cancelledBanner": "Bu tadbir bekor qilindi",
       "cancelledReason": "Sabab: {reason}",
       "doneBanner": "Bu tadbir yakunlandi",
@@ -2102,22 +2102,22 @@
       "today": "Bugun"
     },
     "form": {
-      "stepBasics": "Asosiy maʼlumot",
+      "stepBasics": "Asosiy",
       "stepSchedule": "Vaqt va manzil",
       "stepCapacity": "Joylar va eslatmalar",
       "stepBack": "Orqaga",
       "stepNext": "Keyingisi",
-      "aiIdeaLabel": "Bir qatorli ideya",
+      "aiIdeaLabel": "Bir qatorli fikr",
       "aiIdeaPlaceholder": "Masalan, keyingi oyda bogʻda jamoaviy piknik",
       "aiDraftButton": "AI bilan qoralama tuzish",
       "aiDraftPending": "Qoralama tuzilmoqda…",
       "aiDraftFailed": "Tadbir qoralamasini tuzib boʻlmadi",
       "aiDraftAccept": "Shu qoralamadan foydalanish",
       "aiDraftEdit": "Foydalanib, tahrirlash",
-      "aiDraftDiscard": "Rad etish",
+      "aiDraftDiscard": "Kerak emas",
       "aiDraftChecklist": "Taklif qilingan roʻyxat",
       "aiDraftPoll": "Taklif qilingan soʻrovnoma variantlari: {options}",
-      "aiDraftFollowUp": "Roʻyxat, soʻrovnoma va birga borish rejasini tadbirni yaratgandan keyin uning sahifasida qoʻshing.",
+      "aiDraftFollowUp": "Roʻyxat, soʻrovnoma va birga borishni tadbir qoʻshilgandan keyin uning sahifasida sozlaysiz.",
       "titleLabel": "Tadbir nomi",
       "titlePlaceholder": "Masalan, kuzgi jamoaviy piknik",
       "descriptionLabel": "Tavsif",
@@ -2126,23 +2126,23 @@
       "startsAtLabel": "Boshlanish vaqti",
       "endsAtLabel": "Tugash vaqti",
       "placeLabel": "Manzil",
-      "placePlaceholder": "Masalan, boʻlim yigʻilishlar zali",
+      "placePlaceholder": "Masalan, boshqarma yigʻilishlar zali",
       "placeUrlLabel": "Manzil havolasi",
       "capacityLabel": "Joylar soni",
       "capacityPlaceholder": "Cheklanmagan",
       "waitlistEnabledLabel": "Joylar tugasa navbat ochilsin",
-      "rsvpDeadlineLabel": "Roʻyxatdan oʻtish muddati",
+      "rsvpDeadlineLabel": "Javob muddati",
       "costNoteLabel": "Xarajat haqida eslatma",
-      "costNotePlaceholder": "Masalan, transport boʻlim hisobidan",
+      "costNotePlaceholder": "Masalan, transport boshqarma hisobidan",
       "remindersLabel": "Eslatmalar",
       "reminderDayBefore": "1 kun oldin",
       "reminderHourBefore": "1 soat oldin",
-      "submitCreate": "Tadbirni yaratish",
+      "submitCreate": "Tadbirni qoʻshish",
       "submitUpdate": "Oʻzgarishlarni saqlash",
       "validation": {
-        "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak"
+        "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlsin."
       },
-      "aiDraftCarpool": "Yoʻl-yoʻriq",
+      "aiDraftCarpool": "Yoʻl",
       "aiDraftPickDate": "Qaysi sanani olamiz?"
     },
     "diff": {
@@ -2160,18 +2160,18 @@
     },
     "cancelDialog": {
       "title": "Tadbirni bekor qilish",
-      "body": "\"{title}\" bekor qilinadi va roʻyxatdan oʻtgan {count} kishiga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi.",
+      "body": "«{title}» bekor qilinadi va ishtirokini belgilagan {count} kishiga xabar boradi. Buni ortga qaytarib boʻlmaydi.",
       "reasonLabel": "Sabab",
-      "reasonPlaceholder": "Xodimlarga tushuntiring",
-      "confirm": "Ha, bekor qilish",
-      "keepEvent": "Yoʻq, saqlab qolish"
+      "reasonPlaceholder": "Xodimlarga nima boʻlganini tushuntiring",
+      "confirm": "Tadbirni bekor qilish",
+      "keepEvent": "Saqlab qolish"
     },
     "rsvp": {
       "title": "Ishtirok etasizmi?",
       "status": {
-        "yes": "Ha, boraman",
+        "yes": "Boraman",
         "no": "Bormayman",
-        "maybe": "Ehtimol",
+        "maybe": "Balki",
         "waitlist": "Navbatda"
       },
       "guestsLabel": "Mehmonlar soni",
@@ -2179,12 +2179,12 @@
       "notePlaceholder": "Masalan, allergiya yoki boshqa eslatma",
       "submit": "Yuborish",
       "update": "Yangilash",
-      "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
-      "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
+      "deadlinePassed": "Javob muddati tugagan",
+      "eventFull": "Joylar toʻlgan — navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
       "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
       "cancelledToast": "Ishtirokingiz bekor qilindi",
-      "myStatus": "Sizning javobingiz: {status}",
+      "myStatus": "Javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
     "attendees": {
@@ -2201,24 +2201,24 @@
       "submit": "Yuborish",
       "delete": "Oʻchirish",
       "deleteConfirm": "Izohni oʻchirmoqchimisiz?",
-      "summarize": "Muhokamani qisqacha ifodalash",
-      "summaryPending": "Qisqacha bayon tuzilmoqda…",
-      "summaryFailed": "Muhokamani qisqacha bayon qilib boʻlmadi",
+      "summarize": "Qisqacha xulosa",
+      "summaryPending": "Xulosa tayyorlanmoqda…",
+      "summaryFailed": "Muhokamadan xulosa chiqarib boʻlmadi",
       "summaryAccept": "Izohga qoʻshish",
       "summaryEdit": "Qoʻshib, tahrirlash",
-      "summaryDiscard": "Rad etish",
+      "summaryDiscard": "Kerak emas",
       "viewerFallback": "Siz"
     },
     "carpool": {
       "title": "Birga borish",
-      "empty": "Hozircha birga borish takliflari yoʻq",
+      "empty": "Hali mashina taklif qilinmagan",
       "offer": "Mashina taklif qilish",
       "seatsLabel": "Boʻsh oʻrindiqlar",
       "departurePlaceLabel": "Joʻnash nuqtasi",
       "departureAtLabel": "Joʻnash vaqti",
       "noteLabel": "Izoh",
       "driver": "Haydovchi: {name}",
-      "seatsTaken": "{claimed} / {seats} oʻrin band",
+      "seatsTaken": "{claimed}/{seats} oʻrin band",
       "claim": "Oʻrin band qilish",
       "release": "Voz kechish",
       "waitlisted": "Navbatda",
@@ -2231,7 +2231,7 @@
     },
     "items": {
       "title": "Kim nima olib keladi",
-      "empty": "Hozircha buyumlar roʻyxati boʻsh",
+      "empty": "Roʻyxat hali boʻsh",
       "add": "Buyum qoʻshish",
       "labelPlaceholder": "Masalan, choy-poy",
       "quantityLabel": "Miqdori",
@@ -2244,7 +2244,7 @@
     "polls": {
       "title": "Soʻrovnomalar",
       "empty": "Hozircha soʻrovnoma yoʻq",
-      "create": "Soʻrovnoma yaratish",
+      "create": "Soʻrovnoma qoʻshish",
       "kindLabel": "Turi",
       "kind": {
         "date": "Sana tanlash",
@@ -2266,12 +2266,12 @@
       "voteRevertedToast": "Avvalgi ovozingiz tiklandi",
       "totalVotes": "{count} ta ovoz",
       "closed": "Yakunlangan",
-      "yourVote": "Sizning ovozingiz",
-      "createdBy": "Yaratdi: {name}"
+      "yourVote": "Ovozingiz",
+      "createdBy": "Qoʻshdi: {name}"
     },
     "photos": {
-      "title": "Fotosuratlar",
-      "empty": "Hozircha fotosurat yoʻq",
+      "title": "Suratlar",
+      "empty": "Hali surat yoʻq",
       "add": "Havola qoʻshish",
       "urlLabel": "Rasm havolasi",
       "captionLabel": "Izoh (ixtiyoriy)",
@@ -2285,14 +2285,14 @@
       "anonymousLabel": "Anonim qoldirish",
       "submit": "Yuborish",
       "update": "Yangilash",
-      "average": "Oʻrtacha baho: {rating} / 5",
-      "yours": "Sizning bahoyingiz",
+      "average": "Oʻrtacha baho: {rating}/5",
+      "yours": "Bahoyingiz",
       "anonymousAuthor": "Anonim",
       "thankYou": "Fikringiz uchun rahmat"
     },
     "ics": {
       "exportEvent": "Taqvimga qoʻshish (.ics)",
-      "exportMine": "Mening tadbirlarim (.ics)"
+      "exportMine": "Tadbirlarim (.ics)"
     },
     "tabs": {
       "overview": "Umumiy",
@@ -2300,13 +2300,13 @@
       "carpool": "Birga borish",
       "items": "Buyumlar",
       "polls": "Soʻrovnomalar",
-      "photos": "Fotosuratlar",
+      "photos": "Suratlar",
       "feedback": "Fikr",
       "comments": "Muhokama"
     },
     "filters": {
-      "from": "Boshlanish",
-      "to": "Tugash"
+      "from": "Qaysi sanadan",
+      "to": "Qaysi sanagacha"
     }
   },
   "fields": {
