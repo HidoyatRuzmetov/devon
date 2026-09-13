@@ -13,6 +13,7 @@ import type { NotificationRow } from '../notifications/repo.js'
 import { absoluteDeepLink, buildTelegramPointer } from './pointer.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
 import { getLinkStatus, getTelegramLinkLocale } from './repo.js'
+import { addMiniappButton, routeForReason } from './miniapp-buttons.js'
 import { telegram as telegramBreaker } from '../../lib/resilience/registry.js'
 import { CircuitOpenError } from '../../lib/resilience/circuit-breaker.js'
 import { withTimeout } from '../../lib/resilience/timeout.js'
@@ -176,6 +177,14 @@ function buildActionKeyboard(
     // what it actually does -- "Toʻldirish", not the generic "Ochish" -- and opens the person's own
     // profile at its fields section.
     kb.url(tb(locale, notification.reason === 'field_request' ? 'button.fill' : 'button.open'), url)
+    any = true
+  }
+  // v1.1 SPEC §9: the same pointer, opened inside Telegram rather than in an external browser.
+  // Added only on an HTTPS instance (`miniapp-buttons.ts`) -- on `http://localhost` Telegram would
+  // reject the whole keyboard, and a notification that fails to send is far worse than one without
+  // this button.
+  if (any) kb.row()
+  if (addMiniappButton(kb, locale, routeForReason(notification.reason), 'miniapp.open')) {
     any = true
   }
   return any ? kb : null

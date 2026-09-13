@@ -25,6 +25,9 @@ import { sendProblem } from '../../lib/problem-reply.js'
 import { registerBotHandlers } from './bot.js'
 import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
 import { configureTelegram, getBot, isTelegramConfigured, publicUrl } from './transport.js'
+import miniappRoutes, { miniappUrl } from './miniapp.js'
+import { setupCounts } from './miniapp-repo.js'
+import { setupChecklistSchema } from './miniapp-schemas.js'
 import {
   groupConnectCodeSchema,
   groupListSchema,
@@ -305,6 +308,80 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.minutes > 0 ? new Date(Date.now() + req.body.minutes * 60_000) : null,
       )
       return reply.code(204).send()
+    },
+  )
+
+  // --- Mini App (v1.1 SPEC §9, EPIC-015) -------------------------------------------------------------
+
+  // Its own encapsulation context, so the `initData` `onRequest` hook it installs on its sign-in
+  // route cannot leak onto any other route in this module (`miniapp.ts` header).
+  await app.register(miniappRoutes, { prefix: '/telegram/miniapp' })
+
+  /**
+   * The head's "is Telegram actually wired up?" answer (SPEC §9: "the department settings show the
+   * bot username and a setup checklist for the head"). `department_managed`, so a xodim never sees
+   * the instance's bot configuration -- the same reasoning that already makes the group list
+   * head-only (D8). Listed in `apps/api/test/unit/head-only-routes.test.ts`.
+   */
+  app.get(
+    '/telegram/departments/:departmentId/setup-checklist',
+    {
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ({
+            kind: 'department_managed',
+            departmentId: (r.params as { departmentId: string }).departmentId,
+          }),
+        },
+      },
+      schema: {
+        params: z.object({ departmentId: z.string().uuid() }),
+        response: { 200: setupChecklistSchema },
+      },
+    },
+    async (req, reply) => {
+      const { departmentId } = req.params
+      const counts = await setupCounts(
+        {
+          requestId: req.id,
+          userId: req.actor?.userId ?? null,
+          actorRole: req.actor?.role ?? null,
+          departmentId,
+          departmentRole: 'head',
+          actingForUserId: null,
+          viewAs: req.actor?.viewAs != null,
+          ip: requestIp(req),
+          userAgent: requestUserAgent(req),
+        },
+        departmentId,
+      )
+      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME ?? null
+      const configured = isTelegramConfigured()
+      const selfLinked = await getLinkStatus(req.actor!.userId)
+      return reply.send({
+        botConfigured: configured,
+        botUsername,
+        miniappUrl: miniappUrl(),
+        memberCount: counts.memberCount,
+        linkedMemberCount: counts.linkedMemberCount,
+        groupCount: counts.groupCount,
+        steps: [
+          { id: 'bot_token' as const, done: configured, progress: null },
+          { id: 'bot_username' as const, done: botUsername !== null, progress: null },
+          // "Done" for the checklist means "we can hand the head a URL to paste into BotFather's
+          // menu-button dialog"; Telegram does not expose a read API for that setting, so the honest
+          // signal is that the app itself is reachable, not a claim we cannot verify.
+          { id: 'menu_button' as const, done: configured && botUsername !== null, progress: null },
+          { id: 'link_self' as const, done: selfLinked.linked, progress: null },
+          {
+            id: 'members_linked' as const,
+            done: counts.memberCount > 0 && counts.linkedMemberCount === counts.memberCount,
+            progress: { done: counts.linkedMemberCount, total: counts.memberCount },
+          },
+          { id: 'group_connected' as const, done: counts.groupCount > 0, progress: null },
+        ],
+      })
     },
   )
 

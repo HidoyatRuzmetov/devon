@@ -24,6 +24,7 @@ import {
   setMutedUntil,
 } from './repo.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
+import { miniappMenuKeyboard } from './miniapp-buttons.js'
 
 function localeFromTelegram(ctx: Context): BotLocale {
   const code = ctx.from?.language_code
@@ -109,11 +110,31 @@ export function registerBotHandlers(bot: Bot): void {
       await ctx.reply(tb(locale, key))
       return
     }
-    await ctx.reply(tb(locale, 'link.success', { name: ctx.from?.first_name ?? '' }))
+    const startKeyboard = miniappMenuKeyboard(locale)
+    await ctx.reply(
+      tb(locale, 'link.success', { name: ctx.from?.first_name ?? '' }),
+      startKeyboard ? { reply_markup: startKeyboard } : undefined,
+    )
   })
 
   bot.command('help', async (ctx) => {
-    await ctx.reply(tb(localeFromTelegram(ctx), 'help'))
+    const locale = localeFromTelegram(ctx)
+    const keyboard = miniappMenuKeyboard(locale)
+    await ctx.reply(tb(locale, 'help'), keyboard ? { reply_markup: keyboard } : undefined)
+  })
+
+  // v1.1 SPEC §9: "Bot commands open the Mini App via a web_app button". `/app` is the one command
+  // whose whole purpose is that button; every other command keeps its text answer and simply carries
+  // the button alongside, so a person on a Telegram client too old for Mini Apps loses nothing.
+  bot.command('app', async (ctx) => {
+    const linked = await requireLinkedUser(ctx)
+    if (!linked) return
+    const keyboard = miniappMenuKeyboard(linked.locale)
+    if (!keyboard) {
+      await ctx.reply(tb(linked.locale, 'miniapp.not_available'))
+      return
+    }
+    await ctx.reply(tb(linked.locale, 'miniapp.app_intro'), { reply_markup: keyboard })
   })
 
   bot.command('today', async (ctx) => {
