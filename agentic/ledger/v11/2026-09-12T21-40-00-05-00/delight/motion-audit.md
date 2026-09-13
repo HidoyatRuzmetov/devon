@@ -265,3 +265,59 @@ pre-existing exception of `Collapsible`, whose whole purpose is an animated heig
 4. **A DevTools `.trace` file.** Two attempts produced a 972 MB artefact and then an `IO.read`
    protocol failure on this host; the frame-interval JSON in this folder is the evidence instead, and
    it carries the isolation runs a raw trace would not have given without manual reading anyway.
+
+---
+
+## 7. Final state after the design lead's verdict (`verdict.md`)
+
+The verdict judged this pass live and found eleven things. All eleven are closed — ten fixed and
+re-measured, one filed as a backlog item because it is structural rather than a motion edit, which is
+what the verdict itself asked for. Evidence: `shots-fixed/`.
+
+**Measured against the production bundle**, not the dev server. That matters: the verdict's timings
+were taken on `pnpm start`, where React's own DEV instrumentation dominates. Profiling the palette's
+"420 ms" open by CPU-sample self-time gave `console.createTask` 120 ms, `run` 119 ms,
+`updateProperties` 37 ms, `warnUnknownProperties` 22 ms, `validateProperty$1` 20 ms — about 320 ms of
+instrumentation nobody in a ministry will ever run, sitting on top of roughly 210 ms of real work.
+Every number below is from `apps/web/dist`, served with the same same-origin `/api` proxy.
+
+| # | Was | Is | How it was fixed |
+|---|---|---|---|
+| F1 | 66 pills mounted; selection jumps 243 → 287 px with `transform: none` on ten consecutive frames | **1** pill mounted; on `ArrowDown` it FLIPs `matrix(…,-44) → -43.3 → -42.2 → -40.6 → -37.4 → … → -11.5` | The pill was rendered in every row and hidden with `display:none` — not unmounting, so shared layout had no unmount→mount pair. A new `PaletteCursor` reads `useCommandState((s) => s.value)` and mounts the `motion.span` only in the matching row |
+| F2 | 352–420 ms open, 245–258 ms close (dev); 310 ms on the admin shell | **one long task, 77–148 ms** | F1 removed 62 projection nodes; `PaletteRow` is `React.memo`'d; the value pass and the controller's whole group list are `useMemo`'d and are not built at all while the palette is shut; the body mounts only while open; and the ~40 entity rows (people, cards, projects, events, pages) are appended one frame later inside a transition, so the keypress mounts the ~23 rows a person is actually looking at |
+| F3 | Clock frozen at 24:37 across three runs more than 20 s apart; `stroke-dashoffset` constant at 649.4069740600047 over 160 samples; `aria-valuenow` 2 → 2 | Clock **24:29 → 24:26 → 24:23**; dashoffset **646.389 → 645.068 → 643.746**; `aria-valuenow` climbs | `usePomodoroRemainingSec()` — a `useSyncExternalStore` snapshot of whole seconds left, which actually changes, so React stops bailing out on `Object.is`. It also re-arms the widget's end-of-phase effect, which depended on the same object that never changed |
+| F4 | `/inbox`: 30 rows at opacity 100, then 29 at opacity 100 on the next frame; nothing translates | The leaving row holds **opacity 94 → 87 → 82 → … → 43** with `data-motion-pop-id`, while the survivors translate **161.3 → 137.9 px** to close the gap | `<Stagger presence>` puts `AnimatePresence initial={false} mode="popLayout"` *inside* the list container, and the twelve call sites that wrapped it outside dropped their own wrapper. `StaggerItem` now forwards a ref, which `popLayout`'s `PopChild` needs in order to measure the leaving row |
+| F5 | Click-to-second-painted-frame 527 / 508 / 526 / 511 ms; worse under reduced motion | **21–37 ms**, with no long animation frame at all (28–37 ms under reduced motion) | Three things, each found by measuring rather than guessing. (a) All three tab lists stay mounted, `hidden` on the inactive two, and only the visible one polls. (b) `useQuery` hands back a fresh result object every render, so passing it to the memoised panel made that memo a no-op — the panel takes `items`/`isPending`/`isError` and a stable `onRetry` instead, and everything a switch changes (`hidden`, the entrance class) lives on a wrapper outside the memo. (c) The selection moved into `SelectedNotificationContext`, and each row caches its own element, so a cursor move re-renders 74 rows into the identical element instead of rebuilding `AnimatePresence`'s `PresenceChild`/`PopChild` wrappers around every one of them — 238 ms → 12 ms of component time |
+| F6 | Median frame 98.4 ms, p95 423 ms, 69 / 70 frames over budget | Median **17–22 ms**, p95 **26–39 ms**, **36–46 / 69** over budget | Component-level measurement said the virtualiser was not even the larger half: `WorkShell` accounted for 394 ms across 40 scrolled frames, because TanStack Virtual's per-scroll state lived in `TableScreen` and dragged the page header and filter bar through every tick. The virtualiser moved into its own `VirtualRows`; the scroll element became state so the child can attach to it; both rows are `React.memo`'d behind one stable `onToggle`; `estimateSize` and `getItemKey` are `useCallback`s; and the per-row `motion.div` is a plain `div` with an inline `translate3d`, its re-sort travel kept as a CSS transform transition that cannot fire while scrolling |
+| F7 | An 838 ms long task, then 73 ms; neither catalogue animation ever got a frame | Click-to-second-painted-frame **17–25 ms**; the crossfade holds fractional opacity **0.89 → 0.85 → … → 0.65** across 30 frames | The range change runs inside `React.startTransition`; the filter value, the section props and every chart's `data` are memoised and the nine sections are `React.memo`'d, so a range change re-renders the charts once rather than once per KPI settle. The region is keyed on the range itself — inside a transition React holds the painted charts and skips the intermediate skeleton, so the crossfade had nothing to play on until it was given a real old/new pair. What remains is Recharts redrawing seven surfaces, which is the work itself, not repeated work |
+| F8 | `aria-live` read `"…" Anvar Aliyev ustuniga koʻchirildi` after a forced 403 | Within **220 ms** it reads `Koʻchirib boʻlmadi. Karta oldingi joyiga qaytarildi.` | `announce(t('work.board.moveFailed'))` inside the existing `onError`, beside `setRejectedCardId` and `toast.error` — the optimistic announcement is kept and then retracted |
+| F9 | Median frame 29.2 ms, p95 37.3 ms, 46 / 70 over budget on the board's horizontal scroll | **Filed as `EPIC-021` (`proposed`)** in `docs/03-plan/backlog.json` | Windowing the columns is structural, not a motion edit — as the verdict itself says. The backlog entry carries the measurement, the cause (rasterising newly revealed columns) and the prescribed fix (an `IntersectionObserver` per fixed-width column header) |
+| F10 | Under reduced motion the spinner landed on one static frame for the whole request | The label crossfades to `Yuklanmoqda` and the button pulses **opacity 0.95 → 0.78 → 0.72 → 0.78 → 1.00** at `2s infinite`; no spinner | `Button` branches on `useReducedMotion()`, and `.devon-busy-pulse` in `tokens.css` re-asserts its duration and iteration count inside the same media query as the global backstop, winning on specificity (a class outranks `*`). Opacity is not a transform, so it honours the reduced-motion intent while keeping §10's "nothing becomes silent" |
+| F11 | `document.querySelectorAll('number-flow-react').length === 0` on `/admin` | **1**, and the three overview tiles now share one surface (`bg-surface-2`, `shadow-1`, `font-display text-h1`) | The user count renders through `CountFlow` with `numberFlowLocale(locale)`, so a uz-Latn UI groups the way the rest of the product groups; `animated={false}` under reduced motion comes with it |
+
+### What §5 and §6 above got wrong
+
+Two claims in this document did not survive being re-measured. They are corrected here rather than
+edited away:
+
+* §5's table reading — *"what is left is the virtualiser"* — was half right. The per-scroll state
+  update is real, but the expensive part was **where that state lived**: in `TableScreen`, above
+  `WorkShell`. Naming it "a rendering concern inside `table-screen.tsx`" was correct; calling it out
+  of scope was not, and F6 closes it.
+* §6.1 and §6.2 listed both scroll costs as "left undone". §6.1 is now done (F6). §6.2 is a backlog
+  item with a measurement and a prescribed fix (F9, `EPIC-021`) rather than a note in a ledger file.
+
+### Verification protocol
+
+Every row above was fired in the browser through the chrome-devtools MCP against the production
+bundle, as `demo.xodim` (xodim), `demo.boshliq` (boshliq) and `admin.super`, at 1440 and 390, with
+`prefers-reduced-motion` emulated both ways (a `matchMedia` override plus the exact
+`@media (prefers-reduced-motion: reduce)` declarations from `tokens.css` injected as a stylesheet —
+including the `.devon-busy-pulse` override, without which the harness measures a cascade the real
+browser never has). Timings are `long-animation-frame` and `longtask` entries plus frame intervals
+taken in the page; the component attributions are React 19's own `performance.measure` entries read
+from the dev build, which is the only place component names exist. F8 was fired against a forced 403
+on `PATCH /api/v1/cards/*`.
+
+Gates: `node agentic/scripts/gate.mjs --profile fast` green, nothing skipped.
+`pnpm --filter @devon/web build` clean. `packages/db` untouched.
