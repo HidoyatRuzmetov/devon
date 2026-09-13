@@ -350,3 +350,33 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `work.goals.emptyBodyHead` | Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi. | Birinchi maqsadni qoʻying — bajarilishi kartalardan oʻzi hisoblanadi. | `progress` — oʻzlashmagan |
 | `work.goals.edit` | {title} maqsadini tahrirlash | «{title}» maqsadini tahrirlash | §14 «…» |
 | `work.goals.forbiddenAction` | Ishlarni koʻrish | Doskani ochish | tugma qayerga olib borishini aytsin |
+
+## Modul: projects (`packages/i18n/messages/modules/projects/`)
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `projects.description` | Boʻlim yuritayotgan barcha guruh loyihalari, taraqqiyoti bilan. | Boshqarma olib borayotgan guruh loyihalari va ularning bajarilishi. | §12.2 boshqarma; «taraqqiyoti» — siyosiy tusli soʻz |
+| `projects.emptyTitle` | Hali loyihalar yoʻq | Hali loyiha yoʻq | §10 nol sanoqda koʻplik yoʻq |
+| `projects.emptyBody` | Birinchi guruh loyihasini yarating — shablondan yoki boshidan. | Birinchi guruh loyihasini oching — andozadan yoki noldan. | §12.2 `shablon` → `andoza`; §11/4 loyiha «ochiladi»; «boshidan» → «noldan» |
+| `projects.noIdTitle` | Loyiha koʻrsatilmagan | Loyiha tanlanmagan | «koʻrsatilmagan» → odam tanlaydi |
+| `projects.noIdBody` | Havolada loyiha identifikatori yoʻq. | Havolada loyiha raqami yoʻq. | §11/25 `identifikator` → `raqam` |
+| `projects.field.titlePlaceholder` | Loyiha nomini kiriting | Loyiha nomini yozing | §11/26 matn «yoziladi» |
+| `projects.field.members` | Aʼzolar | Ishtirokchilar | loyihada `aʼzo` emas, `ishtirokchi` (people moduli ham shunday) |
+| `projects.field.template` | Shablon | Andoza | §12.2 `shablon` → `andoza`; fayl ikkisini aralashtirgan edi |
+| `projects.field.objective` | Umumiy vazifalar | Boshqarma vazifalari | §11/36 binding: objective/subjective — egalik haqida |
+| `projects.field.subjective` | Shaxsiy vazifalar | Oʻz vazifalarim | §11/36 binding: objective/subjective — egalik haqida |
+| `projects.field.galleryTemplateHint` | Bosqichlar va boshlangʻich kartalar avtomatik yaratiladi. | Bosqichlar va dastlabki kartalar oʻzi qoʻshiladi. | §11/4 karta «qoʻshiladi»; «avtomatik» ortiqcha |
+| `projects.status.planning` | Rejalashtirilmoqda | Rejada | chip qisqaroq |
+| `projects.create.title` | Guruh loyihasini yaratish | Guruh loyihasini ochish | §11/4 loyiha «ochiladi» |
+| `projects.create.fromTemplate` | Shablondan | Andozadan | §12.2 `andoza` |
+| `projects.create.fromScratch` | Boshidan | Noldan | «boshidan» — odam «noldan» deydi |
+| `projects.create.submit` | Yaratish | Ochish | §11/4 loyiha «ochiladi» |
+| `projects.create.success` | Loyiha yaratildi | Loyiha ochildi | §11/4 loyiha «ochiladi» |
+| `projects.create.error` | Loyihani yaratib boʻlmadi | Loyihani ochib boʻlmadi | §11/4 loyiha «ochiladi» |
+| `projects.create.fromGallery` | Andozalar galereyasidan | Andozalar toʻplamidan | `galereya` — rasmlar uchun |
+| `projects.milestone.addPlaceholder` | Bosqich nomini kiriting | Bosqich nomini yozing | §11/26 matn «yoziladi» |
+| `projects.card.addObjectivePlaceholder` | Umumiy vazifa qoʻshish | Boshqarma vazifasini qoʻshish | §11/36 |
+| `projects.card.addSubjectivePlaceholder` | Shaxsiy vazifa qoʻshish | Oʻz vazifangizni qoʻshish | §11/36 |
+| `projects.action.archive` | Loyihani arxivlash | Loyihani arxivga olish | §12.2 archive (v.) = `arxivga olish` |
+| `projects.action.archived` | "{title}" arxivlandi | «{title}» arxivga olindi | §14 «…»; §12.2 `arxivga olindi` |
+| `projects.ai.planPreviewTitle` | AI reja koʻrinishi | AI tayyorlagan reja | «reja koʻrinishi» — *preview* soʻzma-soʻz |

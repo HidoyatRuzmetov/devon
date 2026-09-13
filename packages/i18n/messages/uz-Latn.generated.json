@@ -3659,11 +3659,11 @@
   "projects": {
     "eyebrow": "LOYIHALAR",
     "title": "Guruh loyihalari",
-    "description": "Boʻlim yuritayotgan barcha guruh loyihalari, taraqqiyoti bilan.",
-    "emptyTitle": "Hali loyihalar yoʻq",
-    "emptyBody": "Birinchi guruh loyihasini yarating — shablondan yoki boshidan.",
-    "noIdTitle": "Loyiha koʻrsatilmagan",
-    "noIdBody": "Havolada loyiha identifikatori yoʻq.",
+    "description": "Boshqarma olib borayotgan guruh loyihalari va ularning bajarilishi.",
+    "emptyTitle": "Hali loyiha yoʻq",
+    "emptyBody": "Birinchi guruh loyihasini oching — andozadan yoki noldan.",
+    "noIdTitle": "Loyiha tanlanmagan",
+    "noIdBody": "Havolada loyiha raqami yoʻq.",
     "tile": {
       "progress": "{percent}% bajarildi",
       "progressAria": "{percent}% bajarildi",
@@ -3675,19 +3675,19 @@
     },
     "field": {
       "title": "Nomi",
-      "titlePlaceholder": "Loyiha nomini kiriting",
+      "titlePlaceholder": "Loyiha nomini yozing",
       "owner": "Masʼul",
       "ownerPlaceholder": "Masʼulni tanlang",
-      "members": "Aʼzolar",
-      "template": "Shablon",
+      "members": "Ishtirokchilar",
+      "template": "Andoza",
       "milestones": "Bosqichlar",
-      "objective": "Umumiy vazifalar",
-      "subjective": "Shaxsiy vazifalar",
+      "objective": "Boshqarma vazifalari",
+      "subjective": "Oʻz vazifalarim",
       "galleryTemplate": "Andoza",
-      "galleryTemplateHint": "Bosqichlar va boshlangʻich kartalar avtomatik yaratiladi."
+      "galleryTemplateHint": "Bosqichlar va dastlabki kartalar oʻzi qoʻshiladi."
     },
     "status": {
-      "planning": "Rejalashtirilmoqda",
+      "planning": "Rejada",
       "active": "Faol",
       "on_hold": "Toʻxtatilgan",
       "done": "Yakunlangan",
@@ -3695,30 +3695,30 @@
     },
     "create": {
       "button": "Yangi loyiha",
-      "title": "Guruh loyihasini yaratish",
-      "fromTemplate": "Shablondan",
-      "fromScratch": "Boshidan",
-      "submit": "Yaratish",
-      "success": "Loyiha yaratildi",
-      "error": "Loyihani yaratib boʻlmadi",
-      "fromGallery": "Andozalar galereyasidan",
+      "title": "Guruh loyihasini ochish",
+      "fromTemplate": "Andozadan",
+      "fromScratch": "Noldan",
+      "submit": "Ochish",
+      "success": "Loyiha ochildi",
+      "error": "Loyihani ochib boʻlmadi",
+      "fromGallery": "Andozalar toʻplamidan",
       "templateUnreadable": "Andozani oʻqib boʻlmadi"
     },
     "milestone": {
-      "addPlaceholder": "Bosqich nomini kiriting",
+      "addPlaceholder": "Bosqich nomini yozing",
       "completedToast": "Bosqich yakunlandi: {title}"
     },
     "card": {
-      "addObjectivePlaceholder": "Umumiy vazifa qoʻshish",
-      "addSubjectivePlaceholder": "Shaxsiy vazifa qoʻshish"
+      "addObjectivePlaceholder": "Boshqarma vazifasini qoʻshish",
+      "addSubjectivePlaceholder": "Oʻz vazifangizni qoʻshish"
     },
     "action": {
-      "archive": "Loyihani arxivlash",
-      "archived": "\"{title}\" arxivlandi"
+      "archive": "Loyihani arxivga olish",
+      "archived": "«{title}» arxivga olindi"
     },
     "ai": {
       "plan": "Bugungi tartibni taklif qilish",
-      "planPreviewTitle": "AI reja koʻrinishi",
+      "planPreviewTitle": "AI tayyorlagan reja",
       "applyFocus": "Asosiy kartani qoʻllash",
       "focus": "Shundan boshlang: {title}",
       "planApplied": "Asosiy karta yangilandi",

@@ -3659,11 +3659,11 @@
   "projects": {
     "eyebrow": "ЛОЙИҲАЛАР",
     "title": "Гуруҳ лойиҳалари",
-    "description": "Бўлим юритаётган барча гуруҳ лойиҳалари, тараққиёти билан.",
-    "emptyTitle": "Ҳали лойиҳалар йўқ",
-    "emptyBody": "Биринчи гуруҳ лойиҳасини яратинг — шаблондан ёки бошидан.",
-    "noIdTitle": "Лойиҳа кўрсатилмаган",
-    "noIdBody": "Ҳаволада лойиҳа идентификатори йўқ.",
+    "description": "Бошқарма олиб бораётган гуруҳ лойиҳалари ва уларнинг бажарилиши.",
+    "emptyTitle": "Ҳали лойиҳа йўқ",
+    "emptyBody": "Биринчи гуруҳ лойиҳасини очинг — андозадан ёки нолдан.",
+    "noIdTitle": "Лойиҳа танланмаган",
+    "noIdBody": "Ҳаволада лойиҳа рақами йўқ.",
     "tile": {
       "progress": "{percent}% бажарилди",
       "progressAria": "{percent}% бажарилди",
@@ -3675,19 +3675,19 @@
     },
     "field": {
       "title": "Номи",
-      "titlePlaceholder": "Лойиҳа номини киритинг",
+      "titlePlaceholder": "Лойиҳа номини ёзинг",
       "owner": "Масъул",
       "ownerPlaceholder": "Масъулни танланг",
-      "members": "Аъзолар",
-      "template": "Шаблон",
+      "members": "Иштирокчилар",
+      "template": "Андоза",
       "milestones": "Босқичлар",
-      "objective": "Умумий вазифалар",
-      "subjective": "Шахсий вазифалар",
+      "objective": "Бошқарма вазифалари",
+      "subjective": "Ўз вазифаларим",
       "galleryTemplate": "Андоза",
-      "galleryTemplateHint": "Босқичлар ва бошланғич карталар автоматик яратилади."
+      "galleryTemplateHint": "Босқичлар ва дастлабки карталар ўзи қўшилади."
     },
     "status": {
-      "planning": "Режалаштирилмоқда",
+      "planning": "Режада",
       "active": "Фаол",
       "on_hold": "Тўхтатилган",
       "done": "Якунланган",
@@ -3695,30 +3695,30 @@
     },
     "create": {
       "button": "Янги лойиҳа",
-      "title": "Гуруҳ лойиҳасини яратиш",
-      "fromTemplate": "Шаблондан",
-      "fromScratch": "Бошидан",
-      "submit": "Яратиш",
-      "success": "Лойиҳа яратилди",
-      "error": "Лойиҳани яратиб бўлмади",
-      "fromGallery": "Андозалар галереясидан",
+      "title": "Гуруҳ лойиҳасини очиш",
+      "fromTemplate": "Андозадан",
+      "fromScratch": "Нолдан",
+      "submit": "Очиш",
+      "success": "Лойиҳа очилди",
+      "error": "Лойиҳани очиб бўлмади",
+      "fromGallery": "Андозалар тўпламидан",
       "templateUnreadable": "Андозани ўқиб бўлмади"
     },
     "milestone": {
-      "addPlaceholder": "Босқич номини киритинг",
+      "addPlaceholder": "Босқич номини ёзинг",
       "completedToast": "Босқич якунланди: {title}"
     },
     "card": {
-      "addObjectivePlaceholder": "Умумий вазифа қўшиш",
-      "addSubjectivePlaceholder": "Шахсий вазифа қўшиш"
+      "addObjectivePlaceholder": "Бошқарма вазифасини қўшиш",
+      "addSubjectivePlaceholder": "Ўз вазифангизни қўшиш"
     },
     "action": {
-      "archive": "Лойиҳани архивлаш",
-      "archived": "\"{title}\" архивланди"
+      "archive": "Лойиҳани архивга олиш",
+      "archived": "«{title}» архивга олинди"
     },
     "ai": {
       "plan": "Бугунги тартибни таклиф қилиш",
-      "planPreviewTitle": "AI режа кўриниши",
+      "planPreviewTitle": "AI тайёрлаган режа",
       "applyFocus": "Асосий картани қўллаш",
       "focus": "Шундан бошланг: {title}",
       "planApplied": "Асосий карта янгиланди",
