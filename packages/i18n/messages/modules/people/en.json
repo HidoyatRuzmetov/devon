@@ -33,7 +33,8 @@
       },
       "footer": "{count} people",
       "workload": {
-        "value": "{open} / {capacity}"
+        "value": "{open} / {capacity}",
+        "hours": "{hours} h · {pct}%"
       },
       "searchPlaceholder": "Search by name, title or unit",
       "footerTasks": "{count} open tasks",

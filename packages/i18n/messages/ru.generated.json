@@ -2911,7 +2911,8 @@
       },
       "footer": "Сотрудников: {count}",
       "workload": {
-        "value": "{open} / {capacity}"
+        "value": "{open} / {capacity}",
+        "hours": "{hours} ч · {pct}%"
       },
       "searchPlaceholder": "Поиск по имени, должности или отделу",
       "footerTasks": "Открытых задач: {count}",

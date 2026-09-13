@@ -2911,7 +2911,8 @@
       },
       "footer": "{count} та ходим",
       "workload": {
-        "value": "{open} / {capacity}"
+        "value": "{open} / {capacity}",
+        "hours": "{hours} соат · {pct}%"
       },
       "searchPlaceholder": "Исм, лавозим ёки бўлим бўйича қидириш",
       "footerTasks": "{count} та очиқ вазифа",

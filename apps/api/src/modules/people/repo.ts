@@ -5,6 +5,7 @@
 // Every function here takes the whole cohort of user ids and returns a `Map<userId, value>`.
 // `service.ts` assembles them into the registry's shape; nothing here knows about HTTP.
 import { sql } from 'drizzle-orm'
+import { DEFAULT_WEEKLY_CAPACITY_HOURS } from '@devon/contracts'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
 
 export type UserNumbers = Map<string, number>
@@ -28,6 +29,17 @@ export type CardIndicators = {
   doneLast30d: UserNumbers
   onTimeRate90d: UserNumbers
   cardsGivenOpen: UserNumbers
+  /** v1.1 HANDOFFS #5: summed `estimate_min` over this person's open cards, in hours, rounded to
+   * one decimal. Zero when they hold open cards but none of them carries an estimate -- the caller
+   * (`service.ts`) is what turns "the department does not estimate at all" into a `null` figure
+   * rather than a confident 0 h. */
+  estimatedHoursOpen: UserNumbers
+  /** How many of this person's open cards carry an estimate. `service.ts` reads it to tell "nobody
+   * estimates" apart from "this person's work is genuinely 0 h". */
+  estimatedCardsOpen: UserNumbers
+  /** Per-person weekly capacity in hours (`app.work_capacity`), falling back to the department
+   * default where nobody has set one. */
+  weeklyCapacityHours: UserNumbers
 }
 
 /**
@@ -52,6 +64,9 @@ export async function cardIndicators(
       doneLast30d: emptyNumbers(),
       onTimeRate90d: emptyNumbers(),
       cardsGivenOpen: emptyNumbers(),
+      estimatedHoursOpen: emptyNumbers(),
+      estimatedCardsOpen: emptyNumbers(),
+      weeklyCapacityHours: emptyNumbers(),
     }
   }
   const ids = sql.param([...userIds])
@@ -63,6 +78,8 @@ export async function cardIndicators(
     done_last_30d: string
     due_last_90d: string
     on_time_last_90d: string
+    estimated_minutes_open: string
+    estimated_cards_open: string
   }>(sql`
     select c.assignee_user_id as user_id,
            count(*) filter (where c.status = 'active')                                as open_cards,
@@ -80,7 +97,11 @@ export async function cardIndicators(
            count(*) filter (
              where c.status = 'done' and c.done_at >= now() - interval '90 days'
                and c.due_at is not null and c.done_at <= c.due_at
-           )                                                                          as on_time_last_90d
+           )                                                                          as on_time_last_90d,
+           -- v1.1 (SPEC 7 A3, HANDOFFS 5): estimates ship now, so the Yuklama column can be hours
+           -- against capacity instead of a bare open-card count. Same one pass over app.cards.
+           coalesce(sum(c.estimate_min) filter (where c.status = 'active'), 0)         as estimated_minutes_open,
+           count(*) filter (where c.status = 'active' and c.estimate_min is not null)  as estimated_cards_open
     from app.cards c
     where c.department_id = ${departmentId}
       and c.deleted_at is null
@@ -98,11 +119,22 @@ export async function cardIndicators(
     group by c.giver_user_id
   `)
 
+  // Per-person weekly capacity (SPEC §7 A4). A row per person only where somebody set one; the
+  // department default fills the rest in the loop below. One statement for the whole cohort.
+  const capacityRows = await tx.raw<{ user_id: string; value: string }>(sql`
+    select wc.user_id, wc.weekly_hours as value
+    from app.work_capacity wc
+    where wc.department_id = ${departmentId}
+      and wc.user_id = any(${ids}::uuid[])
+  `)
+
   const openCards = emptyNumbers()
   const overdueCards = emptyNumbers()
   const dueThisWeek = emptyNumbers()
   const doneLast30d = emptyNumbers()
   const onTimeRate90d = emptyNumbers()
+  const estimatedHoursOpen = emptyNumbers()
+  const estimatedCardsOpen = emptyNumbers()
   for (const row of rows) {
     openCards.set(row.user_id, Number(row.open_cards))
     overdueCards.set(row.user_id, Number(row.overdue_cards))
@@ -113,7 +145,16 @@ export async function cardIndicators(
       row.user_id,
       due === 0 ? 100 : Math.round((Number(row.on_time_last_90d) / due) * 100),
     )
+    estimatedHoursOpen.set(row.user_id, Number(row.estimated_minutes_open) / 60)
+    estimatedCardsOpen.set(row.user_id, Number(row.estimated_cards_open))
   }
+
+  const weeklyCapacityHours = emptyNumbers()
+  const capacityByUser = toNumberMap(capacityRows)
+  for (const userId of userIds) {
+    weeklyCapacityHours.set(userId, capacityByUser.get(userId) ?? DEFAULT_WEEKLY_CAPACITY_HOURS)
+  }
+
   return {
     openCards,
     overdueCards,
@@ -121,6 +162,9 @@ export async function cardIndicators(
     doneLast30d,
     onTimeRate90d,
     cardsGivenOpen: toNumberMap(givenRows),
+    estimatedHoursOpen,
+    estimatedCardsOpen,
+    weeklyCapacityHours,
   }
 }
 

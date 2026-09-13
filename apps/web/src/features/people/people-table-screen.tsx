@@ -21,7 +21,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useLocale, useT } from '@devon/i18n'
+import { formatNumber, useLocale, useT } from '@devon/i18n'
 import {
   DEFAULT_PEOPLE_VIEW_CONFIG,
   INDICATORS,
@@ -117,6 +117,34 @@ function loadTone(pct: number): string {
   return 'bg-primary'
 }
 
+/**
+ * What the Yuklama bar says next to itself (SPEC §4.3: "bar: hours vs capacity, or open count when
+ * estimates are off").
+ *
+ * The department is the unit of choice here, not the person: `workloadHours` is `null` for anyone
+ * whose open cards carry no estimate at all, which is what a department that does not estimate looks
+ * like -- and in that world an hours label would be an invented number. Where estimates exist, hours
+ * is the honest reading, because two cards are not two equal days.
+ */
+function workloadLabel(
+  values: Record<string, CellValue>,
+  capacityCards: number,
+  t: Translate,
+  locale: ReturnType<typeof useLocale>,
+): string {
+  const hours = values['workloadHours']
+  if (typeof hours === 'number') {
+    return t('people.table.workload.hours', {
+      hours: formatNumber(hours, locale),
+      pct: formatNumber(Number(values['workloadPct'] ?? 0), locale),
+    })
+  }
+  return t('people.table.workload.value', {
+    open: Number(values['openCards'] ?? 0),
+    capacity: capacityCards,
+  })
+}
+
 function WorkloadBar({ pct, label }: { pct: number; label: string }): React.JSX.Element {
   return (
     <span className="flex items-center gap-2" title={label}>
@@ -200,8 +228,20 @@ export default function PeopleTableScreen(): React.JSX.Element {
     [config.columns],
   )
 
+  // `workloadHours` rides along with `workloadPct` (HANDOFFS #5): the bar's own label is hours where
+  // the department estimates and an open-card count where it does not, and it cannot tell the two
+  // apart without the hours figure. Same source, same query -- no extra statement.
   const requestedKeys = React.useMemo(
-    () => [...new Set([...config.columns, 'openCards', 'workloadPct', 'unit', 'unitRole'])],
+    () => [
+      ...new Set([
+        ...config.columns,
+        'openCards',
+        'workloadPct',
+        'workloadHours',
+        'unit',
+        'unitRole',
+      ]),
+    ],
     [config.columns],
   )
 
@@ -850,10 +890,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                       {spec.id === 'workloadPct' ? (
                         <WorkloadBar
                           pct={Number(entry.row.values['workloadPct'] ?? 0)}
-                          label={t('people.table.workload.value', {
-                            open: Number(entry.row.values['openCards'] ?? 0),
-                            capacity,
-                          })}
+                          label={workloadLabel(entry.row.values, capacity, t, locale)}
                         />
                       ) : (
                         <span className="tabular-nums">
@@ -1280,10 +1317,7 @@ function PeopleCards({
                       {spec.id === 'workloadPct' ? (
                         <WorkloadBar
                           pct={Number(entry.row.values['workloadPct'] ?? 0)}
-                          label={t('people.table.workload.value', {
-                            open: Number(entry.row.values['openCards'] ?? 0),
-                            capacity,
-                          })}
+                          label={workloadLabel(entry.row.values, capacity, t, locale)}
                         />
                       ) : (
                         formatIndicator(spec, entry.row.values[spec.id] ?? null, t, locale)

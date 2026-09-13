@@ -78,6 +78,9 @@ export function numberFlowLocale(locale: Locale): Locale | 'uz-Cyrl' {
  *  rather than trusting a unit test run under Node to catch it). So `uz-Latn` alone is built from
  *  `formatToParts` with the `group` part forced to U+00A0 regardless of what the runtime's ICU
  *  chose; `uz-Cyrl`/`ru`/`en` are left to `Intl`, which already agrees with DESIGN.md for them. */
+/** U+00A0 -- DESIGN.md §5's thousands separator, written as an escape so it survives every editor. */
+const NBSP = ' '
+
 export function formatNumber(
   n: number,
   locale: Locale,
@@ -86,11 +89,21 @@ export function formatNumber(
   if (locale === 'uz-Latn') {
     return new Intl.NumberFormat(locale, options)
       .formatToParts(n)
-      .map((part) => (part.type === 'group' ? ' ' : part.value))
+      .map((part) => {
+        if (part.type === 'group') return NBSP
+        // v1.1: the same borrowed-English fallback gets the DECIMAL separator wrong for the same
+        // reason, and nothing in the product had ever formatted a fraction until the people table's
+        // Yuklama column started printing "19.5 soat" -- so nobody had seen it. Uzbek writes 19,5,
+        // as `uz-Cyrl` itself does on this very runtime, and as this function's own unit test has
+        // asserted all along (it passes under Node's full ICU and could never have caught this).
+        if (part.type === 'decimal') return ','
+        return part.value
+      })
       .join('')
   }
   return new Intl.NumberFormat(locale, options).format(n)
 }
+
 
 /** Full month names, January-first, capitalised for standalone display ("Sentabr 2026", a section
  * header or a calendar title). Not delegated to `Intl.DateTimeFormat(locale, { month: 'long' })`:

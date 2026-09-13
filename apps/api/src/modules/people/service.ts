@@ -9,6 +9,7 @@
 // endpoint is head-only and every head of a department sees the same numbers.
 import { withContext, type RequestContext } from '@devon/db'
 import {
+  DEFAULT_WEEKLY_CAPACITY_HOURS,
   INDICATORS,
   type IndicatorKey,
   type IndicatorValue,
@@ -170,10 +171,26 @@ async function compute(
         set('doneLast30d', cards.doneLast30d.get(userId) ?? 0)
         set('onTimeRate90d', cards.onTimeRate90d.get(userId) ?? 100)
         set('cardsGivenOpen', cards.cardsGivenOpen.get(userId) ?? 0)
-        // Estimates (SPEC §7 A3) have not shipped: an hours figure would be invented, so it is null
-        // and the UI renders the registry's "—" for a missing value rather than a fake number.
-        set('workloadHours', null)
-        set('workloadPct', Math.round((open / DEFAULT_WEEKLY_CARD_CAPACITY) * 100))
+        // v1.1 HANDOFFS #5. Estimates ship now (SPEC §7 A3), so Yuklama is hours against this
+        // person's own weekly capacity -- which is what a boshliq actually allocates. The `null`
+        // is kept for the one case it was always for: a department that does not estimate. Nobody
+        // has put an estimate on any of this person's open cards, so an hours figure would be
+        // invented, and the registry's "—" is the honest render.
+        //
+        // `workloadPct` follows the same two worlds and says so in one number: hours-vs-hours where
+        // estimates exist, the old cards-vs-`DEFAULT_WEEKLY_CARD_CAPACITY` where they do not. Both
+        // are "how full is this week", which is why they are one column and not two.
+        const estimatedCards = cards.estimatedCardsOpen.get(userId) ?? 0
+        const estimatedHours = cards.estimatedHoursOpen.get(userId) ?? 0
+        const capacityHours =
+          cards.weeklyCapacityHours.get(userId) ?? DEFAULT_WEEKLY_CAPACITY_HOURS
+        set('workloadHours', estimatedCards > 0 ? Math.round(estimatedHours * 10) / 10 : null)
+        set(
+          'workloadPct',
+          estimatedCards > 0 && capacityHours > 0
+            ? Math.round((estimatedHours / capacityHours) * 100)
+            : Math.round((open / DEFAULT_WEEKLY_CARD_CAPACITY) * 100),
+        )
       }
       if (projects) {
         set('projects', projects.projects.get(userId) ?? 0)
