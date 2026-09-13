@@ -3,18 +3,18 @@
     "manager": {
       "title": "Maydonlar",
       "nav": "Maydonlar",
-      "subtitle": "Boshqarma xodimlari va vazifalari uchun oʻz ustunlaringizni belgilang.",
+      "subtitle": "Boshqarma xodimlari va kartalari uchun oʻz ustunlaringizni belgilang.",
       "create": "Yangi maydon",
       "created": "«{name}» maydoni qoʻshildi.",
-      "createFailed": "Maydonni qoʻshib boʻlmadi. Qaytadan urinib koʻring.",
-      "saved": "Oʻzgarishlar saqlandi.",
-      "saveFailed": "Saqlab boʻlmadi. Qaytadan urinib koʻring.",
+      "createFailed": "Maydonni qoʻshib boʻlmadi. Qayta urinib koʻring.",
+      "saved": "Saqlandi",
+      "saveFailed": "Saqlab boʻlmadi. Qayta urinib koʻring.",
       "archived": "«{name}» arxivga olindi.",
       "archiveFailed": "Arxivga olib boʻlmadi.",
-      "restored": "Maydon qaytarildi.",
-      "restoreFailed": "Qaytarib boʻlmadi.",
+      "restored": "Maydon tiklandi",
+      "restoreFailed": "Tiklab boʻlmadi.",
       "reorderFailed": "Tartibni oʻzgartirib boʻlmadi.",
-      "undo": "Qaytarish",
+      "undo": "Bekor qilish",
       "ask": "Toʻldirishni soʻrash",
       "nudge": "Yana eslatish",
       "asked": "{count} ta xodimdan toʻldirish soʻraldi.",
@@ -23,7 +23,7 @@
       "askFailed": "Soʻrovni yuborib boʻlmadi.",
       "tab": {
         "person": "Xodim maydonlari",
-        "card": "Vazifa maydonlari"
+        "card": "Karta maydonlari"
       },
       "tabsAria": "Maydon turini tanlang",
       "capCount": "{used} / {cap} ta maydon",
@@ -34,17 +34,17 @@
       "moveDown": "Pastga surish",
       "edit": "Tahrirlash",
       "archive": "Arxivga olish",
-      "restore": "Qaytarish",
-      "progressLabel": "{filled} / {total} toʻldirgan",
+      "restore": "Tiklash",
+      "progressLabel": "{total} tadan {filled} tasi toʻldirgan",
       "waitingOn": "{count} ta javob kutilmoqda",
       "empty": {
         "person": {
-          "title": "Xodimlar uchun maydon yoʻq",
+          "title": "Hali xodim maydoni yoʻq",
           "body": "Taʼlim yoki chet tillari kabi ustun qoʻshsangiz, u xodimlar jadvalida va har bir xodimning sahifasida paydo boʻladi."
         },
         "card": {
-          "title": "Vazifalar uchun maydon yoʻq",
-          "body": "Baholangan soat yoki hujjat havolasi kabi ustun qoʻshsangiz, u vazifa kartochkasida koʻrinadi."
+          "title": "Hali karta maydoni yoʻq",
+          "body": "Baholangan soat yoki hujjat havolasi kabi ustun qoʻshsangiz, u kartaning oʻzida koʻrinadi."
         }
       },
       "denied": {
@@ -56,8 +56,8 @@
       "title": "Mening maʼlumotlarim",
       "subtitle": "Boshqarma soʻragan maʼlumotlar. Faqat shu boshqarma ichida koʻrinadi.",
       "save": "Saqlash",
-      "saved": "Maʼlumotlaringiz saqlandi.",
-      "saveFailed": "Saqlab boʻlmadi. Qaytadan urinib koʻring.",
+      "saved": "Saqlandi",
+      "saveFailed": "Saqlab boʻlmadi. Qayta urinib koʻring.",
       "fixErrors": "Belgilangan maydonlarni tekshirib chiqing.",
       "requestedBadge": "{count} ta soʻrov",
       "missingBadge": "{count} ta toʻldirilmagan",
@@ -73,10 +73,10 @@
       "title": "Qoʻshimcha maydonlar",
       "apply": "Qoʻllash",
       "cancel": "Bekor qilish",
-      "saved": "Maydon yangilandi.",
+      "saved": "Saqlandi",
       "saveFailed": "Maydonni saqlab boʻlmadi.",
       "editAria": "«{field}» maydonini tahrirlash",
-      "requiredBlocksDone": "Bu maydon toʻldirilmaguncha vazifani yakunlab boʻlmaydi."
+      "requiredBlocksDone": "Bu maydon toʻldirilmaguncha kartani yakunlab boʻlmaydi."
     },
     "form": {
       "createTitle": "Yangi maydon",
@@ -92,15 +92,15 @@
       "optionPlaceholder": "Variant nomi",
       "optionLabelAria": "{n}-variant nomi",
       "optionColorAria": "{n}-variant rangi",
-      "behaviourLegend": "Xatti-harakati",
+      "behaviourLegend": "Qoidalari",
       "required": "Majburiy",
       "requiredHint": "Toʻldirilmagani darhol koʻrinib turadi.",
       "showInTable": "Jadvalda ustun sifatida",
       "showInTableHint": "Xodimlar jadvalidagi ustunlar roʻyxatiga tushadi.",
-      "showOnCardTile": "Kartochkada koʻrsatish",
-      "showOnCardTileHint": "Doskadagi kartochkada kichik yozuv sifatida chiqadi.",
+      "showOnCardTile": "Kartada koʻrsatish",
+      "showOnCardTileHint": "Doskadagi kartada kichik yozuv boʻlib chiqadi.",
       "selfEditable": "Xodim oʻzi toʻldiradi",
-      "selfEditableHint": "Oʻchirilsa, faqat boshqarma boshligʻi kiritadi.",
+      "selfEditableHint": "Oʻchirilsa, uni faqat boshqarma boshligʻi toʻldiradi.",
       "visibility": "Kim koʻradi",
       "visibilityHint": "Maosh yoki shaxsiy hujjat kabi maʼlumotlar bu tizimda umuman saqlanmaydi.",
       "reminderDays": "Eslatma (kun)",
@@ -145,11 +145,11 @@
     },
     "input": {
       "textPlaceholder": "Yozing",
-      "numberPlaceholder": "Raqam kiriting",
+      "numberPlaceholder": "Raqam",
       "urlPlaceholder": "https://",
       "datePlaceholder": "Sanani tanlang",
       "selectPlaceholder": "Tanlanmagan",
-      "derivedHint": "Bu qiymat avtomatik hisoblanadi."
+      "derivedHint": "Bu qiymat oʻzi hisoblanadi."
     },
     "value": {
       "yes": "Ha",
@@ -157,17 +157,17 @@
       "empty": "Toʻldirilmagan"
     },
     "error": {
-      "required": "Bu maydon majburiy.",
+      "required": "Bu maydon toʻldirilishi kerak.",
       "not_a_number": "Raqam kiriting.",
       "not_a_date": "Sanani tanlang.",
       "not_a_url": "Havola https:// bilan boshlanishi kerak.",
       "unknown_option": "Bunday variant yoʻq.",
-      "too_long": "Matn juda uzun.",
+      "too_long": "Matn juda uzun — qisqartiring.",
       "not_editable": "Bu maydonni oʻzgartira olmaysiz.",
       "not_self_editable": "Bu maydonni faqat boshqarma boshligʻi toʻldiradi.",
       "personal_data": "Bu tizim tugʻilgan sana, pasport, STIR, yashash joyi, maosh, millat va eʼtiqod kabi maʼlumotlarni saqlamaydi. Boshqa nom tanlang.",
       "cap_reached": "Maydonlar soni chegaraga yetdi.",
-      "cap_reached_detail": "{cap} ta maydon chegarasi toʻldi. Hech kim oʻqiy olmaydigan jadval jadval emas — avval keraksizini arxivga oling.",
+      "cap_reached_detail": "{cap} ta maydon chegarasi toʻldi. Yangisini qoʻshish uchun avval keraksizini arxivga oling.",
       "duplicate_key": "Bu kalit soʻz allaqachon band.",
       "invalid_key": "Kalit soʻz lotin harflari, raqam va pastki chiziqdan iborat boʻlsin.",
       "needs_options": "Kamida bitta variant qoʻshing.",

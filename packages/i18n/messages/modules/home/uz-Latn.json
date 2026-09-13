@@ -3,62 +3,62 @@
     "dashboard": {
       "dueFromMe": {
         "title": "Mendan kutilmoqda",
-        "body": "{open} ta ochiq, {overdue} tasi muddatidan oʻtgan",
+        "body": "{open} ta ochiq, {overdue} tasi kechikkan",
         "cta": "Menga topshirilganlar"
       },
       "needsMyDecision": {
-        "title": "Mening qarorim kerak",
-        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
-        "empty": "Hozircha qaror kerak boʻlgan narsa yoʻq"
+        "title": "Qarorimni kutmoqda",
+        "body": "Men topshirgan {count} ta ish kechikdi",
+        "empty": "Qaror kutayotgan ish yoʻq"
       },
       "aroundMe": {
         "title": "Atrofimda",
-        "body": "{count} ta tadbirga qatnashishni tasdiqlagansiz",
-        "cta": "Tadbirlarni koʻrish"
+        "body": "{count} ta tadbirga boraman deb belgilagansiz",
+        "cta": "Tadbirlar"
       },
       "pinned": {
         "title": "Mahkamlangan diagrammalar",
-        "empty": "Hali hech narsa mahkamlanmagan",
-        "cta": "Tahlil sahifasini ochish"
+        "empty": "Mahkamlangan diagramma yoʻq",
+        "cta": "Tahlilni ochish"
       },
       "personal": {
-        "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
-        "focusMinutes": "Bu hafta fokus daqiqalari"
+        "onTimeRate": "Muddatida bajarilgani",
+        "focusMinutes": "Bu haftadagi diqqat daqiqalari"
       },
       "onboarding": {
-        "title": "Boshlash",
+        "title": "Ilk qadamlar",
         "body": "{done}/{total} bajarildi",
         "photo": "Suratingizni qoʻshing",
-        "department": "Boʻlimga qoʻshiling",
-        "work": "Birinchi ishingizni oching",
-        "event": "Tadbirga yoziling",
-        "focus": "Fokus seansini oʻtkazing",
+        "department": "Boshqarmaga qoʻshiling",
+        "work": "Birinchi kartangizni qoʻshing",
+        "event": "Tadbirga ishtirokni belgilang",
+        "focus": "Diqqat vaqtini oʻtkazing",
         "done": "Hammasi bajarildi"
       },
       "kpi": {
-        "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
+        "onTimeQuestion": "Ishlaringizning qanchasi muddatida bajarilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
-      "sectionTiles": "Bugungi holat",
+      "sectionTiles": "Bugun",
       "givenOverdue": {
-        "title": "Men bergan ishlar kechikdi",
-        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
+        "title": "Kechikkan topshiriqlarim",
+        "body": "Men bergan {count} ta ish muddatidan oʻtdi",
         "empty": "Men bergan ishlarning hammasi muddatida",
         "cta": "Men bergan ishlar"
       },
       "myLoad": {
-        "title": "Mening yuklamam",
-        "hours": "{capacity} soatdan {hours} soat",
+        "title": "Yuklamam",
+        "hours": "{hours}/{capacity} soat",
         "cards": "Bu hafta {count} ta karta",
-        "meaning": "Bu haftaga muddati belgilangan ishlaringizning haftalik imkoniyatingizga nisbati.",
-        "meaningCards": "Boʻlimda ishlarning yarmidan kami baholangan, shuning uchun bu soat emas, karta soni."
+        "meaning": "Bu haftaga muddati belgilangan ishlaringiz haftalik sigʻimingizga nisbatan.",
+        "meaningCards": "Boshqarmada ishlarning yarmidan kami baholangan, shuning uchun bu yerda soat emas, karta sanaladi."
       }
     },
     "head": {
       "section": "Boshqaruv koʻrinishi",
       "decisions": {
         "title": "Qaror kutmoqda",
-        "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
+        "meaning": "Siz bergan va muddati oʻtgan kartalar — qaror sizdan.",
         "cta": "Doskani ochish",
         "empty": "Sizdan kutilayotgan qaror yoʻq."
       },
@@ -66,26 +66,26 @@
         "title": "Kechikayotgan ishlar",
         "meaning": "Eng koʻp kechikkan besh xodim. Ismni bosing — jadvalga oʻtasiz.",
         "cta": "Xodimlar jadvali",
-        "empty": "Kechikkan vazifa yoʻq. Boʻlim muddatlarga ulgurmoqda."
+        "empty": "Kechikkan ish yoʻq. Boshqarma muddatlarga ulgurmoqda."
       },
       "load": {
         "title": "Bu hafta yuklama",
-        "meaning": "Ochiq vazifalarning haftalik imkoniyatga nisbati.",
-        "cta": "Yuklamani koʻrish",
-        "empty": "Hozircha ochiq vazifa yoʻq."
+        "meaning": "Har bir xodimning ochiq kartalari haftalik sigʻimiga nisbatan.",
+        "cta": "Yuklama",
+        "empty": "Hozircha ochiq ish yoʻq."
       },
       "projects": {
         "title": "Loyihalar",
-        "meaning": "Eng orqada qolgan loyihalar birinchi turadi.",
+        "meaning": "Eng orqada qolgan loyihalar yuqorida.",
         "cta": "Loyihalar",
         "empty": "Faol loyiha yoʻq.",
         "progressAria": "{title} — bajarilgan qismi"
       },
       "events": {
         "title": "Yaqin tadbirlar",
-        "meaning": "Yetti kun ichidagi tadbirlar va roziligini bildirganlar soni.",
+        "meaning": "Yetti kun ichidagi tadbirlar va ishtirok etaman deganlar soni.",
         "cta": "Tadbirlar",
-        "empty": "Yaqin kunlarda tadbir rejalashtirilmagan."
+        "empty": "Yetti kun ichida tadbir rejalashtirilmagan."
       },
       "onboarding": {
         "title": "Yangi xodimlar",
@@ -93,49 +93,49 @@
         "cta": "Xodimlar jadvali",
         "empty": "Hamma moslashuv qadamlarini yakunlagan."
       },
-      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud.",
+      "indicatorsNote": "Jadval va xodim sahifalari uchun {count} ta koʻrsatkich bor.",
       "risk": {
         "title": "Xavf ostida",
         "meaning": "Ikki kun ichida muddati tugaydigan, hali bajarilmagan ishlar.",
         "cta": "Doskani ochish",
         "empty": "Yaqin ikki kunda xavf ostidagi ish yoʻq."
       },
-      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi.",
+      "drillNote": "Har bir raqam ortidagi xodim yoki karta ochiladi.",
       "arrange": {
         "action": "Joylashuv",
-        "heading": "Kartochkalarni joylashtiring",
+        "heading": "Kartalarni joylashtirish",
         "hint": "Tartibni oʻzgartiring yoki keraksizlarini yashiring — tanlovingiz shu qurilmada saqlanadi.",
-        "show": "«{name}» kartochkasini koʻrsatish",
-        "moveUp": "«{name}» kartochkasini yuqoriga surish",
-        "moveDown": "«{name}» kartochkasini pastga surish",
+        "show": "«{name}» kartasini koʻrsatish",
+        "moveUp": "«{name}» kartasini yuqoriga surish",
+        "moveDown": "«{name}» kartasini pastga surish",
         "reset": "Dastlabki holatga qaytarish",
         "allHidden": {
-          "title": "Barcha kartochkalar yashirilgan",
-          "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartochkalarni belgilang."
+          "title": "Hamma kartalar yashirilgan",
+          "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartalarni belgilang."
         }
       },
       "goals": {
         "title": "Maqsadlar",
-        "meaning": "Eng orqada qolgan maqsadlar oldinda. Progress kartalardan oʻzi hisoblanadi.",
+        "meaning": "Eng orqada qolgan maqsadlar yuqorida. Bajarilgani kartalardan oʻzi hisoblanadi.",
         "cta": "Barcha maqsadlar",
-        "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi.",
+        "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — bajarilgani oʻzi hisoblanadi.",
         "progressAria": "{title} — bajarilgan qismi",
-        "ofCap": "chegaradan"
+        "ofCap": "chegaraga nisbatan"
       },
       "catchUp": {
         "title": "AI xulosa",
-        "meaning": "Boʻlimning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan.",
+        "meaning": "Boshqarmaning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan.",
         "cta": "AI sahifasi",
-        "idle": "Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi.",
+        "idle": "Hafta boʻyicha qisqa xulosa tayyorlansinmi? Har bir fikr aniq kartaga tayanadi.",
         "run": "Xulosa tayyorlash",
         "dismiss": "Yopish",
         "refresh": "Yangilash",
         "pending": "Xulosa tayyorlanmoqda",
-        "pendingHint": "Bir necha daqiqa olishi mumkin. Tayyor boʻlgach shu yerda koʻrinadi.",
-        "generatedAt": "{time} da tayyorlangan",
-        "empty": "Hali xulosa tayyorlanmagan. Har kecha avtomatik tayyorlanadi yoki hozir soʻrashingiz mumkin.",
-        "failed": "Oxirgi urinish natija bermadi. Qaytadan soʻrab koʻring.",
-        "cooldown": "Xulosa hozirgina yangilandi. Biroz kutib, qaytadan urinib koʻring.",
+        "pendingHint": "Bir necha daqiqa ketadi. Tayyor boʻlgach shu yerda koʻrinadi.",
+        "generatedAt": "{time}da tayyorlangan",
+        "empty": "Xulosa hali yoʻq. Har kecha oʻzi tayyorlanadi — yoki hozir soʻrang.",
+        "failed": "Xulosa tayyorlanmadi. Qaytadan soʻrang.",
+        "cooldown": "Xulosa hozirgina yangilandi. Biroz kutib, qaytadan soʻrang.",
         "requested": "Xulosa soʻraldi — tayyor boʻlgach shu yerda koʻrinadi."
       }
     }

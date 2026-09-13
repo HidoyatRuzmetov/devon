@@ -3,21 +3,21 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "онлайн",
-      "replyMessage": "Уланди! Энди WorkPortal билдиришномалари шу ерга келади.",
-      "connectedMessage": "Сиз уландингиз — WorkPortal билдиришномалари шу чатга келади."
+      "replyMessage": "Уланди. Энди билдиришномалар шу ерга келади.",
+      "connectedMessage": "Ҳисобингиз уланган — билдиришномалар шу ерга келади."
     },
     "notConfigured": {
       "title": "Telegram ҳали уланмаган",
-      "body": "Ушбу тизим учун Telegram ботини созлашни администратордан сўранг."
+      "body": "Telegram ботини созлашни администратордан сўранг."
     },
     "personal": {
-      "title": "Сизнинг Telegramингиз",
+      "title": "Telegramингиз",
       "linkedBadge": "Уланган",
       "notLinkedBadge": "Уланмаган",
       "codeBody": "Ҳисобингизни улаш учун ботни Telegramда очинг ёки кодни сканерланг.",
       "qrAlt": "Telegramни улаш учун QR-код",
       "openInTelegram": "Telegramда очиш",
-      "codeExpires": "Код {time} да эскиради",
+      "codeExpires": "Код {time} гача амал қилади",
       "connectButton": "Улаш кодини олиш",
       "unlink": "Telegramни узиш",
       "unlinked": "Telegram узилди",
@@ -25,24 +25,24 @@
         "title": "Билдиришномаларни ўчириш",
         "off": "Ёқиш",
         "forMinutes": "{minutes} дақиқага",
-        "until": "{date} гача ўчирилган",
+        "until": "{date} гача ўчиқ",
         "applied": "Янгиланди"
       }
     },
     "group": {
-      "title": "Бўлим гуруҳи",
-      "body": "Бўлим тадбирлари, сўровномалари ва эълонларини олиш учун Telegram гуруҳини уланг.",
+      "title": "Бошқарма гуруҳи",
+      "body": "Тадбирлар, сўровномалар ва эълонлар гуруҳга тушиши учун Telegram гуруҳини уланг.",
       "untitled": "Номсиз гуруҳ",
       "disconnect": "Узиш",
       "disconnected": "Гуруҳ узилди",
       "updated": "Янгиланди",
-      "codeBody": "Гуруҳда ушбу код билан /connect буйруғини юборинг.",
-      "codeExpires": "Код {time} да эскиради",
+      "codeBody": "Гуруҳда шу код билан /connect юборинг.",
+      "codeExpires": "Код {time} гача амал қилади",
       "connectButton": "Улаш кодини олиш",
       "copyCode": "Кодни нусхалаш",
       "empty": {
         "title": "Уланган гуруҳ йўқ",
-        "body": "Ботни Telegram гуруҳига қўшинг, сўнг шу ердан улаш кодидан фойдаланинг."
+        "body": "Ботни Telegram гуруҳига қўшинг, сўнг шу ердан улаш кодини олинг."
       },
       "kinds": {
         "events": "Тадбирлар",

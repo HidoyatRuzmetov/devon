@@ -2,7 +2,7 @@
   "automations": {
     "eyebrow": "AVTOMATLASHTIRISH",
     "title": "Qoidalar",
-    "description": "«Shunday boʻlsa — shuni qil». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
+    "description": "«Shunday boʻlsa — shunday qilinsin». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
     "create": "Qoida qoʻshish",
     "newTitle": "Yangi qoida",
     "created": "Qoida qoʻshildi",
@@ -18,7 +18,7 @@
     "emptyBody": "Birinchi qoidani qoʻshing — masalan, muddati oʻtgan kartani boshliqqa xabar qilsin.",
     "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
     "forbiddenBody": "Qoidalarni faqat boshqarma boshligʻi sozlaydi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling.",
-    "runsTitle": "Bajarilishlar tarixi",
+    "runsTitle": "Ishga tushishlar tarixi",
     "runsDescription": "Har bir ishga tushish — nima qilingani yoki nega oʻtkazib yuborilgani bilan.",
     "runsEmptyTitle": "Hali hech narsa ishga tushmagan",
     "runsEmptyBody": "Qoida ishga tushganda shu yerda koʻrinadi.",
@@ -33,10 +33,10 @@
       "edit": "{name} qoidasini tahrirlash",
       "duplicate": "{name} qoidasidan nusxa olish",
       "copyOf": "{name} — nusxa",
-      "suppressed": "Qoida hozir oʻchirilgan — quyidagi {count} ta ishga tushish u yoqilgan paytda boʻlgan, yangi kartalar uchun hech narsa bajarilmaydi."
+      "suppressed": "Qoida hozir oʻchirilgan — bu {count} ta ishga tushish u yoqilgan paytda boʻlgan; yangi kartalar uchun hech narsa bajarilmaydi."
     },
     "trigger": {
-      "cardCreated": "Karta yaratilganda",
+      "cardCreated": "Karta qoʻshilganda",
       "cardStatusChanged": "Holati oʻzgarganda",
       "cardAssigned": "Karta biriktirilganda",
       "cardDueSoon": "Muddati yaqinlashganda",
@@ -50,8 +50,8 @@
       "notifyUser": "xodimga xabar berish",
       "notifyHead": "boshliqqa xabar berish",
       "setStatus": "holatini oʻzgartirish",
-      "addChecklist": "tekshirish roʻyxatini qoʻshish",
-      "createFollowup": "davomi uchun karta yaratish"
+      "addChecklist": "bajarish roʻyxatini qoʻshish",
+      "createFollowup": "davomi uchun karta qoʻshish"
     },
     "builder": {
       "nameLabel": "Qoida nomi",
@@ -62,7 +62,7 @@
       "toStatusLabel": "Qaysi holatga oʻtganda",
       "anyStatus": "Har qanday holat",
       "daysAheadLabel": "Necha kun oldin",
-      "daysAheadHint": "1 dan 14 kungacha.",
+      "daysAheadHint": "1 kundan 14 kungacha.",
       "fieldLabel": "Qaysi maydon",
       "field": {
         "priority": "Muhimlik",
@@ -83,16 +83,16 @@
       "labelLabel": "Yorliq",
       "chooseLabel": "Yorliqni tanlang",
       "statusLabel": "Holat",
-      "checklistLabel": "Tekshirish roʻyxati",
+      "checklistLabel": "Bajarish roʻyxati",
       "checklistHint": "Har bir band — alohida qator.",
       "followupTitle": "Yangi karta nomi",
-      "followupDueInDays": "Necha kunda",
+      "followupDueInDays": "Necha kundan keyin",
       "invalid": "Qoida toʻliq emas — maydonlarni tekshiring."
     },
     "run": {
       "status": {
         "applied": "Bajarildi",
-        "skipped": "Oʻtkazildi",
+        "skipped": "Oʻtkazib yuborildi",
         "failed": "Xato"
       },
       "reason": {
@@ -116,7 +116,7 @@
       "allRules": "Hamma qoidalar",
       "allStatuses": "Hammasi",
       "count": "{groups} ta guruh · {runs} ta ishga tushish",
-      "countOf": "{groups} ta guruh · {total} tadan {runs} tasi koʻrsatilmoqda"
+      "countOf": "{groups} ta guruh · {total} tadan {runs} tasi"
     },
     "runsFilteredTitle": "Bu filtrga mos yozuv yoʻq",
     "runsFilteredBody": "Boshqa qoidani yoki boshqa natijani tanlang.",
@@ -124,8 +124,8 @@
     "runsPage": {
       "previous": "Oldingi",
       "next": "Keyingi",
-      "of": "{pages} sahifadan {page} chisi"
+      "of": "{pages} sahifadan {page}-si"
     },
-    "forbiddenAction": "Ishlarni koʻrish"
+    "forbiddenAction": "Doskani ochish"
   }
 }

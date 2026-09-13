@@ -1,18 +1,18 @@
 {
   "personal": {
     "title": "Shaxsiy",
-    "eyebrow": "FAQAT SIZ UCHUN",
-    "description": "Davrlar, vazifalar, qaydlar, doska va fokus vaqti uchun shaxsiy maydoningiz.",
+    "eyebrow": "FAQAT SIZGA",
+    "description": "Davrlar, vazifalar, qaydlar, oq taxta va diqqat vaqti — faqat sizga koʻrinadigan maydon.",
     "tabs": {
       "today": "Bugun",
       "sprints": "Davrlar",
       "tasks": "Vazifalar",
       "notes": "Qaydlar",
-      "canvas": "Doska",
+      "canvas": "Oq taxta",
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Bu maydonni faqat siz koʻrasiz — boʻlim boshligʻi ham, boshqa hech kim ham emas.",
+      "note": "Bu yerdagilarni faqat siz koʻrasiz — boshqarma boshligʻi ham, boshqa hech kim ham koʻrmaydi.",
       "dismiss": "Yopish"
     },
     "duration": {
@@ -24,26 +24,26 @@
       "tasks": {
         "title": "Bugungi vazifalar",
         "remaining": "{count} qoldi",
-        "completedToast": "Bajarildi deb belgilandi"
+        "completedToast": "Bajarildi"
       },
       "empty": {
-        "title": "Bugun uchun hech narsa rejalashtirilmagan",
-        "body": "Bu yerda koʻrish uchun vazifa qoʻshing yoki davr boshlang."
+        "title": "Bugunga reja yoʻq",
+        "body": "Vazifa qoʻshing yoki davr boshlang — shu yerda koʻrinadi."
       },
       "allDone": {
-        "title": "Hozircha barchasi bajarildi",
-        "body": "Faol davrlar va kirish qutingizda boshqa hech narsa qolmadi. Osoyishtalikdan bahramand boʻling."
+        "title": "Hozircha hammasi bajarildi",
+        "body": "Faol davrlaringizda ham, yigʻmada ham boshqa vazifa qolmadi."
       },
       "addPlaceholder": "Bugun uchun vazifa qoʻshish",
-      "focus": "Fokus",
+      "focus": "Diqqat",
       "period": {
-        "progressAria": "Davr jarayoni",
+        "progressAria": "Davrning bajarilgan qismi",
         "timeLeft": "{value} qoldi",
         "noGoal": "Bu davr uchun hali maqsad belgilanmagan"
       },
       "rollover": {
         "banner": "Bu davr vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?",
-        "bannerGoal": "“{goal}” davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?"
+        "bannerGoal": "«{goal}» davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?"
       }
     },
     "sprints": {
@@ -51,13 +51,13 @@
         "title": "Faol davrlar"
       },
       "empty": {
-        "title": "Hali davrlar yoʻq",
+        "title": "Hali davr yoʻq",
         "body": "Ishingizga maqsad va vaqt chegarasi belgilash uchun davr boshlang."
       },
       "create": {
         "action": "Yangi davr",
         "title": "Yangi davr",
-        "submit": "Davr yaratish"
+        "submit": "Davrni boshlash"
       },
       "goal": "Maqsad",
       "goalPlaceholder": "Nimaga erishmoqchisiz?",
@@ -69,7 +69,7 @@
         "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
       },
       "complete": {
-        "action": "Yakunlangan deb belgilash",
+        "action": "Yakunlash",
         "toast": "Davr yakunlandi"
       },
       "ended": "Vaqt tugadi",
@@ -77,7 +77,7 @@
         "threeHour": "3 soat",
         "day": "Kun",
         "week": "Hafta",
-        "custom": "Ixtiyoriy"
+        "custom": "Boshqa"
       },
       "status": {
         "active": "Faol",
@@ -86,58 +86,58 @@
       }
     },
     "tasks": {
-      "inbox": "Kirish qutisi",
+      "inbox": "Yigʻma",
       "addPlaceholder": "Vazifa qoʻshish",
       "openCount": "{count} ta ochiq",
-      "toggleDone": "Bajarilgan deb belgilash",
+      "toggleDone": "Bajarildi deb belgilash",
       "delete": "Vazifani oʻchirish",
       "deleted": {
         "toast": "Vazifa oʻchirildi"
       },
       "dragHandle": "Tartibni oʻzgartirish uchun torting",
-      "indent": "Ichkariga surish (quyi vazifa qilish)",
-      "outdent": "Tashqariga chiqarish",
+      "indent": "Quyi vazifaga aylantirish",
+      "outdent": "Yuqoriga chiqarish",
       "empty": {
-        "section": "Bu yerda hali vazifalar yoʻq."
+        "section": "Bu yerda hali vazifa yoʻq."
       }
     },
     "notes": {
       "create": "Yangi qayd",
       "newTitle": "Yangi qayd",
-      "bodyPlaceholder": "Nimadir yozing...",
+      "bodyPlaceholder": "Xohlagan narsangizni yozing",
       "delete": "Qaydni oʻchirish",
       "deleted": {
         "toast": "Qayd oʻchirildi"
       },
       "pin": "Mahkamlash",
-      "unpin": "Mahkamlashni bekor qilish",
+      "unpin": "Mahkamlashni olib tashlash",
       "autosave": {
         "saving": "Saqlanmoqda…",
         "saved": "Saqlandi"
       },
       "empty": {
-        "title": "Hali qaydlar yoʻq",
+        "title": "Hali qayd yoʻq",
         "body": "Qaydlar faqat siz uchun — xohlagan narsangizni yozib qoʻying."
       }
     },
     "canvas": {
-      "create": "Yangi doska",
-      "newTitle": "Yangi doska",
+      "create": "Yangi oq taxta",
+      "newTitle": "Yangi oq taxta",
       "open": "Ochish",
-      "back": "Doskalarga qaytish",
-      "delete": "Doskani oʻchirish",
+      "back": "Oq taxtalarga qaytish",
+      "delete": "Oq taxtani oʻchirish",
       "deleted": {
-        "toast": "Doska oʻchirildi"
+        "toast": "Oq taxta oʻchirildi"
       },
       "autosave": {
         "saving": "Saqlanmoqda…",
         "saved": "Saqlandi"
       },
       "empty": {
-        "title": "Hali doskalar yoʻq",
-        "body": "Doska — eskiz va eslatma qogʻozlari uchun erkin joy."
+        "title": "Hali oq taxta yoʻq",
+        "body": "Oq taxta — eskiz va eslatma qogʻozlari uchun erkin maydon."
       },
-      "addSticky": "Eslatma qogʻoz qoʻshish",
+      "addSticky": "Eslatma qogʻozi qoʻshish",
       "undo": "Bekor qilish",
       "redo": "Qaytarish",
       "zoomIn": "Kattalashtirish",
@@ -161,17 +161,17 @@
       },
       "phase": {
         "idle": "Tayyor",
-        "focus": "Fokus",
+        "focus": "Diqqat",
         "shortBreak": "Qisqa tanaffus",
         "longBreak": "Uzoq tanaffus"
       },
       "action": {
-        "startFocus": "Fokusni boshlash",
+        "startFocus": "Diqqat vaqtini boshlash",
         "startShortBreak": "Tanaffusni boshlash",
-        "pause": "Pauza",
+        "pause": "Toʻxtatib turish",
         "resume": "Davom ettirish",
         "skip": "Oʻtkazib yuborish",
-        "stop": "Toʻxtatish"
+        "stop": "Tugatish"
       },
       "notification": {
         "body": "Vaqt tugadi"
@@ -186,35 +186,35 @@
       },
       "notifications": {
         "on": "Bildirishnomalar yoqilgan",
-        "off": "Bildirishnomalar oʻchirilgan"
+        "off": "Bildirishnomalar oʻchiq"
       },
       "settings": {
         "title": "Pomodoro sozlamalari",
-        "focusMin": "Fokus (daqiqa)",
+        "focusMin": "Diqqat (daqiqa)",
         "shortBreakMin": "Qisqa tanaffus (daqiqa)",
         "longBreakMin": "Uzoq tanaffus (daqiqa)",
-        "cyclesBeforeLong": "Uzoq tanaffusdan oldingi fokus soni",
+        "cyclesBeforeLong": "Uzoq tanaffusgacha nechta diqqat vaqti",
         "sound": "Ovoz",
         "notifications": "Brauzer bildirishnomalari",
         "autoStart": "Keyingi bosqichni avtomatik boshlash"
       },
       "stats": {
-        "todayFocus": "Bugungi fokus",
+        "todayFocus": "Bugungi diqqat vaqti",
         "todaySessions": "Bugungi seanslar",
-        "weekFocus": "Shu haftalik fokus",
-        "weekSessions": "Shu haftalik seanslar",
+        "weekFocus": "Bu haftadagi diqqat vaqti",
+        "weekSessions": "Bu haftadagi seanslar",
         "minutesShort": "daq"
       },
       "log": {
-        "title": "Seanslar jurnali",
+        "title": "Seanslar tarixi",
         "today": "Bugun",
         "yesterday": "Kecha",
         "completed": "Yakunlangan",
         "skipped": "Oʻtkazib yuborilgan",
         "showMore": "Yana {count} kunni koʻrsatish",
         "empty": {
-          "title": "Hali seanslar yoʻq",
-          "body": "Bu yerda koʻrish uchun fokus seansini boshlang."
+          "title": "Hali seans yoʻq",
+          "body": "Diqqat vaqtini boshlang — shu yerda koʻrinadi."
         }
       }
     },
@@ -222,8 +222,8 @@
       "pending": "Tayyorlanmoqda…",
       "accept": "Qabul qilish",
       "edit": "Tahrirlash",
-      "discard": "Rad etish",
-      "disclaimer": "AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi.",
+      "discard": "Kerak emas",
+      "disclaimer": "AI takliflari xato boʻlishi mumkin — siz tasdiqlamaguningizcha hech narsa qoʻshilmaydi.",
       "quickAdd": {
         "action": "AI bilan tozalash",
         "title": "AI tozalash"
@@ -248,7 +248,7 @@
       "catchUp": {
         "subjectSelf": "Siz",
         "noteTitle": "Haftalik xulosa",
-        "savedToast": "Xulosa qaydlarga saqlandi",
+        "savedToast": "Qaydlarga saqlandi",
         "action": "Nimani oʻtkazib yubordim",
         "title": "Oxirgi hafta",
         "acceptLabel": "Qaydlarga saqlash",

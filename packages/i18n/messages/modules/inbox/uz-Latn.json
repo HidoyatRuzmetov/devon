@@ -1,8 +1,8 @@
 {
   "inbox": {
     "title": "Bildirishnomalar",
-    "eyebrow": "XABARLAR",
-    "markAllRead": "Barchasini oʻqilgan deb belgilash",
+    "eyebrow": "BILDIRISHNOMALAR",
+    "markAllRead": "Hammasini oʻqilgan deb belgilash",
     "groupByReason": "Sababi boʻyicha guruhlash",
     "calendarLink": "Taqvim havolasi",
     "viewMenu": {
@@ -15,21 +15,21 @@
     },
     "empty": {
       "inbox": {
-        "title": "Hammasi tekshirildi",
-        "body": "Hozircha eʼtibor talab qiladigan narsa yoʻq. Xotirjam boʻling."
+        "title": "Hammasi koʻrib chiqilgan",
+        "body": "Hozircha javobingizni kutayotgan bildirishnoma yoʻq."
       },
       "unread": {
-        "title": "Oʻqilmagan narsa yoʻq",
-        "body": "Barcha bildirishnomalarni koʻrib chiqdingiz."
+        "title": "Oʻqilmagan bildirishnoma yoʻq",
+        "body": "Hammasini oʻqib chiqdingiz."
       },
       "archived": {
-        "title": "Arxivlangan bildirishnoma yoʻq",
-        "body": "Arxivlagan bildirishnomalaringiz shu yerda koʻrinadi."
+        "title": "Arxivda bildirishnoma yoʻq",
+        "body": "Arxivga olgan bildirishnomalaringiz shu yerda turadi."
       }
     },
     "reason": {
       "assigned": "Topshiriq",
-      "mentioned": "Eslatish",
+      "mentioned": "Belgilash",
       "due": "Muddat",
       "updated": "Yangilanish",
       "rsvp": "Ishtirok",
@@ -42,11 +42,11 @@
     "channel": {
       "inapp": "Ilovada",
       "telegram": "Telegram",
-      "email": "Elektron pochta"
+      "email": "E-pochta"
     },
     "row": {
       "unread": "Oʻqilmagan",
-      "archive": "Arxivlash",
+      "archive": "Arxivga olish",
       "archived": "Arxivlandi",
       "snooze": "Kechiktirish",
       "snoozed": "Kechiktirildi",
@@ -67,35 +67,35 @@
     },
     "preferences": {
       "title": "Bildirishnoma sozlamalari",
-      "body": "Qanday bildirishnomalar va qayerga kelishini tanlang.",
+      "body": "Qaysi bildirishnoma qayerga kelishini oʻzingiz tanlang.",
       "matrixTitle": "Turi va kanali boʻyicha",
       "reasonColumn": "Bildirishnoma turi",
       "toggleAria": "{reason} — {channel} orqali",
-      "digestFrequency": "Xulosa chastotasi",
+      "digestFrequency": "Xulosa davriyligi",
       "digestMode": {
         "instant": "Darhol",
         "daily": "Har kuni",
         "weekly": "Har hafta",
-        "off": "Oʻchirilgan"
+        "off": "Oʻchiq"
       },
       "quietHours": {
         "title": "Tinch soatlar",
-        "usingDepartmentDefault": "Boʻlimning andozasi qoʻllanmoqda: {range}",
-        "usingPersonal": "Shaxsiy vaqtingiz: {range}",
-        "start": "Boshlanishi",
-        "end": "Tugashi",
-        "weekends": "Dam olish kunlarini ham qamrab olsin",
-        "tooLoud": "Bu oraliq boʻlim andozasidan kamida shuncha tinch boʻlishi kerak.",
-        "useDefault": "Boʻlim andozasidan foydalanish"
+        "usingDepartmentDefault": "Boshqarma sozlamasi qoʻllanmoqda: {range}",
+        "usingPersonal": "Oʻzingiz belgilagan vaqt: {range}",
+        "start": "Qaysi soatdan",
+        "end": "Qaysi soatgacha",
+        "weekends": "Dam olish kunlari ham",
+        "tooLoud": "Bu oraliq boshqarma belgilagan tinch soatlarni toʻliq qamrab olishi kerak.",
+        "useDefault": "Boshqarma sozlamasiga qaytish"
       },
       "calendar": {
-        "title": "Taqvim lentasi",
+        "title": "Taqvim ulanishi",
         "body": "Muddatlaringiz va tadbirlaringizni istalgan taqvim ilovasiga qoʻshing.",
         "reveal": "Havolani olish",
         "copy": "Havolani nusxalash"
       },
       "save": "Saqlash",
-      "saved": "Sozlamalar saqlandi"
+      "saved": "Saqlandi"
     }
   }
 }

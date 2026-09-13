@@ -262,7 +262,7 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       byActor(
         f,
         plain(
-          'sizga vaqtinchalik parol berdi. Kirgandan soʻng darhol yangi parol oʻrnating.',
+          'sizga vaqtinchalik parol berdi. Kirganingizdan soʻng darhol yangi parol oʻrnating.',
           'сизга вақтинчалик парол берди. Кирганингиздан сўнг дарҳол янги парол ўрнатинг.',
           'выдал вам временный пароль. Сразу после входа задайте новый.',
           'issued you a temporary password. Set a new one as soon as you sign in.',
@@ -422,7 +422,7 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     deepLink: () => '/structure',
     title: (f) =>
       withName(
-        plain('Yangi vazifa roli', 'Янги вазифа роли', 'Новая роль', 'New unit role'),
+        plain('Boʻlimda yangi rol', 'Бўлимда янги рол', 'Новая роль', 'New unit role'),
         f.subjectTitle,
       ),
     body: (f) =>
@@ -526,8 +526,8 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       byActor(
         f,
         plain(
-          'ushbu vazifani sizga biriktirdi.',
-          'ушбу вазифани сизга бириктирди.',
+          'bu vazifani sizga biriktirdi.',
+          'бу вазифани сизга бириктирди.',
           'назначил эту задачу на вас.',
           'made you the assignee.',
         ),
@@ -775,8 +775,8 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
     title: (f) =>
       withName(
         plain(
-          'Yoʻlda joy taklifi',
-          'Йўлда жой таклифи',
+          'Mashinada joy bor',
+          'Машинада жой бор',
           'Предложены места в машине',
           'Seats offered',
         ),
@@ -868,8 +868,8 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       byActor(
         f,
         plain(
-          'ushbu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish.',
-          'ушбу майдонни тўлдиришингизни сўради. Бир дақиқалик иш.',
+          'bu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish.',
+          'бу майдонни тўлдиришингизни сўради. Бир дақиқалик иш.',
           'просит заполнить это поле. Это займёт минуту.',
           'asked you to fill this in. It takes a minute.',
         ),
@@ -967,7 +967,7 @@ function changeSummary(f: EventFacts): LocalizedText {
   }
   const label: Record<string, LocalizedText> = {
     status: plain('holat', 'ҳолат', 'статус', 'status'),
-    assignee: plain('ijrochi', 'ижрочи', 'исполнитель', 'assignee'),
+    assignee: plain('masʼul', 'масъул', 'исполнитель', 'assignee'),
     giver: plain('topshiriq beruvchi', 'топшириқ берувчи', 'постановщик', 'delegator'),
     dueAt: plain('muddat', 'муддат', 'срок', 'due date'),
     priority: plain('muhimlik', 'муҳимлик', 'приоритет', 'priority'),
@@ -995,7 +995,7 @@ function changeSummary(f: EventFacts): LocalizedText {
 
 export const REASON_LABEL: Readonly<Record<Reason, LocalizedText>> = Object.freeze({
   assigned: plain('topshiriq', 'топшириқ', 'задачи', 'assigned'),
-  mentioned: plain('eslatish', 'эслатиш', 'упоминания', 'mentions'),
+  mentioned: plain('belgilash', 'белгилаш', 'упоминания', 'mentions'),
   due: plain('muddat', 'муддат', 'сроки', 'due'),
   updated: plain('yangilanish', 'янгиланиш', 'обновления', 'updates'),
   rsvp: plain('ishtirok', 'иштирок', 'участие', 'RSVP'),

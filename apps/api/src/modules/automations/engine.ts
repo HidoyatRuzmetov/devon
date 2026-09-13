@@ -158,8 +158,8 @@ function notificationText(
       en: `Automation: ${ruleName}`,
     },
     body: {
-      'uz-Latn': `«${cardTitle}» kartochkasi boʻyicha qoida ishga tushdi.`,
-      'uz-Cyrl': `«${cardTitle}» карточкаси бўйича қоида ишга тушди.`,
+      'uz-Latn': `«${cardTitle}» kartasi boʻyicha qoida ishga tushdi.`,
+      'uz-Cyrl': `«${cardTitle}» картаси бўйича қоида ишга тушди.`,
       ru: `Правило сработало по карточке «${cardTitle}».`,
       en: `A rule ran on the card "${cardTitle}".`,
     },

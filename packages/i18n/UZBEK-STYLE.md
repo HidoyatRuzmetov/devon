@@ -462,6 +462,24 @@ Chapdagisi grammatik jihatdan toʻgʻri boʻlishi mumkin; lekin u tarjima ekanin
 | Deep link | **havola** | ҳавола | Foydalanuvchiga «deep link» degan tushuncha yoʻq |
 | Request id | **soʻrov raqami** | сўров рақами | |
 
+#### v1.1 tahririda qaror qilingan atamalar (A qismi: qobiq, accounts, departments, structure, people, work, projects, fields)
+
+| en | uz-Latn | Qaror va sabab |
+|---|---|---|
+| Card (doskadagi obyekt) | **karta** | Obyekt ustidagi amal — karta: `karta qoʻshish`, `arxivga olish`, `kartani koʻchirish`, `karta maydonlari`, `karta andozasi`. §5 toast jadvali va §12.2 shuni talab qiladi. |
+| Task (odamga berilgan ish) | **vazifa** | Sahifa nomi (`Vazifalar`), `Mening vazifalarim`, `Vazifa berish`, bildirishnoma matni. Bitta ekranda ikkisi aralashmasin: doskada karta turadi, odamga vazifa beriladi. |
+| Session (kirilgan qurilma) | **qurilma** | `seans` — ruscha *сеанс*; odam ekranda qurilmani koʻradi. `Kirilgan qurilmalar`, `Hamma qurilmadan chiqish`. |
+| Copy (amal) | **nusxa olish** / **…ni nusxalash** | Obyektsiz tugma — `Nusxa olish`; obyekt bilan — `Havolani nusxalash`, `Taklifni nusxalash`. Toast esa hamma joyda §5 boʻyicha `Nusxa olindi`. |
+| Danger zone | **Xavfli amallar** | «Xavfli hudud» — *danger zone* soʻzma-soʻz; sahifada amallar turadi, hudud emas. |
+| Role in a unit | **oʻrni** | `Boʻlimdagi oʻrni`. `rol` oʻzlashmasi shart emas, `lavozim` esa boshqa maydon (job title). |
+| Project member | **ishtirokchi** | Boshqarmada `xodim`, loyihada `ishtirokchi`. `aʼzo` faqat «boshqarmaga aʼzo emassiz» kabi holat bildirganda qoladi. |
+| Revert (saqlangan koʻrinish) | **asliga qaytarish** | §5 dagi undo/redo juftligiga tegmaydi: undo — `Bekor qilish`, redo — `Qaytarish`. |
+| Recurrence period | **oraligʻi** | `davr` shaxsiy ish maydonidagi sprint nomi (§12.2) — takrorlanish oynasida toʻqnashmasin. |
+| Draft (AI javobi) | **qoralama** | `loyiha` bu mahsulotda project; `Javob loyihasi` ikki maʼnoni chalkashtiradi. |
+| Arrow (klaviatura / diagramma) | **oʻq tugmalari** / **chiziq** | `strelka` — ruscha. |
+| Export PNG / CSV | **PNG yuklab olish**, **CSV yuklab olish** | §11/29 ning tuzilma sxemasiga ham tatbiqi («PNG sifatida saqlash» emas). |
+| Nav landmark (aria) | **Asosiy sahifalar** | `boʻlim` tashkiliy boʻlinma nomi; yon panel aria yozuvida u boshqarma almashtirgich yonida turib chalkashtiradi. |
+
 #### Saqlanadigan oʻzlashmalar
 
 Hamma ishlatadigan soʻzlarni oʻzbekchalashtirmang: **fayl, havola, sozlamalar, filtr, arxiv,
@@ -506,6 +524,18 @@ roʻyxat boʻyicha qoʻlda tekshiriladi. Shunda ikki yozuv **bir xil gapni** ayt
    tekshiring.
 7. **Placeholder va teglar teginilmaydi:** `{count}`, `{name}`, `{date}` — hech qachon
    tarjima qilinmaydi va kirillchaga oʻgirilmaydi.
+8. **`ngʻ` — `нғ`, `нгъ` emas.** Transliteratorning `ng` digrafi `n` ni yutib yuboradi va
+   modifikator harfni `ъ` ga aylantiradi: `qorongʻi` → ❌ `қоронгъи`, toʻgʻrisi **`қоронғи`**.
+   `ngʻ` har doim `n` + `gʻ`.
+9. **`menyu`, `tayyor` kabi soʻzlar.** `menyu → меню` (`менйу` emas), `tayyor → тайёр`
+   (`таййор` emas) — `й` dan keyin `ё` yoziladi.
+10. **Lotincha nom + kirillcha qoʻshimcha.** Nom lotinchaligicha qoladi, qoʻshimcha kirillchada:
+    `WorkPortalдан фойдаланиш`, `Telegramда ёзиш`.
+11. **Filtr kalit soʻzlari va format niqoblari lotinchada qoladi:** `field:`, `label:`,
+    `assignee:`, `due:`, `YYYY-MM-DD`. Bular odam yozadigan sintaksis, soʻz emas —
+    `фиэлд:` yoki `ЙЙЙЙ-ММ-ДД` ishlamaydi.
+12. **Til nomlari tarjima qilinmaydi:** `Русский`, `English` va til almashtirgichdagi
+    `Oʻzbekcha (lotin)` ikkala yozuvda ham bir xil qoladi.
 
 ### 13.3 Tartib
 
@@ -575,3 +605,78 @@ Bu qoʻllanma yangi soʻz tanlaganda — qatorni shu yerga qoʻshing: sana, soʻ
 | 2026-09-13 | `capabilities` = **imkoniyatlar**, `weekly capacity` = **haftalik sigʻim** | Ikkalasi `imkoniyat` deb atalgan edi |
 | 2026-09-13 | `objective/subjective` loyiha kartalari → **Boshqarma vazifalari / Oʻz vazifalarim** | Hozirgi «Umumiy/Shaxsiy vazifalar» maʼnoni yoʻqotgan |
 | 2026-09-13 | Undo = **Bekor qilish**, redo = **Qaytarish** | `work.card.undo` ikkisini almashtirib yuborgan |
+| 2026-09-13 | Doskadagi obyekt = **karta**, odamga berilgan ish = **vazifa** | `work` moduli ikkisini bitta ekranda aralashtirgan edi («Karta qoʻshish» tugmasi ostida «Vazifalar yoʻq») |
+| 2026-09-13 | `seans` → **qurilma** | Ruscha *сеанс*; odam ekranda qurilma nomini koʻradi |
+| 2026-09-13 | Tugmada **`Nusxa olish`** / **`…ni nusxalash`**, toastda doim **`Nusxa olindi`** | Uch modul uch xil yozgan edi: `Nusxalash`, `Nusxa olish`, `nusxalandi` |
+| 2026-09-13 | `Xavfli hudud` → **Xavfli amallar** | *Danger zone* soʻzma-soʻz; sahifada amallar turadi |
+| 2026-09-13 | Boʻlimdagi `rol` → **oʻrni**; loyihada `aʼzo` → **ishtirokchi** | `lavozim` (job title) bilan toʻqnashardi; boshqarmada esa `xodim` |
+| 2026-09-13 | Saqlangan koʻrinishni tiklash = **Asliga qaytarish** | §5 dagi undo (`Bekor qilish`) / redo (`Qaytarish`) juftligiga tegmasin |
+| 2026-09-13 | Takrorlanish `davr` → **oraligʻi**; AI `javob loyihasi` → **qoralama** | `davr` — shaxsiy sprint, `loyiha` — project; ikkalasi band |
+| 2026-09-13 | `strelka` → **oʻq tugmalari** / **chiziq**; `PNG sifatida saqlash` → **PNG yuklab olish** | Ruscha oʻzlashma va §11/29 ning sxemaga tatbiqi |
+
+---
+
+## 17. B guruh qarorlari (2026-09-13)
+
+`events`, `personal`, `inbox`, `telegram`, `miniapp`, `analytics`, `pages`, `ai`, `admin`,
+`automations`, `calendar`, `home` modullari va API tarafidagi oʻzbekcha satrlar tahrir qilinganda
+qabul qilingan, TERMS.md jim boʻlgan qarorlar. §12 bilan bir xil kuchga ega.
+
+| Sana | Qaror | Sabab |
+|---|---|---|
+| 2026-09-13 | `calendar` = **taqvim** (`kalendar` emas) | §13.2 kirillcha uchun allaqachon `тақвим` deb belgilagan edi; lotinchasi `kalendar` boʻlib qolgani ikki yozuvni ikki soʻzga ajratardi. Mahsulot nomlari (`Google Calendar`, `Apple Calendar`) oʻzgarmaydi. |
+| 2026-09-13 | Telegram bot amrlari — **buyruq** | `/today`, `/mute` haqiqatan ham buyruq. TERMS.md `buyruq` dagi taqiq `Ctrl+K` oynasiga tegishli (u qidiruv, buyruqlar zanjiri emas), botga emas. |
+| 2026-09-13 | `mention` (ot, chip, sabab yozuvi) = **belgilash** | `eslatish` — oʻzingiz qoʻygan eslatma; sizni izohda **belgilashadi**. `inbox.reason.mentioned` va `REASON_LABEL.mentioned` ikkalasi ham tuzatildi. |
+| 2026-09-13 | `assignee` (bildirishnoma oʻzgarish roʻyxatida) = **masʼul** | TERMS.md `masʼul`; `ijrochi` zavod uslubi va UI ning qolgan qismidan farq qilardi. |
+| 2026-09-13 | Sana/vaqt filtri chegaralari = **Qaysi sanadan / Qaysi sanagacha**, soat uchun **Qaysi soatdan / Qaysi soatgacha** | §11.38 ning davomi: tinch soatlar formasida ham hodisaning boshlanishi emas, chegara soʻraladi. |
+| 2026-09-13 | `email` = **e-pochta** | «Elektron pochta» rasmiy blankda yaxshi, kanal yozuvi uchun uzun. |
+| 2026-09-13 | `digest frequency` = **xulosa davriyligi** | `chastota` — fizika soʻzi. |
+| 2026-09-13 | `unpin` = **mahkamlashni olib tashlash** | `Bekor qilish` undo uchun band (§5). |
+| 2026-09-13 | `photos` = **suratlar** | `fotosurat` rasmiy hujjat uslubi; tadbir sahifasida `surat` tabiiy. |
+| 2026-09-13 | `italic` = **kursiv**, `session` (Pomodoro) = **seans** | Ikkalasi ham tirik oʻzlashma (§12 «Saqlanadigan oʻzlashmalar»), oʻzbekchalashtirilsa sunʼiy chiqadi. |
+| 2026-09-13 | Pomodoro `pause` = **toʻxtatib turish**, `stop` = **tugatish** | `Pauza` va `Toʻxtatish` bir ekranda ikki xil toʻxtashni anglatib chalkashtirardi. |
+| 2026-09-13 | Carpool bildirishnomasi sarlavhasi = **Mashinada joy bor** | «Yoʻlda joy taklifi» — soʻzma-soʻz tarjima; odam «mashinamda joy bor» deydi. |
+| 2026-09-13 | AI tadbir qoralamasidagi `travel` = **yoʻl** | «Yoʻl-yoʻriq» — koʻrsatma degani, safar emas. |
+| 2026-09-13 | `eyebrow` yozuvlari bir soʻzga keltirildi: `BILIM` (pages), `FAQAT SIZGA` (personal), `TAQVIM` (calendar), `HISOBOTLAR` (analytics), `BOSHQARUV` (admin) | §4: eyebrow — boʻlim nomi, tavsif emas («REJA VA ESLATMALAR», «FAQAT SIZ UCHUN» tavsif edi). |
+| 2026-09-13 | Super administrator panelida ijara birligi **boshqarma**, ichki boʻlinma **boʻlim** | Panel ularni teskari nomlagan edi: ijara birligi `boʻlim`, boʻlinma `boʻlinma`. |
+
+### 17.1 uz-Cyrl ni hosil qilishda lotincha qoladigan tokenlar
+
+`latinToCyrillic()` dan oʻtkazilmaydigan (§13.2 item 5 ning kengaytirilgan roʻyxati):
+ICU `{placeholder}` lar va teglar; filtr sintaksisi (`assignee:@me`, `status:active`, `due:<today`,
+`label:` kalitining oʻzi); havolalar va fayl yoʻllari (`infra/sentinel/sentinel.conf`);
+`kalit=qiymat` shakli (`public_key=`); bot buyruqlari (`/connect`, `/setmenubutton`);
+`SCREAMING_SNAKE` muhit oʻzgaruvchilari (`TELEGRAM_BOT_TOKEN`); klaviatura qisqartmalari (`Ctrl+K`);
+mahsulot nomlari (`Telegram`, `WorkPortal`, `Google Calendar`, `Outlook`, `iPhone`, `CalDAV`,
+`DAVx5`, `Webcal`, `VAPID`, `embeddings`) — bunda kirillcha qoʻshimcha nomga yopishib keladi:
+`Telegramда`, `Outlookка`.
+
+Qoʻlda tekshirilgan kirillcha tuzoqlar: `ts → ц` faqat ruscha oʻzlashmada (`муддатсиз` toʻgʻri,
+`муддациз` xato), `yy → йё` (`tayyor → тайёр`, `таййор` emas), `byudjet → бюджет`.
+
+---
+
+## 18. Tekshiruv qarorlari (2026-09-13, `uz/copy-review`)
+
+`uz/copy-a` va `uz/copy-b` qoʻshilgandan keyin butun matn bir koʻzdan kechirildi. Quyidagilar — ikki
+guruh bir-biridan mustaqil ishlagani uchun yuzaga kelgan ziddiyatlar boʻyicha qarorlar. §12 va §17
+bilan bir xil kuchga ega.
+
+| Sana | Qaror | Sabab |
+|---|---|---|
+| 2026-09-13 | `canvas` = **oq taxta** — `realtime` modulida ham | `realtime.canvas.*` ni hech kim tahrir qilmagan edi: u oq taxtani «doska» deb atardi, `personal` esa «oq taxta» — bitta obyekt ikki nom bilan |
+| 2026-09-13 | Loyiha/tadbirdagi odam = **ishtirokchi** (`qatnashchi` emas) | §16 dagi `aʼzo` → `ishtirokchi` qarorining davomi; `projects.field.members` allaqachon «Ishtirokchilar» |
+| 2026-09-13 | `realtime.presence.*` na doskani, na oq taxtani nomlaydi | Bitta komponent (`packages/ui/src/realtime/live-indicators.tsx`) ikkala ekranda ham ishlatiladi |
+| 2026-09-13 | Teskari sanoq = **sanoq** (`hisob` emas) | `hisob` — bu sahifadagi *account*; «60 soniyalik hisob» maʼnosiz |
+| 2026-09-13 | Doskadagi toʻxtab qolgan karta = **Toʻxtab turibdi** (`Bloklangan` emas) | `Bloklangan` — bloklangan hisob (`admin.console.accounts.status.locked`) |
+| 2026-09-13 | `uploads` = **yuklangan fayllar** | `yuklama` — xodimning haftalik yuki (`work.workload.*`) |
+| 2026-09-13 | `latency` = **javob vaqti** (`kechikish` emas) | `kechikkan` — muddati oʻtgan ish |
+| 2026-09-13 | `provider error` = **server xatosi** | `provayder` — internet provayderi |
+| 2026-09-13 | `skipped` (qoida) = **Oʻtkazib yuborildi** | `Oʻtkazildi` — «oʻtkazib boʻlindi» degan teskari maʼno beradi |
+| 2026-09-13 | `restore` = **tiklash**; `Qaytarish` faqat redo uchun | §5 dagi undo/redo juftligi |
+| 2026-09-13 | `daqiqa` qisqartmasi hamma joyda **daq** (`d` emas) | Kartadagi `30d` sana yonida «30 kun» kabi oʻqiladi |
+| 2026-09-13 | Kartaning nomi = **nomi**; `sarlavha` — sahifa sarlavhasi | `work.field.title` bilan `projects/events/people` orasidagi farq |
+| 2026-09-13 | Muddatida bajarish koʻrsatkichi hamma joyda **muddatida** (`oʻz vaqtida` emas) | Koʻrsatkich `analytics` niki; TERMS.md `deadline` = `muddat` |
+| 2026-09-13 | Namunada **`Masalan:`** (vergul emas) | §14 ning oʻz namunasi va 12 ta satr shunday; 7 tasi vergul bilan edi |
+| 2026-09-13 | Qisqartmalar uz-Cyrl da lotincha qoladi: **2FA** | §17.1 roʻyxatining davomi; translitertor buni bilmaydi, shuning uchun avtomatik tekshiruv ham topmaydi |
+| 2026-09-13 | Bot RSVP tugmalari = **Boraman / Bormayman** | Ilova va Mini ilova shunday deydi; javob matnga aynan koʻchiriladi |
