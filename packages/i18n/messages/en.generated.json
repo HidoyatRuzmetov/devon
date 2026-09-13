@@ -3245,7 +3245,9 @@
         "joined": "Joined",
         "lastActive": "Last active",
         "never": "Never signed in",
-        "telegram": "Telegram"
+        "telegram": "Telegram",
+        "telegramLinked": "Linked",
+        "telegramNotLinked": "Not linked"
       },
       "action": {
         "assign": "Give a card",

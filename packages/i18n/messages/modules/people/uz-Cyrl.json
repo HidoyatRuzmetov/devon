@@ -283,7 +283,9 @@
         "joined": "Қўшилган",
         "lastActive": "Охирги фаоллик",
         "never": "Ҳали кирмаган",
-        "telegram": "Телеграм"
+        "telegram": "Телеграм",
+        "telegramLinked": "Уланган",
+        "telegramNotLinked": "Уланмаган"
       },
       "action": {
         "assign": "Вазифа бериш",

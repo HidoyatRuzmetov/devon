@@ -136,7 +136,11 @@ export function ThroughputChart({
   // SEV2 #13: a bar chart with four of twelve weeks filled is an empty axis with a few bars stuck to
   // one end. The accessible table below still carries every week, so nothing is hidden -- only the
   // picture is withheld, and it says why.
-  const weeksWithData = data.filter((p) => p.done > 0 || p.created > 0).length
+  //
+  // Counted on `done` alone, because `done` is the only series this chart draws: a week where three
+  // cards were created and none finished contributes nothing to the picture, and counting it would
+  // let a chart with two visible bars call itself well covered.
+  const weeksWithData = data.filter((p) => p.done > 0).length
   const sparse = tooSparse(weeksWithData, data.length)
   return (
     <ChartFrame

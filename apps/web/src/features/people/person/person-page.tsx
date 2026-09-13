@@ -310,10 +310,13 @@ function PersonHeaderCard({
           </span>
           <span className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.telegram')}</dt>
+            {/* v1.1 critique SEV3 #33: this read "Telegram  Ha". "Ha" is the answer to a question
+                nobody asked out loud -- the field is a *state*, and a state is named, not agreed
+                with. "Ulangan" / "Ulanmagan". */}
             <dd>
               {header.telegramLinked
-                ? t('people.indicator.value.yes')
-                : t('people.indicator.value.no')}
+                ? t('people.person.meta.telegramLinked')
+                : t('people.person.meta.telegramNotLinked')}
             </dd>
           </span>
         </dl>

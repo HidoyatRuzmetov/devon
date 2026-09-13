@@ -3245,7 +3245,9 @@
         "joined": "В отделе с",
         "lastActive": "Последняя активность",
         "never": "Ещё не входил",
-        "telegram": "Telegram"
+        "telegram": "Telegram",
+        "telegramLinked": "Подключён",
+        "telegramNotLinked": "Не подключён"
       },
       "action": {
         "assign": "Поставить задачу",
