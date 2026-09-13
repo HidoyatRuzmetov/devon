@@ -653,3 +653,30 @@ mahsulot nomlari (`Telegram`, `WorkPortal`, `Google Calendar`, `Outlook`, `iPhon
 
 Qoʻlda tekshirilgan kirillcha tuzoqlar: `ts → ц` faqat ruscha oʻzlashmada (`муддатсиз` toʻgʻri,
 `муддациз` xato), `yy → йё` (`tayyor → тайёр`, `таййор` emas), `byudjet → бюджет`.
+
+---
+
+## 18. Tekshiruv qarorlari (2026-09-13, `uz/copy-review`)
+
+`uz/copy-a` va `uz/copy-b` qoʻshilgandan keyin butun matn bir koʻzdan kechirildi. Quyidagilar — ikki
+guruh bir-biridan mustaqil ishlagani uchun yuzaga kelgan ziddiyatlar boʻyicha qarorlar. §12 va §17
+bilan bir xil kuchga ega.
+
+| Sana | Qaror | Sabab |
+|---|---|---|
+| 2026-09-13 | `canvas` = **oq taxta** — `realtime` modulida ham | `realtime.canvas.*` ni hech kim tahrir qilmagan edi: u oq taxtani «doska» deb atardi, `personal` esa «oq taxta» — bitta obyekt ikki nom bilan |
+| 2026-09-13 | Loyiha/tadbirdagi odam = **ishtirokchi** (`qatnashchi` emas) | §16 dagi `aʼzo` → `ishtirokchi` qarorining davomi; `projects.field.members` allaqachon «Ishtirokchilar» |
+| 2026-09-13 | `realtime.presence.*` na doskani, na oq taxtani nomlaydi | Bitta komponent (`packages/ui/src/realtime/live-indicators.tsx`) ikkala ekranda ham ishlatiladi |
+| 2026-09-13 | Teskari sanoq = **sanoq** (`hisob` emas) | `hisob` — bu sahifadagi *account*; «60 soniyalik hisob» maʼnosiz |
+| 2026-09-13 | Doskadagi toʻxtab qolgan karta = **Toʻxtab turibdi** (`Bloklangan` emas) | `Bloklangan` — bloklangan hisob (`admin.console.accounts.status.locked`) |
+| 2026-09-13 | `uploads` = **yuklangan fayllar** | `yuklama` — xodimning haftalik yuki (`work.workload.*`) |
+| 2026-09-13 | `latency` = **javob vaqti** (`kechikish` emas) | `kechikkan` — muddati oʻtgan ish |
+| 2026-09-13 | `provider error` = **server xatosi** | `provayder` — internet provayderi |
+| 2026-09-13 | `skipped` (qoida) = **Oʻtkazib yuborildi** | `Oʻtkazildi` — «oʻtkazib boʻlindi» degan teskari maʼno beradi |
+| 2026-09-13 | `restore` = **tiklash**; `Qaytarish` faqat redo uchun | §5 dagi undo/redo juftligi |
+| 2026-09-13 | `daqiqa` qisqartmasi hamma joyda **daq** (`d` emas) | Kartadagi `30d` sana yonida «30 kun» kabi oʻqiladi |
+| 2026-09-13 | Kartaning nomi = **nomi**; `sarlavha` — sahifa sarlavhasi | `work.field.title` bilan `projects/events/people` orasidagi farq |
+| 2026-09-13 | Muddatida bajarish koʻrsatkichi hamma joyda **muddatida** (`oʻz vaqtida` emas) | Koʻrsatkich `analytics` niki; TERMS.md `deadline` = `muddat` |
+| 2026-09-13 | Namunada **`Masalan:`** (vergul emas) | §14 ning oʻz namunasi va 12 ta satr shunday; 7 tasi vergul bilan edi |
+| 2026-09-13 | Qisqartmalar uz-Cyrl da lotincha qoladi: **2FA** | §17.1 roʻyxatining davomi; translitertor buni bilmaydi, shuning uchun avtomatik tekshiruv ham topmaydi |
+| 2026-09-13 | Bot RSVP tugmalari = **Boraman / Bormayman** | Ilova va Mini ilova shunday deydi; javob matnga aynan koʻchiriladi |
