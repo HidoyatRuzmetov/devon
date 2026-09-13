@@ -707,3 +707,18 @@ maqsad va yuklama `home`/`analytics` da yashaydi va oʻsha yerda tahrirlandi.
 - `uz-Cyrl` har bir modul uchun tuzatilgan `uz-Latn` dan `latinToCyrillic()` bilan qaytadan hosil
   qilindi, soʻng §13.2 roʻyxati boʻyicha qoʻlda oʻqildi (`ц`, `йй`, `ъ`, oʻzlashmalar, lotincha
   qoladigan tokenlar).
+
+## uz-Cyrl qoʻlda oʻqishdan keyingi tuzatishlar
+
+Transliteratsiyadan keyin har bir kirillcha fayl §13.2 roʻyxati boʻyicha koʻzdan kechirildi. Uchta
+tizimli xato topildi va generator qoidasiga aylantirildi (shundan keyin hamma modul qayta hosil
+qilindi):
+
+| Xato | Toʻgʻrisi | Qayerda uchradi |
+|---|---|---|
+| `бажарилйаптими`, `берилйапти`, `кетйапти` | `бажариляптими`, `бериляпти`, `кетяпти` — `-yap-` undoshdan keyin ham iotalanadi | analytics, home |
+| `менйу` | `меню` | miniapp |
+| `обйект` | `объект` | admin |
+
+Oldinroq shu tarzda tuzatilganlar: `таййор` → `тайёр` (`yy` + unli), `бйуджет` → `бюджет`,
+`муддациз` tipidagi soxta `ц` (qoʻshimcha chegarasidagi `t+s`).
