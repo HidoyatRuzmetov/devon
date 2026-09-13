@@ -3,21 +3,21 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "onlayn",
-      "replyMessage": "Ulandi! Endi WorkPortal bildirishnomalari shu yerga keladi.",
-      "connectedMessage": "Siz ulandingiz — WorkPortal bildirishnomalari shu chatga keladi."
+      "replyMessage": "Ulandi. Endi bildirishnomalar shu yerga keladi.",
+      "connectedMessage": "Hisobingiz ulangan — bildirishnomalar shu yerga keladi."
     },
     "notConfigured": {
       "title": "Telegram hali ulanmagan",
-      "body": "Ushbu tizim uchun Telegram botini sozlashni administratordan soʻrang."
+      "body": "Telegram botini sozlashni administratordan soʻrang."
     },
     "personal": {
-      "title": "Sizning Telegramingiz",
+      "title": "Telegramingiz",
       "linkedBadge": "Ulangan",
       "notLinkedBadge": "Ulanmagan",
       "codeBody": "Hisobingizni ulash uchun botni Telegramda oching yoki kodni skanerlang.",
       "qrAlt": "Telegramni ulash uchun QR-kod",
       "openInTelegram": "Telegramda ochish",
-      "codeExpires": "Kod {time} da eskiradi",
+      "codeExpires": "Kod {time} gacha amal qiladi",
       "connectButton": "Ulash kodini olish",
       "unlink": "Telegramni uzish",
       "unlinked": "Telegram uzildi",
@@ -25,24 +25,24 @@
         "title": "Bildirishnomalarni oʻchirish",
         "off": "Yoqish",
         "forMinutes": "{minutes} daqiqaga",
-        "until": "{date} gacha oʻchirilgan",
+        "until": "{date} gacha oʻchiq",
         "applied": "Yangilandi"
       }
     },
     "group": {
-      "title": "Boʻlim guruhi",
-      "body": "Boʻlim tadbirlari, soʻrovnomalari va eʼlonlarini olish uchun Telegram guruhini ulang.",
+      "title": "Boshqarma guruhi",
+      "body": "Tadbirlar, soʻrovnomalar va eʼlonlar guruhga tushishi uchun Telegram guruhini ulang.",
       "untitled": "Nomsiz guruh",
       "disconnect": "Uzish",
       "disconnected": "Guruh uzildi",
       "updated": "Yangilandi",
-      "codeBody": "Guruhda ushbu kod bilan /connect buyrugʻini yuboring.",
-      "codeExpires": "Kod {time} da eskiradi",
+      "codeBody": "Guruhda shu kod bilan /connect yuboring.",
+      "codeExpires": "Kod {time} gacha amal qiladi",
       "connectButton": "Ulash kodini olish",
       "copyCode": "Kodni nusxalash",
       "empty": {
         "title": "Ulangan guruh yoʻq",
-        "body": "Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodidan foydalaning."
+        "body": "Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodini oling."
       },
       "kinds": {
         "events": "Tadbirlar",

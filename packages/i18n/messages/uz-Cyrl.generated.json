@@ -156,62 +156,62 @@
     "dashboard": {
       "dueFromMe": {
         "title": "Мендан кутилмоқда",
-        "body": "{open} та очиқ, {overdue} таси муддатидан ўтган",
+        "body": "{open} та очиқ, {overdue} таси кечиккан",
         "cta": "Менга топширилганлар"
       },
       "needsMyDecision": {
-        "title": "Менинг қарорим керак",
-        "body": "Мен топширган {count} та иш муддатидан ўтиб кетган",
-        "empty": "Ҳозирча қарор керак бўлган нарса йўқ"
+        "title": "Қароримни кутмоқда",
+        "body": "Мен топширган {count} та иш кечикди",
+        "empty": "Қарор кутаётган иш йўқ"
       },
       "aroundMe": {
         "title": "Атрофимда",
-        "body": "{count} та тадбирга қатнашишни тасдиқлагансиз",
-        "cta": "Тадбирларни кўриш"
+        "body": "{count} та тадбирга бораман деб белгилагансиз",
+        "cta": "Тадбирлар"
       },
       "pinned": {
         "title": "Маҳкамланган диаграммалар",
-        "empty": "Ҳали ҳеч нарса маҳкамланмаган",
-        "cta": "Таҳлил саҳифасини очиш"
+        "empty": "Маҳкамланган диаграмма йўқ",
+        "cta": "Таҳлилни очиш"
       },
       "personal": {
-        "onTimeRate": "Бажарилганларнинг ўз вақтидалиги",
-        "focusMinutes": "Бу ҳафта фокус дақиқалари"
+        "onTimeRate": "Муддатида бажарилгани",
+        "focusMinutes": "Бу ҳафтадаги диққат дақиқалари"
       },
       "onboarding": {
-        "title": "Бошлаш",
+        "title": "Илк қадамлар",
         "body": "{done}/{total} бажарилди",
         "photo": "Суратингизни қўшинг",
-        "department": "Бўлимга қўшилинг",
-        "work": "Биринчи ишингизни очинг",
-        "event": "Тадбирга ёзилинг",
-        "focus": "Фокус сеансини ўтказинг",
+        "department": "Бошқармага қўшилинг",
+        "work": "Биринчи картангизни очинг",
+        "event": "Тадбирга иштирокни белгиланг",
+        "focus": "Диққат вақтини ўтказинг",
         "done": "Ҳаммаси бажарилди"
       },
       "kpi": {
         "onTimeQuestion": "Якунлаган ишларингизнинг қанчаси муддатида топширилган?",
         "focusQuestion": "Бу ҳафта қанча вақт диққат билан ишладингиз?"
       },
-      "sectionTiles": "Бугунги ҳолат",
+      "sectionTiles": "Бугун",
       "givenOverdue": {
         "title": "Мен берган ишлар кечикди",
-        "body": "Мен топширган {count} та иш муддатидан ўтиб кетган",
+        "body": "Мен берган {count} та иш муддатидан ўтди",
         "empty": "Мен берган ишларнинг ҳаммаси муддатида",
         "cta": "Мен берган ишлар"
       },
       "myLoad": {
-        "title": "Менинг юкламам",
-        "hours": "{capacity} соатдан {hours} соат",
+        "title": "Юкламам",
+        "hours": "{hours}/{capacity} соат",
         "cards": "Бу ҳафта {count} та карта",
-        "meaning": "Бу ҳафтага муддати белгиланган ишларингизнинг ҳафталик имкониятингизга нисбати.",
-        "meaningCards": "Бўлимда ишларнинг ярмидан ками баҳоланган, шунинг учун бу соат эмас, карта сони."
+        "meaning": "Бу ҳафтага муддати белгиланган ишларингиз ҳафталик сиғимингизга нисбатан.",
+        "meaningCards": "Бошқармада ишларнинг ярмидан ками баҳоланган, шунинг учун бу ерда соат эмас, карта саналади."
       }
     },
     "head": {
       "section": "Бошқарув кўриниши",
       "decisions": {
         "title": "Қарор кутмоқда",
-        "meaning": "Сиз берган ва муддати ўтган вазифалар — ҳал қилиш сиздан.",
+        "meaning": "Сиз берган ва муддати ўтган карталар — қарор сиздан.",
         "cta": "Доскани очиш",
         "empty": "Сиздан кутилаётган қарор йўқ."
       },
@@ -219,26 +219,26 @@
         "title": "Кечикаётган ишлар",
         "meaning": "Энг кўп кечиккан беш ходим. Исмни босинг — жадвалга ўтасиз.",
         "cta": "Ходимлар жадвали",
-        "empty": "Кечиккан вазифа йўқ. Бўлим муддатларга улгурмоқда."
+        "empty": "Кечиккан вазифа йўқ. Бошқарма муддатларга улгурмоқда."
       },
       "load": {
         "title": "Бу ҳафта юклама",
-        "meaning": "Очиқ вазифаларнинг ҳафталик имкониятга нисбати.",
-        "cta": "Юкламани кўриш",
+        "meaning": "Ҳар бир ходимнинг очиқ карталари ҳафталик сиғимига нисбатан.",
+        "cta": "Юклама",
         "empty": "Ҳозирча очиқ вазифа йўқ."
       },
       "projects": {
         "title": "Лойиҳалар",
-        "meaning": "Энг орқада қолган лойиҳалар биринчи туради.",
+        "meaning": "Энг орқада қолган лойиҳалар юқорида.",
         "cta": "Лойиҳалар",
         "empty": "Фаол лойиҳа йўқ.",
         "progressAria": "{title} — бажарилган қисми"
       },
       "events": {
         "title": "Яқин тадбирлар",
-        "meaning": "Етти кун ичидаги тадбирлар ва розилигини билдирганлар сони.",
+        "meaning": "Етти кун ичидаги тадбирлар ва иштирок этаман деганлар сони.",
         "cta": "Тадбирлар",
-        "empty": "Яқин кунларда тадбир режалаштирилмаган."
+        "empty": "Етти кун ичида тадбир режалаштирилмаган."
       },
       "onboarding": {
         "title": "Янги ходимлар",
@@ -246,40 +246,40 @@
         "cta": "Ходимлар жадвали",
         "empty": "Ҳамма мослашув қадамларини якунлаган."
       },
-      "indicatorsNote": "Жадвал ва саҳифалар учун {count} та кўрсаткич мавжуд.",
+      "indicatorsNote": "Жадвал ва ходим саҳифалари учун {count} та кўрсаткич бор.",
       "risk": {
         "title": "Хавф остида",
         "meaning": "Икки кун ичида муддати тугайдиган, ҳали бажарилмаган ишлар.",
         "cta": "Доскани очиш",
         "empty": "Яқин икки кунда хавф остидаги иш йўқ."
       },
-      "drillNote": "Ҳар бир рақамни босинг — у сизни айнан шу одамга ёки шу ишга олиб боради.",
+      "drillNote": "Ҳар бир рақам ортидаги ходим ёки карта очилади.",
       "arrange": {
         "action": "Жойлашув",
-        "heading": "Карточкаларни жойлаштиринг",
+        "heading": "Карталарни жойлаштириш",
         "hint": "Тартибни ўзгартиринг ёки кераксизларини яширинг — танловингиз шу қурилмада сақланади.",
-        "show": "«{name}» карточкасини кўрсатиш",
-        "moveUp": "«{name}» карточкасини юқорига суриш",
-        "moveDown": "«{name}» карточкасини пастга суриш",
+        "show": "«{name}» картасини кўрсатиш",
+        "moveUp": "«{name}» картасини юқорига суриш",
+        "moveDown": "«{name}» картасини пастга суриш",
         "reset": "Дастлабки ҳолатга қайтариш",
         "allHidden": {
-          "title": "Барча карточкалар яширилган",
-          "body": "Бошқарув кўринишида ҳеч нарса қолмади. Дастлабки ҳолатга қайтаринг ёки керакли карточкаларни белгиланг."
+          "title": "Ҳамма карталар яширилган",
+          "body": "Бошқарув кўринишида ҳеч нарса қолмади. Дастлабки ҳолатга қайтаринг ёки керакли карталарни белгиланг."
         }
       },
       "goals": {
         "title": "Мақсадлар",
-        "meaning": "Энг орқада қолган мақсадлар олдинда. Прогресс карталардан ўзи ҳисобланади.",
+        "meaning": "Энг орқада қолган мақсадлар юқорида. Бажарилгани карталардан ўзи ҳисобланади.",
         "cta": "Барча мақсадлар",
-        "empty": "Мақсад қўйилмаган. Биринчисини қўйинг — прогресс ўзи ҳисобланади.",
+        "empty": "Мақсад қўйилмаган. Биринчисини қўйинг — бажарилгани ўзи ҳисобланади.",
         "progressAria": "{title} — бажарилган қисми",
         "ofCap": "чегарадан"
       },
       "catchUp": {
         "title": "AI хулоса",
-        "meaning": "Бўлимнинг ҳафтаси: ютуқлар, хавфлар ва ким ортиқча юкланган.",
+        "meaning": "Бошқарманинг ҳафтаси: ютуқлар, хавфлар ва ким ортиқча юкланган.",
         "cta": "AI саҳифаси",
-        "idle": "Бир ҳафталик иш бўйича қисқа хулоса тайёрлайми? Ҳар бир фикр аниқ картага таянади.",
+        "idle": "Ҳафта бўйича қисқа хулоса тайёрлансинми? Ҳар бир фикр аниқ картага таянади.",
         "run": "Хулоса тайёрлаш",
         "dismiss": "Ёпиш"
       }
@@ -370,12 +370,12 @@
       "refresh": "Янгилаш"
     },
     "console": {
-      "eyebrow": "Бошқарув",
+      "eyebrow": "БОШҚАРУВ",
       "title": "Супер администратор панели",
       "tabs": {
-        "label": "Администратор бўлимлари",
+        "label": "Администратор саҳифалари",
         "dashboard": "Умумий кўриниш",
-        "departments": "Бўлимлар",
+        "departments": "Бошқармалар",
         "accounts": "Ҳисоблар",
         "analytics": "Таҳлиллар",
         "audit": "Аудит",
@@ -383,36 +383,36 @@
         "settings": "Созламалар"
       },
       "viewAsBanner": {
-        "message": "Сиз ҳозир бир бўлимни кўриниш сифатида (фақат ўқиш) кўрмоқдасиз.",
-        "exit": "Кўринишни ёпиш"
+        "message": "Сиз ҳозир бир бошқармани фақат ўқиш учун кўрмоқдасиз.",
+        "exit": "Кўришни тугатиш"
       },
       "dashboard": {
-        "userCount": "Фойдаланувчилар сони",
+        "userCount": "Ходимлар сони",
         "registration": "Рўйхатдан ўтиш",
         "registrationOpen": "Очиқ",
         "registrationClosed": "Ёпиқ",
         "instanceKind": "Тизим тури",
         "demo": "Демо",
         "live": "Ишчи",
-        "maintenanceActive": "Техник хизмат режими ёқилган — фойдаланувчилар тизимга кира олмайди.",
+        "maintenanceActive": "Техник хизмат режими ёқилган — супер администратордан бошқа ҳеч ким кира олмайди.",
         "quickLinks": "Тезкор ҳаволалар",
-        "reviewRequests": "Бўлим сўровларини кўриб чиқиш",
-        "reviewRequestsDesc": "Янги бўлим ташкил этиш сўровларини тасдиқланг ёки рад этинг",
-        "manageDepartments": "Бўлимларни бошқариш",
-        "manageDepartmentsDesc": "Бўлимларни кўринг, тўхтатинг ёки архивланг",
+        "reviewRequests": "Бошқарма сўровларини кўриб чиқиш",
+        "reviewRequestsDesc": "Янги бошқарма очиш сўровларини тасдиқланг ёки рад этинг",
+        "manageDepartments": "Бошқармаларни бошқариш",
+        "manageDepartmentsDesc": "Бошқармаларни кўринг, тўхтатинг ёки архивланг",
         "manageAccounts": "Ҳисобларни бошқариш",
-        "manageAccountsDesc": "Фойдаланувчи ҳисобларини блокланг, тикланг ёки ўчиринг",
+        "manageAccountsDesc": "Ҳисобларни блокланг, тикланг ёки ўчиринг",
         "checkHealth": "Тизим ҳолатини текшириш",
         "checkHealthDesc": "База, навбат, хотира ва бошқа хизматлар ҳолатини кузатинг",
         "healthTitle": "Тизим ҳолати",
         "healthSeeAll": "Барчасини кўриш",
-        "healthUnavailable": "Ҳозирча тизим ҳолати мавжуд эмас.",
-        "backupsUnconfigured": "Захира нусхалар созланмаган — бу инстансияда ҳеч қандай захира олинмаяпти.",
+        "healthUnavailable": "Тизим ҳолати ҳали келмади.",
+        "backupsUnconfigured": "Захира нусхалар созланмаган — бу серверда ҳеч нарса захираланмаяпти.",
         "backupsConfigure": "Созлаш",
-        "userCountBreakdown": "Бўлимлар кесимида"
+        "userCountBreakdown": "Бошқармалар кесимида"
       },
       "departments": {
-        "searchPlaceholder": "Бўлим номи бўйича қидириш",
+        "searchPlaceholder": "Бошқарма номи бўйича қидириш",
         "statusFilter": "Ҳолат бўйича филтр",
         "statusAll": "Барчаси",
         "statusActive": "Фаол",
@@ -425,36 +425,36 @@
           "archived": "Архивланган"
         },
         "empty": {
-          "title": "Бўлимлар топилмади"
+          "title": "Бошқарма топилмади"
         },
-        "memberCount": "{cоунт} та аъзо",
-        "viewAs": "Кўриниш сифатида очиш",
+        "memberCount": "{count} та ходим",
+        "viewAs": "Ичини кўриш",
         "pause": "Тўхтатиш",
-        "archive": "Архивлаш",
+        "archive": "Архивга олиш",
         "resume": "Давом эттириш",
         "restore": "Тиклаш",
-        "stopViewingAs": "Кўринишни ёпиш",
-        "pauseDialogTitle": "Бўлимни тўхтатиш",
+        "stopViewingAs": "Кўришни тугатиш",
+        "pauseDialogTitle": "Бошқармани тўхтатиш",
         "pauseReasonLabel": "Сабаб",
         "pauseCancel": "Бекор қилиш",
         "pauseSubmit": "Тўхтатиш",
-        "pausedToast": "Бўлим тўхтатилди",
-        "resumedToast": "Бўлим қайта фаоллаштирилди",
-        "archivedToast": "Бўлим архивланди",
-        "restoredToast": "Бўлим тикланди",
-        "viewAsStartedToast": "Кўриниш сифатида режим ёқилди",
-        "viewAsStoppedToast": "Кўриниш сифатида режим ёпилди",
-        "columnName": "Бўлим",
+        "pausedToast": "Бошқарма тўхтатилди",
+        "resumedToast": "Бошқарма қайта ишга тушди",
+        "archivedToast": "Бошқарма архивланди",
+        "restoredToast": "Бошқарма тикланди",
+        "viewAsStartedToast": "Кўриш режими ёқилди",
+        "viewAsStoppedToast": "Кўриш режими ёпилди",
+        "columnName": "Бошқарма",
         "columnStatus": "Ҳолат",
         "columnHead": "Бошлиқ",
-        "columnMembers": "Аъзолар",
-        "columnCreated": "Яратилган",
-        "drawerTitle": "Бўлим тафсилотлари",
+        "columnMembers": "Ходимлар",
+        "columnCreated": "Очилган",
+        "drawerTitle": "Бошқарма ҳақида",
         "drawerClose": "Ёпиш",
-        "memberCountLabel": "Аъзолар",
+        "memberCountLabel": "Ходимлар",
         "headLabel": "Бошлиқ",
-        "createdLabel": "Яратилган",
-        "localeLabel": "Стандарт тил"
+        "createdLabel": "Очилган",
+        "localeLabel": "Асосий тил"
       },
       "accounts": {
         "searchPlaceholder": "Исм ёки логин бўйича қидириш",
@@ -469,12 +469,12 @@
           "deleted": "Ўчирилган"
         },
         "empty": {
-          "title": "Ҳисоблар топилмади"
+          "title": "Ҳисоб топилмади"
         },
         "role": {
           "superAdmin": "Супер администратор",
           "head": "Бошлиқ",
-          "member": "Аъзо"
+          "member": "Ходим"
         },
         "columnName": "Исм",
         "columnLogin": "Логин",
@@ -493,51 +493,51 @@
         "unlockedToast": "Ҳисоб блокдан чиқарилди",
         "twoFactorResetToast": "Икки босқичли тасдиқлаш бекор қилинди",
         "temporaryPasswordTitle": "Вақтинчалик парол",
-        "temporaryPasswordBody": "Ушбу паролни фойдаланувчига хавфсиз усулда етказинг. Биринчи киришда у янги парол ўрнатиши сўралади.",
+        "temporaryPasswordBody": "Бу паролни ходимга хавфсиз йўл билан етказинг. Биринчи киришда ундан янги парол сўралади.",
         "temporaryPasswordClose": "Ёпиш",
         "anonymizeDialogTitle": "Ҳисобни ўчириш",
-        "anonymizeDialogBody": "Фойдаланувчи маълумотлари анонимлаштирилади ва ҳисоб доимий равишда ўчирилади. Бу амални бекор қилиб бўлмайди.",
+        "anonymizeDialogBody": "Ходимнинг маълумотлари анонимлаштирилади ва ҳисоб бутунлай ўчирилади. Буни ортга қайтариб бўлмайди.",
         "anonymizeSubmit": "Ўчириш",
         "anonymizedToast": "Ҳисоб ўчирилди"
       },
       "analytics": {
-        "totalDepartments": "Жами бўлимлар",
-        "totalPeople": "Жами фойдаланувчилар",
-        "cardsCreated30d": "Карточкалар (30 кун)",
+        "totalDepartments": "Жами бошқармалар",
+        "totalPeople": "Жами ходимлар",
+        "cardsCreated30d": "Карталар (30 кун)",
         "logins7d": "Киришлар (7 кун)",
-        "departmentsTitle": "Бўлимлар ҳолати",
-        "peopleTitle": "Фойдаланувчилар таркиби",
+        "departmentsTitle": "Бошқармалар ҳолати",
+        "peopleTitle": "Ходимлар таркиби",
         "activityTitle": "Фаоллик",
-        "aiSpendTitle": "АИ харажатлари",
+        "aiSpendTitle": "AI харажатлари",
         "active": "Фаол",
         "paused": "Тўхтатилган",
         "archived": "Архивланган",
         "heads": "Раҳбарлар",
-        "members": "Аъзолар",
+        "members": "Ходимлар",
         "superAdmins": "Супер администраторлар",
-        "noActivity": "Ҳозирча фаоллик маълумотлари йўқ",
+        "noActivity": "Ҳозирча фаоллик қайд этилмаган",
         "weeklyLoginsCaption": "Ҳафталик киришлар сони (сўнгги 8 ҳафта)",
-        "notAvailable": "Мавжуд эмас",
-        "tokensThisMonth": "Ушбу ойдаги токенлар",
-        "costThisMonth": "Ушбу ойдаги харажат",
+        "notAvailable": "Йўқ",
+        "tokensThisMonth": "Бу ойдаги токенлар",
+        "costThisMonth": "Бу ойдаги харажат",
         "uzs": "сўм",
-        "aiSpendUnavailable": "АИ модули ҳали уланмаган."
+        "aiSpendUnavailable": "AI модули ҳали уланмаган."
       },
       "audit": {
         "verifyChain": "Занжирни текшириш",
-        "export": "CСВ юклаб олиш",
+        "export": "CSV юклаб олиш",
         "verifyOkToast": "Аудит занжири бутун",
         "verifyFailedToast": "Аудит занжирида номувофиқлик топилди",
         "chainOk": "Занжир бутун",
         "chainBroken": "Занжир бузилган",
-        "chainRowsChecked": "{cоунт} та ёзув текширилди",
+        "chainRowsChecked": "{count} та ёзув текширилди",
         "empty": {
-          "title": "Воқеалар топилмади"
+          "title": "Ёзув топилмади"
         },
         "columnAt": "Вақт",
         "columnAction": "Амал",
         "columnActor": "Бажарувчи",
-        "columnSubject": "Объэкт",
+        "columnSubject": "Объект",
         "previousPage": "Олдинги",
         "nextPage": "Кейинги",
         "actorSystem": "Тизим",
@@ -547,7 +547,7 @@
           "session": "Кириш",
           "accounts": "Ҳисоблар",
           "admin": "Бошқарув",
-          "departments": "Бўлимлар",
+          "departments": "Бошқармалар",
           "other": "Бошқа"
         },
         "verb": {
@@ -568,111 +568,111 @@
           "admin.user.two_factor_reset": "икки босқичли текширувни бекор қилди",
           "admin.maintenance.changed": "техник хизмат режимини ўзгартирди",
           "admin.registration.changed": "рўйхатдан ўтиш созламасини ўзгартирди",
-          "admin.sentinel.key_rotated": "sentinel калитини янгилади",
+          "admin.sentinel.key_rotated": "сентинел калитини янгилади",
           "admin.wipe.started": "тизимни ўчиришни бошлади",
           "admin.wipe.executing": "тизимни ўчирмоқда",
           "admin.wipe.cancelled": "тизимни ўчиришни бекор қилди",
           "admin.wipe.rejected": "тизимни ўчириш рад этилди",
-          "admin.view_as.started": "кўриниш сифатида режимни бошлади",
-          "admin.view_as.stopped": "кўриниш сифатида режимни якунлади",
-          "admin.audit.exported": "аудит журналини юклади",
-          "departments.request_created": "бўлим сўровини юборди",
-          "departments.request_approved": "бўлим сўровини тасдиқлади",
-          "departments.request_rejected": "бўлим сўровини рад этди",
+          "admin.view_as.started": "бошқарма ичини кўра бошлади",
+          "admin.view_as.stopped": "бошқарма ичини кўришни тугатди",
+          "admin.audit.exported": "аудит журналини юклаб олди",
+          "departments.request_created": "бошқарма сўровини юборди",
+          "departments.request_approved": "бошқарма сўровини тасдиқлади",
+          "departments.request_rejected": "бошқарма сўровини рад этди",
           "departments.headship_transferred": "бошлиқликни топширди",
           "departments.member_removed": "аъзони чиқарди",
-          "departments.joined": "бўлимга қўшилди",
-          "departments.left": "бўлимни тарк этди",
-          "structure.unit_created": "бўлинма яратди",
-          "structure.unit_deleted": "бўлинмани ўчирди",
+          "departments.joined": "бошқармага қўшилди",
+          "departments.left": "бошқармани тарк этди",
+          "structure.unit_created": "бўлим очди",
+          "structure.unit_deleted": "бўлимни ўчирди",
           "structure.unit_role_assigned": "ролни тайинлади",
           "structure.unit_role_unassigned": "ролни бекор қилди",
-          "setup.completed": "тизимни созлашни якунлади",
+          "setup.completed": "дастлабки созлашни якунлади",
           "access.denied": "рухсатсиз амалга уринди",
-          "accounts.2fa_challenge_failed": "икки босқичли текширувда хатолик қилди",
+          "accounts.2fa_challenge_failed": "икки босқичли текширувдан ўта олмади",
           "accounts.2fa_challenge_passed": "икки босқичли текширувдан ўтди",
           "accounts.avatar_updated": "профил расмини ўзгартирди",
           "accounts.avatar_removed": "профил расмини ўчирди",
           "admin.wipe.completed": "тизимни ўчиришни якунлади",
-          "admin.wipe.failed": "тизимни ўчиришда хатоликка учради",
+          "admin.wipe.failed": "тизимни ўчира олмади",
           "ai.feature.run": "AI ёрдамчисини ишлатди",
           "ai.settings.updated": "AI созламаларини ўзгартирди",
           "analytics.chart.pinned": "диаграммани маҳкамлади",
           "analytics.chart.reordered": "диаграммалар тартибини ўзгартирди",
-          "analytics.chart.unpinned": "диаграммани ечди",
-          "analytics.saved_filter.created": "сақланган филтр яратди",
+          "analytics.chart.unpinned": "диаграммани маҳкамдан олди",
+          "analytics.saved_filter.created": "филтрни сақлади",
           "analytics.saved_filter.deleted": "сақланган филтрни ўчирди",
           "analytics.saved_filter.updated": "сақланган филтрни ўзгартирди",
-          "departments.deletion_requested": "бўлимни ўчиришни сўради",
+          "departments.deletion_requested": "бошқармани ўчиришни сўради",
           "departments.invite_approval_toggled": "таклиф тасдиғи созламасини ўзгартирди",
           "departments.invite_key_rotated": "таклиф калитини янгилади",
           "departments.invite_password_rotated": "таклиф паролини янгилади",
           "departments.invite_password_set": "таклиф паролини ўрнатди",
-          "departments.join_failed": "бўлимга қўшилишда хатоликка учради",
-          "departments.settings_updated": "бўлим созламаларини ўзгартирди",
-          "events.carpool_created": "ҳамроҳ сафарини яратди",
-          "events.carpool_seat_claimed": "ҳамроҳ сафаридан жой олди",
-          "events.carpool_seat_released": "ҳамроҳ сафаридаги жойни бўшатди",
+          "departments.join_failed": "бошқармага қўшила олмади",
+          "departments.settings_updated": "бошқарма созламаларини ўзгартирди",
+          "events.carpool_created": "бирга боришни таклиф қилди",
+          "events.carpool_seat_claimed": "бирга боришдан жой олди",
+          "events.carpool_seat_released": "бирга боришдаги жойни бўшатди",
           "events.comment_created": "тадбирга изоҳ қолдирди",
           "events.comment_deleted": "тадбир изоҳини ўчирди",
           "events.event_cancelled": "тадбирни бекор қилди",
-          "events.event_created": "тадбир яратди",
+          "events.event_created": "тадбир қўшди",
           "events.event_updated": "тадбирни ўзгартирди",
           "events.feedback_submitted": "тадбир ҳақида фикр билдирди",
-          "events.item_added": "олиб келинадиган нарсани қўшди",
-          "events.item_claimed": "олиб келинадиган нарсани ўз зиммасига олди",
-          "events.item_unclaimed": "олиб келинадиган нарсадан воз кечди",
+          "events.item_added": "олиб келиладиган нарсани қўшди",
+          "events.item_claimed": "олиб келиладиган нарсани ўз зиммасига олди",
+          "events.item_unclaimed": "олиб келиладиган нарсадан воз кечди",
           "events.photo_added": "тадбирга сурат қўшди",
           "events.photo_deleted": "тадбир суратини ўчирди",
-          "events.poll_created": "сўровнома яратди",
+          "events.poll_created": "сўровнома қўшди",
           "events.poll_voted": "сўровномада овоз берди",
-          "events.rsvp_changed": "тадбирга қатнашиш ҳолатини ўзгартирди",
+          "events.rsvp_changed": "тадбирдаги иштирокини ўзгартирди",
           "notifications.action_requested": "билдиришнома бўйича амал сўради",
           "notifications.archived": "билдиришномани архивлади",
-          "notifications.created": "билдиришнома яратди",
-          "notifications.department_settings_updated": "бўлим билдиришнома созламаларини ўзгартирди",
+          "notifications.created": "билдиришнома юборди",
+          "notifications.department_settings_updated": "бошқарма билдиришнома созламаларини ўзгартирди",
           "notifications.prefs_updated": "билдиришнома созламаларини ўзгартирди",
           "notifications.quiet_hours_updated": "тинч соатларни ўзгартирди",
           "notifications.read": "билдиришномани ўқиди",
           "notifications.read_all": "барча билдиришномаларни ўқилган деб белгилади",
-          "notifications.snoozed": "билдиришномани кейинга қолдирди",
-          "pages.onboarding_template.applied": "мослашув шаблонини қўллади",
-          "pages.onboarding_template.created": "мослашув шаблонини яратди",
-          "pages.onboarding_template.deleted": "мослашув шаблонини ўчирди",
-          "pages.onboarding_template.updated": "мослашув шаблонини ўзгартирди",
-          "pages.page.created": "саҳифа яратди",
+          "notifications.snoozed": "билдиришномани кечиктирди",
+          "pages.onboarding_template.applied": "мослашув андозаини қўллади",
+          "pages.onboarding_template.created": "мослашув андозаини яратди",
+          "pages.onboarding_template.deleted": "мослашув андозаини ўчирди",
+          "pages.onboarding_template.updated": "мослашув андозаини ўзгартирди",
+          "pages.page.created": "саҳифа қўшди",
           "pages.page.deleted": "саҳифани ўчирди",
           "pages.page.updated": "саҳифани ўзгартирди",
           "pages.page.version_restored": "саҳифа версиясини тиклади",
-          "personal.canvas.created": "шахсий тахтачани яратди",
-          "personal.canvas.deleted": "шахсий тахтачани ўчирди",
-          "personal.canvas.updated": "шахсий тахтачани ўзгартирди",
-          "personal.note.created": "шахсий эслатма яратди",
-          "personal.note.deleted": "шахсий эслатмани ўчирди",
-          "personal.note.updated": "шахсий эслатмани ўзгартирди",
+          "personal.canvas.created": "шахсий оқ тахта қўшди",
+          "personal.canvas.deleted": "шахсий оқ тахтани ўчирди",
+          "personal.canvas.updated": "шахсий оқ тахтани ўзгартирди",
+          "personal.note.created": "шахсий қайд қўшди",
+          "personal.note.deleted": "шахсий қайдни ўчирди",
+          "personal.note.updated": "шахсий қайдни ўзгартирди",
           "personal.pomodoro_session.ended": "помодоро сеансини якунлади",
           "personal.pomodoro_session.started": "помодоро сеансини бошлади",
           "personal.pomodoro_settings.updated": "помодоро созламаларини ўзгартирди",
-          "personal.cycle.created": "давр яратди",
+          "personal.cycle.created": "давр бошлади",
           "personal.cycle.rolled_over": "эски даврни янги даврга кўчирди",
           "personal.cycle.updated": "даврни ўзгартирди",
-          "personal.item.created": "шахсий вазифа яратди",
+          "personal.item.created": "шахсий вазифа қўшди",
           "personal.item.deleted": "шахсий вазифани ўчирди",
           "personal.item.reordered": "шахсий вазифалар тартибини ўзгартирди",
           "personal.item.updated": "шахсий вазифани ўзгартирди",
-          "projects.project_created": "лойиҳа яратди",
+          "projects.project_created": "лойиҳа очди",
           "projects.project_updated": "лойиҳани ўзгартирди",
-          "setup.token_issued": "созлаш токенини олди",
+          "setup.token_issued": "созлаш калитини олди",
           "storage.upload_requested": "файл юклашни сўради",
-          "storage.upload_rejected": "юкланган файл рад этилди",
-          "storage.upload_infected": "юкланган файлда вирус топилди",
-          "storage.upload_scan_failed": "юкланган файлни текшириб бўлмади",
+          "storage.upload_rejected": "юклаган файли рад этилди",
+          "storage.upload_infected": "юклаган файлида вирус топилди",
+          "storage.upload_scan_failed": "юклаган файлини текшириб бўлмади",
           "storage.upload_finalized": "файл юклашни якунлади",
           "storage.upload_expired": "юклаш муддати ўтди",
           "storage.uploads_expired": "муддати ўтган юкламалар тозаланди",
-          "structure.unit_restored": "бўлинмани тиклади",
-          "structure.unit_updated": "бўлинмани ўзгартирди",
-          "structure.units_reordered": "бўлинмалар тартибини ўзгартирди",
+          "structure.unit_restored": "бўлимни тиклади",
+          "structure.unit_updated": "бўлимни ўзгартирди",
+          "structure.units_reordered": "бўлимлар тартибини ўзгартирди",
           "telegram.group_connect_code_issued": "гуруҳ улаш кодини олди",
           "telegram.group_connected": "Telegram гуруҳини улашди",
           "telegram.group_disconnected": "Telegram гуруҳини узди",
@@ -681,31 +681,31 @@
           "telegram.linked": "Telegram ҳисобини боғлади",
           "telegram.unlinked": "Telegram ҳисобини узди",
           "user.updated": "профилини ўзгартирди",
-          "work.card_created": "карточка яратди",
-          "work.card_restored": "карточкани тиклади",
-          "work.card_updated": "карточкани ўзгартирди",
-          "work.checklist_item_added": "текширув рўйхатига банд қўшди",
-          "work.comment_added": "карточкага изоҳ қолдирди",
-          "work.label_created": "ёрлиқ яратди"
+          "work.card_created": "карта қўшди",
+          "work.card_restored": "картани тиклади",
+          "work.card_updated": "картани ўзгартирди",
+          "work.checklist_item_added": "бажариш рўйхатига банд қўшди",
+          "work.comment_added": "картага изоҳ қолдирди",
+          "work.label_created": "ёрлиқ қўшди"
         },
         "subjectType": {
           "session": "Сеанс",
-          "user": "Фойдаланувчи",
-          "department": "Бўлим",
-          "department_request": "Бўлим сўрови",
+          "user": "Ходим",
+          "department": "Бошқарма",
+          "department_request": "Бошқарма сўрови",
           "instance_settings": "Тизим созламаси",
-          "unit": "Бўлинма",
-          "audit_export": "Аудит экспорти"
+          "unit": "Бўлим",
+          "audit_export": "Аудит нусхаси"
         }
       },
       "health": {
         "refresh": "Янгилаш",
-        "checkedAt": "Охирги текширув: {тиме}",
+        "checkedAt": "Охирги текширув: {time}",
         "db": "Маълумотлар базаси",
         "queue": "Навбат",
         "storage": "Хотира",
-        "telegram": "Телеграм",
-        "ai": "АИ хизмати",
+        "telegram": "Telegram",
+        "ai": "AI хизмати",
         "backups": "Захира нусхалар",
         "status": {
           "ok": "Ишлаяпти",
@@ -715,36 +715,36 @@
         },
         "detail": {
           "error.raw": "{message}",
-          "queue.pending": "Кутилаётган ҳодисалар: {count}",
-          "queue.pendingOldest": "Кутилаётган ҳодисалар: {count}, энг эскиси {seconds} сония олдин",
+          "queue.pending": "{count} та ҳодиса навбатда",
+          "queue.pendingOldest": "{count} та ҳодиса навбатда, энг эскиси {seconds} сония олдин",
           "queue.unreadable": "Навбатни ўқиб бўлмади",
           "storage.free": "{gb} ГБ бўш жой",
-          "telegram.connected": "Уланган гуруҳлар: {count}",
+          "telegram.connected": "{count} та гуруҳ уланган",
           "backups.none": "Захира нусха топилмади",
           "backups.latest": "Охирги захира {hours} соат олдин"
         }
       },
       "settings": {
         "registrationTitle": "Рўйхатдан ўтиш",
-        "registrationBody": "Янги фойдаланувчилар рўйхатдан ўтиши мумкинлигини бошқаринг.",
-        "registrationSwitchLabel": "Янги ҳисоблар рўйхатдан ўтиши мумкин",
+        "registrationBody": "Янги ходимлар ҳисоб очиши мумкинми — шуни белгилайсиз.",
+        "registrationSwitchLabel": "Янги ҳисоб очиш мумкин",
         "registrationStatusOpen": "Очиқ",
         "registrationStatusClosed": "Ёпиқ",
         "registrationSavedToast": "Рўйхатдан ўтиш созламаси сақланди",
         "maintenanceTitle": "Техник хизмат режими",
-        "maintenanceBody": "Ёқилганда барча фойдаланувчилар (супер администратордан ташқари) ушбу хабарни кўради.",
+        "maintenanceBody": "Ёқилганда супер администратордан бошқа ҳамма шу хабарни кўради.",
         "maintenanceOnBadge": "Ёқилган",
-        "maintenanceMessagePlaceholder": "Хабар матнини киритинг",
+        "maintenanceMessagePlaceholder": "Хабар матни",
         "maintenanceMessageLabel": "Хабар",
         "maintenancePreviewLabel": "Олдиндан кўриш",
         "maintenancePreviewBadge": "Хизмат техник хизмат учун тўхтатилган",
-        "maintenancePreviewEmpty": "Ҳали хабар киритилмаган — фойдаланувчилар стандарт билдиришномани кўради.",
+        "maintenancePreviewEmpty": "Ҳали хабар ёзилмаган — ходимлар одатдаги билдиришномани кўради.",
         "maintenanceEnable": "Ёқиш",
         "maintenanceDisable": "Ўчириш",
         "maintenanceSaveMessage": "Хабарни сақлаш",
         "maintenanceSavedToast": "Техник хизмат созламаси сақланди",
         "sentinelTitle": "Сентинел калити",
-        "sentinelBody": "Ўчириш тугмасини хост хизматига юбориш учун ишлатиладиган махфий калит.",
+        "sentinelBody": "Хост хизматига юбориладиган ўчириш буйруғини имзолайдиган махфий калит.",
         "sentinelConfigured": "Созланган",
         "sentinelNotConfigured": "Созланмаган",
         "sentinelRotate": "Калитни янгилаш",
@@ -752,11 +752,11 @@
         "sentinelKeyCopiedToast": "Калит нусхаланди",
         "sentinelGenerate": "Калит яратиш",
         "wipeTitle": "Ўчириш тугмаси",
-        "wipeBody": "Ушбу тугма бутун тизимни сервердан бутунлай ўчиради. Амални ортга қайтариб бўлмайди.",
+        "wipeBody": "Бу тугма бутун тизимни сервердан бутунлай ўчиради. Буни ортга қайтариб бўлмайди.",
         "wipeStartCta": "Ўчиришни бошлаш",
         "wipeDialogTitle": "Тасдиқлаш талаб қилинади",
-        "wipeDialogBody": "Бу бутун тизимни сервердан қайтариб бўлмайдиган тарзда ўчиради: барча бўлимлар, ҳисоблар, саҳифалар, карточкалар ва файллар. Амални ортга қайтариб бўлмайди. Кейинги қадамларда тасдиқлаш иборасини киритиб, ҳисоб маълумотларингизни қайта киритасиз.",
-        "wipeStepOf": "{total} дан {step}-қадам",
+        "wipeDialogBody": "Бу бутун тизимни сервердан қайтариб бўлмайдиган тарзда ўчиради: ҳамма бошқарма, ҳисоб, саҳифа, карта ва файл. Кейинги қадамларда тасдиқлаш иборасини ёзасиз ва паролингизни қайта киритасиз.",
+        "wipeStepOf": "{total} қадамдан {step}-си",
         "wipeStepContinue": "Давом этиш",
         "wipeStepBack": "Орқага",
         "wipeStepCancel": "Бекор қилиш",
@@ -767,17 +767,17 @@
         "wipeReviewPassword": "Парол",
         "wipeReviewTotp": "2ФА коди",
         "wipeReviewTotpNone": "Киритилмаган",
-        "wipeReviewBody": "Ҳисоблаш нолга етгач уни бекор қилиб бўлмайди, лекин ҳисоблаш давом этаётганда ҳали ҳам бекор қилиш мумкин.",
-        "wipeConfirmCta": "60 сониялик ҳисоблашни бошлаш",
-        "wipeStartFailedToast": "Тасдиқлаш муваффақияциз тугади",
-        "wipeCountdownBody": "Ҳисоблаш тугагач ўчириш буйруғи хост хизматига юборилади. Ҳозир бекор қилишингиз мумкин.",
+        "wipeReviewBody": "Ҳисоб нолга етгач ўчиришни тўхтатиб бўлмайди; ҳисоб давом этаётганда эса бекор қилсангиз бўлади.",
+        "wipeConfirmCta": "60 сониялик ҳисобни бошлаш",
+        "wipeStartFailedToast": "Тасдиқлаб бўлмади",
+        "wipeCountdownBody": "Ҳисоб нолга етгач ўчириш буйруғи хост хизматига юборилади. Ҳозир бекор қилсангиз бўлади.",
         "wipeCountdownAria": "Ўчиришга {seconds} сония қолди",
         "wipeCancel": "Бекор қилиш",
         "wipeCancelledToast": "Ўчириш бекор қилинди",
-        "wipeExecuting": "Ўчириш буйруғи юборилмоқда...",
-        "wipeFailed": "Муваффақияциз",
+        "wipeExecuting": "Ўчириш буйруғи юборилмоқда…",
+        "wipeFailed": "Бўлмади",
         "sentinelPublicKeyLabel": "Очиқ калит",
-        "sentinelPublicKeyHint": "Буни хост машинадаги инфра/сентинел/сентинел.cонф файлига публиc_кей=... сифатида жойлаштиринг. Бу махфий эмас, исталган вақтда шу ерда кўрсатилиши мумкин."
+        "sentinelPublicKeyHint": "Буни хост машинадаги infra/sentinel/sentinel.conf файлига public_key=… кўринишида ёзинг. Бу махфий эмас, исталган вақтда шу ерда кўрсатилади."
       },
       "maintenanceNotice": {
         "title": "Хизмат вақтинча тўхтатилган"
@@ -938,15 +938,15 @@
   "ai": {
     "title": "AI",
     "eyebrow": "AI",
-    "description": "Бўлимнинг AI ёрдамчилари: ҳар бири нима қилиши, қаерда туриши, қанча туриши ва фойдаланиш тарихи.",
+    "description": "Бошқарманинг AI ёрдамчилари: ҳар бири нима қилади, қаерда туради, қанча туради ва ким ишлатган.",
     "tabs": {
       "helpers": "Ёрдамчилар",
       "ask": "Сўраш",
       "usage": "Фойдаланиш"
     },
     "command": {
-      "ask": "AI дан сўраш",
-      "search": "Бўлим бўйича қидириш"
+      "ask": "АИдан сўраш",
+      "search": "Бошқарма бўйича қидириш"
     },
     "simulated": {
       "title": "Намунавий жавоб.",
@@ -960,31 +960,31 @@
       "low": "Шубҳали"
     },
     "budget": {
-      "title": "Ойлик AI бйуджети",
+      "title": "Ойлик AI бюджети",
       "status": {
         "ok": "Меъёрида",
         "soft_cap": "Чегарага яқин",
-        "hard_stop": "Бйуджет тугади"
+        "hard_stop": "Бюджет тугади"
       },
       "spentOfCap": "Бу ой {cap}дан {spent} сарфланди",
-      "resetToast": "Ойлик AI бйуджети янгиланди",
-      "editLabel": "Ойлик бйуджет (UZS)",
-      "save": "Бйуджетни сақлаш",
-      "invalidAmount": "Тўғри миқдор киритинг",
+      "resetToast": "Ойлик AI бюджети янгиланди",
+      "editLabel": "Ойлик бюджет (сўм)",
+      "save": "Бюджетни сақлаш",
+      "invalidAmount": "Суммани тўғри киритинг.",
       "currency": "сўм"
     },
     "flags": {
       "title": "Ёрдамчилар",
-      "description": "Ҳар бир ёрдамчи нима қилишини ўқинг ва бўлимга кераклисини ёқинг. Ёқмагунингизча ўчирилган бўлади.",
-      "headOnly": "Буларни фақат бўлим бошлиғи ўзгартира олади.",
+      "description": "Ҳар бир ёрдамчи нима қилишини ўқинг ва бошқармага кераклисини ёқинг. Ёқмагунингизча ҳаммаси ўчиқ туради.",
+      "headOnly": "Буларни фақат бошқарма бошлиғи ўзгартиради.",
       "headOnlyBadge": "Фақат бошлиқ учун",
       "whereLabel": "Қаерда:",
       "spentThisMonth": "Бу ой: {cost}"
     },
     "usage": {
       "empty": {
-        "title": "Ҳали AI чақирувлари йўқ",
-        "body": "Бўлимдан кимдир AI ёрдамчисини ишлатгач, фойдаланиш шу ерда кўринади."
+        "title": "Ҳали AI ишлатилмаган",
+        "body": "Бошқармадан кимдир ёрдамчини ишлатгач, фойдаланиш шу ерда кўринади."
       },
       "columns": {
         "when": "Қачон",
@@ -995,13 +995,13 @@
         "cost": "Нарх",
         "latency": "Кечикиш"
       },
-      "unknownUser": "Бўлимдан чиққан ходим",
+      "unknownUser": "Бошқармадан чиққан ходим",
       "status": {
         "ok": "Яхши",
         "empty_after_retry": "Бўш жавоб",
         "schema_invalid_after_retry": "Нотўғри жавоб",
         "provider_error": "Провайдер хатоси",
-        "blocked_budget": "Бйуджет тўхтатди",
+        "blocked_budget": "Бюджет тўхтатди",
         "blocked_flag": "Ёрдамчи ўчирилган",
         "timeout": "Вақт тугади"
       },
@@ -1026,7 +1026,7 @@
       "page": {
         "previous": "Олдинги",
         "next": "Кейинги",
-        "of": "{pages} саҳифадан {page} чиси"
+        "of": "{pages} саҳифадан {page}-си"
       }
     },
     "result": {
@@ -1042,10 +1042,10 @@
       "close": "Ёпиш"
     },
     "ask": {
-      "label": "Бўлим маълумотидан сўранг",
+      "label": "Бошқарма ёзувларидан сўранг",
       "placeholder": "Масалан: ойлик ҳисоботни ким тайёрлаяпти?",
       "submit": "Сўраш",
-      "hint": "Жавоб фақат шу бўлимнинг карточкалари, изоҳлари, саҳифалари ва тадбирларидан олинади. Ҳар бир жавобда манба ҳаволаси бўлади.",
+      "hint": "Жавоб фақат шу бошқарманинг карталари, изоҳлари, саҳифалари ва тадбирларидан олинади. Ҳар бир жавобда манба ҳаволаси бўлади.",
       "answerTitle": "Жавоб: {question}",
       "done": "Ёпиш"
     },
@@ -1064,15 +1064,15 @@
         "no_api_key": "AI калити созланмаган, шунинг учун қидирув Postgres калит сўз ва ҳарф ўхшашлиги бўйича ишлайди.",
         "models_endpoint_unreachable": "GLM серверига уланиб бўлмади, шунинг учун қидирув калит сўз бўйича ишлайди.",
         "no_embeddings_model_listed": "Бу GLM сервери embeddings моделини таклиф қилмайди, шунинг учун қидирув калит сўз бўйича ишлайди.",
-        "embeddings_endpoint_failed": "Эмбеддингс сўрови бажарилмади, шунинг учун қидирув калит сўз бўйича ишлайди.",
-        "dimension_mismatch": "Эмбеддингс вектори кутилган ўлчамда эмас, шунинг учун қидирув калит сўз бўйича ишлайди."
+        "embeddings_endpoint_failed": "Embeddings сўрови бажарилмади, шунинг учун қидирув калит сўз бўйича ишлайди.",
+        "dimension_mismatch": "Embeddings вектори кутилган ўлчамда эмас, шунинг учун қидирув калит сўз бўйича ишлайди."
       },
       "indexed": "{count} та ёзув индексланган, {pending} таси навбатда.",
       "rebuild": "Индексни янгилаш",
-      "rebuildHint": "Карточкалар, изоҳлар, саҳифалар ва тадбирларни қайтадан ўқийди.",
+      "rebuildHint": "Карталар, изоҳлар, саҳифалар ва тадбирларни қайтадан ўқийди.",
       "rebuilt": "{indexed} та ёзув янгиланди, {embedded} тасига вектор ёзилди.",
       "kind": {
-        "card": "Карточка",
+        "card": "Карта",
         "comment": "Изоҳ",
         "page": "Саҳифа",
         "event": "Тадбир"
@@ -1084,10 +1084,10 @@
     },
     "errors": {
       "invalidInput": "Майдонларни текшириб, қайта уриниб кўринг",
-      "forbidden": "Бу ёрдамчи ўчирилган ёки бйуджет тугаган",
+      "forbidden": "Бу ёрдамчи ўчирилган ёки бюджет тугаган",
       "runFailed": "AI ҳозирча жавоб бера олмади",
-      "headOnly": "Бу ёрдамчи фақат бўлим бошлиғи учун",
-      "featureDisabled": "Бу ёрдамчи бўлим созламаларида ўчирилган. AI саҳифасида ёқинг.",
+      "headOnly": "Бу ёрдамчи фақат бошқарма бошлиғи учун",
+      "featureDisabled": "Бу ёрдамчи бошқарма созламаларида ўчирилган. AI саҳифасидан ёқинг.",
       "timeout": "AI белгиланган вақтда жавоб бермади. Қайта уриниб кўринг.",
       "retry": "Қайта уриниш"
     },
@@ -1102,8 +1102,8 @@
       "noDate": "Муддат йўқ",
       "unknownPerson": "Номаълум ходим",
       "unknownProject": "Номаълум лойиҳа",
-      "unknownCard": "Номаълум карточка",
-      "openCard": "Карточкани очиш",
+      "unknownCard": "Номаълум карта",
+      "openCard": "Картани очиш",
       "minutes": "{count} дақиқа",
       "needsApproval": "Тасдиқ керак",
       "risk": {
@@ -1123,10 +1123,10 @@
         "priority": "Муҳимлик",
         "labels": "Ёрлиқлар",
         "project": "Лойиҳа",
-        "ambiguous": "Бир нечта мос келди"
+        "ambiguous": "Бир нечта ходим мос келди"
       },
       "subtasks": {
-        "insufficient": "Карточкада бўлиш учун етарли маълумот йўқ. Тавсиф қўшиб, қайта уриниб кўринг.",
+        "insufficient": "Картани бўлиш учун матн етарли эмас. Тавсиф қўшиб, қайта уриниб кўринг.",
         "total": "{count} та қадам, жами тахминан {minutes} дақиқа."
       },
       "plan": {
@@ -1146,10 +1146,10 @@
       },
       "event": {
         "place": "Жой",
-        "attendees": "Тахминий иштирокчи",
+        "attendees": "Тахминий иштирокчилар сони",
         "dateOptions": "Сана вариантлари",
         "checklist": "Тайёргарлик рўйхати",
-        "carpool": "Йўл-йўриқ"
+        "carpool": "Йўл"
       },
       "thread": {
         "empty": "Бу муҳокамада ҳали қарор ҳам, очиқ савол ҳам йўқ.",
@@ -1168,7 +1168,7 @@
           "line": "Чизиқли",
           "pie": "Доиравий",
           "table": "Жадвал",
-          "burnup": "Ўсиш эгри чизиғи"
+          "burnup": "Ўсиш чизиғи"
         },
         "groupBy": {
           "person": "Ходим бўйича",
@@ -1190,14 +1190,14 @@
           "brief": "Қисқа"
         },
         "answering": "{count} та изоҳга жавоб беради",
-        "stillNeeded": "Сиз ҳали айтишингиз керак:"
+        "stillNeeded": "Ҳали айтишингиз керак:"
       },
       "riskAction": {
         "move_due_date": "Муддатни кўчириш",
         "ping_assignee": "Масъулга эслатиш",
         "split_into_subtasks": "Қадамларга бўлиш",
         "reassign": "Бошқага топшириш",
-        "mark_blocked": "Тўсиқ деб белгилаш"
+        "mark_blocked": "Тўхтаб турибди деб белгилаш"
       },
       "digest": {
         "pressure": "Босим нуқталари"
@@ -1212,7 +1212,7 @@
         "related": "Алоқадор"
       },
       "ask": {
-        "notFound": "Бўлим маълумотларида бу саволга жавоб топилмади.",
+        "notFound": "Бошқарма ёзувларида бу саволга жавоб топилмади.",
         "sources": "Манбалар",
         "openSource": "Манбани очиш"
       }
@@ -1220,97 +1220,97 @@
     "features": {
       "quickAddParse": {
         "label": "Тезкор қўшиш таҳлили",
-        "description": "Бир гапда ёзилган вазифани ном, масъул, муддат, муҳимлик ва ёрлиқларга ажратади. Бугунги сана берилади, шунинг учун “эртага” ёки “жумагача” тўғри кунга тушади.",
-        "where": "Доска ва шахсий иш жойидаги тезкор қўшиш қатори.",
-        "example": "“Нодирага чораклик ҳисоботни жумагача тайинла, шошилинч” → ном, масъул Нодира Каримова, муддат 19-сентабр, шошилинч."
+        "description": "Бир гапда ёзилган ишни ном, масъул, муддат, муҳимлик ва ёрлиқларга ажратади. Бугунги сана берилади, шунинг учун «эртага» ёки «жумагача» тўғри кунга тушади.",
+        "where": "Доска ва шахсий майдондаги тезкор қўшиш қатори.",
+        "example": "«Нодирага чораклик ҳисоботни жумагача тайинла, шошилинч» → ном, масъул Нодира Каримова, муддат 19-сентабр, шошилинч."
       },
       "subtaskBreakdown": {
         "label": "Қуйи вазифаларга бўлиш",
-        "description": "Битта карточкани бажарилиши мумкин бўлган қадамларга бўлади ва ҳар бирига тахминий вақт қўяди.",
-        "where": "Карточка ичидаги рўйхат бўлими ва шахсий иш жойидаги вазифа қатори.",
-        "example": "“Ойлик ҳисоботни тайёрлаш” → маълумот йиғиш, жадвал тузиш, бўлим билан келишиш, якуний нусха."
+        "description": "Битта картани бажарса бўладиган қадамларга бўлади ва ҳар бирига тахминий вақт қўяди.",
+        "where": "Карта ичидаги бажариш рўйхати ва шахсий майдондаги вазифа қатори.",
+        "example": "«Ойлик ҳисоботни тайёрлаш» → маълумот йиғиш, жадвал тузиш, бўлим билан келишиш, якуний нусха."
       },
       "planSprint": {
         "label": "Даврни режалаштириш",
         "description": "Очиқ ишларингизни муддат, муҳимлик ва қолган вақтингизга қараб тартиблайди, нимадан бошлашни ва нима сиғмаслигини айтади.",
-        "where": "Шахсий иш жойидаги даврлар ва лойиҳа саҳифаси.",
-        "example": "Уч соат ва еттита иш → тартибланган режа, биринчи иш белгиланган, иккитаси “сиғмайди”."
+        "where": "Шахсий майдондаги даврлар ва лойиҳа саҳифаси.",
+        "example": "Уч соат ва еттита иш → тартибланган режа, биринчи иш белгиланган, иккитаси «сиғмайди»."
       },
       "deadlineRisk": {
-        "label": "Бу хавфни тушунтир",
-        "description": "Карточкадаги хавф белгиси нега қўйилганини оддий тилда тушунтиради ва битта аниқ чорани таклиф қилади. Хавф даражасини қайтадан ҳисобламайди.",
-        "where": "Карточкадаги хавф белгиси ёнида.",
-        "example": "“Муддат кеча ўтди, рўйхатнинг ярми бажарилган” → сабаби ва “муддатни 22-сентабрга кўчириш” таклифи."
+        "label": "Хавфни тушунтириш",
+        "description": "Картадаги хавф белгиси нега қўйилганини оддий тилда тушунтиради ва битта аниқ чорани таклиф қилади. Хавф даражасини қайтадан ҳисобламайди.",
+        "where": "Картадаги хавф белгиси ёнида.",
+        "example": "«Муддат кеча ўтди, рўйхатнинг ярми бажарилган» → сабаби ва «муддатни 22-сентабрга кўчириш» таклифи."
       },
       "catchUp": {
         "label": "Нимани ўтказиб юбордим",
-        "description": "Сиз йўқ вақтингизда ёки ўтган ҳафтада нима бўлганини йиғади: бажарилганлар, хавфлар, сиздан кутилаётган ишлар. Бўлим бошлиғи учун бутун бўлим бўйича душанба хулосасини беради.",
-        "where": "Бош саҳифа, шахсий иш жойи ва лойиҳа саҳифаси.",
-        "example": "“Жумадан бери: 4 та иш бажарилди, 2 тасининг муддати ўтган, Анварда 11 та очиқ иш.”"
+        "description": "Сиз йўқ вақтингизда ёки ўтган ҳафтада нима бўлганини йиғади: бажарилганлар, хавфлар, сиздан кутилаётган ишлар. Бошқарма бошлиғига бутун бошқарма бўйича душанба хулосасини беради.",
+        "where": "Бош саҳифа, шахсий майдон ва лойиҳа саҳифаси.",
+        "example": "«Жумадан бери: 4 та иш бажарилди, 2 тасининг муддати ўтган, Анварда 11 та очиқ иш.»"
       },
       "draftEvent": {
-        "label": "Тадбир лойиҳаси",
-        "description": "Бир қаторли ғояни тўлиқ тадбирга айлантиради: тавсиф, сана вариантлари, тайёргарлик рўйхати ва йўл-йўриқ режаси.",
-        "where": "Тадбир яратиш ойнаси.",
-        "example": "“Чорвоқда куз сайли” → тавсиф, учта сана варианти, саккиз бандли рўйхат, автомобил режаси."
+        "label": "Тадбир қораламаси",
+        "description": "Бир қаторли фикрни тўлиқ тадбирга айлантиради: тавсиф, сана вариантлари, тайёргарлик рўйхати ва йўл режаси.",
+        "where": "Тадбир қўшиш ойнаси.",
+        "example": "«Чорвоқда куз сайли» → тавсиф, учта сана варианти, саккиз бандли рўйхат, йўл режаси."
       },
       "summarizeThread": {
         "label": "Муҳокамани хулосалаш",
         "description": "Узоқ изоҳлар муҳокамасидан қабул қилинган қарорлар, очиқ саволлар ва ким нимага ваъда берганини ажратиб беради, ҳар бири изоҳга ҳавола билан.",
-        "where": "Карточка ва тадбир изоҳлари.",
-        "example": "24 та изоҳ → 3 та қарор, 2 та очиқ савол, “Анвар PDF-ни пайшанбагача юборади”."
+        "where": "Карта ва тадбир изоҳлари.",
+        "example": "24 та изоҳ → 3 та қарор, 2 та очиқ савол, «Анвар PDF-ни пайшанбагача юборади»."
       },
       "nlAnalytics": {
-        "label": "Таҳлилдан сўраш",
+        "label": "Таҳлилга савол бериш",
         "description": "Оддий тилдаги саволни филтрга айлантиради ва рақамлар билан жавоб беради, қайси филтр ишлатилганини кўрсатган ҳолда.",
         "where": "Таҳлил саҳифаси.",
-        "example": "“Бу ой Дата бўлимининг муддати ўтган ишлари” → 7 та, филтр ва диаграмма билан."
+        "example": "«Бу ой Дата бўлимининг муддати ўтган ишлари» → 7 та, филтр ва диаграмма билан."
       },
       "translate": {
         "label": "Таржима қилиш",
-        "description": "Матнни сиз танлаган тилга таржима қилади, бўлим атамаларини ўзгартирмай. Лотин ва кирилл ўртасида модел ишлатилмайди, ўгириш шу ерда бажарилади.",
-        "where": "Карточка тавсифи, саҳифа муҳаррири ва шахсий қайдлар.",
-        "example": "Ўзбекча тавсиф → русча таржима, “муддат” ва “бўлим” атамалари сақланган ҳолда."
+        "description": "Матнни сиз танлаган тилга таржима қилади, бошқарма атамаларига тегмайди. Лотин ва кирилл ўртасида модел ишлатилмайди — ўгириш шу ерда бажарилади.",
+        "where": "Карта тавсифи, саҳифа муҳаррири ва шахсий қайдлар.",
+        "example": "Ўзбекча тавсиф → русча таржима, «муддат» ва «бўлим» атамалари сақланган ҳолда."
       },
       "draftReply": {
-        "label": "Жавоб лойиҳаси",
+        "label": "Жавоб қораламаси",
         "description": "Муҳокамага мулойим ва ишчан жавоб ёзиб беради. Ҳеч қачон ўзи юбормайди: матн изоҳ майдонига тушади, юборишни сиз ҳал қиласиз.",
-        "where": "Карточка изоҳ майдони ва кирувчи хабардаги эслатма.",
-        "example": "“Муддатни сурайми?” → тайёр жавоб ва “ҳали айтишингиз керак: янги сана”."
+        "where": "Карта изоҳ майдони ва билдиришномадаги белгилаш.",
+        "example": "«Муддатни сурайми?» → тайёр жавоб ва «ҳали айтишингиз керак: янги сана»."
       },
       "boardRiskDigest": {
-        "label": "Ким кечиктирйапти",
-        "description": "Доскадаги энг хавфли ишларни битта сўров билан тартиблайди, ҳар бирига сабаб ва битта чора билан. Фақат бўлим бошлиғи учун.",
+        "label": "Ким кечикаётгани",
+        "description": "Доскадаги энг хавфли ишларни битта сўров билан тартиблайди, ҳар бирига сабаб ва битта чора қўшади. Фақат бошқарма бошлиғи учун.",
         "where": "Доска сарлавҳаси.",
-        "example": "Бешта иш, ҳар бирига сабаб, ҳамда “Анварда 11 та очиқ иш” деган босим нуқтаси."
+        "example": "Бешта иш, ҳар бирига сабаб, ҳамда «Анварда 11 та очиқ иш» деган босим нуқтаси."
       },
       "suggestAssignee": {
-        "label": "Кимга топширай",
-        "description": "Иш юки ва тажрибасига қараб учта номзод таклиф қилади. Сабаби фақат юк ва тажриба бўлади, ҳеч қачон баҳо эмас. Танловни бўлим бошлиғи қилади.",
-        "where": "Карточкадаги масъул майдони.",
-        "example": "“Ойлик ҳисобот” → Нодира (шу мавзуда 4 та иш), Анвар (юки кўп), Дилноза."
+        "label": "Кимга топшириш",
+        "description": "Иш юки ва тажрибасига қараб учта номзод таклиф қилади. Сабаби фақат юк ва тажриба бўлади, ҳеч қачон баҳо эмас. Танловни бошқарма бошлиғи қилади.",
+        "where": "Картадаги масъул майдони.",
+        "example": "«Ойлик ҳисобот» → Нодира (шу мавзуда 4 та иш), Анвар (юки кўп), Дилноза."
       },
       "duplicateCheck": {
         "label": "Такрорий ишни топиш",
         "description": "Янги иш ёзаётганингизда шунга ўхшаш иш аллақачон бор-йўқлигини текширади ва ҳавола беради.",
-        "where": "Карточка яратиш ва тезкор қўшиш олдиндан кўриши.",
-        "example": "“Ҳисоботни тайёрлаш” → “Чораклик ҳисоботни тайёрлаш” аллақачон очиқ."
+        "where": "Карта қўшиш ва тезкор қўшиш ойнаси.",
+        "example": "«Ҳисоботни тайёрлаш» → «Чораклик ҳисоботни тайёрлаш» аллақачон очиқ."
       },
       "semanticAsk": {
-        "label": "Бўлим маълумотидан сўраш",
-        "description": "Саволингизга фақат бўлимнинг ўз карточкалари, изоҳлари, саҳифалари ва тадбирларидан жавоб беради, ҳар бир жавобга ҳавола қўйиб. Топилмаса, “топилмади” дейди.",
-        "where": "AI саҳифасидаги “Сўраш” бўлими ва Ctrl+K.",
-        "example": "“Ойлик ҳисоботни ким тайёрлаяпти?” → “Нодира Каримова, муддат 18-сентабр”, карточкага ҳавола билан."
+        "label": "Бошқарма ёзувларидан сўраш",
+        "description": "Саволингизга фақат бошқарманинг ўз карталари, изоҳлари, саҳифалари ва тадбирларидан жавоб беради ва ҳар бир жавобга ҳавола қўяди. Топилмаса, «топилмади» дейди.",
+        "where": "AI саҳифасидаги «Сўраш» бўлими ва Ctrl+K.",
+        "example": "«Ойлик ҳисоботни ким тайёрлаяпти?» → «Нодира Каримова, муддат 18-сентабр», картага ҳавола билан."
       },
       "weeklySummary": {
         "label": "Ҳафталик хулоса (эскирган)",
-        "description": "Энди “Нимани ўтказиб юбордим” ёрдамчисининг бир қисми. Эски ёзувлар шу ном билан қолган.",
+        "description": "Энди «Нимани ўтказиб юбордим» ёрдамчисининг бир қисми. Эски ёзувлар шу ном билан қолган.",
         "where": "Энди алоҳида экрани йўқ.",
         "example": "Эски фойдаланиш ёзувларида кўринади."
       },
       "whatDidIMiss": {
         "label": "Нимани ўтказиб юбордим (эскирган)",
-        "description": "Энди “Нимани ўтказиб юбордим” ёрдамчисининг бир қисми. Эски ёзувлар шу ном билан қолган.",
+        "description": "Энди «Нимани ўтказиб юбордим» ёрдамчисининг бир қисми. Эски ёзувлар шу ном билан қолган.",
         "where": "Энди алоҳида экрани йўқ.",
         "example": "Эски фойдаланиш ёзувларида кўринади."
       }
@@ -1327,21 +1327,21 @@
   },
   "analytics": {
     "title": "Таҳлил",
-    "eyebrow": "Ҳисоботлар",
+    "eyebrow": "ҲИСОБОТЛАР",
     "kpi": {
-      "throughput": "Ўтган ҳафта бажарилган карточкалар",
+      "throughput": "Ўтган ҳафта бажарилган карталар",
       "throughputQuestion": "олдинги ҳафтага нисбатан",
-      "open": "Очиқ карточкалар",
+      "open": "Очиқ карталар",
       "openQuestion": "олдинги ҳафтага нисбатан",
-      "overdue": "Муддати ўтган карточкалар",
+      "overdue": "Муддати ўтган карталар",
       "overdueQuestion": "олдинги ҳафтага нисбатан",
-      "onTimeRate": "Ўтган ҳафта ўз вақтида",
+      "onTimeRate": "Ўтган ҳафта муддатида",
       "onTimeRateQuestion": "олдинги ҳафтага нисбатан фоиз пункти",
       "onTimeRateDenominator": "ўтган ҳафта муддати келган {due} тадан {onTime} таси"
     },
     "ask": {
-      "title": "Таҳлилдан сўраш",
-      "placeholder": "Савол беринг, масалан \"бу ой муддати ўтган карточкалар\"",
+      "title": "Савол беринг",
+      "placeholder": "Масалан: бу ой муддати ўтган карталар",
       "action": "Сўраш",
       "pending": "Савол ўқилмоқда…",
       "apply": "Филтрни қўллаш",
@@ -1352,7 +1352,7 @@
       "resultNoFilter": "Буни филтрга айлантириб бўлмади — бошқача сўраб кўринг.",
       "errors": {
         "invalid": "Саволни текшириб, қайта уриниб кўринг",
-        "forbidden": "Бу функсия ўчирилган ёки AI бюджети тугаган",
+        "forbidden": "Савол бериш ўчирилган ёки AI бюджети тугаган",
         "failed": "AI бу сафар жавоб бера олмади"
       }
     },
@@ -1360,14 +1360,14 @@
       "placeholder": "assignee:@me status:active due:<today",
       "apply": "Қўллаш",
       "clear": "Тозалаш",
-      "since": "Бошланиши",
-      "until": "Тугаши",
+      "since": "Қайси санадан",
+      "until": "Қайси санагача",
       "activeTerms": "Филтрлар:",
-      "removeTerm": "\"{term}\" филтрини олиб ташлаш",
+      "removeTerm": "«{term}» филтрини олиб ташлаш",
       "dateRange": "Давр:",
       "presetDays": "Охирги {count} кун",
-      "showAdvanced": "Кенгайтирилган",
-      "hideAdvanced": "Кенгайтирилганни яшириш"
+      "showAdvanced": "Қўшимча",
+      "hideAdvanced": "Қўшимчани яшириш"
     },
     "savedFilters": {
       "title": "Сақланган филтрлар",
@@ -1375,100 +1375,100 @@
       "namePlaceholder": "Филтр номи",
       "save": "Сақлаш",
       "delete": "Ўчириш",
-      "shared": "Бўлим билан бўлишилган",
+      "shared": "Бутун бошқармага очиқ",
       "empty": "Ҳали сақланган филтр йўқ"
     },
     "actions": {
-      "export": "Экспорт",
-      "exportCsv": "CSV форматида юклаб олиш",
-      "exportPng": "Расм сифатида юклаб олиш",
+      "export": "Юклаб олиш",
+      "exportCsv": "CSV юклаб олиш",
+      "exportPng": "Расм юклаб олиш",
       "pin": "Бош саҳифага маҳкамлаш",
-      "unpin": "Маҳкамлашни бекор қилиш",
-      "viewAsTable": "Жадвал кўринишида кўриш",
-      "viewAsChart": "Диаграмма кўринишида кўриш"
+      "unpin": "Маҳкамлашни олиб ташлаш",
+      "viewAsTable": "Жадвал кўриниши",
+      "viewAsChart": "Диаграмма кўриниши"
     },
     "legend": {
       "open": "Очиқ",
       "overdue": "Муддати ўтган",
       "done": "Бажарилган",
-      "yes": "Келаман",
-      "no": "Келмайман",
+      "yes": "Бораман",
+      "no": "Бормайман",
       "maybe": "Балки",
-      "waitlist": "Кутиш рўйхатида",
+      "waitlist": "Навбатда",
       "unassigned": "Бўлимсиз"
     },
     "sections": {
       "throughput": {
-        "title": "Ҳафталик бажарилган топшириқлар",
-        "question": "Ҳар ҳафта нечта топшириқ якунланди?",
-        "empty": "Ҳали якунланган топшириқлар йўқ"
+        "title": "Ҳафтада бажарилган карталар",
+        "question": "Ҳар ҳафта нечта карта якунланди?",
+        "empty": "Ҳали якунланган карта йўқ"
       },
       "onTimeRate": {
-        "title": "Ўз вақтида бажарилиш даражаси",
-        "question": "Топшириқлар муддатида бажарилйаптими?",
+        "title": "Муддатида бажарилиш улуши",
+        "question": "Карталар муддатида бажариляптими?",
         "overall": "Умумий: {percent}%",
-        "empty": "Баҳолаш учун етарли маълумот йўқ",
+        "empty": "Баҳолаш учун ҳали етарли рақам йўқ",
         "overallDenominator": "(танланган даврда муддати келган {due} тадан {onTime} таси)"
       },
       "openVsOverdue": {
-        "title": "Очиқ ва муддати ўтган топшириқлар",
-        "question": "Очиқ ишларнинг қанчаси муддатидан чиқиб кетган?",
-        "empty": "Ҳозирча очиқ топшириқлар йўқ"
+        "title": "Очиқ ва муддати ўтган карталар",
+        "question": "Очиқ ишларнинг қанчаси кечиккан?",
+        "empty": "Очиқ карта йўқ"
       },
       "loadPerPerson": {
         "title": "Ходимлар бўйича юклама",
         "question": "Ҳозир кимнинг устида қанча иш бор?",
-        "empty": "Ҳозирча ҳеч кимга топшириқ бириктирилмаган"
+        "empty": "Ҳеч кимга карта бириктирилмаган"
       },
       "loadPerUnit": {
         "title": "Бўлимлар бўйича юклама",
         "question": "Қайси бўлим энг банд?",
-        "empty": "Ҳозирча бўлимлар бўйича маълумот йўқ"
+        "empty": "Бўлимларга бириктирилган карта йўқ"
       },
       "projectProgress": {
-        "title": "Лойиҳалар бўйича жараён",
+        "title": "Лойиҳаларнинг бажарилиши",
         "question": "Ҳар бир лойиҳа қай даражада бажарилган?",
-        "empty": "Ҳали лойиҳалар йўқ"
+        "empty": "Ҳали лойиҳа йўқ"
       },
       "eventsParticipation": {
         "title": "Тадбирларда иштирок",
-        "question": "Тадбирларга қандай жавоб беришмоқда?",
-        "empty": "Бу даврда тадбирлар йўқ"
+        "question": "Тадбирларга қандай жавоб бериляпти?",
+        "empty": "Бу даврда тадбир бўлмаган"
       },
       "pollTurnout": {
         "title": "Сўровномаларда қатнашиш",
-        "question": "Сўровномаларга қанча киши овоз берди?",
-        "empty": "Ҳали сўровномалар йўқ"
+        "question": "Ҳар бир сўровномада нечта ходим овоз берди?",
+        "empty": "Ҳали сўровнома йўқ"
       },
       "personal": {
-        "title": "Шахсий кўрсаткичларим",
-        "question": "Менинг ишларим қандай кетйапти?",
-        "empty": "Ҳозирча шахсий кўрсаткичлар йўқ"
+        "title": "Кўрсаткичларим",
+        "question": "Менинг ишларим қандай кетяпти?",
+        "empty": "Ҳозирча кўрсаткич йиғилмаган"
       }
     },
     "personal": {
       "open": "Очиқ",
       "overdue": "Муддати ўтган",
       "doneThisWeek": "Шу ҳафта бажарилган",
-      "onTimeRate": "Бажарилганларнинг ўз вақтидалиги",
-      "focusMinutes": "Фокус дақиқалари",
-      "upcomingEvents": "Яқинлашиб келаётган тадбирлар"
+      "onTimeRate": "Муддатида бажарилгани",
+      "focusMinutes": "Диққат дақиқалари",
+      "upcomingEvents": "Яқин тадбирлар"
     },
     "empty": {
       "title": "Ҳали таҳлил қиладиган нарса йўқ",
-      "body": "Топшириқлар ва тадбирлар пайдо бўлгач, бу ерда ҳисоботлар кўринади."
+      "body": "Карталар ва тадбирлар пайдо бўлгач, ҳисоботлар шу ерда кўринади."
     },
     "pinDialog": {
       "title": "Бош саҳифага маҳкамлаш",
       "titlePlaceholder": "Диаграмма номи",
       "confirm": "Маҳкамлаш"
     },
-    "chartEmpty": "Ҳозирча маълумот йўқ"
+    "chartEmpty": "Бу давр учун рақам йўқ"
   },
   "automations": {
     "eyebrow": "АВТОМАТЛАШТИРИШ",
     "title": "Қоидалар",
-    "description": "«Шундай бўлса — шуни қил». Такрорланувчи қўл меҳнатини қоидага айлантиринг.",
+    "description": "«Шундай бўлса — шундай қилинсин». Такрорланувчи қўл меҳнатини қоидага айлантиринг.",
     "create": "Қоида қўшиш",
     "newTitle": "Янги қоида",
     "created": "Қоида қўшилди",
@@ -1499,10 +1499,10 @@
       "edit": "{name} қоидасини таҳрирлаш",
       "duplicate": "{name} қоидасидан нусха олиш",
       "copyOf": "{name} — нусха",
-      "suppressed": "Қоида ҳозир ўчирилган — қуйидаги {count} та ишга тушиш у ёқилган пайтда бўлган, янги карталар учун ҳеч нарса бажарилмайди."
+      "suppressed": "Қоида ҳозир ўчирилган — бу {count} та ишга тушиш у ёқилган пайтда бўлган; янги карталар учун ҳеч нарса бажарилмайди."
     },
     "trigger": {
-      "cardCreated": "Карта яратилганда",
+      "cardCreated": "Карта қўшилганда",
       "cardStatusChanged": "Ҳолати ўзгарганда",
       "cardAssigned": "Карта бириктирилганда",
       "cardDueSoon": "Муддати яқинлашганда",
@@ -1516,8 +1516,8 @@
       "notifyUser": "ходимга хабар бериш",
       "notifyHead": "бошлиққа хабар бериш",
       "setStatus": "ҳолатини ўзгартириш",
-      "addChecklist": "текшириш рўйхатини қўшиш",
-      "createFollowup": "давоми учун карта яратиш"
+      "addChecklist": "бажариш рўйхатини қўшиш",
+      "createFollowup": "давоми учун карта қўшиш"
     },
     "builder": {
       "nameLabel": "Қоида номи",
@@ -1528,7 +1528,7 @@
       "toStatusLabel": "Қайси ҳолатга ўтганда",
       "anyStatus": "Ҳар қандай ҳолат",
       "daysAheadLabel": "Неча кун олдин",
-      "daysAheadHint": "1 дан 14 кунгача.",
+      "daysAheadHint": "1 кундан 14 кунгача.",
       "fieldLabel": "Қайси майдон",
       "field": {
         "priority": "Муҳимлик",
@@ -1549,10 +1549,10 @@
       "labelLabel": "Ёрлиқ",
       "chooseLabel": "Ёрлиқни танланг",
       "statusLabel": "Ҳолат",
-      "checklistLabel": "Текшириш рўйхати",
+      "checklistLabel": "Бажариш рўйхати",
       "checklistHint": "Ҳар бир банд — алоҳида қатор.",
       "followupTitle": "Янги карта номи",
-      "followupDueInDays": "Неча кунда",
+      "followupDueInDays": "Неча кундан кейин",
       "invalid": "Қоида тўлиқ эмас — майдонларни текширинг."
     },
     "run": {
@@ -1589,14 +1589,14 @@
     "runsPage": {
       "previous": "Олдинги",
       "next": "Кейинги",
-      "of": "{pages} саҳифадан {page} чиси"
+      "of": "{pages} саҳифадан {page}-си"
     },
-    "forbiddenAction": "Ишларни кўриш"
+    "forbiddenAction": "Доскани очиш"
   },
   "calendar": {
-    "title": "Календар",
-    "eyebrow": "РЕЖА ВА ЭСЛАТМАЛАР",
-    "description": "Тадбирлар ва карточка муддатлари — бир жойда, телефонингиздаги календарда ва эслатмаларда.",
+    "title": "Тақвим",
+    "eyebrow": "ТАҚВИМ",
+    "description": "Тадбирлар ва карта муддатлари бир жойда — телефонингиздаги тақвимда ва эслатмаларда.",
     "tabs": {
       "agenda": "Кун тартиби",
       "feeds": "Обуналар",
@@ -1608,19 +1608,19 @@
       "copy": "Нусха олиш",
       "copied": "Нусха олинди",
       "open": "Очиш",
-      "undo": "Қайтариш"
+      "undo": "Бекор қилиш"
     },
     "forbidden": {
       "title": "Бу саҳифа сиз учун очиқ эмас",
-      "body": "Календар обуналари шахсий. Ҳисобингизга кирганингизни текширинг."
+      "body": "Тақвим обуналари шахсий. Ўз ҳисобингизга кирганингизни текширинг."
     },
     "offline": {
       "title": "Алоқа йўқ",
-      "body": "Интернет тикланганда кун тартиби ўзи янгиланади."
+      "body": "Алоқа тиклангач кун тартиби ўзи янгиланади."
     },
     "agenda": {
       "title": "Яқин кунлар",
-      "description": "Сизнинг тадбирларингиз ва муддати келаётган карточкаларингиз.",
+      "description": "Тадбирларингиз ва муддати яқинлашган карталарингиз.",
       "range": {
         "label": "Давр",
         "week": "7 кун",
@@ -1629,7 +1629,7 @@
       },
       "kind": {
         "event": "Тадбир",
-        "card": "Карточка"
+        "card": "Карта"
       },
       "today": "Бугун",
       "tomorrow": "Эртага",
@@ -1637,7 +1637,7 @@
       "allDay": "Кун бўйи",
       "empty": {
         "title": "Яқин кунларда ҳеч нарса йўқ",
-        "body": "Тадбир яратинг ёки карточкага муддат қўйинг — бу ерда кўринади.",
+        "body": "Тадбир қўшинг ёки картага муддат белгиланг — шу ерда кўринади.",
         "action": "Тадбирларга ўтиш"
       },
       "loading": {
@@ -1645,39 +1645,39 @@
       },
       "error": {
         "title": "Кун тартибини очиб бўлмади",
-        "body": "Уланишда муаммо бўлди. Қайта уриниб кўринг."
+        "body": "Алоқа узилди. Қайта уриниб кўринг."
       }
     },
     "feeds": {
-      "title": "Календар обуналари",
-      "description": "Махфий ҳавола орқали WorkPortal календарингизни телефонингизга ёки Outlookка уланг.",
-      "secretWarning": "Бу ҳавола — калит. Ҳаволага эга ҳар ким сизнинг тадбирларингиз ва муддатларингизни кўра олади. Уни фақат ўзингизнинг иловангизга қўйинг.",
+      "title": "Тақвим обуналари",
+      "description": "Махфий ҳавола орқали WorkPortal тақвимингизни телефонингизга ёки Outlookка уланг.",
+      "secretWarning": "Бу ҳавола — калит. Ҳаволага эга ҳар ким тадбирларингиз ва муддатларингизни кўра олади. Уни фақат ўз иловангизга киритинг.",
       "create": {
         "title": "Янги обуна",
         "label": "Номи",
-        "labelPlaceholder": "Масалан: iPhone календари",
+        "labelPlaceholder": "Масалан: iPhone тақвими",
         "kind": "Нималар кирсин",
-        "submit": "Обуна яратиш",
-        "creating": "Яратилмоқда…"
+        "submit": "Обуна қўшиш",
+        "creating": "Қўшилмоқда…"
       },
       "kind": {
         "all": "Ҳаммаси",
         "events": "Фақат тадбирлар",
-        "tasks": "Фақат карточка муддатлари",
-        "allHelp": "Тадбирлар ҳам, муддати бор карточкалар ҳам.",
+        "tasks": "Фақат карта муддатлари",
+        "allHelp": "Тадбирлар ҳам, муддати бор карталар ҳам.",
         "eventsHelp": "Фақат сиз қатнашадиган тадбирлар.",
-        "tasksHelp": "Фақат сизга бириктирилган, муддати бор карточкалар."
+        "tasksHelp": "Фақат сизга бириктирилган, муддати бор карталар."
       },
       "url": {
         "https": "Ҳавола (https)",
         "webcal": "Webcal ҳаволаси",
         "caldav": "CalDAV ҳаволаси",
         "httpsHelp": "Google Calendar → «URL орқали қўшиш» учун.",
-        "webcalHelp": "iPhone, Apple Calendar ва Outlook учун — босилганда календар иловаси очилади.",
+        "webcalHelp": "iPhone, Apple Calendar ва Outlook учун — босилганда тақвим иловаси очилади.",
         "caldavHelp": "DAVx5, Thunderbird ва Evolution учун. Фақат ўқиш."
       },
       "meta": {
-        "created": "Яратилган {date}",
+        "created": "Қўшилган {date}",
         "rotated": "Янгиланган {date}",
         "lastAccessed": "Охирги марта ўқилган {date}",
         "neverAccessed": "Ҳали бир марта ҳам ўқилмаган",
@@ -1685,9 +1685,9 @@
       },
       "rotate": {
         "action": "Ҳаволани янгилаш",
-        "confirmTitle": "Ҳаволани янгилаймизми?",
-        "confirmBody": "Эски ҳавола шу заҳоти ишламай қолади. Янги ҳаволани календар иловангизга қайтадан қўйишингиз керак бўлади.",
-        "confirm": "Ҳа, янгилансин",
+        "confirmTitle": "Ҳавола янгилансинми?",
+        "confirmBody": "Эски ҳавола шу заҳоти ишламай қолади. Янги ҳаволани тақвим иловангизга қайтадан киритишингиз керак бўлади.",
+        "confirm": "Янгилаш",
         "cancel": "Бекор қилиш",
         "toast": "Ҳавола янгиланди"
       },
@@ -1698,36 +1698,36 @@
       "copyToast": "Ҳавола нусхаланди",
       "empty": {
         "title": "Ҳали обуна йўқ",
-        "body": "Обуна яратинг — тадбирларингиз телефонингиздаги календарда ҳам кўринади.",
-        "action": "Обуна яратиш"
+        "body": "Обуна қўшинг — тадбирларингиз телефонингиздаги тақвимда ҳам кўринади.",
+        "action": "Обуна қўшиш"
       },
       "loading": {
         "title": "Обуналар юкланмоқда"
       },
       "error": {
         "title": "Обуналарни очиб бўлмади",
-        "body": "Уланишда муаммо бўлди. Қайта уриниб кўринг."
+        "body": "Алоқа узилди. Қайта уриниб кўринг."
       }
     },
     "push": {
       "title": "Браузер эслатмалари",
-      "description": "Муддат яқинлашганда ёки сизни эслатиб ўтишганда — WorkPortal очиқ бўлмаса ҳам хабар келади.",
+      "description": "Муддат яқинлашганда ёки сизни белгилашганда хабар келади — WorkPortal очиқ бўлмаса ҳам.",
       "what": {
         "title": "Нима учун хабар келади",
-        "mentioned": "Изоҳда сизни эслатиб ўтишса",
-        "assigned": "Сизга карточка бириктирилса",
-        "due": "Карточка муддати яқинлашса",
+        "mentioned": "Изоҳда сизни белгилашса",
+        "assigned": "Сизга карта бириктирилса",
+        "due": "Карта муддати яқинлашса",
         "decision": "Сиздан қарор кутилса"
       },
       "quietHours": {
-        "note": "Тинч соатларингизда хабар келмайди — кириш қутиси созламаларидаги вақтга бўйсунади."
+        "note": "Тинч соатларингизда хабар келмайди — билдиришнома созламаларингиздаги вақт қўлланади."
       },
       "enable": "Эслатмаларни ёқиш",
       "enabling": "Ёқилмоқда…",
       "disable": "Бу қурилмада ўчириш",
       "state": {
         "on": "Бу қурилмада ёқилган",
-        "off": "Бу қурилмада ўчирилган"
+        "off": "Бу қурилмада ўчиқ"
       },
       "devices": {
         "title": "Уланган қурилмалар",
@@ -1738,11 +1738,11 @@
       },
       "unsupported": {
         "title": "Бу браузер эслатмаларни қўлламайди",
-        "body": "Chrome, Edge ёки Firefoxнинг янги версиясидан фойдаланинг. iPhoneʼда WorkPortalни аввал «Бош экранга қўшиш» керак."
+        "body": "Chrome, Edge ёки Firefoxнинг янги версиясидан фойдаланинг. iPhone учун аввал WorkPortalни бош экранга қўшинг."
       },
       "denied": {
-        "title": "Браузер эслатмаларни блоклаган",
-        "body": "Манзил сатридаги қулф белгисини босинг ва бу сайт учун билдиришномаларга рухсат беринг, сўнг қайтадан уриниб кўринг."
+        "title": "Браузер билдиришномаларни тўсиб қўйган",
+        "body": "Манзил сатридаги қулф белгисини босинг, бу сайт учун билдиришномаларга рухсат беринг ва қайта уриниб кўринг."
       },
       "disabledOnServer": {
         "title": "Бу серверда эслатмалар созланмаган",
@@ -1758,17 +1758,17 @@
       },
       "error": {
         "title": "Созламаларни очиб бўлмади",
-        "body": "Уланишда муаммо бўлди. Қайта уриниб кўринг."
+        "body": "Алоқа узилди. Қайта уриниб кўринг."
       }
     },
     "addTo": {
-      "label": "Календарга қўшиш",
+      "label": "Тақвимга қўшиш",
       "google": "Google Calendar",
-      "outlook": "Outlook.com",
+      "outlook": "Outlook.cом",
       "office365": "Microsoft 365",
       "yahoo": "Yahoo Calendar",
       "ics": "Файл (.ics)",
-      "hint": "Тадбирни ўз календарингизга кўчиради.",
+      "hint": "Тадбирни ўз тақвимингизга кўчиради.",
       "error": "Ҳаволаларни тайёрлаб бўлмади"
     }
   },
@@ -2032,44 +2032,44 @@
   "events": {
     "title": "Тадбирлар",
     "eyebrow": "ТАДБИРЛАР",
-    "description": "Бўлим биргаликда қиладиган ҳар бир ишни режалаштиринг, иштирокни белгиланг.",
+    "description": "Бошқарма бирга қиладиган ишларни режалаштиринг ва иштирокни белгиланг.",
     "view": {
       "list": "Рўйхат",
       "calendar": "Тақвим"
     },
     "actions": {
-      "create": "Тадбир яратиш",
+      "create": "Тадбир қўшиш",
       "edit": "Таҳрирлаш",
       "save": "Сақлаш",
       "cancelEvent": "Тадбирни бекор қилиш",
-      "moreActions": "Қўшимча амаллар",
+      "moreActions": "Яна амаллар",
       "close": "Ёпиш",
       "retry": "Қайта уриниш",
       "back": "Орқага",
       "undo": "Бекор қилиш"
     },
     "empty": {
-      "title": "Ҳозирча тадбирлар йўқ",
-      "body": "Жамоангиз учун биринчи тадбирни шу ерда яратинг.",
-      "action": "Тадбир яратиш"
+      "title": "Ҳали тадбир йўқ",
+      "body": "Биринчи тадбирни қўшинг — ҳамма шу ерда иштирокини белгилайди.",
+      "action": "Тадбир қўшиш"
     },
     "loading": {
       "title": "Тадбирлар юкланмоқда"
     },
     "error": {
       "title": "Тадбирларни юклаб бўлмади",
-      "body": "Нимадир хато кетди. Қайта уриниб кўринг."
+      "body": "Алоқа узилди. Қайта уриниб кўринг."
     },
     "forbidden": {
-      "title": "Рухсат йўқ",
-      "body": "Тадбирларни кўриш учун бўлим аъзоси бўлишингиз керак."
+      "title": "Тадбирлар бошқарма ходимлари учун",
+      "body": "Тадбирларни бошқарма ходимлари кўради. Керак бўлса, бошқарма бошлиғига мурожаат қилинг."
     },
     "offline": {
       "title": "Алоқа йўқ",
-      "body": "Интернет тикланганда тадбирлар рўйхати янгиланади."
+      "body": "Алоқа тиклангач тадбирлар рўйхати янгиланади."
     },
     "category": {
-      "team_building": "Жамоа қуриш",
+      "team_building": "Жамоани жипслаштириш",
       "sports": "Спорт",
       "volunteering": "Кўнгиллилик",
       "social": "Ижтимоий",
@@ -2088,9 +2088,9 @@
       "organizer": "Ташкилотчи: {name}",
       "going": "{count} киши боради",
       "waitlisted": "{count} киши навбатда",
-      "capacity": "{going} / {capacity} жой",
+      "capacity": "{going}/{capacity} жой",
       "unlimitedCapacity": "Жойлар сони чекланмаган",
-      "deadline": "Рўйхатдан ўтиш: {date}",
+      "deadline": "Жавоб муддати: {date}",
       "cancelledBanner": "Бу тадбир бекор қилинди",
       "cancelledReason": "Сабаб: {reason}",
       "doneBanner": "Бу тадбир якунланди",
@@ -2102,22 +2102,22 @@
       "today": "Бугун"
     },
     "form": {
-      "stepBasics": "Асосий маълумот",
+      "stepBasics": "Асосий",
       "stepSchedule": "Вақт ва манзил",
       "stepCapacity": "Жойлар ва эслатмалар",
       "stepBack": "Орқага",
       "stepNext": "Кейингиси",
-      "aiIdeaLabel": "Бир қаторли идея",
+      "aiIdeaLabel": "Бир қаторли фикр",
       "aiIdeaPlaceholder": "Масалан, кейинги ойда боғда жамоавий пикник",
       "aiDraftButton": "AI билан қоралама тузиш",
       "aiDraftPending": "Қоралама тузилмоқда…",
       "aiDraftFailed": "Тадбир қораламасини тузиб бўлмади",
       "aiDraftAccept": "Шу қораламадан фойдаланиш",
       "aiDraftEdit": "Фойдаланиб, таҳрирлаш",
-      "aiDraftDiscard": "Рад этиш",
+      "aiDraftDiscard": "Керак эмас",
       "aiDraftChecklist": "Таклиф қилинган рўйхат",
       "aiDraftPoll": "Таклиф қилинган сўровнома вариантлари: {options}",
-      "aiDraftFollowUp": "Рўйхат, сўровнома ва бирга бориш режасини тадбирни яратгандан кейин унинг саҳифасида қўшинг.",
+      "aiDraftFollowUp": "Рўйхат, сўровнома ва бирга боришни тадбир қўшилгандан кейин унинг саҳифасида созлайсиз.",
       "titleLabel": "Тадбир номи",
       "titlePlaceholder": "Масалан, кузги жамоавий пикник",
       "descriptionLabel": "Тавсиф",
@@ -2126,23 +2126,23 @@
       "startsAtLabel": "Бошланиш вақти",
       "endsAtLabel": "Тугаш вақти",
       "placeLabel": "Манзил",
-      "placePlaceholder": "Масалан, бўлим йиғилишлар зали",
+      "placePlaceholder": "Масалан, бошқарма йиғилишлар зали",
       "placeUrlLabel": "Манзил ҳаволаси",
       "capacityLabel": "Жойлар сони",
       "capacityPlaceholder": "Чекланмаган",
       "waitlistEnabledLabel": "Жойлар тугаса навбат очилсин",
-      "rsvpDeadlineLabel": "Рўйхатдан ўтиш муддати",
+      "rsvpDeadlineLabel": "Жавоб муддати",
       "costNoteLabel": "Харажат ҳақида эслатма",
-      "costNotePlaceholder": "Масалан, транспорт бўлим ҳисобидан",
+      "costNotePlaceholder": "Масалан, транспорт бошқарма ҳисобидан",
       "remindersLabel": "Эслатмалар",
       "reminderDayBefore": "1 кун олдин",
       "reminderHourBefore": "1 соат олдин",
-      "submitCreate": "Тадбирни яратиш",
+      "submitCreate": "Тадбирни қўшиш",
       "submitUpdate": "Ўзгаришларни сақлаш",
       "validation": {
-        "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлиши керак"
+        "endsBeforeStarts": "Тугаш вақти бошланиш вақтидан кейин бўлсин."
       },
-      "aiDraftCarpool": "Йўл-йўриқ",
+      "aiDraftCarpool": "Йўл",
       "aiDraftPickDate": "Қайси санани оламиз?"
     },
     "diff": {
@@ -2160,18 +2160,18 @@
     },
     "cancelDialog": {
       "title": "Тадбирни бекор қилиш",
-      "body": "\"{title}\" бекор қилинади ва рўйхатдан ўтган {count} кишига хабар боради. Бу амални ортга қайтариб бўлмайди.",
+      "body": "«{title}» бекор қилинади ва иштирокини белгилаган {count} кишига хабар боради. Буни ортга қайтариб бўлмайди.",
       "reasonLabel": "Сабаб",
-      "reasonPlaceholder": "Ходимларга тушунтиринг",
-      "confirm": "Ҳа, бекор қилиш",
-      "keepEvent": "Йўқ, сақлаб қолиш"
+      "reasonPlaceholder": "Ходимларга нима бўлганини тушунтиринг",
+      "confirm": "Тадбирни бекор қилиш",
+      "keepEvent": "Сақлаб қолиш"
     },
     "rsvp": {
       "title": "Иштирок этасизми?",
       "status": {
-        "yes": "Ҳа, бораман",
+        "yes": "Бораман",
         "no": "Бормайман",
-        "maybe": "Эҳтимол",
+        "maybe": "Балки",
         "waitlist": "Навбатда"
       },
       "guestsLabel": "Меҳмонлар сони",
@@ -2179,12 +2179,12 @@
       "notePlaceholder": "Масалан, аллергия ёки бошқа эслатма",
       "submit": "Юбориш",
       "update": "Янгилаш",
-      "deadlinePassed": "Рўйхатдан ўтиш муддати тугаган",
-      "eventFull": "Жойлар тўлган, навбатга ёзилдингиз",
+      "deadlinePassed": "Жавоб муддати тугаган",
+      "eventFull": "Жойлар тўлган — навбатга ёзилдингиз",
       "confirmedToast": "Иштирокингиз қайд этилди",
       "waitlistedToast": "Жойлар тўлган — навбатга қўйилдингиз",
       "cancelledToast": "Иштирокингиз бекор қилинди",
-      "myStatus": "Сизнинг жавобингиз: {status}",
+      "myStatus": "Жавобингиз: {status}",
       "notYet": "Ҳали жавоб бермадингиз"
     },
     "attendees": {
@@ -2201,24 +2201,24 @@
       "submit": "Юбориш",
       "delete": "Ўчириш",
       "deleteConfirm": "Изоҳни ўчирмоқчимисиз?",
-      "summarize": "Муҳокамани қисқача ифодалаш",
-      "summaryPending": "Қисқача баён тузилмоқда…",
-      "summaryFailed": "Муҳокамани қисқача баён қилиб бўлмади",
+      "summarize": "Қисқача хулоса",
+      "summaryPending": "Хулоса тайёрланмоқда…",
+      "summaryFailed": "Муҳокамадан хулоса чиқариб бўлмади",
       "summaryAccept": "Изоҳга қўшиш",
       "summaryEdit": "Қўшиб, таҳрирлаш",
-      "summaryDiscard": "Рад этиш",
+      "summaryDiscard": "Керак эмас",
       "viewerFallback": "Сиз"
     },
     "carpool": {
       "title": "Бирга бориш",
-      "empty": "Ҳозирча бирга бориш таклифлари йўқ",
+      "empty": "Ҳали машина таклиф қилинмаган",
       "offer": "Машина таклиф қилиш",
       "seatsLabel": "Бўш ўриндиқлар",
       "departurePlaceLabel": "Жўнаш нуқтаси",
       "departureAtLabel": "Жўнаш вақти",
       "noteLabel": "Изоҳ",
       "driver": "Ҳайдовчи: {name}",
-      "seatsTaken": "{claimed} / {seats} ўрин банд",
+      "seatsTaken": "{claimed}/{seats} ўрин банд",
       "claim": "Ўрин банд қилиш",
       "release": "Воз кечиш",
       "waitlisted": "Навбатда",
@@ -2231,7 +2231,7 @@
     },
     "items": {
       "title": "Ким нима олиб келади",
-      "empty": "Ҳозирча буюмлар рўйхати бўш",
+      "empty": "Рўйхат ҳали бўш",
       "add": "Буюм қўшиш",
       "labelPlaceholder": "Масалан, чой-пой",
       "quantityLabel": "Миқдори",
@@ -2244,7 +2244,7 @@
     "polls": {
       "title": "Сўровномалар",
       "empty": "Ҳозирча сўровнома йўқ",
-      "create": "Сўровнома яратиш",
+      "create": "Сўровнома қўшиш",
       "kindLabel": "Тури",
       "kind": {
         "date": "Сана танлаш",
@@ -2266,12 +2266,12 @@
       "voteRevertedToast": "Аввалги овозингиз тикланди",
       "totalVotes": "{count} та овоз",
       "closed": "Якунланган",
-      "yourVote": "Сизнинг овозингиз",
-      "createdBy": "Яратди: {name}"
+      "yourVote": "Овозингиз",
+      "createdBy": "Қўшди: {name}"
     },
     "photos": {
-      "title": "Фотосуратлар",
-      "empty": "Ҳозирча фотосурат йўқ",
+      "title": "Суратлар",
+      "empty": "Ҳали сурат йўқ",
       "add": "Ҳавола қўшиш",
       "urlLabel": "Расм ҳаволаси",
       "captionLabel": "Изоҳ (ихтиёрий)",
@@ -2285,14 +2285,14 @@
       "anonymousLabel": "Аноним қолдириш",
       "submit": "Юбориш",
       "update": "Янгилаш",
-      "average": "Ўртача баҳо: {rating} / 5",
-      "yours": "Сизнинг баҳойингиз",
+      "average": "Ўртача баҳо: {rating}/5",
+      "yours": "Баҳойингиз",
       "anonymousAuthor": "Аноним",
       "thankYou": "Фикрингиз учун раҳмат"
     },
     "ics": {
-      "exportEvent": "Тақвимга қўшиш (.иcс)",
-      "exportMine": "Менинг тадбирларим (.иcс)"
+      "exportEvent": "Тақвимга қўшиш (.ics)",
+      "exportMine": "Тадбирларим (.ics)"
     },
     "tabs": {
       "overview": "Умумий",
@@ -2300,13 +2300,13 @@
       "carpool": "Бирга бориш",
       "items": "Буюмлар",
       "polls": "Сўровномалар",
-      "photos": "Фотосуратлар",
+      "photos": "Суратлар",
       "feedback": "Фикр",
       "comments": "Муҳокама"
     },
     "filters": {
-      "from": "Бошланиш",
-      "to": "Тугаш"
+      "from": "Қайси санадан",
+      "to": "Қайси санагача"
     }
   },
   "fields": {
@@ -2494,7 +2494,7 @@
   "inbox": {
     "title": "Билдиришномалар",
     "eyebrow": "ХАБАРЛАР",
-    "markAllRead": "Барчасини ўқилган деб белгилаш",
+    "markAllRead": "Ҳаммасини ўқилган деб белгилаш",
     "groupByReason": "Сабаби бўйича гуруҳлаш",
     "calendarLink": "Тақвим ҳаволаси",
     "viewMenu": {
@@ -2507,21 +2507,21 @@
     },
     "empty": {
       "inbox": {
-        "title": "Ҳаммаси текширилди",
-        "body": "Ҳозирча эътибор талаб қиладиган нарса йўқ. Хотиржам бўлинг."
+        "title": "Ҳаммаси кўриб чиқилган",
+        "body": "Ҳозирча жавобингизни кутаётган билдиришнома йўқ."
       },
       "unread": {
-        "title": "Ўқилмаган нарса йўқ",
-        "body": "Барча билдиришномаларни кўриб чиқдингиз."
+        "title": "Ўқилмаган билдиришнома йўқ",
+        "body": "Ҳаммасини ўқиб чиқдингиз."
       },
       "archived": {
-        "title": "Архивланган билдиришнома йўқ",
-        "body": "Архивлаган билдиришномаларингиз шу ерда кўринади."
+        "title": "Архивда билдиришнома йўқ",
+        "body": "Архивга олган билдиришномаларингиз шу ерда туради."
       }
     },
     "reason": {
       "assigned": "Топшириқ",
-      "mentioned": "Эслатиш",
+      "mentioned": "Белгилаш",
       "due": "Муддат",
       "updated": "Янгиланиш",
       "rsvp": "Иштирок",
@@ -2534,11 +2534,11 @@
     "channel": {
       "inapp": "Иловада",
       "telegram": "Telegram",
-      "email": "Электрон почта"
+      "email": "Э-почта"
     },
     "row": {
       "unread": "Ўқилмаган",
-      "archive": "Архивлаш",
+      "archive": "Архивга олиш",
       "archived": "Архивланди",
       "snooze": "Кечиктириш",
       "snoozed": "Кечиктирилди",
@@ -2559,41 +2559,41 @@
     },
     "preferences": {
       "title": "Билдиришнома созламалари",
-      "body": "Қандай билдиришномалар ва қаерга келишини танланг.",
+      "body": "Қайси билдиришнома қаерга келишини ўзингиз танланг.",
       "matrixTitle": "Тури ва канали бўйича",
       "reasonColumn": "Билдиришнома тури",
       "toggleAria": "{reason} — {channel} орқали",
-      "digestFrequency": "Хулоса частотаси",
+      "digestFrequency": "Хулоса даврийлиги",
       "digestMode": {
         "instant": "Дарҳол",
         "daily": "Ҳар куни",
         "weekly": "Ҳар ҳафта",
-        "off": "Ўчирилган"
+        "off": "Ўчиқ"
       },
       "quietHours": {
         "title": "Тинч соатлар",
-        "usingDepartmentDefault": "Бўлимнинг андозаси қўлланмоқда: {range}",
-        "usingPersonal": "Шахсий вақтингиз: {range}",
-        "start": "Бошланиши",
-        "end": "Тугаши",
-        "weekends": "Дам олиш кунларини ҳам қамраб олсин",
-        "tooLoud": "Бу оралиқ бўлим андозасидан камида шунча тинч бўлиши керак.",
-        "useDefault": "Бўлим андозасидан фойдаланиш"
+        "usingDepartmentDefault": "Бошқарма созламаси қўлланмоқда: {range}",
+        "usingPersonal": "Ўзингиз белгилаган вақт: {range}",
+        "start": "Қайси соатдан",
+        "end": "Қайси соатгача",
+        "weekends": "Дам олиш кунлари ҳам",
+        "tooLoud": "Бу оралиқ бошқарма белгилаган тинч соатларни тўлиқ қамраб олиши керак.",
+        "useDefault": "Бошқарма созламасига қайтиш"
       },
       "calendar": {
-        "title": "Тақвим лентаси",
+        "title": "Тақвим уланиши",
         "body": "Муддатларингиз ва тадбирларингизни исталган тақвим иловасига қўшинг.",
         "reveal": "Ҳаволани олиш",
         "copy": "Ҳаволани нусхалаш"
       },
       "save": "Сақлаш",
-      "saved": "Созламалар сақланди"
+      "saved": "Сақланди"
     }
   },
   "miniapp": {
     "title": "WorkPortal",
-    "devMode": "Намунавий режим — Телеграм эмас, браузер сеанси",
-    "noDepartment": "Бўлим танланмаган",
+    "devMode": "Демо режим — Telegram эмас, браузер ойнаси",
+    "noDepartment": "Бошқарма танланмаган",
     "action": {
       "back": "Орқага",
       "retry": "Қайта уриниш",
@@ -2609,8 +2609,8 @@
       "boardShort": "Доска",
       "events": "Тадбирлар",
       "eventsShort": "Тадбир",
-      "focus": "Фокус",
-      "focusShort": "Фокус"
+      "focus": "Диққат",
+      "focusShort": "Диққат"
     },
     "greeting": {
       "morning": "Хайрли тонг",
@@ -2623,20 +2623,20 @@
       "body": "Бу ерда кўрсатадиган нарса йўқ."
     },
     "error": {
-      "title": "Нимадир хато кетди",
-      "body": "Маълумотни юклаб бўлмади. Қайта уриниб кўринг."
+      "title": "Юклаб бўлмади",
+      "body": "Алоқа узилди. Қайта уриниб кўринг."
     },
     "offline": {
       "title": "Алоқа йўқ",
-      "body": "Интернет алоқаси узилган. Уланиш тикланганда қайта уриниб кўринг."
+      "body": "Алоқа тиклангач қайта уриниб кўринг."
     },
     "forbidden": {
-      "title": "Рухсат йўқ",
-      "body": "Бу саҳифа бўлим бошлиғи учун. Агар бу хато бўлса, бошлиғингизга мурожаат қилинг."
+      "title": "Бу саҳифа бошлиқ учун",
+      "body": "Бу саҳифани бошқарма бошлиғи кўради. Хато бўлса, бошлиғингизга айтинг."
     },
     "unlinked": {
       "title": "Ҳисоб уланмаган",
-      "body": "Телеграмингиз ҳали WorkPortal ҳисобига уланмаган. Сайтда «Телеграм» бўлимини очинг ва улаш кодини олинг."
+      "body": "Telegramингиз ҳали WorkPortal ҳисобига уланмаган. Сайтда «Telegram» бўлимини очинг ва улаш кодини олинг."
     },
     "due": {
       "today": "Бугун",
@@ -2657,13 +2657,13 @@
     },
     "reason": {
       "assigned": "Топширилди",
-      "mentioned": "Эслатилдингиз",
+      "mentioned": "Сизни белгилашди",
       "due": "Муддат",
       "updated": "Янгиланди",
       "rsvp": "Тадбир",
       "poll": "Сўровнома",
       "decision": "Қарор",
-      "digest": "Кунлик хулоса",
+      "digest": "Хулоса",
       "system": "Тизим"
     },
     "today": {
@@ -2684,12 +2684,12 @@
       "eyebrow": "{count} та ўқилмаган",
       "unread": "Янги",
       "markRead": "Ўқилди",
-      "markedRead": "Ўқилди деб белгиланди",
-      "markAllRead": "Ҳаммасини ўқилди деб белгилаш",
+      "markedRead": "Ўқилди",
+      "markAllRead": "Ҳаммасини ўқилган деб белгилаш",
       "allRead": "Ҳаммаси ўқилди",
-      "snooze": "Эртага",
+      "snooze": "Кечиктириш",
       "snoozed": "Эртага эслатилади",
-      "archive": "Архивлаш",
+      "archive": "Архивга олиш",
       "archived": "Архивланди",
       "actionFailed": "Амални бажариб бўлмади",
       "empty": {
@@ -2701,24 +2701,24 @@
       "title": "Доска",
       "viewAria": "Доска кўриниши",
       "mine": "Менинг устуним",
-      "team": "Бўлим",
-      "myCards": "Менинг карточкаларим",
+      "team": "Бошқарма",
+      "myCards": "Карталарим",
       "you": "сиз",
       "openCount": "{count} та очиқ",
       "overdueCount": "{count} та кечиккан",
-      "openTotal": "Бўлимда очиқ",
-      "overdueTotal": "Бўлимда кечиккан",
+      "openTotal": "Бошқармада очиқ",
+      "overdueTotal": "Бошқармада кечиккан",
       "empty": {
         "title": "Устунингиз бўш",
-        "body": "Сизга ҳали карточка бириктирилмаган. Бириктирилса, шу ерда пайдо бўлади."
+        "body": "Сизга ҳали карта бириктирилмаган. Бириктирилса, шу ерда пайдо бўлади."
       },
       "emptyTeam": {
-        "title": "Бўлим доскаси бўш",
-        "body": "Бўлимда ҳали очиқ карточка йўқ."
+        "title": "Бошқарма доскаси бўш",
+        "body": "Бошқармада ҳали очиқ карта йўқ."
       }
     },
     "card": {
-      "title": "Карточка",
+      "title": "Карта",
       "eyebrow": "Доска",
       "open": "Очиқ",
       "done": "Бажарилди",
@@ -2726,13 +2726,13 @@
       "markedDone": "Бажарилди",
       "reopen": "Қайта очиш",
       "reopened": "Қайта очилди",
-      "updateFailed": "Янгилаб бўлмади",
+      "updateFailed": "Картани янгилаб бўлмади",
       "noDescription": "Тавсиф ёзилмаган",
-      "readOnly": "Бу карточкани фақат ўқий оласиз.",
-      "checklist": "Назорат рўйхати",
+      "readOnly": "Бу картани фақат ўқий оласиз.",
+      "checklist": "Бажариш рўйхати",
       "comments": "Изоҳлар",
       "noComments": "Ҳали изоҳ йўқ",
-      "commentPlaceholder": "Изоҳ ёзинг…",
+      "commentPlaceholder": "Изоҳ ёзинг",
       "send": "Юбориш",
       "commentAdded": "Изоҳ қўшилди",
       "commentFailed": "Изоҳни юбориб бўлмади"
@@ -2740,10 +2740,10 @@
     "events": {
       "title": "Тадбирлар",
       "one": "Тадбир",
-      "eyebrow": "Бўлим тадбирлари",
+      "eyebrow": "ТАДБИРЛАР",
       "organizer": "Ташкилотчи: {name}",
-      "going": "{count} та боради",
-      "capacity": "{used} / {total} жой",
+      "going": "{count} киши боради",
+      "capacity": "{used}/{total} жой",
       "rsvpAria": "Жавобингиз",
       "rsvpFailed": "Жавобни сақлаб бўлмади",
       "cancelled": "Тадбир бекор қилинди",
@@ -2760,7 +2760,7 @@
       },
       "empty": {
         "title": "Режадаги тадбир йўқ",
-        "body": "Бўлимда яқин кунларда тадбир режалаштирилмаган."
+        "body": "Бошқармада яқин кунларда тадбир режалаштирилмаган."
       },
       "missing": {
         "title": "Тадбир топилмади",
@@ -2768,13 +2768,13 @@
       }
     },
     "carpool": {
-      "title": "Йўловчи олиш",
-      "seats": "{free} / {total} жой бўш",
+      "title": "Бирга бориш",
+      "seats": "{free}/{total} жой бўш",
       "claim": "Жой банд қилиш",
       "claimed": "Жой банд қилинди",
       "release": "Жойдан воз кечиш",
       "released": "Жой бўшатилди",
-      "empty": "Бу тадбирга машина таклиф қилинмаган.",
+      "empty": "Бу тадбирга ҳеч ким машина таклиф қилмаган.",
       "failed": "Жойни ўзгартириб бўлмади"
     },
     "polls": {
@@ -2788,46 +2788,46 @@
       "empty": "Бу тадбирда сўровнома йўқ."
     },
     "focus": {
-      "title": "Фокус",
-      "eyebrow": "Шахсий майдон",
+      "title": "Диққат вақти",
+      "eyebrow": "ШАХСИЙ",
       "start": "Бошлаш",
       "stop": "Тўхтатиш",
-      "reset": "Вақтни тиклаш",
+      "reset": "Қайтадан",
       "minutes": "{count} дақ",
-      "stats": "Фокус вақти",
+      "stats": "Диққат вақти",
       "today": "Бугун",
       "week": "Шу ҳафта",
       "phaseAria": "Босқич",
-      "ringAria": "{phase} босқичи қолдиғи",
-      "botNote": "Вақт тугаганда бот Телеграмда хабар беради. Вазифа номи ҳеч қачон юборилмайди.",
-      "alertNotLinked": "Телеграм уланмагани учун хабар юборилмади.",
-      "alertMuted": "Билдиришномалар ўчирилган — хабар юборилмади.",
+      "ringAria": "{phase} босқичида қолган вақт",
+      "botNote": "Вақт тугаганда бот Telegramда хабар беради. Вазифа номи ҳеч қачон юборилмайди.",
+      "alertNotLinked": "Telegram уланмагани учун хабар юборилмади.",
+      "alertMuted": "Билдиришномалар ўчиқ — хабар юборилмади.",
       "startFailed": "Бошлаб бўлмади",
       "saveFailed": "Сақлаб бўлмади",
       "phase": {
-        "focus": "Фокус",
+        "focus": "Диққат",
         "short_break": "Қисқа танаффус",
         "long_break": "Узоқ танаффус"
       }
     },
     "fields": {
-      "title": "Менинг маълумотларим",
-      "eyebrow": "Бўлим сўраган майдонлар",
+      "title": "Маълумотларим",
+      "eyebrow": "СЎРАЛГАН МАЙДОНЛАР",
       "requested": "Сўралди",
       "missing": "Тўлдирилмаган",
       "save": "Сақлаш",
       "saved": "Сақланди",
       "saveFailed": "Сақлаб бўлмади",
-      "readOnly": "Бу майдонни бўлим бошлиғи тўлдиради.",
+      "readOnly": "Бу майдонни бошқарма бошлиғи тўлдиради.",
       "yes": "Ҳа",
-      "numberInvalid": "Фақат рақам киритинг",
+      "numberInvalid": "Рақам киритинг.",
       "empty": {
         "title": "Сўралган майдон йўқ",
-        "body": "Бўлим сиздан ҳеч қандай маълумот сўрамаган."
+        "body": "Бошқарма сиздан ҳеч нарса сўрамаган."
       }
     },
     "setup": {
-      "title": "Телеграм созламаси",
+      "title": "Telegram созламалари",
       "bot": "Бот",
       "noBot": "Бот номи ҳали кўрсатилмаган. Буни тизим администратори қўшади.",
       "appUrl": "Мини илова манзили",
@@ -2837,7 +2837,7 @@
       "checklist": "Созлаш рўйхати",
       "done": "Тайёр",
       "todo": "Қолди",
-      "linkedSummary": "{total} ходимдан {linked} таси Телеграмни улаган · {groups} та гуруҳ уланган",
+      "linkedSummary": "{total} ходимдан {linked} таси Telegramни улаган · {groups} та гуруҳ уланган",
       "step": {
         "bot_token": {
           "title": "Бот токени қўйилган",
@@ -2860,7 +2860,7 @@
           "body": "Ҳар бир ходим ўз ҳисобини ўзи улайди — буни сиз улар учун қила олмайсиз."
         },
         "group_connected": {
-          "title": "Бўлим гуруҳи уланган",
+          "title": "Бошқарма гуруҳи уланган",
           "body": "Тадбир ва сўровнома эълонлари учун ботни гуруҳга қўшинг."
         }
       }
@@ -2868,53 +2868,53 @@
   },
   "pages": {
     "title": "Саҳифалар",
-    "eyebrow": "Билим базаси",
+    "eyebrow": "БИЛИМ",
     "create": "Янги саҳифа",
     "untitled": "Номсиз саҳифа",
     "newTitlePlaceholder": "Саҳифа номи",
     "kind": {
       "how_we_work": "Биз қандай ишлаймиз",
       "onboarding": "Мослашув",
-      "brief": "Қисқача маълумот",
+      "brief": "Қисқача",
       "note": "Қайд"
     },
     "empty": {
-      "title": "Ҳали саҳифалар йўқ",
-      "body": "Бўлимингиз учун биринчи саҳифани яратинг — масалан, \"Биз қандай ишлаймиз\"."
+      "title": "Ҳали саҳифа йўқ",
+      "body": "Биринчи саҳифани қўшинг — масалан, «Биз қандай ишлаймиз»."
     },
-    "backToList": "Саҳифалар рўйхатига қайтиш",
+    "backToList": "Саҳифаларга қайтиш",
     "delete": "Саҳифани ўчириш",
     "deleted": "Саҳифа ўчирилди",
     "editor": {
       "titlePlaceholder": "Сарлавҳа",
       "save": "Сақлаш",
       "saved": "Сақланди",
-      "autosaving": "Сақланмоқда...",
+      "autosaving": "Сақланмоқда…",
       "toolbar": {
         "bold": "Қалин",
-        "italic": "Қия",
+        "italic": "Курсив",
         "heading1": "Сарлавҳа 1",
         "heading2": "Сарлавҳа 2",
         "bulletList": "Белгили рўйхат",
         "orderedList": "Рақамли рўйхат",
-        "taskList": "Рўйхат (белгилаш мумкин)",
+        "taskList": "Бажариш рўйхати",
         "callout": "Эслатма блоки",
-        "mention": "Кишини эслатиш",
+        "mention": "Ходимни белгилаш",
         "blockquote": "Иқтибос",
         "codeBlock": "Код блоки",
-        "translate": "Белгиланганни таржима қилиш"
+        "translate": "Танланган матнни таржима қилиш"
       },
-      "contentPlaceholder": "Ёзишни бошланг ёки буйруқлар учун \"/\" босинг…",
+      "contentPlaceholder": "Матн ёзинг ёки амаллар учун «/» киритинг",
       "translate": {
-        "selectFirst": "Аввал матнни белгиланг, кейин таржима қилинг",
-        "title": "Белгиланганни таржима қилиш",
+        "selectFirst": "Аввал таржима қилинадиган матнни танланг",
+        "title": "Танланган матнни таржима қилиш",
         "pending": "Таржима қилинмоқда…",
-        "accept": "Белгиланганни алмаштириш",
+        "accept": "Матнни алмаштириш",
         "edit": "Таҳрирлаш",
         "discard": "Бекор қилиш",
         "retry": "Қайта уриниш",
         "errors": {
-          "invalid": "Белгиланган матнни текшириб, қайта уриниб кўринг",
+          "invalid": "Танланган матнни текшириб, қайта уриниб кўринг",
           "forbidden": "Таржима ўчирилган ёки AI бюджети тугаган",
           "failed": "AI бу сафар таржима қила олмади"
         }
@@ -2922,25 +2922,25 @@
     },
     "versions": {
       "title": "Версиялар тарихи",
-      "empty": "Ҳали версиялар йўқ",
-      "restore": "Ушбу версияни тиклаш",
+      "empty": "Ҳали сақланган версия йўқ",
+      "restore": "Шу версияни тиклаш",
       "restored": "Версия тикланди",
       "viewDiff": "Фарқни кўриш",
-      "current": "Жорий",
+      "current": "Ҳозирги",
       "by": "Муаллиф: {name}"
     },
     "diff": {
       "added": "Қўшилган",
       "removed": "Ўчирилган",
-      "noChanges": "Бу версиялар орасида фарқ йўқ"
+      "noChanges": "Бу икки версия орасида фарқ йўқ"
     },
     "conflict": {
       "title": "Саҳифа аллақачон янгиланган",
-      "body": "Бошқа биров шу орада ўзгартириш киритди. Саҳифани қайта юклаб, ўзгаришларингизни қайта киритинг."
+      "body": "Шу орада бошқа ходим ўзгартирди. Саҳифани қайта очинг ва ёзганларингизни қайтадан киритинг."
     },
     "onboarding": {
       "title": "Мослашув рўйхати",
-      "subtitle": "Янги ходим бўлимга қўшилганда, қуйидаги вазифалар автоматик равишда унинг шахсий вазифалар рўйхатига қўшилади.",
+      "subtitle": "Янги ходим бошқармага қўшилганда, бу бандлар унинг шахсий вазифалар рўйхатига ўзи қўшилади.",
       "enable": "Ёқиш",
       "enabled": "Ёқилган",
       "disabled": "Ўчирилган",
@@ -2950,16 +2950,16 @@
       "itemPlaceholder": "Нима қилиш керак?",
       "ownerRole": {
         "newcomer": "Янги ходим",
-        "head": "Бўлим раҳбари",
+        "head": "Бошқарма бошлиғи",
         "buddy": "Ёрдамчи ҳамкасб"
       },
-      "empty": "Ҳали мослашув рўйхати йўқ",
+      "empty": "Мослашув рўйхати ҳали тузилмаган",
       "save": "Сақлаш",
       "saved": "Сақланди",
       "removeItem": "Бандни ўчириш"
     },
     "moreActions": "Яна амаллар",
-    "undo": "Қайтариш"
+    "undo": "Бекор қилиш"
   },
   "people": {
     "table": {
@@ -3401,18 +3401,18 @@
   },
   "personal": {
     "title": "Шахсий",
-    "eyebrow": "ФАҚАТ СИЗ УЧУН",
-    "description": "Даврлар, вазифалар, қайдлар, доска ва фокус вақти учун шахсий майдонингиз.",
+    "eyebrow": "ФАҚАТ СИЗГА",
+    "description": "Даврлар, вазифалар, қайдлар, оқ тахта ва диққат вақти — фақат сизга кўринадиган майдон.",
     "tabs": {
       "today": "Бугун",
       "sprints": "Даврлар",
       "tasks": "Вазифалар",
       "notes": "Қайдлар",
-      "canvas": "Доска",
-      "pomodoro": "Помодоро"
+      "canvas": "Оқ тахта",
+      "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Бу майдонни фақат сиз кўрасиз — бўлим бошлиғи ҳам, бошқа ҳеч ким ҳам эмас.",
+      "note": "Бу ердагиларни фақат сиз кўрасиз — бошқарма бошлиғи ҳам, бошқа ҳеч ким ҳам кўрмайди.",
       "dismiss": "Ёпиш"
     },
     "duration": {
@@ -3424,26 +3424,26 @@
       "tasks": {
         "title": "Бугунги вазифалар",
         "remaining": "{count} қолди",
-        "completedToast": "Бажарилди деб белгиланди"
+        "completedToast": "Бажарилди"
       },
       "empty": {
-        "title": "Бугун учун ҳеч нарса режалаштирилмаган",
-        "body": "Бу ерда кўриш учун вазифа қўшинг ёки давр бошланг."
+        "title": "Бугунга режа йўқ",
+        "body": "Вазифа қўшинг ёки давр бошланг — шу ерда кўринади."
       },
       "allDone": {
-        "title": "Ҳозирча барчаси бажарилди",
-        "body": "Фаол даврлар ва кириш қутингизда бошқа ҳеч нарса қолмади. Осойишталикдан баҳраманд бўлинг."
+        "title": "Ҳозирча ҳаммаси бажарилди",
+        "body": "Фаол даврларингизда ҳам, йиғмада ҳам бошқа вазифа қолмади."
       },
       "addPlaceholder": "Бугун учун вазифа қўшиш",
-      "focus": "Фокус",
+      "focus": "Диққат",
       "period": {
-        "progressAria": "Давр жараёни",
+        "progressAria": "Даврнинг бажарилган қисми",
         "timeLeft": "{value} қолди",
         "noGoal": "Бу давр учун ҳали мақсад белгиланмаган"
       },
       "rollover": {
         "banner": "Бу давр вақти тугади. Тугалланмаган вазифаларни янги даврга кўчирасизми?",
-        "bannerGoal": "“{goal}” даври вақти тугади. Тугалланмаган вазифаларни янги даврга кўчирасизми?"
+        "bannerGoal": "«{goal}» даври вақти тугади. Тугалланмаган вазифаларни янги даврга кўчирасизми?"
       }
     },
     "sprints": {
@@ -3451,13 +3451,13 @@
         "title": "Фаол даврлар"
       },
       "empty": {
-        "title": "Ҳали даврлар йўқ",
+        "title": "Ҳали давр йўқ",
         "body": "Ишингизга мақсад ва вақт чегараси белгилаш учун давр бошланг."
       },
       "create": {
         "action": "Янги давр",
         "title": "Янги давр",
-        "submit": "Давр яратиш"
+        "submit": "Даврни бошлаш"
       },
       "goal": "Мақсад",
       "goalPlaceholder": "Нимага эришмоқчисиз?",
@@ -3469,7 +3469,7 @@
         "toast": "{count} та тугалланмаган вазифа янги даврга кўчирилди"
       },
       "complete": {
-        "action": "Якунланган деб белгилаш",
+        "action": "Якунлаш",
         "toast": "Давр якунланди"
       },
       "ended": "Вақт тугади",
@@ -3477,7 +3477,7 @@
         "threeHour": "3 соат",
         "day": "Кун",
         "week": "Ҳафта",
-        "custom": "Ихтиёрий"
+        "custom": "Бошқа"
       },
       "status": {
         "active": "Фаол",
@@ -3486,58 +3486,58 @@
       }
     },
     "tasks": {
-      "inbox": "Кириш қутиси",
+      "inbox": "Йиғма",
       "addPlaceholder": "Вазифа қўшиш",
       "openCount": "{count} та очиқ",
-      "toggleDone": "Бажарилган деб белгилаш",
+      "toggleDone": "Бажарилди деб белгилаш",
       "delete": "Вазифани ўчириш",
       "deleted": {
         "toast": "Вазифа ўчирилди"
       },
       "dragHandle": "Тартибни ўзгартириш учун тортинг",
-      "indent": "Ичкарига суриш (қуйи вазифа қилиш)",
-      "outdent": "Ташқарига чиқариш",
+      "indent": "Қуйи вазифага айлантириш",
+      "outdent": "Юқорига чиқариш",
       "empty": {
-        "section": "Бу ерда ҳали вазифалар йўқ."
+        "section": "Бу ерда ҳали вазифа йўқ."
       }
     },
     "notes": {
       "create": "Янги қайд",
       "newTitle": "Янги қайд",
-      "bodyPlaceholder": "Нимадир ёзинг...",
+      "bodyPlaceholder": "Хоҳлаган нарсангизни ёзинг",
       "delete": "Қайдни ўчириш",
       "deleted": {
         "toast": "Қайд ўчирилди"
       },
       "pin": "Маҳкамлаш",
-      "unpin": "Маҳкамлашни бекор қилиш",
+      "unpin": "Маҳкамлашни олиб ташлаш",
       "autosave": {
         "saving": "Сақланмоқда…",
         "saved": "Сақланди"
       },
       "empty": {
-        "title": "Ҳали қайдлар йўқ",
+        "title": "Ҳали қайд йўқ",
         "body": "Қайдлар фақат сиз учун — хоҳлаган нарсангизни ёзиб қўйинг."
       }
     },
     "canvas": {
-      "create": "Янги доска",
-      "newTitle": "Янги доска",
+      "create": "Янги оқ тахта",
+      "newTitle": "Янги оқ тахта",
       "open": "Очиш",
-      "back": "Доскаларга қайтиш",
-      "delete": "Доскани ўчириш",
+      "back": "Оқ тахталарга қайтиш",
+      "delete": "Оқ тахтани ўчириш",
       "deleted": {
-        "toast": "Доска ўчирилди"
+        "toast": "Оқ тахта ўчирилди"
       },
       "autosave": {
         "saving": "Сақланмоқда…",
         "saved": "Сақланди"
       },
       "empty": {
-        "title": "Ҳали доскалар йўқ",
-        "body": "Доска — эскиз ва эслатма қоғозлари учун эркин жой."
+        "title": "Ҳали оқ тахта йўқ",
+        "body": "Оқ тахта — эскиз ва эслатма қоғозлари учун эркин майдон."
       },
-      "addSticky": "Эслатма қоғоз қўшиш",
+      "addSticky": "Эслатма қоғози қўшиш",
       "undo": "Бекор қилиш",
       "redo": "Қайтариш",
       "zoomIn": "Катталаштириш",
@@ -3556,29 +3556,29 @@
     },
     "pomodoro": {
       "widget": {
-        "label": "Помодоро",
-        "aria": "Помодоро таймери"
+        "label": "Pomodoro",
+        "aria": "Pomodoro таймери"
       },
       "phase": {
         "idle": "Тайёр",
-        "focus": "Фокус",
+        "focus": "Диққат",
         "shortBreak": "Қисқа танаффус",
         "longBreak": "Узоқ танаффус"
       },
       "action": {
-        "startFocus": "Фокусни бошлаш",
+        "startFocus": "Диққат вақтини бошлаш",
         "startShortBreak": "Танаффусни бошлаш",
-        "pause": "Пауза",
+        "pause": "Тўхтатиб туриш",
         "resume": "Давом эттириш",
         "skip": "Ўтказиб юбориш",
-        "stop": "Тўхтатиш"
+        "stop": "Тугатиш"
       },
       "notification": {
         "body": "Вақт тугади"
       },
       "sound": {
         "chime": "Оҳанг",
-        "bell": "Қўнғироқ",
+        "bell": "Қўнгъироқ",
         "digital": "Рақамли",
         "none": "Овозсиз",
         "muteOn": "Овозни ўчириш",
@@ -3586,23 +3586,23 @@
       },
       "notifications": {
         "on": "Билдиришномалар ёқилган",
-        "off": "Билдиришномалар ўчирилган"
+        "off": "Билдиришномалар ўчиқ"
       },
       "settings": {
-        "title": "Помодоро созламалари",
-        "focusMin": "Фокус (дақиқа)",
+        "title": "Pomodoro созламалари",
+        "focusMin": "Диққат (дақиқа)",
         "shortBreakMin": "Қисқа танаффус (дақиқа)",
         "longBreakMin": "Узоқ танаффус (дақиқа)",
-        "cyclesBeforeLong": "Узоқ танаффусдан олдинги фокус сони",
+        "cyclesBeforeLong": "Узоқ танаффусгача нечта диққат вақти",
         "sound": "Овоз",
         "notifications": "Браузер билдиришномалари",
         "autoStart": "Кейинги босқични автоматик бошлаш"
       },
       "stats": {
-        "todayFocus": "Бугунги фокус",
+        "todayFocus": "Бугунги диққат вақти",
         "todaySessions": "Бугунги сеанслар",
-        "weekFocus": "Шу ҳафталик фокус",
-        "weekSessions": "Шу ҳафталик сеанслар",
+        "weekFocus": "Бу ҳафтадаги диққат вақти",
+        "weekSessions": "Бу ҳафтадаги сеанслар",
         "minutesShort": "дақ"
       },
       "log": {
@@ -3613,8 +3613,8 @@
         "skipped": "Ўтказиб юборилган",
         "showMore": "Яна {count} кунни кўрсатиш",
         "empty": {
-          "title": "Ҳали сеанслар йўқ",
-          "body": "Бу ерда кўриш учун фокус сеансини бошланг."
+          "title": "Ҳали сеанс йўқ",
+          "body": "Диққат вақтини бошланг — шу ерда кўринади."
         }
       }
     },
@@ -3622,8 +3622,8 @@
       "pending": "Тайёрланмоқда…",
       "accept": "Қабул қилиш",
       "edit": "Таҳрирлаш",
-      "discard": "Рад этиш",
-      "disclaimer": "AI таклифлари хато бўлиши мумкин — ҳеч нарса текширмасдан қўшилмайди.",
+      "discard": "Керак эмас",
+      "disclaimer": "AI таклифлари хато бўлиши мумкин — сиз тасдиқламагунингизча ҳеч нарса қўшилмайди.",
       "quickAdd": {
         "action": "AI билан тозалаш",
         "title": "AI тозалаш"
@@ -3648,7 +3648,7 @@
       "catchUp": {
         "subjectSelf": "Сиз",
         "noteTitle": "Ҳафталик хулоса",
-        "savedToast": "Хулоса қайдларга сақланди",
+        "savedToast": "Қайдларга сақланди",
         "action": "Нимани ўтказиб юбордим",
         "title": "Охирги ҳафта",
         "acceptLabel": "Қайдларга сақлаш",
@@ -3969,21 +3969,21 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "онлайн",
-      "replyMessage": "Уланди! Энди WorkPortal билдиришномалари шу ерга келади.",
-      "connectedMessage": "Сиз уландингиз — WorkPortal билдиришномалари шу чатга келади."
+      "replyMessage": "Уланди. Энди билдиришномалар шу ерга келади.",
+      "connectedMessage": "Ҳисобингиз уланган — билдиришномалар шу ерга келади."
     },
     "notConfigured": {
       "title": "Telegram ҳали уланмаган",
-      "body": "Ушбу тизим учун Telegram ботини созлашни администратордан сўранг."
+      "body": "Telegram ботини созлашни администратордан сўранг."
     },
     "personal": {
-      "title": "Сизнинг Telegramингиз",
+      "title": "Telegramингиз",
       "linkedBadge": "Уланган",
       "notLinkedBadge": "Уланмаган",
       "codeBody": "Ҳисобингизни улаш учун ботни Telegramда очинг ёки кодни сканерланг.",
       "qrAlt": "Telegramни улаш учун QR-код",
       "openInTelegram": "Telegramда очиш",
-      "codeExpires": "Код {time} да эскиради",
+      "codeExpires": "Код {time} гача амал қилади",
       "connectButton": "Улаш кодини олиш",
       "unlink": "Telegramни узиш",
       "unlinked": "Telegram узилди",
@@ -3991,24 +3991,24 @@
         "title": "Билдиришномаларни ўчириш",
         "off": "Ёқиш",
         "forMinutes": "{minutes} дақиқага",
-        "until": "{date} гача ўчирилган",
+        "until": "{date} гача ўчиқ",
         "applied": "Янгиланди"
       }
     },
     "group": {
-      "title": "Бўлим гуруҳи",
-      "body": "Бўлим тадбирлари, сўровномалари ва эълонларини олиш учун Telegram гуруҳини уланг.",
+      "title": "Бошқарма гуруҳи",
+      "body": "Тадбирлар, сўровномалар ва эълонлар гуруҳга тушиши учун Telegram гуруҳини уланг.",
       "untitled": "Номсиз гуруҳ",
       "disconnect": "Узиш",
       "disconnected": "Гуруҳ узилди",
       "updated": "Янгиланди",
-      "codeBody": "Гуруҳда ушбу код билан /connect буйруғини юборинг.",
-      "codeExpires": "Код {time} да эскиради",
+      "codeBody": "Гуруҳда шу код билан /connect юборинг.",
+      "codeExpires": "Код {time} гача амал қилади",
       "connectButton": "Улаш кодини олиш",
       "copyCode": "Кодни нусхалаш",
       "empty": {
         "title": "Уланган гуруҳ йўқ",
-        "body": "Ботни Telegram гуруҳига қўшинг, сўнг шу ердан улаш кодидан фойдаланинг."
+        "body": "Ботни Telegram гуруҳига қўшинг, сўнг шу ердан улаш кодини олинг."
       },
       "kinds": {
         "events": "Тадбирлар",

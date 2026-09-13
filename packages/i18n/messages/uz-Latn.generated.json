@@ -156,62 +156,62 @@
     "dashboard": {
       "dueFromMe": {
         "title": "Mendan kutilmoqda",
-        "body": "{open} ta ochiq, {overdue} tasi muddatidan oʻtgan",
+        "body": "{open} ta ochiq, {overdue} tasi kechikkan",
         "cta": "Menga topshirilganlar"
       },
       "needsMyDecision": {
-        "title": "Mening qarorim kerak",
-        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
-        "empty": "Hozircha qaror kerak boʻlgan narsa yoʻq"
+        "title": "Qarorimni kutmoqda",
+        "body": "Men topshirgan {count} ta ish kechikdi",
+        "empty": "Qaror kutayotgan ish yoʻq"
       },
       "aroundMe": {
         "title": "Atrofimda",
-        "body": "{count} ta tadbirga qatnashishni tasdiqlagansiz",
-        "cta": "Tadbirlarni koʻrish"
+        "body": "{count} ta tadbirga boraman deb belgilagansiz",
+        "cta": "Tadbirlar"
       },
       "pinned": {
         "title": "Mahkamlangan diagrammalar",
-        "empty": "Hali hech narsa mahkamlanmagan",
-        "cta": "Tahlil sahifasini ochish"
+        "empty": "Mahkamlangan diagramma yoʻq",
+        "cta": "Tahlilni ochish"
       },
       "personal": {
-        "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
-        "focusMinutes": "Bu hafta fokus daqiqalari"
+        "onTimeRate": "Muddatida bajarilgani",
+        "focusMinutes": "Bu haftadagi diqqat daqiqalari"
       },
       "onboarding": {
-        "title": "Boshlash",
+        "title": "Ilk qadamlar",
         "body": "{done}/{total} bajarildi",
         "photo": "Suratingizni qoʻshing",
-        "department": "Boʻlimga qoʻshiling",
-        "work": "Birinchi ishingizni oching",
-        "event": "Tadbirga yoziling",
-        "focus": "Fokus seansini oʻtkazing",
+        "department": "Boshqarmaga qoʻshiling",
+        "work": "Birinchi kartangizni oching",
+        "event": "Tadbirga ishtirokni belgilang",
+        "focus": "Diqqat vaqtini oʻtkazing",
         "done": "Hammasi bajarildi"
       },
       "kpi": {
         "onTimeQuestion": "Yakunlagan ishlaringizning qanchasi muddatida topshirilgan?",
         "focusQuestion": "Bu hafta qancha vaqt diqqat bilan ishladingiz?"
       },
-      "sectionTiles": "Bugungi holat",
+      "sectionTiles": "Bugun",
       "givenOverdue": {
         "title": "Men bergan ishlar kechikdi",
-        "body": "Men topshirgan {count} ta ish muddatidan oʻtib ketgan",
+        "body": "Men bergan {count} ta ish muddatidan oʻtdi",
         "empty": "Men bergan ishlarning hammasi muddatida",
         "cta": "Men bergan ishlar"
       },
       "myLoad": {
-        "title": "Mening yuklamam",
-        "hours": "{capacity} soatdan {hours} soat",
+        "title": "Yuklamam",
+        "hours": "{hours}/{capacity} soat",
         "cards": "Bu hafta {count} ta karta",
-        "meaning": "Bu haftaga muddati belgilangan ishlaringizning haftalik imkoniyatingizga nisbati.",
-        "meaningCards": "Boʻlimda ishlarning yarmidan kami baholangan, shuning uchun bu soat emas, karta soni."
+        "meaning": "Bu haftaga muddati belgilangan ishlaringiz haftalik sigʻimingizga nisbatan.",
+        "meaningCards": "Boshqarmada ishlarning yarmidan kami baholangan, shuning uchun bu yerda soat emas, karta sanaladi."
       }
     },
     "head": {
       "section": "Boshqaruv koʻrinishi",
       "decisions": {
         "title": "Qaror kutmoqda",
-        "meaning": "Siz bergan va muddati oʻtgan vazifalar — hal qilish sizdan.",
+        "meaning": "Siz bergan va muddati oʻtgan kartalar — qaror sizdan.",
         "cta": "Doskani ochish",
         "empty": "Sizdan kutilayotgan qaror yoʻq."
       },
@@ -219,26 +219,26 @@
         "title": "Kechikayotgan ishlar",
         "meaning": "Eng koʻp kechikkan besh xodim. Ismni bosing — jadvalga oʻtasiz.",
         "cta": "Xodimlar jadvali",
-        "empty": "Kechikkan vazifa yoʻq. Boʻlim muddatlarga ulgurmoqda."
+        "empty": "Kechikkan vazifa yoʻq. Boshqarma muddatlarga ulgurmoqda."
       },
       "load": {
         "title": "Bu hafta yuklama",
-        "meaning": "Ochiq vazifalarning haftalik imkoniyatga nisbati.",
-        "cta": "Yuklamani koʻrish",
+        "meaning": "Har bir xodimning ochiq kartalari haftalik sigʻimiga nisbatan.",
+        "cta": "Yuklama",
         "empty": "Hozircha ochiq vazifa yoʻq."
       },
       "projects": {
         "title": "Loyihalar",
-        "meaning": "Eng orqada qolgan loyihalar birinchi turadi.",
+        "meaning": "Eng orqada qolgan loyihalar yuqorida.",
         "cta": "Loyihalar",
         "empty": "Faol loyiha yoʻq.",
         "progressAria": "{title} — bajarilgan qismi"
       },
       "events": {
         "title": "Yaqin tadbirlar",
-        "meaning": "Yetti kun ichidagi tadbirlar va roziligini bildirganlar soni.",
+        "meaning": "Yetti kun ichidagi tadbirlar va ishtirok etaman deganlar soni.",
         "cta": "Tadbirlar",
-        "empty": "Yaqin kunlarda tadbir rejalashtirilmagan."
+        "empty": "Yetti kun ichida tadbir rejalashtirilmagan."
       },
       "onboarding": {
         "title": "Yangi xodimlar",
@@ -246,40 +246,40 @@
         "cta": "Xodimlar jadvali",
         "empty": "Hamma moslashuv qadamlarini yakunlagan."
       },
-      "indicatorsNote": "Jadval va sahifalar uchun {count} ta koʻrsatkich mavjud.",
+      "indicatorsNote": "Jadval va xodim sahifalari uchun {count} ta koʻrsatkich bor.",
       "risk": {
         "title": "Xavf ostida",
         "meaning": "Ikki kun ichida muddati tugaydigan, hali bajarilmagan ishlar.",
         "cta": "Doskani ochish",
         "empty": "Yaqin ikki kunda xavf ostidagi ish yoʻq."
       },
-      "drillNote": "Har bir raqamni bosing — u sizni aynan shu odamga yoki shu ishga olib boradi.",
+      "drillNote": "Har bir raqam ortidagi xodim yoki karta ochiladi.",
       "arrange": {
         "action": "Joylashuv",
-        "heading": "Kartochkalarni joylashtiring",
+        "heading": "Kartalarni joylashtirish",
         "hint": "Tartibni oʻzgartiring yoki keraksizlarini yashiring — tanlovingiz shu qurilmada saqlanadi.",
-        "show": "«{name}» kartochkasini koʻrsatish",
-        "moveUp": "«{name}» kartochkasini yuqoriga surish",
-        "moveDown": "«{name}» kartochkasini pastga surish",
+        "show": "«{name}» kartasini koʻrsatish",
+        "moveUp": "«{name}» kartasini yuqoriga surish",
+        "moveDown": "«{name}» kartasini pastga surish",
         "reset": "Dastlabki holatga qaytarish",
         "allHidden": {
-          "title": "Barcha kartochkalar yashirilgan",
-          "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartochkalarni belgilang."
+          "title": "Hamma kartalar yashirilgan",
+          "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartalarni belgilang."
         }
       },
       "goals": {
         "title": "Maqsadlar",
-        "meaning": "Eng orqada qolgan maqsadlar oldinda. Progress kartalardan oʻzi hisoblanadi.",
+        "meaning": "Eng orqada qolgan maqsadlar yuqorida. Bajarilgani kartalardan oʻzi hisoblanadi.",
         "cta": "Barcha maqsadlar",
-        "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi.",
+        "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — bajarilgani oʻzi hisoblanadi.",
         "progressAria": "{title} — bajarilgan qismi",
         "ofCap": "chegaradan"
       },
       "catchUp": {
         "title": "AI xulosa",
-        "meaning": "Boʻlimning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan.",
+        "meaning": "Boshqarmaning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan.",
         "cta": "AI sahifasi",
-        "idle": "Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi.",
+        "idle": "Hafta boʻyicha qisqa xulosa tayyorlansinmi? Har bir fikr aniq kartaga tayanadi.",
         "run": "Xulosa tayyorlash",
         "dismiss": "Yopish"
       }
@@ -370,12 +370,12 @@
       "refresh": "Yangilash"
     },
     "console": {
-      "eyebrow": "Boshqaruv",
+      "eyebrow": "BOSHQARUV",
       "title": "Super administrator paneli",
       "tabs": {
-        "label": "Administrator boʻlimlari",
+        "label": "Administrator sahifalari",
         "dashboard": "Umumiy koʻrinish",
-        "departments": "Boʻlimlar",
+        "departments": "Boshqarmalar",
         "accounts": "Hisoblar",
         "analytics": "Tahlillar",
         "audit": "Audit",
@@ -383,36 +383,36 @@
         "settings": "Sozlamalar"
       },
       "viewAsBanner": {
-        "message": "Siz hozir bir boʻlimni koʻrinish sifatida (faqat oʻqish) koʻrmoqdasiz.",
-        "exit": "Koʻrinishni yopish"
+        "message": "Siz hozir bir boshqarmani faqat oʻqish uchun koʻrmoqdasiz.",
+        "exit": "Koʻrishni tugatish"
       },
       "dashboard": {
-        "userCount": "Foydalanuvchilar soni",
+        "userCount": "Xodimlar soni",
         "registration": "Roʻyxatdan oʻtish",
         "registrationOpen": "Ochiq",
         "registrationClosed": "Yopiq",
         "instanceKind": "Tizim turi",
         "demo": "Demo",
         "live": "Ishchi",
-        "maintenanceActive": "Texnik xizmat rejimi yoqilgan — foydalanuvchilar tizimga kira olmaydi.",
+        "maintenanceActive": "Texnik xizmat rejimi yoqilgan — super administratordan boshqa hech kim kira olmaydi.",
         "quickLinks": "Tezkor havolalar",
-        "reviewRequests": "Boʻlim soʻrovlarini koʻrib chiqish",
-        "reviewRequestsDesc": "Yangi boʻlim tashkil etish soʻrovlarini tasdiqlang yoki rad eting",
-        "manageDepartments": "Boʻlimlarni boshqarish",
-        "manageDepartmentsDesc": "Boʻlimlarni koʻring, toʻxtating yoki arxivlang",
+        "reviewRequests": "Boshqarma soʻrovlarini koʻrib chiqish",
+        "reviewRequestsDesc": "Yangi boshqarma ochish soʻrovlarini tasdiqlang yoki rad eting",
+        "manageDepartments": "Boshqarmalarni boshqarish",
+        "manageDepartmentsDesc": "Boshqarmalarni koʻring, toʻxtating yoki arxivlang",
         "manageAccounts": "Hisoblarni boshqarish",
-        "manageAccountsDesc": "Foydalanuvchi hisoblarini bloklang, tiklang yoki oʻchiring",
+        "manageAccountsDesc": "Hisoblarni bloklang, tiklang yoki oʻchiring",
         "checkHealth": "Tizim holatini tekshirish",
         "checkHealthDesc": "Baza, navbat, xotira va boshqa xizmatlar holatini kuzating",
         "healthTitle": "Tizim holati",
         "healthSeeAll": "Barchasini koʻrish",
-        "healthUnavailable": "Hozircha tizim holati mavjud emas.",
-        "backupsUnconfigured": "Zaxira nusxalar sozlanmagan — bu instansiyada hech qanday zaxira olinmayapti.",
+        "healthUnavailable": "Tizim holati hali kelmadi.",
+        "backupsUnconfigured": "Zaxira nusxalar sozlanmagan — bu serverda hech narsa zaxiralanmayapti.",
         "backupsConfigure": "Sozlash",
-        "userCountBreakdown": "Boʻlimlar kesimida"
+        "userCountBreakdown": "Boshqarmalar kesimida"
       },
       "departments": {
-        "searchPlaceholder": "Boʻlim nomi boʻyicha qidirish",
+        "searchPlaceholder": "Boshqarma nomi boʻyicha qidirish",
         "statusFilter": "Holat boʻyicha filtr",
         "statusAll": "Barchasi",
         "statusActive": "Faol",
@@ -425,36 +425,36 @@
           "archived": "Arxivlangan"
         },
         "empty": {
-          "title": "Boʻlimlar topilmadi"
+          "title": "Boshqarma topilmadi"
         },
-        "memberCount": "{count} ta aʼzo",
-        "viewAs": "Koʻrinish sifatida ochish",
+        "memberCount": "{count} ta xodim",
+        "viewAs": "Ichini koʻrish",
         "pause": "Toʻxtatish",
-        "archive": "Arxivlash",
+        "archive": "Arxivga olish",
         "resume": "Davom ettirish",
         "restore": "Tiklash",
-        "stopViewingAs": "Koʻrinishni yopish",
-        "pauseDialogTitle": "Boʻlimni toʻxtatish",
+        "stopViewingAs": "Koʻrishni tugatish",
+        "pauseDialogTitle": "Boshqarmani toʻxtatish",
         "pauseReasonLabel": "Sabab",
         "pauseCancel": "Bekor qilish",
         "pauseSubmit": "Toʻxtatish",
-        "pausedToast": "Boʻlim toʻxtatildi",
-        "resumedToast": "Boʻlim qayta faollashtirildi",
-        "archivedToast": "Boʻlim arxivlandi",
-        "restoredToast": "Boʻlim tiklandi",
-        "viewAsStartedToast": "Koʻrinish sifatida rejim yoqildi",
-        "viewAsStoppedToast": "Koʻrinish sifatida rejim yopildi",
-        "columnName": "Boʻlim",
+        "pausedToast": "Boshqarma toʻxtatildi",
+        "resumedToast": "Boshqarma qayta ishga tushdi",
+        "archivedToast": "Boshqarma arxivlandi",
+        "restoredToast": "Boshqarma tiklandi",
+        "viewAsStartedToast": "Koʻrish rejimi yoqildi",
+        "viewAsStoppedToast": "Koʻrish rejimi yopildi",
+        "columnName": "Boshqarma",
         "columnStatus": "Holat",
         "columnHead": "Boshliq",
-        "columnMembers": "Aʼzolar",
-        "columnCreated": "Yaratilgan",
-        "drawerTitle": "Boʻlim tafsilotlari",
+        "columnMembers": "Xodimlar",
+        "columnCreated": "Ochilgan",
+        "drawerTitle": "Boshqarma haqida",
         "drawerClose": "Yopish",
-        "memberCountLabel": "Aʼzolar",
+        "memberCountLabel": "Xodimlar",
         "headLabel": "Boshliq",
-        "createdLabel": "Yaratilgan",
-        "localeLabel": "Standart til"
+        "createdLabel": "Ochilgan",
+        "localeLabel": "Asosiy til"
       },
       "accounts": {
         "searchPlaceholder": "Ism yoki login boʻyicha qidirish",
@@ -469,12 +469,12 @@
           "deleted": "Oʻchirilgan"
         },
         "empty": {
-          "title": "Hisoblar topilmadi"
+          "title": "Hisob topilmadi"
         },
         "role": {
           "superAdmin": "Super administrator",
           "head": "Boshliq",
-          "member": "Aʼzo"
+          "member": "Xodim"
         },
         "columnName": "Ism",
         "columnLogin": "Login",
@@ -493,33 +493,33 @@
         "unlockedToast": "Hisob blokdan chiqarildi",
         "twoFactorResetToast": "Ikki bosqichli tasdiqlash bekor qilindi",
         "temporaryPasswordTitle": "Vaqtinchalik parol",
-        "temporaryPasswordBody": "Ushbu parolni foydalanuvchiga xavfsiz usulda yetkazing. Birinchi kirishda u yangi parol oʻrnatishi soʻraladi.",
+        "temporaryPasswordBody": "Bu parolni xodimga xavfsiz yoʻl bilan yetkazing. Birinchi kirishda undan yangi parol soʻraladi.",
         "temporaryPasswordClose": "Yopish",
         "anonymizeDialogTitle": "Hisobni oʻchirish",
-        "anonymizeDialogBody": "Foydalanuvchi maʼlumotlari anonimlashtiriladi va hisob doimiy ravishda oʻchiriladi. Bu amalni bekor qilib boʻlmaydi.",
+        "anonymizeDialogBody": "Xodimning maʼlumotlari anonimlashtiriladi va hisob butunlay oʻchiriladi. Buni ortga qaytarib boʻlmaydi.",
         "anonymizeSubmit": "Oʻchirish",
         "anonymizedToast": "Hisob oʻchirildi"
       },
       "analytics": {
-        "totalDepartments": "Jami boʻlimlar",
-        "totalPeople": "Jami foydalanuvchilar",
-        "cardsCreated30d": "Kartochkalar (30 kun)",
+        "totalDepartments": "Jami boshqarmalar",
+        "totalPeople": "Jami xodimlar",
+        "cardsCreated30d": "Kartalar (30 kun)",
         "logins7d": "Kirishlar (7 kun)",
-        "departmentsTitle": "Boʻlimlar holati",
-        "peopleTitle": "Foydalanuvchilar tarkibi",
+        "departmentsTitle": "Boshqarmalar holati",
+        "peopleTitle": "Xodimlar tarkibi",
         "activityTitle": "Faollik",
         "aiSpendTitle": "AI xarajatlari",
         "active": "Faol",
         "paused": "Toʻxtatilgan",
         "archived": "Arxivlangan",
         "heads": "Rahbarlar",
-        "members": "Aʼzolar",
+        "members": "Xodimlar",
         "superAdmins": "Super administratorlar",
-        "noActivity": "Hozircha faollik maʼlumotlari yoʻq",
+        "noActivity": "Hozircha faollik qayd etilmagan",
         "weeklyLoginsCaption": "Haftalik kirishlar soni (soʻnggi 8 hafta)",
-        "notAvailable": "Mavjud emas",
-        "tokensThisMonth": "Ushbu oydagi tokenlar",
-        "costThisMonth": "Ushbu oydagi xarajat",
+        "notAvailable": "Yoʻq",
+        "tokensThisMonth": "Bu oydagi tokenlar",
+        "costThisMonth": "Bu oydagi xarajat",
         "uzs": "soʻm",
         "aiSpendUnavailable": "AI moduli hali ulanmagan."
       },
@@ -532,12 +532,12 @@
         "chainBroken": "Zanjir buzilgan",
         "chainRowsChecked": "{count} ta yozuv tekshirildi",
         "empty": {
-          "title": "Voqealar topilmadi"
+          "title": "Yozuv topilmadi"
         },
         "columnAt": "Vaqt",
         "columnAction": "Amal",
         "columnActor": "Bajaruvchi",
-        "columnSubject": "Obʼekt",
+        "columnSubject": "Obyekt",
         "previousPage": "Oldingi",
         "nextPage": "Keyingi",
         "actorSystem": "Tizim",
@@ -547,7 +547,7 @@
           "session": "Kirish",
           "accounts": "Hisoblar",
           "admin": "Boshqaruv",
-          "departments": "Boʻlimlar",
+          "departments": "Boshqarmalar",
           "other": "Boshqa"
         },
         "verb": {
@@ -573,106 +573,106 @@
           "admin.wipe.executing": "tizimni oʻchirmoqda",
           "admin.wipe.cancelled": "tizimni oʻchirishni bekor qildi",
           "admin.wipe.rejected": "tizimni oʻchirish rad etildi",
-          "admin.view_as.started": "koʻrinish sifatida rejimni boshladi",
-          "admin.view_as.stopped": "koʻrinish sifatida rejimni yakunladi",
-          "admin.audit.exported": "audit jurnalini yukladi",
-          "departments.request_created": "boʻlim soʻrovini yubordi",
-          "departments.request_approved": "boʻlim soʻrovini tasdiqladi",
-          "departments.request_rejected": "boʻlim soʻrovini rad etdi",
+          "admin.view_as.started": "boshqarma ichini koʻra boshladi",
+          "admin.view_as.stopped": "boshqarma ichini koʻrishni tugatdi",
+          "admin.audit.exported": "audit jurnalini yuklab oldi",
+          "departments.request_created": "boshqarma soʻrovini yubordi",
+          "departments.request_approved": "boshqarma soʻrovini tasdiqladi",
+          "departments.request_rejected": "boshqarma soʻrovini rad etdi",
           "departments.headship_transferred": "boshliqlikni topshirdi",
           "departments.member_removed": "aʼzoni chiqardi",
-          "departments.joined": "boʻlimga qoʻshildi",
-          "departments.left": "boʻlimni tark etdi",
-          "structure.unit_created": "boʻlinma yaratdi",
-          "structure.unit_deleted": "boʻlinmani oʻchirdi",
+          "departments.joined": "boshqarmaga qoʻshildi",
+          "departments.left": "boshqarmani tark etdi",
+          "structure.unit_created": "boʻlim ochdi",
+          "structure.unit_deleted": "boʻlimni oʻchirdi",
           "structure.unit_role_assigned": "rolni tayinladi",
           "structure.unit_role_unassigned": "rolni bekor qildi",
-          "setup.completed": "tizimni sozlashni yakunladi",
+          "setup.completed": "dastlabki sozlashni yakunladi",
           "access.denied": "ruxsatsiz amalga urindi",
-          "accounts.2fa_challenge_failed": "ikki bosqichli tekshiruvda xatolik qildi",
+          "accounts.2fa_challenge_failed": "ikki bosqichli tekshiruvdan oʻta olmadi",
           "accounts.2fa_challenge_passed": "ikki bosqichli tekshiruvdan oʻtdi",
           "accounts.avatar_updated": "profil rasmini oʻzgartirdi",
           "accounts.avatar_removed": "profil rasmini oʻchirdi",
           "admin.wipe.completed": "tizimni oʻchirishni yakunladi",
-          "admin.wipe.failed": "tizimni oʻchirishda xatolikka uchradi",
+          "admin.wipe.failed": "tizimni oʻchira olmadi",
           "ai.feature.run": "AI yordamchisini ishlatdi",
           "ai.settings.updated": "AI sozlamalarini oʻzgartirdi",
           "analytics.chart.pinned": "diagrammani mahkamladi",
           "analytics.chart.reordered": "diagrammalar tartibini oʻzgartirdi",
-          "analytics.chart.unpinned": "diagrammani yechdi",
-          "analytics.saved_filter.created": "saqlangan filtr yaratdi",
+          "analytics.chart.unpinned": "diagrammani mahkamdan oldi",
+          "analytics.saved_filter.created": "filtrni saqladi",
           "analytics.saved_filter.deleted": "saqlangan filtrni oʻchirdi",
           "analytics.saved_filter.updated": "saqlangan filtrni oʻzgartirdi",
-          "departments.deletion_requested": "boʻlimni oʻchirishni soʻradi",
+          "departments.deletion_requested": "boshqarmani oʻchirishni soʻradi",
           "departments.invite_approval_toggled": "taklif tasdigʻi sozlamasini oʻzgartirdi",
           "departments.invite_key_rotated": "taklif kalitini yangiladi",
           "departments.invite_password_rotated": "taklif parolini yangiladi",
           "departments.invite_password_set": "taklif parolini oʻrnatdi",
-          "departments.join_failed": "boʻlimga qoʻshilishda xatolikka uchradi",
-          "departments.settings_updated": "boʻlim sozlamalarini oʻzgartirdi",
-          "events.carpool_created": "hamroh safarini yaratdi",
-          "events.carpool_seat_claimed": "hamroh safaridan joy oldi",
-          "events.carpool_seat_released": "hamroh safaridagi joyni boʻshatdi",
+          "departments.join_failed": "boshqarmaga qoʻshila olmadi",
+          "departments.settings_updated": "boshqarma sozlamalarini oʻzgartirdi",
+          "events.carpool_created": "birga borishni taklif qildi",
+          "events.carpool_seat_claimed": "birga borishdan joy oldi",
+          "events.carpool_seat_released": "birga borishdagi joyni boʻshatdi",
           "events.comment_created": "tadbirga izoh qoldirdi",
           "events.comment_deleted": "tadbir izohini oʻchirdi",
           "events.event_cancelled": "tadbirni bekor qildi",
-          "events.event_created": "tadbir yaratdi",
+          "events.event_created": "tadbir qoʻshdi",
           "events.event_updated": "tadbirni oʻzgartirdi",
           "events.feedback_submitted": "tadbir haqida fikr bildirdi",
-          "events.item_added": "olib kelinadigan narsani qoʻshdi",
-          "events.item_claimed": "olib kelinadigan narsani oʻz zimmasiga oldi",
-          "events.item_unclaimed": "olib kelinadigan narsadan voz kechdi",
+          "events.item_added": "olib keliladigan narsani qoʻshdi",
+          "events.item_claimed": "olib keliladigan narsani oʻz zimmasiga oldi",
+          "events.item_unclaimed": "olib keliladigan narsadan voz kechdi",
           "events.photo_added": "tadbirga surat qoʻshdi",
           "events.photo_deleted": "tadbir suratini oʻchirdi",
-          "events.poll_created": "soʻrovnoma yaratdi",
+          "events.poll_created": "soʻrovnoma qoʻshdi",
           "events.poll_voted": "soʻrovnomada ovoz berdi",
-          "events.rsvp_changed": "tadbirga qatnashish holatini oʻzgartirdi",
+          "events.rsvp_changed": "tadbirdagi ishtirokini oʻzgartirdi",
           "notifications.action_requested": "bildirishnoma boʻyicha amal soʻradi",
           "notifications.archived": "bildirishnomani arxivladi",
-          "notifications.created": "bildirishnoma yaratdi",
-          "notifications.department_settings_updated": "boʻlim bildirishnoma sozlamalarini oʻzgartirdi",
+          "notifications.created": "bildirishnoma yubordi",
+          "notifications.department_settings_updated": "boshqarma bildirishnoma sozlamalarini oʻzgartirdi",
           "notifications.prefs_updated": "bildirishnoma sozlamalarini oʻzgartirdi",
           "notifications.quiet_hours_updated": "tinch soatlarni oʻzgartirdi",
           "notifications.read": "bildirishnomani oʻqidi",
           "notifications.read_all": "barcha bildirishnomalarni oʻqilgan deb belgiladi",
-          "notifications.snoozed": "bildirishnomani keyinga qoldirdi",
-          "pages.onboarding_template.applied": "moslashuv shablonini qoʻlladi",
-          "pages.onboarding_template.created": "moslashuv shablonini yaratdi",
-          "pages.onboarding_template.deleted": "moslashuv shablonini oʻchirdi",
-          "pages.onboarding_template.updated": "moslashuv shablonini oʻzgartirdi",
-          "pages.page.created": "sahifa yaratdi",
+          "notifications.snoozed": "bildirishnomani kechiktirdi",
+          "pages.onboarding_template.applied": "moslashuv andozaini qoʻlladi",
+          "pages.onboarding_template.created": "moslashuv andozaini yaratdi",
+          "pages.onboarding_template.deleted": "moslashuv andozaini oʻchirdi",
+          "pages.onboarding_template.updated": "moslashuv andozaini oʻzgartirdi",
+          "pages.page.created": "sahifa qoʻshdi",
           "pages.page.deleted": "sahifani oʻchirdi",
           "pages.page.updated": "sahifani oʻzgartirdi",
           "pages.page.version_restored": "sahifa versiyasini tikladi",
-          "personal.canvas.created": "shaxsiy taxtachani yaratdi",
-          "personal.canvas.deleted": "shaxsiy taxtachani oʻchirdi",
-          "personal.canvas.updated": "shaxsiy taxtachani oʻzgartirdi",
-          "personal.note.created": "shaxsiy eslatma yaratdi",
-          "personal.note.deleted": "shaxsiy eslatmani oʻchirdi",
-          "personal.note.updated": "shaxsiy eslatmani oʻzgartirdi",
+          "personal.canvas.created": "shaxsiy oq taxta qoʻshdi",
+          "personal.canvas.deleted": "shaxsiy oq taxtani oʻchirdi",
+          "personal.canvas.updated": "shaxsiy oq taxtani oʻzgartirdi",
+          "personal.note.created": "shaxsiy qayd qoʻshdi",
+          "personal.note.deleted": "shaxsiy qaydni oʻchirdi",
+          "personal.note.updated": "shaxsiy qaydni oʻzgartirdi",
           "personal.pomodoro_session.ended": "pomodoro seansini yakunladi",
           "personal.pomodoro_session.started": "pomodoro seansini boshladi",
           "personal.pomodoro_settings.updated": "pomodoro sozlamalarini oʻzgartirdi",
-          "personal.cycle.created": "davr yaratdi",
+          "personal.cycle.created": "davr boshladi",
           "personal.cycle.rolled_over": "eski davrni yangi davrga koʻchirdi",
           "personal.cycle.updated": "davrni oʻzgartirdi",
-          "personal.item.created": "shaxsiy vazifa yaratdi",
+          "personal.item.created": "shaxsiy vazifa qoʻshdi",
           "personal.item.deleted": "shaxsiy vazifani oʻchirdi",
           "personal.item.reordered": "shaxsiy vazifalar tartibini oʻzgartirdi",
           "personal.item.updated": "shaxsiy vazifani oʻzgartirdi",
-          "projects.project_created": "loyiha yaratdi",
+          "projects.project_created": "loyiha ochdi",
           "projects.project_updated": "loyihani oʻzgartirdi",
-          "setup.token_issued": "sozlash tokenini oldi",
+          "setup.token_issued": "sozlash kalitini oldi",
           "storage.upload_requested": "fayl yuklashni soʻradi",
-          "storage.upload_rejected": "yuklangan fayl rad etildi",
-          "storage.upload_infected": "yuklangan faylda virus topildi",
-          "storage.upload_scan_failed": "yuklangan faylni tekshirib boʻlmadi",
+          "storage.upload_rejected": "yuklagan fayli rad etildi",
+          "storage.upload_infected": "yuklagan faylida virus topildi",
+          "storage.upload_scan_failed": "yuklagan faylini tekshirib boʻlmadi",
           "storage.upload_finalized": "fayl yuklashni yakunladi",
           "storage.upload_expired": "yuklash muddati oʻtdi",
           "storage.uploads_expired": "muddati oʻtgan yuklamalar tozalandi",
-          "structure.unit_restored": "boʻlinmani tikladi",
-          "structure.unit_updated": "boʻlinmani oʻzgartirdi",
-          "structure.units_reordered": "boʻlinmalar tartibini oʻzgartirdi",
+          "structure.unit_restored": "boʻlimni tikladi",
+          "structure.unit_updated": "boʻlimni oʻzgartirdi",
+          "structure.units_reordered": "boʻlimlar tartibini oʻzgartirdi",
           "telegram.group_connect_code_issued": "guruh ulash kodini oldi",
           "telegram.group_connected": "Telegram guruhini ulashdi",
           "telegram.group_disconnected": "Telegram guruhini uzdi",
@@ -681,21 +681,21 @@
           "telegram.linked": "Telegram hisobini bogʻladi",
           "telegram.unlinked": "Telegram hisobini uzdi",
           "user.updated": "profilini oʻzgartirdi",
-          "work.card_created": "kartochka yaratdi",
-          "work.card_restored": "kartochkani tikladi",
-          "work.card_updated": "kartochkani oʻzgartirdi",
-          "work.checklist_item_added": "tekshiruv roʻyxatiga band qoʻshdi",
-          "work.comment_added": "kartochkaga izoh qoldirdi",
-          "work.label_created": "yorliq yaratdi"
+          "work.card_created": "karta qoʻshdi",
+          "work.card_restored": "kartani tikladi",
+          "work.card_updated": "kartani oʻzgartirdi",
+          "work.checklist_item_added": "bajarish roʻyxatiga band qoʻshdi",
+          "work.comment_added": "kartaga izoh qoldirdi",
+          "work.label_created": "yorliq qoʻshdi"
         },
         "subjectType": {
           "session": "Seans",
-          "user": "Foydalanuvchi",
-          "department": "Boʻlim",
-          "department_request": "Boʻlim soʻrovi",
+          "user": "Xodim",
+          "department": "Boshqarma",
+          "department_request": "Boshqarma soʻrovi",
           "instance_settings": "Tizim sozlamasi",
-          "unit": "Boʻlinma",
-          "audit_export": "Audit eksporti"
+          "unit": "Boʻlim",
+          "audit_export": "Audit nusxasi"
         }
       },
       "health": {
@@ -715,8 +715,8 @@
         },
         "detail": {
           "error.raw": "{message}",
-          "queue.pending": "{count} ta kutilayotgan hodisa",
-          "queue.pendingOldest": "{count} ta kutilayotgan hodisa, eng eskisi {seconds} soniya oldin",
+          "queue.pending": "{count} ta hodisa navbatda",
+          "queue.pendingOldest": "{count} ta hodisa navbatda, eng eskisi {seconds} soniya oldin",
           "queue.unreadable": "Navbatni oʻqib boʻlmadi",
           "storage.free": "{gb} GB boʻsh joy",
           "telegram.connected": "{count} ta guruh ulangan",
@@ -726,25 +726,25 @@
       },
       "settings": {
         "registrationTitle": "Roʻyxatdan oʻtish",
-        "registrationBody": "Yangi foydalanuvchilar roʻyxatdan oʻtishi mumkinligini boshqaring.",
-        "registrationSwitchLabel": "Yangi hisoblar roʻyxatdan oʻtishi mumkin",
+        "registrationBody": "Yangi xodimlar hisob ochishi mumkinmi — shuni belgilaysiz.",
+        "registrationSwitchLabel": "Yangi hisob ochish mumkin",
         "registrationStatusOpen": "Ochiq",
         "registrationStatusClosed": "Yopiq",
         "registrationSavedToast": "Roʻyxatdan oʻtish sozlamasi saqlandi",
         "maintenanceTitle": "Texnik xizmat rejimi",
-        "maintenanceBody": "Yoqilganda barcha foydalanuvchilar (super administratordan tashqari) ushbu xabarni koʻradi.",
+        "maintenanceBody": "Yoqilganda super administratordan boshqa hamma shu xabarni koʻradi.",
         "maintenanceOnBadge": "Yoqilgan",
-        "maintenanceMessagePlaceholder": "Xabar matnini kiriting",
+        "maintenanceMessagePlaceholder": "Xabar matni",
         "maintenanceMessageLabel": "Xabar",
         "maintenancePreviewLabel": "Oldindan koʻrish",
         "maintenancePreviewBadge": "Xizmat texnik xizmat uchun toʻxtatilgan",
-        "maintenancePreviewEmpty": "Hali xabar kiritilmagan — foydalanuvchilar standart bildirishnomani koʻradi.",
+        "maintenancePreviewEmpty": "Hali xabar yozilmagan — xodimlar odatdagi bildirishnomani koʻradi.",
         "maintenanceEnable": "Yoqish",
         "maintenanceDisable": "Oʻchirish",
         "maintenanceSaveMessage": "Xabarni saqlash",
         "maintenanceSavedToast": "Texnik xizmat sozlamasi saqlandi",
         "sentinelTitle": "Sentinel kaliti",
-        "sentinelBody": "Oʻchirish tugmasini xost xizmatiga yuborish uchun ishlatiladigan maxfiy kalit.",
+        "sentinelBody": "Xost xizmatiga yuboriladigan oʻchirish buyrugʻini imzolaydigan maxfiy kalit.",
         "sentinelConfigured": "Sozlangan",
         "sentinelNotConfigured": "Sozlanmagan",
         "sentinelRotate": "Kalitni yangilash",
@@ -752,11 +752,11 @@
         "sentinelKeyCopiedToast": "Kalit nusxalandi",
         "sentinelGenerate": "Kalit yaratish",
         "wipeTitle": "Oʻchirish tugmasi",
-        "wipeBody": "Ushbu tugma butun tizimni serverdan butunlay oʻchiradi. Amalni ortga qaytarib boʻlmaydi.",
+        "wipeBody": "Bu tugma butun tizimni serverdan butunlay oʻchiradi. Buni ortga qaytarib boʻlmaydi.",
         "wipeStartCta": "Oʻchirishni boshlash",
         "wipeDialogTitle": "Tasdiqlash talab qilinadi",
-        "wipeDialogBody": "Bu butun tizimni serverdan qaytarib boʻlmaydigan tarzda oʻchiradi: barcha boʻlimlar, hisoblar, sahifalar, kartochkalar va fayllar. Amalni ortga qaytarib boʻlmaydi. Keyingi qadamlarda tasdiqlash iborasini kiritib, hisob maʼlumotlaringizni qayta kiritasiz.",
-        "wipeStepOf": "{total} dan {step}-qadam",
+        "wipeDialogBody": "Bu butun tizimni serverdan qaytarib boʻlmaydigan tarzda oʻchiradi: hamma boshqarma, hisob, sahifa, karta va fayl. Keyingi qadamlarda tasdiqlash iborasini yozasiz va parolingizni qayta kiritasiz.",
+        "wipeStepOf": "{total} qadamdan {step}-si",
         "wipeStepContinue": "Davom etish",
         "wipeStepBack": "Orqaga",
         "wipeStepCancel": "Bekor qilish",
@@ -767,17 +767,17 @@
         "wipeReviewPassword": "Parol",
         "wipeReviewTotp": "2FA kodi",
         "wipeReviewTotpNone": "Kiritilmagan",
-        "wipeReviewBody": "Hisoblash nolga yetgach uni bekor qilib boʻlmaydi, lekin hisoblash davom etayotganda hali ham bekor qilish mumkin.",
-        "wipeConfirmCta": "60 soniyalik hisoblashni boshlash",
-        "wipeStartFailedToast": "Tasdiqlash muvaffaqiyatsiz tugadi",
-        "wipeCountdownBody": "Hisoblash tugagach oʻchirish buyrugʻi xost xizmatiga yuboriladi. Hozir bekor qilishingiz mumkin.",
+        "wipeReviewBody": "Hisob nolga yetgach oʻchirishni toʻxtatib boʻlmaydi; hisob davom etayotganda esa bekor qilsangiz boʻladi.",
+        "wipeConfirmCta": "60 soniyalik hisobni boshlash",
+        "wipeStartFailedToast": "Tasdiqlab boʻlmadi",
+        "wipeCountdownBody": "Hisob nolga yetgach oʻchirish buyrugʻi xost xizmatiga yuboriladi. Hozir bekor qilsangiz boʻladi.",
         "wipeCountdownAria": "Oʻchirishga {seconds} soniya qoldi",
         "wipeCancel": "Bekor qilish",
         "wipeCancelledToast": "Oʻchirish bekor qilindi",
-        "wipeExecuting": "Oʻchirish buyrugʻi yuborilmoqda...",
-        "wipeFailed": "Muvaffaqiyatsiz",
+        "wipeExecuting": "Oʻchirish buyrugʻi yuborilmoqda…",
+        "wipeFailed": "Boʻlmadi",
         "sentinelPublicKeyLabel": "Ochiq kalit",
-        "sentinelPublicKeyHint": "Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=... sifatida joylashtiring. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatilishi mumkin."
+        "sentinelPublicKeyHint": "Buni xost mashinadagi infra/sentinel/sentinel.conf fayliga public_key=… koʻrinishida yozing. Bu maxfiy emas, istalgan vaqtda shu yerda koʻrsatiladi."
       },
       "maintenanceNotice": {
         "title": "Xizmat vaqtincha toʻxtatilgan"
@@ -938,15 +938,15 @@
   "ai": {
     "title": "AI",
     "eyebrow": "AI",
-    "description": "Boʻlimning AI yordamchilari: har biri nima qilishi, qayerda turishi, qancha turishi va foydalanish tarixi.",
+    "description": "Boshqarmaning AI yordamchilari: har biri nima qiladi, qayerda turadi, qancha turadi va kim ishlatgan.",
     "tabs": {
       "helpers": "Yordamchilar",
       "ask": "Soʻrash",
       "usage": "Foydalanish"
     },
     "command": {
-      "ask": "AI dan soʻrash",
-      "search": "Boʻlim boʻyicha qidirish"
+      "ask": "AIdan soʻrash",
+      "search": "Boshqarma boʻyicha qidirish"
     },
     "simulated": {
       "title": "Namunaviy javob.",
@@ -968,23 +968,23 @@
       },
       "spentOfCap": "Bu oy {cap}dan {spent} sarflandi",
       "resetToast": "Oylik AI byudjeti yangilandi",
-      "editLabel": "Oylik byudjet (UZS)",
+      "editLabel": "Oylik byudjet (soʻm)",
       "save": "Byudjetni saqlash",
-      "invalidAmount": "Toʻgʻri miqdor kiriting",
+      "invalidAmount": "Summani toʻgʻri kiriting.",
       "currency": "soʻm"
     },
     "flags": {
       "title": "Yordamchilar",
-      "description": "Har bir yordamchi nima qilishini oʻqing va boʻlimga keraklisini yoqing. Yoqmaguningizcha oʻchirilgan boʻladi.",
-      "headOnly": "Bularni faqat boʻlim boshligʻi oʻzgartira oladi.",
+      "description": "Har bir yordamchi nima qilishini oʻqing va boshqarmaga keraklisini yoqing. Yoqmaguningizcha hammasi oʻchiq turadi.",
+      "headOnly": "Bularni faqat boshqarma boshligʻi oʻzgartiradi.",
       "headOnlyBadge": "Faqat boshliq uchun",
       "whereLabel": "Qayerda:",
       "spentThisMonth": "Bu oy: {cost}"
     },
     "usage": {
       "empty": {
-        "title": "Hali AI chaqiruvlari yoʻq",
-        "body": "Boʻlimdan kimdir AI yordamchisini ishlatgach, foydalanish shu yerda koʻrinadi."
+        "title": "Hali AI ishlatilmagan",
+        "body": "Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi."
       },
       "columns": {
         "when": "Qachon",
@@ -995,7 +995,7 @@
         "cost": "Narx",
         "latency": "Kechikish"
       },
-      "unknownUser": "Boʻlimdan chiqqan xodim",
+      "unknownUser": "Boshqarmadan chiqqan xodim",
       "status": {
         "ok": "Yaxshi",
         "empty_after_retry": "Boʻsh javob",
@@ -1026,7 +1026,7 @@
       "page": {
         "previous": "Oldingi",
         "next": "Keyingi",
-        "of": "{pages} sahifadan {page} chisi"
+        "of": "{pages} sahifadan {page}-si"
       }
     },
     "result": {
@@ -1042,10 +1042,10 @@
       "close": "Yopish"
     },
     "ask": {
-      "label": "Boʻlim maʼlumotidan soʻrang",
+      "label": "Boshqarma yozuvlaridan soʻrang",
       "placeholder": "Masalan: oylik hisobotni kim tayyorlayapti?",
       "submit": "Soʻrash",
-      "hint": "Javob faqat shu boʻlimning kartochkalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi.",
+      "hint": "Javob faqat shu boshqarmaning kartalari, izohlari, sahifalari va tadbirlaridan olinadi. Har bir javobda manba havolasi boʻladi.",
       "answerTitle": "Javob: {question}",
       "done": "Yopish"
     },
@@ -1069,10 +1069,10 @@
       },
       "indexed": "{count} ta yozuv indekslangan, {pending} tasi navbatda.",
       "rebuild": "Indeksni yangilash",
-      "rebuildHint": "Kartochkalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi.",
+      "rebuildHint": "Kartalar, izohlar, sahifalar va tadbirlarni qaytadan oʻqiydi.",
       "rebuilt": "{indexed} ta yozuv yangilandi, {embedded} tasiga vektor yozildi.",
       "kind": {
-        "card": "Kartochka",
+        "card": "Karta",
         "comment": "Izoh",
         "page": "Sahifa",
         "event": "Tadbir"
@@ -1086,8 +1086,8 @@
       "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",
       "forbidden": "Bu yordamchi oʻchirilgan yoki byudjet tugagan",
       "runFailed": "AI hozircha javob bera olmadi",
-      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun",
-      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing.",
+      "headOnly": "Bu yordamchi faqat boshqarma boshligʻi uchun",
+      "featureDisabled": "Bu yordamchi boshqarma sozlamalarida oʻchirilgan. AI sahifasidan yoqing.",
       "timeout": "AI belgilangan vaqtda javob bermadi. Qayta urinib koʻring.",
       "retry": "Qayta urinish"
     },
@@ -1102,8 +1102,8 @@
       "noDate": "Muddat yoʻq",
       "unknownPerson": "Nomaʼlum xodim",
       "unknownProject": "Nomaʼlum loyiha",
-      "unknownCard": "Nomaʼlum kartochka",
-      "openCard": "Kartochkani ochish",
+      "unknownCard": "Nomaʼlum karta",
+      "openCard": "Kartani ochish",
       "minutes": "{count} daqiqa",
       "needsApproval": "Tasdiq kerak",
       "risk": {
@@ -1123,10 +1123,10 @@
         "priority": "Muhimlik",
         "labels": "Yorliqlar",
         "project": "Loyiha",
-        "ambiguous": "Bir nechta mos keldi"
+        "ambiguous": "Bir nechta xodim mos keldi"
       },
       "subtasks": {
-        "insufficient": "Kartochkada boʻlish uchun yetarli maʼlumot yoʻq. Tavsif qoʻshib, qayta urinib koʻring.",
+        "insufficient": "Kartani boʻlish uchun matn yetarli emas. Tavsif qoʻshib, qayta urinib koʻring.",
         "total": "{count} ta qadam, jami taxminan {minutes} daqiqa."
       },
       "plan": {
@@ -1146,10 +1146,10 @@
       },
       "event": {
         "place": "Joy",
-        "attendees": "Taxminiy ishtirokchi",
+        "attendees": "Taxminiy ishtirokchilar soni",
         "dateOptions": "Sana variantlari",
         "checklist": "Tayyorgarlik roʻyxati",
-        "carpool": "Yoʻl-yoʻriq"
+        "carpool": "Yoʻl"
       },
       "thread": {
         "empty": "Bu muhokamada hali qaror ham, ochiq savol ham yoʻq.",
@@ -1168,7 +1168,7 @@
           "line": "Chiziqli",
           "pie": "Doiraviy",
           "table": "Jadval",
-          "burnup": "Oʻsish egri chizigʻi"
+          "burnup": "Oʻsish chizigʻi"
         },
         "groupBy": {
           "person": "Xodim boʻyicha",
@@ -1190,14 +1190,14 @@
           "brief": "Qisqa"
         },
         "answering": "{count} ta izohga javob beradi",
-        "stillNeeded": "Siz hali aytishingiz kerak:"
+        "stillNeeded": "Hali aytishingiz kerak:"
       },
       "riskAction": {
         "move_due_date": "Muddatni koʻchirish",
         "ping_assignee": "Masʼulga eslatish",
         "split_into_subtasks": "Qadamlarga boʻlish",
         "reassign": "Boshqaga topshirish",
-        "mark_blocked": "Toʻsiq deb belgilash"
+        "mark_blocked": "Toʻxtab turibdi deb belgilash"
       },
       "digest": {
         "pressure": "Bosim nuqtalari"
@@ -1212,7 +1212,7 @@
         "related": "Aloqador"
       },
       "ask": {
-        "notFound": "Boʻlim maʼlumotlarida bu savolga javob topilmadi.",
+        "notFound": "Boshqarma yozuvlarida bu savolga javob topilmadi.",
         "sources": "Manbalar",
         "openSource": "Manbani ochish"
       }
@@ -1220,97 +1220,97 @@
     "features": {
       "quickAddParse": {
         "label": "Tezkor qoʻshish tahlili",
-        "description": "Bir gapda yozilgan vazifani nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun “ertaga” yoki “jumagacha” toʻgʻri kunga tushadi.",
-        "where": "Doska va shaxsiy ish joyidagi tezkor qoʻshish qatori.",
-        "example": "“Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch” → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch."
+        "description": "Bir gapda yozilgan ishni nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun «ertaga» yoki «jumagacha» toʻgʻri kunga tushadi.",
+        "where": "Doska va shaxsiy maydondagi tezkor qoʻshish qatori.",
+        "example": "«Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch» → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch."
       },
       "subtaskBreakdown": {
         "label": "Quyi vazifalarga boʻlish",
-        "description": "Bitta kartochkani bajarilishi mumkin boʻlgan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi.",
-        "where": "Kartochka ichidagi roʻyxat boʻlimi va shaxsiy ish joyidagi vazifa qatori.",
-        "example": "“Oylik hisobotni tayyorlash” → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
+        "description": "Bitta kartani bajarsa boʻladigan qadamlarga boʻladi va har biriga taxminiy vaqt qoʻyadi.",
+        "where": "Karta ichidagi bajarish roʻyxati va shaxsiy maydondagi vazifa qatori.",
+        "example": "«Oylik hisobotni tayyorlash» → maʼlumot yigʻish, jadval tuzish, boʻlim bilan kelishish, yakuniy nusxa."
       },
       "planSprint": {
         "label": "Davrni rejalashtirish",
         "description": "Ochiq ishlaringizni muddat, muhimlik va qolgan vaqtingizga qarab tartiblaydi, nimadan boshlashni va nima sigʻmasligini aytadi.",
-        "where": "Shaxsiy ish joyidagi davrlar va loyiha sahifasi.",
-        "example": "Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi “sigʻmaydi”."
+        "where": "Shaxsiy maydondagi davrlar va loyiha sahifasi.",
+        "example": "Uch soat va yettita ish → tartiblangan reja, birinchi ish belgilangan, ikkitasi «sigʻmaydi»."
       },
       "deadlineRisk": {
-        "label": "Bu xavfni tushuntir",
-        "description": "Kartochkadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi.",
-        "where": "Kartochkadagi xavf belgisi yonida.",
-        "example": "“Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan” → sababi va “muddatni 22-sentabrga koʻchirish” taklifi."
+        "label": "Xavfni tushuntirish",
+        "description": "Kartadagi xavf belgisi nega qoʻyilganini oddiy tilda tushuntiradi va bitta aniq chorani taklif qiladi. Xavf darajasini qaytadan hisoblamaydi.",
+        "where": "Kartadagi xavf belgisi yonida.",
+        "example": "«Muddat kecha oʻtdi, roʻyxatning yarmi bajarilgan» → sababi va «muddatni 22-sentabrga koʻchirish» taklifi."
       },
       "catchUp": {
         "label": "Nimani oʻtkazib yubordim",
-        "description": "Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boʻlim boshligʻi uchun butun boʻlim boʻyicha dushanba xulosasini beradi.",
-        "where": "Bosh sahifa, shaxsiy ish joyi va loyiha sahifasi.",
-        "example": "“Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.”"
+        "description": "Siz yoʻq vaqtingizda yoki oʻtgan haftada nima boʻlganini yigʻadi: bajarilganlar, xavflar, sizdan kutilayotgan ishlar. Boshqarma boshligʻiga butun boshqarma boʻyicha dushanba xulosasini beradi.",
+        "where": "Bosh sahifa, shaxsiy maydon va loyiha sahifasi.",
+        "example": "«Jumadan beri: 4 ta ish bajarildi, 2 tasining muddati oʻtgan, Anvarda 11 ta ochiq ish.»"
       },
       "draftEvent": {
-        "label": "Tadbir loyihasi",
-        "description": "Bir qatorli gʻoyani toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl-yoʻriq rejasi.",
-        "where": "Tadbir yaratish oynasi.",
-        "example": "“Chorvoqda kuz sayli” → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, avtomobil rejasi."
+        "label": "Tadbir qoralamasi",
+        "description": "Bir qatorli fikrni toʻliq tadbirga aylantiradi: tavsif, sana variantlari, tayyorgarlik roʻyxati va yoʻl rejasi.",
+        "where": "Tadbir qoʻshish oynasi.",
+        "example": "«Chorvoqda kuz sayli» → tavsif, uchta sana varianti, sakkiz bandli roʻyxat, yoʻl rejasi."
       },
       "summarizeThread": {
         "label": "Muhokamani xulosalash",
         "description": "Uzoq izohlar muhokamasidan qabul qilingan qarorlar, ochiq savollar va kim nimaga vaʼda berganini ajratib beradi, har biri izohga havola bilan.",
-        "where": "Kartochka va tadbir izohlari.",
-        "example": "24 ta izoh → 3 ta qaror, 2 ta ochiq savol, “Anvar PDF-ni payshanbagacha yuboradi”."
+        "where": "Karta va tadbir izohlari.",
+        "example": "24 ta izoh → 3 ta qaror, 2 ta ochiq savol, «Anvar PDF-ni payshanbagacha yuboradi»."
       },
       "nlAnalytics": {
-        "label": "Tahlildan soʻrash",
+        "label": "Tahlilga savol berish",
         "description": "Oddiy tildagi savolni filtrga aylantiradi va raqamlar bilan javob beradi, qaysi filtr ishlatilganini koʻrsatgan holda.",
         "where": "Tahlil sahifasi.",
-        "example": "“Bu oy Data boʻlimining muddati oʻtgan ishlari” → 7 ta, filtr va diagramma bilan."
+        "example": "«Bu oy Data boʻlimining muddati oʻtgan ishlari» → 7 ta, filtr va diagramma bilan."
       },
       "translate": {
         "label": "Tarjima qilish",
-        "description": "Matnni siz tanlagan tilga tarjima qiladi, boʻlim atamalarini oʻzgartirmay. Lotin va kirill oʻrtasida model ishlatilmaydi, oʻgirish shu yerda bajariladi.",
-        "where": "Kartochka tavsifi, sahifa muharriri va shaxsiy qaydlar.",
-        "example": "Oʻzbekcha tavsif → ruscha tarjima, “muddat” va “boʻlim” atamalari saqlangan holda."
+        "description": "Matnni siz tanlagan tilga tarjima qiladi, boshqarma atamalariga tegmaydi. Lotin va kirill oʻrtasida model ishlatilmaydi — oʻgirish shu yerda bajariladi.",
+        "where": "Karta tavsifi, sahifa muharriri va shaxsiy qaydlar.",
+        "example": "Oʻzbekcha tavsif → ruscha tarjima, «muddat» va «boʻlim» atamalari saqlangan holda."
       },
       "draftReply": {
-        "label": "Javob loyihasi",
+        "label": "Javob qoralamasi",
         "description": "Muhokamaga muloyim va ishchan javob yozib beradi. Hech qachon oʻzi yubormaydi: matn izoh maydoniga tushadi, yuborishni siz hal qilasiz.",
-        "where": "Kartochka izoh maydoni va kiruvchi xabardagi eslatma.",
-        "example": "“Muddatni suraymi?” → tayyor javob va “hali aytishingiz kerak: yangi sana”."
+        "where": "Karta izoh maydoni va bildirishnomadagi belgilash.",
+        "example": "«Muddatni suraymi?» → tayyor javob va «hali aytishingiz kerak: yangi sana»."
       },
       "boardRiskDigest": {
-        "label": "Kim kechiktiryapti",
-        "description": "Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora bilan. Faqat boʻlim boshligʻi uchun.",
+        "label": "Kim kechikayotgani",
+        "description": "Doskadagi eng xavfli ishlarni bitta soʻrov bilan tartiblaydi, har biriga sabab va bitta chora qoʻshadi. Faqat boshqarma boshligʻi uchun.",
         "where": "Doska sarlavhasi.",
-        "example": "Beshta ish, har biriga sabab, hamda “Anvarda 11 ta ochiq ish” degan bosim nuqtasi."
+        "example": "Beshta ish, har biriga sabab, hamda «Anvarda 11 ta ochiq ish» degan bosim nuqtasi."
       },
       "suggestAssignee": {
-        "label": "Kimga topshiray",
-        "description": "Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boʻlim boshligʻi qiladi.",
-        "where": "Kartochkadagi masʼul maydoni.",
-        "example": "“Oylik hisobot” → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
+        "label": "Kimga topshirish",
+        "description": "Ish yuki va tajribasiga qarab uchta nomzod taklif qiladi. Sababi faqat yuk va tajriba boʻladi, hech qachon baho emas. Tanlovni boshqarma boshligʻi qiladi.",
+        "where": "Kartadagi masʼul maydoni.",
+        "example": "«Oylik hisobot» → Nodira (shu mavzuda 4 ta ish), Anvar (yuki koʻp), Dilnoza."
       },
       "duplicateCheck": {
         "label": "Takroriy ishni topish",
         "description": "Yangi ish yozayotganingizda shunga oʻxshash ish allaqachon bor-yoʻqligini tekshiradi va havola beradi.",
-        "where": "Kartochka yaratish va tezkor qoʻshish oldindan koʻrishi.",
-        "example": "“Hisobotni tayyorlash” → “Choraklik hisobotni tayyorlash” allaqachon ochiq."
+        "where": "Karta qoʻshish va tezkor qoʻshish oynasi.",
+        "example": "«Hisobotni tayyorlash» → «Choraklik hisobotni tayyorlash» allaqachon ochiq."
       },
       "semanticAsk": {
-        "label": "Boʻlim maʼlumotidan soʻrash",
-        "description": "Savolingizga faqat boʻlimning oʻz kartochkalari, izohlari, sahifalari va tadbirlaridan javob beradi, har bir javobga havola qoʻyib. Topilmasa, “topilmadi” deydi.",
-        "where": "AI sahifasidagi “Soʻrash” boʻlimi va Ctrl+K.",
-        "example": "“Oylik hisobotni kim tayyorlayapti?” → “Nodira Karimova, muddat 18-sentabr”, kartochkaga havola bilan."
+        "label": "Boshqarma yozuvlaridan soʻrash",
+        "description": "Savolingizga faqat boshqarmaning oʻz kartalari, izohlari, sahifalari va tadbirlaridan javob beradi va har bir javobga havola qoʻyadi. Topilmasa, «topilmadi» deydi.",
+        "where": "AI sahifasidagi «Soʻrash» boʻlimi va Ctrl+K.",
+        "example": "«Oylik hisobotni kim tayyorlayapti?» → «Nodira Karimova, muddat 18-sentabr», kartaga havola bilan."
       },
       "weeklySummary": {
         "label": "Haftalik xulosa (eskirgan)",
-        "description": "Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
+        "description": "Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
       },
       "whatDidIMiss": {
         "label": "Nimani oʻtkazib yubordim (eskirgan)",
-        "description": "Endi “Nimani oʻtkazib yubordim” yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
+        "description": "Endi «Nimani oʻtkazib yubordim» yordamchisining bir qismi. Eski yozuvlar shu nom bilan qolgan.",
         "where": "Endi alohida ekrani yoʻq.",
         "example": "Eski foydalanish yozuvlarida koʻrinadi."
       }
@@ -1327,21 +1327,21 @@
   },
   "analytics": {
     "title": "Tahlil",
-    "eyebrow": "Hisobotlar",
+    "eyebrow": "HISOBOTLAR",
     "kpi": {
-      "throughput": "Oʻtgan hafta bajarilgan kartochkalar",
+      "throughput": "Oʻtgan hafta bajarilgan kartalar",
       "throughputQuestion": "oldingi haftaga nisbatan",
-      "open": "Ochiq kartochkalar",
+      "open": "Ochiq kartalar",
       "openQuestion": "oldingi haftaga nisbatan",
-      "overdue": "Muddati oʻtgan kartochkalar",
+      "overdue": "Muddati oʻtgan kartalar",
       "overdueQuestion": "oldingi haftaga nisbatan",
-      "onTimeRate": "Oʻtgan hafta oʻz vaqtida",
+      "onTimeRate": "Oʻtgan hafta muddatida",
       "onTimeRateQuestion": "oldingi haftaga nisbatan foiz punkti",
       "onTimeRateDenominator": "oʻtgan hafta muddati kelgan {due} tadan {onTime} tasi"
     },
     "ask": {
-      "title": "Tahlildan soʻrash",
-      "placeholder": "Savol bering, masalan \"bu oy muddati oʻtgan kartochkalar\"",
+      "title": "Savol bering",
+      "placeholder": "Masalan: bu oy muddati oʻtgan kartalar",
       "action": "Soʻrash",
       "pending": "Savol oʻqilmoqda…",
       "apply": "Filtrni qoʻllash",
@@ -1352,7 +1352,7 @@
       "resultNoFilter": "Buni filtrga aylantirib boʻlmadi — boshqacha soʻrab koʻring.",
       "errors": {
         "invalid": "Savolni tekshirib, qayta urinib koʻring",
-        "forbidden": "Bu funksiya oʻchirilgan yoki AI byudjeti tugagan",
+        "forbidden": "Savol berish oʻchirilgan yoki AI byudjeti tugagan",
         "failed": "AI bu safar javob bera olmadi"
       }
     },
@@ -1360,14 +1360,14 @@
       "placeholder": "assignee:@me status:active due:<today",
       "apply": "Qoʻllash",
       "clear": "Tozalash",
-      "since": "Boshlanishi",
-      "until": "Tugashi",
+      "since": "Qaysi sanadan",
+      "until": "Qaysi sanagacha",
       "activeTerms": "Filtrlar:",
-      "removeTerm": "\"{term}\" filtrini olib tashlash",
+      "removeTerm": "«{term}» filtrini olib tashlash",
       "dateRange": "Davr:",
       "presetDays": "Oxirgi {count} kun",
-      "showAdvanced": "Kengaytirilgan",
-      "hideAdvanced": "Kengaytirilganni yashirish"
+      "showAdvanced": "Qoʻshimcha",
+      "hideAdvanced": "Qoʻshimchani yashirish"
     },
     "savedFilters": {
       "title": "Saqlangan filtrlar",
@@ -1375,100 +1375,100 @@
       "namePlaceholder": "Filtr nomi",
       "save": "Saqlash",
       "delete": "Oʻchirish",
-      "shared": "Boʻlim bilan boʻlishilgan",
+      "shared": "Butun boshqarmaga ochiq",
       "empty": "Hali saqlangan filtr yoʻq"
     },
     "actions": {
-      "export": "Eksport",
-      "exportCsv": "CSV formatida yuklab olish",
-      "exportPng": "Rasm sifatida yuklab olish",
+      "export": "Yuklab olish",
+      "exportCsv": "CSV yuklab olish",
+      "exportPng": "Rasm yuklab olish",
       "pin": "Bosh sahifaga mahkamlash",
-      "unpin": "Mahkamlashni bekor qilish",
-      "viewAsTable": "Jadval koʻrinishida koʻrish",
-      "viewAsChart": "Diagramma koʻrinishida koʻrish"
+      "unpin": "Mahkamlashni olib tashlash",
+      "viewAsTable": "Jadval koʻrinishi",
+      "viewAsChart": "Diagramma koʻrinishi"
     },
     "legend": {
       "open": "Ochiq",
       "overdue": "Muddati oʻtgan",
       "done": "Bajarilgan",
-      "yes": "Kelaman",
-      "no": "Kelmayman",
+      "yes": "Boraman",
+      "no": "Bormayman",
       "maybe": "Balki",
-      "waitlist": "Kutish roʻyxatida",
+      "waitlist": "Navbatda",
       "unassigned": "Boʻlimsiz"
     },
     "sections": {
       "throughput": {
-        "title": "Haftalik bajarilgan topshiriqlar",
-        "question": "Har hafta nechta topshiriq yakunlandi?",
-        "empty": "Hali yakunlangan topshiriqlar yoʻq"
+        "title": "Haftada bajarilgan kartalar",
+        "question": "Har hafta nechta karta yakunlandi?",
+        "empty": "Hali yakunlangan karta yoʻq"
       },
       "onTimeRate": {
-        "title": "Oʻz vaqtida bajarilish darajasi",
-        "question": "Topshiriqlar muddatida bajarilyaptimi?",
+        "title": "Muddatida bajarilish ulushi",
+        "question": "Kartalar muddatida bajarilyaptimi?",
         "overall": "Umumiy: {percent}%",
-        "empty": "Baholash uchun yetarli maʼlumot yoʻq",
+        "empty": "Baholash uchun hali yetarli raqam yoʻq",
         "overallDenominator": "(tanlangan davrda muddati kelgan {due} tadan {onTime} tasi)"
       },
       "openVsOverdue": {
-        "title": "Ochiq va muddati oʻtgan topshiriqlar",
-        "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?",
-        "empty": "Hozircha ochiq topshiriqlar yoʻq"
+        "title": "Ochiq va muddati oʻtgan kartalar",
+        "question": "Ochiq ishlarning qanchasi kechikkan?",
+        "empty": "Ochiq karta yoʻq"
       },
       "loadPerPerson": {
         "title": "Xodimlar boʻyicha yuklama",
         "question": "Hozir kimning ustida qancha ish bor?",
-        "empty": "Hozircha hech kimga topshiriq biriktirilmagan"
+        "empty": "Hech kimga karta biriktirilmagan"
       },
       "loadPerUnit": {
         "title": "Boʻlimlar boʻyicha yuklama",
         "question": "Qaysi boʻlim eng band?",
-        "empty": "Hozircha boʻlimlar boʻyicha maʼlumot yoʻq"
+        "empty": "Boʻlimlarga biriktirilgan karta yoʻq"
       },
       "projectProgress": {
-        "title": "Loyihalar boʻyicha jarayon",
+        "title": "Loyihalarning bajarilishi",
         "question": "Har bir loyiha qay darajada bajarilgan?",
-        "empty": "Hali loyihalar yoʻq"
+        "empty": "Hali loyiha yoʻq"
       },
       "eventsParticipation": {
         "title": "Tadbirlarda ishtirok",
-        "question": "Tadbirlarga qanday javob berishmoqda?",
-        "empty": "Bu davrda tadbirlar yoʻq"
+        "question": "Tadbirlarga qanday javob berilyapti?",
+        "empty": "Bu davrda tadbir boʻlmagan"
       },
       "pollTurnout": {
         "title": "Soʻrovnomalarda qatnashish",
-        "question": "Soʻrovnomalarga qancha kishi ovoz berdi?",
-        "empty": "Hali soʻrovnomalar yoʻq"
+        "question": "Har bir soʻrovnomada nechta xodim ovoz berdi?",
+        "empty": "Hali soʻrovnoma yoʻq"
       },
       "personal": {
-        "title": "Shaxsiy koʻrsatkichlarim",
+        "title": "Koʻrsatkichlarim",
         "question": "Mening ishlarim qanday ketyapti?",
-        "empty": "Hozircha shaxsiy koʻrsatkichlar yoʻq"
+        "empty": "Hozircha koʻrsatkich yigʻilmagan"
       }
     },
     "personal": {
       "open": "Ochiq",
       "overdue": "Muddati oʻtgan",
       "doneThisWeek": "Shu hafta bajarilgan",
-      "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
-      "focusMinutes": "Fokus daqiqalari",
-      "upcomingEvents": "Yaqinlashib kelayotgan tadbirlar"
+      "onTimeRate": "Muddatida bajarilgani",
+      "focusMinutes": "Diqqat daqiqalari",
+      "upcomingEvents": "Yaqin tadbirlar"
     },
     "empty": {
       "title": "Hali tahlil qiladigan narsa yoʻq",
-      "body": "Topshiriqlar va tadbirlar paydo boʻlgach, bu yerda hisobotlar koʻrinadi."
+      "body": "Kartalar va tadbirlar paydo boʻlgach, hisobotlar shu yerda koʻrinadi."
     },
     "pinDialog": {
       "title": "Bosh sahifaga mahkamlash",
       "titlePlaceholder": "Diagramma nomi",
       "confirm": "Mahkamlash"
     },
-    "chartEmpty": "Hozircha maʼlumot yoʻq"
+    "chartEmpty": "Bu davr uchun raqam yoʻq"
   },
   "automations": {
     "eyebrow": "AVTOMATLASHTIRISH",
     "title": "Qoidalar",
-    "description": "«Shunday boʻlsa — shuni qil». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
+    "description": "«Shunday boʻlsa — shunday qilinsin». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
     "create": "Qoida qoʻshish",
     "newTitle": "Yangi qoida",
     "created": "Qoida qoʻshildi",
@@ -1499,10 +1499,10 @@
       "edit": "{name} qoidasini tahrirlash",
       "duplicate": "{name} qoidasidan nusxa olish",
       "copyOf": "{name} — nusxa",
-      "suppressed": "Qoida hozir oʻchirilgan — quyidagi {count} ta ishga tushish u yoqilgan paytda boʻlgan, yangi kartalar uchun hech narsa bajarilmaydi."
+      "suppressed": "Qoida hozir oʻchirilgan — bu {count} ta ishga tushish u yoqilgan paytda boʻlgan; yangi kartalar uchun hech narsa bajarilmaydi."
     },
     "trigger": {
-      "cardCreated": "Karta yaratilganda",
+      "cardCreated": "Karta qoʻshilganda",
       "cardStatusChanged": "Holati oʻzgarganda",
       "cardAssigned": "Karta biriktirilganda",
       "cardDueSoon": "Muddati yaqinlashganda",
@@ -1516,8 +1516,8 @@
       "notifyUser": "xodimga xabar berish",
       "notifyHead": "boshliqqa xabar berish",
       "setStatus": "holatini oʻzgartirish",
-      "addChecklist": "tekshirish roʻyxatini qoʻshish",
-      "createFollowup": "davomi uchun karta yaratish"
+      "addChecklist": "bajarish roʻyxatini qoʻshish",
+      "createFollowup": "davomi uchun karta qoʻshish"
     },
     "builder": {
       "nameLabel": "Qoida nomi",
@@ -1528,7 +1528,7 @@
       "toStatusLabel": "Qaysi holatga oʻtganda",
       "anyStatus": "Har qanday holat",
       "daysAheadLabel": "Necha kun oldin",
-      "daysAheadHint": "1 dan 14 kungacha.",
+      "daysAheadHint": "1 kundan 14 kungacha.",
       "fieldLabel": "Qaysi maydon",
       "field": {
         "priority": "Muhimlik",
@@ -1549,10 +1549,10 @@
       "labelLabel": "Yorliq",
       "chooseLabel": "Yorliqni tanlang",
       "statusLabel": "Holat",
-      "checklistLabel": "Tekshirish roʻyxati",
+      "checklistLabel": "Bajarish roʻyxati",
       "checklistHint": "Har bir band — alohida qator.",
       "followupTitle": "Yangi karta nomi",
-      "followupDueInDays": "Necha kunda",
+      "followupDueInDays": "Necha kundan keyin",
       "invalid": "Qoida toʻliq emas — maydonlarni tekshiring."
     },
     "run": {
@@ -1589,14 +1589,14 @@
     "runsPage": {
       "previous": "Oldingi",
       "next": "Keyingi",
-      "of": "{pages} sahifadan {page} chisi"
+      "of": "{pages} sahifadan {page}-si"
     },
-    "forbiddenAction": "Ishlarni koʻrish"
+    "forbiddenAction": "Doskani ochish"
   },
   "calendar": {
-    "title": "Kalendar",
-    "eyebrow": "REJA VA ESLATMALAR",
-    "description": "Tadbirlar va kartochka muddatlari — bir joyda, telefoningizdagi kalendarda va eslatmalarda.",
+    "title": "Taqvim",
+    "eyebrow": "TAQVIM",
+    "description": "Tadbirlar va karta muddatlari bir joyda — telefoningizdagi taqvimda va eslatmalarda.",
     "tabs": {
       "agenda": "Kun tartibi",
       "feeds": "Obunalar",
@@ -1608,19 +1608,19 @@
       "copy": "Nusxa olish",
       "copied": "Nusxa olindi",
       "open": "Ochish",
-      "undo": "Qaytarish"
+      "undo": "Bekor qilish"
     },
     "forbidden": {
       "title": "Bu sahifa siz uchun ochiq emas",
-      "body": "Kalendar obunalari shaxsiy. Hisobingizga kirganingizni tekshiring."
+      "body": "Taqvim obunalari shaxsiy. Oʻz hisobingizga kirganingizni tekshiring."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet tiklanganda kun tartibi oʻzi yangilanadi."
+      "body": "Aloqa tiklangach kun tartibi oʻzi yangilanadi."
     },
     "agenda": {
       "title": "Yaqin kunlar",
-      "description": "Sizning tadbirlaringiz va muddati kelayotgan kartochkalaringiz.",
+      "description": "Tadbirlaringiz va muddati yaqinlashgan kartalaringiz.",
       "range": {
         "label": "Davr",
         "week": "7 kun",
@@ -1629,7 +1629,7 @@
       },
       "kind": {
         "event": "Tadbir",
-        "card": "Kartochka"
+        "card": "Karta"
       },
       "today": "Bugun",
       "tomorrow": "Ertaga",
@@ -1637,7 +1637,7 @@
       "allDay": "Kun boʻyi",
       "empty": {
         "title": "Yaqin kunlarda hech narsa yoʻq",
-        "body": "Tadbir yarating yoki kartochkaga muddat qoʻying — bu yerda koʻrinadi.",
+        "body": "Tadbir qoʻshing yoki kartaga muddat belgilang — shu yerda koʻrinadi.",
         "action": "Tadbirlarga oʻtish"
       },
       "loading": {
@@ -1645,39 +1645,39 @@
       },
       "error": {
         "title": "Kun tartibini ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "feeds": {
-      "title": "Kalendar obunalari",
-      "description": "Maxfiy havola orqali WorkPortal kalendaringizni telefoningizga yoki Outlookka ulang.",
-      "secretWarning": "Bu havola — kalit. Havolaga ega har kim sizning tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻzingizning ilovangizga qoʻying.",
+      "title": "Taqvim obunalari",
+      "description": "Maxfiy havola orqali WorkPortal taqvimingizni telefoningizga yoki Outlookka ulang.",
+      "secretWarning": "Bu havola — kalit. Havolaga ega har kim tadbirlaringiz va muddatlaringizni koʻra oladi. Uni faqat oʻz ilovangizga kiriting.",
       "create": {
         "title": "Yangi obuna",
         "label": "Nomi",
-        "labelPlaceholder": "Masalan: iPhone kalendari",
+        "labelPlaceholder": "Masalan: iPhone taqvimi",
         "kind": "Nimalar kirsin",
-        "submit": "Obuna yaratish",
-        "creating": "Yaratilmoqda…"
+        "submit": "Obuna qoʻshish",
+        "creating": "Qoʻshilmoqda…"
       },
       "kind": {
         "all": "Hammasi",
         "events": "Faqat tadbirlar",
-        "tasks": "Faqat kartochka muddatlari",
-        "allHelp": "Tadbirlar ham, muddati bor kartochkalar ham.",
+        "tasks": "Faqat karta muddatlari",
+        "allHelp": "Tadbirlar ham, muddati bor kartalar ham.",
         "eventsHelp": "Faqat siz qatnashadigan tadbirlar.",
-        "tasksHelp": "Faqat sizga biriktirilgan, muddati bor kartochkalar."
+        "tasksHelp": "Faqat sizga biriktirilgan, muddati bor kartalar."
       },
       "url": {
         "https": "Havola (https)",
         "webcal": "Webcal havolasi",
         "caldav": "CalDAV havolasi",
         "httpsHelp": "Google Calendar → «URL orqali qoʻshish» uchun.",
-        "webcalHelp": "iPhone, Apple Calendar va Outlook uchun — bosilganda kalendar ilovasi ochiladi.",
+        "webcalHelp": "iPhone, Apple Calendar va Outlook uchun — bosilganda taqvim ilovasi ochiladi.",
         "caldavHelp": "DAVx5, Thunderbird va Evolution uchun. Faqat oʻqish."
       },
       "meta": {
-        "created": "Yaratilgan {date}",
+        "created": "Qoʻshilgan {date}",
         "rotated": "Yangilangan {date}",
         "lastAccessed": "Oxirgi marta oʻqilgan {date}",
         "neverAccessed": "Hali bir marta ham oʻqilmagan",
@@ -1685,9 +1685,9 @@
       },
       "rotate": {
         "action": "Havolani yangilash",
-        "confirmTitle": "Havolani yangilaymizmi?",
-        "confirmBody": "Eski havola shu zahoti ishlamay qoladi. Yangi havolani kalendar ilovangizga qaytadan qoʻyishingiz kerak boʻladi.",
-        "confirm": "Ha, yangilansin",
+        "confirmTitle": "Havola yangilansinmi?",
+        "confirmBody": "Eski havola shu zahoti ishlamay qoladi. Yangi havolani taqvim ilovangizga qaytadan kiritishingiz kerak boʻladi.",
+        "confirm": "Yangilash",
         "cancel": "Bekor qilish",
         "toast": "Havola yangilandi"
       },
@@ -1698,36 +1698,36 @@
       "copyToast": "Havola nusxalandi",
       "empty": {
         "title": "Hali obuna yoʻq",
-        "body": "Obuna yarating — tadbirlaringiz telefoningizdagi kalendarda ham koʻrinadi.",
-        "action": "Obuna yaratish"
+        "body": "Obuna qoʻshing — tadbirlaringiz telefoningizdagi taqvimda ham koʻrinadi.",
+        "action": "Obuna qoʻshish"
       },
       "loading": {
         "title": "Obunalar yuklanmoqda"
       },
       "error": {
         "title": "Obunalarni ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "push": {
       "title": "Brauzer eslatmalari",
-      "description": "Muddat yaqinlashganda yoki sizni eslatib oʻtishganda — WorkPortal ochiq boʻlmasa ham xabar keladi.",
+      "description": "Muddat yaqinlashganda yoki sizni belgilashganda xabar keladi — WorkPortal ochiq boʻlmasa ham.",
       "what": {
         "title": "Nima uchun xabar keladi",
-        "mentioned": "Izohda sizni eslatib oʻtishsa",
-        "assigned": "Sizga kartochka biriktirilsa",
-        "due": "Kartochka muddati yaqinlashsa",
+        "mentioned": "Izohda sizni belgilashsa",
+        "assigned": "Sizga karta biriktirilsa",
+        "due": "Karta muddati yaqinlashsa",
         "decision": "Sizdan qaror kutilsa"
       },
       "quietHours": {
-        "note": "Tinch soatlaringizda xabar kelmaydi — kirish qutisi sozlamalaridagi vaqtga boʻysunadi."
+        "note": "Tinch soatlaringizda xabar kelmaydi — bildirishnoma sozlamalaringizdagi vaqt qoʻllanadi."
       },
       "enable": "Eslatmalarni yoqish",
       "enabling": "Yoqilmoqda…",
       "disable": "Bu qurilmada oʻchirish",
       "state": {
         "on": "Bu qurilmada yoqilgan",
-        "off": "Bu qurilmada oʻchirilgan"
+        "off": "Bu qurilmada oʻchiq"
       },
       "devices": {
         "title": "Ulangan qurilmalar",
@@ -1738,11 +1738,11 @@
       },
       "unsupported": {
         "title": "Bu brauzer eslatmalarni qoʻllamaydi",
-        "body": "Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhoneʼda WorkPortalni avval «Bosh ekranga qoʻshish» kerak."
+        "body": "Chrome, Edge yoki Firefoxning yangi versiyasidan foydalaning. iPhone uchun avval WorkPortalni bosh ekranga qoʻshing."
       },
       "denied": {
-        "title": "Brauzer eslatmalarni bloklagan",
-        "body": "Manzil satridagi qulf belgisini bosing va bu sayt uchun bildirishnomalarga ruxsat bering, soʻng qaytadan urinib koʻring."
+        "title": "Brauzer bildirishnomalarni toʻsib qoʻygan",
+        "body": "Manzil satridagi qulf belgisini bosing, bu sayt uchun bildirishnomalarga ruxsat bering va qayta urinib koʻring."
       },
       "disabledOnServer": {
         "title": "Bu serverda eslatmalar sozlanmagan",
@@ -1758,17 +1758,17 @@
       },
       "error": {
         "title": "Sozlamalarni ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       }
     },
     "addTo": {
-      "label": "Kalendarga qoʻshish",
+      "label": "Taqvimga qoʻshish",
       "google": "Google Calendar",
       "outlook": "Outlook.com",
       "office365": "Microsoft 365",
       "yahoo": "Yahoo Calendar",
       "ics": "Fayl (.ics)",
-      "hint": "Tadbirni oʻz kalendaringizga koʻchiradi.",
+      "hint": "Tadbirni oʻz taqvimingizga koʻchiradi.",
       "error": "Havolalarni tayyorlab boʻlmadi"
     }
   },
@@ -2032,44 +2032,44 @@
   "events": {
     "title": "Tadbirlar",
     "eyebrow": "TADBIRLAR",
-    "description": "Boʻlim birgalikda qiladigan har bir ishni rejalashtiring, ishtirokni belgilang.",
+    "description": "Boshqarma birga qiladigan ishlarni rejalashtiring va ishtirokni belgilang.",
     "view": {
       "list": "Roʻyxat",
       "calendar": "Taqvim"
     },
     "actions": {
-      "create": "Tadbir yaratish",
+      "create": "Tadbir qoʻshish",
       "edit": "Tahrirlash",
       "save": "Saqlash",
       "cancelEvent": "Tadbirni bekor qilish",
-      "moreActions": "Qoʻshimcha amallar",
+      "moreActions": "Yana amallar",
       "close": "Yopish",
       "retry": "Qayta urinish",
       "back": "Orqaga",
       "undo": "Bekor qilish"
     },
     "empty": {
-      "title": "Hozircha tadbirlar yoʻq",
-      "body": "Jamoangiz uchun birinchi tadbirni shu yerda yarating.",
-      "action": "Tadbir yaratish"
+      "title": "Hali tadbir yoʻq",
+      "body": "Birinchi tadbirni qoʻshing — hamma shu yerda ishtirokini belgilaydi.",
+      "action": "Tadbir qoʻshish"
     },
     "loading": {
       "title": "Tadbirlar yuklanmoqda"
     },
     "error": {
       "title": "Tadbirlarni yuklab boʻlmadi",
-      "body": "Nimadir xato ketdi. Qayta urinib koʻring."
+      "body": "Aloqa uzildi. Qayta urinib koʻring."
     },
     "forbidden": {
-      "title": "Ruxsat yoʻq",
-      "body": "Tadbirlarni koʻrish uchun boʻlim aʼzosi boʻlishingiz kerak."
+      "title": "Tadbirlar boshqarma xodimlari uchun",
+      "body": "Tadbirlarni boshqarma xodimlari koʻradi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet tiklanganda tadbirlar roʻyxati yangilanadi."
+      "body": "Aloqa tiklangach tadbirlar roʻyxati yangilanadi."
     },
     "category": {
-      "team_building": "Jamoa qurish",
+      "team_building": "Jamoani jipslashtirish",
       "sports": "Sport",
       "volunteering": "Koʻngillilik",
       "social": "Ijtimoiy",
@@ -2088,9 +2088,9 @@
       "organizer": "Tashkilotchi: {name}",
       "going": "{count} kishi boradi",
       "waitlisted": "{count} kishi navbatda",
-      "capacity": "{going} / {capacity} joy",
+      "capacity": "{going}/{capacity} joy",
       "unlimitedCapacity": "Joylar soni cheklanmagan",
-      "deadline": "Roʻyxatdan oʻtish: {date}",
+      "deadline": "Javob muddati: {date}",
       "cancelledBanner": "Bu tadbir bekor qilindi",
       "cancelledReason": "Sabab: {reason}",
       "doneBanner": "Bu tadbir yakunlandi",
@@ -2102,22 +2102,22 @@
       "today": "Bugun"
     },
     "form": {
-      "stepBasics": "Asosiy maʼlumot",
+      "stepBasics": "Asosiy",
       "stepSchedule": "Vaqt va manzil",
       "stepCapacity": "Joylar va eslatmalar",
       "stepBack": "Orqaga",
       "stepNext": "Keyingisi",
-      "aiIdeaLabel": "Bir qatorli ideya",
+      "aiIdeaLabel": "Bir qatorli fikr",
       "aiIdeaPlaceholder": "Masalan, keyingi oyda bogʻda jamoaviy piknik",
       "aiDraftButton": "AI bilan qoralama tuzish",
       "aiDraftPending": "Qoralama tuzilmoqda…",
       "aiDraftFailed": "Tadbir qoralamasini tuzib boʻlmadi",
       "aiDraftAccept": "Shu qoralamadan foydalanish",
       "aiDraftEdit": "Foydalanib, tahrirlash",
-      "aiDraftDiscard": "Rad etish",
+      "aiDraftDiscard": "Kerak emas",
       "aiDraftChecklist": "Taklif qilingan roʻyxat",
       "aiDraftPoll": "Taklif qilingan soʻrovnoma variantlari: {options}",
-      "aiDraftFollowUp": "Roʻyxat, soʻrovnoma va birga borish rejasini tadbirni yaratgandan keyin uning sahifasida qoʻshing.",
+      "aiDraftFollowUp": "Roʻyxat, soʻrovnoma va birga borishni tadbir qoʻshilgandan keyin uning sahifasida sozlaysiz.",
       "titleLabel": "Tadbir nomi",
       "titlePlaceholder": "Masalan, kuzgi jamoaviy piknik",
       "descriptionLabel": "Tavsif",
@@ -2126,23 +2126,23 @@
       "startsAtLabel": "Boshlanish vaqti",
       "endsAtLabel": "Tugash vaqti",
       "placeLabel": "Manzil",
-      "placePlaceholder": "Masalan, boʻlim yigʻilishlar zali",
+      "placePlaceholder": "Masalan, boshqarma yigʻilishlar zali",
       "placeUrlLabel": "Manzil havolasi",
       "capacityLabel": "Joylar soni",
       "capacityPlaceholder": "Cheklanmagan",
       "waitlistEnabledLabel": "Joylar tugasa navbat ochilsin",
-      "rsvpDeadlineLabel": "Roʻyxatdan oʻtish muddati",
+      "rsvpDeadlineLabel": "Javob muddati",
       "costNoteLabel": "Xarajat haqida eslatma",
-      "costNotePlaceholder": "Masalan, transport boʻlim hisobidan",
+      "costNotePlaceholder": "Masalan, transport boshqarma hisobidan",
       "remindersLabel": "Eslatmalar",
       "reminderDayBefore": "1 kun oldin",
       "reminderHourBefore": "1 soat oldin",
-      "submitCreate": "Tadbirni yaratish",
+      "submitCreate": "Tadbirni qoʻshish",
       "submitUpdate": "Oʻzgarishlarni saqlash",
       "validation": {
-        "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak"
+        "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlsin."
       },
-      "aiDraftCarpool": "Yoʻl-yoʻriq",
+      "aiDraftCarpool": "Yoʻl",
       "aiDraftPickDate": "Qaysi sanani olamiz?"
     },
     "diff": {
@@ -2160,18 +2160,18 @@
     },
     "cancelDialog": {
       "title": "Tadbirni bekor qilish",
-      "body": "\"{title}\" bekor qilinadi va roʻyxatdan oʻtgan {count} kishiga xabar boradi. Bu amalni ortga qaytarib boʻlmaydi.",
+      "body": "«{title}» bekor qilinadi va ishtirokini belgilagan {count} kishiga xabar boradi. Buni ortga qaytarib boʻlmaydi.",
       "reasonLabel": "Sabab",
-      "reasonPlaceholder": "Xodimlarga tushuntiring",
-      "confirm": "Ha, bekor qilish",
-      "keepEvent": "Yoʻq, saqlab qolish"
+      "reasonPlaceholder": "Xodimlarga nima boʻlganini tushuntiring",
+      "confirm": "Tadbirni bekor qilish",
+      "keepEvent": "Saqlab qolish"
     },
     "rsvp": {
       "title": "Ishtirok etasizmi?",
       "status": {
-        "yes": "Ha, boraman",
+        "yes": "Boraman",
         "no": "Bormayman",
-        "maybe": "Ehtimol",
+        "maybe": "Balki",
         "waitlist": "Navbatda"
       },
       "guestsLabel": "Mehmonlar soni",
@@ -2179,12 +2179,12 @@
       "notePlaceholder": "Masalan, allergiya yoki boshqa eslatma",
       "submit": "Yuborish",
       "update": "Yangilash",
-      "deadlinePassed": "Roʻyxatdan oʻtish muddati tugagan",
-      "eventFull": "Joylar toʻlgan, navbatga yozildingiz",
+      "deadlinePassed": "Javob muddati tugagan",
+      "eventFull": "Joylar toʻlgan — navbatga yozildingiz",
       "confirmedToast": "Ishtirokingiz qayd etildi",
       "waitlistedToast": "Joylar toʻlgan — navbatga qoʻyildingiz",
       "cancelledToast": "Ishtirokingiz bekor qilindi",
-      "myStatus": "Sizning javobingiz: {status}",
+      "myStatus": "Javobingiz: {status}",
       "notYet": "Hali javob bermadingiz"
     },
     "attendees": {
@@ -2201,24 +2201,24 @@
       "submit": "Yuborish",
       "delete": "Oʻchirish",
       "deleteConfirm": "Izohni oʻchirmoqchimisiz?",
-      "summarize": "Muhokamani qisqacha ifodalash",
-      "summaryPending": "Qisqacha bayon tuzilmoqda…",
-      "summaryFailed": "Muhokamani qisqacha bayon qilib boʻlmadi",
+      "summarize": "Qisqacha xulosa",
+      "summaryPending": "Xulosa tayyorlanmoqda…",
+      "summaryFailed": "Muhokamadan xulosa chiqarib boʻlmadi",
       "summaryAccept": "Izohga qoʻshish",
       "summaryEdit": "Qoʻshib, tahrirlash",
-      "summaryDiscard": "Rad etish",
+      "summaryDiscard": "Kerak emas",
       "viewerFallback": "Siz"
     },
     "carpool": {
       "title": "Birga borish",
-      "empty": "Hozircha birga borish takliflari yoʻq",
+      "empty": "Hali mashina taklif qilinmagan",
       "offer": "Mashina taklif qilish",
       "seatsLabel": "Boʻsh oʻrindiqlar",
       "departurePlaceLabel": "Joʻnash nuqtasi",
       "departureAtLabel": "Joʻnash vaqti",
       "noteLabel": "Izoh",
       "driver": "Haydovchi: {name}",
-      "seatsTaken": "{claimed} / {seats} oʻrin band",
+      "seatsTaken": "{claimed}/{seats} oʻrin band",
       "claim": "Oʻrin band qilish",
       "release": "Voz kechish",
       "waitlisted": "Navbatda",
@@ -2231,7 +2231,7 @@
     },
     "items": {
       "title": "Kim nima olib keladi",
-      "empty": "Hozircha buyumlar roʻyxati boʻsh",
+      "empty": "Roʻyxat hali boʻsh",
       "add": "Buyum qoʻshish",
       "labelPlaceholder": "Masalan, choy-poy",
       "quantityLabel": "Miqdori",
@@ -2244,7 +2244,7 @@
     "polls": {
       "title": "Soʻrovnomalar",
       "empty": "Hozircha soʻrovnoma yoʻq",
-      "create": "Soʻrovnoma yaratish",
+      "create": "Soʻrovnoma qoʻshish",
       "kindLabel": "Turi",
       "kind": {
         "date": "Sana tanlash",
@@ -2266,12 +2266,12 @@
       "voteRevertedToast": "Avvalgi ovozingiz tiklandi",
       "totalVotes": "{count} ta ovoz",
       "closed": "Yakunlangan",
-      "yourVote": "Sizning ovozingiz",
-      "createdBy": "Yaratdi: {name}"
+      "yourVote": "Ovozingiz",
+      "createdBy": "Qoʻshdi: {name}"
     },
     "photos": {
-      "title": "Fotosuratlar",
-      "empty": "Hozircha fotosurat yoʻq",
+      "title": "Suratlar",
+      "empty": "Hali surat yoʻq",
       "add": "Havola qoʻshish",
       "urlLabel": "Rasm havolasi",
       "captionLabel": "Izoh (ixtiyoriy)",
@@ -2285,14 +2285,14 @@
       "anonymousLabel": "Anonim qoldirish",
       "submit": "Yuborish",
       "update": "Yangilash",
-      "average": "Oʻrtacha baho: {rating} / 5",
-      "yours": "Sizning bahoyingiz",
+      "average": "Oʻrtacha baho: {rating}/5",
+      "yours": "Bahoyingiz",
       "anonymousAuthor": "Anonim",
       "thankYou": "Fikringiz uchun rahmat"
     },
     "ics": {
       "exportEvent": "Taqvimga qoʻshish (.ics)",
-      "exportMine": "Mening tadbirlarim (.ics)"
+      "exportMine": "Tadbirlarim (.ics)"
     },
     "tabs": {
       "overview": "Umumiy",
@@ -2300,13 +2300,13 @@
       "carpool": "Birga borish",
       "items": "Buyumlar",
       "polls": "Soʻrovnomalar",
-      "photos": "Fotosuratlar",
+      "photos": "Suratlar",
       "feedback": "Fikr",
       "comments": "Muhokama"
     },
     "filters": {
-      "from": "Boshlanish",
-      "to": "Tugash"
+      "from": "Qaysi sanadan",
+      "to": "Qaysi sanagacha"
     }
   },
   "fields": {
@@ -2494,7 +2494,7 @@
   "inbox": {
     "title": "Bildirishnomalar",
     "eyebrow": "XABARLAR",
-    "markAllRead": "Barchasini oʻqilgan deb belgilash",
+    "markAllRead": "Hammasini oʻqilgan deb belgilash",
     "groupByReason": "Sababi boʻyicha guruhlash",
     "calendarLink": "Taqvim havolasi",
     "viewMenu": {
@@ -2507,21 +2507,21 @@
     },
     "empty": {
       "inbox": {
-        "title": "Hammasi tekshirildi",
-        "body": "Hozircha eʼtibor talab qiladigan narsa yoʻq. Xotirjam boʻling."
+        "title": "Hammasi koʻrib chiqilgan",
+        "body": "Hozircha javobingizni kutayotgan bildirishnoma yoʻq."
       },
       "unread": {
-        "title": "Oʻqilmagan narsa yoʻq",
-        "body": "Barcha bildirishnomalarni koʻrib chiqdingiz."
+        "title": "Oʻqilmagan bildirishnoma yoʻq",
+        "body": "Hammasini oʻqib chiqdingiz."
       },
       "archived": {
-        "title": "Arxivlangan bildirishnoma yoʻq",
-        "body": "Arxivlagan bildirishnomalaringiz shu yerda koʻrinadi."
+        "title": "Arxivda bildirishnoma yoʻq",
+        "body": "Arxivga olgan bildirishnomalaringiz shu yerda turadi."
       }
     },
     "reason": {
       "assigned": "Topshiriq",
-      "mentioned": "Eslatish",
+      "mentioned": "Belgilash",
       "due": "Muddat",
       "updated": "Yangilanish",
       "rsvp": "Ishtirok",
@@ -2534,11 +2534,11 @@
     "channel": {
       "inapp": "Ilovada",
       "telegram": "Telegram",
-      "email": "Elektron pochta"
+      "email": "E-pochta"
     },
     "row": {
       "unread": "Oʻqilmagan",
-      "archive": "Arxivlash",
+      "archive": "Arxivga olish",
       "archived": "Arxivlandi",
       "snooze": "Kechiktirish",
       "snoozed": "Kechiktirildi",
@@ -2559,41 +2559,41 @@
     },
     "preferences": {
       "title": "Bildirishnoma sozlamalari",
-      "body": "Qanday bildirishnomalar va qayerga kelishini tanlang.",
+      "body": "Qaysi bildirishnoma qayerga kelishini oʻzingiz tanlang.",
       "matrixTitle": "Turi va kanali boʻyicha",
       "reasonColumn": "Bildirishnoma turi",
       "toggleAria": "{reason} — {channel} orqali",
-      "digestFrequency": "Xulosa chastotasi",
+      "digestFrequency": "Xulosa davriyligi",
       "digestMode": {
         "instant": "Darhol",
         "daily": "Har kuni",
         "weekly": "Har hafta",
-        "off": "Oʻchirilgan"
+        "off": "Oʻchiq"
       },
       "quietHours": {
         "title": "Tinch soatlar",
-        "usingDepartmentDefault": "Boʻlimning andozasi qoʻllanmoqda: {range}",
-        "usingPersonal": "Shaxsiy vaqtingiz: {range}",
-        "start": "Boshlanishi",
-        "end": "Tugashi",
-        "weekends": "Dam olish kunlarini ham qamrab olsin",
-        "tooLoud": "Bu oraliq boʻlim andozasidan kamida shuncha tinch boʻlishi kerak.",
-        "useDefault": "Boʻlim andozasidan foydalanish"
+        "usingDepartmentDefault": "Boshqarma sozlamasi qoʻllanmoqda: {range}",
+        "usingPersonal": "Oʻzingiz belgilagan vaqt: {range}",
+        "start": "Qaysi soatdan",
+        "end": "Qaysi soatgacha",
+        "weekends": "Dam olish kunlari ham",
+        "tooLoud": "Bu oraliq boshqarma belgilagan tinch soatlarni toʻliq qamrab olishi kerak.",
+        "useDefault": "Boshqarma sozlamasiga qaytish"
       },
       "calendar": {
-        "title": "Taqvim lentasi",
+        "title": "Taqvim ulanishi",
         "body": "Muddatlaringiz va tadbirlaringizni istalgan taqvim ilovasiga qoʻshing.",
         "reveal": "Havolani olish",
         "copy": "Havolani nusxalash"
       },
       "save": "Saqlash",
-      "saved": "Sozlamalar saqlandi"
+      "saved": "Saqlandi"
     }
   },
   "miniapp": {
     "title": "WorkPortal",
-    "devMode": "Namunaviy rejim — Telegram emas, brauzer seansi",
-    "noDepartment": "Boʻlim tanlanmagan",
+    "devMode": "Demo rejim — Telegram emas, brauzer oynasi",
+    "noDepartment": "Boshqarma tanlanmagan",
     "action": {
       "back": "Orqaga",
       "retry": "Qayta urinish",
@@ -2609,8 +2609,8 @@
       "boardShort": "Doska",
       "events": "Tadbirlar",
       "eventsShort": "Tadbir",
-      "focus": "Fokus",
-      "focusShort": "Fokus"
+      "focus": "Diqqat",
+      "focusShort": "Diqqat"
     },
     "greeting": {
       "morning": "Xayrli tong",
@@ -2623,16 +2623,16 @@
       "body": "Bu yerda koʻrsatadigan narsa yoʻq."
     },
     "error": {
-      "title": "Nimadir xato ketdi",
-      "body": "Maʼlumotni yuklab boʻlmadi. Qayta urinib koʻring."
+      "title": "Yuklab boʻlmadi",
+      "body": "Aloqa uzildi. Qayta urinib koʻring."
     },
     "offline": {
       "title": "Aloqa yoʻq",
-      "body": "Internet aloqasi uzilgan. Ulanish tiklangach, qayta urinib koʻring."
+      "body": "Aloqa tiklangach qayta urinib koʻring."
     },
     "forbidden": {
-      "title": "Ruxsat yoʻq",
-      "body": "Bu sahifa boʻlim boshligʻi uchun. Agar bu xato boʻlsa, boshligʻingizga murojaat qiling."
+      "title": "Bu sahifa boshliq uchun",
+      "body": "Bu sahifani boshqarma boshligʻi koʻradi. Xato boʻlsa, boshligʻingizga ayting."
     },
     "unlinked": {
       "title": "Hisob ulanmagan",
@@ -2657,13 +2657,13 @@
     },
     "reason": {
       "assigned": "Topshirildi",
-      "mentioned": "Eslatildingiz",
+      "mentioned": "Sizni belgilashdi",
       "due": "Muddat",
       "updated": "Yangilandi",
       "rsvp": "Tadbir",
       "poll": "Soʻrovnoma",
       "decision": "Qaror",
-      "digest": "Kunlik xulosa",
+      "digest": "Xulosa",
       "system": "Tizim"
     },
     "today": {
@@ -2684,12 +2684,12 @@
       "eyebrow": "{count} ta oʻqilmagan",
       "unread": "Yangi",
       "markRead": "Oʻqildi",
-      "markedRead": "Oʻqildi deb belgilandi",
-      "markAllRead": "Hammasini oʻqildi deb belgilash",
+      "markedRead": "Oʻqildi",
+      "markAllRead": "Hammasini oʻqilgan deb belgilash",
       "allRead": "Hammasi oʻqildi",
-      "snooze": "Ertaga",
+      "snooze": "Kechiktirish",
       "snoozed": "Ertaga eslatiladi",
-      "archive": "Arxivlash",
+      "archive": "Arxivga olish",
       "archived": "Arxivlandi",
       "actionFailed": "Amalni bajarib boʻlmadi",
       "empty": {
@@ -2701,24 +2701,24 @@
       "title": "Doska",
       "viewAria": "Doska koʻrinishi",
       "mine": "Mening ustunim",
-      "team": "Boʻlim",
-      "myCards": "Mening kartochkalarim",
+      "team": "Boshqarma",
+      "myCards": "Kartalarim",
       "you": "siz",
       "openCount": "{count} ta ochiq",
       "overdueCount": "{count} ta kechikkan",
-      "openTotal": "Boʻlimda ochiq",
-      "overdueTotal": "Boʻlimda kechikkan",
+      "openTotal": "Boshqarmada ochiq",
+      "overdueTotal": "Boshqarmada kechikkan",
       "empty": {
         "title": "Ustuningiz boʻsh",
-        "body": "Sizga hali kartochka biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi."
+        "body": "Sizga hali karta biriktirilmagan. Biriktirilsa, shu yerda paydo boʻladi."
       },
       "emptyTeam": {
-        "title": "Boʻlim doskasi boʻsh",
-        "body": "Boʻlimda hali ochiq kartochka yoʻq."
+        "title": "Boshqarma doskasi boʻsh",
+        "body": "Boshqarmada hali ochiq karta yoʻq."
       }
     },
     "card": {
-      "title": "Kartochka",
+      "title": "Karta",
       "eyebrow": "Doska",
       "open": "Ochiq",
       "done": "Bajarildi",
@@ -2726,13 +2726,13 @@
       "markedDone": "Bajarildi",
       "reopen": "Qayta ochish",
       "reopened": "Qayta ochildi",
-      "updateFailed": "Yangilab boʻlmadi",
+      "updateFailed": "Kartani yangilab boʻlmadi",
       "noDescription": "Tavsif yozilmagan",
-      "readOnly": "Bu kartochkani faqat oʻqiy olasiz.",
-      "checklist": "Nazorat roʻyxati",
+      "readOnly": "Bu kartani faqat oʻqiy olasiz.",
+      "checklist": "Bajarish roʻyxati",
       "comments": "Izohlar",
       "noComments": "Hali izoh yoʻq",
-      "commentPlaceholder": "Izoh yozing…",
+      "commentPlaceholder": "Izoh yozing",
       "send": "Yuborish",
       "commentAdded": "Izoh qoʻshildi",
       "commentFailed": "Izohni yuborib boʻlmadi"
@@ -2740,10 +2740,10 @@
     "events": {
       "title": "Tadbirlar",
       "one": "Tadbir",
-      "eyebrow": "Boʻlim tadbirlari",
+      "eyebrow": "TADBIRLAR",
       "organizer": "Tashkilotchi: {name}",
-      "going": "{count} ta boradi",
-      "capacity": "{used} / {total} joy",
+      "going": "{count} kishi boradi",
+      "capacity": "{used}/{total} joy",
       "rsvpAria": "Javobingiz",
       "rsvpFailed": "Javobni saqlab boʻlmadi",
       "cancelled": "Tadbir bekor qilindi",
@@ -2760,7 +2760,7 @@
       },
       "empty": {
         "title": "Rejadagi tadbir yoʻq",
-        "body": "Boʻlimda yaqin kunlarda tadbir rejalashtirilmagan."
+        "body": "Boshqarmada yaqin kunlarda tadbir rejalashtirilmagan."
       },
       "missing": {
         "title": "Tadbir topilmadi",
@@ -2768,13 +2768,13 @@
       }
     },
     "carpool": {
-      "title": "Yoʻlovchi olish",
-      "seats": "{free} / {total} joy boʻsh",
+      "title": "Birga borish",
+      "seats": "{free}/{total} joy boʻsh",
       "claim": "Joy band qilish",
       "claimed": "Joy band qilindi",
       "release": "Joydan voz kechish",
       "released": "Joy boʻshatildi",
-      "empty": "Bu tadbirga mashina taklif qilinmagan.",
+      "empty": "Bu tadbirga hech kim mashina taklif qilmagan.",
       "failed": "Joyni oʻzgartirib boʻlmadi"
     },
     "polls": {
@@ -2788,46 +2788,46 @@
       "empty": "Bu tadbirda soʻrovnoma yoʻq."
     },
     "focus": {
-      "title": "Fokus",
-      "eyebrow": "Shaxsiy maydon",
+      "title": "Diqqat vaqti",
+      "eyebrow": "SHAXSIY",
       "start": "Boshlash",
       "stop": "Toʻxtatish",
-      "reset": "Vaqtni tiklash",
+      "reset": "Qaytadan",
       "minutes": "{count} daq",
-      "stats": "Fokus vaqti",
+      "stats": "Diqqat vaqti",
       "today": "Bugun",
       "week": "Shu hafta",
       "phaseAria": "Bosqich",
-      "ringAria": "{phase} bosqichi qoldigʻi",
+      "ringAria": "{phase} bosqichida qolgan vaqt",
       "botNote": "Vaqt tugaganda bot Telegramda xabar beradi. Vazifa nomi hech qachon yuborilmaydi.",
       "alertNotLinked": "Telegram ulanmagani uchun xabar yuborilmadi.",
-      "alertMuted": "Bildirishnomalar oʻchirilgan — xabar yuborilmadi.",
+      "alertMuted": "Bildirishnomalar oʻchiq — xabar yuborilmadi.",
       "startFailed": "Boshlab boʻlmadi",
       "saveFailed": "Saqlab boʻlmadi",
       "phase": {
-        "focus": "Fokus",
+        "focus": "Diqqat",
         "short_break": "Qisqa tanaffus",
         "long_break": "Uzoq tanaffus"
       }
     },
     "fields": {
-      "title": "Mening maʼlumotlarim",
-      "eyebrow": "Boʻlim soʻragan maydonlar",
+      "title": "Maʼlumotlarim",
+      "eyebrow": "SOʻRALGAN MAYDONLAR",
       "requested": "Soʻraldi",
       "missing": "Toʻldirilmagan",
       "save": "Saqlash",
       "saved": "Saqlandi",
       "saveFailed": "Saqlab boʻlmadi",
-      "readOnly": "Bu maydonni boʻlim boshligʻi toʻldiradi.",
+      "readOnly": "Bu maydonni boshqarma boshligʻi toʻldiradi.",
       "yes": "Ha",
-      "numberInvalid": "Faqat raqam kiriting",
+      "numberInvalid": "Raqam kiriting.",
       "empty": {
         "title": "Soʻralgan maydon yoʻq",
-        "body": "Boʻlim sizdan hech qanday maʼlumot soʻramagan."
+        "body": "Boshqarma sizdan hech narsa soʻramagan."
       }
     },
     "setup": {
-      "title": "Telegram sozlamasi",
+      "title": "Telegram sozlamalari",
       "bot": "Bot",
       "noBot": "Bot nomi hali koʻrsatilmagan. Buni tizim administratori qoʻshadi.",
       "appUrl": "Mini ilova manzili",
@@ -2860,7 +2860,7 @@
           "body": "Har bir xodim oʻz hisobini oʻzi ulaydi — buni siz ular uchun qila olmaysiz."
         },
         "group_connected": {
-          "title": "Boʻlim guruhi ulangan",
+          "title": "Boshqarma guruhi ulangan",
           "body": "Tadbir va soʻrovnoma eʼlonlari uchun botni guruhga qoʻshing."
         }
       }
@@ -2868,53 +2868,53 @@
   },
   "pages": {
     "title": "Sahifalar",
-    "eyebrow": "Bilim bazasi",
+    "eyebrow": "BILIM",
     "create": "Yangi sahifa",
     "untitled": "Nomsiz sahifa",
     "newTitlePlaceholder": "Sahifa nomi",
     "kind": {
       "how_we_work": "Biz qanday ishlaymiz",
       "onboarding": "Moslashuv",
-      "brief": "Qisqacha maʼlumot",
+      "brief": "Qisqacha",
       "note": "Qayd"
     },
     "empty": {
-      "title": "Hali sahifalar yoʻq",
-      "body": "Boʻlimingiz uchun birinchi sahifani yarating — masalan, \"Biz qanday ishlaymiz\"."
+      "title": "Hali sahifa yoʻq",
+      "body": "Birinchi sahifani qoʻshing — masalan, «Biz qanday ishlaymiz»."
     },
-    "backToList": "Sahifalar roʻyxatiga qaytish",
+    "backToList": "Sahifalarga qaytish",
     "delete": "Sahifani oʻchirish",
     "deleted": "Sahifa oʻchirildi",
     "editor": {
       "titlePlaceholder": "Sarlavha",
       "save": "Saqlash",
       "saved": "Saqlandi",
-      "autosaving": "Saqlanmoqda...",
+      "autosaving": "Saqlanmoqda…",
       "toolbar": {
         "bold": "Qalin",
-        "italic": "Qiya",
+        "italic": "Kursiv",
         "heading1": "Sarlavha 1",
         "heading2": "Sarlavha 2",
         "bulletList": "Belgili roʻyxat",
         "orderedList": "Raqamli roʻyxat",
-        "taskList": "Roʻyxat (belgilash mumkin)",
+        "taskList": "Bajarish roʻyxati",
         "callout": "Eslatma bloki",
-        "mention": "Kishini eslatish",
+        "mention": "Xodimni belgilash",
         "blockquote": "Iqtibos",
         "codeBlock": "Kod bloki",
-        "translate": "Belgilanganni tarjima qilish"
+        "translate": "Tanlangan matnni tarjima qilish"
       },
-      "contentPlaceholder": "Yozishni boshlang yoki buyruqlar uchun \"/\" bosing…",
+      "contentPlaceholder": "Matn yozing yoki amallar uchun «/» kiriting",
       "translate": {
-        "selectFirst": "Avval matnni belgilang, keyin tarjima qiling",
-        "title": "Belgilanganni tarjima qilish",
+        "selectFirst": "Avval tarjima qilinadigan matnni tanlang",
+        "title": "Tanlangan matnni tarjima qilish",
         "pending": "Tarjima qilinmoqda…",
-        "accept": "Belgilanganni almashtirish",
+        "accept": "Matnni almashtirish",
         "edit": "Tahrirlash",
         "discard": "Bekor qilish",
         "retry": "Qayta urinish",
         "errors": {
-          "invalid": "Belgilangan matnni tekshirib, qayta urinib koʻring",
+          "invalid": "Tanlangan matnni tekshirib, qayta urinib koʻring",
           "forbidden": "Tarjima oʻchirilgan yoki AI byudjeti tugagan",
           "failed": "AI bu safar tarjima qila olmadi"
         }
@@ -2922,25 +2922,25 @@
     },
     "versions": {
       "title": "Versiyalar tarixi",
-      "empty": "Hali versiyalar yoʻq",
-      "restore": "Ushbu versiyani tiklash",
+      "empty": "Hali saqlangan versiya yoʻq",
+      "restore": "Shu versiyani tiklash",
       "restored": "Versiya tiklandi",
       "viewDiff": "Farqni koʻrish",
-      "current": "Joriy",
+      "current": "Hozirgi",
       "by": "Muallif: {name}"
     },
     "diff": {
       "added": "Qoʻshilgan",
       "removed": "Oʻchirilgan",
-      "noChanges": "Bu versiyalar orasida farq yoʻq"
+      "noChanges": "Bu ikki versiya orasida farq yoʻq"
     },
     "conflict": {
       "title": "Sahifa allaqachon yangilangan",
-      "body": "Boshqa birov shu orada oʻzgartirish kiritdi. Sahifani qayta yuklab, oʻzgarishlaringizni qayta kiriting."
+      "body": "Shu orada boshqa xodim oʻzgartirdi. Sahifani qayta oching va yozganlaringizni qaytadan kiriting."
     },
     "onboarding": {
       "title": "Moslashuv roʻyxati",
-      "subtitle": "Yangi xodim boʻlimga qoʻshilganda, quyidagi vazifalar avtomatik ravishda uning shaxsiy vazifalar roʻyxatiga qoʻshiladi.",
+      "subtitle": "Yangi xodim boshqarmaga qoʻshilganda, bu bandlar uning shaxsiy vazifalar roʻyxatiga oʻzi qoʻshiladi.",
       "enable": "Yoqish",
       "enabled": "Yoqilgan",
       "disabled": "Oʻchirilgan",
@@ -2950,16 +2950,16 @@
       "itemPlaceholder": "Nima qilish kerak?",
       "ownerRole": {
         "newcomer": "Yangi xodim",
-        "head": "Boʻlim rahbari",
+        "head": "Boshqarma boshligʻi",
         "buddy": "Yordamchi hamkasb"
       },
-      "empty": "Hali moslashuv roʻyxati yoʻq",
+      "empty": "Moslashuv roʻyxati hali tuzilmagan",
       "save": "Saqlash",
       "saved": "Saqlandi",
       "removeItem": "Bandni oʻchirish"
     },
     "moreActions": "Yana amallar",
-    "undo": "Qaytarish"
+    "undo": "Bekor qilish"
   },
   "people": {
     "table": {
@@ -3401,18 +3401,18 @@
   },
   "personal": {
     "title": "Shaxsiy",
-    "eyebrow": "FAQAT SIZ UCHUN",
-    "description": "Davrlar, vazifalar, qaydlar, doska va fokus vaqti uchun shaxsiy maydoningiz.",
+    "eyebrow": "FAQAT SIZGA",
+    "description": "Davrlar, vazifalar, qaydlar, oq taxta va diqqat vaqti — faqat sizga koʻrinadigan maydon.",
     "tabs": {
       "today": "Bugun",
       "sprints": "Davrlar",
       "tasks": "Vazifalar",
       "notes": "Qaydlar",
-      "canvas": "Doska",
+      "canvas": "Oq taxta",
       "pomodoro": "Pomodoro"
     },
     "privacy": {
-      "note": "Bu maydonni faqat siz koʻrasiz — boʻlim boshligʻi ham, boshqa hech kim ham emas.",
+      "note": "Bu yerdagilarni faqat siz koʻrasiz — boshqarma boshligʻi ham, boshqa hech kim ham koʻrmaydi.",
       "dismiss": "Yopish"
     },
     "duration": {
@@ -3424,26 +3424,26 @@
       "tasks": {
         "title": "Bugungi vazifalar",
         "remaining": "{count} qoldi",
-        "completedToast": "Bajarildi deb belgilandi"
+        "completedToast": "Bajarildi"
       },
       "empty": {
-        "title": "Bugun uchun hech narsa rejalashtirilmagan",
-        "body": "Bu yerda koʻrish uchun vazifa qoʻshing yoki davr boshlang."
+        "title": "Bugunga reja yoʻq",
+        "body": "Vazifa qoʻshing yoki davr boshlang — shu yerda koʻrinadi."
       },
       "allDone": {
-        "title": "Hozircha barchasi bajarildi",
-        "body": "Faol davrlar va kirish qutingizda boshqa hech narsa qolmadi. Osoyishtalikdan bahramand boʻling."
+        "title": "Hozircha hammasi bajarildi",
+        "body": "Faol davrlaringizda ham, yigʻmada ham boshqa vazifa qolmadi."
       },
       "addPlaceholder": "Bugun uchun vazifa qoʻshish",
-      "focus": "Fokus",
+      "focus": "Diqqat",
       "period": {
-        "progressAria": "Davr jarayoni",
+        "progressAria": "Davrning bajarilgan qismi",
         "timeLeft": "{value} qoldi",
         "noGoal": "Bu davr uchun hali maqsad belgilanmagan"
       },
       "rollover": {
         "banner": "Bu davr vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?",
-        "bannerGoal": "“{goal}” davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?"
+        "bannerGoal": "«{goal}» davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi?"
       }
     },
     "sprints": {
@@ -3451,13 +3451,13 @@
         "title": "Faol davrlar"
       },
       "empty": {
-        "title": "Hali davrlar yoʻq",
+        "title": "Hali davr yoʻq",
         "body": "Ishingizga maqsad va vaqt chegarasi belgilash uchun davr boshlang."
       },
       "create": {
         "action": "Yangi davr",
         "title": "Yangi davr",
-        "submit": "Davr yaratish"
+        "submit": "Davrni boshlash"
       },
       "goal": "Maqsad",
       "goalPlaceholder": "Nimaga erishmoqchisiz?",
@@ -3469,7 +3469,7 @@
         "toast": "{count} ta tugallanmagan vazifa yangi davrga koʻchirildi"
       },
       "complete": {
-        "action": "Yakunlangan deb belgilash",
+        "action": "Yakunlash",
         "toast": "Davr yakunlandi"
       },
       "ended": "Vaqt tugadi",
@@ -3477,7 +3477,7 @@
         "threeHour": "3 soat",
         "day": "Kun",
         "week": "Hafta",
-        "custom": "Ixtiyoriy"
+        "custom": "Boshqa"
       },
       "status": {
         "active": "Faol",
@@ -3486,58 +3486,58 @@
       }
     },
     "tasks": {
-      "inbox": "Kirish qutisi",
+      "inbox": "Yigʻma",
       "addPlaceholder": "Vazifa qoʻshish",
       "openCount": "{count} ta ochiq",
-      "toggleDone": "Bajarilgan deb belgilash",
+      "toggleDone": "Bajarildi deb belgilash",
       "delete": "Vazifani oʻchirish",
       "deleted": {
         "toast": "Vazifa oʻchirildi"
       },
       "dragHandle": "Tartibni oʻzgartirish uchun torting",
-      "indent": "Ichkariga surish (quyi vazifa qilish)",
-      "outdent": "Tashqariga chiqarish",
+      "indent": "Quyi vazifaga aylantirish",
+      "outdent": "Yuqoriga chiqarish",
       "empty": {
-        "section": "Bu yerda hali vazifalar yoʻq."
+        "section": "Bu yerda hali vazifa yoʻq."
       }
     },
     "notes": {
       "create": "Yangi qayd",
       "newTitle": "Yangi qayd",
-      "bodyPlaceholder": "Nimadir yozing...",
+      "bodyPlaceholder": "Xohlagan narsangizni yozing",
       "delete": "Qaydni oʻchirish",
       "deleted": {
         "toast": "Qayd oʻchirildi"
       },
       "pin": "Mahkamlash",
-      "unpin": "Mahkamlashni bekor qilish",
+      "unpin": "Mahkamlashni olib tashlash",
       "autosave": {
         "saving": "Saqlanmoqda…",
         "saved": "Saqlandi"
       },
       "empty": {
-        "title": "Hali qaydlar yoʻq",
+        "title": "Hali qayd yoʻq",
         "body": "Qaydlar faqat siz uchun — xohlagan narsangizni yozib qoʻying."
       }
     },
     "canvas": {
-      "create": "Yangi doska",
-      "newTitle": "Yangi doska",
+      "create": "Yangi oq taxta",
+      "newTitle": "Yangi oq taxta",
       "open": "Ochish",
-      "back": "Doskalarga qaytish",
-      "delete": "Doskani oʻchirish",
+      "back": "Oq taxtalarga qaytish",
+      "delete": "Oq taxtani oʻchirish",
       "deleted": {
-        "toast": "Doska oʻchirildi"
+        "toast": "Oq taxta oʻchirildi"
       },
       "autosave": {
         "saving": "Saqlanmoqda…",
         "saved": "Saqlandi"
       },
       "empty": {
-        "title": "Hali doskalar yoʻq",
-        "body": "Doska — eskiz va eslatma qogʻozlari uchun erkin joy."
+        "title": "Hali oq taxta yoʻq",
+        "body": "Oq taxta — eskiz va eslatma qogʻozlari uchun erkin maydon."
       },
-      "addSticky": "Eslatma qogʻoz qoʻshish",
+      "addSticky": "Eslatma qogʻozi qoʻshish",
       "undo": "Bekor qilish",
       "redo": "Qaytarish",
       "zoomIn": "Kattalashtirish",
@@ -3561,17 +3561,17 @@
       },
       "phase": {
         "idle": "Tayyor",
-        "focus": "Fokus",
+        "focus": "Diqqat",
         "shortBreak": "Qisqa tanaffus",
         "longBreak": "Uzoq tanaffus"
       },
       "action": {
-        "startFocus": "Fokusni boshlash",
+        "startFocus": "Diqqat vaqtini boshlash",
         "startShortBreak": "Tanaffusni boshlash",
-        "pause": "Pauza",
+        "pause": "Toʻxtatib turish",
         "resume": "Davom ettirish",
         "skip": "Oʻtkazib yuborish",
-        "stop": "Toʻxtatish"
+        "stop": "Tugatish"
       },
       "notification": {
         "body": "Vaqt tugadi"
@@ -3586,23 +3586,23 @@
       },
       "notifications": {
         "on": "Bildirishnomalar yoqilgan",
-        "off": "Bildirishnomalar oʻchirilgan"
+        "off": "Bildirishnomalar oʻchiq"
       },
       "settings": {
         "title": "Pomodoro sozlamalari",
-        "focusMin": "Fokus (daqiqa)",
+        "focusMin": "Diqqat (daqiqa)",
         "shortBreakMin": "Qisqa tanaffus (daqiqa)",
         "longBreakMin": "Uzoq tanaffus (daqiqa)",
-        "cyclesBeforeLong": "Uzoq tanaffusdan oldingi fokus soni",
+        "cyclesBeforeLong": "Uzoq tanaffusgacha nechta diqqat vaqti",
         "sound": "Ovoz",
         "notifications": "Brauzer bildirishnomalari",
         "autoStart": "Keyingi bosqichni avtomatik boshlash"
       },
       "stats": {
-        "todayFocus": "Bugungi fokus",
+        "todayFocus": "Bugungi diqqat vaqti",
         "todaySessions": "Bugungi seanslar",
-        "weekFocus": "Shu haftalik fokus",
-        "weekSessions": "Shu haftalik seanslar",
+        "weekFocus": "Bu haftadagi diqqat vaqti",
+        "weekSessions": "Bu haftadagi seanslar",
         "minutesShort": "daq"
       },
       "log": {
@@ -3613,8 +3613,8 @@
         "skipped": "Oʻtkazib yuborilgan",
         "showMore": "Yana {count} kunni koʻrsatish",
         "empty": {
-          "title": "Hali seanslar yoʻq",
-          "body": "Bu yerda koʻrish uchun fokus seansini boshlang."
+          "title": "Hali seans yoʻq",
+          "body": "Diqqat vaqtini boshlang — shu yerda koʻrinadi."
         }
       }
     },
@@ -3622,8 +3622,8 @@
       "pending": "Tayyorlanmoqda…",
       "accept": "Qabul qilish",
       "edit": "Tahrirlash",
-      "discard": "Rad etish",
-      "disclaimer": "AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi.",
+      "discard": "Kerak emas",
+      "disclaimer": "AI takliflari xato boʻlishi mumkin — siz tasdiqlamaguningizcha hech narsa qoʻshilmaydi.",
       "quickAdd": {
         "action": "AI bilan tozalash",
         "title": "AI tozalash"
@@ -3648,7 +3648,7 @@
       "catchUp": {
         "subjectSelf": "Siz",
         "noteTitle": "Haftalik xulosa",
-        "savedToast": "Xulosa qaydlarga saqlandi",
+        "savedToast": "Qaydlarga saqlandi",
         "action": "Nimani oʻtkazib yubordim",
         "title": "Oxirgi hafta",
         "acceptLabel": "Qaydlarga saqlash",
@@ -3969,21 +3969,21 @@
     "title": "Telegram",
     "phoneMock": {
       "online": "onlayn",
-      "replyMessage": "Ulandi! Endi WorkPortal bildirishnomalari shu yerga keladi.",
-      "connectedMessage": "Siz ulandingiz — WorkPortal bildirishnomalari shu chatga keladi."
+      "replyMessage": "Ulandi. Endi bildirishnomalar shu yerga keladi.",
+      "connectedMessage": "Hisobingiz ulangan — bildirishnomalar shu yerga keladi."
     },
     "notConfigured": {
       "title": "Telegram hali ulanmagan",
-      "body": "Ushbu tizim uchun Telegram botini sozlashni administratordan soʻrang."
+      "body": "Telegram botini sozlashni administratordan soʻrang."
     },
     "personal": {
-      "title": "Sizning Telegramingiz",
+      "title": "Telegramingiz",
       "linkedBadge": "Ulangan",
       "notLinkedBadge": "Ulanmagan",
       "codeBody": "Hisobingizni ulash uchun botni Telegramda oching yoki kodni skanerlang.",
       "qrAlt": "Telegramni ulash uchun QR-kod",
       "openInTelegram": "Telegramda ochish",
-      "codeExpires": "Kod {time} da eskiradi",
+      "codeExpires": "Kod {time} gacha amal qiladi",
       "connectButton": "Ulash kodini olish",
       "unlink": "Telegramni uzish",
       "unlinked": "Telegram uzildi",
@@ -3991,24 +3991,24 @@
         "title": "Bildirishnomalarni oʻchirish",
         "off": "Yoqish",
         "forMinutes": "{minutes} daqiqaga",
-        "until": "{date} gacha oʻchirilgan",
+        "until": "{date} gacha oʻchiq",
         "applied": "Yangilandi"
       }
     },
     "group": {
-      "title": "Boʻlim guruhi",
-      "body": "Boʻlim tadbirlari, soʻrovnomalari va eʼlonlarini olish uchun Telegram guruhini ulang.",
+      "title": "Boshqarma guruhi",
+      "body": "Tadbirlar, soʻrovnomalar va eʼlonlar guruhga tushishi uchun Telegram guruhini ulang.",
       "untitled": "Nomsiz guruh",
       "disconnect": "Uzish",
       "disconnected": "Guruh uzildi",
       "updated": "Yangilandi",
-      "codeBody": "Guruhda ushbu kod bilan /connect buyrugʻini yuboring.",
-      "codeExpires": "Kod {time} da eskiradi",
+      "codeBody": "Guruhda shu kod bilan /connect yuboring.",
+      "codeExpires": "Kod {time} gacha amal qiladi",
       "connectButton": "Ulash kodini olish",
       "copyCode": "Kodni nusxalash",
       "empty": {
         "title": "Ulangan guruh yoʻq",
-        "body": "Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodidan foydalaning."
+        "body": "Botni Telegram guruhiga qoʻshing, soʻng shu yerdan ulash kodini oling."
       },
       "kinds": {
         "events": "Tadbirlar",
