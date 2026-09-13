@@ -102,6 +102,13 @@ export function clauseLabel(
       // the client -- board-screen.tsx's own comment), but a saved view/filter or a hand-typed
       // advanced query can already carry one, so it still needs a readable chip.
       return `${t('work.field.unit')}: ${clause.name}`
+    case 'field':
+      // v1.1 SPEC §5: `field:<key>:<value>`. The chip shows the key the head typed into the manager
+      // rather than the label, because the key is what this grammar round-trips -- the field's
+      // label is only known once `/fields` has loaded, and a chip must render before that.
+      return clause.empty
+        ? t('fields.filter.chipEmpty', { key: clause.key })
+        : t('fields.filter.chip', { key: clause.key, value: clause.value })
     case 'text':
       return clause.value
     default: {

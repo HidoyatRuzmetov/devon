@@ -36,7 +36,8 @@
       "poll": "Poll",
       "decision": "Decision",
       "digest": "Summary",
-      "system": "System"
+      "system": "System",
+      "field_request": "Profile"
     },
     "channel": {
       "inapp": "In-app",

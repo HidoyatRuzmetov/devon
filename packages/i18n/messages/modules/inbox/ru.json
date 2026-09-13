@@ -36,7 +36,8 @@
       "poll": "Опрос",
       "decision": "Решение",
       "digest": "Сводка",
-      "system": "Система"
+      "system": "Система",
+      "field_request": "Анкета"
     },
     "channel": {
       "inapp": "В приложении",

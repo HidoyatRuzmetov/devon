@@ -25,6 +25,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
     'departments',
     'department-settings',
     'events',
+    'fields',
     'inbox',
     'pages',
     'people-table',
@@ -57,6 +58,7 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
       'department-requests',
       'department-settings',
       'events',
+      'fields',
       'inbox',
       'pages',
       'people-table',
@@ -77,7 +79,11 @@ describe('NAV_ENTRIES visibility (design.md §3.6/§7, I-8b)', () => {
 // production; here it is a stub over the same action ids, which is the point -- the entry declares an
 // id, the resolver asks, and nothing in `nav.ts` knows what a head is.
 describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () => {
-  const HEAD_ONLY_ACTIONS = new Set(['people.table.read', 'departments.settings.edit'])
+  const HEAD_ONLY_ACTIONS = new Set([
+    'people.table.read',
+    'departments.settings.edit',
+    'fields.definition.manage',
+  ])
 
   function ctxFor(role: 'head' | 'member') {
     return {
@@ -92,6 +98,8 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     const ids = resolveNavEntries(NAV_ENTRIES, ctxFor('member')).map((e) => e.id)
     expect(ids).not.toContain('people-table')
     expect(ids).not.toContain('department-settings')
+    // v1.1 SPEC §5: the custom-field manager is a Boshqaruv destination, never a xodim's.
+    expect(ids).not.toContain('fields')
   })
 
   it('a xodim keeps the whole working set', () => {
@@ -117,6 +125,7 @@ describe('v1.1 -- the Boshqaruv group is resolved by action, not by role', () =>
     const ids = resolveNavEntries(NAV_ENTRIES, ctxFor('head')).map((e) => e.id)
     expect(ids).toContain('people-table')
     expect(ids).toContain('department-settings')
+    expect(ids).toContain('fields')
   })
 
   it('the instance role is never what decides it (I-8b)', () => {

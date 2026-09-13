@@ -36,7 +36,8 @@
       "poll": "Сўровнома",
       "decision": "Қарор",
       "digest": "Хулоса",
-      "system": "Тизим"
+      "system": "Тизим",
+      "field_request": "Маълумот"
     },
     "channel": {
       "inapp": "Иловада",

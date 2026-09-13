@@ -1715,6 +1715,188 @@
       "to": "Tugash"
     }
   },
+  "fields": {
+    "manager": {
+      "title": "Maydonlar",
+      "nav": "Maydonlar",
+      "subtitle": "Boshqarma xodimlari va vazifalari uchun oʻz ustunlaringizni belgilang.",
+      "create": "Yangi maydon",
+      "created": "«{name}» maydoni qoʻshildi.",
+      "createFailed": "Maydonni qoʻshib boʻlmadi. Qaytadan urinib koʻring.",
+      "saved": "Oʻzgarishlar saqlandi.",
+      "saveFailed": "Saqlab boʻlmadi. Qaytadan urinib koʻring.",
+      "archived": "«{name}» arxivga olindi.",
+      "archiveFailed": "Arxivga olib boʻlmadi.",
+      "restored": "Maydon qaytarildi.",
+      "restoreFailed": "Qaytarib boʻlmadi.",
+      "reorderFailed": "Tartibni oʻzgartirib boʻlmadi.",
+      "undo": "Qaytarish",
+      "ask": "Toʻldirishni soʻrash",
+      "nudge": "Yana eslatish",
+      "asked": "{count} ta xodimdan toʻldirish soʻraldi.",
+      "nudged": "{count} ta xodimga eslatma yuborildi.",
+      "nobodyToAsk": "Hamma allaqachon toʻldirgan.",
+      "askFailed": "Soʻrovni yuborib boʻlmadi.",
+      "tab": {
+        "person": "Xodim maydonlari",
+        "card": "Vazifa maydonlari"
+      },
+      "tabsAria": "Maydon turini tanlang",
+      "capCount": "{used} / {cap} ta maydon",
+      "showArchived": "Arxivdagilarni koʻrsatish",
+      "requiredBadge": "Majburiy",
+      "archivedBadge": "Arxivda",
+      "moveUp": "Yuqoriga surish",
+      "moveDown": "Pastga surish",
+      "edit": "Tahrirlash",
+      "archive": "Arxivga olish",
+      "restore": "Qaytarish",
+      "progressLabel": "{filled} / {total} toʻldirgan",
+      "waitingOn": "{count} ta javob kutilmoqda",
+      "empty": {
+        "person": {
+          "title": "Xodimlar uchun maydon yoʻq",
+          "body": "Taʼlim yoki chet tillari kabi ustun qoʻshsangiz, u xodimlar jadvalida va har bir xodimning sahifasida paydo boʻladi."
+        },
+        "card": {
+          "title": "Vazifalar uchun maydon yoʻq",
+          "body": "Baholangan soat yoki hujjat havolasi kabi ustun qoʻshsangiz, u vazifa kartochkasida koʻrinadi."
+        }
+      },
+      "denied": {
+        "body": "Maydonlarni faqat boshqarma boshligʻi belgilaydi. Oʻz maʼlumotlaringizni hisob sozlamalaringizda toʻldirasiz.",
+        "action": "Hisob sozlamalariga oʻtish"
+      }
+    },
+    "my": {
+      "title": "Mening maʼlumotlarim",
+      "subtitle": "Boshqarma soʻragan maʼlumotlar. Faqat shu boshqarma ichida koʻrinadi.",
+      "save": "Saqlash",
+      "saved": "Maʼlumotlaringiz saqlandi.",
+      "saveFailed": "Saqlab boʻlmadi. Qaytadan urinib koʻring.",
+      "fixErrors": "Belgilangan maydonlarni tekshirib chiqing.",
+      "requestedBadge": "{count} ta soʻrov",
+      "missingBadge": "{count} ta toʻldirilmagan",
+      "completeBadge": "Hammasi toʻldirilgan",
+      "requestedHint": "Boshqarma boshligʻi shu maydonni toʻldirishingizni soʻradi.",
+      "headOnlyHint": "Bu maydonni faqat boshqarma boshligʻi toʻldiradi.",
+      "empty": {
+        "title": "Hozircha soʻralgan maʼlumot yoʻq",
+        "body": "Boshqarma boshligʻi ustun qoʻshsa, u shu yerda paydo boʻladi."
+      }
+    },
+    "card": {
+      "title": "Qoʻshimcha maydonlar",
+      "apply": "Qoʻllash",
+      "cancel": "Bekor qilish",
+      "saved": "Maydon yangilandi.",
+      "saveFailed": "Maydonni saqlab boʻlmadi.",
+      "editAria": "«{field}» maydonini tahrirlash",
+      "requiredBlocksDone": "Bu maydon toʻldirilmaguncha vazifani yakunlab boʻlmaydi."
+    },
+    "form": {
+      "createTitle": "Yangi maydon",
+      "editTitle": "Maydonni tahrirlash",
+      "nameLegend": "Nomi",
+      "namePlaceholder": "Masalan: Taʼlim",
+      "key": "Kalit soʻz",
+      "keyHint": "Filtrda shunday yoziladi: {example}",
+      "type": "Turi",
+      "optionsLegend": "Variantlar",
+      "optionAdd": "Variant qoʻshish",
+      "optionRemove": "Variantni oʻchirish",
+      "optionPlaceholder": "Variant nomi",
+      "optionLabelAria": "{n}-variant nomi",
+      "optionColorAria": "{n}-variant rangi",
+      "behaviourLegend": "Xatti-harakati",
+      "required": "Majburiy",
+      "requiredHint": "Toʻldirilmagani darhol koʻrinib turadi.",
+      "showInTable": "Jadvalda ustun sifatida",
+      "showInTableHint": "Xodimlar jadvalidagi ustunlar roʻyxatiga tushadi.",
+      "showOnCardTile": "Kartochkada koʻrsatish",
+      "showOnCardTileHint": "Doskadagi kartochkada kichik yozuv sifatida chiqadi.",
+      "selfEditable": "Xodim oʻzi toʻldiradi",
+      "selfEditableHint": "Oʻchirilsa, faqat boshqarma boshligʻi kiritadi.",
+      "visibility": "Kim koʻradi",
+      "visibilityHint": "Maosh yoki shaxsiy hujjat kabi maʼlumotlar bu tizimda umuman saqlanmaydi.",
+      "reminderDays": "Eslatma (kun)",
+      "reminderDaysHint": "Soʻrov shuncha kundan keyin takrorlanadi.",
+      "description": "Izoh",
+      "descriptionPlaceholder": "Xodimga nima yozish kerakligini tushuntiring.",
+      "cancel": "Bekor qilish",
+      "save": "Saqlash",
+      "create": "Qoʻshish"
+    },
+    "type": {
+      "text": "Qisqa matn",
+      "long_text": "Uzun matn",
+      "number": "Raqam",
+      "date": "Sana",
+      "select": "Bitta variant",
+      "multi_select": "Bir nechta variant",
+      "person": "Xodim",
+      "url": "Havola",
+      "checkbox": "Ha / Yoʻq",
+      "derived": "Hisoblanadigan"
+    },
+    "color": {
+      "slate": "Kulrang",
+      "blue": "Koʻk",
+      "green": "Yashil",
+      "amber": "Sariq",
+      "red": "Qizil",
+      "violet": "Binafsha",
+      "teal": "Feruza",
+      "pink": "Pushti"
+    },
+    "visibility": {
+      "everyone": "Boshqarmadagi hamma",
+      "headOnly": "Faqat boshliq"
+    },
+    "locale": {
+      "uz-Latn": "Oʻzbekcha (lotin)",
+      "uz-Cyrl": "Oʻzbekcha (kirill)",
+      "ru": "Ruscha",
+      "en": "Inglizcha"
+    },
+    "input": {
+      "textPlaceholder": "Yozing",
+      "numberPlaceholder": "Raqam kiriting",
+      "urlPlaceholder": "https://",
+      "datePlaceholder": "Sanani tanlang",
+      "selectPlaceholder": "Tanlanmagan",
+      "derivedHint": "Bu qiymat avtomatik hisoblanadi."
+    },
+    "value": {
+      "yes": "Ha",
+      "no": "Yoʻq",
+      "empty": "Toʻldirilmagan"
+    },
+    "error": {
+      "required": "Bu maydon majburiy.",
+      "not_a_number": "Raqam kiriting.",
+      "not_a_date": "Sanani tanlang.",
+      "not_a_url": "Havola https:// bilan boshlanishi kerak.",
+      "unknown_option": "Bunday variant yoʻq.",
+      "too_long": "Matn juda uzun.",
+      "not_editable": "Bu maydonni oʻzgartira olmaysiz.",
+      "not_self_editable": "Bu maydonni faqat boshqarma boshligʻi toʻldiradi.",
+      "personal_data": "Bu tizim tugʻilgan sana, pasport, STIR, yashash joyi, maosh, millat va eʼtiqod kabi maʼlumotlarni saqlamaydi. Boshqa nom tanlang.",
+      "cap_reached": "Maydonlar soni chegaraga yetdi.",
+      "cap_reached_detail": "{cap} ta maydon chegarasi toʻldi. Hech kim oʻqiy olmaydigan jadval jadval emas — avval keraksizini arxivga oling.",
+      "duplicate_key": "Bu kalit soʻz allaqachon band.",
+      "invalid_key": "Kalit soʻz lotin harflari, raqam va pastki chiziqdan iborat boʻlsin.",
+      "needs_options": "Kamida bitta variant qoʻshing.",
+      "archived": "Bu maydon arxivda.",
+      "unknown_subject": "Kimga tegishli ekani aniqlanmadi.",
+      "invalid_value": "Qiymat notoʻgʻri."
+    },
+    "filter": {
+      "chip": "{key}: {value}",
+      "chipEmpty": "{key}: boʻsh",
+      "hint": "Maydon boʻyicha filtr: field:{key}:qiymat"
+    }
+  },
   "inbox": {
     "title": "Bildirishnomalar",
     "eyebrow": "XABARLAR",
@@ -1752,7 +1934,8 @@
       "poll": "Soʻrovnoma",
       "decision": "Qaror",
       "digest": "Xulosa",
-      "system": "Tizim"
+      "system": "Tizim",
+      "field_request": "Maʼlumot"
     },
     "channel": {
       "inapp": "Ilovada",

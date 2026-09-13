@@ -104,6 +104,10 @@ export const REASONS = [
   'decision',
   'digest',
   'system',
+  /** v1.1 SPEC §5: the boshqarma boshligʻi asked this person to fill in a custom field. Mirrors
+   * `apps/api/src/modules/notifications/schemas.ts`'s `REASONS` -- a reason the server can send and
+   * this enum does not know makes every notification query fail its response schema at once. */
+  'field_request',
 ] as const
 export type Reason = (typeof REASONS)[number]
 

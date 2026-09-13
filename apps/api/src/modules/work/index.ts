@@ -9,7 +9,16 @@ import { can, matchesFilterQuery, parseFilterQuery, type FilterableCard } from '
 import { isHeadOf } from '../../lib/actor.js'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
+import { withContext } from '@devon/db'
 import { contextFromRequest } from './context.js'
+// v1.1 SPEC §5: `field:<key>:<value>` is part of this grammar, so the card search has to know the
+// answers. One narrow, documented dependency on the `fields` module -- the same shape
+// `notifications/delivery.ts` has on `telegram/transport.ts`.
+import {
+  cardFieldValues,
+  missingRequiredCardFields,
+  type CardFieldValues,
+} from '../fields/filter-values.js'
 import { UnsafeUrlError, unfurlLink } from './link-unfurl.js'
 import * as repo from './repo.js'
 import {
@@ -110,8 +119,11 @@ function toFilterable(
   card: CardDTO,
   projectNames: Map<string, string>,
   labelNames: Map<string, string>,
+  fieldValues?: CardFieldValues,
 ): FilterableCard {
+  const values = fieldValues?.get(card.id)
   return {
+    ...(values ? { fieldValues: values } : {}),
     id: card.id,
     title: card.title,
     description: card.description?.text ?? null,
@@ -197,11 +209,12 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send({ items: [], nextCursor: null })
       const ctx = contextFromRequest(req)
-      const [cards, members, labels, projectNames] = await Promise.all([
+      const [cards, members, labels, projectNames, fieldValues] = await Promise.all([
         repo.listCards(ctx, departmentId, {}),
         repo.getMembers(ctx, departmentId),
         repo.getLabels(ctx, departmentId),
         repo.getProjectNames(ctx, departmentId),
+        withContext(ctx, (tx) => cardFieldValues(tx, departmentId)),
       ])
       const labelNames = new Map(labels.map((l) => [l.id, l.name]))
       const resolveUserIds = (token: string): string[] => {
@@ -219,7 +232,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (req.query.q && req.query.q.trim().length > 0) {
         const query = parseFilterQuery(req.query.q)
         filtered = cards.filter((c) =>
-          matchesFilterQuery(toFilterable(c, projectNames, labelNames), query, {
+          matchesFilterQuery(toFilterable(c, projectNames, labelNames, fieldValues), query, {
             meUserId: req.actor!.userId,
             resolveUserIds,
           }),
@@ -354,6 +367,23 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
       const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
       if (!ownership.ok) return
+      // v1.1 SPEC §5: "required fields block moving to done with an inline message". The refusal is
+      // here, on the server, because a card that leaves the board without its required answers is
+      // exactly the hole a client-side check leaves open. Only on the transition *into* done or
+      // archived -- editing the title of an already-finished card is never blocked.
+      if (patch.status === 'done' || patch.status === 'archived') {
+        const missing = await withContext(ctx, (tx) =>
+          missingRequiredCardFields(tx, departmentId, req.params.id),
+        )
+        if (missing.length > 0) {
+          return sendProblem(reply, 'validation_failed', {
+            errors: missing.map((key) => ({
+              path: `field:${key}`,
+              code: 'required_field_missing',
+            })),
+          })
+        }
+      }
       const result = await repo.patchCard(
         ctx,
         departmentId,

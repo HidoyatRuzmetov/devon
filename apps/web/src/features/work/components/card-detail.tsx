@@ -43,6 +43,9 @@ import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
 import type { AiFeatureId } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
+// v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
+// property list. The `fields` feature owns the component; this is the one line that puts it here.
+import { CardCustomFields } from '../../fields/index.js'
 import {
   nextDoneStatus,
   useAddChecklistItemMutation,
@@ -578,6 +581,13 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               />
             </div>
           </Field>
+
+          <CardCustomFields
+            cardId={card.id}
+            ownerUserIds={[card.giverUserId, card.assigneeUserId, card.createdByUserId].filter(
+              (id): id is string => Boolean(id),
+            )}
+          />
         </div>
 
         <Field label={t('work.field.links')}>

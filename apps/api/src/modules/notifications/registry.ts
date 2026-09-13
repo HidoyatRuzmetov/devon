@@ -68,6 +68,7 @@ export type SubjectSource =
   | 'department_request'
   | 'unit_role'
   | 'account'
+  | 'field_request'
 
 /** Everything a text builder or a deep link may use. Flat on purpose: a builder is a pure function of
  * this record, so every entry in the table below can be exercised in a unit test with a literal. */
@@ -159,6 +160,38 @@ function byActor(f: EventFacts, text: LocalizedText): LocalizedText | null {
     'uz-Cyrl': `${who} — ${text['uz-Cyrl']}`,
     ru: `${who} — ${text.ru}`,
     en: `${who} — ${text.en}`,
+  }
+}
+
+/** A custom field's own label, per locale. Four separate `extra` keys rather than one nested object,
+ * because `EventFacts.extra` is flat by design (a builder must stay a pure function of a record a
+ * unit test can write as a literal). A head may name a column in their own locale only, so each
+ * locale falls back through the others and finally to the machine key -- a half-translated
+ * definition still reads as a sentence rather than as an empty gap. */
+function fieldLabel(f: EventFacts): LocalizedText {
+  const uzLatn = str(f, 'labelUzLatn')
+  const uzCyrl = str(f, 'labelUzCyrl')
+  const ru = str(f, 'labelRu')
+  const en = str(f, 'labelEn')
+  const any = uzLatn || uzCyrl || ru || en || str(f, 'key')
+  return {
+    'uz-Latn': uzLatn || any,
+    'uz-Cyrl': uzCyrl || any,
+    ru: ru || any,
+    en: en || any,
+  }
+}
+
+/** `withName`, but the name itself differs per locale -- the one place in this table where the
+ * subject's own title is translatable, because a custom field's label genuinely is. */
+function withLocalizedName(text: LocalizedText, name: LocalizedText): LocalizedText {
+  const join = (locale: keyof LocalizedText) =>
+    name[locale].trim() ? `${text[locale]}: ${name[locale].trim()}` : text[locale]
+  return {
+    'uz-Latn': join('uz-Latn'),
+    'uz-Cyrl': join('uz-Cyrl'),
+    ru: join('ru'),
+    en: join('en'),
   }
 }
 
@@ -748,6 +781,57 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       ),
   },
 
+  // --- custom fields (v1.1 SPEC §5) -----------------------------------------------------------------
+  'fields.definition.created': {
+    notify: false,
+    why: 'A new column on the people table is the head arranging their own management view; telling the whole boshqarma about it is noise. The moment it becomes news for a colleague is when they are asked to fill it -- `fields.request.created`.',
+  },
+  'fields.definition.updated': { notify: false, why: 'See fields.definition.created.' },
+  'fields.definition.archived': { notify: false, why: 'See fields.definition.created.' },
+  'fields.definition.reordered': { notify: false, why: 'See fields.definition.created.' },
+  'fields.value.set': {
+    notify: false,
+    why: 'SPEC §5: filling a field resolves the request and, when the head asked to hear about it, is reported in the daily digest -- "a daily batch, not per fill". One inbox row per colleague per answer would make the head mute the inbox on the first day.',
+  },
+
+  'fields.request.created': {
+    notify: true,
+    reason: 'field_request',
+    source: 'field_request',
+    subjectType: 'field_def',
+    recipients: ['target_user'],
+    // The deep link is the member's own profile, anchored at the fields section -- never the head's
+    // manager screen, which a xodim may not open at all.
+    deepLink: () => '/account#fields',
+    title: (f) =>
+      withLocalizedName(
+        str(f, 'reminder') === 'true'
+          ? plain(
+              'Eslatma: maʼlumot toʻldirilmagan',
+              'Эслатма: маълумот тўлдирилмаган',
+              'Напоминание: поле не заполнено',
+              'Reminder: a field is still empty',
+            )
+          : plain(
+              'Maʼlumotingizni toʻldiring',
+              'Маълумотингизни тўлдиринг',
+              'Заполните данные о себе',
+              'Please fill in your details',
+            ),
+        fieldLabel(f),
+      ),
+    body: (f) =>
+      byActor(
+        f,
+        plain(
+          'ushbu maydonni toʻldirishingizni soʻradi. Bir daqiqalik ish.',
+          'ушбу майдонни тўлдиришингизни сўради. Бир дақиқалик иш.',
+          'просит заполнить это поле. Это займёт минуту.',
+          'asked you to fill this in. It takes a minute.',
+        ),
+      ),
+  },
+
   // --- notifications (this module's own bookkeeping) ------------------------------------------------
   'notifications.notification.created': {
     notify: false,
@@ -841,6 +925,7 @@ export const REASON_LABEL: Readonly<Record<Reason, LocalizedText>> = Object.free
   decision: plain('qaror', 'қарор', 'решения', 'decisions'),
   digest: plain('xulosa', 'хулоса', 'сводка', 'digest'),
   system: plain('tizim', 'тизим', 'система', 'system'),
+  field_request: plain('maʼlumot', 'маълумот', 'анкета', 'profile'),
 })
 
 type Counts = Partial<Record<Reason, number>>

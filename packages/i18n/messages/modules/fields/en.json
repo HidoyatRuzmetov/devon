@@ -1,0 +1,184 @@
+{
+  "fields": {
+    "manager": {
+      "title": "Fields",
+      "nav": "Fields",
+      "subtitle": "Define your own columns for the people and the work of this department.",
+      "create": "New field",
+      "created": "“{name}” was added.",
+      "createFailed": "The field could not be added. Please try again.",
+      "saved": "Changes saved.",
+      "saveFailed": "Could not save. Please try again.",
+      "archived": "“{name}” was archived.",
+      "archiveFailed": "Could not archive it.",
+      "restored": "The field is back.",
+      "restoreFailed": "Could not bring it back.",
+      "reorderFailed": "Could not change the order.",
+      "undo": "Undo",
+      "ask": "Ask everyone to fill it",
+      "nudge": "Remind again",
+      "asked": "{count} colleagues were asked to fill it in.",
+      "nudged": "A reminder went out to {count} colleagues.",
+      "nobodyToAsk": "Everyone has already filled this in.",
+      "askFailed": "The request could not be sent.",
+      "tab": {
+        "person": "People fields",
+        "card": "Card fields"
+      },
+      "tabsAria": "Choose which fields to manage",
+      "capCount": "{used} of {cap} fields",
+      "showArchived": "Show archived",
+      "requiredBadge": "Required",
+      "archivedBadge": "Archived",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "edit": "Edit",
+      "archive": "Archive",
+      "restore": "Restore",
+      "progressLabel": "{filled} of {total} filled in",
+      "waitingOn": "waiting on {count}",
+      "empty": {
+        "person": {
+          "title": "No people fields yet",
+          "body": "Add a column such as Education or Languages and it appears in the people table and on every colleague's page."
+        },
+        "card": {
+          "title": "No card fields yet",
+          "body": "Add a column such as Estimated hours or a document link and it appears on the card itself."
+        }
+      },
+      "denied": {
+        "body": "Only the head of the department defines fields. You fill in your own details in your account settings.",
+        "action": "Go to account settings"
+      }
+    },
+    "my": {
+      "title": "My details",
+      "subtitle": "What the department asked you for. Visible inside this department only.",
+      "save": "Save",
+      "saved": "Your details were saved.",
+      "saveFailed": "Could not save. Please try again.",
+      "fixErrors": "Please check the marked fields.",
+      "requestedBadge": "{count} requested",
+      "missingBadge": "{count} still empty",
+      "completeBadge": "All filled in",
+      "requestedHint": "The head of the department asked you to fill this in.",
+      "headOnlyHint": "Only the head of the department fills this one in.",
+      "empty": {
+        "title": "Nothing has been asked of you yet",
+        "body": "When the head of the department adds a column, it shows up here."
+      }
+    },
+    "card": {
+      "title": "Custom fields",
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "saved": "Field updated.",
+      "saveFailed": "The field could not be saved.",
+      "editAria": "Edit “{field}”",
+      "requiredBlocksDone": "This card cannot be marked done until this field is filled in."
+    },
+    "form": {
+      "createTitle": "New field",
+      "editTitle": "Edit field",
+      "nameLegend": "Name",
+      "namePlaceholder": "For example: Education",
+      "key": "Key",
+      "keyHint": "In a filter it is typed like this: {example}",
+      "type": "Type",
+      "optionsLegend": "Options",
+      "optionAdd": "Add an option",
+      "optionRemove": "Remove the option",
+      "optionPlaceholder": "Option name",
+      "optionLabelAria": "Name of option {n}",
+      "optionColorAria": "Colour of option {n}",
+      "behaviourLegend": "Behaviour",
+      "required": "Required",
+      "requiredHint": "An empty answer is visible straight away.",
+      "showInTable": "As a column in the table",
+      "showInTableHint": "It joins the column list of the people table.",
+      "showOnCardTile": "Show on the card",
+      "showOnCardTileHint": "It appears as a small note on the board card.",
+      "selfEditable": "People fill it in themselves",
+      "selfEditableHint": "Switched off, only the head of the department enters it.",
+      "visibility": "Who sees it",
+      "visibilityHint": "Details such as pay or personal documents are never stored in this system.",
+      "reminderDays": "Reminder (days)",
+      "reminderDaysHint": "The request is repeated after this many days.",
+      "description": "Note",
+      "descriptionPlaceholder": "Explain what a colleague should write here.",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Add"
+    },
+    "type": {
+      "text": "Short text",
+      "long_text": "Long text",
+      "number": "Number",
+      "date": "Date",
+      "select": "One option",
+      "multi_select": "Several options",
+      "person": "Colleague",
+      "url": "Link",
+      "checkbox": "Yes / No",
+      "derived": "Calculated"
+    },
+    "color": {
+      "slate": "Grey",
+      "blue": "Blue",
+      "green": "Green",
+      "amber": "Amber",
+      "red": "Red",
+      "violet": "Violet",
+      "teal": "Teal",
+      "pink": "Pink"
+    },
+    "visibility": {
+      "everyone": "Everyone in the department",
+      "headOnly": "The head only"
+    },
+    "locale": {
+      "uz-Latn": "Uzbek (Latin)",
+      "uz-Cyrl": "Uzbek (Cyrillic)",
+      "ru": "Russian",
+      "en": "English"
+    },
+    "input": {
+      "textPlaceholder": "Type here",
+      "numberPlaceholder": "Enter a number",
+      "urlPlaceholder": "https://",
+      "datePlaceholder": "Pick a date",
+      "selectPlaceholder": "Not chosen",
+      "derivedHint": "This value is calculated automatically."
+    },
+    "value": {
+      "yes": "Yes",
+      "no": "No",
+      "empty": "Not filled in"
+    },
+    "error": {
+      "required": "This field is required.",
+      "not_a_number": "Enter a number.",
+      "not_a_date": "Pick a date.",
+      "not_a_url": "A link has to start with https://",
+      "unknown_option": "There is no such option.",
+      "too_long": "That text is too long.",
+      "not_editable": "You cannot change this field.",
+      "not_self_editable": "Only the head of the department fills this field in.",
+      "personal_data": "This system does not store dates of birth, passports, taxpayer ids, home addresses, pay, ethnicity or faith. Please choose another name.",
+      "cap_reached": "The field limit has been reached.",
+      "cap_reached_detail": "The limit of {cap} fields is full. A table nobody can read is not a table — archive one you no longer need first.",
+      "duplicate_key": "That key is already taken.",
+      "invalid_key": "A key is Latin letters, digits and underscores.",
+      "needs_options": "Add at least one option.",
+      "archived": "This field is archived.",
+      "unknown_subject": "It is not clear who this belongs to.",
+      "invalid_value": "That value is not valid."
+    },
+    "filter": {
+      "chip": "{key}: {value}",
+      "chipEmpty": "{key}: empty",
+      "hint": "Filter by a field: field:{key}:value"
+    }
+  }
+}

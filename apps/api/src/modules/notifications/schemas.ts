@@ -15,6 +15,10 @@ export const REASONS = [
   'decision',
   'digest',
   'system',
+  /** v1.1 SPEC §5: the boshqarma boshligʻi asked this person to fill in a custom field. Its own
+   * reason rather than `system` so a person can mute or route it separately, and so the Telegram
+   * message can carry a "Toʻldirish" button instead of the generic "Ochish". */
+  'field_request',
 ] as const
 export type Reason = (typeof REASONS)[number]
 export const reasonSchema = z.enum(REASONS)
