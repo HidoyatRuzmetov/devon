@@ -85,7 +85,8 @@
         "friday": "пятница",
         "saturday": "суббота",
         "sunday": "воскресенье"
-      }
+      },
+      "emptyChip": "{field}: не задано"
     },
     "field": {
       "title": "Заголовок",
@@ -105,7 +106,8 @@
       "activity": "История",
       "project": "Проект",
       "labels": "Метки",
-      "unit": "Отдел"
+      "unit": "Отдел",
+      "estimate": "Оценка"
     },
     "card": {
       "peekTitle": "Детали задачи",
@@ -495,7 +497,23 @@
       "capacityLabel": "Недельная ёмкость (часы)",
       "capacitySaved": "Ёмкость сохранена",
       "capacityFailed": "Не удалось сохранить ёмкость",
-      "capacityInvalid": "Введите от 0 до 168 часов"
+      "capacityInvalid": "Введите от 0 до 168 часов",
+      "legendTitle": "Что означают цвета",
+      "legendFreeHours": "Меньше 80% нормы",
+      "legendNearHours": "80–100%",
+      "legendOverHours": "Больше 100%",
+      "legendFreeCount": "Меньше {near} карточек",
+      "legendNearCount": "{near}–{over} карточек",
+      "legendOverCount": "Больше {over} карточек",
+      "warningTitle": "Эта таблица показывает не всю работу",
+      "warningNoDue": "{count} карточек без срока",
+      "warningNoEstimate": "{count} карточек без оценки",
+      "warningOpenLink": "Открыть список",
+      "modeCountBadge": "По числу карточек",
+      "modeCountWhy": "Оценено лишь {pct}% открытой работы, поэтому цвет считается по числу карточек, а не по часам.",
+      "modeHoursBadge": "По часам",
+      "currentWeek": "Текущая неделя",
+      "cellSummaryCount": "{name}, {week}: {cards} карточек (норма {allowance})"
     },
     "goals": {
       "title": "Цели",

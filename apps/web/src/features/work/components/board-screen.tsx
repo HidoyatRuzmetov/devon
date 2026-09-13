@@ -172,6 +172,9 @@ function BoardScreenInner() {
         {
           ...card,
           description: card.description?.text ?? null,
+          // SEV2 #3: `estimate:boʻsh` needs the value, and `exactOptionalPropertyTypes` means an
+          // absent estimate has to arrive as `null` rather than `undefined`.
+          estimateMin: card.estimateMin ?? null,
           labelNames: card.labels.map((id) => labelNames.get(id) ?? ''),
           projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
         },

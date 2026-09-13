@@ -109,6 +109,12 @@ export function clauseLabel(
       return clause.empty
         ? t('fields.filter.chipEmpty', { key: clause.key })
         : t('fields.filter.chip', { key: clause.key, value: clause.value })
+    case 'empty':
+      // v1.1 critique SEV2 #3: `due:boʻsh` / `estimate:boʻsh`, the two clauses the workload view's
+      // header warning links with. Same "unfilled" vocabulary as a custom field's own empty form.
+      return t('work.filter.emptyChip', {
+        field: t(clause.field === 'due' ? FIELD_LABEL_KEY.due : 'work.field.estimate'),
+      })
     case 'text':
       return clause.value
     default: {

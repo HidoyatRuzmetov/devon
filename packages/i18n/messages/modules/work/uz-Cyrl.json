@@ -85,7 +85,8 @@
         "friday": "жума",
         "saturday": "шанба",
         "sunday": "якшанба"
-      }
+      },
+      "emptyChip": "{field}: бўш"
     },
     "field": {
       "title": "Сарлавҳа",
@@ -105,7 +106,8 @@
       "activity": "Тарих",
       "project": "Лойиҳа",
       "labels": "Ёрлиқлар",
-      "unit": "Бўлим"
+      "unit": "Бўлим",
+      "estimate": "Баҳо"
     },
     "card": {
       "peekTitle": "Вазифа тафсилотлари",
@@ -495,7 +497,23 @@
       "capacityLabel": "Ҳафталик имконият (соат)",
       "capacitySaved": "Имконият сақланди",
       "capacityFailed": "Имкониятни сақлаб бўлмади",
-      "capacityInvalid": "0 дан 168 гача соат киритинг"
+      "capacityInvalid": "0 дан 168 гача соат киритинг",
+      "legendTitle": "Ранглар нимани билдиради",
+      "legendFreeHours": "Имкониятнинг 80% идан кам",
+      "legendNearHours": "80–100%",
+      "legendOverHours": "100% дан ортиқ",
+      "legendFreeCount": "{near} тадан кам карта",
+      "legendNearCount": "{near}–{over} та карта",
+      "legendOverCount": "{over} тадан ортиқ карта",
+      "warningTitle": "Бу жадвал ҳамма ишни кўрсатмаяпти",
+      "warningNoDue": "{count} та картада муддат йўқ",
+      "warningNoEstimate": "{count} та карта баҳоланмаган",
+      "warningOpenLink": "Рўйхатни очиш",
+      "modeCountBadge": "Карта сони бўйича",
+      "modeCountWhy": "Очиқ ишнинг атиги {pct}% и баҳоланган, шунинг учун ранглар соат эмас, карта сони бўйича.",
+      "modeHoursBadge": "Соат бўйича",
+      "currentWeek": "Бу ҳафта",
+      "cellSummaryCount": "{name}, {week}: {cards} та карта ({allowance} тагача)"
     },
     "goals": {
       "title": "Мақсадлар",

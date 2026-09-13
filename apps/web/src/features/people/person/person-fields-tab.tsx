@@ -54,7 +54,8 @@ async function loadValues(userId: string): Promise<FieldValueRecordDto[] | null>
       return null
     // A member who somehow reaches a colleague's page gets the designed no-permission state, not a
     // crash -- the server is the one that decides, and it just did.
-    if (error instanceof ApiError && (error.code === 'forbidden' || error.status === 403)) return null
+    if (error instanceof ApiError && (error.code === 'forbidden' || error.status === 403))
+      return null
     throw error
   }
 }
@@ -164,49 +165,49 @@ export function PersonFieldsTab({
 
       <Card elevation="flat" className="flex flex-col gap-1">
         <dl className="flex flex-col">
-            {ordered.map((def) => {
-              const shown = loaded ? renderValue(values.get(def.id)?.value ?? null) : null
-              return (
-                <div
-                  key={def.id}
-                  className={cn(
-                    'flex min-h-11 flex-wrap items-center gap-2 border-b border-border py-2 last:border-0',
+          {ordered.map((def) => {
+            const shown = loaded ? renderValue(values.get(def.id)?.value ?? null) : null
+            return (
+              <div
+                key={def.id}
+                className={cn(
+                  'flex min-h-11 flex-wrap items-center gap-2 border-b border-border py-2 last:border-0',
+                )}
+              >
+                <dt className="min-w-40 text-small text-muted-foreground">
+                  {fieldLabel(def, locale)}
+                  {def.required ? (
+                    <Badge variant="subtle" tone="warning" className="ml-2">
+                      {t('people.person.fields.required')}
+                    </Badge>
+                  ) : null}
+                </dt>
+                <dd className={cn('flex-1 text-small', shown === null && 'text-muted-foreground')}>
+                  {!loaded ? (
+                    <Skeleton className="h-4 w-24 rounded-sm" />
+                  ) : (
+                    (shown ?? t('people.person.fields.missing'))
                   )}
-                >
-                  <dt className="min-w-40 text-small text-muted-foreground">
-                    {fieldLabel(def, locale)}
-                    {def.required ? (
-                      <Badge variant="subtle" tone="warning" className="ml-2">
-                        {t('people.person.fields.required')}
-                      </Badge>
-                    ) : null}
-                  </dt>
-                  <dd className={cn('flex-1 text-small', shown === null && 'text-muted-foreground')}>
-                    {!loaded ? (
-                      <Skeleton className="h-4 w-24 rounded-sm" />
-                    ) : (
-                      (shown ?? t('people.person.fields.missing'))
-                    )}
-                  </dd>
-                  {loaded && shown === null && canManage ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      loading={askToFill.isPending}
-                      onClick={() => askToFill.mutate(def.id)}
-                    >
-                      <BellRing aria-hidden="true" className="size-4" />
-                      {t('people.person.fields.ask')}
-                    </Button>
-                  ) : null}
-                  {loaded && shown === null && canEditOwn && !canManage ? (
-                    <Button asChild variant="ghost" size="sm">
-                      <a href="/account#fields">{t('people.person.fields.fillOwn')}</a>
-                    </Button>
-                  ) : null}
-                </div>
-              )
-            })}
+                </dd>
+                {loaded && shown === null && canManage ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    loading={askToFill.isPending}
+                    onClick={() => askToFill.mutate(def.id)}
+                  >
+                    <BellRing aria-hidden="true" className="size-4" />
+                    {t('people.person.fields.ask')}
+                  </Button>
+                ) : null}
+                {loaded && shown === null && canEditOwn && !canManage ? (
+                  <Button asChild variant="ghost" size="sm">
+                    <a href="/account#fields">{t('people.person.fields.fillOwn')}</a>
+                  </Button>
+                ) : null}
+              </div>
+            )
+          })}
         </dl>
       </Card>
     </div>

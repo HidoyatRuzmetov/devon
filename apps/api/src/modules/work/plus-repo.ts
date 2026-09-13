@@ -800,6 +800,9 @@ export type WorkloadRaw = {
   buckets: WorkloadBucket[]
   noDueDate: number
   noEstimate: number
+  /** Every open card in the department, so the grid can say honestly how much of the work its
+   * estimate-based colouring actually covers (v1.1 critique SEV2 #3). */
+  openTotal: number
 }
 
 /**
@@ -834,9 +837,10 @@ export async function getWorkloadBuckets(
             and c.due_at >= ${fromIso} and c.due_at < ${toIso}
           group by 1, 2`,
     )
-    const unscheduled = await tx.raw<{ no_due: string; no_estimate: string }>(
+    const unscheduled = await tx.raw<{ no_due: string; no_estimate: string; open_total: string }>(
       sql`select count(*) filter (where due_at is null) as no_due,
-                 count(*) filter (where estimate_min is null) as no_estimate
+                 count(*) filter (where estimate_min is null) as no_estimate,
+                 count(*) as open_total
           from app.cards
           where department_id = ${departmentId} and deleted_at is null and status = 'active'`,
     )
@@ -850,6 +854,7 @@ export async function getWorkloadBuckets(
       })),
       noDueDate: Number(unscheduled[0]?.no_due ?? 0),
       noEstimate: Number(unscheduled[0]?.no_estimate ?? 0),
+      openTotal: Number(unscheduled[0]?.open_total ?? 0),
     }
   })
 }

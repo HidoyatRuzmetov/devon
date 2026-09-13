@@ -382,7 +382,14 @@ export const workloadSchema = z.object({
   /** A4's "Hisobga olinmagan" panel: the two ways a workload grid quietly lies -- open cards with
    * no due date (they land in no week) and open cards with no estimate (they add nothing to any
    * bar). */
-  unscheduled: z.object({ noDueDate: z.number().int(), noEstimate: z.number().int() }),
+  unscheduled: z.object({
+    noDueDate: z.number().int(),
+    noEstimate: z.number().int(),
+    /** v1.1 critique SEV2 #3: every open card in the department, so the grid can tell honestly how
+     * much of the work its estimate-based colouring covers -- and fall back to counting cards when
+     * the answer is "less than half". */
+    openTotal: z.number().int(),
+  }),
 })
 export type Workload = z.infer<typeof workloadSchema>
 

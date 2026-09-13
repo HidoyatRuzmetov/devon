@@ -32,6 +32,12 @@ export type FilterClause =
    * value -- an option id, a number, an ISO date, `ha`/`yoʻq` for a checkbox, or one member of a
    * multi-select. `empty` is the "nobody has filled this in" form. */
   | { kind: 'field'; key: string; value: string; empty: boolean }
+  /** v1.1 critique SEV2 #3: `due:boʻsh` and `estimate:boʻsh` -- "the cards this grid cannot draw".
+   * The workload view's header warning names two numbers ("37 ta kartada muddat yoʻq", "93 ta karta
+   * baholanmagan") and both have to be clickable, which means the grammar needs a way to say "this
+   * column is empty" about the two card properties the grid depends on. Same `boʻsh` vocabulary the
+   * `field:` clause already uses, so there is one word for "unfilled" in the whole product. */
+  | { kind: 'empty'; field: 'due' | 'estimate' }
   | { kind: 'text'; value: string }
 
 export type FilterQuery = {
@@ -50,6 +56,7 @@ const KNOWN_KEYS = new Set([
   'label',
   'unit',
   'field',
+  'estimate',
 ])
 const STATUS_VALUES = new Set<CardFilterStatus>(['active', 'done', 'archived'])
 const COMPARE_OPS: readonly CompareOp[] = ['<=', '>=', '<', '>', '='] // longest-first: checked in order
@@ -101,7 +108,16 @@ export function parseFilterQuery(input: string): FilterQuery {
           break
         }
         case 'due':
-          clauses.push({ kind: 'due', ...parseDueValue(value) })
+          // `due:boʻsh` is "no due date at all", not a date comparison -- see the `empty` clause.
+          if (isFieldEmptyWord(value)) clauses.push({ kind: 'empty', field: 'due' })
+          else clauses.push({ kind: 'due', ...parseDueValue(value) })
+          break
+        case 'estimate':
+          // The only `estimate:` form the grammar defines is "unestimated". A numeric comparison
+          // would need units in four locales for a filter nobody has asked for; a typo falls through
+          // to free text rather than being silently dropped, exactly like every other key here.
+          if (isFieldEmptyWord(value)) clauses.push({ kind: 'empty', field: 'estimate' })
+          else clauses.push({ kind: 'text', value: match[0] })
           break
         case 'project':
           clauses.push({ kind: 'project', name: value })
@@ -171,6 +187,8 @@ export function serializeFilterQuery(clauses: readonly FilterClause[]): string {
           // The quotes go around `<key>:<value>`, not around the whole token, so the result still
           // matches this grammar's own `key:"quoted value"` form when the value contains a space.
           return `field:${quoteIfNeeded(`${c.key}:${c.empty && !c.value ? 'boʻsh' : c.value}`)}`
+        case 'empty':
+          return `${c.field}:boʻsh`
         case 'text':
           return quoteIfNeeded(c.value)
       }
@@ -257,6 +275,9 @@ export type FilterableCard = {
    * has not loaded them -- every `field:` clause then simply matches nothing, which is the
    * fail-closed direction for a filter. */
   fieldValues?: Readonly<Record<string, FieldValue>>
+  /** Minutes. Absent on a caller that has not loaded estimates, in which case `estimate:boʻsh`
+   * matches nothing -- the fail-closed direction for a filter. */
+  estimateMin?: number | null
 }
 
 export type FilterContext = {
@@ -371,6 +392,10 @@ export function matchesFilterQuery(
         return (card.unitName ?? '').toLowerCase() === clause.name.toLowerCase()
       case 'field':
         return fieldMatches(card.fieldValues?.[clause.key], clause)
+      case 'empty':
+        return clause.field === 'due'
+          ? card.dueAt === null || card.dueAt === undefined
+          : card.estimateMin === null || card.estimateMin === undefined
       case 'text': {
         const needle = clause.value.toLowerCase()
         return (

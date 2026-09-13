@@ -882,7 +882,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
         return reply.send({
           weekStarts: [],
           rows: [],
-          unscheduled: { noDueDate: 0, noEstimate: 0 },
+          unscheduled: { noDueDate: 0, noEstimate: 0, openTotal: 0 },
         })
       }
       // "Mening yuklamam" is exactly one row -- the caller's. There is no parameter to widen it,
@@ -1088,6 +1088,7 @@ function makeFilterableFactory(
     assigneeUserId: card.assigneeUserId,
     giverUserId: card.giverUserId,
     dueAt: card.dueAt,
+    estimateMin: card.estimateMin ?? null,
     projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
     labelNames: card.labels.map((id) => labelNames.get(id) ?? '').filter(Boolean),
     unitName: card.assigneeUserId ? (unitNames.get(card.assigneeUserId) ?? null) : null,
@@ -1157,6 +1158,10 @@ async function buildWorkload(
         }
       }),
     })),
-    unscheduled: { noDueDate: raw.noDueDate, noEstimate: raw.noEstimate },
+    unscheduled: {
+      noDueDate: raw.noDueDate,
+      noEstimate: raw.noEstimate,
+      openTotal: raw.openTotal,
+    },
   }
 }

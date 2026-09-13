@@ -68,6 +68,9 @@ function toFilterable(
     assigneeUserId: card.assigneeUserId,
     giverUserId: card.giverUserId,
     dueAt: card.dueAt,
+    // SEV2 #3: `estimate:boʻsh` is how the workload view's warning strip links to the cards it
+    // could not draw.
+    estimateMin: card.estimateMin ?? null,
     projectName: card.projectId ? (projectNames.get(card.projectId) ?? null) : null,
     labelNames: card.labels.map((id) => labelNames.get(id) ?? '').filter(Boolean),
     // v1.1: EPIC-003 shipped, so `unit:` clauses finally match something. The board already loads

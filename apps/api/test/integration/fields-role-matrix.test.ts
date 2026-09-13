@@ -66,10 +66,7 @@ async function createDef(
   return { status: res.status, id: json.def.id }
 }
 
-async function setValue(
-  session: Session,
-  body: Record<string, unknown>,
-): Promise<number> {
+async function setValue(session: Session, body: Record<string, unknown>): Promise<number> {
   const res = await fetch(`${baseUrl}/api/v1/fields/values`, {
     method: 'PUT',
     headers: session.headers,
@@ -144,10 +141,7 @@ describe('SEV1 #1 -- a xodim can never read a colleague’s answers', () => {
   })
 
   it('naming a colleague by user id is refused for a member', async () => {
-    const res = await get(
-      `/api/v1/fields/values?subjectType=person&userIds=${otherUserId}`,
-      member,
-    )
+    const res = await get(`/api/v1/fields/values?subjectType=person&userIds=${otherUserId}`, member)
     expect(res.status).toBe(403)
   })
 
@@ -175,7 +169,10 @@ describe('SEV1 #1 -- a xodim can never read a colleague’s answers', () => {
   })
 
   it('a member may read their OWN answers, and gets only their own rows', async () => {
-    const res = await get(`/api/v1/fields/values?subjectType=person&userIds=${memberUserId}`, member)
+    const res = await get(
+      `/api/v1/fields/values?subjectType=person&userIds=${memberUserId}`,
+      member,
+    )
     expect(res.status).toBe(200)
     const body = (await res.json()) as { values: ValueRow[] }
     expect(body.values.length).toBeGreaterThan(0)
@@ -183,7 +180,10 @@ describe('SEV1 #1 -- a xodim can never read a colleague’s answers', () => {
   })
 
   it('a head_only definition’s answers never reach the person they are about', async () => {
-    const res = await get(`/api/v1/fields/values?subjectType=person&userIds=${memberUserId}`, member)
+    const res = await get(
+      `/api/v1/fields/values?subjectType=person&userIds=${memberUserId}`,
+      member,
+    )
     const body = (await res.json()) as { values: ValueRow[] }
     expect(body.values.some((v) => v.key === 'baholash')).toBe(false)
     // ...and the head does see it, so the assertion above is about permission, not about an

@@ -230,6 +230,11 @@ export const workloadSchema = z.object({
   unscheduled: z.object({
     noDueDate: z.number().int(),
     noEstimate: z.number().int(),
+    /** Every open card in the department. v1.1 critique SEV2 #3: the grid's three-step colour is
+     * computed from estimates, so when estimates cover under half the open work every cell comes out
+     * green and the view whose only job is to show load says "joy bor" for everyone. The client
+     * needs the denominator to know that, and to say so on screen. */
+    openTotal: z.number().int(),
   }),
 })
 

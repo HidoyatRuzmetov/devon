@@ -85,7 +85,8 @@
         "friday": "friday",
         "saturday": "saturday",
         "sunday": "sunday"
-      }
+      },
+      "emptyChip": "{field}: empty"
     },
     "field": {
       "title": "Title",
@@ -105,7 +106,8 @@
       "activity": "Activity",
       "project": "Project",
       "labels": "Labels",
-      "unit": "Unit"
+      "unit": "Unit",
+      "estimate": "Estimate"
     },
     "card": {
       "peekTitle": "Card details",
@@ -495,7 +497,23 @@
       "capacityLabel": "Weekly capacity (hours)",
       "capacitySaved": "Capacity saved",
       "capacityFailed": "Could not save the capacity",
-      "capacityInvalid": "Enter between 0 and 168 hours"
+      "capacityInvalid": "Enter between 0 and 168 hours",
+      "legendTitle": "What the colours mean",
+      "legendFreeHours": "Under 80% of capacity",
+      "legendNearHours": "80–100%",
+      "legendOverHours": "Over 100%",
+      "legendFreeCount": "Fewer than {near} cards",
+      "legendNearCount": "{near}–{over} cards",
+      "legendOverCount": "More than {over} cards",
+      "warningTitle": "This grid is not showing all the work",
+      "warningNoDue": "{count} cards have no due date",
+      "warningNoEstimate": "{count} cards have no estimate",
+      "warningOpenLink": "Open the list",
+      "modeCountBadge": "By card count",
+      "modeCountWhy": "Only {pct}% of the open work is estimated, so the colour is counted in cards, not hours.",
+      "modeHoursBadge": "By hours",
+      "currentWeek": "This week",
+      "cellSummaryCount": "{name}, {week}: {cards} cards (allowance {allowance})"
     },
     "goals": {
       "title": "Goals",

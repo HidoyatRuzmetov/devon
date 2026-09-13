@@ -85,7 +85,8 @@
         "friday": "juma",
         "saturday": "shanba",
         "sunday": "yakshanba"
-      }
+      },
+      "emptyChip": "{field}: boʻsh"
     },
     "field": {
       "title": "Sarlavha",
@@ -105,7 +106,8 @@
       "activity": "Tarix",
       "project": "Loyiha",
       "labels": "Yorliqlar",
-      "unit": "Boʻlim"
+      "unit": "Boʻlim",
+      "estimate": "Baho"
     },
     "card": {
       "peekTitle": "Vazifa tafsilotlari",
@@ -495,7 +497,23 @@
       "capacityLabel": "Haftalik imkoniyat (soat)",
       "capacitySaved": "Imkoniyat saqlandi",
       "capacityFailed": "Imkoniyatni saqlab boʻlmadi",
-      "capacityInvalid": "0 dan 168 gacha soat kiriting"
+      "capacityInvalid": "0 dan 168 gacha soat kiriting",
+      "legendTitle": "Ranglar nimani bildiradi",
+      "legendFreeHours": "Imkoniyatning 80% idan kam",
+      "legendNearHours": "80–100%",
+      "legendOverHours": "100% dan ortiq",
+      "legendFreeCount": "{near} tadan kam karta",
+      "legendNearCount": "{near}–{over} ta karta",
+      "legendOverCount": "{over} tadan ortiq karta",
+      "warningTitle": "Bu jadval hamma ishni koʻrsatmayapti",
+      "warningNoDue": "{count} ta kartada muddat yoʻq",
+      "warningNoEstimate": "{count} ta karta baholanmagan",
+      "warningOpenLink": "Roʻyxatni ochish",
+      "modeCountBadge": "Karta soni boʻyicha",
+      "modeCountWhy": "Ochiq ishning atigi {pct}% i baholangan, shuning uchun ranglar soat emas, karta soni boʻyicha.",
+      "modeHoursBadge": "Soat boʻyicha",
+      "currentWeek": "Bu hafta",
+      "cellSummaryCount": "{name}, {week}: {cards} ta karta ({allowance} tagacha)"
     },
     "goals": {
       "title": "Maqsadlar",
