@@ -3831,7 +3831,7 @@
       "subtitle": "{departmentName} boʻlimlari va lavozimlari",
       "empty": {
         "title": "Hali boʻlim yoʻq",
-        "body": "Boʻlimni tuzganingizdan keyin xodimlarni unga taqsimlashingiz mumkin.",
+        "body": "Birinchi boʻlimni qoʻshing, keyin xodimlarni unga joylashtirasiz.",
         "action": "Boʻlim qoʻshish"
       },
       "addUnit": "Boʻlim qoʻshish",
@@ -3842,7 +3842,7 @@
       "rowActions": "Boʻlim amallari",
       "deleteConfirm": {
         "title": "«{name}» oʻchirilsinmi?",
-        "body": "Aʼzolar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarish mumkin.",
+        "body": "Xodimlar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarasiz.",
         "confirm": "Oʻchirish",
         "cancel": "Bekor qilish"
       },
@@ -3852,8 +3852,8 @@
       "colourLabel": "Rang",
       "colourAuto": "Avtomatik",
       "settingsNotice": {
-        "structureEdit": "Hozircha tuzilmani faqat boʻlim boshligʻi tahrirlay oladi",
-        "selfAssign": "Hozircha lavozimlarni faqat boʻlim boshligʻi belgilay oladi"
+        "structureEdit": "Hozircha tuzilmani faqat boshqarma boshligʻi tahrirlay oladi",
+        "selfAssign": "Hozircha lavozimlarni faqat boshqarma boshligʻi belgilay oladi"
       },
       "dragHint": "Tartibini oʻzgartirish uchun torting",
       "expandBranch": "Ichki boʻlimlarni yoyish",
@@ -3863,26 +3863,26 @@
         "chart": "Tuzilma sxemasi"
       },
       "chart": {
-        "exportPng": "PNG sifatida saqlash",
+        "exportPng": "PNG yuklab olish",
         "noHead": "Boshligʻi hali tayinlanmagan",
-        "headBadge": "Boshligʻi",
-        "deputyBadge": "Oʻrinbosari",
+        "headBadge": "Boshliq",
+        "deputyBadge": "Oʻrinbosar",
         "memberCount": "{count} kishi",
-        "keyboardHint": "Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning",
+        "keyboardHint": "Boʻlimlar orasida oʻq tugmalari bilan yuring",
         "zoomIn": "Kattalashtirish",
         "zoomOut": "Kichiklashtirish",
         "resetView": "Koʻrinishni tiklash",
         "closePanel": "Yopish"
       },
       "validation": {
-        "nameRequired": "Nomini kiriting"
+        "nameRequired": "Nomini yozing."
       },
       "addDialog": {
         "title": "Yangi boʻlim",
-        "namePlaceholder": "Masalan, Monitoring guruhi",
+        "namePlaceholder": "Masalan: Monitoring guruhi",
         "parentLabel": "Yuqori boʻlim",
-        "rootOption": "Yoʻq — asosiy boʻlim",
-        "create": "Yaratish",
+        "rootOption": "Yoʻq — eng yuqori daraja",
+        "create": "Qoʻshish",
         "cancel": "Bekor qilish"
       }
     },
@@ -3890,9 +3890,9 @@
       "roleLabel": {
         "head": "Boʻlim boshligʻi",
         "deputy": "Oʻrinbosar",
-        "member": "Aʼzo"
+        "member": "Xodim"
       },
-      "join": "Ushbu boʻlimga qoʻshilish",
+      "join": "Bu boʻlimga qoʻshilish",
       "joinAs": "{role} sifatida qoʻshilish",
       "leave": "Boʻlimdan chiqish",
       "assign": "Tayinlash",
@@ -3915,7 +3915,7 @@
       "title": "Xodimlar",
       "subtitle": "{departmentName} jamoasi, boʻlimlar boʻyicha",
       "empty": {
-        "title": "Hali aʼzo yoʻq"
+        "title": "Hali xodim yoʻq"
       },
       "searchPlaceholder": "Xodimni qidirish",
       "unassignedGroup": "Boʻlimsiz",
@@ -3933,13 +3933,13 @@
         "body": "Boshqa soʻz bilan qidiring yoki filtrni tozalang."
       },
       "hoverCard": {
-        "membership": "Aʼzolik",
+        "membership": "Boshqarmada",
         "unit": "Boʻlim",
         "openBoardColumn": "Doskadagi ustunini ochish",
         "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish",
         "copyLink": "Havola",
         "copyLinkAria": "{name} profiliga havolani nusxalash",
-        "linkCopied": "Havola nusxalandi",
+        "linkCopied": "Havoladan nusxa olindi",
         "openProfile": "Profilni ochish",
         "assignTask": "Vazifa berish",
         "message": "Telegramda yozish"
@@ -3947,22 +3947,22 @@
       "openTable": "Koʻrsatkichlar jadvali",
       "layout": {
         "label": "Koʻrinish",
-        "cards": "Kartochkalar",
+        "cards": "Kartalar",
         "table": "Jadval"
       },
       "table": {
-        "caption": "Boʻlim xodimlari roʻyxati",
+        "caption": "Boshqarma xodimlari roʻyxati",
         "name": "Ism",
         "unit": "Boʻlim",
-        "unitRole": "Boʻlimdagi roli",
+        "unitRole": "Boʻlimdagi oʻrni",
         "title": "Lavozim",
         "noRole": "Belgilanmagan",
         "noTitle": "Koʻrsatilmagan"
       }
     },
     "common": {
-      "head": "Boshligʻi",
-      "member": "Aʼzo"
+      "head": "Boshliq",
+      "member": "Xodim"
     }
   },
   "telegram": {

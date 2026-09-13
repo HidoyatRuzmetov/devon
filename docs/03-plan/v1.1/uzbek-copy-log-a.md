@@ -188,3 +188,30 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `departments.features.templates.description` | Tayyor vazifa va loyiha namunalari — bir xil ishni har safar qaytadan yozmaslik uchun. | Tayyor karta va loyiha andozalari — bir xil ishni har safar qaytadan yozmaslik uchun. |  |
 | `departments.features.focus_list.description` | Har kim uchun beshtagacha asosiy vazifa roʻyxati. | Har bir xodimda beshtagacha asosiy ish. | «Har kim uchun … roʻyxati» — uzun; §10 `beshtagacha` |
 | `departments.features.reminders.description` | Vazifa boʻyicha oʻzingizga belgilangan vaqtda eslatma olish. | Karta boʻyicha oʻzingiz tanlagan vaqtda eslatma keladi. | TERMS: karta; «eslatma olish» → «eslatma keladi» (§2 tizim oʻzi haqida gapirmaydi) |
+
+## Modul: structure (`packages/i18n/messages/modules/structure/`)
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `structure.units.empty.body` | Boʻlimni tuzganingizdan keyin xodimlarni unga taqsimlashingiz mumkin. | Birinchi boʻlimni qoʻshing, keyin xodimlarni unga joylashtirasiz. | §7 boʻsh holat keyingi qadamni oʻrgatadi; «mumkin» → aniq feʼl |
+| `structure.units.deleteConfirm.body` | Aʼzolar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarish mumkin. | Xodimlar boʻlimsiz qoladi. Bir muddat «Bekor qilish» bilan qaytarasiz. | §12.2 Member = xodim |
+| `structure.units.settingsNotice.structureEdit` | Hozircha tuzilmani faqat boʻlim boshligʻi tahrirlay oladi | Hozircha tuzilmani faqat boshqarma boshligʻi tahrirlay oladi | §12.2 tuzilmani boshqarma boshligʻi boshqaradi, boʻlim boshligʻi emas |
+| `structure.units.settingsNotice.selfAssign` | Hozircha lavozimlarni faqat boʻlim boshligʻi belgilay oladi | Hozircha lavozimlarni faqat boshqarma boshligʻi belgilay oladi | §12.2 boshqarma boshligʻi |
+| `structure.units.chart.exportPng` | PNG sifatida saqlash | PNG yuklab olish | §11/29 «Eksport»/«sifatida saqlash» → «yuklab olish» |
+| `structure.units.chart.headBadge` | Boshligʻi | Boshliq | belgida egalik qoʻshimchasi keraksiz |
+| `structure.units.chart.deputyBadge` | Oʻrinbosari | Oʻrinbosar | belgida egalik qoʻshimchasi keraksiz |
+| `structure.units.chart.keyboardHint` | Boʻlimlar orasida oʻtish uchun strelka tugmalaridan foydalaning | Boʻlimlar orasida oʻq tugmalari bilan yuring | «strelka» — ruscha; «foydalaning» — uzun |
+| `structure.units.validation.nameRequired` | Nomini kiriting | Nomini yozing. | §6 tekshiruv nuqta bilan; §11/26 matn «yoziladi» |
+| `structure.units.addDialog.namePlaceholder` | Masalan, Monitoring guruhi | Masalan: Monitoring guruhi | §14 namuna shakli «Masalan: …» |
+| `structure.units.addDialog.rootOption` | Yoʻq — asosiy boʻlim | Yoʻq — eng yuqori daraja | «asosiy boʻlim» quyidagi «Yuqori boʻlim» bilan chalkashadi |
+| `structure.units.addDialog.create` | Yaratish | Qoʻshish | §11/4 boʻlim «qoʻshiladi»; dialog sarlavhasi obyektni aytib turibdi |
+| `structure.roles.roleLabel.member` | Aʼzo | Xodim | §12.2 Member = xodim |
+| `structure.roles.join` | Ushbu boʻlimga qoʻshilish | Bu boʻlimga qoʻshilish | §11/19 `ushbu` → `bu` |
+| `structure.people.empty.title` | Hali aʼzo yoʻq | Hali xodim yoʻq | §12.2 Member = xodim |
+| `structure.people.hoverCard.membership` | Aʼzolik | Boshqarmada | «Aʼzolik» — ostidagi belgida boshqarmadagi oʻrni turadi |
+| `structure.people.hoverCard.linkCopied` | Havola nusxalandi | Havoladan nusxa olindi | §5 nusxa toasti bir xil shaklda |
+| `structure.people.layout.cards` | Kartochkalar | Kartalar | §11/9 `kartochka` → `karta` |
+| `structure.people.table.caption` | Boʻlim xodimlari roʻyxati | Boshqarma xodimlari roʻyxati | §12.2 roster — butun boshqarma |
+| `structure.people.table.unitRole` | Boʻlimdagi roli | Boʻlimdagi oʻrni | «roli» — oʻzlashmasi shart emas |
+| `structure.common.head` | Boshligʻi | Boshliq | belgida egalik qoʻshimchasi keraksiz |
+| `structure.common.member` | Aʼzo | Xodim | §12.2 Member = xodim |
