@@ -369,7 +369,7 @@ export default function GoalsScreen(): React.JSX.Element {
           animateKey={`goals-${goals.length}`}
         >
           {goals.map((goal) => (
-            <StaggerItem key={goal.id} exit="hidden" layout className="h-full">
+            <StaggerItem key={goal.id} exit="hidden" layout className="h-full min-w-0">
               <GoalCard
                 goal={goal}
                 canManage={isHead}

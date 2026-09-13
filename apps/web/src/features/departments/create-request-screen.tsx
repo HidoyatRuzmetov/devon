@@ -20,12 +20,18 @@ function StepIndicator({ step }: { step: Step }) {
   const t = useT()
   const index = STEP_KEYS.indexOf(step)
   return (
-    <ol className="flex items-center gap-2">
+    // 390 px: three numbered dots plus three full Uzbek labels plus two 32 px rules is 401 px of
+    // stepper in a 390 px window, and DESIGN.md's rule is that the page body never scrolls
+    // sideways. Below `sm` only the step you are on is named -- which is the only label a stepper is
+    // read for anyway -- and the connectors shrink; from `sm` up nothing changes. The names of the
+    // other steps stay in the accessible tree either way (`sr-only`), so the list still reads as
+    // "Nomi, Boʻlinmalar, Sozlamalar" to a screen reader at every width.
+    <ol className="flex items-center gap-1.5 sm:gap-2">
       {STEP_KEYS.map((key, i) => (
-        <li key={key} className="flex items-center gap-2">
+        <li key={key} className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <span
             className={cn(
-              'flex size-6 items-center justify-center rounded-full text-caption font-medium transition-colors duration-(--dur-micro)',
+              'flex size-6 shrink-0 items-center justify-center rounded-full text-caption font-medium transition-colors duration-(--dur-micro)',
               i < index && 'bg-success text-success-foreground',
               i === index && 'bg-primary text-primary-foreground',
               i > index && 'bg-muted text-muted-foreground',
@@ -35,14 +41,15 @@ function StepIndicator({ step }: { step: Step }) {
           </span>
           <span
             className={cn(
-              'text-small',
+              'truncate text-small',
               i === index ? 'font-medium text-foreground' : 'text-muted-foreground',
+              i === index ? '' : 'sr-only sm:not-sr-only',
             )}
           >
             {t(`departments.create.steps.${key}`)}
           </span>
           {i < STEP_KEYS.length - 1 ? (
-            <span className="h-px w-8 bg-border" aria-hidden="true" />
+            <span className="h-px w-4 shrink-0 bg-border sm:w-8" aria-hidden="true" />
           ) : null}
         </li>
       ))}

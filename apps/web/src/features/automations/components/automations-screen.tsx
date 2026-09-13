@@ -327,7 +327,7 @@ export default function AutomationsScreen(): React.JSX.Element {
       <AnimatePresence initial={false}>
         <Stagger className="grid gap-3 lg:grid-cols-2" animateKey={`rules-${rules.length}`}>
           {rules.map((rule) => (
-            <StaggerItem key={rule.id} exit="hidden" layout className="h-full">
+            <StaggerItem key={rule.id} exit="hidden" layout className="h-full min-w-0">
               <RuleCard
                 rule={rule}
                 busy={pending === rule.id}
