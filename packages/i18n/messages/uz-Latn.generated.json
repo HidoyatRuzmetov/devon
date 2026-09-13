@@ -1219,7 +1219,7 @@
     "trigger": {
       "cardCreated": "Karta yaratilganda",
       "cardStatusChanged": "Holati oʻzgarganda",
-      "cardAssigned": "Kartа biriktirilganda",
+      "cardAssigned": "Karta biriktirilganda",
       "cardDueSoon": "Muddati yaqinlashganda",
       "cardOverdue": "Muddati oʻtganda",
       "cardFieldChanged": "Maydon oʻzgarganda"

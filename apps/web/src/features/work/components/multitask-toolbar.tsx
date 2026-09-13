@@ -252,7 +252,9 @@ export function MultitaskToolbar({
         onSelect={(date) => apply({ dueAt: date ? date.toISOString() : null }, 'work.bulk.dueSet')}
         label={t('work.bulk.due')}
         placeholder={t('work.bulk.due')}
-        triggerClassName="h-8"
+        // `w-auto`: the picker trigger is `w-full` by default, which on a flex toolbar
+        // claimed its own row and made the bar three rows tall (seen live on the board).
+        triggerClassName="h-8 w-auto min-w-32"
       />
 
       <DropdownMenu open={estimateOpen} onOpenChange={setEstimateOpen}>
