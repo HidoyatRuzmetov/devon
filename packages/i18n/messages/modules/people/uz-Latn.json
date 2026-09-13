@@ -152,7 +152,7 @@
     "indicator": {
       "openCards": {
         "label": "Ochiq vazifalar",
-        "description": "Hozir bajarilayotgan vazifalar soni"
+        "description": "Hozir bajarilayotgan vazifalar"
       },
       "overdueCards": {
         "label": "Kechikkan",
@@ -412,7 +412,7 @@
       "activity": {
         "empty": {
           "title": "Faollik yoʻq",
-          "body": "Bu xodimning ish boʻyicha harakatlari hali qayd etilmagan."
+          "body": "Bu xodim boʻyicha hali hech qanday ish qayd etilmagan."
         },
         "kind": {
           "created": "Vazifa qoʻshdi",

@@ -408,3 +408,38 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `fields.input.derivedHint` | Bu qiymat avtomatik hisoblanadi. | Bu qiymat oʻzi hisoblanadi. | «avtomatik» → oʻzbekcha «oʻzi» |
 | `fields.error.required` | Bu maydon majburiy. | Bu maydon toʻldirilishi kerak. | §6 tekshiruv jadvalidagi aynan shakl |
 | `fields.error.too_long` | Matn juda uzun. | Matn juda uzun — qisqartiring. | §6 xato nima qilishni ham aytadi |
+
+## Ikkinchi oʻqish (barcha modullar)
+
+Birinchi tahrirdan keyin har bir modulning toʻrt va undan koʻp soʻzli satrlari yana bir bor
+inglizchasi bilan yonma-yon oʻqib chiqildi. Quyidagilar shunda tuzatildi.
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `structure.units.dragHint` | Tartibini oʻzgartirish uchun torting | Tortib tartibini oʻzgartiring | «…uchun torting» — inglizcha *to reorder* qurilmasi |
+| `people.indicator.openCards.description` | Hozir bajarilayotgan vazifalar soni | Hozir bajarilayotgan vazifalar | «soni» ortiqcha — ustunning oʻzi son koʻrsatadi |
+| `people.person.activity.empty.body` | Bu xodimning ish boʻyicha harakatlari hali qayd etilmagan. | Bu xodim boʻyicha hali hech qanday ish qayd etilmagan. | «ish boʻyicha harakatlari» — kitobiy |
+| `work.ai.explainRiskPreviewTitle` | Xavf nima uchun qoʻyildi | Bu karta nega xavf ostida | Xavfni hech kim «qoʻymaydi» — u hisoblanadi |
+
+## Yakuniy holat
+
+| Fayl | uz-Latn oʻzgargan / jami |
+|---|---|
+| `uz-Latn.json` (qobiq, kirish, holatlar) | 32 / 153 |
+| `modules/accounts` | 35 / 108 |
+| `modules/departments` | 86 / 187 |
+| `modules/structure` | 23 / 98 |
+| `modules/people` | 43 / 290 |
+| `modules/work` | 83 / 479 |
+| `modules/projects` | 25 / 54 |
+| `modules/fields` | 23 / 144 |
+| **Jami** | **350 / 1513** |
+
+uz-Cyrl faylarining hammasi tuzatilgan uz-Latn dan qayta hosil qilindi; qayta yugurtirilganda
+fayllar bir bitga ham oʻzgarmaydi (determinizm tekshirildi). Oʻzgargan kirillcha qiymatlar: 366 —
+lotinchadagidan koʻproq, chunki generator ikkita eskidan qolgan transliteratsiya xatosini ham
+tuzatdi (`тикланганч` → `тиклангач`, `муддациз` → `муддатсиз`).
+
+**Gate holati:** `node agentic/scripts/check-i18n.mjs` — `errors=0`;
+`pnpm --filter @devon/i18n test:unit` — 78/78; `pnpm --filter @devon/i18n lint` — 0 xato
+(prettier: «All matched files use Prettier code style»).

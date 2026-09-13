@@ -3114,7 +3114,7 @@
     "indicator": {
       "openCards": {
         "label": "Ochiq vazifalar",
-        "description": "Hozir bajarilayotgan vazifalar soni"
+        "description": "Hozir bajarilayotgan vazifalar"
       },
       "overdueCards": {
         "label": "Kechikkan",
@@ -3374,7 +3374,7 @@
       "activity": {
         "empty": {
           "title": "Faollik yoʻq",
-          "body": "Bu xodimning ish boʻyicha harakatlari hali qayd etilmagan."
+          "body": "Bu xodim boʻyicha hali hech qanday ish qayd etilmagan."
         },
         "kind": {
           "created": "Vazifa qoʻshdi",
@@ -3855,7 +3855,7 @@
         "structureEdit": "Hozircha tuzilmani faqat boshqarma boshligʻi tahrirlay oladi",
         "selfAssign": "Hozircha lavozimlarni faqat boshqarma boshligʻi belgilay oladi"
       },
-      "dragHint": "Tartibini oʻzgartirish uchun torting",
+      "dragHint": "Tortib tartibini oʻzgartiring",
       "expandBranch": "Ichki boʻlimlarni yoyish",
       "collapseBranch": "Ichki boʻlimlarni yigʻish",
       "view": {
@@ -4279,7 +4279,7 @@
       "draftReplyPreviewTitle": "Javob qoralamasi",
       "useDraft": "Izoh maydoniga qoʻyish",
       "explainRisk": "Xavfni tushuntirish",
-      "explainRiskPreviewTitle": "Xavf nima uchun qoʻyildi",
+      "explainRiskPreviewTitle": "Bu karta nega xavf ostida",
       "suggestAssignee": "Kimga berish kerak",
       "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
       "boardDigest": "Kim kechikyapti",
