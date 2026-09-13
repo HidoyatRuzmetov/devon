@@ -11,6 +11,12 @@ import { AnimatedCheck } from './animated-check.js'
 import { ProgressRing } from './progress-ring.js'
 import { AmbientGradient, IdleFloat } from './ambient-gradient.js'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './hover-card.js'
+import { Shake, useShake } from './shake.js'
+import { FlashOnChange } from './flash.js'
+import { SettlePulse, useSettlePulse, LivePulse } from './pulse.js'
+import { Strikethrough } from './strikethrough.js'
+import { CountFlow } from './count-flow.js'
+import { Swap } from './swap.js'
 
 const meta = {
   title: 'Foundations/Motion catalogue',
@@ -76,6 +82,107 @@ function CollapsibleDemo() {
           Balandlik avtomatik ravishda animatsiyalanadi.
         </p>
       </Collapsible>
+    </div>
+  )
+}
+
+function ShakeDemo() {
+  const { play, fire, onDone } = useShake()
+  return (
+    <Shake play={play} onDone={onDone}>
+      <button
+        type="button"
+        onClick={fire}
+        className="rounded-md border border-border bg-card px-3 py-2 text-body text-foreground"
+      >
+        Ruxsat berilmagan joyga tashlash
+      </button>
+    </Shake>
+  )
+}
+
+function FlashDemo() {
+  const [priority, setPriority] = React.useState('Oʻrta')
+  const next = { Oʻrta: 'Yuqori', Yuqori: 'Shoshilinch', Shoshilinch: 'Oʻrta' } as Record<
+    string,
+    string
+  >
+  return (
+    <button
+      type="button"
+      onClick={() => setPriority((p) => next[p] ?? 'Oʻrta')}
+      className="rounded-md border border-border bg-card px-3 py-2 text-left text-body text-foreground"
+    >
+      <span className="text-caption text-muted-foreground">Muhimligi </span>
+      <FlashOnChange value={priority}>{priority}</FlashOnChange>
+    </button>
+  )
+}
+
+function SettlePulseDemo() {
+  const { play, fire, onDone } = useSettlePulse()
+  const [count, setCount] = React.useState(7)
+  return (
+    <div className="flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => {
+          fire()
+          setCount((n) => n + 1)
+        }}
+        className="relative rounded-md border border-border bg-card px-3 py-2 text-body text-foreground"
+      >
+        Bajarildi
+        <SettlePulse play={play} onDone={onDone} />
+      </button>
+      <span className="text-body text-muted-foreground">
+        Bajarilgan: <CountFlow value={count} />
+      </span>
+    </div>
+  )
+}
+
+function StrikethroughDemo() {
+  const [done, setDone] = React.useState(false)
+  return (
+    <button
+      type="button"
+      onClick={() => setDone((v) => !v)}
+      className="max-w-100 text-left text-body text-foreground"
+    >
+      <Strikethrough done={done}>
+        Hisobotni tayyorlash va boshqarma boshligʻiga kelishuvga yuborish
+      </Strikethrough>
+    </button>
+  )
+}
+
+function SwapDemo() {
+  const [pending, setPending] = React.useState(true)
+  return (
+    <div className="flex flex-col items-start gap-3">
+      <button
+        type="button"
+        onClick={() => setPending((v) => !v)}
+        className="rounded-sm border border-border bg-card px-3 py-1.5 text-small text-foreground"
+      >
+        {pending ? 'Yuklandi' : 'Qayta yuklash'}
+      </button>
+      <Swap
+        pending={pending}
+        className="w-100"
+        fallback={
+          <div className="flex flex-col gap-2">
+            <Shimmer className="h-5 w-60" />
+            <Shimmer className="h-4 w-full" />
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-2">
+          <p className="text-lead text-foreground">Raqamli xizmatlar boshqarmasi</p>
+          <p className="text-small text-muted-foreground">12 ta xodim · 34 ta ochiq vazifa</p>
+        </div>
+      </Swap>
     </div>
   )
 }
@@ -151,6 +258,33 @@ export const Catalogue: Story = {
             <IdleFloat className="w-40">
               <div className="h-24 rounded-md bg-illustration-fill" />
             </IdleFloat>
+          </Row>
+
+          <Row title="Shake (the product's refusal)">
+            <ShakeDemo />
+          </Row>
+
+          <Row title="FlashOnChange (optimistic receipt)">
+            <FlashDemo />
+          </Row>
+
+          <Row title="SettlePulse + CountFlow (a card lands in Done)">
+            <SettlePulseDemo />
+          </Row>
+
+          <Row title="LivePulse (somebody is editing)">
+            <span className="inline-flex items-center gap-2 text-body text-muted-foreground">
+              <LivePulse label="Aziza Karimova tahrirlamoqda" />
+              Aziza Karimova tahrirlamoqda
+            </span>
+          </Row>
+
+          <Row title="Strikethrough (the third beat of done)">
+            <StrikethroughDemo />
+          </Row>
+
+          <Row title="Swap (skeleton to content, no layout jump)">
+            <SwapDemo />
           </Row>
 
           <Row title="HoverCard">

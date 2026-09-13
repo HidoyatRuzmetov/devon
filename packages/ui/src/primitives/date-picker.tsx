@@ -2,6 +2,7 @@ import * as React from 'react'
 import { DayPicker } from 'react-day-picker'
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '../lib/cn.js'
+import { FIELD_TRANSITION } from '../lib/focus-ring.js'
 import { Popover, PopoverContent, PopoverTrigger } from './popover.js'
 
 /** DESIGN.md §3: "DatePicker (uz/ru/en, holidays greyed, week starts Monday)".
@@ -148,7 +149,8 @@ export function DatePicker({
           disabled={disabledTrigger}
           className={cn(
             'inline-flex h-11 w-full items-center justify-between gap-2 rounded-sm border border-border',
-            'bg-card px-3 text-body text-foreground transition-colors duration-(--dur-micro) ease-out',
+            'bg-card px-3 text-body text-foreground',
+            FIELD_TRANSITION,
             'hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             'focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
             invalid && 'border-destructive focus-visible:ring-destructive',

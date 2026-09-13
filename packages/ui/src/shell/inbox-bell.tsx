@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Bell } from 'lucide-react'
 import { cn } from '../lib/cn.js'
 import { useReducedMotion } from '../lib/use-reduced-motion.js'
+import { CountFlow } from '../motion/count-flow.js'
 
 export interface InboxBellProps {
   count: number
@@ -12,14 +13,30 @@ export interface InboxBellProps {
   /** Renders the bell as the active item when the inbox itself is on screen. */
   active?: boolean
   className?: string
+  /** Active locale, so the badge's digits are grouped the way the rest of the shell groups numbers.
+   * Optional -- a two-digit badge never needs a separator, but the prop keeps the ticker honest in
+   * the rare department where it does. */
+  locale?: Intl.LocalesArgument
 }
 
-/** UI-OVERHAUL.md §3 "Inbox badge": pop on increment, at `--dur-micro`.
+/** UI-OVERHAUL.md §3 "Inbox badge": pop on increment, at `--dur-micro`, and -- v1.1 motion pass --
+ * the number inside it *ticks* rather than being replaced.
  *
- * The pop fires only when the count *rises* -- a badge that pops every time the poll returns, or on
- * every re-render, is noise. Under reduced motion the number still changes; only the pop is dropped
- * (the change itself is the feedback). */
-export function InboxBell({ count, label, onClick, active = false, className }: InboxBellProps) {
+ * The two are deliberately different signals doing different jobs: the pop says "something arrived"
+ * and fires only when the count rises (a badge that pops every time the poll returns, or on every
+ * re-render, is noise); the ticker says "it is this many now" and runs in both directions, so
+ * reading three notifications counts the badge down instead of cutting to a smaller number.
+ *
+ * Under reduced motion the number still changes and the badge still updates; the pop and the roll
+ * are the only things dropped. */
+export function InboxBell({
+  count,
+  label,
+  onClick,
+  active = false,
+  className,
+  locale,
+}: InboxBellProps) {
   const reduced = useReducedMotion()
   const [pop, setPop] = React.useState(false)
   const previous = React.useRef(count)
@@ -58,7 +75,7 @@ export function InboxBell({ count, label, onClick, active = false, className }: 
             pop && !reduced && 'animate-[devon-badge-pop_300ms_var(--ease-out)]',
           )}
         >
-          {count > 99 ? '99+' : count}
+          <CountFlow value={count} max={99} {...(locale ? { locale } : {})} />
         </span>
       ) : null}
     </button>

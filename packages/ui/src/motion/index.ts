@@ -23,6 +23,22 @@ export { HoverLift, PressScale, type HoverLiftProps, type PressScaleProps } from
 export { Collapsible, type CollapsibleProps } from './collapsible.js'
 export { Shimmer, type ShimmerProps } from './shimmer.js'
 export { Celebrate, useCelebrate, type CelebrateProps } from './celebrate.js'
+// `Celebrate`'s counterparts: the product's "no" (`Shake`), its "taken" (`FlashOnChange`), its
+// quieter "done" (`SettlePulse`), its "somebody is here" (`LivePulse`), the third beat of a
+// completed task (`Strikethrough`), the ticker every count that changes now uses (`CountFlow`) and
+// the jump-free skeleton→content crossfade (`Swap`).
+export { Shake, useShake, type ShakeProps } from './shake.js'
+export { FlashOnChange, type FlashOnChangeProps } from './flash.js'
+export {
+  SettlePulse,
+  useSettlePulse,
+  LivePulse,
+  type SettlePulseProps,
+  type LivePulseProps,
+} from './pulse.js'
+export { Strikethrough, type StrikethroughProps } from './strikethrough.js'
+export { CountFlow, type CountFlowProps } from './count-flow.js'
+export { Swap, type SwapProps } from './swap.js'
 export { AnimatedCheck, type AnimatedCheckProps } from './animated-check.js'
 export { ProgressRing, type ProgressRingProps } from './progress-ring.js'
 export {

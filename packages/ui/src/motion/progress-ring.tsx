@@ -16,8 +16,21 @@ export interface ProgressRingProps {
   /** Rendered in the middle (a percentage, a fraction, a Pomodoro clock). */
   children?: React.ReactNode
   className?: string
-  /** Token class for the arc, e.g. `text-success`. The track is always `--color-muted`. */
+  /** Token class for the arc, e.g. `text-success`. The track is always `--color-muted`. Changing it
+   * crossfades rather than cuts (see `sweep`). */
   toneClassName?: string
+  /** How the arc travels to a new value.
+   *
+   * `'settle'` (the default) is the catalogue's `--ease-standard` tween: right for a value that
+   * jumps -- a sprint gaining a finished task, a project's completion moving from 40 % to 55 %.
+   *
+   * `'tick'` is a *linear one-second* sweep, for the one surface whose value changes every second:
+   * the Pomodoro ring (DESIGN.md §10, "Pomodoro | Animated ring stroke ... 1 s per tick"). With the
+   * default tween that ring lurched -- 220 ms of easing followed by 780 ms of nothing, once a
+   * second, for twenty-five minutes. Linear over exactly the tick interval makes it a second hand.
+   *
+   * Reduced motion collapses both to a crossfade; a clock that sweeps is still a clock that reads. */
+  sweep?: 'settle' | 'tick'
 }
 
 /** UI-OVERHAUL.md §3: project progress rings, the Pomodoro ring, sprint completion. The arc animates
@@ -34,6 +47,7 @@ export function ProgressRing({
   children,
   className,
   toneClassName = 'text-primary',
+  sweep = 'settle',
 }: ProgressRingProps): React.JSX.Element {
   const reduced = useReducedMotion()
   const clamped = Math.max(0, Math.min(100, value))
@@ -68,7 +82,14 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           stroke="currentColor"
-          className={toneClassName}
+          // The arc's colour is a token class, and a class swap is a cut. The Pomodoro ring changes
+          // colour every time a phase ends (focus -> break -> focus), and a cut there reads as a
+          // glitch rather than as a change of state -- so the stroke colour transitions over
+          // `--dur-standard` (0 ms under reduced motion, via the backstop in `tokens.css`).
+          className={cn(
+            'transition-[stroke] duration-(--dur-standard) ease-(--ease-standard)',
+            toneClassName,
+          )}
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
           strokeDasharray={circumference}
           initial={
@@ -77,7 +98,9 @@ export function ProgressRing({
               : { strokeDashoffset: circumference }
           }
           animate={{ strokeDashoffset: circumference * (1 - clamped / 100) }}
-          transition={reduced ? crossfade : tweenStandard}
+          transition={
+            reduced ? crossfade : sweep === 'tick' ? { duration: 1, ease: 'linear' } : tweenStandard
+          }
         />
       </svg>
       {children ? (

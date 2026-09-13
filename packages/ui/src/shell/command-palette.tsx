@@ -8,6 +8,10 @@ import { Button } from '../primitives/button.js'
 import { Kbd } from '../primitives/kbd.js'
 import { comboboxScore } from '../primitives/combobox.js'
 import { cn } from '../lib/cn.js'
+import { motion } from 'motion/react'
+import { useReducedMotion } from '../lib/use-reduced-motion.js'
+import { springSettle } from '../motion/tokens.js'
+import { Stagger, StaggerItem } from '../motion/stagger.js'
 
 export interface CommandPaletteItem {
   id: string
@@ -107,6 +111,11 @@ function CommandPaletteBody({
   // Rebuilt on every render, in render order, so the "first occurrence keeps the plain value" rule
   // is stable between renders (the group order is).
   const seen = new Map<string, number>()
+  const reduced = useReducedMotion()
+  // The cursor is one object moving between rows (a shared `layoutId`), the same device the sidebar
+  // and the tab strip use -- so the palette's selection reads as the *same* mechanism the rest of
+  // the shell uses, which is the whole point of a Jakob's-Law map (DESIGN.md §8).
+  const cursorId = React.useId()
   return (
     <Command
       shouldFilter
@@ -141,79 +150,113 @@ function CommandPaletteBody({
                 <span data-shell-label>{emptyActionLabel}</span>
               </Button>
             </Command.Empty>
-            {groups.map((group) => (
-              <Command.Group
-                key={group.heading}
-                heading={<span data-shell-label>{group.heading}</span>}
-                // cmdk hides a whole group whose items all score zero against the typed text, and
-                // `forceMount` on an item does not rescue it from that -- the group has to be
-                // mounted too. A group of server-matched rows (the semantic-search section) would
-                // otherwise be filtered away by the client using the very query the server just
-                // answered, which is how that section rendered nothing at all the first time.
-                {...(group.items.some((item) => item.alwaysVisible) ? { forceMount: true } : {})}
-                className={GROUP_HEADING_CLASS}
-              >
-                {group.items.map((item) => (
-                  <Command.Item
-                    key={item.id}
-                    value={uniqueValue(item, seen)}
-                    {...(item.alwaysVisible ? { forceMount: true } : {})}
-                    onSelect={item.onSelect}
-                    className={cn(
-                      'group flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 py-1.5 text-body text-foreground',
-                      'transition-colors duration-(--dur-micro) data-[selected=true]:bg-accent',
-                    )}
+            {/* DESIGN.md §10, "Command palette ... results re-stagger on query" -- read against
+                §2.5, "repeated actions (palette open, row select) animate at `--dur-micro` or not at
+                all". Re-staggering on every keystroke would satisfy the first rule by breaking the
+                second: the rows a person is *reading while they type* would re-enter under their
+                eyes six times a word, and `<Stagger animateKey>` re-keys its container, so each of
+                those would remount every cmdk row and reset the selection with it.
+                So the stagger fires on the *mode* change instead -- the one moment the list is
+                genuinely a different list: default sections (Recent / Go to / Actions) becoming
+                search results, and back again. At most twice per visit to the palette, never under
+                the typing hand. */}
+            <Stagger animateKey={query ? 'results' : 'sections'} delay={0}>
+              {groups.map((group) => (
+                <StaggerItem key={`stagger-${group.heading}`}>
+                  <Command.Group
+                    key={group.heading}
+                    heading={<span data-shell-label>{group.heading}</span>}
+                    // cmdk hides a whole group whose items all score zero against the typed text, and
+                    // `forceMount` on an item does not rescue it from that -- the group has to be
+                    // mounted too. A group of server-matched rows (the semantic-search section) would
+                    // otherwise be filtered away by the client using the very query the server just
+                    // answered, which is how that section rendered nothing at all the first time.
+                    {...(group.items.some((item) => item.alwaysVisible)
+                      ? { forceMount: true }
+                      : {})}
+                    className={GROUP_HEADING_CLASS}
                   >
-                    {item.icon ? (
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground group-data-[selected=true]:bg-card group-data-[selected=true]:text-foreground">
-                        <item.icon className="size-4" aria-hidden="true" />
-                      </span>
-                    ) : null}
-                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                      <span className="flex min-w-0 items-center gap-2">
-                        {item.badge ? (
-                          <span
-                            data-shell-label
-                            className="shrink-0 rounded-xs bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
-                          >
-                            {item.badge}
+                    {group.items.map((item) => (
+                      <Command.Item
+                        key={item.id}
+                        value={uniqueValue(item, seen)}
+                        {...(item.alwaysVisible ? { forceMount: true } : {})}
+                        onSelect={item.onSelect}
+                        className={cn(
+                          'group relative isolate flex min-h-11 cursor-pointer items-center gap-3 rounded-sm px-3 py-1.5 text-body text-foreground',
+                          // No `data-[selected=true]:bg-accent` any more: the fill is the gliding pill
+                          // below, and painting both meant the old row stayed lit for the length of the
+                          // glide. Reduced motion renders the pill without the shared layout, i.e. it
+                          // appears under the selected row -- identical to the tint it replaces.
+                          'transition-colors duration-(--dur-micro)',
+                        )}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-0 -z-10 hidden rounded-sm group-data-[selected=true]:block"
+                        >
+                          {reduced ? (
+                            <span className="block size-full rounded-sm bg-accent" />
+                          ) : (
+                            <motion.span
+                              layoutId={`${cursorId}-cursor`}
+                              className="block size-full rounded-sm bg-accent"
+                              transition={springSettle}
+                            />
+                          )}
+                        </span>
+                        {item.icon ? (
+                          <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground group-data-[selected=true]:bg-card group-data-[selected=true]:text-foreground">
+                            <item.icon className="size-4" aria-hidden="true" />
                           </span>
                         ) : null}
-                        {/* No `truncate`: design.md §3.5 forbids ellipsis in the shell, and the
+                        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <span className="flex min-w-0 items-center gap-2">
+                            {item.badge ? (
+                              <span
+                                data-shell-label
+                                className="shrink-0 rounded-xs bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
+                              >
+                                {item.badge}
+                              </span>
+                            ) : null}
+                            {/* No `truncate`: design.md §3.5 forbids ellipsis in the shell, and the
                             `devon/no-shell-truncate` lint rule enforces it here. A long row label
                             wraps, which is what that rule asks for. */}
-                        <span data-shell-label className="min-w-0 flex-1">
-                          {item.label}
+                            <span data-shell-label className="min-w-0 flex-1">
+                              {item.label}
+                            </span>
+                          </span>
+                          {item.description ? (
+                            <span
+                              data-shell-label
+                              className="line-clamp-1 text-caption text-muted-foreground"
+                            >
+                              {item.description}
+                            </span>
+                          ) : null}
                         </span>
-                      </span>
-                      {item.description ? (
-                        <span
-                          data-shell-label
-                          className="line-clamp-1 text-caption text-muted-foreground"
-                        >
-                          {item.description}
-                        </span>
-                      ) : null}
-                    </span>
-                    {item.hint ? (
-                      <span
-                        data-shell-label
-                        className="shrink-0 text-caption text-muted-foreground"
-                      >
-                        {item.hint}
-                      </span>
-                    ) : null}
-                    {item.shortcut ? <Kbd className="shrink-0">{item.shortcut}</Kbd> : null}
-                    {openHintLabel ? (
-                      <span className="hidden shrink-0 items-center gap-1 text-caption text-muted-foreground group-data-[selected=true]:flex">
-                        <span data-shell-label>{openHintLabel}</span>
-                        <CornerDownLeft className="size-3" aria-hidden="true" />
-                      </span>
-                    ) : null}
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            ))}
+                        {item.hint ? (
+                          <span
+                            data-shell-label
+                            className="shrink-0 text-caption text-muted-foreground"
+                          >
+                            {item.hint}
+                          </span>
+                        ) : null}
+                        {item.shortcut ? <Kbd className="shrink-0">{item.shortcut}</Kbd> : null}
+                        {openHintLabel ? (
+                          <span className="hidden shrink-0 items-center gap-1 text-caption text-muted-foreground group-data-[selected=true]:flex">
+                            <span data-shell-label>{openHintLabel}</span>
+                            <CornerDownLeft className="size-3" aria-hidden="true" />
+                          </span>
+                        ) : null}
+                      </Command.Item>
+                    ))}
+                  </Command.Group>
+                </StaggerItem>
+              ))}
+            </Stagger>
           </>
         )}
       </Command.List>

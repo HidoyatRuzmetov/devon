@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '../lib/cn.js'
+import { FIELD_TRANSITION } from '../lib/focus-ring.js'
 
 export interface SelectOption {
   value: string
@@ -22,7 +23,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       ref={ref}
       className={cn(
         'h-11 w-full rounded-sm border border-border bg-card px-3 text-body text-foreground',
-        'transition-colors duration-(--dur-micro) ease-out',
+        FIELD_TRANSITION,
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,

@@ -13,6 +13,12 @@ import { AnimatedCheck } from './animated-check.js'
 import { ProgressRing } from './progress-ring.js'
 import { AmbientGradient, IdleFloat } from './ambient-gradient.js'
 import { HoverCard, HoverCardTrigger, HoverCardContent } from './hover-card.js'
+import { Shake } from './shake.js'
+import { FlashOnChange } from './flash.js'
+import { SettlePulse, LivePulse } from './pulse.js'
+import { Strikethrough } from './strikethrough.js'
+import { CountFlow } from './count-flow.js'
+import { Swap } from './swap.js'
 import { supportsViewTransitions, startViewTransition } from './view-transition.js'
 import { STAGGER_STEP, RISE_PX, S_MICRO, DUR_MICRO } from './tokens.js'
 
@@ -250,5 +256,108 @@ describe('view transitions', () => {
     expect(update).toHaveBeenCalledOnce()
     // @ts-expect-error -- removing the test double again
     delete document.startViewTransition
+  })
+})
+
+/** The v1.1 motion pass added six pieces. Same contract as every row above: the thing they wrap is
+ * still there under reduced motion, and the replacement branch renders something rather than
+ * nothing. */
+describe('Shake', () => {
+  it('keeps its child whether or not it is playing', () => {
+    const { rerender } = render(<Shake play={false}>Saqlash</Shake>)
+    expect(screen.getByText('Saqlash')).toBeInTheDocument()
+    rerender(<Shake play>Saqlash</Shake>)
+    expect(screen.getByText('Saqlash')).toBeInTheDocument()
+  })
+
+  it('replaces the travel with a ring under reduced motion, and still shows the child', () => {
+    mockReducedMotion(true)
+    const { container } = render(<Shake play>Saqlash</Shake>)
+    expect(screen.getByText('Saqlash')).toBeInTheDocument()
+    expect(container.querySelector('.ring-destructive')).not.toBeNull()
+  })
+})
+
+describe('FlashOnChange', () => {
+  it('does not flash on first render -- arriving is not a change', () => {
+    const { container } = render(<FlashOnChange value="high">Yuqori</FlashOnChange>)
+    expect(screen.getByText('Yuqori')).toBeInTheDocument()
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+
+  it('flashes once when the watched value changes', () => {
+    const { container, rerender } = render(<FlashOnChange value="high">Yuqori</FlashOnChange>)
+    rerender(<FlashOnChange value="urgent">Shoshilinch</FlashOnChange>)
+    expect(container.querySelector('[aria-hidden="true"]')).not.toBeNull()
+    expect(screen.getByText('Shoshilinch')).toBeInTheDocument()
+  })
+
+  it('stays quiet while disabled', () => {
+    const { container, rerender } = render(
+      <FlashOnChange value="high" enabled={false}>
+        Yuqori
+      </FlashOnChange>,
+    )
+    rerender(
+      <FlashOnChange value="urgent" enabled={false}>
+        Shoshilinch
+      </FlashOnChange>,
+    )
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+})
+
+describe('SettlePulse / LivePulse', () => {
+  it('renders nothing until it is played', () => {
+    const { container, rerender } = render(<SettlePulse play={false} />)
+    expect(container.querySelector('span')).toBeNull()
+    rerender(<SettlePulse play />)
+    expect(container.querySelector('span')).not.toBeNull()
+  })
+
+  it('names the live dot for a screen reader in both motion modes', () => {
+    const { unmount } = render(<LivePulse label="Aziza tahrirlamoqda" />)
+    expect(screen.getByRole('status', { name: 'Aziza tahrirlamoqda' })).toBeInTheDocument()
+    unmount()
+    mockReducedMotion(true)
+    render(<LivePulse label="Aziza tahrirlamoqda" />)
+    expect(screen.getByRole('status', { name: 'Aziza tahrirlamoqda' })).toBeInTheDocument()
+  })
+})
+
+describe('Strikethrough', () => {
+  it('carries the strike only when done, and never loses the text', () => {
+    const { rerender } = render(<Strikethrough done={false}>Hisobot</Strikethrough>)
+    expect(screen.getByText('Hisobot')).toHaveClass('decoration-transparent')
+    rerender(<Strikethrough done>Hisobot</Strikethrough>)
+    expect(screen.getByText('Hisobot')).toHaveClass('decoration-current')
+    expect(screen.getByText('Hisobot')).toBeInTheDocument()
+  })
+})
+
+describe('CountFlow', () => {
+  it('renders the number, and caps it where a cap is asked for', () => {
+    const { rerender } = render(<CountFlow value={7} />)
+    expect(screen.getByText('7')).toBeInTheDocument()
+    rerender(<CountFlow value={140} max={99} />)
+    expect(screen.getByText('99+')).toBeInTheDocument()
+  })
+})
+
+describe('Swap', () => {
+  it('keeps both layers mounted so the box never changes height mid-crossfade', () => {
+    const { rerender } = render(
+      <Swap pending fallback={<span>Yuklanmoqda</span>}>
+        <span>Tayyor</span>
+      </Swap>,
+    )
+    expect(screen.getByText('Yuklanmoqda')).toBeInTheDocument()
+    expect(screen.getByText('Tayyor')).toBeInTheDocument()
+    rerender(
+      <Swap pending={false} fallback={<span>Yuklanmoqda</span>}>
+        <span>Tayyor</span>
+      </Swap>,
+    )
+    expect(screen.getByText('Tayyor')).toBeInTheDocument()
   })
 })

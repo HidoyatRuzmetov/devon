@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '../lib/cn.js'
+import { FIELD_TRANSITION } from '../lib/focus-ring.js'
 
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
 
@@ -13,7 +14,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       className={cn(
         'w-full rounded-sm border border-border bg-card px-3 py-2 text-body text-foreground',
         'placeholder:text-muted-foreground',
-        'transition-colors duration-(--dur-micro) ease-out',
+        FIELD_TRANSITION,
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,

@@ -18,6 +18,9 @@ import { Radio, WifiOff } from 'lucide-react'
 import { Avatar, initialsFromName } from '../primitives/avatar.js'
 import { Badge } from '../primitives/badge.js'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/tooltip.js'
+import { AnimatePresence, motion } from 'motion/react'
+import { useReducedMotion } from '../lib/use-reduced-motion.js'
+import { tweenOut, tweenIn, crossfade } from '../motion/tokens.js'
 
 /** Mirrors `apps/web/src/lib/realtime`'s `RealtimeStatus`; declared here so the package stays
  *  transport-free. The app passes its own value straight in, and the two are held together by a
@@ -89,13 +92,23 @@ export type PresenceAvatarsProps = {
   className?: string | undefined
 }
 
-/** Who else is looking at this screen right now. */
+/** Who else is looking at this screen right now.
+ *
+ * v1.1 motion pass: people arriving and leaving used to be a cut -- an avatar simply existed, or
+ * simply did not, between two frames. On a board four colleagues are moving through during a
+ * stand-up that reads as flicker rather than as presence. Each avatar now fades and scales in from
+ * 0.8 when its owner joins and collapses out when they leave (`AnimatePresence`), and the `layout`
+ * flag slides the survivors along rather than teleporting them into the gap.
+ *
+ * Reduced motion keeps the crossfade and drops the scale and the slide: you still see somebody
+ * arrive, nothing travels. */
 export function PresenceAvatars({
   members,
   max = 4,
   className,
 }: PresenceAvatarsProps): React.JSX.Element | null {
   const t = useT()
+  const reduced = useReducedMotion()
   if (members.length === 0) return null
 
   const shown = members.slice(0, max)
@@ -114,20 +127,27 @@ export function PresenceAvatars({
           aria-label={summary}
           className={['flex items-center -space-x-2', className].filter(Boolean).join(' ')}
         >
-          {shown.map((member) => (
-            <span
-              key={member.userId}
-              className="rounded-full ring-2 ring-surface-1 transition-transform duration-(--dur-micro) ease-out hover:z-10 hover:-translate-y-0.5"
-            >
-              <Avatar
-                size="sm"
-                src={null}
-                alt={member.name}
-                initials={initialsFromName(member.name, '')}
-                hueSeed={member.userId}
-              />
-            </span>
-          ))}
+          <AnimatePresence initial={false} mode="popLayout">
+            {shown.map((member) => (
+              <motion.span
+                key={member.userId}
+                layout={!reduced}
+                initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+                animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1 }}
+                exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
+                transition={reduced ? crossfade : { ...tweenOut, opacity: tweenIn }}
+                className="rounded-full ring-2 ring-surface-1 transition-transform duration-(--dur-micro) ease-out hover:z-10 hover:-translate-y-0.5"
+              >
+                <Avatar
+                  size="sm"
+                  src={null}
+                  alt={member.name}
+                  initials={initialsFromName(member.name, '')}
+                  hueSeed={member.userId}
+                />
+              </motion.span>
+            ))}
+          </AnimatePresence>
           {hidden > 0 ? (
             <span className="z-10 flex size-6 items-center justify-center rounded-full bg-surface-3 text-caption text-muted-foreground ring-2 ring-surface-1">
               +{hidden}
