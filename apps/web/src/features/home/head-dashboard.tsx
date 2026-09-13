@@ -32,6 +32,8 @@ import {
   PopoverTrigger,
   Progress,
   Reveal,
+  Skeleton,
+  SparkleButton,
   Stagger,
   StaggerItem,
   StatNumber,
@@ -48,6 +50,8 @@ import {
   Gavel,
   LayoutGrid,
   Sparkle,
+  Sparkles,
+  Target,
   Users2,
 } from 'lucide-react'
 import { navigate } from '../../lib/router.js'
@@ -57,6 +61,14 @@ import { fetchMembers, type Member } from '../structure/api.js'
 import { fetchIndicators } from '../people/api.js'
 import { personPath } from '../people/routes.js'
 import { fetchBoard, type Card as WorkCard } from '../work/api.js'
+import { useGoalsQuery } from '../work/hooks-plus.js'
+import { GOAL_METRIC_LABEL_KEYS, goalProgressTone } from '../work/lib/goal-format.js'
+import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { CatchUpPreview } from '../ai/components/previews.js'
+import { parseFeatureOutput, type CatchUpOutput } from '../ai/outputs.js'
+import { aiErrorMessageKey } from '../ai/lib/errors.js'
+import type { RunMeta } from '../ai/types.js'
 import { usePersonalOverviewQuery, useSummaryQuery } from '../analytics/use-analytics.js'
 
 /** The indicator keys this dashboard asks for. Narrow on purpose: the service runs one query per
@@ -212,10 +224,28 @@ const HEAD_TILE_IDS = [
   'projects',
   'events',
   'onboarding',
+  // v1.1 integration (HANDOFFS #6): SPEC §3.2 names these two in the tile order and the wave left
+  // them to the goals and AI packages, neither of which owns this file. A head who arranged their
+  // dashboard before this build keeps their arrangement -- `useHeadLayout` appends an id it has not
+  // seen rather than dropping it.
+  'goals',
+  'catchUp',
 ] as const
 type HeadTileId = (typeof HEAD_TILE_IDS)[number]
 
 type HeadLayout = { order: HeadTileId[]; hidden: HeadTileId[]; visible: HeadTileId[] }
+
+/** The AI xulosa tile's own state. Idle until the head asks -- an AI call costs soʻm, and a
+ * dashboard that spends the department's budget every time somebody opens Home is exactly the
+ * "random and gray" AI the CTO objected to. */
+type BriefingState =
+  | { status: 'idle' }
+  | { status: 'pending' }
+  | { status: 'ready'; output: CatchUpOutput; meta: RunMeta }
+  | { status: 'error'; message: string }
+
+/** How many days of the department's own week the briefing reads. */
+const BRIEFING_WINDOW_DAYS = 7
 
 function useHeadLayout(userId: string | undefined): {
   layout: HeadLayout
@@ -290,7 +320,7 @@ export function HeadDashboard(): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const session = useSession()
-  const { departmentId } = useDepartment()
+  const { department, departmentId } = useDepartment()
   const { layout, move, toggle, reset } = useHeadLayout(session.user?.id)
 
   const membersQuery = useQuery({
@@ -310,7 +340,16 @@ export function HeadDashboard(): React.JSX.Element {
   })
   const summaryQuery = useSummaryQuery({})
   const overviewQuery = usePersonalOverviewQuery()
+  // SPEC §3.2's last two tiles. Goals are a plain query -- they are computed from the cards the
+  // department already has and cost one statement. The briefing is *not*: an AI call costs money, so
+  // it runs when the head asks for it and never on page load (AI-AUDIT §5, "no feature spends a
+  // budget nobody asked it to").
+  const goalsQuery = useGoalsQuery()
+  const catchUp = useRunAiFeatureMutation('catch_up')
+  const [briefing, setBriefing] = React.useState<BriefingState>({ status: 'idle' })
 
+  // `goalsQuery` is deliberately absent: a dashboard must not withhold six tiles while a seventh
+  // loads. Its own tile renders a skeleton.
   const pending =
     membersQuery.isPending ||
     indicatorsQuery.isPending ||
@@ -406,6 +445,117 @@ export function HeadDashboard(): React.JSX.Element {
 
   const totalOverdue = members.reduce((sum, member) => sum + num(member.userId, 'overdueCards'), 0)
   const overloaded = loadThisWeek.filter((row) => row.pct >= 100).length
+
+  // Goals worth a dashboard row: not archived, most-behind first, at most three. A head who set
+  // eight goals does not want eight bars on Home -- `/goals` is where all of them live.
+  const activeGoals = [...(goalsQuery.data ?? [])]
+    .filter((goal) => goal.archivedAt === null)
+    .sort((a, b) => a.progress - b.progress)
+    .slice(0, 3)
+
+  const cardTitleById = (id: string): string | null =>
+    allCards.find((card) => card.id === id)?.title ?? null
+
+  /**
+   * SPEC §3.2's "AI xulosa (the department catch-up briefing, head-only, with citations)".
+   *
+   * Every input is a fact this component already holds -- the board, the indicator rows, the
+   * analytics summary -- so the briefing is a reading of the department's real week and the model is
+   * never asked to remember anything. `scope: 'department'` is the head-only scope the prompt itself
+   * branches on (AI-AUDIT §4), and the server enforces that gate independently.
+   */
+  function runBriefing(): void {
+    const windowStart = now - BRIEFING_WINDOW_DAYS * 86_400_000
+    const nameOf = (userId: string | null): string | null => {
+      if (!userId) return null
+      const member = members.find((m) => m.userId === userId)
+      return member ? `${member.givenName} ${member.familyName}`.trim() : null
+    }
+    const asItem = (card: WorkCard) => ({
+      id: card.id,
+      title: card.title,
+      assigneeName: nameOf(card.assigneeUserId),
+      dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
+      daysOverdue: card.dueAt
+        ? Math.max(0, Math.floor((now - new Date(card.dueAt).getTime()) / 86_400_000))
+        : 0,
+    })
+
+    const doneThisWeek = allCards.filter(
+      (card) => card.doneAt !== null && new Date(card.doneAt).getTime() >= windowStart,
+    )
+    const overdueCards = allCards.filter((card) => card.risk === 'overdue')
+
+    setBriefing({ status: 'pending' })
+    catchUp.mutate(
+      {
+        locale,
+        scope: 'department',
+        window: 'week',
+        subjectName: department?.name ?? t('home.head.catchUp.title'),
+        viewerName:
+          `${session.user?.givenName ?? ''} ${session.user?.familyName ?? ''}`.trim() ||
+          t('home.head.catchUp.title'),
+        period: {
+          start: new Date(windowStart).toISOString().slice(0, 10),
+          end: new Date(now).toISOString().slice(0, 10),
+        },
+        counts: {
+          done: doneThisWeek.length,
+          doneLastPeriod: 0,
+          created: 0,
+          overdue: totalOverdue,
+        },
+        // The schemas allow 60/40/100 rows; a briefing is sent eight of each on purpose.
+        //
+        // Measured against the configured `glm-5.2`: it is a reasoning model that spends its
+        // *completion* budget thinking, and the amount it thinks scales with how much it was given.
+        // A department of 27 with 77 overdue cards produced a ~9 000-token prompt, 7 000+ characters
+        // of `reasoning_content`, and then no tool call at all -- the dashboard's "AI hozircha javob
+        // bera olmadi". The counts above already carry the real totals, so the briefing can say
+        // "77 kechikkan" while reasoning over the worst eight; and a briefing that names twenty
+        // overdue cards is a list, not a briefing.
+        done: doneThisWeek.slice(0, 8).map(asItem),
+        overdue: overdueCards
+          .slice()
+          .sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''))
+          .slice(0, 8)
+          .map(asItem),
+        dueThisWeek: atRiskCards.slice(0, 5).map(asItem),
+        assignedToMe: [],
+        mentions: [],
+        comments: [],
+        // Only people who actually hold work, busiest first -- a row of zeroes for somebody who has
+        // not been given a card teaches the model nothing and costs tokens.
+        loadPerPerson: members
+          .map((member) => ({
+            name: `${member.givenName} ${member.familyName}`.trim(),
+            openCount: num(member.userId, 'openCards'),
+            overdueCount: num(member.userId, 'overdueCards'),
+          }))
+          .filter((row) => row.openCount > 0)
+          .sort((a, b) => b.openCount - a.openCount)
+          .slice(0, 8),
+        eventsAhead: upcomingEvents.map((event) => ({
+          id: event.id,
+          title: event.title,
+          startsAt: event.startsAt,
+          myRsvp: null,
+        })),
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<CatchUpOutput>('catch_up', res.data)
+          if (!output) {
+            setBriefing({ status: 'error', message: t('ai.errors.runFailed') })
+            return
+          }
+          setBriefing({ status: 'ready', output, meta: res.meta })
+        },
+        onError: (err) => setBriefing({ status: 'error', message: t(aiErrorMessageKey(err)) }),
+      },
+    )
+  }
 
   /** Every tile, by id. The map is built unconditionally (each one is cheap JSX over data this
    * component already has); `layout` decides which of them reach the grid. */
@@ -572,20 +722,26 @@ export function HeadDashboard(): React.JSX.Element {
             <p className="text-small text-muted-foreground">{t('home.head.projects.empty')}</p>
           ) : (
             <ul className="flex flex-col gap-2">
-              {slippingProjects.map((project) => (
-                <li key={project.id} className="flex flex-col gap-1">
-                  <span className="flex items-baseline justify-between gap-2">
-                    <span className="min-w-0 truncate text-small">{project.title}</span>
-                    <span className="tabular-nums text-caption text-muted-foreground">
-                      {Math.round(project.progress)}%
+              {slippingProjects.map((project) => {
+                // `progress` is a 0..1 ratio, exactly as `analytics/sections.tsx` reads it. Rounding
+                // it without the x100 is what made every project on this dashboard read "0%" while
+                // the analytics chart, from the same field of the same response, read 33-44%.
+                const percent = Math.round(project.progress * 100)
+                return (
+                  <li key={project.id} className="flex flex-col gap-1">
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="min-w-0 truncate text-small">{project.title}</span>
+                      <span className="tabular-nums text-caption text-muted-foreground">
+                        {formatNumber(percent, locale)}%
+                      </span>
                     </span>
-                  </span>
-                  <Progress
-                    value={Math.round(project.progress)}
-                    label={t('home.head.projects.progressAria', { title: project.title })}
-                  />
-                </li>
-              ))}
+                    <Progress
+                      value={percent}
+                      label={t('home.head.projects.progressAria', { title: project.title })}
+                    />
+                  </li>
+                )
+              })}
             </ul>
           )}
         </TileShell>
@@ -652,6 +808,93 @@ export function HeadDashboard(): React.JSX.Element {
                 />
               ))}
             </ul>
+          )}
+        </TileShell>
+      </StaggerItem>
+    ),
+    goals: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.goals.title',
+            meaningKey: 'home.head.goals.meaning',
+            icon: Target,
+            ctaKey: 'home.head.goals.cta',
+            onOpen: () => navigate('/goals'),
+          }}
+        >
+          {goalsQuery.isPending ? (
+            <div className="flex flex-col gap-2" aria-hidden="true">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          ) : null}
+          {!goalsQuery.isPending && activeGoals.length === 0 ? (
+            <p className="text-small text-muted-foreground">{t('home.head.goals.empty')}</p>
+          ) : null}
+          {!goalsQuery.isPending && activeGoals.length > 0 ? (
+            <ul className="flex flex-col gap-2">
+              {activeGoals.map((goal) => (
+                <li key={goal.id} className="flex flex-col gap-1">
+                  <span className="flex items-baseline justify-between gap-2">
+                    <span className="min-w-0 truncate text-small">{goal.title}</span>
+                    <span className="shrink-0 tabular-nums text-caption text-muted-foreground">
+                      {formatNumber(Math.round(goal.progress * 100), locale)}%
+                    </span>
+                  </span>
+                  <Progress
+                    value={Math.round(goal.progress * 100)}
+                    tone={goalProgressTone(goal.metric, goal.currentValue, goal.targetValue)}
+                    label={t('home.head.goals.progressAria', { title: goal.title })}
+                  />
+                  <span className="text-caption text-muted-foreground">
+                    {t(GOAL_METRIC_LABEL_KEYS[goal.metric])}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </TileShell>
+      </StaggerItem>
+    ),
+    catchUp: (
+      <StaggerItem className="h-full">
+        <TileShell
+          tile={{
+            titleKey: 'home.head.catchUp.title',
+            meaningKey: 'home.head.catchUp.meaning',
+            icon: Sparkles,
+            ctaKey: 'home.head.catchUp.cta',
+            onOpen: () => navigate('/ai'),
+          }}
+        >
+          {briefing.status === 'idle' ? (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-small text-muted-foreground">{t('home.head.catchUp.idle')}</p>
+              <SparkleButton
+                size="sm"
+                label={t('home.head.catchUp.run')}
+                aria-label={t('home.head.catchUp.run')}
+                onClick={runBriefing}
+              />
+            </div>
+          ) : (
+            // `readOnly`: a briefing is a reading of the week, not a draft to accept -- the same
+            // reason the risk explainer and the board digest are read-only (AI-AUDIT §5). Pending,
+            // error and the "Namunaviy javob" strip are all this panel's own job.
+            <AiResultPanel
+              title={t('home.head.catchUp.title')}
+              status={briefing.status}
+              readOnly
+              meta={briefing.status === 'ready' ? briefing.meta : undefined}
+              errorMessage={briefing.status === 'error' ? briefing.message : undefined}
+              onDiscard={() => setBriefing({ status: 'idle' })}
+              onRetry={runBriefing}
+            >
+              {briefing.status === 'ready' ? (
+                <CatchUpPreview output={briefing.output} cardTitle={cardTitleById} />
+              ) : null}
+            </AiResultPanel>
           )}
         </TileShell>
       </StaggerItem>

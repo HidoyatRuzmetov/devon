@@ -4,19 +4,10 @@
 // four times, since `features/ai` is import-only from this module (UI-OVERHAUL.md: a wave agent never
 // edits another feature's folder).
 import { formatNumber, formatUzs, type useT, type Locale } from '@devon/i18n'
-import { ApiError } from '../../../lib/api-client.js'
 
-/** Maps a failed `useRunAiFeatureMutation` call to one of the generic `ai.errors.*` message keys the
- * `ai` module's own message files already ship (reused here rather than duplicated under
- * `personal.*` -- one wording for "the AI could not answer" across the whole product). */
-export function aiErrorMessageKey(err: unknown): string {
-  if (err instanceof ApiError) {
-    if (err.code === 'validation_failed') return 'ai.errors.invalidInput'
-    if (err.code === 'forbidden') return 'ai.errors.forbidden'
-    if (err.code === 'internal') return 'ai.errors.runFailed'
-  }
-  return 'toast.saveError'
-}
+/** Moved to `features/ai/lib/errors.ts` in v1.1, where every host screen that runs an AI feature can
+ * reach it -- re-exported here so this module's four call sites keep their existing import. */
+export { aiErrorMessageKey } from '../../ai/lib/errors.js'
 
 /**
  * The `costLine` every `<AiPreviewPanel>` shows in its footer (TECH-SPEC §8: "the cost of every run

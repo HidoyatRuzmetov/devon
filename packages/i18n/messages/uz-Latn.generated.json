@@ -251,6 +251,21 @@
           "title": "Barcha kartochkalar yashirilgan",
           "body": "Boshqaruv koʻrinishida hech narsa qolmadi. Dastlabki holatga qaytaring yoki kerakli kartochkalarni belgilang."
         }
+      },
+      "goals": {
+        "title": "Maqsadlar",
+        "meaning": "Eng orqada qolgan maqsadlar oldinda. Progress kartalardan oʻzi hisoblanadi.",
+        "cta": "Barcha maqsadlar",
+        "empty": "Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi.",
+        "progressAria": "{title} — bajarilgan qismi"
+      },
+      "catchUp": {
+        "title": "AI xulosa",
+        "meaning": "Boʻlimning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan.",
+        "cta": "AI sahifasi",
+        "idle": "Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi.",
+        "run": "Xulosa tayyorlash",
+        "dismiss": "Yopish"
       }
     }
   },
@@ -1026,7 +1041,8 @@
       "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",
       "forbidden": "Bu yordamchi oʻchirilgan yoki byudjet tugagan",
       "runFailed": "AI hozircha javob bera olmadi",
-      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun"
+      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun",
+      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing."
     },
     "translateTarget": {
       "label": "Qaysi tilga",

@@ -327,7 +327,12 @@ export const boardRiskDigestSpec: FeatureSpec<BoardRiskDigestInput, BoardRiskDig
       },
     },
   },
-  defaultMaxTokens: 1792,
+  // v1.1 integration, measured: this feature's tool call is the largest in the product, and
+  // `glm-5.2` spends its reasoning out of the same completion budget -- at 1792 the model finished
+  // with `finish_reason: "length"`, zero tool calls and 6 000 characters of reasoning, so the answer
+  // never existed. 4096 leaves room for both; the gateway's own doubling loop is the safety net
+  // above it, not the plan.
+  defaultMaxTokens: 4096,
   temperature: 0,
   systemPrompt,
   buildUserContent: standardUserContent,

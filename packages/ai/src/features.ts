@@ -83,6 +83,21 @@ export type RunFeatureOptions = {
 
 export type RunFeatureResult<T> = RunResult<T> | { ok: false; error: string; meta: null }
 
+/**
+ * Appended to every feature's system prompt, because it is a fact about the *provider*, not about any
+ * one feature -- and a rule stated fourteen times is a rule that drifts thirteen ways.
+ *
+ * Measured against the configured `glm-5.2` (v1.1 integration): with `tool_choice: "required"` it
+ * deliberates at length and then emits the SAME tool call over and over until it hits `max_tokens`,
+ * so `finish_reason` is always `"length"`, the gateway's "answer was cut off, double the budget"
+ * branch fires on a perfectly good answer, and one department briefing cost 32 000 tokens across
+ * four minutes. One call, then stop, is all this asks for.
+ */
+const CALL_ONCE_RULE =
+  'Call the tool exactly once, then stop. Do not repeat the call, do not emit a second one, and do ' +
+  'not write any prose outside it. Decide quickly: a short deliberation followed by the call is ' +
+  'better than a long one, and the budget you think in is the same budget the answer is written from.'
+
 export async function runFeature<T = unknown>(
   options: RunFeatureOptions,
 ): Promise<RunFeatureResult<T>> {
@@ -94,7 +109,9 @@ export async function runFeature<T = unknown>(
   const input = parsedInput.data as { locale: Locale }
 
   const messages: ChatMessage[] = [
-    { role: 'system', content: spec.systemPrompt(input) },
+    { role: 'system', content: `${spec.systemPrompt(input)}
+
+${CALL_ONCE_RULE}` },
     ...(options.priorMessages ?? []),
     { role: 'user', content: spec.buildUserContent(input) },
   ]

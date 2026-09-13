@@ -215,6 +215,13 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx
   let inserted = 0
 
+  // The one row in this whole seed that is *configuration*, not content -- and the only one where
+  // `do nothing` is wrong. A database seeded before v1.1 kept the v1.0 nine-flag object forever, so
+  // every new helper (`catch_up`, `draft_reply`, `board_risk_digest`, `suggest_assignee`,
+  // `duplicate_check`, `semantic_ask`) answered 403 `feature: disabled` in a demo that exists to show
+  // them. The demo department's AI settings belong to this module; re-stating them on every run is
+  // what keeps "--demo exercises the whole product" true. `returning` still reports one row, which is
+  // honest: the row was written.
   const insertedSettings = await tx.drizzle
     .insert(schema.aiDepartmentSettings)
     .values({
@@ -223,7 +230,10 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
       softCapPct: 80,
       flags: DEMO_FLAGS,
     })
-    .onConflictDoNothing()
+    .onConflictDoUpdate({
+      target: schema.aiDepartmentSettings.departmentId,
+      set: { flags: DEMO_FLAGS, budgetUzsPerMonth: 2_000_000, softCapPct: 80 },
+    })
     .returning({ departmentId: schema.aiDepartmentSettings.departmentId })
   inserted += insertedSettings.length
 

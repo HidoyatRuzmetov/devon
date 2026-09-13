@@ -100,6 +100,21 @@
           "title": "Every tile is hidden",
           "body": "Nothing is left on the management view. Restore the default layout, or tick the tiles you want back."
         }
+      },
+      "goals": {
+        "title": "Goals",
+        "meaning": "The goals furthest behind come first. Progress is computed from the cards themselves.",
+        "cta": "All goals",
+        "empty": "No goals yet. Set the first one — progress computes itself.",
+        "progressAria": "{title} — progress"
+      },
+      "catchUp": {
+        "title": "AI briefing",
+        "meaning": "The department's week: wins, risks and who is overloaded.",
+        "cta": "AI page",
+        "idle": "Prepare a short briefing on the week? Every claim cites a specific card.",
+        "run": "Prepare the briefing",
+        "dismiss": "Close"
       }
     }
   }

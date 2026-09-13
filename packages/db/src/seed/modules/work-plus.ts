@@ -176,11 +176,11 @@ const GOALS: readonly {
 }[] = [
   {
     id: demoId('workplus.goal.oylik'),
-    title: 'Sentabrda 60 ta vazifa yakunlansin',
+    title: 'Sentabrda 120 ta vazifa yakunlansin',
     description: 'Boʻlimning oylik sur’ati — kartalardan oʻzi hisoblanadi.',
     metric: 'cards_done',
     filter: '',
-    targetValue: 60,
+    targetValue: 120,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },
@@ -196,11 +196,11 @@ const GOALS: readonly {
   },
   {
     id: demoId('workplus.goal.muhim'),
-    title: 'Ochiq «Muhim» ishlar 10 tadan oshmasin',
+    title: 'Ochiq «Muhim» ishlar 100 tadan oshmasin',
     description: 'Yuqori chegara: ochiq muhim ishlar soni shu raqamdan past turishi kerak.',
     metric: 'open_cards_max',
     filter: 'label:"Muhim"',
-    targetValue: 10,
+    targetValue: 100,
     startsOn: isoDate(-6),
     dueOn: isoDate(24),
   },

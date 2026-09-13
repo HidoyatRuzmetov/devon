@@ -124,7 +124,8 @@
       "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",
       "forbidden": "Bu yordamchi oʻchirilgan yoki byudjet tugagan",
       "runFailed": "AI hozircha javob bera olmadi",
-      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun"
+      "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun",
+      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing."
     },
     "translateTarget": {
       "label": "Qaysi tilga",

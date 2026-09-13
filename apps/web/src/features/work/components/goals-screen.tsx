@@ -36,7 +36,12 @@ import {
 } from '@devon/ui'
 import { useDepartment } from '../../../lib/session.js'
 import { useCreateGoalMutation, useDeleteGoalMutation, useGoalsQuery } from '../hooks-plus.js'
-import { goalProgress, goalProgressTone, isCeilingMetric } from '../lib/goal-format.js'
+import {
+  GOAL_METRIC_LABEL_KEYS,
+  goalProgress,
+  goalProgressTone,
+  isCeilingMetric,
+} from '../lib/goal-format.js'
 import type { Goal } from '../api-plus.js'
 
 const METRICS: readonly GoalMetric[] = [
@@ -45,13 +50,6 @@ const METRICS: readonly GoalMetric[] = [
   'estimate_hours',
   'open_cards_max',
 ]
-
-const METRIC_LABEL_KEY: Record<GoalMetric, string> = {
-  cards_done: 'work.goals.metric.cardsDone',
-  on_time_rate: 'work.goals.metric.onTimeRate',
-  estimate_hours: 'work.goals.metric.estimateHours',
-  open_cards_max: 'work.goals.metric.openCardsMax',
-}
 
 const METRIC_HINT_KEY: Record<GoalMetric, string> = {
   cards_done: 'work.goals.metricHint.cardsDone',
@@ -82,7 +80,7 @@ export function GoalCard({
         <Target className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-body font-medium text-foreground">{goal.title}</h3>
-          <p className="text-caption text-muted-foreground">{t(METRIC_LABEL_KEY[goal.metric])}</p>
+          <p className="text-caption text-muted-foreground">{t(GOAL_METRIC_LABEL_KEYS[goal.metric])}</p>
         </div>
         {canManage ? (
           <IconButton
@@ -232,7 +230,7 @@ function NewGoalDialog({
               id="goal-metric"
               value={metric}
               onChange={(e) => setMetric(e.target.value as GoalMetric)}
-              options={METRICS.map((m) => ({ value: m, label: t(METRIC_LABEL_KEY[m]) }))}
+              options={METRICS.map((m) => ({ value: m, label: t(GOAL_METRIC_LABEL_KEYS[m]) }))}
             />
           </Field>
 

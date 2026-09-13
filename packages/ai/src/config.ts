@@ -43,10 +43,25 @@ export const DEFAULT_PRICE_PER_MILLION_UZS = 19_500
 export const MIN_MAX_TOKENS = 1024
 export const DEFAULT_MAX_MAX_TOKENS = 8192
 export const DEFAULT_CONTEXT_WINDOW_TOKENS = 256_000
-export const DEFAULT_REQUEST_TIMEOUT_MS = 30_000
+/**
+ * v1.1 integration, measured against the configured deployment: `glm-5.2` is a **reasoning** model,
+ * and a large structured answer (`catch_up`, `board_risk_digest`) spends 6 000+ characters of
+ * `reasoning_content` before it emits the tool call at all. At 30 s the request aborted mid-thought
+ * every time -- `GLM request failed after retries: This operation was aborted` -- which reached the
+ * head's dashboard as the useless "AI hozircha javob bera olmadi".
+ *
+ * Still a hard bound (TECH-SPEC §16: "every external call has a timeout"), and still well under the
+ * breaker's patience; `AI_REQUEST_TIMEOUT_MS` overrides it for a deployment whose model is faster.
+ */
+export const DEFAULT_REQUEST_TIMEOUT_MS = 90_000
 export const DEFAULT_TEMPERATURE = 0
 export const DEFAULT_EMBEDDINGS_MODEL = 'embedding-3'
 export const DEFAULT_EMBEDDINGS_DIMENSIONS = 1024
+
+function positiveIntOr(raw: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(raw?.trim() ?? '', 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
 
 export function loadAiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig {
   const apiKey = env['AI_API_KEY']?.trim() || null
@@ -59,7 +74,7 @@ export function loadAiConfig(env: NodeJS.ProcessEnv = process.env): AiConfig {
     minMaxTokens: MIN_MAX_TOKENS,
     maxMaxTokens: DEFAULT_MAX_MAX_TOKENS,
     contextWindowTokens: DEFAULT_CONTEXT_WINDOW_TOKENS,
-    requestTimeoutMs: DEFAULT_REQUEST_TIMEOUT_MS,
+    requestTimeoutMs: positiveIntOr(env['AI_REQUEST_TIMEOUT_MS'], DEFAULT_REQUEST_TIMEOUT_MS),
     defaultTemperature: DEFAULT_TEMPERATURE,
     embeddingsModel: env['AI_EMBEDDINGS_MODEL']?.trim() || DEFAULT_EMBEDDINGS_MODEL,
     embeddingsDimensions:

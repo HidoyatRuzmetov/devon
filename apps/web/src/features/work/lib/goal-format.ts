@@ -23,4 +23,14 @@ export function goalProgressTone(
   return 'destructive'
 }
 
+/** What a goal counts, in words. Lives here rather than in `goals-screen.tsx` because the head
+ * dashboard's Maqsadlar tile names the same metric (SPEC §3.2) and two copies of this map would be
+ * two chances to disagree about what `open_cards_max` is called. */
+export const GOAL_METRIC_LABEL_KEYS: Readonly<Record<GoalMetric, string>> = {
+  cards_done: 'work.goals.metric.cardsDone',
+  on_time_rate: 'work.goals.metric.onTimeRate',
+  estimate_hours: 'work.goals.metric.estimateHours',
+  open_cards_max: 'work.goals.metric.openCardsMax',
+}
+
 export { goalProgress, isCeilingMetric }

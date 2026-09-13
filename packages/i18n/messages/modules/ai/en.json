@@ -124,7 +124,8 @@
       "invalidInput": "Check the fields and try again",
       "forbidden": "This helper is switched off, or the budget is spent",
       "runFailed": "AI could not answer just now",
-      "headOnly": "This helper is for the head of the department only"
+      "headOnly": "This helper is for the head of the department only",
+      "featureDisabled": "This helper is switched off in the department settings. Turn it on from the AI page."
     },
     "translateTarget": {
       "label": "Into which language",
