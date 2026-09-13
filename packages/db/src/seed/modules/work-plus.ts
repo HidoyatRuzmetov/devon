@@ -215,13 +215,18 @@ const AUTOMATIONS: readonly {
   actions: unknown
   enabled: boolean
 }[] = [
+  // Deliberately OFF in the demo, and the reason is the lesson: `notify_head` fires once per card,
+  // the scan dedupes per rule per card per day but not per tick, and this department carries 77
+  // overdue cards -- so switching it on filled the boshliq's inbox with 79 identical rows in one
+  // sweep. It ships enabled: false so the demo shows a rule in both states and a head sees what the
+  // switch is for before they flip it on a backlog.
   {
     id: demoId('workplus.rule.kechikkan'),
     name: 'Muddati oʻtganda boshliqqa xabar bering',
     trigger: 'card_overdue',
-    triggerConfig: { filter: '' },
+    triggerConfig: { filter: 'label:"Muhim"' },
     actions: [{ kind: 'notify_head' }],
-    enabled: true,
+    enabled: false,
   },
   {
     id: demoId('workplus.rule.muhim'),
