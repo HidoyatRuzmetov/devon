@@ -278,8 +278,8 @@
       "unitHour": "{count} soat",
       "unitMinute": "{count} daqiqa",
       "unitHourShort": "{count} soat",
-      "shortHour": "{count}s",
-      "shortMinute": "{count}d"
+      "shortHour": "{count} soat",
+      "shortMinute": "{count} daq"
     },
     "section": {
       "time": "Vaqt",

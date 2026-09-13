@@ -278,8 +278,8 @@
       "unitHour": "{count} соат",
       "unitMinute": "{count} дақиқа",
       "unitHourShort": "{count} соат",
-      "shortHour": "{count}с",
-      "shortMinute": "{count}д"
+      "shortHour": "{count} соат",
+      "shortMinute": "{count} дақ"
     },
     "section": {
       "time": "Вақт",

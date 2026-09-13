@@ -33,10 +33,10 @@
         "scope": "Qayerga",
         "scopeProject": "Loyiha",
         "scopeEvent": "Tadbir",
-        "target": "Tanlang",
+        "target": "Qaysi biri",
         "targetPlaceholder": "Loyiha yoki tadbirni tanlang",
-        "allowEdit": "Qatnashchilar tahrirlay olsin",
-        "allowEditHelp": "Oʻchirilsa — faqat koʻradilar, kursorlari koʻrinmaydi.",
+        "allowEdit": "Ishtirokchilar tahrirlay olsin",
+        "allowEditHelp": "Oʻchirilsa — faqat koʻrishadi, kursorlari ham koʻrinmaydi.",
         "submit": "Ulashish",
         "sharing": "Ulashilmoqda…",
         "toast": "Oq taxta ulashildi",
@@ -54,7 +54,7 @@
         "action": "Ulashuvni qaytarib olish",
         "confirmTitle": "Ulashuvni qaytarib olamizmi?",
         "confirmBody": "Nusxa hamma uchun yopiladi. Shaxsiy oq taxtangizga hech narsa boʻlmaydi.",
-        "confirm": "Ha, yopilsin",
+        "confirm": "Qaytarib olish",
         "cancel": "Bekor qilish",
         "toast": "Ulashuv qaytarib olindi"
       },
@@ -63,7 +63,7 @@
         "toProject": "{name} loyihasiga ulashilgan",
         "toEvent": "{name} tadbiriga ulashilgan",
         "readOnly": "Faqat koʻrish uchun",
-        "editable": "Qatnashchilar tahrirlay oladi",
+        "editable": "Ishtirokchilar tahrirlay oladi",
         "openOriginal": "Shaxsiy oq taxtani ochish"
       },
       "cursors": {
@@ -77,18 +77,18 @@
       },
       "empty": {
         "title": "Bu oq taxta hali ulashilmagan",
-        "body": "Ulashsangiz — loyiha yoki tadbir qatnashchilari uni birga koʻradi va tahrirlaydi."
+        "body": "Ulashsangiz — loyiha yoki tadbir ishtirokchilari uni birga koʻradi va tahrirlaydi."
       },
       "loading": {
         "title": "Oq taxta yuklanmoqda"
       },
       "error": {
         "title": "Oq taxtani ochib boʻlmadi",
-        "body": "Ulanishda muammo boʻldi. Qayta urinib koʻring."
+        "body": "Aloqa uzildi. Qayta urinib koʻring."
       },
       "forbidden": {
         "title": "Bu oq taxta sizga ochiq emas",
-        "body": "Uni faqat ulashilgan loyiha yoki tadbir qatnashchilari koʻradi."
+        "body": "Uni faqat ulashilgan loyiha yoki tadbir ishtirokchilari koʻradi."
       }
     }
   }

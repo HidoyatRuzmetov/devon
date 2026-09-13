@@ -273,7 +273,7 @@
         "cta": "Барча мақсадлар",
         "empty": "Мақсад қўйилмаган. Биринчисини қўйинг — бажарилгани ўзи ҳисобланади.",
         "progressAria": "{title} — бажарилган қисми",
-        "ofCap": "чегарадан"
+        "ofCap": "чегарага нисбатан"
       },
       "catchUp": {
         "title": "AI хулоса",
@@ -762,10 +762,10 @@
         "wipeStepCancel": "Бекор қилиш",
         "wipePhraseLabel": "Иборани киритинг: {phrase}",
         "wipePasswordLabel": "Парол",
-        "wipeTotpLabel": "2ФА коди (агар ёқилган бўлса)",
+        "wipeTotpLabel": "2FA коди (агар ёқилган бўлса)",
         "wipeReviewPhrase": "Ибора",
         "wipeReviewPassword": "Парол",
-        "wipeReviewTotp": "2ФА коди",
+        "wipeReviewTotp": "2FA коди",
         "wipeReviewTotpNone": "Киритилмаган",
         "wipeReviewBody": "Саноқ нолга етгач ўчиришни тўхтатиб бўлмайди; саноқ давом этаётганда эса бекор қилсангиз бўлади.",
         "wipeConfirmCta": "60 сониялик саноқни бошлаш",
@@ -847,7 +847,7 @@
       "revokedAllToast": "Барча қурилмалардан чиқилди"
     },
     "twoFactor": {
-      "title": "Икки босқичли текширув (2ФА)",
+      "title": "Икки босқичли текширув (2FA)",
       "subtitle": "Аутентификация иловаси билан ҳисобингизни қўшимча ҳимояланг.",
       "enabled": "Ёқилган",
       "disabled": "Ўчирилган",
@@ -4298,8 +4298,8 @@
       "unitHour": "{count} соат",
       "unitMinute": "{count} дақиқа",
       "unitHourShort": "{count} соат",
-      "shortHour": "{count}с",
-      "shortMinute": "{count}д"
+      "shortHour": "{count} соат",
+      "shortMinute": "{count} дақ"
     },
     "section": {
       "time": "Вақт",
