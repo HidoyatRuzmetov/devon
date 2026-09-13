@@ -66,16 +66,18 @@ async function importCatalogue(locale: Locale): Promise<MessageTree> {
   // A literal specifier per locale, not a computed template string: bundlers only emit a separate
   // chunk for an `import()` they can read statically, and a glob-y dynamic import would pull all
   // four back into one chunk -- the exact thing this file exists to stop.
+  //
+  // Each specifier points at a `.ts` wrapper in `./catalogues/`, never straight at the `.json`:
+  // Node ESM demands a `with { type: 'json' }` attribute on a JSON module and Vite serves the same
+  // file as `text/javascript`, which makes a browser reject that very attribute. The wrappers hold
+  // the static JSON import (attribute and all) and hand back plain JavaScript here.
   switch (locale) {
     case 'uz-Cyrl':
-      return (await import('../messages/uz-Cyrl.generated.json', { with: { type: 'json' } }))
-        .default as MessageTree
+      return (await import('./catalogues/uz-Cyrl.js')).default
     case 'ru':
-      return (await import('../messages/ru.generated.json', { with: { type: 'json' } }))
-        .default as MessageTree
+      return (await import('./catalogues/ru.js')).default
     case 'en':
-      return (await import('../messages/en.generated.json', { with: { type: 'json' } }))
-        .default as MessageTree
+      return (await import('./catalogues/en.js')).default
     default:
       return uzLatn as MessageTree
   }

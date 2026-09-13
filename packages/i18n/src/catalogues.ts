@@ -11,15 +11,15 @@
 //
 // It is deliberately NOT re-exported from the package barrel: a browser that reached it through
 // `index.ts` would pull all four catalogues back into the shell chunk.
-import uzCyrl from '../messages/uz-Cyrl.generated.json' with { type: 'json' }
-import ru from '../messages/ru.generated.json' with { type: 'json' }
-import en from '../messages/en.generated.json' with { type: 'json' }
-import { registerCatalogue, type MessageTree } from './messages.js'
+import uzCyrl from './catalogues/uz-Cyrl.js'
+import ru from './catalogues/ru.js'
+import en from './catalogues/en.js'
+import { registerCatalogue } from './messages.js'
 
 export function registerAllCatalogues(): void {
-  registerCatalogue('uz-Cyrl', uzCyrl as MessageTree)
-  registerCatalogue('ru', ru as MessageTree)
-  registerCatalogue('en', en as MessageTree)
+  registerCatalogue('uz-Cyrl', uzCyrl)
+  registerCatalogue('ru', ru)
+  registerCatalogue('en', en)
 }
 
 registerAllCatalogues()

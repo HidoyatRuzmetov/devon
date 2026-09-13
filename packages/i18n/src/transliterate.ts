@@ -31,6 +31,9 @@ const APOSTROPHE_DIGRAPHS: ReadonlyArray<readonly [string, string]> = [
 
 const IOTATED: Readonly<Record<string, string>> = { ya: 'я', ye: 'е', yo: 'ё', yu: 'ю' }
 
+/** The three spellings of the modifier letter this file already accepts in `oʻ`/`gʻ`. */
+const APOSTROPHES = new Set(["'", 'ʼ', 'ʻ'])
+
 // `e` on its own follows the same word-initial-or-after-vowel rule as the `y` digraphs: "elektron"
 // -> "электрон" (word start), "bekor" -> "бекор" (after a consonant, palatalising it, as Cyrillic
 // "е" already implies -- not "бэкор").
@@ -114,7 +117,15 @@ export function latinToCyrillic(input: string): string {
       i === 0 || VOWELS.has(lower[i - 1] ?? '') || isWordStartPosition(lower, i)
     if (remaining[0] === 'y' && remaining.length >= 2) {
       const digraph = remaining.slice(0, 2)
-      if (digraph in IOTATED && atIotationPosition) {
+      // `yoʻ` is `y` + the `oʻ` digraph, never the iotated `yo`: the tiers above match longest-first
+      // within themselves, but `yo` and `oʻ` overlap *across* tiers and the iotated one was winning.
+      // That turned the commonest word in the product's empty states -- "yoʻq" (there is none) --
+      // into "ёъқ", which is not a word (found reading the login screen in uz-Cyrl in the running
+      // app; 16 shipped strings across six modules said it). Correct is "йўқ": consonant й, then ў.
+      // Only `yo` can collide -- `ya`/`ye`/`yu` are never followed by a modifier letter that belongs
+      // to them, and "yaʼni" -> "яъни" must keep iotating, so this guard stays narrow.
+      const splitsAnApostropheDigraph = digraph === 'yo' && APOSTROPHES.has(remaining[2] ?? '')
+      if (digraph in IOTATED && atIotationPosition && !splitsAnApostropheDigraph) {
         out += applyCase(input.slice(i, i + 2), IOTATED[digraph]!)
         i += 2
         continue

@@ -61,7 +61,7 @@
     "approvalQueue": {
       "title": "Бўлим сўровлари",
       "empty": {
-        "title": "Кўриб чиқилмаган сўровлар ёъқ"
+        "title": "Кўриб чиқилмаган сўровлар йўқ"
       },
       "requestedBy": "Сўров берувчи",
       "unitsCount": "{count} та бўлинма",
@@ -124,7 +124,7 @@
     "members": {
       "title": "Аъзолар",
       "empty": {
-        "title": "Аъзолар ёъқ"
+        "title": "Аъзолар йўқ"
       },
       "roleHead": "Бошлиқ",
       "roleMember": "Аъзо",

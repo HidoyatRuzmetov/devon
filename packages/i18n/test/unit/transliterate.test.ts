@@ -60,4 +60,27 @@ describe('latinToCyrillic (mechanical Uzbek Latin -> Cyrillic transliteration)',
   it('passes digits and punctuation through unchanged', () => {
     expect(latinToCyrillic('2026-yil')).toBe('2026-йил')
   })
+
+  // Regression: `yo` (iotated ё) and `oʻ` (ў) overlap across the two match tiers, and the iotated
+  // one used to win -- turning "yoʻq", the word in half the product's empty states, into "ёъқ",
+  // which is not a word. It is й + ў: two letters, not one iotated vowel.
+  it('reads yoʻ as y + oʻ (йў), never as the iotated yo (ёъ)', () => {
+    expect(latinToCyrillic('yoʻq')).toBe('йўқ')
+    expect(latinToCyrillic('yoʻl')).toBe('йўл')
+    expect(latinToCyrillic('yoʻnalish')).toBe('йўналиш')
+    expect(latinToCyrillic('yoʻqotish')).toBe('йўқотиш')
+    // The bare ASCII apostrophe spelling of the same digraph, which this file also accepts.
+    expect(latinToCyrillic("yo'q")).toBe('йўқ')
+    // Case is still carried across the two letters it now produces instead of one.
+    expect(latinToCyrillic('Yoʻq')).toBe('Йўқ')
+    expect(latinToCyrillic('YOʻQ')).toBe('ЙЎҚ')
+  })
+
+  it('still iotates yo when no modifier letter follows, and keeps yaʼ iotated', () => {
+    expect(latinToCyrillic('yosh')).toBe('ёш')
+    expect(latinToCyrillic('quyosh')).toBe('қуёш')
+    // "yaʼni" -- the apostrophe here is the tutuq belgisi on `ya`, not part of a `aʻ` digraph, so
+    // the narrow guard above must not touch it.
+    expect(latinToCyrillic('yaʼni')).toBe('яъни')
+  })
 })
