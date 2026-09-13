@@ -51,7 +51,7 @@
       "duplicateTitle": "Бунга ўхшаш иш аллақачон бор"
     },
     "filter": {
-      "placeholder": "ассигнеэ:@ме дуэ:<=фридай лабел:ургент",
+      "placeholder": "assignee:@me due:<=friday label:urgent",
       "apply": "Қўллаш",
       "clear": "Тозалаш",
       "saveAs": "Кўриниш сифатида сақлаш",
@@ -539,7 +539,7 @@
       "fieldTargetHint": "Рақам: карталар сони, фоиз ёки соат.",
       "fieldFilter": "Қайси карталар",
       "fieldFilterHint": "Бўш қолдирилса — бошқарманинг барча карталари.",
-      "fieldFilterPlaceholder": "лабел:мурожаат",
+      "fieldFilterPlaceholder": "label:murojaat",
       "fieldDueOn": "Муддат",
       "metric": {
         "cardsDone": "Бажарилган карталар сони",

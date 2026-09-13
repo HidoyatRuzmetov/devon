@@ -380,3 +380,31 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `projects.action.archive` | Loyihani arxivlash | Loyihani arxivga olish | §12.2 archive (v.) = `arxivga olish` |
 | `projects.action.archived` | "{title}" arxivlandi | «{title}» arxivga olindi | §14 «…»; §12.2 `arxivga olindi` |
 | `projects.ai.planPreviewTitle` | AI reja koʻrinishi | AI tayyorlagan reja | «reja koʻrinishi» — *preview* soʻzma-soʻz |
+
+## Modul: fields (`packages/i18n/messages/modules/fields/`)
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `fields.manager.subtitle` | Boshqarma xodimlari va vazifalari uchun oʻz ustunlaringizni belgilang. | Boshqarma xodimlari va kartalari uchun oʻz ustunlaringizni belgilang. | §12.2 doskadagi obyekt — karta |
+| `fields.manager.createFailed` | Maydonni qoʻshib boʻlmadi. Qaytadan urinib koʻring. | Maydonni qoʻshib boʻlmadi. Qayta urinib koʻring. | «Qaytadan urinib koʻring» → mahsulot boʻylab bitta shakl: «Qayta urinib koʻring» |
+| `fields.manager.saved` | Oʻzgarishlar saqlandi. | Saqlandi | §5 toast qisqa: «Oʻzgarishlar saqlandi» → «Saqlandi» |
+| `fields.manager.saveFailed` | Saqlab boʻlmadi. Qaytadan urinib koʻring. | Saqlab boʻlmadi. Qayta urinib koʻring. | bitta shakl: «Qayta urinib koʻring» |
+| `fields.manager.restored` | Maydon qaytarildi. | Qaytarildi | §5 toast qisqa |
+| `fields.manager.undo` | Qaytarish | Bekor qilish | §5 binding: undo = `Bekor qilish` |
+| `fields.manager.tab.card` | Vazifa maydonlari | Karta maydonlari | §12.2 obyekt — karta (departments modulidagi imkoniyat nomi bilan bir xil) |
+| `fields.manager.progressLabel` | {filled} / {total} toʻldirgan | {total} tadan {filled} tasi toʻldirgan | §10 maxraj «{total} tadan {filled} tasi» |
+| `fields.manager.empty.person.title` | Xodimlar uchun maydon yoʻq | Hali xodim maydoni yoʻq | §7 boʻsh holat nima yoʻqligini aytadi |
+| `fields.manager.empty.card.title` | Vazifalar uchun maydon yoʻq | Hali karta maydoni yoʻq | §7 + §12.2 karta |
+| `fields.manager.empty.card.body` | Baholangan soat yoki hujjat havolasi kabi ustun qoʻshsangiz, u vazifa kartochkasida koʻrinadi. | Baholangan soat yoki hujjat havolasi kabi ustun qoʻshsangiz, u kartaning oʻzida koʻrinadi. | §11/9 `kartochka` → `karta` |
+| `fields.my.saved` | Maʼlumotlaringiz saqlandi. | Saqlandi | §5 toast qisqa |
+| `fields.my.saveFailed` | Saqlab boʻlmadi. Qaytadan urinib koʻring. | Saqlab boʻlmadi. Qayta urinib koʻring. | bitta shakl: «Qayta urinib koʻring» |
+| `fields.card.saved` | Maydon yangilandi. | Saqlandi | §5 toast qisqa |
+| `fields.card.requiredBlocksDone` | Bu maydon toʻldirilmaguncha vazifani yakunlab boʻlmaydi. | Bu maydon toʻldirilmaguncha kartani yakunlab boʻlmaydi. | §12.2 obyekt — karta |
+| `fields.form.behaviourLegend` | Xatti-harakati | Qoidalari | §11/35 `Xatti-harakati` — odamning xatti-harakati boʻladi, maydonning qoidasi |
+| `fields.form.showOnCardTile` | Kartochkada koʻrsatish | Kartada koʻrsatish | §11/9 `kartochka` → `karta` |
+| `fields.form.showOnCardTileHint` | Doskadagi kartochkada kichik yozuv sifatida chiqadi. | Doskadagi kartada kichik yozuv boʻlib chiqadi. | §11/9 `kartochka` → `karta` |
+| `fields.form.selfEditableHint` | Oʻchirilsa, faqat boshqarma boshligʻi kiritadi. | Oʻchirilsa, uni faqat boshqarma boshligʻi toʻldiradi. | §11/26 maydon «toʻldiriladi», «kiritilmaydi» |
+| `fields.input.numberPlaceholder` | Raqam kiriting | Raqam | §14 placeholder — namuna, buyruq emas |
+| `fields.input.derivedHint` | Bu qiymat avtomatik hisoblanadi. | Bu qiymat oʻzi hisoblanadi. | «avtomatik» → oʻzbekcha «oʻzi» |
+| `fields.error.required` | Bu maydon majburiy. | Bu maydon toʻldirilishi kerak. | §6 tekshiruv jadvalidagi aynan shakl |
+| `fields.error.too_long` | Matn juda uzun. | Matn juda uzun — qisqartiring. | §6 xato nima qilishni ham aytadi |
