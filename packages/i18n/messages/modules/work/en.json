@@ -252,7 +252,13 @@
       "viewerYou": "You",
       "draftReply": "Draft a reply",
       "draftReplyPreviewTitle": "Reply draft",
-      "useDraft": "Put it in the comment box"
+      "useDraft": "Put it in the comment box",
+      "explainRisk": "Explain this risk",
+      "explainRiskPreviewTitle": "Why this card is at risk",
+      "suggestAssignee": "Who should take this",
+      "suggestAssigneePreviewTitle": "Suggested owners",
+      "boardDigest": "Who is running late",
+      "boardDigestPreviewTitle": "The riskiest work on the board"
     },
     "actions": {
       "create": "New card"

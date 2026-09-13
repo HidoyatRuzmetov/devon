@@ -252,7 +252,13 @@
       "viewerYou": "Сиз",
       "draftReply": "Жавоб лойиҳасини ёзиш",
       "draftReplyPreviewTitle": "Жавоб лойиҳаси",
-      "useDraft": "Изоҳ майдонига қўйиш"
+      "useDraft": "Изоҳ майдонига қўйиш",
+      "explainRisk": "Бу хавфни тушунтир",
+      "explainRiskPreviewTitle": "Хавф нима учун қўйилди",
+      "suggestAssignee": "Кимга топширай",
+      "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
+      "boardDigest": "Ким кечиктиряпти",
+      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
     },
     "actions": {
       "create": "Янги вазифа"

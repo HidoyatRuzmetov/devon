@@ -21,7 +21,7 @@
 // if a real department's card count grows an order of magnitude past the demo.
 import * as React from 'react'
 import { cardMatchesFilterText, parseFilterQuery } from '@devon/contracts'
-import { useT } from '@devon/i18n'
+import { useT, useLocale } from '@devon/i18n'
 import { IconButton, SegmentedControl, Skeleton, StateView, cn, unitHueClass } from '@devon/ui'
 import { ChevronsLeftRight, Rows3, Rows4 } from 'lucide-react'
 import { useDepartment, useSession } from '../../../lib/session.js'
@@ -32,6 +32,12 @@ import type { Card } from '../api.js'
 import { keyBetween } from '../lib/fractional.js'
 import { useAnnounce, DndAnnouncerProvider } from './dnd-announcer.js'
 import { useBoardQuery, useMoveCardMutation } from '../hooks.js'
+import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import { BoardRiskDigestPreview } from '../../ai/components/previews.js'
+import { parseFeatureOutput, type BoardRiskDigestOutput } from '../../ai/outputs.js'
+import type { RunMeta } from '../../ai/types.js'
+import { SparkleButton } from '@devon/ui'
 import { BoardColumn } from './board-column.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { NewCardDialog } from './new-card-dialog.js'
@@ -315,6 +321,12 @@ function BoardScreenInner() {
 
   return (
     <div className="flex h-full flex-col gap-4">
+      {/* N-2 "Kim kechiktiryapti?" -- the head's daily version of the risk explainer, over the top
+          at-risk cards on this board, in ONE batched call instead of one per card. Head only, on the
+          server (`department_managed`) and here: it is a ranked list of who is late, which is
+          management information about other people. */}
+      <BoardRiskDigest board={board} />
+
       <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
         <div className="flex flex-wrap items-center gap-2 px-1">
           <span
@@ -483,5 +495,145 @@ export default function BoardScreen() {
       <NewCardDialog />
       <TouchDragPreviewLayer />
     </DndAnnouncerProvider>
+  )
+}
+
+/**
+ * The head's board digest (AI-AUDIT §4, N-2).
+ *
+ * One call, not N: v1.0's `deadline_risk` could only explain a single card, and explaining a board
+ * meant twenty calls and twenty previews. This ranks the top few at-risk cards together, with one
+ * reason each and one suggested action each, plus the "pressure points" -- the people whose load is
+ * the structural cause -- because a head reading five late cards mostly wants to know whether it is
+ * five problems or one person with too much work.
+ *
+ * Renders nothing at all for a member, or when nothing on the board is at risk. An empty AI panel
+ * over a healthy board is noise.
+ */
+function BoardRiskDigest({
+  board,
+}: {
+  board: { members: readonly { userId: string }[]; columns: readonly { member: { userId: string; givenName: string; familyName: string }; cards: readonly Card[] }[]; unassigned: readonly Card[] }
+}) {
+  const t = useT()
+  const locale = useLocale()
+  const { department } = useDepartment()
+  const isHead = department?.role === 'head'
+  const aiSettings = useAiSettingsQuery()
+  const digestAi = useRunAiFeatureMutation('board_risk_digest')
+  const [digest, setDigest] = React.useState<{
+    output: BoardRiskDigestOutput
+    meta: RunMeta
+  } | null>(null)
+
+  const enabled =
+    isHead &&
+    aiSettings.data !== undefined &&
+    aiSettings.data.flags['board_risk_digest'] === true &&
+    aiSettings.data.budgetStatus !== 'hard_stop'
+
+  const nameFor = React.useCallback(
+    (userId: string | null): string | null => {
+      if (!userId) return null
+      const column = board.columns.find((c) => c.member.userId === userId)
+      return column ? fullName(column.member) : null
+    },
+    [board.columns],
+  )
+
+  const allCards = React.useMemo(
+    () => [...board.columns.flatMap((column) => column.cards), ...board.unassigned],
+    [board.columns, board.unassigned],
+  )
+  const atRisk = React.useMemo(
+    () => allCards.filter((card) => card.risk !== 'none' && card.status === 'active'),
+    [allCards],
+  )
+
+  function run() {
+    if (atRisk.length === 0) return
+    setDigest(null)
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date())
+    const now = Date.now()
+    digestAi.mutate(
+      {
+        locale,
+        departmentName: department?.name ?? t('work.board.department'),
+        today,
+        cards: atRisk.slice(0, 40).map((card) => ({
+          id: card.id,
+          title: card.title,
+          riskLevel: card.risk === 'overdue' ? 'high' : 'medium',
+          assigneeName: nameFor(card.assigneeUserId),
+          dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
+          daysOverdue: card.dueAt
+            ? Math.max(0, Math.round((now - new Date(card.dueAt).getTime()) / 86_400_000))
+            : 0,
+          daysSinceUpdate: Math.max(
+            0,
+            Math.round((now - new Date(card.updatedAt).getTime()) / 86_400_000),
+          ),
+          checklistDone: card.checklistDone,
+          checklistTotal: card.checklistTotal,
+          blocked: false,
+        })),
+        loadPerPerson: board.columns.map((column) => ({
+          name: fullName(column.member),
+          openCount: column.cards.filter((card) => card.status === 'active').length,
+        })),
+        topN: 5,
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<BoardRiskDigestOutput>('board_risk_digest', res.data)
+          if (output) setDigest({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
+  if (!enabled || atRisk.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="flex flex-col gap-2 px-1">
+      <SparkleButton
+        aria-label={t('work.ai.boardDigest')}
+        label={t('work.ai.boardDigest')}
+        size="sm"
+        className="self-start"
+        loading={digestAi.isPending}
+        onClick={run}
+      />
+      {digestAi.isPending || digest || digestAi.isError ? (
+        <AiResultPanel
+          title={t('work.ai.boardDigestPreviewTitle')}
+          status={digestAi.isPending ? 'pending' : digestAi.isError ? 'error' : 'ready'}
+          errorMessage={t('work.quickAdd.aiError')}
+          {...(digest ? { meta: digest.meta } : {})}
+          // Read-only: each row already carries its own action, and a single Accept over a ranked
+          // list of five different problems would mean nothing.
+          onDiscard={() => {
+            setDigest(null)
+            digestAi.reset()
+          }}
+          onRetry={run}
+        >
+          {digest ? (
+            <BoardRiskDigestPreview
+              output={digest.output}
+              cardTitle={(id) => allCards.find((card) => card.id === id)?.title ?? null}
+              onAction={(cardId) => openCardPeek(cardId)}
+            />
+          ) : null}
+        </AiResultPanel>
+      ) : null}
+    </section>
   )
 }

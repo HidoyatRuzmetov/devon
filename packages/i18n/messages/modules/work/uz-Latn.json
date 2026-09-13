@@ -252,7 +252,13 @@
       "viewerYou": "Siz",
       "draftReply": "Javob loyihasini yozish",
       "draftReplyPreviewTitle": "Javob loyihasi",
-      "useDraft": "Izoh maydoniga qoʻyish"
+      "useDraft": "Izoh maydoniga qoʻyish",
+      "explainRisk": "Bu xavfni tushuntir",
+      "explainRiskPreviewTitle": "Xavf nima uchun qoʻyildi",
+      "suggestAssignee": "Kimga topshiray",
+      "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
+      "boardDigest": "Kim kechiktiryapti",
+      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
     },
     "actions": {
       "create": "Yangi vazifa"

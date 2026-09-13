@@ -252,7 +252,13 @@
       "viewerYou": "Вы",
       "draftReply": "Написать черновик ответа",
       "draftReplyPreviewTitle": "Черновик ответа",
-      "useDraft": "Вставить в поле комментария"
+      "useDraft": "Вставить в поле комментария",
+      "explainRisk": "Объяснить этот риск",
+      "explainRiskPreviewTitle": "Почему стоит отметка риска",
+      "suggestAssignee": "Кому поручить",
+      "suggestAssigneePreviewTitle": "Предложенные исполнители",
+      "boardDigest": "Кто задерживает",
+      "boardDigestPreviewTitle": "Самые рискованные дела на доске"
     },
     "actions": {
       "create": "Новая задача"

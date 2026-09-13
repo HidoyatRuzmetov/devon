@@ -42,7 +42,9 @@ import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import {
+  AssigneeSuggestionsPreview,
   DraftReplyPreview,
+  RiskExplainPreview,
   SubtasksPreview,
   ThreadDigestPreview,
   TranslatePreview,
@@ -52,9 +54,12 @@ import {
   defaultTranslateTarget,
   isLocalTransliterationPair,
 } from '../../ai/components/translate-target.js'
+import { useSummaryQuery } from '../../analytics/use-analytics.js'
 import {
   parseFeatureOutput,
+  type DeadlineRiskOutput,
   type DraftReplyOutput,
+  type SuggestAssigneeOutput,
   type SubtaskBreakdownOutput,
   type SummarizeThreadOutput,
   type TranslateOutput,
@@ -123,6 +128,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const locale = useLocale()
   const query = useCardQuery(cardId)
   const members = useMembers()
+  const { department } = useDepartment()
+  const isHead = department?.role === 'head'
   const labels = useLabelsQuery().data ?? []
   const projects = useProjectsQuery().data ?? []
   const { user } = useSession()
@@ -170,6 +177,28 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const [translateTarget, setTranslateTarget] = React.useState<Locale>(() =>
     defaultTranslateTarget(locale),
   )
+
+  // F4, rebuilt as an *explainer* (AI-AUDIT §4, D-4). `computeRisk()` on the server already decided
+  // whether this card is at risk; two sources of truth for that would be a defect, not a feature.
+  // The model is handed that verdict and asked only to say why, in words, and name one thing to do.
+  const riskEnabled = useAiFeatureEnabled('deadline_risk')
+  const riskAi = useRunAiFeatureMutation('deadline_risk')
+  const [riskExplain, setRiskExplain] = React.useState<{
+    output: DeadlineRiskOutput
+    meta: RunMeta
+  } | null>(null)
+
+  // N-3. Head-only, on the server (`department_managed`) and here: "who should take this" reads
+  // every member's workload, which is management information, and the head is the one who chooses.
+  const assigneeAiEnabled = useAiFeatureEnabled('suggest_assignee') && isHead
+  const assigneeAi = useRunAiFeatureMutation('suggest_assignee')
+  const [assigneeSuggestions, setAssigneeSuggestions] = React.useState<{
+    output: SuggestAssigneeOutput
+    meta: RunMeta
+  } | null>(null)
+  // The load numbers the suggestion is allowed to reason over -- the department's own aggregates,
+  // fetched only when a head actually opens this sheet with the helper enabled.
+  const loadSummary = useSummaryQuery({})
 
   if (query.isPending) {
     return (
@@ -313,6 +342,86 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     )
   }
 
+  function runRiskExplain() {
+    if (!card) return
+    setRiskExplain(null)
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date())
+    const assignee = members.find((m) => m.userId === card.assigneeUserId)
+    riskAi.mutate(
+      {
+        locale,
+        card: {
+          id: card.id,
+          title: card.title,
+          // The server's verdict, passed through. The prompt is explicit that it may not re-decide.
+          riskLevel: card.risk === 'overdue' ? 'high' : card.risk === 'at_risk' ? 'medium' : 'low',
+          dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
+          today,
+          checklistTotal: card.checklist.length,
+          checklistDone: card.checklist.filter((i) => i.doneAt !== null).length,
+          daysSinceUpdate: Math.max(
+            0,
+            Math.round((Date.now() - new Date(card.updatedAt).getTime()) / 86_400_000),
+          ),
+          assigneeName: assignee ? fullName(assignee) : null,
+          commentCount: card.comments.length,
+          blockedByTitles: [],
+          similarSlippedCount: 0,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<DeadlineRiskOutput>('deadline_risk', res.data)
+          if (output) setRiskExplain({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
+  function runSuggestAssignee() {
+    if (!card) return
+    setAssigneeSuggestions(null)
+    const loadByName = new Map(
+      (loadSummary.data?.loadPerPerson ?? []).map((person) => [person.userId, person] as const),
+    )
+    const candidates = members.map((member) => {
+      const load = loadByName.get(member.userId)
+      return {
+        userId: member.userId,
+        fullName: fullName(member),
+        openCount: load?.openCount ?? 0,
+        overdueCount: load?.overdueCount ?? 0,
+        recentLabels: [],
+        away: false,
+      }
+    })
+    if (candidates.length === 0) return
+    assigneeAi.mutate(
+      {
+        locale,
+        card: {
+          id: card.id,
+          title: card.title,
+          labels: [],
+          projectTitle: null,
+          estimateMin: null,
+        },
+        candidates,
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<SuggestAssigneeOutput>('suggest_assignee', res.data)
+          if (output) setAssigneeSuggestions({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
   async function acceptTranslate() {
     if (!translatePreview) return
     const text = translatePreview.output.translatedText
@@ -357,7 +466,19 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             </Badge>
           ) : null}
           {card.risk !== 'none' ? (
-            <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
+            <span className="flex items-center gap-1.5">
+              <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
+              {/* The one place this helper belongs: beside the badge it explains. v1.0 had it
+                  reachable only by typing card ids into a textarea on /ai (AI-AUDIT §0.4). */}
+              {riskEnabled ? (
+                <SparkleButton
+                  aria-label={t('work.ai.explainRisk')}
+                  size="sm"
+                  loading={riskAi.isPending}
+                  onClick={runRiskExplain}
+                />
+              ) : null}
+            </span>
           ) : null}
           <div className="ml-auto flex flex-wrap gap-2">
             {card.status === 'active' ? (
@@ -384,6 +505,24 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           </div>
         </div>
       </header>
+
+      {riskAi.isPending || riskExplain || riskAi.isError ? (
+        <AiResultPanel
+          title={t('work.ai.explainRiskPreviewTitle')}
+          status={riskAi.isPending ? 'pending' : riskAi.isError ? 'error' : 'ready'}
+          errorMessage={t('work.quickAdd.aiError')}
+          {...(riskExplain ? { meta: riskExplain.meta } : {})}
+          // Read-only by design: this helper explains a verdict the server already reached. There is
+          // nothing to accept, and a disabled-looking Accept on it would read as a bug.
+          onDiscard={() => {
+            setRiskExplain(null)
+            riskAi.reset()
+          }}
+          onRetry={runRiskExplain}
+        >
+          {riskExplain ? <RiskExplainPreview output={riskExplain.output} /> : null}
+        </AiResultPanel>
+      ) : null}
 
       {/* round2 SEV2: the two-column split ran the left column at ~170px inside the 480px sheet --
           a description textarea broke after four words, a three-word comment took four lines, and
@@ -498,6 +637,45 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               }}
               placeholderKey="work.field.unassigned"
             />
+            {assigneeAiEnabled ? (
+              <SparkleButton
+                aria-label={t('work.ai.suggestAssignee')}
+                label={t('work.ai.suggestAssignee')}
+                size="sm"
+                className="mt-2"
+                loading={assigneeAi.isPending}
+                onClick={runSuggestAssignee}
+              />
+            ) : null}
+            {assigneeAi.isPending || assigneeSuggestions || assigneeAi.isError ? (
+              <AiResultPanel
+                className="mt-2"
+                title={t('work.ai.suggestAssigneePreviewTitle')}
+                status={assigneeAi.isPending ? 'pending' : assigneeAi.isError ? 'error' : 'ready'}
+                errorMessage={t('work.quickAdd.aiError')}
+                {...(assigneeSuggestions ? { meta: assigneeSuggestions.meta } : {})}
+                // No Accept: the head chooses a person from the list, one click per row. A single
+                // "Accept" over a ranked list of three people would mean "take the first", which is
+                // precisely the decision the guard rail says the head must make (AI-AUDIT N-3).
+                onDiscard={() => {
+                  setAssigneeSuggestions(null)
+                  assigneeAi.reset()
+                }}
+                onRetry={runSuggestAssignee}
+              >
+                {assigneeSuggestions ? (
+                  <AssigneeSuggestionsPreview
+                    output={assigneeSuggestions.output}
+                    memberName={(id) => nameOf(members, id)}
+                    onChoose={(userId) => {
+                      void patchCard.mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                      setAssigneeSuggestions(null)
+                      assigneeAi.reset()
+                    }}
+                  />
+                ) : null}
+              </AiResultPanel>
+            ) : null}
           </Field>
           <Field label={t('work.field.giver')} flashedAt={giverFlash.flashedAt}>
             <MemberPicker
