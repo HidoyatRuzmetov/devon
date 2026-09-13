@@ -92,7 +92,10 @@ export function decodeJwtPayloadUnsafe(token: string): Record<string, unknown> |
   const parts = token.split('.')
   if (parts.length !== 3 || !parts[1]) return null
   try {
-    return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as Record<string, unknown>
+    return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as Record<
+      string,
+      unknown
+    >
   } catch {
     return null
   }

@@ -765,7 +765,7 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   // notification this table already refuses one line above.
   'realtime.canvas.shared': {
     notify: false,
-    why: "The canvas appears on the project or event page the moment it is shared, live, for everyone already looking at it -- and the owner shares it *while talking to* those people. An inbox row would arrive after the conversation it belongs to.",
+    why: 'The canvas appears on the project or event page the moment it is shared, live, for everyone already looking at it -- and the owner shares it *while talking to* those people. An inbox row would arrive after the conversation it belongs to.',
   },
   'realtime.canvas.share_revoked': {
     notify: false,

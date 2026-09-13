@@ -3,14 +3,7 @@
 // the API, two renderings).
 import * as React from 'react'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
-import {
-  Reveal,
-  SegmentedControl,
-  Stagger,
-  StaggerItem,
-  StateView,
-  HoverLift,
-} from '@devon/ui'
+import { Reveal, SegmentedControl, Stagger, StaggerItem, StateView, HoverLift } from '@devon/ui'
 import { CalendarDays, KanbanSquare, MapPin } from 'lucide-react'
 import { ApiError } from '../../../lib/api-client.js'
 import { navigate } from '../../../lib/router.js'
@@ -85,7 +78,8 @@ export function AgendaPanel(): React.JSX.Element {
         />
       )
     }
-    if (query.isPending) return <StateView kind="loading" titleKey="calendar.agenda.loading.title" />
+    if (query.isPending)
+      return <StateView kind="loading" titleKey="calendar.agenda.loading.title" />
     if (query.isError) {
       const err = query.error
       const code = err instanceof ApiError ? err.code : null

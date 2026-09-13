@@ -74,7 +74,11 @@ export async function publish(channel: string, event: RealtimeEvent): Promise<bo
   if (!canPublish(cfg)) return false
   const data = { ...event, at: event.at ?? new Date().toISOString() }
   try {
-    await guarded('centrifugo.publish', () => callCentrifugo('publish', { channel, data }, cfg), cfg)
+    await guarded(
+      'centrifugo.publish',
+      () => callCentrifugo('publish', { channel, data }, cfg),
+      cfg,
+    )
     return true
   } catch (err) {
     logger?.debug(

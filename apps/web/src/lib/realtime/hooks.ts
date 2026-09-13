@@ -69,10 +69,7 @@ export function usePresence(channel: string | null | undefined): PresenceMember[
     return subscribePresence(channel, setMembers)
   }, [channel])
 
-  return React.useMemo(
-    () => members.filter((m) => m.userId !== myId),
-    [members, myId],
-  )
+  return React.useMemo(() => members.filter((m) => m.userId !== myId), [members, myId])
 }
 
 export type EphemeralSignal = {
@@ -171,7 +168,14 @@ export function useSignalWhile(
  * features, so "which event refreshes what" is answerable in one place -- and so a feature that adds
  * an event name only has to add a row here. */
 const INVALIDATIONS: ReadonlyArray<{ match: RegExp; keys: readonly (readonly string[])[] }> = [
-  { match: /^work\.card\./, keys: [['work', 'board'], ['work', 'cards'], ['work', 'archive']] },
+  {
+    match: /^work\.card\./,
+    keys: [
+      ['work', 'board'],
+      ['work', 'cards'],
+      ['work', 'archive'],
+    ],
+  },
   { match: /^projects\./, keys: [['projects'], ['work', 'board']] },
   { match: /^events\./, keys: [['events']] },
   { match: /^structure\./, keys: [['structure']] },

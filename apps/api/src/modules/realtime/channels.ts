@@ -34,8 +34,7 @@ export type ParsedChannel =
   | { namespace: 'personal'; userId: string }
   | { namespace: 'canvas'; sharedCanvasId: string }
 
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 export function departmentChannel(departmentId: string): string {
   return `dept:${departmentId}`

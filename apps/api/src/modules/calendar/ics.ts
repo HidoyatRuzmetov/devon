@@ -65,7 +65,10 @@ export function foldLine(line: string): string {
 }
 
 export function toIcsUtc(d: Date): string {
-  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z')
+  return d
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}Z$/, 'Z')
 }
 
 const TASHKENT_VTIMEZONE = [
@@ -149,9 +152,9 @@ export function buildCalendar(options: BuildCalendarOptions): string {
   ]
 
   for (const item of items) {
-    const summary =
-      item.kind === 'card' ? `${CARD_PREFIX[locale]}: ${item.title}` : item.title
-    const start = item.kind === 'card' ? new Date(item.startsAt.getTime() - 30 * 60_000) : item.startsAt
+    const summary = item.kind === 'card' ? `${CARD_PREFIX[locale]}: ${item.title}` : item.title
+    const start =
+      item.kind === 'card' ? new Date(item.startsAt.getTime() - 30 * 60_000) : item.startsAt
     const end = item.kind === 'card' ? item.endsAt : item.endsAt
     lines.push('BEGIN:VEVENT')
     lines.push(`UID:${item.kind}-${item.id}@${UID_DOMAIN}`)
@@ -166,7 +169,8 @@ export function buildCalendar(options: BuildCalendarOptions): string {
     lines.push(`CATEGORIES:${item.kind === 'card' ? 'TASK' : 'EVENT'}`)
     if (item.status === 'cancelled') lines.push('STATUS:CANCELLED')
     else if (item.kind === 'card' && item.status === 'done') lines.push('STATUS:CONFIRMED')
-    else if (item.kind === 'event') lines.push(`STATUS:${partstatFor(item.status) === 'ACCEPTED' ? 'CONFIRMED' : 'TENTATIVE'}`)
+    else if (item.kind === 'event')
+      lines.push(`STATUS:${partstatFor(item.status) === 'ACCEPTED' ? 'CONFIRMED' : 'TENTATIVE'}`)
     if (item.kind === 'event') lines.push(`X-DEVON-RSVP:${item.status}`)
     lines.push('TRANSP:OPAQUE')
     if (reminderMinutes !== null && reminderMinutes > 0 && item.status !== 'cancelled') {

@@ -14,7 +14,11 @@ import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Avatar, Badge, initialsFromName, Tooltip, TooltipContent, TooltipTrigger } from '@devon/ui'
 import { Radio, WifiOff } from 'lucide-react'
-import { useRealtimeStatus, type PresenceMember, type RealtimeStatus } from '../../../lib/realtime/index.js'
+import {
+  useRealtimeStatus,
+  type PresenceMember,
+  type RealtimeStatus,
+} from '../../../lib/realtime/index.js'
 
 const STATUS_COPY: Record<RealtimeStatus, { label: string; hint: string } | null> = {
   // `idle` is "we have not tried yet" -- a state with nothing honest to say, so it says nothing.
@@ -45,7 +49,10 @@ export function LiveStatusPill({ className }: { className?: string }): React.JSX
           className={className}
           aria-label={`${t(copy.label)} — ${t(copy.hint)}`}
         >
-          <Badge tone={live ? 'success' : 'neutral'}>
+          {/* `primary`, not `success`: DESIGN.md §2.1 keeps green for success/approved/on-track, and
+              "the socket is connected" is an on/configured state -- the exact leak that rule exists
+              to stop. Brand tone says "this is a fact about this thing" without claiming a win. */}
+          <Badge tone={live ? 'primary' : 'neutral'}>
             <Icon aria-hidden="true" className="size-3.5" />
             {t(copy.label)}
           </Badge>

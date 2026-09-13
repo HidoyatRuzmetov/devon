@@ -33,6 +33,15 @@ export type AddToCalendarMenuProps = {
   /** Rendered as the trigger; defaults to a secondary button with the standard label. */
   trigger?: React.ReactNode
   align?: 'start' | 'center' | 'end'
+  /** Replaces the navigation to `/calendar/items/<id>.ics` for the "File (.ics)" entry.
+   *
+   * The events feature already owns a download path for an event (`lib/ics-download.ts`, fed by its
+   * own endpoint), and two ways to obtain the same file would be two things to keep in step. So a
+   * host that has one passes it here and this menu offers exactly one ICS action, which is that
+   * one. */
+  onIcs?: () => void
+  /** True while `onIcs` is working, so the entry can say so. */
+  icsBusy?: boolean
 }
 
 const SERVICES = [
@@ -46,6 +55,8 @@ export function AddToCalendarMenu({
   eventId,
   trigger,
   align = 'end',
+  onIcs,
+  icsBusy = false,
 }: AddToCalendarMenuProps): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
@@ -67,39 +78,52 @@ export function AddToCalendarMenu({
       <DropdownMenuContent align={align} className="min-w-56">
         <DropdownMenuLabel>{t('calendar.addTo.hint')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {query.isPending ? (
-          <div className="flex flex-col gap-1.5 p-2" aria-busy="true">
-            <Skeleton className="h-7 w-full" />
-            <Skeleton className="h-7 w-full" />
-            <Skeleton className="h-7 w-full" />
-          </div>
-        ) : query.isError ? (
-          <DropdownMenuItem disabled>{t('calendar.addTo.error')}</DropdownMenuItem>
-        ) : (
-          <>
-            {SERVICES.map(({ key, labelKey }) => (
-              <DropdownMenuItem
-                key={key}
-                onSelect={() => window.open(query.data[key], '_blank', 'noopener,noreferrer')}
-              >
-                <ExternalLink aria-hidden="true" className="size-4" />
-                {t(labelKey)}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={() => {
-                window.location.href = query.data.ics
-              }}
-            >
-              <Download aria-hidden="true" className="size-4" />
-              {t('calendar.addTo.ics')}
-            </DropdownMenuItem>
-          </>
-        )}
+        {items()}
       </DropdownMenuContent>
     </DropdownMenu>
   )
+
+  function items(): React.JSX.Element {
+    if (query.isPending) {
+      return (
+        <div className="flex flex-col gap-1.5 p-2" aria-busy="true">
+          <Skeleton className="h-7 w-full" />
+          <Skeleton className="h-7 w-full" />
+          <Skeleton className="h-7 w-full" />
+        </div>
+      )
+    }
+    if (query.isError) {
+      return <DropdownMenuItem disabled>{t('calendar.addTo.error')}</DropdownMenuItem>
+    }
+    return (
+      <>
+        {SERVICES.map(({ key, labelKey }) => (
+          <DropdownMenuItem
+            key={key}
+            onSelect={() => window.open(query.data[key], '_blank', 'noopener,noreferrer')}
+          >
+            <ExternalLink aria-hidden="true" className="size-4" />
+            {t(labelKey)}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          disabled={icsBusy}
+          onSelect={() => {
+            if (onIcs) {
+              onIcs()
+              return
+            }
+            window.location.href = query.data.ics
+          }}
+        >
+          <Download aria-hidden="true" className="size-4" />
+          {t('calendar.addTo.ics')}
+        </DropdownMenuItem>
+      </>
+    )
+  }
 }
 
 export default AddToCalendarMenu

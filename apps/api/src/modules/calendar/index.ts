@@ -261,12 +261,14 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
       // Bookkeeping after the body is built, never before: a failed render must not look like a
       // successful subscription on the person's own screen.
       void touchFeed(feed.id, feed.userId).catch(() => {})
-      return reply
-        .header('content-type', 'text/calendar; charset=utf-8')
-        .header('content-disposition', 'inline; filename="workportal.ics"')
-        // Private: this body is one person's calendar and must never sit in a shared proxy cache.
-        .header('cache-control', 'private, max-age=300')
-        .send(body)
+      return (
+        reply
+          .header('content-type', 'text/calendar; charset=utf-8')
+          .header('content-disposition', 'inline; filename="workportal.ics"')
+          // Private: this body is one person's calendar and must never sit in a shared proxy cache.
+          .header('cache-control', 'private, max-age=300')
+          .send(body)
+      )
     },
   )
 
@@ -347,15 +349,12 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
   app.addHttpMethod('PROPFIND', { hasBody: true })
   app.addHttpMethod('REPORT', { hasBody: true })
 
-  async function resolveFromRequest(req: FastifyRequest): Promise<
-    | {
-        id: string
-        secret: string
-        userId: string
-        kind: 'all' | 'events' | 'tasks'
-      }
-    | null
-  > {
+  async function resolveFromRequest(req: FastifyRequest): Promise<{
+    id: string
+    secret: string
+    userId: string
+    kind: 'all' | 'events' | 'tasks'
+  } | null> {
     const params = req.params as { secret?: string }
     const fromPath = params.secret ?? null
     const fromAuth = secretFromBasicAuth(req.headers.authorization)
@@ -396,10 +395,7 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
         depth === '0'
           ? principalPropfind(API_BASE, feed.secret, displayName)
           : homeSetPropfind(API_BASE, feed.secret, displayName, items)
-      return davHeaders(reply)
-        .code(207)
-        .header('content-type', XML_CONTENT_TYPE)
-        .send(body)
+      return davHeaders(reply).code(207).header('content-type', XML_CONTENT_TYPE).send(body)
     },
   })
 
@@ -487,15 +483,11 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
   /** Everything a write-capable client might try. Answered honestly rather than with a 404, so the
    * client shows "read-only calendar" instead of "server broken". */
   for (const url of ['/caldav/:secret/calendar/', '/caldav/:secret/calendar/:resource']) {
-    app.put(
-      url,
-      { config: { permission: { public: true } }, schema: {} },
-      async (_req, reply) => davHeaders(reply).code(403).send(),
+    app.put(url, { config: { permission: { public: true } }, schema: {} }, async (_req, reply) =>
+      davHeaders(reply).code(403).send(),
     )
-    app.delete(
-      url,
-      { config: { permission: { public: true } }, schema: {} },
-      async (_req, reply) => davHeaders(reply).code(403).send(),
+    app.delete(url, { config: { permission: { public: true } }, schema: {} }, async (_req, reply) =>
+      davHeaders(reply).code(403).send(),
     )
   }
 }

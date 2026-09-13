@@ -359,10 +359,7 @@ export type OwnCanvasRow = { id: string; title: string; scene: unknown; stickies
  * canvas -- it returns nothing. That is the property that makes "the owner publishes a copy" safe to
  * implement as a plain read followed by an insert.
  */
-export async function getOwnCanvas(
-  userId: string,
-  canvasId: string,
-): Promise<OwnCanvasRow | null> {
+export async function getOwnCanvas(userId: string, canvasId: string): Promise<OwnCanvasRow | null> {
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ id: string; title: string; scene: unknown; stickies: unknown }>(sql`
       select id, title, scene, stickies

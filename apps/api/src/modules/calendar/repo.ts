@@ -170,11 +170,7 @@ export async function rotateFeed(
   })
 }
 
-export async function revokeFeed(
-  ctx: AuditCtx,
-  userId: string,
-  feedId: string,
-): Promise<boolean> {
+export async function revokeFeed(ctx: AuditCtx, userId: string, feedId: string): Promise<boolean> {
   return withContext(toRequestContext(ctx, { userId }), async (tx) => {
     const rows = await tx.raw<{ id: string }>(sql`
       update app.calendar_feeds set revoked_at = now()
@@ -246,10 +242,8 @@ export const DEFAULT_WINDOW: FeedWindow = { fromDays: 30, toDays: 365 }
  * `memberships_read` (migration 0303) allows `user_id = app.current_user_id()`, which is precisely
  * the self-read this needs and nothing wider. */
 async function activeDepartmentIds(userId: string): Promise<string[]> {
-  const rows = await withContext(
-    toRequestContext(systemCtx(userId), { userId }),
-    async (tx) =>
-      tx.raw<{ department_id: string }>(sql`
+  const rows = await withContext(toRequestContext(systemCtx(userId), { userId }), async (tx) =>
+    tx.raw<{ department_id: string }>(sql`
         select department_id from app.memberships
         where user_id = ${userId} and status = 'active' and deleted_at is null
         limit 20
@@ -369,10 +363,8 @@ export async function feedItem(userId: string, itemId: string): Promise<Calendar
 }
 
 export async function userLocale(userId: string): Promise<string | null> {
-  const rows = await withContext(
-    toRequestContext(systemCtx(userId), { userId }),
-    async (tx) =>
-      tx.raw<{ locale: string | null }>(sql`
+  const rows = await withContext(toRequestContext(systemCtx(userId), { userId }), async (tx) =>
+    tx.raw<{ locale: string | null }>(sql`
         select locale from app.users where id = ${userId} limit 1
       `),
   )

@@ -246,7 +246,8 @@ async function loadUserLocale(userId: string): Promise<string | null> {
       ip: '',
       userAgent: 'devon-realtime/system',
     },
-    async (tx) => tx.raw<{ locale: string | null }>(sql`
+    async (tx) =>
+      tx.raw<{ locale: string | null }>(sql`
       select locale from app.users where id = ${userId} limit 1
     `),
   )

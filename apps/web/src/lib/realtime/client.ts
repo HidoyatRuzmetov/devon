@@ -18,7 +18,7 @@
 // Everything here degrades to nothing. `GET /realtime/config` says `enabled:false` on a deployment
 // with no Centrifugo -- the common case on a developer box -- and every hook then reports `off`, at
 // which point the screens keep their polling fallbacks and say so in words.
-import type { Centrifuge, PublicationContext, Subscription } from 'centrifuge'
+import type { Centrifuge, ClientInfo, PublicationContext, Subscription } from 'centrifuge'
 import {
   fetchConnectionToken,
   fetchRealtimeConfig,
@@ -92,11 +92,36 @@ function toMessage(data: unknown): RealtimeMessage | null {
   }
 }
 
-function deliver(channel: string, data: unknown): void {
+/**
+ * Turn one publication into the message every screen sees.
+ *
+ * `info` is present only for a publication a *browser* sent (Centrifugo attaches the publishing
+ * connection's own authenticated identity to it and omits it for server-API publishes). That is what
+ * makes the one client-publishable namespace -- `canvas:`, for live cursors -- safe: the publisher's
+ * user id and name are stamped by the broker from the connection token, never carried in the body,
+ * so a participant cannot put a colleague's name on a cursor even though they can publish. The two
+ * fields are merged into the payload here, once, rather than in every consumer.
+ */
+function deliver(channel: string, data: unknown, info?: ClientInfo): void {
   const entry = channels.get(channel)
   if (!entry) return
-  const message = toMessage(data)
-  if (!message) return
+  const base = toMessage(data)
+  if (!base) return
+  const message: RealtimeMessage =
+    info && info.user
+      ? {
+          ...base,
+          actorUserId: info.user,
+          payload: {
+            ...base.payload,
+            userId: info.user,
+            name:
+              typeof (info.connInfo as { name?: unknown } | undefined)?.name === 'string'
+                ? (info.connInfo as { name: string }).name
+                : '',
+          },
+        }
+      : base
   for (const handler of entry.handlers) {
     try {
       handler(message, channel)
@@ -148,7 +173,7 @@ async function connect(): Promise<Centrifuge | null> {
     // Server-side subscriptions (the personal inbox channel, named in the connection token) arrive
     // here rather than on a `Subscription`.
     client.on('publication', (ctx: PublicationContext & { channel: string }) => {
-      deliver(ctx.channel, ctx.data)
+      deliver(ctx.channel, ctx.data, ctx.info)
     })
 
     centrifuge = client
@@ -160,7 +185,7 @@ async function connect(): Promise<Centrifuge | null> {
   return connecting
 }
 
-function attachPresence(entry: ChannelEntry, sub: Subscription, channel: string): void {
+function attachPresence(entry: ChannelEntry, sub: Subscription): void {
   const refresh = async () => {
     if (entry.presenceHandlers.size === 0) return
     try {
@@ -214,8 +239,8 @@ async function ensureChannel(channel: string): Promise<ChannelEntry> {
       // on every token refresh, so losing access ends the subscription rather than freezing it.
       getToken: () => fetchSubscriptionToken(channel),
     })
-  sub.on('publication', (ctx: PublicationContext) => deliver(channel, ctx.data))
-  attachPresence(entry, sub, channel)
+  sub.on('publication', (ctx: PublicationContext) => deliver(channel, ctx.data, ctx.info))
+  attachPresence(entry, sub)
   entry.sub = sub
   sub.subscribe()
   return entry

@@ -84,10 +84,7 @@ function dbDepartmentRole(req: FastifyRequest, departmentId: string): 'head' | '
   return contextDepartmentRole(req.actor ?? null, departmentId) ?? 'member'
 }
 
-function personDisplayName(user: {
-  familyName: string | null
-  givenName: string | null
-}): string {
+function personDisplayName(user: { familyName: string | null; givenName: string | null }): string {
   return [user.familyName, user.givenName].filter(Boolean).join(' ').trim()
 }
 
@@ -549,10 +546,7 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
       })
       if (!audience) return reply.code(404).send({ code: 'not_found' })
       if (!audience.mayEdit) return reply.code(403).send({ code: 'forbidden' })
-      if (
-        req.body.baseVersion !== undefined &&
-        req.body.baseVersion !== audience.share.version
-      ) {
+      if (req.body.baseVersion !== undefined && req.body.baseVersion !== audience.share.version) {
         return reply.code(409).send({ code: 'stale_version', version: audience.share.version })
       }
 

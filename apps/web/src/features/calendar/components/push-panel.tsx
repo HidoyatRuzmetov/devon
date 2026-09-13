@@ -155,7 +155,9 @@ export function PushPanel(): React.JSX.Element {
       <div className="flex flex-wrap items-center gap-3">
         {push.enabledHere ? (
           <>
-            <Badge tone="success">
+            {/* `primary`, not `success` -- see `live-indicators.tsx`: "reminders are on" is a
+                configured state, and DESIGN.md §2.1 reserves green for success/approved/on-track. */}
+            <Badge tone="primary">
               <CheckCircle2 aria-hidden="true" className="size-3.5" />
               {t('calendar.push.state.on')}
             </Badge>
@@ -224,10 +226,7 @@ export function PushPanel(): React.JSX.Element {
           </h3>
           <ul className="flex flex-col gap-1.5">
             {REASONS.map(({ key, icon: Icon }) => (
-              <li
-                key={key}
-                className="flex items-center gap-2 text-body text-muted-foreground"
-              >
+              <li key={key} className="flex items-center gap-2 text-body text-muted-foreground">
                 <Icon aria-hidden="true" className="size-4 shrink-0" />
                 {t(`calendar.push.what.${key}`)}
               </li>
