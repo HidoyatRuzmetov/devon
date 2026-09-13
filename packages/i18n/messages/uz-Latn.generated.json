@@ -2688,7 +2688,7 @@
       "savedViews": "Saqlangan koʻrinishlar",
       "noSavedViews": "Saqlangan koʻrinishlar yoʻq",
       "me": "Men",
-      "addFilter": "+ Filtr",
+      "addFilter": "Filtr",
       "fieldStep": "Maydonni qidirish",
       "valueStep": "Qiymatni qidirish",
       "noOptions": "Hech narsa topilmadi",
@@ -2853,7 +2853,8 @@
       "atRisk": "Muddat yaqin",
       "rest": "Qolganlari",
       "emptyTitle": "Sizga biriktirilgan vazifalar yoʻq",
-      "emptyBody": "Sizga biriktirilgan vazifalar shu yerda koʻrinadi."
+      "emptyBody": "Sizga biriktirilgan vazifalar shu yerda koʻrinadi.",
+      "completed": "Bajarilgan"
     },
     "archive": {
       "emptyTitle": "Arxiv boʻsh",

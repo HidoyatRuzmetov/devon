@@ -5,7 +5,7 @@
 // tabs -- all of it still just the `?q=` search param, so a filter typed here survives switching
 // Board/Table/Timeline/Calendar/Mine and is exactly what "share this view" means.
 import * as React from 'react'
-import { Bookmark, Filter as FilterIcon, Save, Trash2 } from 'lucide-react'
+import { Bookmark, ChevronDown, Filter as FilterIcon, Save, Trash2 } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { Button, cn, Input, Popover, PopoverContent, PopoverTrigger, toast } from '@devon/ui'
 import { navigate, replaceSearchParam, useSearchParams } from '../../../lib/router.js'
@@ -96,13 +96,24 @@ export function FilterBar({ layout }: { layout: SavedViewLayout }) {
           </PopoverContent>
         </Popover>
 
-        <button
+        <Button
           type="button"
+          size="sm"
+          variant="ghost"
+          className="ml-auto"
+          aria-expanded={advanced}
+          aria-controls="work-filter-advanced"
           onClick={() => setAdvanced((v) => !v)}
-          className="ml-auto rounded-sm px-2 py-1 text-caption font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
         >
-          {advanced ? t('work.filter.hideAdvanced') : t('work.filter.showAdvanced')}
-        </button>
+          {t('work.filter.showAdvanced')}
+          <ChevronDown
+            className={cn(
+              'size-3.5 transition-transform duration-(--dur-micro)',
+              advanced && 'rotate-180',
+            )}
+            aria-hidden="true"
+          />
+        </Button>
       </div>
 
       {savedViews.length > 0 ? (
@@ -143,7 +154,10 @@ export function FilterBar({ layout }: { layout: SavedViewLayout }) {
       ) : null}
 
       {advanced ? (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border p-2">
+        <div
+          id="work-filter-advanced"
+          className="flex flex-wrap items-center gap-2 rounded-md border border-dashed border-border p-2"
+        >
           <FilterIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <Input
             value={text}

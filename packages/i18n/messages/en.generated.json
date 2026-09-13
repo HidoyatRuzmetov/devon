@@ -2688,7 +2688,7 @@
       "savedViews": "Saved views",
       "noSavedViews": "No saved views yet",
       "me": "Me",
-      "addFilter": "+ Filter",
+      "addFilter": "Filter",
       "fieldStep": "Search fields",
       "valueStep": "Search values",
       "noOptions": "Nothing found",
@@ -2853,7 +2853,8 @@
       "atRisk": "Due soon",
       "rest": "Everything else",
       "emptyTitle": "Nothing assigned to you",
-      "emptyBody": "Cards assigned to you will show up here."
+      "emptyBody": "Cards assigned to you will show up here.",
+      "completed": "Completed"
     },
     "archive": {
       "emptyTitle": "Archive is empty",
