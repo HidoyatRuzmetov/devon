@@ -983,7 +983,7 @@
     },
     "usage": {
       "empty": {
-        "title": "Hali AI chaqiruvlari yoʻq",
+        "title": "Hali AI ishlatilmagan",
         "body": "Boshqarmadan kimdir yordamchini ishlatgach, foydalanish shu yerda koʻrinadi."
       },
       "columns": {
@@ -1221,7 +1221,7 @@
       "quickAddParse": {
         "label": "Tezkor qoʻshish tahlili",
         "description": "Bir gapda yozilgan ishni nom, masʼul, muddat, muhimlik va yorliqlarga ajratadi. Bugungi sana beriladi, shuning uchun «ertaga» yoki «jumagacha» toʻgʻri kunga tushadi.",
-        "where": "Doska va shaxsiy ish joyidagi tezkor qoʻshish qatori.",
+        "where": "Doska va shaxsiy maydondagi tezkor qoʻshish qatori.",
         "example": "«Nodiraga choraklik hisobotni jumagacha tayinla, shoshilinch» → nom, masʼul Nodira Karimova, muddat 19-sentabr, shoshilinch."
       },
       "subtaskBreakdown": {

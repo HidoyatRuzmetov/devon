@@ -722,3 +722,20 @@ qilindi):
 
 Oldinroq shu tarzda tuzatilganlar: `таййор` → `тайёр` (`yy` + unli), `бйуджет` → `бюджет`,
 `муддациз` tipidagi soxta `ц` (qoʻshimcha chegarasidagi `t+s`).
+
+## Oxirgi izchillik tuzatishlari
+
+| modul | kalit | oldin | keyin | sabab |
+|---|---|---|---|---|
+| ai | `ai.usage.empty.title` | Hali AI chaqiruvlari yoʻq | Hali AI ishlatilmagan | «Chaqiruv» — dasturchi soʻzi; boʻsh holat odam qilgan ishni nomlaydi. |
+| ai | `ai.features.quickAddParse.where` | Doska va shaxsiy ish joyidagi tezkor qoʻshish qatori. | Doska va shaxsiy maydondagi tezkor qoʻshish qatori. | Shaxsiy boʻlim hamma joyda «shaxsiy maydon» deb ataldi. |
+
+## Nega hamma satr oʻzgarmadi
+
+Modul satrlarining 539 tasi (1791 dan) qayta yozildi. Qolganlari — `Saqlash`, `Yopish`, `Holat`,
+`Tadbirlar` kabi bir soʻzli yozuvlar va v1.1 da allaqachon tabiiy yozilgan jumlalar
+(`Hozircha hech kim javob bermadi`, `Kim nima olib keladi`, `Bot nomi hali koʻrsatilmagan.
+Buni tizim administratori qoʻshadi.`). Ularni faqat sanoq uchun oʻzgartirish matnni
+yaxshilamaydi, ekran suratlari va testlarni esa behuda buzadi — §2 ning «qisqalik — hurmat»
+qoidasi tahrirga ham tegishli. Har bir uzun (toʻrt soʻzdan ortiq) oʻzgarmagan satr alohida
+oʻqib chiqildi va shu sababdan qoldirildi.
