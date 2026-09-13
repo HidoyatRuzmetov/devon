@@ -1,8 +1,10 @@
 // The two small pieces of chrome that make the live layer visible (v1.1 SPEC §10, EPIC-018).
 //
-// SHARED PRIMITIVES (see this package's notes): both are consumed by `features/work`'s board today.
-// They live here because this package owns the realtime layer and its copy; the merge may promote
-// them to `packages/ui`.
+// Promoted here at the v1.1 integration: `features/calendar` built them, `features/work`'s board
+// header and the shared canvas both use them, and a component two features import is a `@devon/ui`
+// component by this repo's own convention (MODULE-GUIDE.md). They are presentational on purpose --
+// the transport lives in `apps/web/src/lib/realtime`, which this package must not reach into, so
+// the status and the member list arrive as props and the app binds them.
 //
 // Design rule both obey: **an indicator that cannot be trusted is worse than no indicator.** So
 // `LiveStatusPill` shows "off" as plainly as it shows "live" -- a deployment with no Centrifugo is
@@ -12,15 +14,23 @@
 // not a thing that needs a widget.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Avatar, Badge, initialsFromName, Tooltip, TooltipContent, TooltipTrigger } from '@devon/ui'
 import { Radio, WifiOff } from 'lucide-react'
-import {
-  useRealtimeStatus,
-  type PresenceMember,
-  type RealtimeStatus,
-} from '../../../lib/realtime/index.js'
+import { Avatar, initialsFromName } from '../primitives/avatar.js'
+import { Badge } from '../primitives/badge.js'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/tooltip.js'
 
-const STATUS_COPY: Record<RealtimeStatus, { label: string; hint: string } | null> = {
+/** Mirrors `apps/web/src/lib/realtime`'s `RealtimeStatus`; declared here so the package stays
+ *  transport-free. The app passes its own value straight in, and the two are held together by a
+ *  mutual-assignability assertion in `apps/web/src/lib/realtime/live-status-pill.tsx` -- the one
+ *  file where both types are visible -- so adding a state on either side is a typecheck error, not
+ *  a pill that silently renders nothing. Behaviour is covered by `./live-indicators.test.tsx`. */
+export type LiveStatus = 'idle' | 'off' | 'connecting' | 'connected' | 'error'
+
+/** The shape `PresenceAvatars` needs off a presence member; the app's own `PresenceMember` is a
+ *  superset of it. */
+export type PresenceMemberLike = { userId: string; name: string }
+
+const STATUS_COPY: Record<LiveStatus, { label: string; hint: string } | null> = {
   // `idle` is "we have not tried yet" -- a state with nothing honest to say, so it says nothing.
   idle: null,
   connecting: { label: 'realtime.status.connecting', hint: 'realtime.status.connectingHint' },
@@ -29,10 +39,19 @@ const STATUS_COPY: Record<RealtimeStatus, { label: string; hint: string } | null
   error: { label: 'realtime.status.error', hint: 'realtime.status.errorHint' },
 }
 
+export type LiveStatusPillProps = {
+  status: LiveStatus
+  /** `| undefined` explicitly: the repo runs `exactOptionalPropertyTypes`, and the app binding
+   *  forwards its own optional `className` straight through. */
+  className?: string | undefined
+}
+
 /** "Live" / "Live mode is off", with the reason on hover and focus. */
-export function LiveStatusPill({ className }: { className?: string }): React.JSX.Element | null {
+export function LiveStatusPill({
+  status,
+  className,
+}: LiveStatusPillProps): React.JSX.Element | null {
   const t = useT()
-  const status = useRealtimeStatus()
   const copy = STATUS_COPY[status]
   if (!copy) return null
 
@@ -64,10 +83,10 @@ export function LiveStatusPill({ className }: { className?: string }): React.JSX
 }
 
 export type PresenceAvatarsProps = {
-  members: PresenceMember[]
+  members: readonly PresenceMemberLike[]
   /** Beyond this many, the rest collapse into a "+N" chip. Four fits the board header at 390 px. */
-  max?: number
-  className?: string
+  max?: number | undefined
+  className?: string | undefined
 }
 
 /** Who else is looking at this screen right now. */

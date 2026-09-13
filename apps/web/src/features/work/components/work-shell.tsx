@@ -7,15 +7,22 @@ import { SlidersHorizontal } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import { RouterLink, useRoutePath, useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
-import { Collapsible, IconButton, PageHeader, SegmentedControl, cn } from '@devon/ui'
+import {
+  Collapsible,
+  IconButton,
+  PageHeader,
+  PresenceAvatars,
+  SegmentedControl,
+  cn,
+} from '@devon/ui'
 import { replaceSearchParam } from '../../../lib/router.js'
 import {
+  LiveStatusPill,
   useCardSignalSource,
   usePresence,
   useRealtimeChannels,
 } from '../../../lib/realtime/index.js'
 import { useMeQuery } from '../../../lib/session.js'
-import { LiveStatusPill, PresenceAvatars } from '../../calendar/components/live-indicators.js'
 import { useBoardQuery } from '../hooks.js'
 import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'

@@ -189,3 +189,14 @@ export {
   type ShortcutEntry,
   type ShortcutOverlayProps,
 } from './shell/shortcut-overlay.js'
+
+// --- realtime chrome -------------------------------------------------------------------------
+// Presentational only: the app owns the socket and passes the status and the member list in.
+export {
+  LiveStatusPill,
+  PresenceAvatars,
+  type LiveStatus,
+  type LiveStatusPillProps,
+  type PresenceMemberLike,
+  type PresenceAvatarsProps,
+} from './realtime/live-indicators.js'

@@ -13,7 +13,16 @@
 //     control that matters -- taking it back.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Badge, Button, Card, Dialog, DialogContent, StateView, toast } from '@devon/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogContent,
+  PresenceAvatars,
+  StateView,
+  toast,
+} from '@devon/ui'
 import { MousePointer2, Share2, Undo2 } from 'lucide-react'
 import { useMeQuery } from '../../../lib/session.js'
 import {
@@ -22,7 +31,6 @@ import {
   useRevokeCanvasShare,
 } from '../../../lib/realtime/canvas-hooks.js'
 import { usePresence } from '../../../lib/realtime/index.js'
-import { PresenceAvatars } from './live-indicators.js'
 import type { SharedCanvasSummary } from '../../../lib/realtime/canvas-api.js'
 
 /** A colleague's pointer, drawn over the shared canvas preview. */

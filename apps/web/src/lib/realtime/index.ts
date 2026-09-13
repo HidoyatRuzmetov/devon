@@ -34,3 +34,8 @@ export {
 } from './api.js'
 
 export { useCardSignalSource, useCardSignals, type CardSignal } from './signals-store.js'
+
+// The one piece of chrome that has to live beside the transport: `@devon/ui`'s `LiveStatusPill`
+// reads its status from a prop, and this is the layer that owns the socket. `PresenceAvatars` needs
+// no binding and is imported from `@devon/ui` directly.
+export { LiveStatusPill } from './live-status-pill.js'

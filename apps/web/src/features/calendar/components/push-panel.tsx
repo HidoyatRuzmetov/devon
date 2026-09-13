@@ -155,7 +155,7 @@ export function PushPanel(): React.JSX.Element {
       <div className="flex flex-wrap items-center gap-3">
         {push.enabledHere ? (
           <>
-            {/* `primary`, not `success` -- see `live-indicators.tsx`: "reminders are on" is a
+            {/* `primary`, not `success` -- see `@devon/ui`'s `realtime/live-indicators.tsx`: "reminders are on" is a
                 configured state, and DESIGN.md §2.1 reserves green for success/approved/on-track. */}
             <Badge tone="primary">
               <CheckCircle2 aria-hidden="true" className="size-3.5" />
