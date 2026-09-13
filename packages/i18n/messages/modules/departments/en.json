@@ -168,7 +168,8 @@
       "requestDeletionConfirm": "The super admin will review this request. This cannot be undone.",
       "deletionRequested": "Deletion requested",
       "typedConfirmLabel": "Type \"{name}\" to confirm",
-      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department head manages these."
+      "permissionsReadOnlyDescription": "What members may do on their own in your department. Your department head manages these.",
+      "readOnlyNotice": "Your department head manages these settings. You can see them, but not change them."
     },
     "switcher": {
       "label": "Switch department",

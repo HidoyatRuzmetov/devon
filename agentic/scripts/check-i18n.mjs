@@ -184,6 +184,11 @@ const successToneAllowlist = new Set([
   'apps/web/src/features/accounts/account-settings-screen.tsx',
   'apps/web/src/features/accounts/password-strength.tsx',
   'apps/web/src/features/admin/audit-screen.tsx',
+  // v1.1 critique SEV2 #26: the admin health snapshot now writes each check's state beside its dot
+  // (DESIGN.md §6 forbids colour as the only signal). `ok` -- "this dependency is healthy right now"
+  // -- is exactly the on-track meaning §2.1 reserves green for; the other three map to
+  // warning/destructive/warning, and an unconfigured backup is deliberately NOT neutral.
+  'apps/web/src/features/admin/dashboard-screen.tsx',
   'apps/web/src/features/ai/ai-settings-screen.tsx',
   'apps/web/src/features/departments/approval-queue-screen.tsx',
   'apps/web/src/features/departments/components/pending-request-view.tsx',

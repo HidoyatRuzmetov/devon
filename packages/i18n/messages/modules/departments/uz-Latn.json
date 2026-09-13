@@ -168,7 +168,8 @@
       "requestDeletionConfirm": "Super administrator soʻrovni koʻrib chiqadi. Bu amalni orqaga qaytarib boʻlmaydi.",
       "deletionRequested": "Oʻchirish soʻraldi",
       "typedConfirmLabel": "Tasdiqlash uchun \"{name}\" deb yozing",
-      "permissionsReadOnlyDescription": "Boshqarmangizda aʼzolar oʻzi bajara oladigan ishlar. Ularni boʻlim boshligʻi boshqaradi."
+      "permissionsReadOnlyDescription": "Boshqarmangizda aʼzolar oʻzi bajara oladigan ishlar. Ularni boʻlim boshligʻi boshqaradi.",
+      "readOnlyNotice": "Bu sozlamalarni boʻlim boshligʻi boshqaradi. Siz ularni koʻrasiz, lekin oʻzgartira olmaysiz."
     },
     "switcher": {
       "label": "Boʻlimni almashtirish",

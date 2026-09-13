@@ -131,6 +131,27 @@ export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['work', 'team',
  * as a sheet. Order matters: it is the order of a working day. */
 export const MOBILE_TAB_IDS: readonly string[] = ['home', 'work', 'personal', 'events', 'inbox']
 
+/**
+ * v1.1 critique SEV2 #28 -- "on a phone the head gets the member's app".
+ *
+ * The tab bar was identical for both roles, so nothing managerial was one tap away and "Shaxsiy"
+ * (the private personal workspace) outranked "Xodimlar jadvali" for a department head. That is the
+ * same complaint as CTO finding #2, applied to the one surface where there are only five slots: if
+ * the head's product is a different product, its five most-used areas are different too.
+ *
+ * Asosiy · Xodimlar · Yuklama · Vazifalar · Xabarlar. Shaxsiy is still one tap away behind ☰ -- a
+ * head has a personal workspace like everybody else, it is just not one of the five things they do
+ * most on a phone. A head whose department has the workload feature switched off simply gets the
+ * entry resolved away and the bar renders four tabs, which is what `mobileTabEntries` already does.
+ */
+export const MOBILE_TAB_IDS_HEAD: readonly string[] = [
+  'home',
+  'people-table',
+  'workload',
+  'work',
+  'inbox',
+]
+
 /** Shorter labels for those five tabs. A tab is about 78 px wide at 390 px, and "Bildirishnomalar"
  * is not 78 px of anything -- but the shell may not ellipsize (DESIGN.md §3.5), and that rule's own
  * prescription is "a shorter i18n key". These are those keys. The full name stays the tab's
@@ -141,10 +162,17 @@ export const MOBILE_TAB_SHORT_LABEL_KEYS: Readonly<Record<string, string>> = {
   personal: 'shell.nav.short.personal',
   events: 'shell.nav.short.events',
   inbox: 'shell.nav.short.inbox',
+  // SEV2 #28: two more fixed 390 px slots needing short keys. "Xodimlar jadvali" and "Yuklama" are
+  // the full names, and they stay as the tabs' accessible names (DESIGN.md §5).
+  'people-table': 'shell.nav.short.peopleTable',
+  workload: 'shell.nav.short.workload',
 }
 
-export function mobileTabEntries(visible: readonly NavEntry[]): NavEntry[] {
-  return MOBILE_TAB_IDS.map((id) => visible.find((entry) => entry.id === id)).filter(
-    (entry): entry is NavEntry => Boolean(entry),
-  )
+/** SEV2 #28: the head's five, or the member's five. `departmentRole` rather than `role`, because
+ * `Actor.role` is the instance role and is `member` for every real boshqarma boshligʻi (I-8b). */
+export function mobileTabEntries(visible: readonly NavEntry[], isHead = false): NavEntry[] {
+  const ids = isHead ? MOBILE_TAB_IDS_HEAD : MOBILE_TAB_IDS
+  return ids
+    .map((id) => visible.find((entry) => entry.id === id))
+    .filter((entry): entry is NavEntry => Boolean(entry))
 }

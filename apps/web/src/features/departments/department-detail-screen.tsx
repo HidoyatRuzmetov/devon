@@ -23,6 +23,7 @@ import {
   PageHeader,
   RadioGroup,
   RadioOption,
+  ReadOnlyStrip,
   Reveal,
   SectionCard,
   StateView,
@@ -33,7 +34,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { Copy, MoreVertical, RefreshCw } from 'lucide-react'
+import { Copy, Lock, MoreVertical, RefreshCw } from 'lucide-react'
 import { FEATURES, FEATURE_KEYS, type FeatureKey } from '@devon/contracts'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useDepartment } from '../../lib/session.js'
@@ -114,6 +115,15 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {/* v1.1 critique SEV2 #17: `/department` is the second deliberate own-data exception -- a
+          member sees their own department's settings rather than a locked door, because they have to
+          know whether self-assign is on. What was missing was the sentence saying so, in the same
+          shape `/work/workload` uses for the same reason. */}
+      {!isHead ? (
+        <ReadOnlyStrip icon={<Lock aria-hidden="true" className="size-4 shrink-0" />}>
+          {t('departments.settings.readOnlyNotice')}
+        </ReadOnlyStrip>
+      ) : null}
       {/* v1.1 critique SEV2 #16. A xodim was shown this card with the imperative "Aʼzolar nimani
           oʻzi bajara olishini belgilang" and nothing at all saying the toggles were read-only --
           while the Imkoniyatlar card directly below it did exactly the right thing ("Ularni boʻlim

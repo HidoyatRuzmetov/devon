@@ -42,7 +42,7 @@ import {
   toast,
   toastWithUndo,
 } from '@devon/ui'
-import { replaceSearchParam } from '../../../lib/router.js'
+import { navigate, replaceSearchParam } from '../../../lib/router.js'
 import { useDepartment } from '../../../lib/session.js'
 import { useLabelsQuery, useMembers } from '../../work/hooks.js'
 import {
@@ -393,19 +393,15 @@ export default function AutomationsScreen(): React.JSX.Element {
   // SPEC §2.2: a member has no business here, and the server agrees -- so they get the designed
   // no-permission state rather than an empty list or a raw 403.
   if (!isHead) {
+    // SEV2 #17: the /people/table treatment -- no page header pretending this screen is theirs,
+    // what it is, who to ask, and one alternative worth taking.
     return (
-      <div className="flex flex-col gap-4">
-        <PageHeader
-          eyebrow={t('automations.eyebrow')}
-          title={t('automations.title')}
-          description={t('automations.description')}
-        />
-        <StateView
-          kind="forbidden"
-          titleKey="automations.forbiddenTitle"
-          bodyKey="automations.forbiddenBody"
-        />
-      </div>
+      <StateView
+        kind="forbidden"
+        titleKey="state.denied.title"
+        bodyKey="automations.forbiddenBody"
+        action={{ labelKey: 'automations.forbiddenAction', onAction: () => navigate('/work') }}
+      />
     )
   }
 

@@ -147,6 +147,7 @@ export {
   type ErrorStateProps,
 } from './states/empty-state.js'
 export { OfflineBanner, type OfflineBannerProps } from './states/offline-banner.js'
+export { ReadOnlyStrip, type ReadOnlyStripProps } from './states/read-only-strip.js'
 
 // Open-licence illustration set, recoloured to tokens (DESIGN.md v2 §2.7).
 export * from './illustrations/index.js'

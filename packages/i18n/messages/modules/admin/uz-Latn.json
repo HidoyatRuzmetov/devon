@@ -37,7 +37,10 @@
         "checkHealthDesc": "Baza, navbat, xotira va boshqa xizmatlar holatini kuzating",
         "healthTitle": "Tizim holati",
         "healthSeeAll": "Barchasini koʻrish",
-        "healthUnavailable": "Hozircha tizim holati mavjud emas."
+        "healthUnavailable": "Hozircha tizim holati mavjud emas.",
+        "backupsUnconfigured": "Zaxira nusxalar sozlanmagan — bu instansiyada hech qanday zaxira olinmayapti.",
+        "backupsConfigure": "Sozlash",
+        "userCountBreakdown": "Boʻlimlar kesimida"
       },
       "departments": {
         "searchPlaceholder": "Boʻlim nomi boʻyicha qidirish",

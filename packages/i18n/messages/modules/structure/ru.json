@@ -98,7 +98,8 @@
       "searchPlaceholder": "Поиск сотрудника",
       "unassignedGroup": "Без отдела",
       "memberCard": {
-        "noUnit": "Отдел не указан"
+        "noUnit": "Отдел не указан",
+        "openActions": "{name} — открыть действия"
       },
       "filters": {
         "label": "Фильтр по отделу",
@@ -114,10 +115,12 @@
         "unit": "Отдел",
         "openBoardColumn": "Открыть колонку на доске",
         "filterByUnitAria": "Показать только «{unit}»",
-        "copyLink": "Скопировать ссылку",
+        "copyLink": "Ссылка",
         "copyLinkAria": "Скопировать ссылку на профиль {name}",
         "linkCopied": "Ссылка скопирована",
-        "openProfile": "Открыть профиль"
+        "openProfile": "Открыть профиль",
+        "assignTask": "Дать задачу",
+        "message": "Написать в Telegram"
       },
       "openTable": "Таблица показателей",
       "layout": {

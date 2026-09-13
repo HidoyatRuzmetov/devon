@@ -55,6 +55,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  ReadOnlyStrip,
   SectionCard,
   Skeleton,
   Stagger,
@@ -882,14 +883,14 @@ export default function WorkloadScreen(): React.JSX.Element {
           </div>
         }
       />
+      {/* v1.1 critique SEV2 #17. This screen is one of the two deliberate own-data exceptions: a
+          member sees their own row rather than a locked door, which is right. What it now shares
+          with the other one (/department) is the *shape* of the sentence that says so -- one strip,
+          one icon, one place, rather than a differently-styled note per screen. */}
       {!isHead ? (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-small text-muted-foreground"
-        >
-          <Users className="size-4 shrink-0" aria-hidden="true" />
+        <ReadOnlyStrip icon={<Users className="size-4 shrink-0" aria-hidden="true" />}>
           {t('work.workload.memberNotice')}
-        </p>
+        </ReadOnlyStrip>
       ) : null}
       {body}
     </div>

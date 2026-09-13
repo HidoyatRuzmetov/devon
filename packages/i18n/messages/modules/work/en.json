@@ -556,7 +556,7 @@
       "emptyTitle": "No goals set",
       "emptyBodyHead": "Set the first goal — progress is computed from the cards.",
       "forbiddenTitle": "This page is for the head of the department",
-      "forbiddenBody": "Only the head of the department sees and sets goals.",
+      "forbiddenBody": "Only the department head sees and sets goals. Ask your department head if you need access.",
       "edit": "Edit the goal {title}",
       "editTitle": "Edit goal",
       "save": "Save",
@@ -564,7 +564,8 @@
       "saveFailed": "Could not save the goal",
       "percentTarget": "(target: {target}%)",
       "capUsed": "{pct}% of the cap",
-      "overCap": "{over} over the cap"
+      "overCap": "{over} over the cap",
+      "forbiddenAction": "Open the board"
     }
   },
   "common": {

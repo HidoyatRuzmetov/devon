@@ -2,7 +2,7 @@
 // UI-OVERHAUL.md's Jakob row "People directory" (Slack members, Google Contacts): search first,
 // cards grid with avatar/title/unit chip, a hover card, filters by unit, distinct empty/no-results.
 import * as React from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import {
   Avatar,
@@ -33,6 +33,13 @@ import { fetchMembers, fetchUnitsOverview, type Member, type Unit } from './api.
 import { useMyDepartments } from './use-my-departments.js'
 import { DepartmentHeader } from './department-header.js'
 import { MemberCard, formalName, fullName } from './member-card.js'
+import { fetchPeopleContacts } from '../people/api.js'
+import { useCsrfToken } from '../people/hooks.js'
+import {
+  QuickAssignSheet,
+  type QuickAssignSubmit,
+} from '../people/components/quick-assign-sheet.js'
+import { createCard } from '../work/api.js'
 
 type Group = { unit: Unit | null; label: string; members: Member[] }
 
@@ -107,6 +114,59 @@ export default function PeopleScreen() {
     },
     [canSeeAnyPerson.allowed, session.user?.id],
   )
+  /**
+   * v1.1 critique SEV2 #15 -- "a member still cannot do anything with a colleague".
+   *
+   * SPEC §4.1 asks the directory for four actions on every card: a hover card, a Telegram deep link
+   * where the head's setting allows one, "open board column", and "assign a task ... for anyone,
+   * since any member may create a card for a colleague". The first and third existed. These are the
+   * other two.
+   *
+   * `QuickAssignSheet` is the people module's own composer, already used by the table's row action
+   * -- the same sheet, the same one-card-per-person rule, reached from the screen a xodim actually
+   * has. Telegram handles stay head-only (`GET /people/contacts`, PERMISSIONS-AUDIT §4.13): the
+   * query is gated on the same capability, so for a member it is never issued and the button simply
+   * is not there.
+   */
+  const csrf = useCsrfToken()
+  const queryClient = useQueryClient()
+  const canSeeContacts = useCan('people.table.read')
+  const [assignTarget, setAssignTarget] = React.useState<Member | null>(null)
+
+  const contactsQuery = useQuery({
+    queryKey: ['people', 'contacts', departmentId],
+    queryFn: fetchPeopleContacts,
+    enabled: departmentId !== null && canSeeContacts.allowed,
+  })
+  const telegramByUser = React.useMemo(() => {
+    const out = new Map<string, string>()
+    for (const contact of contactsQuery.data ?? []) {
+      if (contact.telegramDeepLink) out.set(contact.userId, contact.telegramDeepLink)
+    }
+    return out
+  }, [contactsQuery.data])
+
+  const assignMutation = useMutation({
+    mutationFn: (input: QuickAssignSubmit) =>
+      Promise.all(
+        input.assigneeUserIds.map((assigneeUserId) =>
+          createCard(
+            {
+              title: input.title,
+              assigneeUserId,
+              priority: input.priority,
+              dueAt: input.dueAt,
+              ...(input.estimateMin === null ? {} : { estimateMin: input.estimateMin }),
+            },
+            csrf,
+          ),
+        ),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['work', 'board'] })
+    },
+  })
+
   const [layout, setLayout] = React.useState<'cards' | 'table'>('cards')
   const highlightMemberId = search.get('member')
   const [highlightedId, setHighlightedId] = React.useState<string | null>(null)
@@ -336,6 +396,8 @@ export default function PeopleScreen() {
                 member={m}
                 unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
                 profileHref={profileHrefFor(m.userId)}
+                onAssign={m.userId === session.user?.id ? undefined : () => setAssignTarget(m)}
+                telegramDeepLink={telegramByUser.get(m.userId)}
               />
             </div>
           </StaggerItem>
@@ -372,6 +434,10 @@ export default function PeopleScreen() {
                       unit={group.unit}
                       onFilterByUnit={group.unit ? setUnitFilter : undefined}
                       profileHref={profileHrefFor(m.userId)}
+                      onAssign={
+                        m.userId === session.user?.id ? undefined : () => setAssignTarget(m)
+                      }
+                      telegramDeepLink={telegramByUser.get(m.userId)}
                     />
                   </div>
                 </StaggerItem>
@@ -444,6 +510,31 @@ export default function PeopleScreen() {
       ) : null}
 
       {body}
+
+      {/* SEV2 #15: the same composer the people table's row action opens -- one card per person,
+          with its own history, never a shared card. Any member may create one for a colleague. */}
+      <QuickAssignSheet
+        targets={
+          assignTarget
+            ? [
+                {
+                  userId: assignTarget.userId,
+                  givenName: assignTarget.givenName,
+                  familyName: assignTarget.familyName,
+                  title: assignTarget.title,
+                  avatarKey: assignTarget.avatarKey,
+                },
+              ]
+            : []
+        }
+        onOpenChange={(open) => {
+          if (!open) setAssignTarget(null)
+        }}
+        onSubmit={async (input) => {
+          await assignMutation.mutateAsync(input)
+        }}
+        pending={assignMutation.isPending}
+      />
     </div>
   )
 }

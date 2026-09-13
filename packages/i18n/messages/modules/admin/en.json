@@ -37,7 +37,10 @@
         "checkHealthDesc": "Watch the database, queue, storage and other services",
         "healthTitle": "System health",
         "healthSeeAll": "See all",
-        "healthUnavailable": "Health status is unavailable right now."
+        "healthUnavailable": "Health status is unavailable right now.",
+        "backupsUnconfigured": "Backups are not configured — nothing on this instance is being backed up.",
+        "backupsConfigure": "Configure",
+        "userCountBreakdown": "By department"
       },
       "departments": {
         "searchPlaceholder": "Search by department name",

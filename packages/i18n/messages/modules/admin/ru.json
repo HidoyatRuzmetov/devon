@@ -37,7 +37,10 @@
         "checkHealthDesc": "Следите за состоянием базы данных, очереди, хранилища и других служб",
         "healthTitle": "Состояние системы",
         "healthSeeAll": "Смотреть все",
-        "healthUnavailable": "Состояние системы сейчас недоступно."
+        "healthUnavailable": "Состояние системы сейчас недоступно.",
+        "backupsUnconfigured": "Резервные копии не настроены — на этом экземпляре ничего не копируется.",
+        "backupsConfigure": "Настроить",
+        "userCountBreakdown": "По управлениям"
       },
       "departments": {
         "searchPlaceholder": "Поиск по названию отдела",

@@ -466,11 +466,16 @@ export default function GoalsScreen(): React.JSX.Element {
 
   let body: React.ReactNode
   if (!isHead) {
+    // v1.1 critique SEV2 #17: four different shapes of no-permission across the head's screens.
+    // This is the /people/table treatment -- what the page is, who to ask, and exactly one
+    // alternative action worth taking -- applied here, where a member used to get a page header
+    // followed by an inline sentence and nowhere to go.
     body = (
       <StateView
         kind="forbidden"
-        titleKey="work.goals.forbiddenTitle"
+        titleKey="state.denied.title"
         bodyKey="work.goals.forbiddenBody"
+        action={{ labelKey: 'work.goals.forbiddenAction', onAction: () => navigate('/work') }}
       />
     )
   } else if (query.isPending) {

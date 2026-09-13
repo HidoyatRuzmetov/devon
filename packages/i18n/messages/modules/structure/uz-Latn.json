@@ -98,7 +98,8 @@
       "searchPlaceholder": "Xodimni qidirish",
       "unassignedGroup": "Boʻlimsiz",
       "memberCard": {
-        "noUnit": "Boʻlim belgilanmagan"
+        "noUnit": "Boʻlim belgilanmagan",
+        "openActions": "{name} — amallarni ochish"
       },
       "filters": {
         "label": "Boʻlim boʻyicha filtr",
@@ -114,10 +115,12 @@
         "unit": "Boʻlim",
         "openBoardColumn": "Doskadagi ustunini ochish",
         "filterByUnitAria": "Faqat «{unit}»ni koʻrsatish",
-        "copyLink": "Havolani nusxalash",
+        "copyLink": "Havola",
         "copyLinkAria": "{name} profiliga havolani nusxalash",
         "linkCopied": "Havola nusxalandi",
-        "openProfile": "Profilni ochish"
+        "openProfile": "Profilni ochish",
+        "assignTask": "Vazifa berish",
+        "message": "Telegramda yozish"
       },
       "openTable": "Koʻrsatkichlar jadvali",
       "layout": {

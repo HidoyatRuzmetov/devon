@@ -481,7 +481,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {!isDesktop && user ? (
         <BottomTabBar
-          entries={mobileTabEntries(visibleEntries)}
+          entries={mobileTabEntries(visibleEntries, department?.role === 'head')}
           activeRoute={route}
           linkAs={RouterLink}
           counts={counts}

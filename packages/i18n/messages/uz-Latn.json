@@ -17,7 +17,9 @@
         "work": "Vazifalar",
         "personal": "Shaxsiy",
         "events": "Tadbirlar",
-        "inbox": "Xabarlar"
+        "inbox": "Xabarlar",
+        "peopleTable": "Xodimlar",
+        "workload": "Yuklama"
       }
     },
     "skip": "Asosiy qismga oʻtish",

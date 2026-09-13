@@ -98,7 +98,8 @@
       "searchPlaceholder": "Ходимни қидириш",
       "unassignedGroup": "Бўлимсиз",
       "memberCard": {
-        "noUnit": "Бўлим белгиланмаган"
+        "noUnit": "Бўлим белгиланмаган",
+        "openActions": "{name} — амалларни очиш"
       },
       "filters": {
         "label": "Бўлим бўйича филтр",
@@ -114,10 +115,12 @@
         "unit": "Бўлим",
         "openBoardColumn": "Доскадаги устунини очиш",
         "filterByUnitAria": "Фақат «{unit}»ни кўрсатиш",
-        "copyLink": "Ҳаволани нусхалаш",
+        "copyLink": "Ҳавола",
         "copyLinkAria": "{name} профилига ҳаволани нусхалаш",
         "linkCopied": "Ҳавола нусхаланди",
-        "openProfile": "Профилни очиш"
+        "openProfile": "Профилни очиш",
+        "assignTask": "Вазифа бериш",
+        "message": "Телеграмда ёзиш"
       },
       "openTable": "Кўрсаткичлар жадвали",
       "layout": {

@@ -98,7 +98,8 @@
       "searchPlaceholder": "Search people",
       "unassignedGroup": "Unassigned",
       "memberCard": {
-        "noUnit": "No unit assigned"
+        "noUnit": "No unit assigned",
+        "openActions": "{name} — open actions"
       },
       "filters": {
         "label": "Filter by unit",
@@ -114,10 +115,12 @@
         "unit": "Unit",
         "openBoardColumn": "Open board column",
         "filterByUnitAria": "View only «{unit}»",
-        "copyLink": "Copy link",
+        "copyLink": "Link",
         "copyLinkAria": "Copy a link to {name}'s profile",
         "linkCopied": "Link copied",
-        "openProfile": "Open profile"
+        "openProfile": "Open profile",
+        "assignTask": "Assign a task",
+        "message": "Message on Telegram"
       },
       "openTable": "Indicator table",
       "layout": {

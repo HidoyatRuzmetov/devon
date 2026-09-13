@@ -17,7 +17,7 @@
     "emptyTitle": "No rules yet",
     "emptyBody": "Add the first one — for example, tell the head when a card goes overdue.",
     "forbiddenTitle": "This page is for the head of the department",
-    "forbiddenBody": "Only the head of the department configures automation rules.",
+    "forbiddenBody": "Only the department head sets up rules. Ask your department head if you need access.",
     "runsTitle": "Run log",
     "runsDescription": "Every run — with what it did, or why it was skipped.",
     "runsEmptyTitle": "Nothing has run yet",
@@ -124,6 +124,7 @@
       "previous": "Previous",
       "next": "Next",
       "of": "Page {page} of {pages}"
-    }
+    },
+    "forbiddenAction": "Open the board"
   }
 }

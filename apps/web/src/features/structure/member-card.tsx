@@ -16,7 +16,7 @@ import {
   initialsFromName,
   toast,
 } from '@devon/ui'
-import { IdCard, KanbanSquare, Link as LinkIcon, Users } from 'lucide-react'
+import { IdCard, KanbanSquare, Link as LinkIcon, Send, UserPlus, Users } from 'lucide-react'
 import { avatarUrl } from '../../lib/avatar.js'
 import { navigate } from '../../lib/router.js'
 import type { Member, Unit } from './api.js'
@@ -50,6 +50,8 @@ export function MemberCard({
   compact = false,
   onFilterByUnit,
   profileHref,
+  onAssign,
+  telegramDeepLink,
 }: {
   member: Member
   /** The bo'lim this member belongs to, when known -- surfaced only in the hover card's detail, never
@@ -70,6 +72,17 @@ export function MemberCard({
    * a xodim gets one only for their own row, because SPEC §2.2 gives members a directory, not each
    * other's pages. Omitted = the card stays a plain card, never a link that answers 403. */
   profileHref?: string | undefined
+  /**
+   * v1.1 critique SEV2 #15 -- SPEC §4.1's "assign a task, for anyone, since any member may create a
+   * card for a colleague". The directory was "a wall you cannot act on": only your own card was a
+   * link and the other 26 were plain divs. This is the action that makes a colleague's card do
+   * something for a xodim as well as for the head.
+   */
+  onAssign?: (() => void) | undefined
+  /** SEV2 #15: `tg://…` for a colleague who has linked Telegram, when the viewer is allowed to see
+   * it (`GET /people/contacts` is head-only -- a chat handle is a management fact, PERMISSIONS-AUDIT
+   * §4.13 -- so a member simply gets no button rather than a link that would 403). */
+  telegramDeepLink?: string | undefined
 }) {
   const t = useT()
   const Face = profileHref ? 'a' : 'div'
@@ -82,7 +95,16 @@ export function MemberCard({
           navigate(profileHref)
         },
       }
-    : {}
+    : // SEV2 #15: "make the card itself keyboard-focusable so the actions are reachable without a
+      // pointer". Radix opens a HoverCard on focus as well as on hover, but only if its trigger can
+      // take focus -- and a colleague's card was a plain `div`, so for a keyboard user the whole
+      // directory had no actions at all. `role="button"` is honest: pressing it opens the card that
+      // holds them, which is what a pointer hovering does.
+      {
+        tabIndex: 0,
+        role: 'button',
+        'aria-label': t('structure.people.memberCard.openActions', { name: fullName(member) }),
+      }
   const body = (
     <Face
       {...faceProps}
@@ -94,7 +116,7 @@ export function MemberCard({
             // `HoverCardTrigger asChild` injects onto this exact element) -- transform + shadow only,
             // and `motion-reduce:` (the Tailwind variant for `prefers-reduced-motion: reduce`) drops
             // just the travel, keeping the shadow step as the reduced-motion replacement.
-            'flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1 transition-[transform,box-shadow] duration-(--dur-micro) ease-out hover:-translate-y-0.5 hover:shadow-2 motion-reduce:hover:translate-y-0'
+            'flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1 transition-[transform,box-shadow] duration-(--dur-micro) ease-out hover:-translate-y-0.5 hover:shadow-2 motion-reduce:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
       }
     >
       <div className={compact ? 'contents' : 'flex items-center gap-3'}>
@@ -207,22 +229,26 @@ export function MemberCard({
             contact details out of surfaces like this), so the honest second action is a shareable
             deep link into this exact profile (`people-screen.tsx` reads `?member=` back out and
             scrolls/highlights the matching card), not a fabricated mailto/tg: link. */}
-        <div className="mt-3 flex gap-2">
+        {/* SEV2 #15: SPEC §4.1 asks for four things here and the card had two. "Vazifa berish" is
+            the one that matters most -- any member may create a card for a colleague, so the
+            directory is a perfectly good place to do it from -- and the Telegram deep link is real
+            when the viewer is allowed to have it. */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {profileHref ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              className="flex-1"
-              onClick={() => navigate(profileHref)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => navigate(profileHref)}>
               <IdCard className="size-4" aria-hidden="true" />
               {t('structure.people.hoverCard.openProfile')}
+            </Button>
+          ) : null}
+          {onAssign ? (
+            <Button variant="secondary" size="sm" onClick={onAssign}>
+              <UserPlus className="size-4" aria-hidden="true" />
+              {t('structure.people.hoverCard.assignTask')}
             </Button>
           ) : null}
           <Button
             variant="secondary"
             size="sm"
-            className="flex-1"
             onClick={() =>
               navigate(`/work?q=${encodeURIComponent(`assignee:"${member.givenName}"`)}`)
             }
@@ -230,6 +256,14 @@ export function MemberCard({
             <KanbanSquare className="size-4" aria-hidden="true" />
             {t('structure.people.hoverCard.openBoardColumn')}
           </Button>
+          {telegramDeepLink ? (
+            <Button asChild variant="secondary" size="sm">
+              <a href={telegramDeepLink} rel="noopener noreferrer">
+                <Send className="size-4" aria-hidden="true" />
+                {t('structure.people.hoverCard.message')}
+              </a>
+            </Button>
+          ) : null}
           <Button
             variant="secondary"
             size="sm"
@@ -242,6 +276,7 @@ export function MemberCard({
             }}
           >
             <LinkIcon className="size-4" aria-hidden="true" />
+            {t('structure.people.hoverCard.copyLink')}
           </Button>
         </div>
       </HoverCardContent>

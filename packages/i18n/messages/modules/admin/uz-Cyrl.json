@@ -37,7 +37,10 @@
         "checkHealthDesc": "База, навбат, хотира ва бошқа хизматлар ҳолатини кузатинг",
         "healthTitle": "Тизим ҳолати",
         "healthSeeAll": "Барчасини кўриш",
-        "healthUnavailable": "Ҳозирча тизим ҳолати мавжуд эмас."
+        "healthUnavailable": "Ҳозирча тизим ҳолати мавжуд эмас.",
+        "backupsUnconfigured": "Захира нусхалар созланмаган — бу инстансияда ҳеч қандай захира олинмаяпти.",
+        "backupsConfigure": "Созлаш",
+        "userCountBreakdown": "Бўлимлар кесимида"
       },
       "departments": {
         "searchPlaceholder": "Бўлим номи бўйича қидириш",

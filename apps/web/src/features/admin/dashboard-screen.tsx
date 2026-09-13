@@ -3,13 +3,27 @@
 // first (MODULE-GUIDE.md "Web features"), so this component now renders at `/admin` and the old
 // `AdminRoute`/`routes/admin.tsx` file is unreachable dead code left for a follow-up cleanup pass
 // (outside this module's own paths -- see this item's report).
-import type * as React from 'react'
+import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useT } from '@devon/i18n'
-import { DataList, DataRow, KpiTile, StateView } from '@devon/ui'
-import { Activity, Building2, ChevronRight, ClipboardCheck, Users } from 'lucide-react'
+import { formatNumber, useLocale, useT } from '@devon/i18n'
+import { Badge, Button, Collapsible, DataList, DataRow, StateView, cn } from '@devon/ui'
+import {
+  Activity,
+  AlertTriangle,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  ClipboardCheck,
+  Users,
+} from 'lucide-react'
 import { Link, navigate } from '../../lib/router.js'
-import { fetchAdminHealth, fetchAdminInstanceDetail, fetchMaintenance } from './api.js'
+import { fetchAllRequests } from '../departments/api.js'
+import {
+  fetchAdminDepartments,
+  fetchAdminHealth,
+  fetchAdminInstanceDetail,
+  fetchMaintenance,
+} from './api.js'
 import { AdminScreen } from './admin-screen.js'
 import { StatTile, StatusDot } from './charts.js'
 
@@ -49,6 +63,27 @@ const HEALTH_ROWS = [
   { key: 'backups', labelKey: 'admin.console.health.backups' },
 ] as const
 
+/** SEV2 #26: which status is a problem the super admin has to do something about. A grey
+ * "not_configured" backup on a government instance is not neutral information. */
+const STATUS_TONE: Record<
+  'ok' | 'degraded' | 'down' | 'not_configured',
+  'success' | 'warning' | 'destructive' | 'neutral'
+> = {
+  ok: 'success',
+  degraded: 'warning',
+  down: 'destructive',
+  not_configured: 'warning',
+}
+
+/**
+ * v1.1 critique SEV2 #26 -- "'Tizim holati' still conveys status by colour alone: six bare dots with
+ * no text label and no legend, which DESIGN.md §6 explicitly forbids."
+ *
+ * Every dot now has its state written next to it, so the grid is readable with the colour removed
+ * entirely -- which is the actual test §6 is asking for. "Zaxira nusxalar" being unconfigured is
+ * rendered as a warning with a link to configure it rather than as a neutral grey dot: no backups on
+ * a government instance is the single most important thing this card can say.
+ */
 function HealthSnapshot() {
   const t = useT()
   const query = useQuery({ queryKey: ['admin', 'health'], queryFn: fetchAdminHealth })
@@ -74,25 +109,138 @@ function HealthSnapshot() {
         </p>
       )
     }
+    const backups = query.data['backups']
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {HEALTH_ROWS.map((row) => (
-          <div key={row.key} className="flex items-center gap-2">
-            <StatusDot status={query.data[row.key].status} />
-            <span className="truncate text-small text-foreground">{t(row.labelKey)}</span>
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {HEALTH_ROWS.map((row) => {
+            const status = query.data[row.key].status
+            return (
+              <div key={row.key} className="flex min-w-0 items-center gap-2">
+                <StatusDot status={status} />
+                <span className="min-w-0 flex-1 truncate text-small text-foreground">
+                  {t(row.labelKey)}
+                </span>
+                {/* SEV2 #26: the state in words, beside the dot. Not a legend somewhere else on the
+                    page -- the label a person needs is the one next to the thing. */}
+                <Badge variant="subtle" tone={STATUS_TONE[status]} className="shrink-0">
+                  {t(`admin.console.health.status.${status}`)}
+                </Badge>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* SEV2 #26: an unconfigured backup is a warning with somewhere to go, not a grey dot. */}
+        {backups && backups.status === 'not_configured' ? (
+          <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2">
+            <AlertTriangle aria-hidden="true" className="size-4 shrink-0 text-warning" />
+            <span className="min-w-0 flex-1 text-small text-foreground">
+              {t('admin.console.dashboard.backupsUnconfigured')}
+            </span>
+            <Button asChild variant="secondary" size="sm">
+              <Link to="/admin/health">{t('admin.console.dashboard.backupsConfigure')}</Link>
+            </Button>
           </div>
-        ))}
+        ) : null}
       </div>
     )
   }
 }
 
+/**
+ * v1.1 critique SEV2 #26 -- "'FOYDALANUVCHILAR SONI 62' has no breakdown by department".
+ *
+ * A super admin's one instance-wide number, with the thing it is made of one click away. The
+ * department list is already an endpoint this console owns; nothing new is computed here.
+ */
+function UserCountTile({ total }: { total: number }): React.JSX.Element {
+  const t = useT()
+  const locale = useLocale()
+  const [open, setOpen] = React.useState(false)
+  const departments = useQuery({
+    queryKey: ['admin', 'departments', 'breakdown'],
+    queryFn: () => fetchAdminDepartments({}),
+    // Only fetched once the super admin actually asks for the breakdown.
+    enabled: open,
+  })
+
+  const rows = [...(departments.data?.departments ?? [])].sort(
+    (a, b) => b.memberCount - a.memberCount,
+  )
+
+  // A plain if/else rather than a nested ternary: `check-i18n.mjs`'s hard-coded-text heuristic reads
+  // the `>...<` at a ternary branch point as JSX copy (the same workaround `people-screen.tsx` and
+  // `filter-clause-chips.ts` document).
+  function renderBreakdown(): React.ReactNode {
+    if (departments.isPending) {
+      return <p className="text-caption text-muted-foreground">{t('state.loading')}</p>
+    }
+    if (departments.isError) {
+      return (
+        <p className="text-caption text-muted-foreground">
+          {t('admin.console.dashboard.healthUnavailable')}
+        </p>
+      )
+    }
+    return (
+      <ul className="flex flex-col gap-1">
+        {rows.map((department) => (
+          <li key={department.id} className="flex items-baseline justify-between gap-2">
+            <span className="min-w-0 truncate text-small text-foreground">{department.name}</span>
+            <span className="shrink-0 text-small tabular-nums text-muted-foreground">
+              {formatNumber(department.memberCount, locale)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
+      <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+        {t('admin.console.dashboard.userCount')}
+      </p>
+      <p className="text-h2 font-semibold tabular-nums text-foreground">
+        {formatNumber(total, locale)}
+      </p>
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center gap-1 self-start rounded-sm text-small text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <ChevronDown
+          aria-hidden="true"
+          className={cn(
+            'size-4 transition-transform duration-(--dur-micro) ease-(--ease-standard)',
+            open && 'rotate-180',
+          )}
+        />
+        {t('admin.console.dashboard.userCountBreakdown')}
+      </button>
+      <Collapsible open={open}>
+        <div className="pt-2">{renderBreakdown()}</div>
+      </Collapsible>
+    </div>
+  )
+}
+
 function DashboardBody() {
   const t = useT()
+  const locale = useLocale()
   const instanceQuery = useQuery({
     queryKey: ['admin', 'instance'],
     queryFn: fetchAdminInstanceDetail,
   })
+  // SEV2 #26: how many department requests are actually waiting. A count that is wrong is worse than
+  // no count, so a failed fetch simply shows none rather than a guess.
+  const pendingQuery = useQuery({
+    queryKey: ['departments', 'requests', 'pending'],
+    queryFn: () => fetchAllRequests('pending'),
+  })
+  const pendingRequests = pendingQuery.data?.requests.length ?? 0
   const maintenanceQuery = useQuery({
     queryKey: ['admin', 'maintenance'],
     queryFn: fetchMaintenance,
@@ -121,7 +269,7 @@ function DashboardBody() {
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <KpiTile label={t('admin.console.dashboard.userCount')} value={instance.userCount} />
+        <UserCountTile total={instance.userCount} />
         <StatTile
           label={t('admin.console.dashboard.registration')}
           value={t(
@@ -153,7 +301,15 @@ function DashboardBody() {
               onClick={() => navigate(link.to)}
               leading={<link.icon className="size-5 text-muted-foreground" aria-hidden="true" />}
               trailing={
-                <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                <span className="flex items-center gap-2">
+                  {/* SEV2 #26: "Boʻlim soʻrovlari -- the super admin's main job -- has no
+                      pending-count badge". It is the one row on this screen that is ever waiting for
+                      somebody, so it is the one row that says so. */}
+                  {link.to === '/departments/requests' && pendingRequests > 0 ? (
+                    <Badge tone="attention">{formatNumber(pendingRequests, locale)}</Badge>
+                  ) : null}
+                  <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                </span>
               }
             >
               <div className="min-w-0">
