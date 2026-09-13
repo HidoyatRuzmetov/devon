@@ -627,6 +627,32 @@
       ],
       "value": "H",
       "complexity": "H"
+    },
+    {
+      "id": "EPIC-021",
+      "title": "Window the people board horizontally: render only the columns intersecting the scroll port",
+      "status": "proposed",
+      "priority": 120,
+      "phase": 2,
+      "area": "web",
+      "depends_on": [],
+      "plan_ref": "agentic/ledger/v11/2026-09-12T21-40-00-05-00/delight/verdict.md F9",
+      "personas": [
+        "member",
+        "head"
+      ],
+      "outcomes": [
+        "Scrolling sideways across the people board holds 60 fps at ordinary demo scale (39 tiles over 16 columns): median frame under 16.7 ms, measured the way the motion verdict measured 29.2 ms"
+      ],
+      "has_ui": true,
+      "class_hint": "B",
+      "evidence": [
+        "agentic/ledger/v11/2026-09-12T21-40-00-05-00/delight/verdict.md §F9",
+        "agentic/ledger/v11/2026-09-12T21-40-00-05-00/delight/motion-audit.md"
+      ],
+      "value": "M",
+      "complexity": "M",
+      "note": "Motion verdict F9, filed rather than fixed in the delight pass because it is structural, not a motion edit. Measured on /work as xodim with 39 tiles over 16 columns: median frame 29.2 ms, p95 37.3 ms, 46 of 70 frames over budget. The audit isolation runs already proved the cost is rasterising newly revealed columns rather than any animation, and that removing every ticking count changes nothing. Fix: render only the columns intersecting the scroll port plus one either side. The columns are fixed-width, so an IntersectionObserver on each column header is enough and no measurement pass is needed. apps/web/src/features/work/components/board-screen.tsx."
     }
   ]
 }

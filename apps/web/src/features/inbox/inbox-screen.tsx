@@ -138,6 +138,49 @@ function useListKeyboardNav({
   }, [items, selectedIndex, setSelectedIndex, onOpen, onArchive])
 }
 
+/** Motion verdict F5. A tab click cost a 499 ms long task followed by a 238 ms one, and the
+ * re-stagger it should have played started after half a second of frozen UI. The cost was
+ * re-rendering ~30 notification rows; this is the half of the fix that stops that happening on every
+ * parent render.
+ *
+ * The inline `() => onOpen(notification, index)` closures the rows used to be handed were rebuilt on
+ * every render, so a plain `React.memo` around `NotificationRow` would never have held. They are
+ * built *inside* this component instead, from props that are genuinely stable: the parent's handlers
+ * are `useCallback`s and `notification` is the object react-query already keeps identical between
+ * refetches, so the default shallow comparison is exactly right and needs no hand-written
+ * `areEqual`. */
+const InboxRow = React.memo(function InboxRow({
+  notification,
+  index,
+  selected,
+  showReasonChip,
+  onOpen,
+  onArchive,
+  onQuickAction,
+  onSnooze,
+}: {
+  notification: NotificationDto
+  index: number
+  selected: boolean
+  showReasonChip?: boolean
+  onOpen: (notification: NotificationDto, index: number) => void
+  onArchive: (id: string) => void
+  onQuickAction: (notification: NotificationDto) => void
+  onSnooze: (id: string, minutes: number) => void
+}) {
+  return (
+    <NotificationRow
+      notification={notification}
+      selected={selected}
+      {...(showReasonChip === undefined ? {} : { showReasonChip })}
+      onOpen={() => onOpen(notification, index)}
+      onQuickAction={() => onQuickAction(notification)}
+      onArchive={() => onArchive(notification.id)}
+      onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+    />
+  )
+})
+
 function InboxList({
   items,
   selectedIndex,
@@ -168,13 +211,14 @@ function InboxList({
     >
       {items.map((notification, index) => (
         <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-          <NotificationRow
+          <InboxRow
             notification={notification}
+            index={index}
             selected={index === selectedIndex}
-            onOpen={() => onOpen(notification, index)}
-            onQuickAction={() => onQuickAction(notification)}
-            onArchive={() => onArchive(notification.id)}
-            onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+            onOpen={onOpen}
+            onQuickAction={onQuickAction}
+            onArchive={onArchive}
+            onSnooze={onSnooze}
           />
         </StaggerItem>
       ))}
@@ -225,14 +269,15 @@ function GroupedInboxList({
             >
               {group.map((notification) => (
                 <StaggerItem key={notification.id} as="li" exit="hidden" layout>
-                  <NotificationRow
+                  <InboxRow
                     notification={notification}
+                    index={indexOf.get(notification.id) ?? 0}
                     selected={indexOf.get(notification.id) === selectedIndex}
                     showReasonChip={false}
-                    onOpen={() => onOpen(notification, indexOf.get(notification.id) ?? 0)}
-                    onQuickAction={() => onQuickAction(notification)}
-                    onArchive={() => onArchive(notification.id)}
-                    onSnooze={(minutes) => onSnooze(notification.id, minutes)}
+                    onOpen={onOpen}
+                    onQuickAction={onQuickAction}
+                    onArchive={onArchive}
+                    onSnooze={onSnooze}
                   />
                 </StaggerItem>
               ))}
@@ -341,7 +386,18 @@ export default function InboxScreen() {
     if (settled && meQuery.data === null) navigate('/login')
   }, [forced, settled, meQuery.data])
 
-  const notificationsQuery = useNotificationsQuery(status)
+  // Motion verdict F5: all three tab lists stay mounted and the inactive two are hidden, so
+  // Barchasi -> Oʻqilmagan is a visibility change rather than an unmount of thirty rows and a mount
+  // of thirty more. Only the tab in view polls (`useNotificationsQuery`'s `active`).
+  const inboxQuery = useNotificationsQuery('inbox', status === 'inbox')
+  const unreadQuery = useNotificationsQuery('unread', status === 'unread')
+  const archivedQuery = useNotificationsQuery('archived', status === 'archived')
+  const queryByStatus: Record<InboxStatus, ReturnType<typeof useNotificationsQuery>> = {
+    inbox: inboxQuery,
+    unread: unreadQuery,
+    archived: archivedQuery,
+  }
+  const notificationsQuery = queryByStatus[status]
   const markRead = useMarkReadMutation()
   const markAllRead = useMarkAllReadMutation()
   const snooze = useSnoozeMutation()
@@ -373,34 +429,48 @@ export default function InboxScreen() {
     setOpenId(null)
   }, [status])
 
-  function handleOpen(notification: NotificationDto, index: number) {
-    setOpenId(notification.id)
-    setSelectedIndex(index)
-    if (notification.readAt === null) markRead.mutate([notification.id])
-  }
+  // Stable identities, so `InboxRow`'s `React.memo` actually holds and a parent re-render does not
+  // re-render thirty rows (motion verdict F5).
+  const handleOpen = React.useCallback(
+    (notification: NotificationDto, index: number) => {
+      setOpenId(notification.id)
+      setSelectedIndex(index)
+      if (notification.readAt === null) markRead.mutate([notification.id])
+    },
+    [markRead],
+  )
 
-  function handleQuickAction(notification: NotificationDto) {
-    if (notification.readAt === null) markRead.mutate([notification.id])
-    if (notification.deepLink) navigate(notification.deepLink)
-  }
+  const handleQuickAction = React.useCallback(
+    (notification: NotificationDto) => {
+      if (notification.readAt === null) markRead.mutate([notification.id])
+      if (notification.deepLink) navigate(notification.deepLink)
+    },
+    [markRead],
+  )
 
-  function handleArchive(id: string) {
-    if (openId === id) setOpenId(null)
-    const { cancel } = archiveUndoable([id])
-    toastWithUndo({
-      message: t('inbox.row.archived'),
-      undoLabel: t('action.undo'),
-      onUndo: cancel,
-    })
-  }
+  const handleArchive = React.useCallback(
+    (id: string) => {
+      setOpenId((current) => (current === id ? null : current))
+      const { cancel } = archiveUndoable([id])
+      toastWithUndo({
+        message: t('inbox.row.archived'),
+        undoLabel: t('action.undo'),
+        onUndo: cancel,
+      })
+    },
+    [archiveUndoable, t],
+  )
+
+  const handleSnooze = React.useCallback(
+    (id: string, minutes: number) => {
+      snooze.mutate({ id, minutes })
+      toast(t('inbox.row.snoozed'))
+    },
+    [snooze, t],
+  )
 
   function handleArchiveNow(id: string) {
     archiveNow.mutate([id])
-  }
-
-  function handleSnooze(id: string, minutes: number) {
-    snooze.mutate({ id, minutes })
-    toast(t('inbox.row.snoozed'))
   }
 
   async function handleCopyCalendar() {
@@ -497,17 +567,34 @@ export default function InboxScreen() {
           only an 80px bordered box below it (item handoff) -- widening the list a little and letting
           the detail pane take the rest evens that out. */}
       <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
-        <InboxBody
-          query={notificationsQuery}
-          status={status}
-          grouped={grouped}
-          selectedIndex={selectedIndex}
-          onOpen={handleOpen}
-          onArchive={handleArchive}
-          onQuickAction={handleQuickAction}
-          onSnooze={handleSnooze}
-          zeroCelebrate={zeroCelebrate}
-        />
+        <div className="min-w-0">
+          {TABS.map((tab) => (
+            <div
+              key={tab}
+              hidden={tab !== status}
+              // The list itself no longer re-staggers on a tab switch (it never unmounts), so the
+              // "a different tab is a different list" arrival DESIGN.md §10 asks for is carried by
+              // one composited entrance on the panel instead of thirty. Adding the class is what
+              // restarts the keyframe, and the reduced-motion backstop collapses it to instant.
+              className={cn(
+                'min-w-0',
+                tab === status && 'animate-[devon-rise-in_220ms_var(--ease-out)]',
+              )}
+            >
+              <InboxBody
+                query={queryByStatus[tab]}
+                status={tab}
+                grouped={grouped}
+                selectedIndex={selectedIndex}
+                onOpen={handleOpen}
+                onArchive={handleArchive}
+                onQuickAction={handleQuickAction}
+                onSnooze={handleSnooze}
+                {...(tab === 'inbox' ? { zeroCelebrate } : {})}
+              />
+            </div>
+          ))}
+        </div>
 
         {/* The right pane of the split at >=768; a bottom sheet carries the same content below that
             (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so

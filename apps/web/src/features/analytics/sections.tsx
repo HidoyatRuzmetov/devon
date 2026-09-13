@@ -159,7 +159,7 @@ export function KpiOverviewRow({ summary }: { summary: AnalyticsSummary }) {
   )
 }
 
-export function ThroughputSection({
+const ThroughputSectionImpl = function ThroughputSection({
   summary,
   query,
   pinnedKeys,
@@ -170,7 +170,12 @@ export function ThroughputSection({
   const locale = useLocale()
   const animate = useChartAnimation()
   const weekLabel = useWeekLabel()
-  const data = summary.throughput.map((p: WeekPoint) => ({ ...p, label: weekLabel(p.weekStart) }))
+  // Motion verdict F7: the chart's own rows are derived once per summary, not once per parent
+  // render, so a KPI state settle (or a pin toggle) cannot re-run fourteen of these.
+  const data = React.useMemo(
+    () => summary.throughput.map((p: WeekPoint) => ({ ...p, label: weekLabel(p.weekStart) })),
+    [summary.throughput, weekLabel],
+  )
 
   return (
     <ChartCard
@@ -217,7 +222,7 @@ export function ThroughputSection({
   )
 }
 
-export function OnTimeRateSection({
+const OnTimeRateSectionImpl = function OnTimeRateSection({
   summary,
   query,
   pinnedKeys,
@@ -227,11 +232,15 @@ export function OnTimeRateSection({
   const t = useT()
   const animate = useChartAnimation()
   const weekLabel = useWeekLabel()
-  const data = summary.onTimeRate.series.map((p: OnTimePoint) => ({
-    ...p,
-    label: weekLabel(p.weekStart),
-    rate: p.dueCount > 0 ? Math.round((p.onTimeCount / p.dueCount) * 100) : null,
-  }))
+  const data = React.useMemo(
+    () =>
+      summary.onTimeRate.series.map((p: OnTimePoint) => ({
+        ...p,
+        label: weekLabel(p.weekStart),
+        rate: p.dueCount > 0 ? Math.round((p.onTimeCount / p.dueCount) * 100) : null,
+      })),
+    [summary.onTimeRate.series, weekLabel],
+  )
   const overallPercent =
     summary.onTimeRate.overall === null ? null : Math.round(summary.onTimeRate.overall * 100)
   // The subtitle's own denominator, summed from the very series the chart draws -- so the sentence
@@ -293,7 +302,7 @@ export function OnTimeRateSection({
   )
 }
 
-export function OpenVsOverdueSection({
+const OpenVsOverdueSectionImpl = function OpenVsOverdueSection({
   summary,
   query,
   pinnedKeys,
@@ -304,10 +313,14 @@ export function OpenVsOverdueSection({
   const locale = useLocale()
   const animate = useChartAnimation()
   const weekLabel = useWeekLabel()
-  const data = summary.openVsOverdue.map((p: OpenOverduePoint) => ({
-    ...p,
-    label: weekLabel(p.weekStart),
-  }))
+  const data = React.useMemo(
+    () =>
+      summary.openVsOverdue.map((p: OpenOverduePoint) => ({
+        ...p,
+        label: weekLabel(p.weekStart),
+      })),
+    [summary.openVsOverdue, weekLabel],
+  )
 
   return (
     <ChartCard
@@ -372,7 +385,7 @@ export function OpenVsOverdueSection({
   )
 }
 
-export function LoadPerPersonSection({
+const LoadPerPersonSectionImpl = function LoadPerPersonSection({
   summary,
   query,
   pinnedKeys,
@@ -382,9 +395,13 @@ export function LoadPerPersonSection({
   const t = useT()
   const locale = useLocale()
   const animate = useChartAnimation()
-  const data = [...summary.loadPerPerson]
-    .sort((a: PersonLoad, b: PersonLoad) => b.openCount - a.openCount)
-    .slice(0, 12)
+  const data = React.useMemo(
+    () =>
+      [...summary.loadPerPerson]
+        .sort((a: PersonLoad, b: PersonLoad) => b.openCount - a.openCount)
+        .slice(0, 12),
+    [summary.loadPerPerson],
+  )
 
   return (
     <ChartCard
@@ -452,7 +469,7 @@ export function LoadPerPersonSection({
   )
 }
 
-export function LoadPerUnitSection({
+const LoadPerUnitSectionImpl = function LoadPerUnitSection({
   summary,
   query,
   pinnedKeys,
@@ -462,10 +479,14 @@ export function LoadPerUnitSection({
   const t = useT()
   const locale = useLocale()
   const animate = useChartAnimation()
-  const data = summary.loadPerUnit.map((u: UnitLoad) => ({
-    ...u,
-    name: u.unitName ?? t('analytics.legend.unassigned'),
-  }))
+  const data = React.useMemo(
+    () =>
+      summary.loadPerUnit.map((u: UnitLoad) => ({
+        ...u,
+        name: u.unitName ?? t('analytics.legend.unassigned'),
+      })),
+    [summary.loadPerUnit, t],
+  )
 
   return (
     <ChartCard
@@ -529,7 +550,7 @@ export function LoadPerUnitSection({
   )
 }
 
-export function ProjectProgressSection({
+const ProjectProgressSectionImpl = function ProjectProgressSection({
   summary,
   query,
   pinnedKeys,
@@ -538,10 +559,14 @@ export function ProjectProgressSection({
 }: SectionProps) {
   const t = useT()
   const animate = useChartAnimation()
-  const data = summary.projectProgress.map((p: ProjectProgress) => ({
-    ...p,
-    percent: Math.round(p.progress * 100),
-  }))
+  const data = React.useMemo(
+    () =>
+      summary.projectProgress.map((p: ProjectProgress) => ({
+        ...p,
+        percent: Math.round(p.progress * 100),
+      })),
+    [summary.projectProgress],
+  )
 
   return (
     <ChartCard
@@ -601,7 +626,7 @@ export function ProjectProgressSection({
   )
 }
 
-export function EventsParticipationSection({
+const EventsParticipationSectionImpl = function EventsParticipationSection({
   summary,
   query,
   pinnedKeys,
@@ -703,7 +728,7 @@ export function EventsParticipationSection({
   )
 }
 
-export function PollTurnoutSection({
+const PollTurnoutSectionImpl = function PollTurnoutSection({
   summary,
   query,
   pinnedKeys,
@@ -712,10 +737,14 @@ export function PollTurnoutSection({
 }: SectionProps) {
   const t = useT()
   const animate = useChartAnimation()
-  const data = summary.pollTurnout.map((p: PollTurnout) => ({
-    ...p,
-    percent: Math.round(p.turnoutRate * 100),
-  }))
+  const data = React.useMemo(
+    () =>
+      summary.pollTurnout.map((p: PollTurnout) => ({
+        ...p,
+        percent: Math.round(p.turnoutRate * 100),
+      })),
+    [summary.pollTurnout],
+  )
 
   return (
     <ChartCard
@@ -774,7 +803,7 @@ export function PollTurnoutSection({
   )
 }
 
-export function PersonalStatsSection({
+const PersonalStatsSectionImpl = function PersonalStatsSection({
   summary,
   query,
   pinnedKeys,
@@ -829,3 +858,19 @@ export function PersonalStatsSection({
     </ChartCard>
   )
 }
+
+/* Motion verdict F7. Changing the range produced an 838 ms long task: ten `NumberFlow` counters and
+ * fourteen Recharts surfaces all re-rendered synchronously, so neither of the catalogue's two
+ * animations for this moment -- the skeleton -> chart crossfade and the draw-in replayed on the range
+ * key -- ever got a frame. Each section is memoised on the props it is actually given
+ * (`analytics-screen.tsx` builds that object in a `useMemo` of its own), so a KPI settling, a pin
+ * toggling or the Ask panel answering re-renders one card rather than all fourteen. */
+export const ThroughputSection = React.memo(ThroughputSectionImpl)
+export const OnTimeRateSection = React.memo(OnTimeRateSectionImpl)
+export const OpenVsOverdueSection = React.memo(OpenVsOverdueSectionImpl)
+export const LoadPerPersonSection = React.memo(LoadPerPersonSectionImpl)
+export const LoadPerUnitSection = React.memo(LoadPerUnitSectionImpl)
+export const ProjectProgressSection = React.memo(ProjectProgressSectionImpl)
+export const EventsParticipationSection = React.memo(EventsParticipationSectionImpl)
+export const PollTurnoutSection = React.memo(PollTurnoutSectionImpl)
+export const PersonalStatsSection = React.memo(PersonalStatsSectionImpl)

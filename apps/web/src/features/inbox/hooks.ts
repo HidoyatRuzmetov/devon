@@ -46,12 +46,18 @@ function useCsrfToken(): string | null {
 
 // --- Inbox list ------------------------------------------------------------------------------------
 
-export function useNotificationsQuery(status: InboxStatus) {
+/** `active` is false for the two inbox tabs that are mounted but hidden (motion verdict F5: a tab
+ * switch has to be a visibility change, not a 30-row unmount/remount). They still fetch once and
+ * stay cached -- every mutation on this screen invalidates the whole `['inbox','notifications']`
+ * prefix anyway -- but only the tab a person is actually looking at keeps polling, so three mounted
+ * lists are still one poll per minute. */
+export function useNotificationsQuery(status: InboxStatus, active = true) {
   return useQuery({
     queryKey: ['inbox', 'notifications', status],
     queryFn: () => fetchNotifications(status),
     staleTime: 15_000,
-    refetchInterval: 60_000, // a lightweight poll -- there is no realtime push transport in this epic
+    // a lightweight poll -- there is no realtime push transport in this epic
+    refetchInterval: active ? 60_000 : false,
   })
 }
 

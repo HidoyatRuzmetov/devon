@@ -42,20 +42,30 @@ export default function AnalyticsScreen() {
   const search = useSearchParams()
   const fallback = React.useMemo(defaultRange, [])
 
-  const value: FilterBarValue = {
-    filter: search.get('filter') ?? '',
-    since: search.get('since') ?? fallback.since,
-    until: search.get('until') ?? fallback.until,
-  }
+  const filterParam = search.get('filter') ?? ''
+  const sinceParam = search.get('since') ?? fallback.since
+  const untilParam = search.get('until') ?? fallback.until
+  // One identity per actual range/filter, not one per render -- `useSummaryQuery`'s key, the memoised
+  // section props below and the `React.memo`'d sections all hang off this.
+  const value: FilterBarValue = React.useMemo(
+    () => ({ filter: filterParam, since: sinceParam, until: untilParam }),
+    [filterParam, sinceParam, untilParam],
+  )
 
-  const setValue = (next: FilterBarValue) => {
+  // Motion verdict F7: `Oxirgi 7 kun -> Oxirgi 90 kun` blocked the main thread for 838 ms, so the
+  // skeleton it swaps to never painted and the screen simply jumped to its new end state. The range
+  // change is a transition: React keeps the charts that are already on screen painted and interactive
+  // while it prepares the skeleton render in slices, so the crossfade below gets its frames.
+  const setValue = React.useCallback((next: FilterBarValue) => {
     const url = new URL(window.location.href)
     if (next.filter) url.searchParams.set('filter', next.filter)
     else url.searchParams.delete('filter')
     url.searchParams.set('since', next.since)
     url.searchParams.set('until', next.until)
-    navigate(`${url.pathname}${url.search}`, { replace: true })
-  }
+    React.startTransition(() => {
+      navigate(`${url.pathname}${url.search}`, { replace: true })
+    })
+  }, [])
 
   const summaryQuery = useSummaryQuery(value)
   const pinnedQuery = usePinnedChartsQuery()
@@ -69,11 +79,34 @@ export default function AnalyticsScreen() {
   }, [pinnedQuery.data])
   const pinnedKeys = React.useMemo(() => new Set(pinnedByKey.keys()), [pinnedByKey])
 
-  const handleTogglePin = (chartKey: string, title: string) => {
-    const existingId = pinnedByKey.get(chartKey)
-    if (existingId) unpinChart.mutate(existingId)
-    else pinChart.mutate({ chartKey: chartKey as never, title, filterQuery: value.filter })
-  }
+  // Stable, so the memoised sections below are not re-rendered by a new closure every render.
+  const handleTogglePin = React.useCallback(
+    (chartKey: string, title: string) => {
+      const existingId = pinnedByKey.get(chartKey)
+      if (existingId) unpinChart.mutate(existingId)
+      else pinChart.mutate({ chartKey: chartKey as never, title, filterQuery: value.filter })
+    },
+    [pinnedByKey, unpinChart, pinChart, value.filter],
+  )
+
+  // One object identity per meaningful change, so `React.memo` on the nine sections actually holds
+  // (motion verdict F7). Declared above the early returns below, because a hook may not be called
+  // conditionally.
+  const pinBusy = pinChart.isPending || unpinChart.isPending
+  const summaryData = summaryQuery.data
+  const memoSectionProps = React.useMemo(
+    () =>
+      summaryData
+        ? {
+            summary: summaryData,
+            query: value,
+            pinnedKeys,
+            onTogglePin: handleTogglePin,
+            pinBusy,
+          }
+        : null,
+    [summaryData, value, pinnedKeys, handleTogglePin, pinBusy],
+  )
 
   if (meQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (!meQuery.data) {
@@ -100,15 +133,7 @@ export default function AnalyticsScreen() {
     summary.eventsParticipation.length === 0 &&
     summary.pollTurnout.length === 0
 
-  const sectionProps = summary
-    ? {
-        summary,
-        query: value,
-        pinnedKeys,
-        onTogglePin: handleTogglePin,
-        pinBusy: pinChart.isPending || unpinChart.isPending,
-      }
-    : null
+  const sectionProps = memoSectionProps
 
   // A plain if/else (not a JSX ternary chain) so no `>...<`-shaped boundary between two regions can
   // ever be mistaken for hard-coded text by `check-i18n.mjs`'s regex heuristic (`people-screen.tsx`

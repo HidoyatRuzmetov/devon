@@ -7,20 +7,9 @@
 // transform-based offset, which browsers do not reliably honour on a genuine table-row element.
 import * as React from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { motion } from 'motion/react'
 import { AlertCircle, ArrowDown, ArrowUp, ArrowUpDown, Clock3 } from 'lucide-react'
 import { useT, useLocale } from '@devon/i18n'
-import {
-  Badge,
-  Checkbox,
-  DatePicker,
-  Input,
-  Select,
-  Skeleton,
-  StateView,
-  cn,
-  useReducedMotion,
-} from '@devon/ui'
+import { Badge, Checkbox, DatePicker, Input, Select, Skeleton, StateView, cn } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
@@ -198,23 +187,35 @@ export default function TableScreen() {
   // Shift-click range select needs to know which row the last plain click landed on.
   const lastClickedRef = React.useRef<string | null>(null)
 
-  function onRowToggle(id: string, checked: boolean, shiftKey: boolean): void {
-    if (shiftKey && lastClickedRef.current) {
-      selectRange(lastClickedRef.current, id, sortedIds)
-      return
-    }
-    lastClickedRef.current = id
-    toggleRow(id, checked)
-  }
+  // Stable, so the memoised rows below are not re-rendered by a fresh closure on every scroll tick.
+  const onRowToggle = React.useCallback(
+    (id: string, checked: boolean, shiftKey: boolean): void => {
+      if (shiftKey && lastClickedRef.current) {
+        selectRange(lastClickedRef.current, id, sortedIds)
+        return
+      }
+      lastClickedRef.current = id
+      toggleRow(id, checked)
+    },
+    [selectRange, toggleRow, sortedIds],
+  )
 
   function toggleAll(checked: boolean): void {
     selectAll(checked, sortedIds)
   }
 
+  // Motion verdict F6: scrolling this list ran at ~10 fps (median frame 98.4 ms, 69 of 70 frames
+  // over budget). TanStack Virtual sets state on every scroll event, and with unstable inputs the
+  // whole ~25-row window re-rendered with it. `estimateSize` and `getItemKey` are `useCallback`s so
+  // the virtualiser is not re-created per render, and `getItemKey` keys by card id so React reuses a
+  // row's fiber as the window slides instead of remounting it under a positional key.
+  const estimateSize = React.useCallback(() => rowHeight, [rowHeight])
+  const getItemKey = React.useCallback((index: number) => sorted[index]?.id ?? index, [sorted])
   const virtualizer = useVirtualizer({
     count: sorted.length,
     getScrollElement: () => scrollElRef.current,
-    estimateSize: () => rowHeight,
+    estimateSize,
+    getItemKey,
     overscan: 8,
   })
 
@@ -331,7 +332,7 @@ export default function TableScreen() {
                   card={card}
                   members={members}
                   checked={selected.has(card.id)}
-                  onCheckedChange={(v, shiftKey) => onRowToggle(card.id, v, shiftKey)}
+                  onToggle={onRowToggle}
                   top={vRow.start}
                   height={vRow.size}
                 />
@@ -341,7 +342,7 @@ export default function TableScreen() {
                   card={card}
                   members={members}
                   checked={selected.has(card.id)}
-                  onCheckedChange={(v, shiftKey) => onRowToggle(card.id, v, shiftKey)}
+                  onToggle={onRowToggle}
                   top={vRow.start}
                   height={vRow.size}
                 />
@@ -406,18 +407,21 @@ export default function TableScreen() {
   )
 }
 
-function TableRow({
+const TableRow = React.memo(function TableRow({
   card,
   members,
   checked,
-  onCheckedChange,
+  onToggle,
   top,
   height,
 }: {
   card: Card
   members: MemberSummary[]
   checked: boolean
-  onCheckedChange: (checked: boolean, shiftKey: boolean) => void
+  /** Takes the row's own id, so the parent can hand down one stable callback for every row instead
+   * of a fresh closure per row per render -- which is what makes the `React.memo` around this
+   * component actually hold while the list scrolls (motion verdict F6). */
+  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
@@ -427,7 +431,6 @@ function TableRow({
   'use memo'
   const t = useT()
   const locale = useLocale()
-  const reduced = useReducedMotion()
   const patchCard = usePatchCardMutation()
   // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
   const shiftRef = React.useRef(false)
@@ -459,7 +462,7 @@ function TableRow({
   }
 
   return (
-    <motion.div
+    <div
       role="row"
       tabIndex={0}
       style={{
@@ -469,21 +472,19 @@ function TableRow({
         width: '100%',
         height,
         gridTemplateColumns: GRID_COLUMNS,
+        transform: `translate3d(0, ${top}px, 0)`,
       }}
-      // UI-OVERHAUL.md §3 "Lists, grids, tiles" + the round-3 table FLIP: this list is
-      // `useVirtualizer`-backed (rows mount and unmount continuously as the 200+-row table
-      // scrolls), so a JS `Stagger`/`StaggerItem` pair here would mean mounting a fresh
-      // framer-motion instance, with its own per-item stagger delay, on every scroll tick -- still
-      // avoided. But `top` (from `vRow.start`) only ever changes for an already-mounted row when
-      // the *sort order* (or the density row height) moves that same card to a different index --
-      // never on plain scrolling, since the virtualizer keeps each mounted row's own start fixed
-      // and only mounts/unmounts rows at the scroll edges. Driving `y` through `animate` (transform
-      // only, never `top`/layout) means a re-sort reads as the row *travelling* to its new place
-      // (Linear's own re-sort tell) while a first mount still gets the plain fade + 4px rise; both
-      // share one `transition` so neither needs its own bookkeeping.
-      initial={reduced ? { opacity: 1, y: top } : { opacity: 0, y: top + 4 }}
-      animate={{ opacity: 1, y: top }}
-      transition={reduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
+      // Motion verdict F6. This used to be a `motion.div` whose `y` was driven by `animate`, one
+      // framer-motion instance per visible row, re-created as the window slid -- and the audit's own
+      // reverted experiment already showed a plain transform is within 4 % of it, so it costs
+      // nothing to drop and it removes ~25 projection nodes from every scroll tick.
+      //
+      // The re-sort tell survives as pure CSS. `top` (from `vRow.start`) only ever changes for an
+      // already-mounted row when the *sort order* (or the density row height) moves that card to a
+      // different index -- never on plain scrolling, since the virtualiser keeps each mounted row's
+      // start fixed and only mounts and unmounts rows at the scroll edges. So a transform transition
+      // fires exactly on a re-sort (the row travels to its new place, Linear's own tell) and never
+      // once while scrolling, and the reduced-motion backstop in `tokens.css` collapses it for free.
       onClick={onRowClick}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
@@ -491,7 +492,7 @@ function TableRow({
           openCardPeek(card.id)
         }
       }}
-      className="relative grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="relative grid cursor-pointer items-center gap-2 border-b border-border/60 px-2 transition-transform duration-(--dur-standard) ease-(--ease-out) hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       {/* DESIGN.md §9.2's own overdue signal, on a row -- the rail, not (only) a solid-tinted date
           chip, since the row already carries a per-cell risk badge for the "colour is never the
@@ -507,7 +508,7 @@ function TableRow({
         onPointerDown={(e) => {
           shiftRef.current = e.shiftKey
         }}
-        onCheckedChange={(v) => onCheckedChange(v === true, shiftRef.current)}
+        onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
         aria-label={card.title}
       />
       {editingTitle ? (
@@ -588,9 +589,9 @@ function TableRow({
           {t(`work.status.${card.status}`)}
         </Badge>
       </span>
-    </motion.div>
+    </div>
   )
-}
+})
 
 /** ui-blitz round3 #30's fix: below `md`, one stacked row (title, then a truncated meta line)
  * instead of the five-column grid `TableRow` renders. Read-only by design -- a phone list item that
@@ -598,25 +599,25 @@ function TableRow({
  * native list), and it sidesteps the five separate hover-to-edit affordances `TableRow` has room for
  * but a 390px row does not. Selection (the checkbox, bulk bar) still works exactly like the desktop
  * row -- mobile bulk-archiving/assigning a filtered set is a real, common use of this screen. */
-function MobileTableRow({
+const MobileTableRow = React.memo(function MobileTableRow({
   card,
   members,
   checked,
-  onCheckedChange,
+  onToggle,
   top,
   height,
 }: {
   card: Card
   members: MemberSummary[]
   checked: boolean
-  onCheckedChange: (checked: boolean, shiftKey: boolean) => void
+  /** See `TableRow`'s own note: one stable callback for every row. */
+  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
   top: number
   height: number
 }) {
   // H4.1/H4.2: same virtualised-row hot spot as `TableRow`, for the mobile layout.
   'use memo'
   const t = useT()
-  const reduced = useReducedMotion()
   // Radix's `onCheckedChange` gives no event, so shift is captured on the pointerdown before it.
   const shiftRef = React.useRef(false)
   const assignee = members.find((m) => m.userId === card.assigneeUserId)
@@ -634,13 +635,18 @@ function MobileTableRow({
   }
 
   return (
-    <motion.div
+    <div
       role="row"
       tabIndex={0}
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height }}
-      initial={reduced ? { opacity: 1, y: top } : { opacity: 0, y: top + 4 }}
-      animate={{ opacity: 1, y: top }}
-      transition={reduced ? { duration: 0.12 } : { duration: 0.22, ease: 'easeOut' }}
+      // Plain transform, same reasoning as `TableRow` above (motion verdict F6).
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height,
+        transform: `translate3d(0, ${top}px, 0)`,
+      }}
       onClick={onRowClick}
       onKeyDown={(e) => {
         if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
@@ -648,7 +654,7 @@ function MobileTableRow({
           openCardPeek(card.id)
         }
       }}
-      className="relative flex cursor-pointer items-center gap-3 border-b border-border/60 px-3 py-2 active:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      className="relative flex cursor-pointer items-center gap-3 border-b border-border/60 px-3 py-2 transition-transform duration-(--dur-standard) ease-(--ease-out) active:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
     >
       {card.risk === 'overdue' ? (
         <span
@@ -661,13 +667,13 @@ function MobileTableRow({
         onPointerDown={(e) => {
           shiftRef.current = e.shiftKey
         }}
-        onCheckedChange={(v) => onCheckedChange(v === true, shiftRef.current)}
+        onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
         aria-label={card.title}
       />
       <div className="min-w-0 flex-1">
         <p className="truncate text-body text-foreground">{card.title}</p>
         <p className="truncate text-caption text-muted-foreground">{metaParts.join(' · ')}</p>
       </div>
-    </motion.div>
+    </div>
   )
-}
+})
