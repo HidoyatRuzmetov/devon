@@ -261,3 +261,92 @@ qilindi (`.uzwork/gen-cyrl.ts`), soʻng §13.2 boʻyicha qoʻlda oʻqib chiqildi
 | `people.person.activity.kind.assigned` | Vazifani biriktirdi | Vazifani berdi | modul boʻylab bitta feʼl: vazifa «beriladi» |
 | `people.person.activity.kind.checklist` | Nazorat roʻyxatini yangiladi | Bajarish roʻyxatini yangiladi | §12.2 checklist = `bajarish roʻyxati` |
 | `people.person.missing.body` | Bu xodim boʻlimda faol emas yoki havola eskirgan. | Bu xodim boshqarmada faol emas yoki havola eskirgan. | §12.2 boshqarma |
+
+## Modul: work (`packages/i18n/messages/modules/work/`)
+
+**Asosiy qaror:** doskadagi obyekt — `karta` (UZBEK-STYLE.md §12.2, §5 toast jadvali), odamga topshirilgan ish esa `vazifa` (sahifa nomi, «Mening vazifalarim», «Vazifa berish»). Fayl ikkisini bir ekranda aralashtirib yuborgan edi.
+
+| kalit | avval | keyin | sabab |
+|---|---|---|---|
+| `work.description` | Xodimlar doskasi: boshqarma aʼzosiga bitta ustundan. | Xodimlar doskasi: har bir xodimga bitta ustun. | «boshqarma aʼzosiga bitta ustundan» — sanoq qurilmasi gʻalati |
+| `work.board.department` | Boʻlim | Boshqarma | §12.2 ijara birligi — boshqarma |
+| `work.board.columnEmpty` | Vazifalar yoʻq | Karta yoʻq | §10 nol sanoqda koʻplik yoʻq; §12.2 doskadagi obyekt — karta |
+| `work.board.emptyTitle` | Boshqarma aʼzolari topilmadi | Boshqarmada hali xodim yoʻq | §12.2 Member = xodim; «topilmadi» — qidiruv natijasi emas |
+| `work.board.emptyBody` | Doska koʻrinishi uchun avval boshqarmaga aʼzolar qoʻshilishi kerak. | Doska koʻrinishi uchun boshqarmaga xodim qoʻshing. | §7 boʻsh holat bitta amalni oʻrgatadi |
+| `work.board.moved` | "{title}" {target} ustuniga koʻchirildi | «{title}» {target} ustuniga koʻchirildi | §14 obyekt nomi «…» da (§5 toast jadvalidagi shakl) |
+| `work.board.columnsShowing` | {shown} / {total} ustun koʻrsatilmoqda | {shown}/{total} ustun koʻrsatilmoqda | §10 nisbat chiziqchasi atrofida probel yoʻq |
+| `work.board.scopeMine` | Mening | Meniki | «Mening» — yolgʻiz turolmaydi |
+| `work.board.densityCompact` | Ixcham koʻrinish | Ixcham | jadvaldagi «Ixcham» bilan bir xil |
+| `work.board.densityRoomy` | Keng koʻrinish | Keng | jadvaldagi «Keng» bilan bir xil |
+| `work.quickAdd.placeholder` | Tez qoʻshish: "Nodira: oylik hisobotni juma kuniga tayyorla" | Tez qoʻshish: «Nodira: oylik hisobot, juma kuni» | «tayyorla» — «sen» shakli (§2 hamma joyda «siz»); §14 «…» |
+| `work.quickAdd.created` | "{title}" yaratildi | «{title}» qoʻshildi | §11/4 karta «qoʻshiladi»; §14 «…» |
+| `work.quickAdd.error` | Vazifani yaratib boʻlmadi | Kartani qoʻshib boʻlmadi | §12.2 obyekt — karta; §11/4 |
+| `work.quickAdd.unknownAssignee` | "{name}" nomli xodim topilmadi | «{name}» degan xodim topilmadi | «nomli xodim» — rasmiy; §14 «…» |
+| `work.quickAdd.aiError` | Matnni aniqlab boʻlmadi | Matn tushunarsiz boʻldi | §2 tizim oʻzi haqida gapirmaydi («aniqlab boʻlmadi» → matn tushunarsiz) |
+| `work.filter.saved` | Koʻrinish saqlandi | Saqlandi | §5 toast qisqa |
+| `work.filter.noSavedViews` | Saqlangan koʻrinishlar yoʻq | Saqlangan koʻrinish yoʻq | §10 nol sanoqda koʻplik yoʻq |
+| `work.filter.removeChip` | "{chip}" filtrini olib tashlash | «{chip}» filtrini olib tashlash | §14 «…» |
+| `work.filter.hideAdvanced` | Kengaytirilganni yashirish | Yashirish | «Kengaytirilganni yashirish» — ogʻizga sigʻmaydi |
+| `work.card.peekTitle` | Vazifa tafsilotlari | Karta tafsilotlari | §12.2 obyekt — karta |
+| `work.card.archive` | Arxivlash | Arxivga olish | §12.2 archive (v.) = `arxivga olish` |
+| `work.card.archived` | Vazifa arxivlandi | Arxivga olindi | §5 toast jadvalidagi shakl |
+| `work.card.done` | Vazifa bajarildi | Bajarildi | §5 toast qisqa |
+| `work.card.addLinkPlaceholder` | Havola manzilini kiriting | Havolani qoʻying | §11/26 havola «qoʻyiladi» (paste), «manzili kiritilmaydi» |
+| `work.card.noIdTitle` | Vazifa koʻrsatilmagan | Karta tanlanmagan | §12.2 obyekt — karta |
+| `work.card.noIdBody` | Havolada vazifa identifikatori yoʻq. | Havolada karta raqami yoʻq. | §11/25 `identifikator` → `raqam` |
+| `work.card.readOnly` | Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin. | Bu kartani siz oʻzgartira olmaysiz — faqat oʻqish uchun. Uni bergan, bajarayotgan va qoʻshgan xodim hamda boshqarma boshligʻi tahrirlaydi. | «siznikimas» — imlo va ohang; §12.2 boshqarma boshligʻi |
+| `work.card.undo` | Qaytarish | Bekor qilish | §5 binding: undo = `Bekor qilish`, `Qaytarish` — redo |
+| `work.risk.atRisk` | Muddat yaqinlashmoqda | Muddat yaqin | chip qisqaroq; `work.mine.atRisk` bilan bir xil |
+| `work.activity.created` | vazifani yaratdi | kartani qoʻshdi | §11/4 karta «qoʻshiladi» |
+| `work.activity.assigned` | biriktirmani oʻzgartirdi | masʼulni oʻzgartirdi | «biriktirma» — soʻz yoʻq; TERMS: assignee = `masʼul` |
+| `work.activity.checklist` | roʻyxatga band qoʻshdi | bajarish roʻyxatiga band qoʻshdi | §12.2 checklist = `bajarish roʻyxati` |
+| `work.table.emptyTitle` | Vazifalar topilmadi | Karta topilmadi | §12.2 obyekt — karta; §10 koʻplik yoʻq |
+| `work.table.emptyBody` | Filtrni oʻzgartiring yoki yangi vazifa qoʻshing. | Filtrni oʻzgartiring yoki yangi karta qoʻshing. | §12.2 obyekt — karta |
+| `work.table.bulk.archived` | {count} ta vazifa arxivlandi | {count} ta karta arxivlandi | §5 toast jadvalidagi aynan shakl |
+| `work.table.bulk.clear` | Bekor qilish | Tanlovni tozalash | §5 `Bekor qilish` — undo yozuvi |
+| `work.timeline.emptyTitle` | Muddati belgilangan vazifalar yoʻq | Muddati belgilangan karta yoʻq | §12.2 obyekt — karta |
+| `work.timeline.emptyBody` | Bu yerda faqat muddati bor faol vazifalar koʻrinadi. | Bu yerda faqat muddati bor faol kartalar koʻrinadi. | §12.2 obyekt — karta |
+| `work.timeline.dateChanged` | "{title}" sanasi yangilandi | «{title}» sanasi oʻzgardi | §14 «…»; «yangilandi» → «oʻzgardi» |
+| `work.timeline.dependencyArrows` | Bogʻliqlik strelkalari: {count} ta | {count} ta bogʻliqlik chizigʻi | «strelka» — ruscha |
+| `work.mine.emptyTitle` | Sizga biriktirilgan vazifalar yoʻq | Sizga hali vazifa berilmagan | «biriktirilgan vazifalar yoʻq» → odam «vazifa berilmagan» deydi |
+| `work.mine.emptyBody` | Sizga biriktirilgan vazifalar shu yerda koʻrinadi. | Sizga berilgan vazifalar shu yerda koʻrinadi. | modul boʻylab bitta feʼl: vazifa «beriladi» |
+| `work.archive.emptyBody` | Bajarilgan va arxivlangan vazifalar shu yerda koʻrinadi. | Bajarilgan va arxivga olingan kartalar shu yerda koʻrinadi. | §12.2 archive (v.) = `arxivga olish` |
+| `work.ai.draftReply` | Javob loyihasini yozish | Qoralama tuzish | «loyiha» — bu mahsulotda project; qoralama boshqa soʻz |
+| `work.ai.draftReplyPreviewTitle` | Javob loyihasi | Javob qoralamasi | «Javob loyihasi» — project bilan toʻqnashadi |
+| `work.ai.explainRisk` | Bu xavfni tushuntir | Xavfni tushuntirish | «tushuntir» — «sen» shakli |
+| `work.ai.suggestAssignee` | Kimga topshiray | Kimga berish kerak | «topshiray» — birinchi shaxs, tugmada gʻalati |
+| `work.ai.boardDigest` | Kim kechiktiryapti | Kim kechikyapti | «kechiktiryapti» — birovni kechiktirish; odam «kechikyapti» |
+| `work.estimate.unreadable` | Bu vaqtni oʻqiy olmadim. Masalan: 2 soat 30 daqiqa. | Bu vaqt tushunarsiz. Masalan: 2 soat 30 daqiqa. | §2 «oʻqiy olmadim» — tizim oʻzi haqida gapiryapti |
+| `work.section.timeSummary` | {logged} / {estimate} | {logged}/{estimate} | §10 nisbat chiziqchasi atrofida probel yoʻq |
+| `work.chip.blockedBy` | {count} ta tugallanmagan ish kutilmoqda | {count} ta kartani kutmoqda | §12.2 obyekt — karta |
+| `work.timeLog.unreadable` | Bu vaqtni oʻqiy olmadim. Masalan: 45 daqiqa. | Bu vaqt tushunarsiz. Masalan: 45 daqiqa. | §2 «oʻqiy olmadim» — tizim oʻzi haqida gapiryapti |
+| `work.dependencies.wouldLoop` | Bu halqa hosil qiladi | Bunda halqa hosil boʻladi | «Bu halqa hosil qiladi» — ega noaniq |
+| `work.recurrence.mode.scheduleHint` | Joriy karta bajarilgan-bajarilmaganidan qat'i nazar. | Bu karta bajarilgan yoki bajarilmaganidan qatʼi nazar. | §14 ASCII apostrof `qat'i` → `qatʼi`; §11/21 `joriy` |
+| `work.recurrence.mode.afterDone` | Joriysi bajarilgach | Shu karta bajarilgach | §11/21 `joriysi` → `shu karta` |
+| `work.recurrence.freqLabel` | Davr | Oraligʻi | §12.2 `davr` — shaxsiy ish maydonidagi sprint nomi, toʻqnashmasin |
+| `work.recurrence.dayOfMonthHint` | Qisqa oyda oxirgi kunga surliadi. | Qisqa oyda oxirgi kunga suriladi. | imlo xatosi: `surliadi` → `suriladi` |
+| `work.recurrence.countLabel` | Nechta marta | Necha marta | grammatika: `nechta marta` → `necha marta` |
+| `work.bulk.clear` | Tanlovni bekor qilish | Tanlovni tozalash | §5 `Bekor qilish` — undo yozuvi |
+| `work.bulk.noneApplied` | Hech bir kartaga oʻzgartirish kiritilmadi | Hech bir karta oʻzgarmadi | «oʻzgartirish kiritilmadi» — hujjat uslubi |
+| `work.focus.moveUp` | «{title}» ni yuqoriga | «{title}»ni yuqoriga surish | oʻzbekchada qoʻshimcha probelsiz yoziladi; amal nomlansin |
+| `work.focus.moveDown` | «{title}» ni pastga | «{title}»ni pastga surish | oʻzbekchada qoʻshimcha probelsiz yoziladi; amal nomlansin |
+| `work.focus.unpinCard` | «{title}» ni diqqat markazidan olish | «{title}»ni diqqat markazidan olish | oʻzbekchada qoʻshimcha probelsiz yoziladi |
+| `work.templates.createCard` | Karta yaratish | Karta qoʻshish | §11/4 karta «qoʻshiladi» |
+| `work.templates.createProject` | Loyiha yaratish | Loyiha ochish | §11/4 loyiha «ochiladi» |
+| `work.templates.created` | «{name}» andozasidan karta yaratildi | «{name}» andozasidan karta qoʻshildi | §11/4 karta «qoʻshiladi» |
+| `work.templates.dueInDays` | {count} kunda | {count} kundan keyin | «{count} kunda» — maʼnosi noaniq |
+| `work.templates.emptyBodyHead` | Kartani ochib, uni andoza sifatida saqlashingiz mumkin. | Kartani ochib, «Andoza sifatida saqlash»ni tanlang. | §7 boʻsh holat aniq amal koʻrsatadi |
+| `work.workload.emptyTitle` | Yuklama hisoblanmadi | Yuklama hali yoʻq | «hisoblanmadi» — xatodek eshitiladi, aslida hali ish yoʻq |
+| `work.workload.capacityEdit` | Haftalik imkoniyatni oʻzgartirish | Haftalik sigʻimni oʻzgartirish | §12.2 weekly capacity = `haftalik sigʻim` (`imkoniyat` — feature toggle) |
+| `work.workload.capacityLabel` | Haftalik imkoniyat (soat) | Haftalik sigʻim (soat) | §12.2 `haftalik sigʻim` |
+| `work.workload.capacitySaved` | Imkoniyat saqlandi | Saqlandi | §5 toast qisqa |
+| `work.workload.capacityFailed` | Imkoniyatni saqlab boʻlmadi | Sigʻimni saqlab boʻlmadi | §12.2 `sigʻim` |
+| `work.workload.capacityInvalid` | 0 dan 168 gacha soat kiriting | 0 dan 168 gacha son yozing. | §6 tekshiruv nuqta bilan; §11/26 |
+| `work.workload.legendFreeHours` | Imkoniyatning 80% idan kam | Sigʻimning 80% idan kam | §12.2 `sigʻim` |
+| `work.goals.value` | {current} / {target} | {current}/{target} | §10 nisbat chiziqchasi atrofida probel yoʻq |
+| `work.goals.ceilingValue` | {target} dan {current} ta | {target} tadan {current} tasi | §10 maxraj «{total} tadan {current} tasi» |
+| `work.goals.progressLabel` | «{title}» boʻyicha progress | «{title}» boʻyicha bajarilishi | `progress` — oʻzlashmagan |
+| `work.goals.fieldDescription` | Izoh | Tavsif | `Izoh` — comment; description = `Tavsif` |
+| `work.goals.emptyBodyHead` | Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi. | Birinchi maqsadni qoʻying — bajarilishi kartalardan oʻzi hisoblanadi. | `progress` — oʻzlashmagan |
+| `work.goals.edit` | {title} maqsadini tahrirlash | «{title}» maqsadini tahrirlash | §14 «…» |
+| `work.goals.forbiddenAction` | Ishlarni koʻrish | Doskani ochish | tugma qayerga olib borishini aytsin |

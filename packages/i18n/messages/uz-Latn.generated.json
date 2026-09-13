@@ -4022,7 +4022,7 @@
   "work": {
     "eyebrow": "ISH",
     "title": "Vazifalar",
-    "description": "Xodimlar doskasi: boshqarma aʼzosiga bitta ustundan.",
+    "description": "Xodimlar doskasi: har bir xodimga bitta ustun.",
     "filterChrome": {
       "toggle": "Filtrlar va tezkor qoʻshish"
     },
@@ -4035,36 +4035,36 @@
       "archive": "Arxiv"
     },
     "board": {
-      "department": "Boʻlim",
+      "department": "Boshqarma",
       "unassigned": "Biriktirilmagan",
-      "columnEmpty": "Vazifalar yoʻq",
-      "emptyTitle": "Boshqarma aʼzolari topilmadi",
-      "emptyBody": "Doska koʻrinishi uchun avval boshqarmaga aʼzolar qoʻshilishi kerak.",
-      "moved": "\"{title}\" {target} ustuniga koʻchirildi",
+      "columnEmpty": "Karta yoʻq",
+      "emptyTitle": "Boshqarmada hali xodim yoʻq",
+      "emptyBody": "Doska koʻrinishi uchun boshqarmaga xodim qoʻshing.",
+      "moved": "«{title}» {target} ustuniga koʻchirildi",
       "addCard": "+ Karta qoʻshish",
       "expandColumn": "Ustunni yoyish",
       "collapseColumn": "Ustunni yigʻish",
       "loadCount": "Ustunda {count} ta karta",
-      "columnsShowing": "{shown} / {total} ustun koʻrsatilmoqda",
+      "columnsShowing": "{shown}/{total} ustun koʻrsatilmoqda",
       "expandAllColumns": "Barchasini yoyish",
       "showAllMembers": "Barcha xodimlar ({count})",
       "showFewer": "Kamroq koʻrsatish",
       "scopeLabel": "Doskada nimani koʻrsatish",
       "scopeAll": "Hammasi",
-      "scopeMine": "Mening",
+      "scopeMine": "Meniki",
       "noUnit": "Boʻlimsiz",
-      "densityCompact": "Ixcham koʻrinish",
-      "densityRoomy": "Keng koʻrinish",
+      "densityCompact": "Ixcham",
+      "densityRoomy": "Keng",
       "collapseAllColumns": "Barcha ustunlarni yigʻish"
     },
     "quickAdd": {
-      "placeholder": "Tez qoʻshish: \"Nodira: oylik hisobotni juma kuniga tayyorla\"",
-      "created": "\"{title}\" yaratildi",
-      "error": "Vazifani yaratib boʻlmadi",
-      "unknownAssignee": "\"{name}\" nomli xodim topilmadi",
+      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma kuni»",
+      "created": "«{title}» qoʻshildi",
+      "error": "Kartani qoʻshib boʻlmadi",
+      "unknownAssignee": "«{name}» degan xodim topilmadi",
       "aiParse": "AI bilan aniqlash",
       "aiPreviewTitle": "AI aniqlagan karta",
-      "aiError": "Matnni aniqlab boʻlmadi",
+      "aiError": "Matn tushunarsiz boʻldi",
       "aiMeta": "{tokens} token · {ms} ms",
       "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
       "fromTemplate": "Andozadan yaratish",
@@ -4076,18 +4076,18 @@
       "clear": "Tozalash",
       "saveAs": "Koʻrinish sifatida saqlash",
       "viewName": "Koʻrinish nomi",
-      "saved": "Koʻrinish saqlandi",
+      "saved": "Saqlandi",
       "saveError": "Koʻrinishni saqlab boʻlmadi",
       "savedViews": "Saqlangan koʻrinishlar",
-      "noSavedViews": "Saqlangan koʻrinishlar yoʻq",
+      "noSavedViews": "Saqlangan koʻrinish yoʻq",
       "me": "Men",
       "addFilter": "Filtr",
       "fieldStep": "Maydonni qidirish",
       "valueStep": "Qiymatni qidirish",
       "noOptions": "Hech narsa topilmadi",
-      "removeChip": "\"{chip}\" filtrini olib tashlash",
+      "removeChip": "«{chip}» filtrini olib tashlash",
       "showAdvanced": "Kengaytirilgan",
-      "hideAdvanced": "Kengaytirilganni yashirish",
+      "hideAdvanced": "Yashirish",
       "op": {
         "lte": "≤",
         "gte": "≥",
@@ -4130,11 +4130,11 @@
       "estimate": "Baho"
     },
     "card": {
-      "peekTitle": "Vazifa tafsilotlari",
+      "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
-      "archive": "Arxivlash",
-      "archived": "Vazifa arxivlandi",
-      "done": "Vazifa bajarildi",
+      "archive": "Arxivga olish",
+      "archived": "Arxivga olindi",
+      "done": "Bajarildi",
       "checklistComplete": "Roʻyxat toʻliq bajarildi",
       "restore": "Tiklash",
       "watch": "Kuzatish",
@@ -4142,19 +4142,19 @@
       "moveTo": "Ustunga koʻchirish",
       "newLabel": "Yangi yorliq",
       "descriptionPlaceholder": "Tavsif qoʻshing",
-      "addLinkPlaceholder": "Havola manzilini kiriting",
+      "addLinkPlaceholder": "Havolani qoʻying",
       "unfurlError": "Havolani yuklab boʻlmadi",
       "addChecklistItem": "Band qoʻshish",
       "addCommentPlaceholder": "Izoh yozing, @ bilan xodimni belgilang",
       "backToBoard": "Doskaga qaytish",
-      "noIdTitle": "Vazifa koʻrsatilmagan",
-      "noIdBody": "Havolada vazifa identifikatori yoʻq.",
-      "readOnly": "Bu vazifa siznikimas — faqat oʻqish uchun. Uni bergan, bajarayotgan yoki yaratgan xodim, hamda boʻlim boshligʻi tahrirlashi mumkin.",
+      "noIdTitle": "Karta tanlanmagan",
+      "noIdBody": "Havolada karta raqami yoʻq.",
+      "readOnly": "Bu kartani siz oʻzgartira olmaysiz — faqat oʻqish uchun. Uni bergan, bajarayotgan va qoʻshgan xodim hamda boshqarma boshligʻi tahrirlaydi.",
       "assignedTo": "Kimga: {name}",
       "byGiver": "Kimdan: {name}",
       "reassigned": "Vazifa {name}ga oʻtkazildi",
       "giverChanged": "Topshiriq beruvchi: {name}",
-      "undo": "Qaytarish"
+      "undo": "Bekor qilish"
     },
     "priority": {
       "none": "Muhimlik yoʻq",
@@ -4164,7 +4164,7 @@
       "urgent": "Shoshilinch"
     },
     "risk": {
-      "atRisk": "Muddat yaqinlashmoqda",
+      "atRisk": "Muddat yaqin",
       "overdue": "Muddati oʻtgan"
     },
     "status": {
@@ -4173,18 +4173,18 @@
       "archived": "Arxivlangan"
     },
     "activity": {
-      "created": "vazifani yaratdi",
-      "assigned": "biriktirmani oʻzgartirdi",
+      "created": "kartani qoʻshdi",
+      "assigned": "masʼulni oʻzgartirdi",
       "status": "holatni oʻzgartirdi",
       "due": "muddatni oʻzgartirdi",
       "comment": "izoh qoldirdi",
-      "checklist": "roʻyxatga band qoʻshdi",
+      "checklist": "bajarish roʻyxatiga band qoʻshdi",
       "system": "Tizim"
     },
     "table": {
       "open": "Ochish",
-      "emptyTitle": "Vazifalar topilmadi",
-      "emptyBody": "Filtrni oʻzgartiring yoki yangi vazifa qoʻshing.",
+      "emptyTitle": "Karta topilmadi",
+      "emptyBody": "Filtrni oʻzgartiring yoki yangi karta qoʻshing.",
       "selectAll": "Barchasini tanlash",
       "density": {
         "label": "Zichlik",
@@ -4199,14 +4199,14 @@
         "selectedCount": "{count} ta tanlandi",
         "assign": "Biriktirish",
         "addLabel": "Yorliq qoʻshish",
-        "archived": "{count} ta vazifa arxivlandi",
-        "clear": "Bekor qilish"
+        "archived": "{count} ta karta arxivlandi",
+        "clear": "Tanlovni tozalash"
       }
     },
     "timeline": {
       "today": "Bugun",
-      "emptyTitle": "Muddati belgilangan vazifalar yoʻq",
-      "emptyBody": "Bu yerda faqat muddati bor faol vazifalar koʻrinadi.",
+      "emptyTitle": "Muddati belgilangan karta yoʻq",
+      "emptyBody": "Bu yerda faqat muddati bor faol kartalar koʻrinadi.",
       "groupByLabel": "Guruhlash",
       "groupBy": {
         "person": "Xodim boʻyicha",
@@ -4219,13 +4219,13 @@
         "month": "Oy"
       },
       "noProject": "Loyihasiz",
-      "dateChanged": "\"{title}\" sanasi yangilandi",
+      "dateChanged": "«{title}» sanasi oʻzgardi",
       "resizeStart": "Boshlanish sanasini oʻzgartirish",
       "resizeEnd": "Muddatni oʻzgartirish",
       "legend": {
         "onTrack": "Faol"
       },
-      "dependencyArrows": "Bogʻliqlik strelkalari: {count} ta"
+      "dependencyArrows": "{count} ta bogʻliqlik chizigʻi"
     },
     "calendar": {
       "prev": "Oldingi oy",
@@ -4247,13 +4247,13 @@
       "overdue": "Muddati oʻtgan",
       "atRisk": "Muddat yaqin",
       "rest": "Qolganlari",
-      "emptyTitle": "Sizga biriktirilgan vazifalar yoʻq",
-      "emptyBody": "Sizga biriktirilgan vazifalar shu yerda koʻrinadi.",
+      "emptyTitle": "Sizga hali vazifa berilmagan",
+      "emptyBody": "Sizga berilgan vazifalar shu yerda koʻrinadi.",
       "completed": "Bajarilgan"
     },
     "archive": {
       "emptyTitle": "Arxiv boʻsh",
-      "emptyBody": "Bajarilgan va arxivlangan vazifalar shu yerda koʻrinadi."
+      "emptyBody": "Bajarilgan va arxivga olingan kartalar shu yerda koʻrinadi."
     },
     "action": {
       "save": "Saqlash",
@@ -4275,14 +4275,14 @@
       "summarizeCitations": "{count} ta izoh asosida",
       "postSummary": "Izoh sifatida joylash",
       "viewerYou": "Siz",
-      "draftReply": "Javob loyihasini yozish",
-      "draftReplyPreviewTitle": "Javob loyihasi",
+      "draftReply": "Qoralama tuzish",
+      "draftReplyPreviewTitle": "Javob qoralamasi",
       "useDraft": "Izoh maydoniga qoʻyish",
-      "explainRisk": "Bu xavfni tushuntir",
+      "explainRisk": "Xavfni tushuntirish",
       "explainRiskPreviewTitle": "Xavf nima uchun qoʻyildi",
-      "suggestAssignee": "Kimga topshiray",
+      "suggestAssignee": "Kimga berish kerak",
       "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
-      "boardDigest": "Kim kechiktiryapti",
+      "boardDigest": "Kim kechikyapti",
       "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
     },
     "actions": {
@@ -4293,7 +4293,7 @@
       "placeholder": "2 soat 30 daqiqa",
       "hint": "Masalan: 2, 1,5 soat, 3 kun yoki 90 daqiqa.",
       "understood": "Tushunildi: {value}",
-      "unreadable": "Bu vaqtni oʻqiy olmadim. Masalan: 2 soat 30 daqiqa.",
+      "unreadable": "Bu vaqt tushunarsiz. Masalan: 2 soat 30 daqiqa.",
       "clamped": "Eng koʻpi 400 soat. Bundan oshsa, kartani boʻlaklarga ajrating.",
       "unitHour": "{count} soat",
       "unitMinute": "{count} daqiqa",
@@ -4306,11 +4306,11 @@
       "dependencies": "Bogʻliqliklar",
       "repeat": "Takrorlanish",
       "reminders": "Eslatmalar",
-      "timeSummary": "{logged} / {estimate}"
+      "timeSummary": "{logged}/{estimate}"
     },
     "chip": {
       "blocked": "Bloklangan",
-      "blockedBy": "{count} ta tugallanmagan ish kutilmoqda",
+      "blockedBy": "{count} ta kartani kutmoqda",
       "repeats": "Takrorlanadi"
     },
     "timeLog": {
@@ -4333,7 +4333,7 @@
       "empty": "Bu kartaga hali vaqt yozilmagan.",
       "hint": "Qancha vaqt ketdi? Masalan: 45 daqiqa.",
       "understood": "Tushunildi: {value}",
-      "unreadable": "Bu vaqtni oʻqiy olmadim. Masalan: 45 daqiqa.",
+      "unreadable": "Bu vaqt tushunarsiz. Masalan: 45 daqiqa.",
       "tooLong": "Bir yozuvda 24 soatdan koʻp boʻlmaydi.",
       "someone": "Xodim"
     },
@@ -4354,7 +4354,7 @@
       "pickPlaceholder": "Kartani tanlang",
       "pickSearch": "Karta nomi boʻyicha qidirish",
       "pickEmpty": "Mos karta topilmadi",
-      "wouldLoop": "Bu halqa hosil qiladi",
+      "wouldLoop": "Bunda halqa hosil boʻladi",
       "blocksCount": "{count} ta kartani toʻxtatib turibdi"
     },
     "recurrence": {
@@ -4363,12 +4363,12 @@
       "modeLabel": "Keyingi karta qachon paydo boʻladi",
       "mode": {
         "schedule": "Jadval boʻyicha",
-        "scheduleHint": "Joriy karta bajarilgan-bajarilmaganidan qat'i nazar.",
-        "afterDone": "Joriysi bajarilgach",
+        "scheduleHint": "Bu karta bajarilgan yoki bajarilmaganidan qatʼi nazar.",
+        "afterDone": "Shu karta bajarilgach",
         "afterDoneHint": "Hisob ish haqiqatan tugagan paytdan boshlanadi."
       },
       "everyLabel": "Har",
-      "freqLabel": "Davr",
+      "freqLabel": "Oraligʻi",
       "freq": {
         "daily": "kun",
         "weekly": "hafta",
@@ -4386,10 +4386,10 @@
         "sun": "Ya"
       },
       "dayOfMonthLabel": "Oyning kuni",
-      "dayOfMonthHint": "Qisqa oyda oxirgi kunga surliadi.",
+      "dayOfMonthHint": "Qisqa oyda oxirgi kunga suriladi.",
       "untilLabel": "Shu sanagacha",
       "untilHint": "Boʻsh qoldirilsa — muddatsiz.",
-      "countLabel": "Nechta marta",
+      "countLabel": "Necha marta",
       "countHint": "Birinchi karta ham hisobga olinadi.",
       "nextPreview": "Keyingisi: {date}",
       "noNext": "Keyingi karta yaratilmaydi — qoida tugagan.",
@@ -4427,7 +4427,7 @@
       "estimate": "Baho",
       "clearEstimate": "Bahoni tozalash",
       "markDone": "Bajarildi",
-      "clear": "Tanlovni bekor qilish",
+      "clear": "Tanlovni tozalash",
       "assigned": "{count} ta karta biriktirildi",
       "labelAdded": "{count} ta kartaga yorliq qoʻshildi",
       "labelRemoved": "{count} ta kartadan yorliq olib tashlandi",
@@ -4438,7 +4438,7 @@
       "movedDone": "{count} ta karta bajarildi",
       "archived": "{count} ta karta arxivlandi",
       "partial": "{count} tasiga huquqingiz yetmadi",
-      "noneApplied": "Hech bir kartaga oʻzgartirish kiritilmadi",
+      "noneApplied": "Hech bir karta oʻzgarmadi",
       "failed": "Amalni bajarib boʻlmadi",
       "undone": "Qaytarildi",
       "undoFailed": "Qaytarib boʻlmadi",
@@ -4455,9 +4455,9 @@
       "unpinned": "Diqqat markazidan olindi",
       "full": "Diqqat markazida eng koʻpi {max} ta karta boʻladi.",
       "failed": "Diqqat markazini yangilab boʻlmadi",
-      "moveUp": "«{title}» ni yuqoriga",
-      "moveDown": "«{title}» ni pastga",
-      "unpinCard": "«{title}» ni diqqat markazidan olish",
+      "moveUp": "«{title}»ni yuqoriga surish",
+      "moveDown": "«{title}»ni pastga surish",
+      "unpinCard": "«{title}»ni diqqat markazidan olish",
       "emptyTitle": "Diqqat markazi boʻsh",
       "emptyBody": "Kartani ochib, «Diqqat markaziga» tugmasini bosing."
     },
@@ -4474,20 +4474,20 @@
       "scopeDepartment": "Boshqarma",
       "scopePersonal": "Shaxsiy",
       "useCount": "{count} marta ishlatilgan",
-      "createCard": "Karta yaratish",
-      "createProject": "Loyiha yaratish",
-      "created": "«{name}» andozasidan karta yaratildi",
+      "createCard": "Karta qoʻshish",
+      "createProject": "Loyiha ochish",
+      "created": "«{name}» andozasidan karta qoʻshildi",
       "createFailed": "Andozadan yaratib boʻlmadi",
       "delete": "«{name}» andozasini oʻchirish",
       "deleted": "Andoza oʻchirildi",
       "deleteFailed": "Andozani oʻchirib boʻlmadi",
-      "dueInDays": "{count} kunda",
+      "dueInDays": "{count} kundan keyin",
       "checklistCount": "{count} ta band",
       "milestoneCount": "{count} ta bosqich",
       "cardCount": "{count} ta karta",
       "emptyTitle": "Andoza yoʻq",
       "emptyBody": "Boshqarmada hali andoza tayyorlanmagan.",
-      "emptyBodyHead": "Kartani ochib, uni andoza sifatida saqlashingiz mumkin."
+      "emptyBodyHead": "Kartani ochib, «Andoza sifatida saqlash»ni tanlang."
     },
     "workload": {
       "title": "Yuklama",
@@ -4509,17 +4509,17 @@
       "dragHint": "Kartani boshqa katakka sudrab oʻtkazing.",
       "moved": "Karta koʻchirildi",
       "moveFailed": "Kartani koʻchirib boʻlmadi",
-      "emptyTitle": "Yuklama hisoblanmadi",
+      "emptyTitle": "Yuklama hali yoʻq",
       "emptyBody": "Boshqarmada hali biriktirilgan karta yoʻq.",
       "capacityValue": "{hours} soat/hafta",
       "capacityDefault": "standart",
-      "capacityEdit": "Haftalik imkoniyatni oʻzgartirish",
-      "capacityLabel": "Haftalik imkoniyat (soat)",
-      "capacitySaved": "Imkoniyat saqlandi",
-      "capacityFailed": "Imkoniyatni saqlab boʻlmadi",
-      "capacityInvalid": "0 dan 168 gacha soat kiriting",
+      "capacityEdit": "Haftalik sigʻimni oʻzgartirish",
+      "capacityLabel": "Haftalik sigʻim (soat)",
+      "capacitySaved": "Saqlandi",
+      "capacityFailed": "Sigʻimni saqlab boʻlmadi",
+      "capacityInvalid": "0 dan 168 gacha son yozing.",
       "legendTitle": "Ranglar nimani bildiradi",
-      "legendFreeHours": "Imkoniyatning 80% idan kam",
+      "legendFreeHours": "Sigʻimning 80% idan kam",
       "legendNearHours": "80–100%",
       "legendOverHours": "100% dan ortiq",
       "legendFreeCount": "{near} tadan kam karta",
@@ -4545,15 +4545,15 @@
       "delete": "«{title}» maqsadini oʻchirish",
       "deleted": "«{title}» oʻchirildi",
       "deleteFailed": "Maqsadni oʻchirib boʻlmadi",
-      "value": "{current} / {target}",
-      "ceilingValue": "{target} dan {current} ta",
-      "progressLabel": "«{title}» boʻyicha progress",
+      "value": "{current}/{target}",
+      "ceilingValue": "{target} tadan {current} tasi",
+      "progressLabel": "«{title}» boʻyicha bajarilishi",
       "matchedCards": "{count} ta karta hisobga olindi",
       "noMatchingWork": "Mos ish topilmadi",
       "dueOn": "Muddat: {date}",
       "fieldTitle": "Nomi",
       "fieldTitlePlaceholder": "Masalan: chorakda 40 ta murojaat yopilsin",
-      "fieldDescription": "Izoh",
+      "fieldDescription": "Tavsif",
       "fieldMetric": "Nima hisoblanadi",
       "fieldTarget": "Maqsad qiymati",
       "fieldTargetHint": "Raqam: kartalar soni, foiz yoki soat.",
@@ -4574,10 +4574,10 @@
         "openCardsMax": "Bu — yuqori chegara: ochiq kartalar shundan oshmasin."
       },
       "emptyTitle": "Maqsad qoʻyilmagan",
-      "emptyBodyHead": "Birinchi maqsadni qoʻying — progress kartalardan oʻzi hisoblanadi.",
+      "emptyBodyHead": "Birinchi maqsadni qoʻying — bajarilishi kartalardan oʻzi hisoblanadi.",
       "forbiddenTitle": "Bu sahifa boshqarma boshligʻi uchun",
       "forbiddenBody": "Maqsadlarni faqat boshqarma boshligʻi koʻradi va qoʻyadi. Kerak boʻlsa, boshqarma boshligʻiga murojaat qiling.",
-      "edit": "{title} maqsadini tahrirlash",
+      "edit": "«{title}» maqsadini tahrirlash",
       "editTitle": "Maqsadni tahrirlash",
       "save": "Saqlash",
       "saved": "Maqsad saqlandi",
@@ -4585,7 +4585,7 @@
       "percentTarget": "(maqsad: {target}%)",
       "capUsed": "chegaraning {pct}% i",
       "overCap": "Chegaradan {over} taga oshib ketdi",
-      "forbiddenAction": "Ishlarni koʻrish"
+      "forbiddenAction": "Doskani ochish"
     }
   },
   "common": {
