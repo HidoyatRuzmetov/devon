@@ -225,8 +225,20 @@ export async function headUserId(tx: Tx, departmentId: string): Promise<string |
 }
 
 export type DepartmentWeekSnapshot = {
+  /** The most recent few, to reason over. Bounded -- see the function's own comment. */
   done: { id: string; title: string }[]
+  /** The most overdue few, to reason over. Bounded. */
   overdue: { id: string; title: string }[]
+  /**
+   * v1.1 critique SEV1 #4. These are the department's *totals*, and they exist separately from the
+   * two lists above because `done.length` and `overdue.length` are the length of a `limit 30` and a
+   * `limit 20` -- not the number of anything. Handing those to the model as counts is exactly how a
+   * briefing comes to say "20 kechikkan" on a screen whose neighbouring tile says 84, and it is the
+   * shape of the contradiction the critique found. The tile and the briefing answer the same
+   * question from the same definition: every active card whose due date has passed.
+   */
+  doneCount: number
+  overdueCount: number
   createdCount: number
   doneLastPeriodCount: number
   loadPerPerson: { name: string; openCount: number; overdueCount: number }[]
@@ -255,9 +267,19 @@ export async function departmentWeekSnapshot(
     order by due_at asc
     limit 20
   `)
-  const counts = await tx.raw<{ created: number; done_last: number }>(sql`
+  const counts = await tx.raw<{
+    created: number
+    done_last: number
+    done_total: number
+    overdue_total: number
+  }>(sql`
     select
       count(*) filter (where created_at >= now() - interval '7 days')::int as created,
+      count(*) filter (where status = 'done' and done_at >= now() - interval '7 days')::int
+        as done_total,
+      count(*) filter (
+        where status = 'active' and due_at is not null and due_at < now()
+      )::int as overdue_total,
       count(*) filter (
         where status = 'done'
           and done_at >= now() - interval '14 days'
@@ -285,6 +307,8 @@ export async function departmentWeekSnapshot(
   return {
     done,
     overdue,
+    doneCount: counts[0]?.done_total ?? 0,
+    overdueCount: counts[0]?.overdue_total ?? 0,
     createdCount: counts[0]?.created ?? 0,
     doneLastPeriodCount: counts[0]?.done_last ?? 0,
     loadPerPerson: load

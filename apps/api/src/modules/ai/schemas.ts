@@ -259,3 +259,46 @@ export const reindexResponseSchema = z.object({
   embedded: z.number().int().min(0),
   backend: z.enum(['embeddings', 'fts']),
 })
+
+// --- the cached department briefing (v1.1 recapture #23) -------------------------------------
+
+/** Where a department's briefing is in its lifecycle. `queued`/`running` are the two the tile draws
+ * as one quiet "tayyorlanmoqda" -- the difference between them matters to the job runner, not to a
+ * head reading Home. */
+export const briefingStatusSchema = z.enum(['queued', 'running', 'ready', 'failed'])
+
+export const briefingResponseSchema = z.object({
+  /** Null on a department that has never produced one -- a brand-new boshqarma, or one whose helper
+   * has never been switched on. The tile has a designed empty state for exactly that (I-10). */
+  briefing: z
+    .object({
+      /** The Tashkent day the briefing is about, `YYYY-MM-DD`. */
+      day: z.string(),
+      locale: z.string(),
+      status: briefingStatusSchema,
+      /** `@devon/ai`'s validated `catch_up` payload, citations included, re-validated client-side
+       * against the same Zod schema the synchronous path used. Null until the first success. */
+      data: z.record(z.string(), z.unknown()).nullable(),
+      /** When the cached words were produced. The tile prints it, so "this is from last night" is
+       * something the head can see rather than something the server decides for them. */
+      generatedAt: z.string().nullable(),
+      /** Why the latest attempt failed, if it did -- the previous `data` is still served alongside. */
+      error: z.string().nullable(),
+      latencyMs: z.number().int().nullable(),
+    })
+    .nullable(),
+  /** Whether this caller may press Yangilash right now (head, outside the cooldown). */
+  canRefresh: z.boolean(),
+})
+export type BriefingResponse = z.infer<typeof briefingResponseSchema>
+
+export const refreshBriefingBodySchema = z
+  .object({ locale: z.enum(['uz-Latn', 'uz-Cyrl', 'ru', 'en']) })
+  .strict()
+
+export const refreshBriefingResponseSchema = z.object({
+  status: briefingStatusSchema,
+  /** Set when the request was inside the cooldown: how long until the button works again, so the
+   * client can say "keyinroq urinib koʻring" with a real number instead of a shrug. */
+  retryAfterMs: z.number().int().nullable(),
+})

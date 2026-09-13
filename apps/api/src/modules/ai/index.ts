@@ -25,6 +25,8 @@ import {
   AiUnavailableError,
 } from './errors.js'
 import * as service from './service.js'
+import { requestBriefing, startBriefingJobs, type BriefingJobsHandle } from './briefing.js'
+import { readBriefing } from './briefing-repo.js'
 import {
   aiSettingsSchema,
   askBodySchema,
@@ -35,6 +37,9 @@ import {
   runFeatureBodySchema,
   runFeatureResponseSchema,
   searchBackendSchema,
+  briefingResponseSchema,
+  refreshBriefingBodySchema,
+  refreshBriefingResponseSchema,
   searchQuerySchema,
   searchResponseSchema,
   usageListResponseSchema,
@@ -361,6 +366,81 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
+  /**
+   * The head's department briefing, read from cache (v1.1 recapture #23, `briefing.ts`).
+   *
+   * A GET that never calls a model. `catch_up` at department scope takes 78-276 seconds against the
+   * ministry's GLM; this returns whatever the nightly job last produced, in milliseconds, with the
+   * time it was generated, so the tile paints on the first frame instead of opening a request nobody
+   * can wait out.
+   */
+  app.get(
+    '/briefing',
+    {
+      // `department_managed`, not `department_child`: the briefing reads the whole department's week
+      // -- who is late and who is overloaded -- which SPEC §2.2 makes a head-only question, refused
+      // on the server rather than hidden in the sidebar.
+      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      schema: { response: { 200: briefingResponseSchema } },
+    },
+    async (req) => {
+      const ctx = toDbContext(req)
+      const row = await readBriefing(ctx, activeDepartmentId(req))
+      return {
+        briefing: row
+          ? {
+              day: row.day,
+              locale: row.locale,
+              status: row.status,
+              data: row.output,
+              generatedAt: row.generatedAt,
+              error: row.error,
+              latencyMs: row.latencyMs,
+            }
+          : null,
+        // The refresh button exists only for a head, and only when nothing is already in flight --
+        // I-6: the client hides what it cannot use, the server decides what that is.
+        canRefresh:
+          isHeadOf(req.actor, activeDepartmentId(req)) &&
+          (row === null || row.status === 'ready' || row.status === 'failed'),
+      }
+    },
+  )
+
+  /**
+   * "Yangilash". Enqueues a run and returns immediately -- the tile goes quiet ("tayyorlanmoqda")
+   * and polls `GET /briefing` until the row turns `ready`. Head-only, and rate-limited twice over:
+   * by the route limiter against bursts, and by `REFRESH_COOLDOWN_MS` inside `requestBriefing`
+   * against a head who presses it every minute for an hour, which is the one that protects the
+   * department's soʻm.
+   */
+  app.post(
+    '/briefing/refresh',
+    {
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+        rateLimit: { max: 6, timeWindow: '1 minute' },
+      },
+      schema: {
+        body: refreshBriefingBodySchema,
+        response: { 200: refreshBriefingResponseSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const outcome = await requestBriefing(toDbContext(req), {
+        departmentId: activeDepartmentId(req),
+        locale: req.body.locale,
+        userId: req.actor?.userId ?? null,
+      })
+      return reply.send(
+        outcome.accepted
+          ? { status: outcome.status, retryAfterMs: null }
+          : { status: 'ready' as const, retryAfterMs: outcome.retryAfterMs },
+      )
+    },
+  )
+
   app.post(
     '/search/reindex',
     {
@@ -382,6 +462,19 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   // no-op again on one whose GLM has no embeddings model: `embedPendingTick` asks the probe first.
   const SIDECAR_INTERVAL_MS = 60_000
   let sidecar: NodeJS.Timeout | null = null
+  // The briefing runner (v1.1 recapture #23): pg-boss, started here and stopped on close, exactly
+  // like `work/jobs.ts`'s -- never in `test`, where there is no Postgres for it to reach.
+  let briefingJobs: BriefingJobsHandle | null = null
+  app.addHook('onReady', async () => {
+    if (app.devonConfig.NODE_ENV === 'test') return
+    if (briefingJobs === null) {
+      briefingJobs = await startBriefingJobs(app.devonConfig.DATABASE_URL, app.log)
+    }
+  })
+  app.addHook('onClose', async () => {
+    if (briefingJobs) await briefingJobs.stop().catch(() => {})
+    briefingJobs = null
+  })
   app.addHook('onReady', async () => {
     if (app.devonConfig.NODE_ENV === 'test') return
     sidecar = setInterval(() => {

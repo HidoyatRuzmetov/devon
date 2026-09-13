@@ -13,7 +13,7 @@
 // opens the table sorted by load. A tile whose number you cannot act on is a poster, not a dashboard.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useT, useLocale, formatDate, formatNumber } from '@devon/i18n'
+import { useT, useLocale, formatDate, formatDateTime, formatNumber } from '@devon/i18n'
 import {
   DEFAULT_PEOPLE_VIEW_CONFIG,
   PEOPLE_VIEW_URL_PARAM,
@@ -68,13 +68,11 @@ import {
   goalBarFill,
   goalProgressTone,
   isCeilingMetric,
+  isPercentMetric,
 } from '../work/lib/goal-format.js'
-import { useRunAiFeatureMutation } from '../ai/use-ai.js'
-import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { useBriefingQuery, useRefreshBriefingMutation } from '../ai/use-ai.js'
 import { CatchUpPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput } from '../ai/outputs.js'
-import { aiErrorMessageKey } from '../ai/lib/errors.js'
-import type { RunMeta } from '../ai/types.js'
 import { usePersonalOverviewQuery, useSummaryQuery } from '../analytics/use-analytics.js'
 
 /** The indicator keys this dashboard asks for. Narrow on purpose: the service runs one query per
@@ -256,17 +254,16 @@ type HeadTileId = (typeof HEAD_TILE_IDS)[number]
 
 type HeadLayout = { order: HeadTileId[]; hidden: HeadTileId[]; visible: HeadTileId[] }
 
-/** The AI xulosa tile's own state. Idle until the head asks -- an AI call costs soʻm, and a
- * dashboard that spends the department's budget every time somebody opens Home is exactly the
- * "random and gray" AI the CTO objected to. */
-type BriefingState =
-  | { status: 'idle' }
-  | { status: 'pending' }
-  | { status: 'ready'; output: CatchUpOutput; meta: RunMeta }
-  | { status: 'error'; message: string }
-
-/** How many days of the department's own week the briefing reads. */
-const BRIEFING_WINDOW_DAYS = 7
+/**
+ * v1.1 recapture report §1a #23. This tile used to run `catch_up` synchronously and hold the head
+ * on a spinner: the call takes 78-276 seconds against the ministry's GLM, the fix round put a 75 s
+ * budget on it, and every run after that ended in "AI did not answer in time".
+ *
+ * Nothing here waits on a model any more. `GET /ai/briefing` returns whatever the nightly job last
+ * produced -- in milliseconds, with the time it was generated -- and "Yangilash" enqueues a new run
+ * the tile reports on quietly while the old briefing stays readable. The whole mechanism is
+ * `apps/api/src/modules/ai/briefing.ts`.
+ */
 
 function useHeadLayout(userId: string | undefined): {
   layout: HeadLayout
@@ -341,7 +338,7 @@ export function HeadDashboard(): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const session = useSession()
-  const { department, departmentId } = useDepartment()
+  const { departmentId } = useDepartment()
   const { layout, move, toggle, reset } = useHeadLayout(session.user?.id)
 
   const membersQuery = useQuery({
@@ -366,8 +363,16 @@ export function HeadDashboard(): React.JSX.Element {
   // it runs when the head asks for it and never on page load (AI-AUDIT §5, "no feature spends a
   // budget nobody asked it to").
   const goalsQuery = useGoalsQuery()
-  const catchUp = useRunAiFeatureMutation('catch_up')
-  const [briefing, setBriefing] = React.useState<BriefingState>({ status: 'idle' })
+  // The cached briefing. One row, read on every Home render and polled only while a refresh is
+  // actually in flight (`useBriefingQuery`) -- never a model call on the request path.
+  const briefingQuery = useBriefingQuery(true)
+  const refreshBriefing = useRefreshBriefingMutation()
+  const briefing = briefingQuery.data?.briefing ?? null
+  const briefingOutput = briefing?.data
+    ? parseFeatureOutput<CatchUpOutput>('catch_up', briefing.data)
+    : null
+  const briefingPending =
+    briefing?.status === 'queued' || briefing?.status === 'running' || refreshBriefing.isPending
 
   // `goalsQuery` is deliberately absent: a dashboard must not withhold six tiles while a seventh
   // loads. Its own tile renders a skeleton.
@@ -468,44 +473,21 @@ export function HeadDashboard(): React.JSX.Element {
   const overloaded = loadThisWeek.filter((row) => row.pct >= 100).length
 
   /**
-   * v1.1 critique SEV1 #4 -- the one set of numbers this screen is allowed to have.
+   * v1.1 critique SEV1 #4, and why it stays fixed now that the briefing is computed server-side.
    *
    * The briefing returned "За прошедшую неделю не закрыто ни одной задачи — без изменений по
    * сравнению с предыдущей неделей. В управлении 77 просроченных задач." while the Maqsadlar tile
-   * three inches to its left read "82/120" and a person page showed three completions in the same
-   * week. Two separate causes, both here rather than in the model:
+   * three inches to its left read "82/120". The 77 was the department's true overdue total,
+   * computed here and then never rendered -- the Kechikayotgan tile showed only its top five
+   * people, so the only number a head could compare the briefing against was 31. The briefing was
+   * right and looked wrong.
    *
-   *   1. `doneLastPeriod` was hard-coded to `0`, so "no change against last week" was not an
-   *      observation -- it was arithmetic on a placeholder, and it was going to say that forever.
-   *   2. The 77 was the department's true overdue total, computed here and then *never rendered*:
-   *      the Kechikayotgan tile showed only its top five people, so the only number a head could
-   *      compare the briefing against was 31. The briefing was right and looked wrong.
-   *
-   * So the counts are computed once, into this object; the tiles render them; the briefing is handed
-   * exactly the same object. `catch-up.golden.test.ts` asserts the headline the prompt produces from
-   * a fixed fixture carries those same numbers, so the two can never drift apart again without a
-   * test failing.
+   * `totalOverdue` is therefore on the tile, and it is the same question `repo.ts`'s
+   * `departmentWeekSnapshot` answers for the briefing job: every active card in the department
+   * whose due date has passed. The window and the counts live in one place per side now -- this
+   * screen renders them, the job feeds them to the model -- and `catch-up.golden.test.ts` pins the
+   * headline the prompt produces from a fixed fixture, so the two cannot drift apart silently.
    */
-  const briefingWindowStart = now - BRIEFING_WINDOW_DAYS * 86_400_000
-  const previousWindowStart = briefingWindowStart - BRIEFING_WINDOW_DAYS * 86_400_000
-  const doneInWindow = (from: number, to: number): WorkCard[] =>
-    allCards.filter((card) => {
-      if (card.doneAt === null) return false
-      const at = new Date(card.doneAt).getTime()
-      if (at < from) return false
-      return at < to
-    })
-  const doneThisWeekCards = doneInWindow(briefingWindowStart, now + 1)
-  const doneLastWeekCards = doneInWindow(previousWindowStart, briefingWindowStart)
-  const briefingCounts = {
-    done: doneThisWeekCards.length,
-    doneLastPeriod: doneLastWeekCards.length,
-    // "Created" over the same window, from the same card list the tiles read -- another field that
-    // used to be a hard-coded zero.
-    created: allCards.filter((card) => new Date(card.createdAt).getTime() >= briefingWindowStart)
-      .length,
-    overdue: totalOverdue,
-  }
 
   // Goals worth a dashboard row: not archived, most-behind first, at most three. A head who set
   // eight goals does not want eight bars on Home -- `/goals` is where all of them live.
@@ -516,105 +498,6 @@ export function HeadDashboard(): React.JSX.Element {
 
   const cardTitleById = (id: string): string | null =>
     allCards.find((card) => card.id === id)?.title ?? null
-
-  /**
-   * SPEC §3.2's "AI xulosa (the department catch-up briefing, head-only, with citations)".
-   *
-   * Every input is a fact this component already holds -- the board, the indicator rows, the
-   * analytics summary -- so the briefing is a reading of the department's real week and the model is
-   * never asked to remember anything. `scope: 'department'` is the head-only scope the prompt itself
-   * branches on (AI-AUDIT §4), and the server enforces that gate independently.
-   */
-  function runBriefing(): void {
-    const windowStart = briefingWindowStart
-    const nameOf = (userId: string | null): string | null => {
-      if (!userId) return null
-      const member = members.find((m) => m.userId === userId)
-      return member ? `${member.givenName} ${member.familyName}`.trim() : null
-    }
-    const asItem = (card: WorkCard) => ({
-      id: card.id,
-      title: card.title,
-      assigneeName: nameOf(card.assigneeUserId),
-      dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
-      daysOverdue: card.dueAt
-        ? Math.max(0, Math.floor((now - new Date(card.dueAt).getTime()) / 86_400_000))
-        : 0,
-    })
-
-    // SEV1 #4: the same list the counts above were computed from, never a second definition of
-    // "done this week".
-    const doneThisWeek = doneThisWeekCards
-    const overdueCards = allCards.filter((card) => card.risk === 'overdue')
-
-    setBriefing({ status: 'pending' })
-    catchUp.mutate(
-      {
-        locale,
-        scope: 'department',
-        window: 'week',
-        subjectName: department?.name ?? t('home.head.catchUp.title'),
-        viewerName:
-          `${session.user?.givenName ?? ''} ${session.user?.familyName ?? ''}`.trim() ||
-          t('home.head.catchUp.title'),
-        period: {
-          start: new Date(windowStart).toISOString().slice(0, 10),
-          end: new Date(now).toISOString().slice(0, 10),
-        },
-        // SEV1 #4: handed the dashboard's own numbers as fetched inputs. `doneLastPeriod` and
-        // `created` used to be literal zeroes here, which is what made the briefing announce "no
-        // change against the previous week" on every single run.
-        counts: briefingCounts,
-        // The schemas allow 60/40/100 rows; a briefing is sent eight of each on purpose.
-        //
-        // Measured against the configured `glm-5.2`: it is a reasoning model that spends its
-        // *completion* budget thinking, and the amount it thinks scales with how much it was given.
-        // A department of 27 with 77 overdue cards produced a ~9 000-token prompt, 7 000+ characters
-        // of `reasoning_content`, and then no tool call at all -- the dashboard's "AI hozircha javob
-        // bera olmadi". The counts above already carry the real totals, so the briefing can say
-        // "77 kechikkan" while reasoning over the worst eight; and a briefing that names twenty
-        // overdue cards is a list, not a briefing.
-        done: doneThisWeek.slice(0, 8).map(asItem),
-        overdue: overdueCards
-          .slice()
-          .sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''))
-          .slice(0, 8)
-          .map(asItem),
-        dueThisWeek: atRiskCards.slice(0, 5).map(asItem),
-        assignedToMe: [],
-        mentions: [],
-        comments: [],
-        // Only people who actually hold work, busiest first -- a row of zeroes for somebody who has
-        // not been given a card teaches the model nothing and costs tokens.
-        loadPerPerson: members
-          .map((member) => ({
-            name: `${member.givenName} ${member.familyName}`.trim(),
-            openCount: num(member.userId, 'openCards'),
-            overdueCount: num(member.userId, 'overdueCards'),
-          }))
-          .filter((row) => row.openCount > 0)
-          .sort((a, b) => b.openCount - a.openCount)
-          .slice(0, 8),
-        eventsAhead: upcomingEvents.map((event) => ({
-          id: event.id,
-          title: event.title,
-          startsAt: event.startsAt,
-          myRsvp: null,
-        })),
-      },
-      {
-        onSuccess: (res) => {
-          const output = parseFeatureOutput<CatchUpOutput>('catch_up', res.data)
-          if (!output) {
-            setBriefing({ status: 'error', message: t('ai.errors.runFailed') })
-            return
-          }
-          setBriefing({ status: 'ready', output, meta: res.meta })
-        },
-        onError: (err) => setBriefing({ status: 'error', message: t(aiErrorMessageKey(err)) }),
-      },
-    )
-  }
 
   /** Every tile, by id. The map is built unconditionally (each one is cheap JSX over data this
    * component already has); `layout` decides which of them reach the grid. */
@@ -902,18 +785,29 @@ export function HeadDashboard(): React.JSX.Element {
                 <li key={goal.id} className="flex flex-col gap-1">
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="min-w-0 truncate text-small">{goal.title}</span>
-                    {/* SEV2 #8: a ceiling goal's bar fills TOWARDS its cap, and its caption says how
-                        much of the cap is used -- the achievement ratio would draw 22% next to a
-                        department that is comfortably inside its own limit. Same two functions the
-                        /goals card uses, so the tile and the page cannot disagree. */}
+                    {/* v1.1 recapture §1a #8: the tile said "100%" where `/goals` said
+                        "98% (maqsad: 85%)", and "78% chegaradan" where the page said
+                        "chegaraning 78%" -- the same goal, two numbers and two sentences, three
+                        inches apart. The tile now reads the goal the way the page does, from the
+                        same helpers and the same `work.goals.*` keys:
+                          - a percentage metric prints its own value against its own target,
+                            never progress-toward-target clamped at 100;
+                          - a ceiling prints how much of the cap is used, in the page's words;
+                          - a count prints "current / target".
+                        One phrasing, one number, wherever a head happens to be looking. */}
                     <span className="shrink-0 tabular-nums text-caption text-muted-foreground">
-                      {formatNumber(
-                        Math.round(
-                          goalBarFill(goal.metric, goal.currentValue, goal.targetValue) * 100,
-                        ),
-                        locale,
-                      )}
-                      %{isCeilingMetric(goal.metric) ? ` ${t('home.head.goals.ofCap')}` : ''}
+                      {isPercentMetric(goal.metric)
+                        ? `${formatNumber(goal.currentValue, locale)}% ${t('work.goals.percentTarget', { target: goal.targetValue })}`
+                        : isCeilingMetric(goal.metric)
+                          ? t('work.goals.capUsed', {
+                              pct: Math.round(
+                                goalBarFill(goal.metric, goal.currentValue, goal.targetValue) * 100,
+                              ),
+                            })
+                          : t('work.goals.value', {
+                              current: goal.currentValue,
+                              target: goal.targetValue,
+                            })}
                     </span>
                   </span>
                   <Progress
@@ -944,41 +838,75 @@ export function HeadDashboard(): React.JSX.Element {
             onOpen: () => navigate('/ai'),
           }}
         >
-          {briefing.status === 'idle' ? (
-            <div className="flex flex-col items-start gap-2">
-              <p className="text-small text-muted-foreground">{t('home.head.catchUp.idle')}</p>
-              <SparkleButton
-                size="sm"
-                label={t('home.head.catchUp.run')}
-                aria-label={t('home.head.catchUp.run')}
-                onClick={runBriefing}
-              />
+          {briefingQuery.isPending ? (
+            // I-10: the tile has a loading state of its own shape, not a spinner in a box.
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
             </div>
           ) : (
-            // `readOnly`: a briefing is a reading of the week, not a draft to accept -- the same
-            // reason the risk explainer and the board digest are read-only (AI-AUDIT §5). Pending,
-            // error and the "Namunaviy javob" strip are all this panel's own job.
-            <AiResultPanel
-              title={t('home.head.catchUp.title')}
-              status={briefing.status}
-              readOnly
-              meta={briefing.status === 'ready' ? briefing.meta : undefined}
-              errorMessage={briefing.status === 'error' ? briefing.message : undefined}
-              onDiscard={() => setBriefing({ status: 'idle' })}
-              // SEV2 #23: a briefing can take the better part of a minute, so the head gets a way
-              // out that returns the tile to its "press to run" state rather than leaving them
-              // staring at a shimmer with nothing but a primary-styled Yopish.
-              onCancel={() => {
-                catchUp.reset()
-                setBriefing({ status: 'idle' })
-                toast(t('ai.pending.cancelled'))
-              }}
-              onRetry={runBriefing}
-            >
-              {briefing.status === 'ready' ? (
-                <CatchUpPreview output={briefing.output} cardTitle={cardTitleById} />
+            <div className="flex flex-col items-start gap-3">
+              {briefingOutput ? (
+                <CatchUpPreview output={briefingOutput} cardTitle={cardTitleById} />
+              ) : (
+                <p className="text-small text-muted-foreground">
+                  {briefing?.status === 'failed'
+                    ? t('home.head.catchUp.failed')
+                    : t('home.head.catchUp.empty')}
+                </p>
+              )}
+
+              {/* The quiet in-flight state the finding asked for: a line, not a takeover. The words
+                  already on screen stay readable while the new ones are being made -- a head who
+                  presses Yangilash has not asked to stop reading. */}
+              {briefingPending ? (
+                <p
+                  className="flex items-center gap-2 text-small text-muted-foreground"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Sparkle className="size-4 animate-pulse" aria-hidden="true" />
+                  <span>
+                    {t('home.head.catchUp.pending')} — {t('home.head.catchUp.pendingHint')}
+                  </span>
+                </p>
               ) : null}
-            </AiResultPanel>
+
+              {/* How old the words are, always, whenever there are words. A briefing without a
+                  timestamp invites a head to read Friday's week as this morning's. */}
+              {briefing?.generatedAt ? (
+                <p className="text-caption text-muted-foreground">
+                  {t('home.head.catchUp.generatedAt', {
+                    time: formatDateTime(new Date(briefing.generatedAt), locale),
+                  })}
+                </p>
+              ) : null}
+
+              {briefingQuery.data?.canRefresh ? (
+                <SparkleButton
+                  size="sm"
+                  label={t('home.head.catchUp.refresh')}
+                  aria-label={t('home.head.catchUp.refresh')}
+                  disabled={briefingPending}
+                  onClick={() => {
+                    refreshBriefing.mutate(locale, {
+                      onSuccess: (res) => {
+                        // The server refuses inside the cooldown rather than spending the
+                        // department's soʻm twice on one unchanged week; it hands back how long is
+                        // left, so the toast can say something true.
+                        toast(
+                          res.retryAfterMs === null
+                            ? t('home.head.catchUp.requested')
+                            : t('home.head.catchUp.cooldown'),
+                        )
+                      },
+                      onError: () => toast(t('home.head.catchUp.failed')),
+                    })
+                  }}
+                />
+              ) : null}
+            </div>
           )}
         </TileShell>
       </StaggerItem>

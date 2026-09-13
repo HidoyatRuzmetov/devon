@@ -172,7 +172,7 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
-      if (!departmentId) return reply.send({ items: [], nextCursor: null })
+      if (!departmentId) return reply.send({ items: [], nextCursor: null, total: 0 })
       return reply.send(
         await repo.listRuns(contextFromRequest(req), departmentId, {
           ruleId: req.query.ruleId,

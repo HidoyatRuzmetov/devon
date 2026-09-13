@@ -50,6 +50,10 @@ export type AutomationRun = z.infer<typeof automationRunSchema>
 export const automationRunListSchema = z.object({
   items: z.array(automationRunSchema),
   nextCursor: z.string().nullable(),
+  /** How many runs the filter matches, department-wide -- not how many this page carries. See the
+   * API schema's own comment: reporting the page's length as "the number of runs" is how the log
+   * came to contradict the rule card above it (v1.1 recapture #9). */
+  total: z.number().int().min(0),
 })
 export type AutomationRunList = z.infer<typeof automationRunListSchema>
 

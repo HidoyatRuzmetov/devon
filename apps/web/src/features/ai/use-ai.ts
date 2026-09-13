@@ -8,6 +8,7 @@ import type { AiFeatureId, PatchAiSettingsInput } from './types.js'
 const KEYS = {
   settings: ['ai', 'settings'] as const,
   usage: ['ai', 'usage'] as const,
+  briefing: ['ai', 'briefing'] as const,
 }
 
 function useCsrfToken(): string {
@@ -94,6 +95,42 @@ export function useRebuildIndexMutation() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: KEYS.settings })
       void qc.invalidateQueries({ queryKey: ['ai', 'search'] })
+    },
+  })
+}
+
+// --- the head's cached department briefing (v1.1 recapture #23) --------------------------------
+
+/**
+ * The cached briefing. Cheap enough to fetch on every Home render -- it reads one row -- and it
+ * polls only while a run is actually in flight: `refetchInterval` is a function, so a `ready` row
+ * costs nothing and a `queued` one is checked every ten seconds until it lands. A briefing takes
+ * one to five minutes, so a tighter interval would be noise on the network panel and no faster to
+ * the reader.
+ */
+export function useBriefingQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: KEYS.briefing,
+    queryFn: api.fetchBriefing,
+    enabled,
+    staleTime: 60_000,
+    refetchInterval: (query) => {
+      const status = query.state.data?.briefing?.status
+      return status === 'queued' || status === 'running' ? 10_000 : false
+    },
+  })
+}
+
+/** "Yangilash". Invalidates the cached row on settle so the tile switches to `tayyorlanmoqda`
+ * immediately, and the poll above takes over from there. */
+export function useRefreshBriefingMutation() {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en') => api.refreshBriefing(locale, csrf),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: KEYS.briefing })
+      void qc.invalidateQueries({ queryKey: KEYS.settings })
     },
   })
 }

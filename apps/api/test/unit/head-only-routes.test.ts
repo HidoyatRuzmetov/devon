@@ -82,6 +82,11 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   // EPIC-016: rebuilding the AI search index re-embeds the department's rows, so its only visible
   // effect is on AI spend -- it belongs with the budget, which is the head's.
   'POST /api/v1/ai/search/reindex',
+  // v1.1 recapture #23: the department briefing reads the whole boshqarma's week -- who is late,
+  // who is overloaded -- which SPEC §2.2 makes a head's question. Reading the cached one is as
+  // managerial as asking for a new one, so both ends carry the same gate.
+  'GET /api/v1/ai/briefing',
+  'POST /api/v1/ai/briefing/refresh',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

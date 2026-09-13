@@ -115,7 +115,8 @@
       "status": "Натижа",
       "allRules": "Ҳамма қоидалар",
       "allStatuses": "Ҳаммаси",
-      "count": "{groups} та гуруҳ · {runs} та ишга тушиш"
+      "count": "{groups} та гуруҳ · {runs} та ишга тушиш",
+      "countOf": "{groups} та гуруҳ · {total} тадан {runs} таси кўрсатилмоқда"
     },
     "runsFilteredTitle": "Бу филтрга мос ёзув йўқ",
     "runsFilteredBody": "Бошқа қоидани ёки бошқа натижани танланг.",

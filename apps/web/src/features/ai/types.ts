@@ -242,6 +242,33 @@ export const askResponseSchema = z.object({
 })
 export type AskResponse = z.infer<typeof askResponseSchema>
 
+/**
+ * The head's cached department briefing (v1.1 recapture #23). The tile reads this; it never runs
+ * `catch_up` itself any more. `status` and `generatedAt` are what let it be honest about *which*
+ * week's words it is showing and whether a fresh run is on the way.
+ */
+export const briefingResponseSchema = z.object({
+  briefing: z
+    .object({
+      day: z.string(),
+      locale: z.string(),
+      status: z.enum(['queued', 'running', 'ready', 'failed']),
+      data: z.record(z.string(), z.unknown()).nullable(),
+      generatedAt: z.string().nullable(),
+      error: z.string().nullable(),
+      latencyMs: z.number().int().nullable(),
+    })
+    .nullable(),
+  canRefresh: z.boolean(),
+})
+export type BriefingResponse = z.infer<typeof briefingResponseSchema>
+
+export const refreshBriefingResponseSchema = z.object({
+  status: z.enum(['queued', 'running', 'ready', 'failed']),
+  retryAfterMs: z.number().int().nullable(),
+})
+export type RefreshBriefingResponse = z.infer<typeof refreshBriefingResponseSchema>
+
 export const reindexResponseSchema = z.object({
   indexed: z.number().int(),
   embedded: z.number().int(),

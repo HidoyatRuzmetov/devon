@@ -45,6 +45,10 @@ export const automationRunSchema = z.object({
 export const automationRunListSchema = z.object({
   items: z.array(automationRunSchema),
   nextCursor: z.string().nullable(),
+  /** How many runs the filter matches in total, not how many this page carries. v1.1 recapture #9:
+   * the run log used to report the page's length as the number of runs, which is how it came to
+   * contradict the rule card three inches above it. */
+  total: z.number().int().min(0),
 })
 
 export const runsQuerySchema = z.object({

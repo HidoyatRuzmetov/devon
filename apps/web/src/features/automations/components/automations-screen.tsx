@@ -548,6 +548,8 @@ export default function AutomationsScreen(): React.JSX.Element {
   }
 
   const runs = runsQuery.data?.items ?? []
+  // The filter's real total, from the server -- see the count line below.
+  const runTotal = runsQuery.data?.total ?? runs.length
   // SEV2 #9: filter, then group, then page. Grouping after filtering is what makes "show me only the
   // failures" collapse to the handful of batches that actually failed instead of to nothing.
   const filteredRuns = runs.filter((run) => {
@@ -723,10 +725,24 @@ export default function AutomationsScreen(): React.JSX.Element {
               className="ml-auto pb-2 text-caption tabular-nums text-muted-foreground"
               role="status"
             >
-              {t('automations.runsFilter.count', {
-                groups: runGroups.length,
-                runs: filteredRuns.length,
-              })}
+              {/* v1.1 recapture §1a #9. This line used to read "1 ta guruh · 50 ta ishga tushish"
+                  under a rule card that said "79 marta ishlagan" -- it was counting the rows the
+                  page had been handed. The server now returns the filter's real total, so the log
+                  says how much of it is on screen when that is less than all of it, and says the
+                  plain count when the whole log fits. A number a head can check against the card
+                  above it, either way. */}
+              {runTotal > filteredRuns.length &&
+              runRuleFilter === 'all' &&
+              runStatusFilter === 'all'
+                ? t('automations.runsFilter.countOf', {
+                    groups: runGroups.length,
+                    runs: filteredRuns.length,
+                    total: runTotal,
+                  })
+                : t('automations.runsFilter.count', {
+                    groups: runGroups.length,
+                    runs: filteredRuns.length,
+                  })}
             </p>
           </div>
 

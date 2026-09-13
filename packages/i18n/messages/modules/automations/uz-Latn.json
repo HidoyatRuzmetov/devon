@@ -115,7 +115,8 @@
       "status": "Natija",
       "allRules": "Hamma qoidalar",
       "allStatuses": "Hammasi",
-      "count": "{groups} ta guruh · {runs} ta ishga tushish"
+      "count": "{groups} ta guruh · {runs} ta ishga tushish",
+      "countOf": "{groups} ta guruh · {total} tadan {runs} tasi koʻrsatilmoqda"
     },
     "runsFilteredTitle": "Bu filtrga mos yozuv yoʻq",
     "runsFilteredBody": "Boshqa qoidani yoki boshqa natijani tanlang.",

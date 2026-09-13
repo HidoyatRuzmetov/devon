@@ -112,8 +112,13 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
       key: 'member.my-open',
       name: 'Mening ochiq ishlarim',
       query: 'assignee:@me status:active',
-      chartKey: 'personal' as const,
-      chartTitle: 'Shaxsiy koʻrsatkichlarim',
+      // v1.1 recapture §1a #20: the member's pinned card was `personal`, which is a KPI grid by
+      // design -- six numbers, five of them already on the tiles directly above it. A card headed
+      // "Mahkamlangan diagrammalar" that contains no diagram is the finding, and the seed was what
+      // put a number grid under that heading. `throughput` is a real twelve-week line: what this
+      // person finished, week by week, which is the one thing the tiles above cannot show.
+      chartKey: 'throughput' as const,
+      chartTitle: 'Haftalik natijam',
     },
   ]
 

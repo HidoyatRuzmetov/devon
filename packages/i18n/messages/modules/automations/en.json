@@ -115,7 +115,8 @@
       "status": "Outcome",
       "allRules": "All rules",
       "allStatuses": "All",
-      "count": "{groups} groups · {runs} runs"
+      "count": "{groups} groups · {runs} runs",
+      "countOf": "{groups} groups · showing {runs} of {total} runs"
     },
     "runsFilteredTitle": "Nothing matches this filter",
     "runsFilteredBody": "Pick another rule or another outcome.",

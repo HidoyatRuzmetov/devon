@@ -115,7 +115,8 @@
       "status": "Результат",
       "allRules": "Все правила",
       "allStatuses": "Все",
-      "count": "{groups} групп · {runs} срабатываний"
+      "count": "{groups} групп · {runs} срабатываний",
+      "countOf": "{groups} групп · показано {runs} из {total} запусков"
     },
     "runsFilteredTitle": "Под этот фильтр ничего не подходит",
     "runsFilteredBody": "Выберите другое правило или другой результат.",

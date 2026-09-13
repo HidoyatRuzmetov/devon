@@ -128,7 +128,15 @@
         "cta": "AI sahifasi",
         "idle": "Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi.",
         "run": "Xulosa tayyorlash",
-        "dismiss": "Yopish"
+        "dismiss": "Yopish",
+        "refresh": "Yangilash",
+        "pending": "Xulosa tayyorlanmoqda",
+        "pendingHint": "Bir necha daqiqa olishi mumkin. Tayyor boʻlgach shu yerda koʻrinadi.",
+        "generatedAt": "{time} da tayyorlangan",
+        "empty": "Hali xulosa tayyorlanmagan. Har kecha avtomatik tayyorlanadi yoki hozir soʻrashingiz mumkin.",
+        "failed": "Oxirgi urinish natija bermadi. Qaytadan soʻrab koʻring.",
+        "cooldown": "Xulosa hozirgina yangilandi. Biroz kutib, qaytadan urinib koʻring.",
+        "requested": "Xulosa soʻraldi — tayyor boʻlgach shu yerda koʻrinadi."
       }
     }
   }

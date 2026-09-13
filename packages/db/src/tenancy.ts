@@ -76,6 +76,9 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.ai_traces': 'department_owned',
   // EPIC-016 AI L2: the search index behind semantic search and the "Ask" box (migration 0810).
   'app.ai_search_documents': 'department_owned',
+  // v1.1 recapture #23: the head's department briefing, cached per department per day so the tile
+  // never waits on a multi-minute GLM call (migration 1900).
+  'app.ai_briefings': 'department_owned',
 
   // EPIC-010/011 analytics + pages/onboarding-lite (MODULE-GUIDE.md "DB: schema").
   // v1.1 SPEC §5 -- custom fields. A definition, a value and a fill request all belong to exactly one

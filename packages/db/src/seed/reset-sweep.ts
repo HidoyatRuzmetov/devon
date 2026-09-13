@@ -90,6 +90,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   { table: 'app.analytics_daily' },
   { table: 'app.ai_traces' },
   { table: 'app.ai_search_documents' },
+  { table: 'app.ai_briefings' },
   { table: 'app.ai_department_settings' },
   // Owner-only on write (owner_user_id); swept once per account -- see sweepDepartmentResidue.
   { table: 'app.saved_views', ownerColumn: 'owner_user_id' },

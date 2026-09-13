@@ -258,7 +258,7 @@ export async function listRuns(
   ctx: RequestContext,
   departmentId: string,
   options: { ruleId?: string | undefined; limit: number; cursor?: string | undefined },
-): Promise<{ items: RunRow[]; nextCursor: string | null }> {
+): Promise<{ items: RunRow[]; nextCursor: string | null; total: number }> {
   return withContext(ctx, async (tx) => {
     const ruleFilter = options.ruleId ? sql` and r.rule_id = ${options.ruleId}` : sql``
     const cursorFilter = options.cursor ? sql` and r.at < ${options.cursor}` : sql``
@@ -282,7 +282,18 @@ export async function listRuns(
           limit ${options.limit + 1}`,
     )
     const page = rows.slice(0, options.limit)
+    // v1.1 recapture §1a #9: the rule card said "79 marta ishlagan" and the log under it said
+    // "50 ta ishga tushish", because the log was counting the rows it had been handed -- one page --
+    // and presenting that as the number of runs. The page is a page; the total is a fact about the
+    // filter, and only the database can answer it. Same `where` clause as the page query, minus the
+    // cursor, so the two can never mean different things.
+    const totals = await tx.raw<{ n: number }>(
+      sql`select count(*)::int as n
+          from app.automation_runs r
+          where r.department_id = ${departmentId}${ruleFilter}`,
+    )
     return {
+      total: totals[0]?.n ?? page.length,
       items: page.map((r) => ({
         id: r.id,
         ruleId: r.rule_id,

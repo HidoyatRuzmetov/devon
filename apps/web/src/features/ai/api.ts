@@ -3,6 +3,8 @@
 import { apiClient } from '../../lib/api-client.js'
 import {
   aiSettingsSchema,
+  briefingResponseSchema,
+  refreshBriefingResponseSchema,
   askResponseSchema,
   reindexResponseSchema,
   runFeatureResponseSchema,
@@ -12,6 +14,8 @@ import {
   type AiFeatureId,
   type AiSettings,
   type AskResponse,
+  type BriefingResponse,
+  type RefreshBriefingResponse,
   type PatchAiSettingsInput,
   type RunFeatureResponse,
   type SearchBackend,
@@ -78,4 +82,25 @@ export function rebuildSearchIndex(
   csrfToken: string,
 ): Promise<{ indexed: number; embedded: number; backend: 'embeddings' | 'fts' }> {
   return apiClient.post(`${BASE}/search/reindex`, {}, reindexResponseSchema, csrfToken)
+}
+
+// --- the head's cached department briefing (v1.1 recapture #23) --------------------------------
+
+/** A plain GET that never calls a model: it returns whatever the nightly job last produced. */
+export function fetchBriefing(): Promise<BriefingResponse> {
+  return apiClient.get(`${BASE}/briefing`, briefingResponseSchema)
+}
+
+/** "Yangilash" -- enqueues a run and returns at once. The tile polls `fetchBriefing` until the
+ * status turns `ready`; nothing here ever waits on the model. */
+export function refreshBriefing(
+  locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en',
+  csrfToken: string,
+): Promise<RefreshBriefingResponse> {
+  return apiClient.post(
+    `${BASE}/briefing/refresh`,
+    { locale },
+    refreshBriefingResponseSchema,
+    csrfToken,
+  )
 }

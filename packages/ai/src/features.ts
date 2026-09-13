@@ -153,8 +153,19 @@ export const DEFAULT_FEATURE_TIMEOUT_MS: Record<AiFeature, number> = {
   // The long-form, deliberately-requested ones. 75 s is under the "bir daqiqagacha" the pending
   // panel promises plus a little slack, and far under anything that reads as a hang.
   plan_sprint: 75_000,
-  catch_up: 75_000,
   board_risk_digest: 75_000,
+  // `catch_up` is not one of those, and pretending it was is what broke it. v1.1 recapture report
+  // §1a #23: the department briefing measured 78.8 s, 112 s and 275.9 s against the ministry's GLM
+  // on one afternoon -- it has never once completed under 78 s -- so a 75 s budget did not make it
+  // faster, it made every run end in "AI did not answer in time". A hang became a guaranteed
+  // failure.
+  //
+  // 300 s is the measured worst case plus headroom, and it is safe to spend *because nobody waits
+  // on it any more*: `apps/api/src/modules/ai/briefing.ts` runs this feature in a pg-boss job and
+  // the head's tile reads the cached result (`app.ai_briefings`). The number below is a server-side
+  // job budget, not a request budget -- which is the only kind of budget a four-minute reasoning
+  // call can honestly have.
+  catch_up: 300_000,
 }
 
 export type RunFeatureResult<T> = RunResult<T> | { ok: false; error: string; meta: null }

@@ -17,6 +17,8 @@ import {
 import type { AiProvider } from '@devon/ai'
 import * as search from './search-service.js'
 import * as repo from './repo.js'
+import { markReady } from './briefing-repo.js'
+import { tashkentDateString } from '../analytics/aggregate.js'
 import { settingsToDto, traceToDto } from './dto.js'
 import type {
   AiSettingsDto,
@@ -650,11 +652,13 @@ export async function narrateDepartmentWeek(
           start: weekAgo.toISOString().slice(0, 10),
           end: now.toISOString().slice(0, 10),
         },
+        // SEV1 #4: the department's totals, never the length of a `limit 30` -- see
+        // `DepartmentWeekSnapshot`.
         counts: {
-          done: snapshot.done.length,
+          done: snapshot.doneCount,
           doneLastPeriod: snapshot.doneLastPeriodCount,
           created: snapshot.createdCount,
-          overdue: snapshot.overdue.length,
+          overdue: snapshot.overdueCount,
         },
         done: snapshot.done,
         overdue: snapshot.overdue,
@@ -666,6 +670,13 @@ export async function narrateDepartmentWeek(
         eventsAhead: [],
       },
     })
+
+    // v1.1 recapture #23: the digest just paid for a full department briefing, so the head's tile
+    // gets it too rather than the department paying twice for the same week. Best-effort -- a cache
+    // write that fails must never stop a digest going out.
+    await withContext(ctx, (tx) =>
+      markReady(tx, params.departmentId, tashkentDateString(now), outcome.data, 0),
+    ).catch(() => {})
 
     const data = outcome.data as {
       headline?: unknown

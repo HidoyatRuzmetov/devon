@@ -85,3 +85,33 @@ export const aiSearchDocuments = appSchema.table('ai_search_documents', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+/**
+ * The head's department briefing, cached one row per department per Tashkent day
+ * (`migrations/1900_ai_briefings.sql`, v1.1 recapture report §1a #23).
+ *
+ * `catch_up` at department scope measured 78.8 s, 112 s and 276 s against the ministry's GLM in one
+ * afternoon. A browser cannot wait on that, and the 75 s budget the fix round set below the
+ * feature's own floor turned every run into a timeout. So the briefing is computed by a pg-boss job
+ * and *read* from here: the tile shows the cached answer and the time it was generated, and
+ * "Yangilash" enqueues a new run rather than opening a four-minute request.
+ *
+ * `output` is the validated `catch_up` payload -- the grounding validator runs before this row is
+ * written, so a cached briefing is never less checked than a live one was.
+ */
+export const aiBriefings = appSchema.table('ai_briefings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  departmentId: uuid('department_id').notNull(),
+  /** Tashkent calendar day, `YYYY-MM-DD` -- the same key `analytics_daily` uses. */
+  day: text('day').notNull(),
+  locale: text('locale').notNull().default('uz-Latn'),
+  /** `'queued' | 'running' | 'ready' | 'failed'` -- the job lifecycle, see the migration. */
+  status: text('status').notNull().default('queued'),
+  output: jsonb('output'),
+  generatedAt: timestamp('generated_at', { withTimezone: true }),
+  error: text('error'),
+  latencyMs: integer('latency_ms'),
+  requestedByUserId: uuid('requested_by_user_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
