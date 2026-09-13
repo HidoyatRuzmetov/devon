@@ -123,7 +123,13 @@ export class GlmProvider implements AiProvider {
     let lastError: unknown
     for (let attempt = 0; attempt <= this.maxTransportRetries; attempt++) {
       const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), this.requestTimeoutMs)
+      // SEV2 #23: whichever is tighter -- this deployment's configured per-attempt ceiling, or what
+      // the caller has left of the run's whole budget.
+      const attemptTimeoutMs =
+        request.timeoutMs !== undefined && request.timeoutMs > 0
+          ? Math.min(request.timeoutMs, this.requestTimeoutMs)
+          : this.requestTimeoutMs
+      const timer = setTimeout(() => controller.abort(), attemptTimeoutMs)
       try {
         const res = await this.fetchImpl(`${this.baseUrl}/chat/completions`, {
           method: 'POST',

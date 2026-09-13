@@ -185,6 +185,9 @@ export const traceDtoSchema = z.object({
     'empty_after_retry',
     'schema_invalid_after_retry',
     'provider_error',
+    // v1.1 critique SEV2 #23: "we stopped waiting", which is a different fact from "the provider
+    // refused" and is the one a person can retry.
+    'timeout',
     'blocked_budget',
     'blocked_flag',
   ]),

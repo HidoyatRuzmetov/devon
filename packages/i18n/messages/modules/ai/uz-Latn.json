@@ -66,7 +66,31 @@
         "schema_invalid_after_retry": "Notoʻgʻri javob",
         "provider_error": "Provayder xatosi",
         "blocked_budget": "Byudjet toʻxtatdi",
-        "blocked_flag": "Yordamchi oʻchirilgan"
+        "blocked_flag": "Yordamchi oʻchirilgan",
+        "timeout": "Vaqt tugadi"
+      },
+      "latencySeconds": "{seconds} s",
+      "filter": {
+        "feature": "Yordamchi",
+        "status": "Natija",
+        "range": "Davr",
+        "allFeatures": "Hammasi",
+        "allStatuses": "Hammasi",
+        "days7": "Soʻnggi 7 kun",
+        "days30": "Soʻnggi 30 kun",
+        "days90": "Soʻnggi 90 kun",
+        "allTime": "Butun davr",
+        "count": "{total} tadan {shown} tasi"
+      },
+      "filtered": {
+        "title": "Bu filtrga mos chaqiruv yoʻq",
+        "body": "Boshqa yordamchi, boshqa natija yoki kengroq davrni tanlang.",
+        "action": "Filtrlarni tozalash"
+      },
+      "page": {
+        "previous": "Oldingi",
+        "next": "Keyingi",
+        "of": "{pages} sahifadan {page} chisi"
       }
     },
     "result": {
@@ -127,7 +151,9 @@
       "forbidden": "Bu yordamchi oʻchirilgan yoki byudjet tugagan",
       "runFailed": "AI hozircha javob bera olmadi",
       "headOnly": "Bu yordamchi faqat boʻlim boshligʻi uchun",
-      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing."
+      "featureDisabled": "Bu yordamchi boʻlim sozlamalarida oʻchirilgan. AI sahifasida yoqing.",
+      "timeout": "AI belgilangan vaqtda javob bermadi. Qayta urinib koʻring.",
+      "retry": "Qayta urinish"
     },
     "translateTarget": {
       "label": "Qaysi tilga",
@@ -356,6 +382,11 @@
     "catalogue": {
       "costPerCall": "~{cost} / soʻrov",
       "costEstimated": "Bitta soʻrovning taxminiy narxi — soʻrov hajmiga qarab."
+    },
+    "pending": {
+      "hint": "Bu bir daqiqagacha davom etishi mumkin.",
+      "cancel": "Bekor qilish",
+      "cancelled": "Soʻrov bekor qilindi."
     }
   }
 }

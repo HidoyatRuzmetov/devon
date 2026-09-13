@@ -66,7 +66,31 @@
         "schema_invalid_after_retry": "Malformed answer",
         "provider_error": "Provider error",
         "blocked_budget": "Stopped by the budget",
-        "blocked_flag": "Helper switched off"
+        "blocked_flag": "Helper switched off",
+        "timeout": "Timed out"
+      },
+      "latencySeconds": "{seconds} s",
+      "filter": {
+        "feature": "Helper",
+        "status": "Outcome",
+        "range": "Period",
+        "allFeatures": "All",
+        "allStatuses": "All",
+        "days7": "Last 7 days",
+        "days30": "Last 30 days",
+        "days90": "Last 90 days",
+        "allTime": "All time",
+        "count": "{shown} of {total}"
+      },
+      "filtered": {
+        "title": "Nothing matches this filter",
+        "body": "Pick another helper, another outcome or a wider period.",
+        "action": "Clear the filters"
+      },
+      "page": {
+        "previous": "Previous",
+        "next": "Next",
+        "of": "Page {page} of {pages}"
       }
     },
     "result": {
@@ -127,7 +151,9 @@
       "forbidden": "This helper is switched off, or the budget is spent",
       "runFailed": "AI could not answer just now",
       "headOnly": "This helper is for the head of the department only",
-      "featureDisabled": "This helper is switched off in the department settings. Turn it on from the AI page."
+      "featureDisabled": "This helper is switched off in the department settings. Turn it on from the AI page.",
+      "timeout": "The AI did not answer within the time allowed. Try again.",
+      "retry": "Try again"
     },
     "translateTarget": {
       "label": "Into which language",
@@ -356,6 +382,11 @@
     "catalogue": {
       "costPerCall": "~{cost} / request",
       "costEstimated": "Estimated cost of one request — depends on how much it is given to read."
+    },
+    "pending": {
+      "hint": "This can take up to a minute.",
+      "cancel": "Cancel",
+      "cancelled": "The request was cancelled."
     }
   }
 }

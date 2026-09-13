@@ -40,6 +40,10 @@ export interface AiResultPanelProps {
   onAccept?: (() => void) | undefined
   onEdit?: (() => void) | undefined
   onDiscard: () => void
+  /** v1.1 critique SEV2 #23: what the footer's only button does while the call is still in flight.
+   * Defaults to `onDiscard` -- closing the panel is already "stop waiting for this" from the
+   * person's point of view, even where the request itself cannot be recalled. */
+  onCancel?: (() => void) | undefined
   onRetry?: (() => void) | undefined
   acceptLabel?: string | undefined
   editLabel?: string | undefined
@@ -56,6 +60,7 @@ export function AiResultPanel({
   onAccept,
   onEdit,
   onDiscard,
+  onCancel,
   onRetry,
   acceptLabel,
   editLabel,
@@ -102,6 +107,7 @@ export function AiResultPanel({
         {...(costLine ? { costLine } : {})}
         {...(errorMessage ? { errorMessage } : {})}
         onClose={onDiscard}
+        {...(onCancel ? { onCancel } : {})}
         {...(onRetry ? { onRetry } : {})}
         {...(className ? { className } : {})}
       >
@@ -145,6 +151,7 @@ function ReadOnlyPanel({
   costLine,
   errorMessage,
   onClose,
+  onCancel,
   onRetry,
   className,
 }: {
@@ -154,6 +161,7 @@ function ReadOnlyPanel({
   costLine?: string | undefined
   errorMessage?: string | undefined
   onClose: () => void
+  onCancel?: (() => void) | undefined
   onRetry?: (() => void) | undefined
   className?: string | undefined
 }): React.JSX.Element {
@@ -188,10 +196,19 @@ function ReadOnlyPanel({
               {t('ai.result.retry')}
             </Button>
           ) : null}
-          <Button data-primary size="sm" onClick={onClose}>
-            <Check className="size-3.5" aria-hidden="true" />
-            {t('ai.result.close')}
-          </Button>
+          {/* SEV2 #23: while the call is in flight the only button is "give up on this", and it is
+              labelled that way. A primary "Yopish" over a shimmer reads as "dismiss the answer you
+              already have", which there is not one of yet. */}
+          {status === 'pending' ? (
+            <Button size="sm" variant="secondary" onClick={onCancel ?? onClose}>
+              {t('ai.pending.cancel')}
+            </Button>
+          ) : (
+            <Button data-primary size="sm" onClick={onClose}>
+              <Check className="size-3.5" aria-hidden="true" />
+              {t('ai.result.close')}
+            </Button>
+          )}
         </div>
       </footer>
     </Reveal>
@@ -216,6 +233,10 @@ function PanelBody({
         <Shimmer className="h-4 w-full" />
         <Shimmer className="h-4 w-[88%]" />
         <Shimmer className="h-4 w-[64%]" />
+        {/* v1.1 critique SEV2 #23: against the real GLM this wait was routinely two minutes and the
+            panel offered nothing but a shimmer and a primary-styled "Yopish". Saying how long it can
+            take is the difference between waiting and wondering whether it has hung. */}
+        <p className="pt-1 text-caption text-muted-foreground">{t('ai.pending.hint')}</p>
       </div>
     )
   }

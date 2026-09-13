@@ -122,6 +122,9 @@ export type InsertTraceInput = {
     | 'empty_after_retry'
     | 'schema_invalid_after_retry'
     | 'provider_error'
+    /** v1.1 critique SEV2 #23: the run exceeded its own wall-clock budget. Deliberately not
+     * `provider_error` -- see `migrations/0811_ai_trace_timeout_status.sql`. */
+    | 'timeout'
     | 'blocked_budget'
     | 'blocked_flag'
 }

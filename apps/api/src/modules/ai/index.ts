@@ -267,6 +267,12 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
           })
         }
         if (err instanceof AiRunFailedError) {
+          // SEV2 #23: a timeout is a 504 the person can retry, not a 500 they cannot.
+          if (err.kind === 'timeout') {
+            return sendProblem(reply, 'internal', {
+              errors: [{ path: 'feature', code: 'timeout' }],
+            })
+          }
           return sendProblem(reply, 'internal')
         }
         if (err instanceof AiUnavailableError) {

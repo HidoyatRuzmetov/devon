@@ -45,6 +45,21 @@ export type RunOptions<T> = {
    * place rather than being re-implemented per feature.
    */
   validate?: (output: T) => { ok: true; output: T } | { ok: false; error: string }
+  /**
+   * v1.1 critique SEV2 #23 -- the whole run's wall-clock budget, in ms.
+   *
+   * `config.requestTimeoutMs` bounds one HTTP attempt. It never bounded a *run*: this function can
+   * make three provider calls (the initial one, the doubled-max_tokens retry, the schema retry) and
+   * `GlmProvider` retries each one once on a transport failure, so the real ceiling was six times
+   * the per-attempt timeout. The head's own trace table recorded 275 962 ms, which is not a number
+   * anybody waits through -- and CLAUDE.md's "timeouts on every outbound call" is about how long a
+   * person waits, not about how long one socket stays open.
+   *
+   * Every provider call checks what is left before it starts and is given the remainder as its own
+   * timeout, so a run stops at this number rather than a multiple of it. Omitted = unbounded (unit
+   * tests against `MockProvider`, where the only cost is a function call).
+   */
+  overallTimeoutMs?: number
 }
 
 function findToolCall(toolCalls: readonly ToolCall[], name: string): ToolCall | null {
@@ -91,6 +106,18 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   const temperature = options.temperature ?? config.defaultTemperature
   const simulated = provider.simulated
   const start = Date.now()
+  // SEV2 #23. `null` = no budget (a unit test against the in-process mock).
+  const deadline =
+    options.overallTimeoutMs !== undefined && options.overallTimeoutMs > 0
+      ? start + options.overallTimeoutMs
+      : null
+  const remainingMs = (): number => (deadline === null ? 0 : deadline - Date.now())
+  const outOfTime = (): boolean => deadline !== null && remainingMs() <= 0
+  const timedOut = (): RunResult<T> => ({
+    ok: false,
+    error: `The request exceeded its ${options.overallTimeoutMs} ms budget.`,
+    meta: finish('timeout'),
+  })
 
   const usage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 }
   let retried = false
@@ -125,6 +152,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   // reasoning ate the whole budget (empty reply, glm-api-instruction.md point 1) or because the tool
   // call itself was truncated mid-JSON (v1.1 G-1). ---------------------------------------------------
   for (let attempt = 0; attempt < 2; attempt++) {
+    if (outOfTime()) return timedOut()
     let result
     try {
       result = await provider.complete({
@@ -134,8 +162,12 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
         tools: [tool],
         toolChoice: 'required',
         temperature,
+        ...(deadline !== null ? { timeoutMs: remainingMs() } : {}),
       })
     } catch (err) {
+      // An abort that happened because the run ran out of time is a timeout, not a provider fault --
+      // the breaker and the UI treat the two differently and should.
+      if (outOfTime()) return timedOut()
       const meta = finish('provider_error')
       return { ok: false, error: err instanceof Error ? err.message : String(err), meta }
     }
@@ -208,6 +240,10 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
       },
     ]
 
+    // SEV2 #23: a corrective round trip is worth having, but not at the cost of blowing the budget
+    // the caller promised a person. Out of time means the first answer's problem is reported as it
+    // stands, not that the wait doubles.
+    if (outOfTime()) return timedOut()
     let retryResult
     try {
       retryResult = await provider.complete({
@@ -217,9 +253,11 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
         tools: [tool],
         toolChoice: 'required',
         temperature,
+        ...(deadline !== null ? { timeoutMs: remainingMs() } : {}),
       })
     } catch (err) {
       retried = true
+      if (outOfTime()) return timedOut()
       const meta = finish('provider_error')
       return { ok: false, error: err instanceof Error ? err.message : String(err), meta }
     }

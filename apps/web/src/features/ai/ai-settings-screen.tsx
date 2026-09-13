@@ -19,7 +19,15 @@
 // `feature-forms.ts`. Every helper is reached where the work is, which is the entire point of them.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useT, useLocale, formatDate, formatTime, formatUzs, formatNumber } from '@devon/i18n'
+import {
+  useT,
+  useLocale,
+  formatDate,
+  formatTime,
+  formatUzs,
+  formatNumber,
+  type Locale,
+} from '@devon/i18n'
 import {
   Badge,
   Button,
@@ -55,7 +63,9 @@ import {
   featureExampleKey,
   featureLabelKey,
   featureWhereKey,
+  displayTraceFeature,
   type AiFeatureId,
+  type AiTraceFeatureId,
   type AiSettings,
   type Trace,
 } from './types.js'
@@ -486,14 +496,86 @@ const STATUS_TONE: Record<Trace['status'], 'success' | 'warning' | 'destructive'
   empty_after_retry: 'warning',
   schema_invalid_after_retry: 'warning',
   provider_error: 'destructive',
+  // SEV2 #23: "we stopped waiting" is a warning about our own patience, not a provider outage.
+  timeout: 'warning',
   blocked_budget: 'destructive',
   blocked_flag: 'neutral',
 }
 
+const TRACE_STATUSES = [
+  'ok',
+  'empty_after_retry',
+  'schema_invalid_after_retry',
+  'provider_error',
+  'timeout',
+  'blocked_budget',
+  'blocked_flag',
+] as const
+
+/** SEV2 #23: the trace table printed `latencyMs` raw -- "275962" -- which no head reads as four and
+ * a half minutes. Seconds, one decimal below ten, whole above. */
+function latencySeconds(ms: number, locale: Locale): string {
+  const seconds = ms / 1000
+  return formatNumber(seconds, locale, { maximumFractionDigits: seconds < 10 ? 1 : 0 })
+}
+
+const PAGE_SIZE = 20
+
+/**
+ * The head's AI console, Foydalanish tab.
+ *
+ * v1.1 critique SEV3 #33: this was an unfiltered, unpaged wall of rows, with latency in raw
+ * milliseconds and a row labelled "Nimani oʻtkazib yubordim (eskirgan)" -- an internal deprecation
+ * marker leaking onto a management screen. Now: filters by helper, outcome and date range, paging,
+ * latency in seconds, and a retired feature id displayed under the helper that absorbed it
+ * (`displayTraceFeature`), while storage keeps the original so an audit stays exact.
+ *
+ * The filtering is client-side on purpose: the endpoint returns the department's most recent traces,
+ * which is the window a head looks through in one sitting. Narrowing that in the browser is instant
+ * and costs one request rather than one per filter change.
+ */
 function UsageTab() {
   const t = useT()
   const locale = useLocale()
   const usageQuery = useAiUsageQuery()
+
+  const [featureFilter, setFeatureFilter] = React.useState<'all' | AiTraceFeatureId>('all')
+  const [statusFilter, setStatusFilter] = React.useState<'all' | Trace['status']>('all')
+  const [days, setDays] = React.useState<number | 'all'>(30)
+  const [page, setPage] = React.useState(0)
+
+  // Any filter change restarts the listing: staying on page 4 of a list that is now two pages long
+  // is the classic way a filtered table looks empty.
+  React.useEffect(() => setPage(0), [featureFilter, statusFilter, days])
+
+  const traces = React.useMemo(() => usageQuery.data ?? [], [usageQuery.data])
+
+  /** Only the helpers that actually appear in the loaded window -- a filter offering fourteen
+   * options when three were used is a longer list carrying less information. */
+  const featuresPresent = React.useMemo(() => {
+    const seen = new Map<AiTraceFeatureId, string>()
+    for (const trace of traces) {
+      const id = displayTraceFeature(trace.feature)
+      if (!seen.has(id)) seen.set(id, t(featureLabelKey(id)))
+    }
+    return [...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+  }, [traces, t])
+
+  const filtered = React.useMemo(() => {
+    const since = days === 'all' ? 0 : Date.now() - days * 86_400_000
+    return traces.filter((trace) => {
+      if (featureFilter !== 'all' && displayTraceFeature(trace.feature) !== featureFilter)
+        return false
+      if (statusFilter !== 'all' && trace.status !== statusFilter) return false
+      if (since === 0) return true
+      const ranAt = new Date(trace.createdAt).getTime()
+      return ranAt >= since
+    })
+  }, [traces, featureFilter, statusFilter, days])
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount - 1)
+  const shown = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
 
   if (usageQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (usageQuery.isError) {
@@ -506,53 +588,180 @@ function UsageTab() {
       />
     )
   }
-  if (usageQuery.data.length === 0) {
+  if (traces.length === 0) {
     return <StateView kind="empty" titleKey="ai.usage.empty.title" bodyKey="ai.usage.empty.body" />
   }
 
+  const selectClass =
+    'h-9 rounded-sm border border-border bg-card px-2 text-small text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
-      <table className="w-full min-w-180 text-left text-small">
-        <thead className="border-b border-border bg-muted/40 text-caption text-muted-foreground">
-          <tr>
-            <th className="px-3 py-2">{t('ai.usage.columns.when')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.who')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.feature')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.status')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.tokens')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.cost')}</th>
-            <th className="px-3 py-2">{t('ai.usage.columns.latency')}</th>
-          </tr>
-        </thead>
-        <Stagger as="tbody">
-          {usageQuery.data.map((trace) => {
-            const date = new Date(trace.createdAt)
-            return (
-              <StaggerItem as="tr" key={trace.id} className="border-b border-border last:border-0">
-                <td className="px-3 py-2 text-foreground">
-                  {formatDate(date, locale)} {formatTime(date, locale)}
-                </td>
-                <td className="px-3 py-2 text-foreground">
-                  {trace.userName || t('ai.usage.unknownUser')}
-                </td>
-                <td className="px-3 py-2 text-foreground">{t(featureLabelKey(trace.feature))}</td>
-                <td className="px-3 py-2">
-                  <Badge tone={STATUS_TONE[trace.status]}>
-                    {t(`ai.usage.status.${trace.status}`)}
-                  </Badge>
-                </td>
-                <td className="px-3 py-2 tabular-nums text-foreground">
-                  {formatNumber(trace.totalTokens, locale)}
-                </td>
-                <td className="px-3 py-2 text-foreground">{formatUzs(trace.costUzs, locale)}</td>
-                <td className="px-3 py-2 text-foreground">
-                  {t('ai.result.latency', { ms: formatNumber(trace.latencyMs, locale) })}
-                </td>
-              </StaggerItem>
-            )
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ai-usage-feature" className="text-caption text-muted-foreground">
+            {t('ai.usage.filter.feature')}
+          </label>
+          <select
+            id="ai-usage-feature"
+            className={selectClass}
+            value={featureFilter}
+            onChange={(e) => setFeatureFilter(e.target.value as 'all' | AiTraceFeatureId)}
+          >
+            <option value="all">{t('ai.usage.filter.allFeatures')}</option>
+            {featuresPresent.map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ai-usage-status" className="text-caption text-muted-foreground">
+            {t('ai.usage.filter.status')}
+          </label>
+          <select
+            id="ai-usage-status"
+            className={selectClass}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | Trace['status'])}
+          >
+            <option value="all">{t('ai.usage.filter.allStatuses')}</option>
+            {TRACE_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {t(`ai.usage.status.${status}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="ai-usage-range" className="text-caption text-muted-foreground">
+            {t('ai.usage.filter.range')}
+          </label>
+          <select
+            id="ai-usage-range"
+            className={selectClass}
+            value={String(days)}
+            onChange={(e) => setDays(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+          >
+            <option value="7">{t('ai.usage.filter.days7')}</option>
+            <option value="30">{t('ai.usage.filter.days30')}</option>
+            <option value="90">{t('ai.usage.filter.days90')}</option>
+            <option value="all">{t('ai.usage.filter.allTime')}</option>
+          </select>
+        </div>
+
+        <p className="ml-auto pb-2 text-caption tabular-nums text-muted-foreground" role="status">
+          {t('ai.usage.filter.count', {
+            shown: formatNumber(filtered.length, locale),
+            total: formatNumber(traces.length, locale),
           })}
-        </Stagger>
-      </table>
+        </p>
+      </div>
+
+      {filtered.length === 0 ? (
+        <StateView
+          kind="empty"
+          titleKey="ai.usage.filtered.title"
+          bodyKey="ai.usage.filtered.body"
+          action={{
+            labelKey: 'ai.usage.filtered.action',
+            onAction: () => {
+              setFeatureFilter('all')
+              setStatusFilter('all')
+              setDays('all')
+            },
+          }}
+        />
+      ) : (
+        <>
+          <div className="overflow-x-auto rounded-md border border-border">
+            <table className="w-full min-w-180 text-left text-small">
+              <thead className="border-b border-border bg-muted/40 text-caption text-muted-foreground">
+                <tr>
+                  <th className="px-3 py-2">{t('ai.usage.columns.when')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.who')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.feature')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.status')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.tokens')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.cost')}</th>
+                  <th className="px-3 py-2">{t('ai.usage.columns.latency')}</th>
+                </tr>
+              </thead>
+              <Stagger
+                as="tbody"
+                animateKey={`${featureFilter}|${statusFilter}|${days}|${safePage}`}
+              >
+                {shown.map((trace) => {
+                  const date = new Date(trace.createdAt)
+                  return (
+                    <StaggerItem
+                      as="tr"
+                      key={trace.id}
+                      className="border-b border-border last:border-0"
+                    >
+                      <td className="px-3 py-2 text-foreground">
+                        {formatDate(date, locale)} {formatTime(date, locale)}
+                      </td>
+                      <td className="px-3 py-2 text-foreground">
+                        {trace.userName || t('ai.usage.unknownUser')}
+                      </td>
+                      <td className="px-3 py-2 text-foreground">
+                        {t(featureLabelKey(trace.feature))}
+                      </td>
+                      <td className="px-3 py-2">
+                        <Badge tone={STATUS_TONE[trace.status]}>
+                          {t(`ai.usage.status.${trace.status}`)}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-foreground">
+                        {formatNumber(trace.totalTokens, locale)}
+                      </td>
+                      <td className="px-3 py-2 text-foreground">
+                        {formatUzs(trace.costUzs, locale)}
+                      </td>
+                      <td className="px-3 py-2 tabular-nums text-foreground">
+                        {t('ai.usage.latencySeconds', {
+                          seconds: latencySeconds(trace.latencyMs, locale),
+                        })}
+                      </td>
+                    </StaggerItem>
+                  )
+                })}
+              </Stagger>
+            </table>
+          </div>
+
+          {pageCount > 1 ? (
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safePage === 0}
+                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+              >
+                {t('ai.usage.page.previous')}
+              </Button>
+              <p className="text-caption tabular-nums text-muted-foreground" role="status">
+                {t('ai.usage.page.of', {
+                  page: formatNumber(safePage + 1, locale),
+                  pages: formatNumber(pageCount, locale),
+                })}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={safePage >= pageCount - 1}
+                onClick={() => setPage((prev) => Math.min(pageCount - 1, prev + 1))}
+              >
+                {t('ai.usage.page.next')}
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   )
 }

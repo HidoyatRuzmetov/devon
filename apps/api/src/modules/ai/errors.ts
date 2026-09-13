@@ -24,7 +24,14 @@ export class AiBudgetExceededError extends Error {
  * answer -- an empty response even after the retry, or a tool call that still failed schema
  * validation after the one retry `@devon/ai` allows. Never the caller's fault; mapped to `internal`. */
 export class AiRunFailedError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    /** v1.1 critique SEV2 #23: `'timeout'` means the run exceeded the wall-clock budget its feature
+     * declares (`@devon/ai`'s `DEFAULT_FEATURE_TIMEOUT_MS`), which the client turns into "it took
+     * too long, try again" plus a retry button -- a different sentence, and a different remedy, from
+     * a provider that refused. */
+    public readonly kind: 'failed' | 'timeout' = 'failed',
+  ) {
     super(message)
     this.name = 'AiRunFailedError'
   }

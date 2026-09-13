@@ -69,6 +69,12 @@ export type ChatCompletionRequest = {
   /** v1.1 AI-AUDIT G-2: never left unset for a structured-extraction feature. Two identical
    * quick-adds returning different labels *is* the "feels random" complaint, literally. */
   temperature?: number
+  /** v1.1 critique SEV2 #23: the caller's remaining wall-clock budget for THIS attempt, in ms.
+   * The provider's own configured `requestTimeoutMs` is a per-attempt ceiling; this is what is left
+   * of the whole run, and the provider takes whichever is smaller. Without it a run could spend
+   * 6 x 90 s across the doubling retry, the schema retry and each of their transport retries -- the
+   * 275 962 ms the head's own trace table recorded. */
+  timeoutMs?: number
 }
 
 /** The one seam a provider implements -- the real GLM endpoint (`glm-provider.ts`) and the
@@ -161,7 +167,15 @@ export type RunMeta = {
    * status rather than inventing a new one, because `app.ai_trace_status` is a Postgres enum and a
    * schema-valid-but-unfaithful answer is, to every consumer of that column, the same thing: the
    * model produced something this gateway refused to hand on. */
-  status: 'ok' | 'empty_after_retry' | 'schema_invalid_after_retry' | 'provider_error'
+  status:
+    | 'ok'
+    | 'empty_after_retry'
+    | 'schema_invalid_after_retry'
+    | 'provider_error'
+    /** v1.1 critique SEV2 #23: the whole run ran out of the wall-clock budget its caller gave it.
+     * Distinct from `provider_error` because it is the one failure a person can act on -- "it took
+     * too long, try again" is a different sentence from "the provider refused". */
+    | 'timeout'
 }
 
 export type RunResult<T> =

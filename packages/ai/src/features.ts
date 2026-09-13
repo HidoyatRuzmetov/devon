@@ -106,10 +106,7 @@ export function estimatedTokensPerCall(feature: AiFeature): number {
 }
 
 /** The same estimate in soʻm, at the configured per-million price. */
-export function estimatedCostUzsPerCall(
-  feature: AiFeature,
-  pricePerMillionUzs?: number,
-): number {
+export function estimatedCostUzsPerCall(feature: AiFeature, pricePerMillionUzs?: number): number {
   return tokensToCostUzs(estimatedTokensPerCall(feature), pricePerMillionUzs)
 }
 
@@ -124,6 +121,40 @@ export type RunFeatureOptions = {
   /** Optional extra history *before* the feature's own single user message -- no feature in this
    * package uses this today (see `trim.ts`'s header comment on the multi-turn future). */
   priorMessages?: ChatMessage[]
+  /** v1.1 critique SEV2 #23: the whole run's wall-clock budget. Falls back to the feature's own
+   * `DEFAULT_FEATURE_TIMEOUT_MS` below, which is the number a person is actually asked to wait. */
+  overallTimeoutMs?: number
+}
+
+/**
+ * v1.1 critique SEV2 #23 -- how long anybody is asked to wait for one helper.
+ *
+ * The head's own trace table recorded 112 123 ms, 129 203 ms and 275 962 ms against the real GLM,
+ * because `config.requestTimeoutMs` bounds one HTTP attempt and a run can make up to six of them.
+ * This is the run-level ceiling, and it is chosen per feature by how long the answer is worth
+ * waiting for at the surface it appears on: an inline quick-add parse has to feel instant or it is
+ * useless, and a Monday briefing the head deliberately pressed a button for may take a minute --
+ * but not four.
+ */
+export const DEFAULT_FEATURE_TIMEOUT_MS: Record<AiFeature, number> = {
+  // Typed into a field, blocking the person mid-sentence.
+  quick_add_parse: 20_000,
+  translate: 20_000,
+  duplicate_check: 20_000,
+  // A panel the person opened and is watching.
+  subtask_breakdown: 45_000,
+  deadline_risk: 45_000,
+  draft_reply: 45_000,
+  suggest_assignee: 45_000,
+  summarize_thread: 45_000,
+  nl_analytics: 45_000,
+  semantic_ask: 45_000,
+  draft_event: 60_000,
+  // The long-form, deliberately-requested ones. 75 s is under the "bir daqiqagacha" the pending
+  // panel promises plus a little slack, and far under anything that reads as a hang.
+  plan_sprint: 75_000,
+  catch_up: 75_000,
+  board_risk_digest: 75_000,
 }
 
 export type RunFeatureResult<T> = RunResult<T> | { ok: false; error: string; meta: null }
@@ -177,6 +208,7 @@ ${CALL_ONCE_RULE}`,
     },
     maxTokens: spec.defaultMaxTokens,
     temperature: spec.temperature,
+    overallTimeoutMs: options.overallTimeoutMs ?? DEFAULT_FEATURE_TIMEOUT_MS[options.feature],
     ...(spec.validateOutput
       ? {
           validate: (output: T) =>

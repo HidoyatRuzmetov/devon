@@ -37,6 +37,7 @@ import {
   Stagger,
   StaggerItem,
   StatNumber,
+  toast,
   StateView,
   cn,
   initialsFromName,
@@ -103,13 +104,20 @@ export type HeadDashboardTile = {
 function TileShell({
   tile,
   tone = 'neutral',
+  /** v1.1 critique SEV1 #4: the tile's own headline number, when it has one. The Kechikayotgan tile
+   * used to render only its top five people, so the department's real overdue total -- the number
+   * the AI briefing quoted back -- appeared nowhere on the dashboard and the two read as a
+   * contradiction. A tile that drives a sentence has to print the number in that sentence. */
+  value,
   children,
 }: {
   tile: Pick<HeadDashboardTile, 'titleKey' | 'meaningKey' | 'icon' | 'onOpen' | 'ctaKey'>
   tone?: 'neutral' | 'attention'
+  value?: number
   children: React.ReactNode
 }): React.JSX.Element {
   const t = useT()
+  const locale = useLocale()
   const Icon = tile.icon
   return (
     <Card
@@ -122,6 +130,11 @@ function TileShell({
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon aria-hidden="true" className="size-4" />
         <h3 className="text-small font-medium text-foreground">{t(tile.titleKey)}</h3>
+        {value !== undefined ? (
+          <span className="ml-auto text-h3 font-semibold tabular-nums text-foreground">
+            <StatNumber value={value} locale={locale} />
+          </span>
+        ) : null}
       </div>
       {children}
       <p className="text-caption text-muted-foreground">{t(tile.meaningKey)}</p>
@@ -446,6 +459,46 @@ export function HeadDashboard(): React.JSX.Element {
   const totalOverdue = members.reduce((sum, member) => sum + num(member.userId, 'overdueCards'), 0)
   const overloaded = loadThisWeek.filter((row) => row.pct >= 100).length
 
+  /**
+   * v1.1 critique SEV1 #4 -- the one set of numbers this screen is allowed to have.
+   *
+   * The briefing returned "За прошедшую неделю не закрыто ни одной задачи — без изменений по
+   * сравнению с предыдущей неделей. В управлении 77 просроченных задач." while the Maqsadlar tile
+   * three inches to its left read "82/120" and a person page showed three completions in the same
+   * week. Two separate causes, both here rather than in the model:
+   *
+   *   1. `doneLastPeriod` was hard-coded to `0`, so "no change against last week" was not an
+   *      observation -- it was arithmetic on a placeholder, and it was going to say that forever.
+   *   2. The 77 was the department's true overdue total, computed here and then *never rendered*:
+   *      the Kechikayotgan tile showed only its top five people, so the only number a head could
+   *      compare the briefing against was 31. The briefing was right and looked wrong.
+   *
+   * So the counts are computed once, into this object; the tiles render them; the briefing is handed
+   * exactly the same object. `catch-up.golden.test.ts` asserts the headline the prompt produces from
+   * a fixed fixture carries those same numbers, so the two can never drift apart again without a
+   * test failing.
+   */
+  const briefingWindowStart = now - BRIEFING_WINDOW_DAYS * 86_400_000
+  const previousWindowStart = briefingWindowStart - BRIEFING_WINDOW_DAYS * 86_400_000
+  const doneInWindow = (from: number, to: number): WorkCard[] =>
+    allCards.filter((card) => {
+      if (card.doneAt === null) return false
+      const at = new Date(card.doneAt).getTime()
+      if (at < from) return false
+      return at < to
+    })
+  const doneThisWeekCards = doneInWindow(briefingWindowStart, now + 1)
+  const doneLastWeekCards = doneInWindow(previousWindowStart, briefingWindowStart)
+  const briefingCounts = {
+    done: doneThisWeekCards.length,
+    doneLastPeriod: doneLastWeekCards.length,
+    // "Created" over the same window, from the same card list the tiles read -- another field that
+    // used to be a hard-coded zero.
+    created: allCards.filter((card) => new Date(card.createdAt).getTime() >= briefingWindowStart)
+      .length,
+    overdue: totalOverdue,
+  }
+
   // Goals worth a dashboard row: not archived, most-behind first, at most three. A head who set
   // eight goals does not want eight bars on Home -- `/goals` is where all of them live.
   const activeGoals = [...(goalsQuery.data ?? [])]
@@ -465,7 +518,7 @@ export function HeadDashboard(): React.JSX.Element {
    * branches on (AI-AUDIT §4), and the server enforces that gate independently.
    */
   function runBriefing(): void {
-    const windowStart = now - BRIEFING_WINDOW_DAYS * 86_400_000
+    const windowStart = briefingWindowStart
     const nameOf = (userId: string | null): string | null => {
       if (!userId) return null
       const member = members.find((m) => m.userId === userId)
@@ -481,9 +534,9 @@ export function HeadDashboard(): React.JSX.Element {
         : 0,
     })
 
-    const doneThisWeek = allCards.filter(
-      (card) => card.doneAt !== null && new Date(card.doneAt).getTime() >= windowStart,
-    )
+    // SEV1 #4: the same list the counts above were computed from, never a second definition of
+    // "done this week".
+    const doneThisWeek = doneThisWeekCards
     const overdueCards = allCards.filter((card) => card.risk === 'overdue')
 
     setBriefing({ status: 'pending' })
@@ -500,12 +553,10 @@ export function HeadDashboard(): React.JSX.Element {
           start: new Date(windowStart).toISOString().slice(0, 10),
           end: new Date(now).toISOString().slice(0, 10),
         },
-        counts: {
-          done: doneThisWeek.length,
-          doneLastPeriod: 0,
-          created: 0,
-          overdue: totalOverdue,
-        },
+        // SEV1 #4: handed the dashboard's own numbers as fetched inputs. `doneLastPeriod` and
+        // `created` used to be literal zeroes here, which is what made the briefing announce "no
+        // change against the previous week" on every single run.
+        counts: briefingCounts,
         // The schemas allow 60/40/100 rows; a briefing is sent eight of each on purpose.
         //
         // Measured against the configured `glm-5.2`: it is a reasoning model that spends its
@@ -606,6 +657,10 @@ export function HeadDashboard(): React.JSX.Element {
               ),
           }}
           tone={totalOverdue > 0 ? 'attention' : 'neutral'}
+          // SEV1 #4: the department's true overdue total, on the tile, so the AI briefing's own
+          // "N kechikkan" has something on screen to agree with. The list below is still the top
+          // five people; the number is the whole boshqarma.
+          value={totalOverdue}
         >
           {overdueByPerson.length === 0 ? (
             <p className="text-small text-muted-foreground">{t('home.head.overdue.empty')}</p>
@@ -638,6 +693,7 @@ export function HeadDashboard(): React.JSX.Element {
             onOpen: () => navigate('/work'),
           }}
           tone={atRiskCards.length > 0 ? 'attention' : 'neutral'}
+          value={atRiskCards.length}
         >
           {atRiskCards.length === 0 ? (
             <p className="text-small text-muted-foreground">{t('home.head.risk.empty')}</p>
@@ -889,6 +945,14 @@ export function HeadDashboard(): React.JSX.Element {
               meta={briefing.status === 'ready' ? briefing.meta : undefined}
               errorMessage={briefing.status === 'error' ? briefing.message : undefined}
               onDiscard={() => setBriefing({ status: 'idle' })}
+              // SEV2 #23: a briefing can take the better part of a minute, so the head gets a way
+              // out that returns the tile to its "press to run" state rather than leaving them
+              // staring at a shimmer with nothing but a primary-styled Yopish.
+              onCancel={() => {
+                catchUp.reset()
+                setBriefing({ status: 'idle' })
+                toast(t('ai.pending.cancelled'))
+              }}
               onRetry={runBriefing}
             >
               {briefing.status === 'ready' ? (

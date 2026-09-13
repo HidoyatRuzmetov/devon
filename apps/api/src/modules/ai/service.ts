@@ -446,7 +446,12 @@ export async function runFeatureForActor(
   })
 
   if (!result.ok) {
-    throw new AiRunFailedError(result.error)
+    // SEV2 #23: the gateway distinguishes "we stopped waiting" from "the provider refused"; so does
+    // the trace row above, and so must the Problem this route answers with.
+    throw new AiRunFailedError(
+      result.error,
+      result.meta.status === 'timeout' ? 'timeout' : 'failed',
+    )
   }
 
   const outcome: RunFeatureOutcome = {

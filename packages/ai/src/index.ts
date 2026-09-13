@@ -31,6 +31,7 @@ export {
   buildOfflineRespond,
   getFeatureSpec,
   estimatedTokensPerCall,
+  DEFAULT_FEATURE_TIMEOUT_MS,
   estimatedCostUzsPerCall,
   FEATURE_REGISTRY,
   type RunFeatureOptions,

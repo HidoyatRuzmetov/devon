@@ -74,8 +74,27 @@ export const FEATURE_KEY_SEGMENT: Record<AiTraceFeatureId, string> = {
   what_did_i_miss: 'whatDidIMiss',
 }
 
+/**
+ * v1.1 critique SEV3 #33. `weekly_summary` and `what_did_i_miss` were merged into `catch_up` in
+ * v1.1, but their old traces are still in the table -- and the head's console rendered them as
+ * "Nimani oʻtkazib yubordim (eskirgan)", which is an internal deprecation marker leaking onto a
+ * management screen. A head does not need to know that this product once had two features where it
+ * now has one; they need to know which helper spent the money. So a retired id is displayed under
+ * the helper that absorbed it.
+ */
+const ABSORBED_BY: Partial<Record<AiTraceFeatureId, AiFeatureId>> = {
+  weekly_summary: 'catch_up',
+  what_did_i_miss: 'catch_up',
+}
+
+/** The id a trace should be *displayed* as. Storage keeps the original -- rewriting history is not
+ * this function's job -- so an audit of what actually ran is still exact. */
+export function displayTraceFeature(feature: AiTraceFeatureId): AiTraceFeatureId {
+  return ABSORBED_BY[feature] ?? feature
+}
+
 export function featureLabelKey(feature: AiTraceFeatureId): string {
-  return `ai.features.${FEATURE_KEY_SEGMENT[feature]}.label`
+  return `ai.features.${FEATURE_KEY_SEGMENT[displayTraceFeature(feature)]}.label`
 }
 
 export function featureDescriptionKey(feature: AiTraceFeatureId): string {
@@ -163,6 +182,9 @@ export const traceSchema = z.object({
     'empty_after_retry',
     'schema_invalid_after_retry',
     'provider_error',
+    // v1.1 critique SEV2 #23: "we stopped waiting", which is a different fact from "the provider
+    // refused" and is the one a person can retry.
+    'timeout',
     'blocked_budget',
     'blocked_flag',
   ]),

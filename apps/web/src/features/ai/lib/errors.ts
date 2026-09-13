@@ -25,7 +25,13 @@ export function aiErrorMessageKey(err: unknown): string {
       if (reason === 'head_only') return 'ai.errors.headOnly'
       return 'ai.errors.forbidden'
     }
-    if (err.code === 'internal') return 'ai.errors.runFailed'
+    if (err.code === 'internal') {
+      // v1.1 critique SEV2 #23: "it took too long" is a different message, with a different remedy,
+      // from "something broke" -- and it is the one a head can act on.
+      const reason = err.errors.find((e) => e.path === 'feature')?.code
+      if (reason === 'timeout') return 'ai.errors.timeout'
+      return 'ai.errors.runFailed'
+    }
   }
   return 'toast.saveError'
 }
