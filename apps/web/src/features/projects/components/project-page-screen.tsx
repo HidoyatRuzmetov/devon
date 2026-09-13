@@ -12,7 +12,6 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarClock, CheckCircle2, ChevronLeft } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
-  AiPreviewPanel,
   Avatar,
   AvatarStack,
   Badge,
@@ -35,6 +34,14 @@ import {
 } from '@devon/ui'
 import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
+import {
+  parseFeatureOutput,
+  type CatchUpOutput,
+  type PlanSprintOutput,
+} from '../../ai/outputs.js'
+import type { RunMeta } from '../../ai/types.js'
 import { fetchCards } from '../../work/api.js'
 import type { Card } from '../../work/api.js'
 import { openCardPeek, CardPeekDialog } from '../../work/components/card-peek-dialog.js'
@@ -87,11 +94,6 @@ function TaskRow({ card }: { card: Card }) {
   )
 }
 
-type PlanSprintResult = {
-  orderedTaskTitles: string[]
-  focusTaskTitle: string | null
-  scheduleNote: string
-}
 
 export default function ProjectPageScreen() {
   const t = useT()
@@ -116,11 +118,19 @@ export default function ProjectPageScreen() {
     aiSettings.data !== undefined &&
     aiSettings.data.flags['plan_sprint'] === true &&
     aiSettings.data.budgetStatus !== 'hard_stop'
-  const [plan, setPlan] = React.useState<{
-    result: PlanSprintResult
-    tokens: number
-    ms: number
-  } | null>(null)
+  const [plan, setPlan] = React.useState<{ output: PlanSprintOutput; meta: RunMeta } | null>(null)
+
+  // N-4: "Juma kunidan beri nima oʻzgardi?" over this project's own cards. The same `catch_up`
+  // prompt as the personal and department briefings, at `scope: 'project'` -- one feature, three
+  // scopes, one golden set (AI-AUDIT §4, D-1).
+  const catchUpAi = useRunAiFeatureMutation('catch_up')
+  const catchUpEnabled =
+    aiSettings.data !== undefined &&
+    aiSettings.data.flags['catch_up'] === true &&
+    aiSettings.data.budgetStatus !== 'hard_stop'
+  const [catchUp, setCatchUp] = React.useState<{ output: CatchUpOutput; meta: RunMeta } | null>(
+    null,
+  )
 
   if (!id) {
     return <StateView kind="empty" titleKey="projects.noIdTitle" bodyKey="projects.noIdBody" />
@@ -149,43 +159,118 @@ export default function ProjectPageScreen() {
   function runPlanAi() {
     if (openObjective.length === 0) return
     setPlan(null)
+    // AI-AUDIT §4 D-5: v1.0 lied to this feature to reuse it -- `sprintKind: 'day'` and
+    // `goal: project.title` on a call that is not planning a day and has no goal. The scope is
+    // explicit now, and the feature is told the real due dates, priorities and estimates instead of
+    // titles alone, which is the difference between an ordering and a re-sort.
+    const now = new Date()
+    const horizon = new Date(now.getTime() + 14 * 86_400_000)
     planAi.mutate(
       {
         locale,
-        sprintKind: 'day',
+        scope: 'project',
+        periodKind: 'custom',
+        now: now.toISOString(),
+        periodEndsAt: horizon.toISOString(),
+        capacityMin: 0,
         goal: project.title,
-        tasks: openObjective.map((c) => ({ title: c.title })),
+        items: openObjective.map((c) => ({
+          id: c.id,
+          title: c.title,
+          estimateMin: null,
+          dueDate: c.dueAt ? c.dueAt.slice(0, 10) : null,
+          priority: c.priority,
+          blocked: false,
+        })),
       },
       {
         onSuccess: (res) => {
-          const data = res.data as Partial<PlanSprintResult>
-          if (Array.isArray(data.orderedTaskTitles) && typeof data.scheduleNote === 'string') {
-            setPlan({
-              result: {
-                orderedTaskTitles: data.orderedTaskTitles,
-                focusTaskTitle: data.focusTaskTitle ?? null,
-                scheduleNote: data.scheduleNote,
-              },
-              tokens: res.meta.totalTokens,
-              ms: res.meta.latencyMs,
-            })
-          }
+          const output = parseFeatureOutput<PlanSprintOutput>('plan_sprint', res.data)
+          if (output) setPlan({ output, meta: res.meta })
         },
       },
     )
   }
 
+  /**
+   * AI-AUDIT §0.2: v1.0 rendered the whole ordering and then applied **one field patch** --
+   * `priority: 'urgent'` on the focus card. Everything else the person read was discarded.
+   *
+   * The ordering is the answer, so the ordering is what lands: the plan's own sequence becomes the
+   * cards' `orderKey` order on the board, the focus card is marked urgent, and anything the model
+   * said will not fit in the horizon is left alone (moving a due date the person did not ask about
+   * is not this feature's business).
+   */
   async function acceptPlan() {
     if (!plan) return
-    const focus = plan.result.focusTaskTitle
-      ? openObjective.find((c) => c.title === plan.result.focusTaskTitle)
-      : undefined
-    if (focus && focus.priority !== 'urgent') {
-      await patchCard.mutateAsync({ id: focus.id, patch: { priority: 'urgent' } })
-    }
+    const byId = new Map(openObjective.map((c) => [c.id, c] as const))
+    const ordered = plan.output.orderedIds.filter((id) => byId.has(id))
+
+    // One patch per card, all independent, so `Promise.all` rather than an awaited loop
+    // (TECH-SPEC §16: no query in a loop).
+    await Promise.all(
+      ordered.map((id, index) => {
+        const card = byId.get(id)!
+        const patch: { orderKey: string; priority?: 'urgent' } = {
+          // A fixed-width index keeps the string order and the numeric order identical, which is
+          // what `order_key`'s lexicographic sort needs.
+          orderKey: `p${String(index).padStart(4, '0')}`,
+        }
+        if (id === plan.output.focusId && card.priority !== 'urgent') patch.priority = 'urgent'
+        return patchCard.mutateAsync({ id, patch })
+      }),
+    )
     toast(t('projects.ai.planApplied'))
     setPlan(null)
     planAi.reset()
+  }
+
+  function runCatchUp() {
+    setCatchUp(null)
+    const now = Date.now()
+    const weekAgo = now - 7 * 86_400_000
+    const asItem = (c: Card) => ({ id: c.id, title: c.title })
+    const done = cards.filter(
+      (c) => c.status === 'done' && c.doneAt !== null && new Date(c.doneAt).getTime() >= weekAgo,
+    )
+    const isOverdue = (c: Card): boolean => {
+      if (c.status === 'done' || c.dueAt === null) return false
+      return new Date(c.dueAt).getTime() < now
+    }
+    const overdue = cards.filter(isOverdue)
+    catchUpAi.mutate(
+      {
+        locale,
+        scope: 'project',
+        window: 'week',
+        subjectName: project.title,
+        viewerName: t('projects.ai.viewerYou'),
+        period: {
+          start: new Date(weekAgo).toISOString().slice(0, 10),
+          end: new Date(now).toISOString().slice(0, 10),
+        },
+        counts: {
+          done: done.length,
+          doneLastPeriod: 0,
+          created: 0,
+          overdue: overdue.length,
+        },
+        done: done.map(asItem),
+        overdue: overdue.map(asItem),
+        dueThisWeek: [],
+        assignedToMe: [],
+        mentions: [],
+        comments: [],
+        loadPerPerson: [],
+        eventsAhead: [],
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<CatchUpOutput>('catch_up', res.data)
+          if (output) setCatchUp({ output, meta: res.meta })
+        },
+      },
+    )
   }
 
   return (
@@ -246,6 +331,47 @@ export default function ProjectPageScreen() {
             />
           ) : null}
         </header>
+
+        {/* N-4: "what changed on this project since Friday", where the question is actually asked --
+            the project header, not a settings screen. Head or member: a project's own progress is
+            not managerial information, it is the work. */}
+        {catchUpEnabled ? (
+          <section className="flex flex-col gap-2">
+            <SparkleButton
+              aria-label={t('projects.ai.catchUp')}
+              label={t('projects.ai.catchUp')}
+              size="sm"
+              className="self-start"
+              loading={catchUpAi.isPending}
+              onClick={runCatchUp}
+            />
+            {catchUpAi.isPending || catchUp || catchUpAi.isError ? (
+              <AiResultPanel
+                title={t('projects.ai.catchUpPreviewTitle')}
+                status={catchUpAi.isPending ? 'pending' : catchUpAi.isError ? 'error' : 'ready'}
+                errorMessage={t('work.quickAdd.aiError')}
+                acceptLabel={t('projects.ai.catchUpDone')}
+                {...(catchUp ? { meta: catchUp.meta } : {})}
+                onAccept={() => {
+                  setCatchUp(null)
+                  catchUpAi.reset()
+                }}
+                onDiscard={() => {
+                  setCatchUp(null)
+                  catchUpAi.reset()
+                }}
+                onRetry={runCatchUp}
+              >
+                {catchUp ? (
+                  <CatchUpPreview
+                    output={catchUp.output}
+                    cardTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
+                  />
+                ) : null}
+              </AiResultPanel>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="flex flex-col gap-2">
           <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
@@ -386,43 +512,32 @@ export default function ProjectPageScreen() {
             )}
 
             {planAi.isPending || plan || planAi.isError ? (
-              <AiPreviewPanel
+              <AiResultPanel
                 title={t('projects.ai.planPreviewTitle')}
                 status={planAi.isPending ? 'pending' : planAi.isError ? 'error' : 'ready'}
-                pendingLabel={t('projects.ai.plan')}
                 errorMessage={t('work.quickAdd.aiError')}
-                acceptLabel={t('projects.ai.applyFocus')}
+                acceptLabel={t('projects.ai.applyPlan')}
                 editLabel={t('work.ai.edit')}
-                discardLabel={t('work.ai.discard')}
-                retryLabel={t('work.ai.retry')}
+                {...(plan ? { meta: plan.meta } : {})}
                 onAccept={() => void acceptPlan()}
-                onEdit={() => setPlan(null)}
+                // Edit opens the focus card so the person can adjust it before the plan lands --
+                // v1.0's Edit discarded the answer, which is what Discard already did.
+                onEdit={() => {
+                  if (plan?.output.focusId) openCardPeek(plan.output.focusId)
+                }}
                 onDiscard={() => {
                   setPlan(null)
                   planAi.reset()
                 }}
                 onRetry={runPlanAi}
-                {...(plan
-                  ? { costLine: t('work.quickAdd.aiMeta', { tokens: plan.tokens, ms: plan.ms }) }
-                  : {})}
               >
                 {plan ? (
-                  <div className="flex flex-col gap-2">
-                    {plan.result.focusTaskTitle ? (
-                      <p className="flex items-center gap-1.5 font-medium text-foreground">
-                        <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />
-                        {t('projects.ai.focus', { title: plan.result.focusTaskTitle })}
-                      </p>
-                    ) : null}
-                    <ol className="flex list-decimal flex-col gap-1 pl-4">
-                      {plan.result.orderedTaskTitles.map((title, i) => (
-                        <li key={i}>{title}</li>
-                      ))}
-                    </ol>
-                    <p className="text-muted-foreground">{plan.result.scheduleNote}</p>
-                  </div>
+                  <PlanPreview
+                    output={plan.output}
+                    itemTitle={(id) => cards.find((c) => c.id === id)?.title ?? null}
+                  />
                 ) : null}
-              </AiPreviewPanel>
+              </AiResultPanel>
             ) : null}
           </TabsContent>
 

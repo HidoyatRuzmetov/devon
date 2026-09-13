@@ -60,7 +60,12 @@
       "planPreviewTitle": "AI plan preview",
       "applyFocus": "Apply focus card",
       "focus": "Start with: {title}",
-      "planApplied": "Focus card updated"
+      "planApplied": "Focus card updated",
+      "viewerYou": "You",
+      "catchUp": "What changed",
+      "catchUpPreviewTitle": "This project, the past week",
+      "catchUpDone": "Close",
+      "applyPlan": "Apply the plan"
     }
   }
 }

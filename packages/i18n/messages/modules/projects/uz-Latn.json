@@ -60,7 +60,12 @@
       "planPreviewTitle": "AI reja koʻrinishi",
       "applyFocus": "Asosiy kartani qoʻllash",
       "focus": "Shundan boshlang: {title}",
-      "planApplied": "Asosiy karta yangilandi"
+      "planApplied": "Asosiy karta yangilandi",
+      "viewerYou": "Siz",
+      "catchUp": "Nima oʻzgardi",
+      "catchUpPreviewTitle": "Loyihada oxirgi hafta",
+      "catchUpDone": "Yopish",
+      "applyPlan": "Rejani qoʻllash"
     }
   }
 }

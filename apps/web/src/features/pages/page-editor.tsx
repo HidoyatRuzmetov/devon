@@ -8,8 +8,14 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
-import { useT, useLocale } from '@devon/i18n'
-import { AiPreviewPanel, IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
+import { useT, useLocale, latinToCyrillic, type Locale } from '@devon/i18n'
+import { IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import {
+  TranslateTargetPicker,
+  defaultTranslateTarget,
+  isLocalTransliterationPair,
+} from '../ai/components/translate-target.js'
 import {
   Bold,
   Code2,
@@ -171,11 +177,19 @@ export function PageEditor({
     editor?.setEditable(editable)
   }, [editable, editor])
 
-  // AI wiring (TECH-SPEC §8 `translate`): translate the selected text, preview it, and only replace
-  // the selection on Accept -- never a whole-document rewrite, so a bad translation never costs more
-  // than the sentence the person already had selected.
+  // AI wiring (AI-AUDIT F9): translate the selected text, preview it, and only replace the selection
+  // on Accept -- never a whole-document rewrite, so a bad translation never costs more than the
+  // sentence the person already had selected.
+  //
+  // v1.1 fixes the defect behind "AI mostly translates to Uzbek and nothing happens" (§0.1): v1.0
+  // passed `locale` -- the reader's own UI language -- as the TARGET, so a uz-Latn user translating
+  // an Uzbek paragraph asked GLM for Uzbek and got their own text back. The target is a picker now,
+  // and uz-Latn to uz-Cyrl never reaches a model at all (D-2: `packages/i18n` does it exactly).
   const locale = useLocale()
   const translateMutation = useRunAiFeatureMutation('translate')
+  const [translateTarget, setTranslateTarget] = React.useState<Locale>(() =>
+    defaultTranslateTarget(locale),
+  )
   const [translateOpen, setTranslateOpen] = React.useState(false)
   const [translateRange, setTranslateRange] = React.useState<{ from: number; to: number } | null>(
     null,
@@ -191,7 +205,21 @@ export function PageEditor({
     const text = editor.state.doc.textBetween(from, to, ' ')
     setTranslateRange({ from, to })
     setTranslateOpen(true)
-    translateMutation.mutate({ text, locale })
+    if (isLocalTransliterationPair(locale, translateTarget)) {
+      // No model call: the script conversion is a lookup table, and the person gets the answer
+      // before the panel has finished opening.
+      setEditedTranslation(latinToCyrillic(text))
+      translateMutation.reset()
+      return
+    }
+    translateMutation.mutate({
+      locale,
+      targetLocale: translateTarget,
+      sourceLocale: null,
+      text,
+      glossary: [],
+      preserve: [],
+    })
   }
 
   const [editedTranslation, setEditedTranslation] = React.useState('')
@@ -300,29 +328,35 @@ export function PageEditor({
           >
             <Megaphone className="size-4" aria-hidden="true" />
           </ToolbarButton>
-          <SparkleButton
-            aria-label={t('pages.editor.toolbar.translate')}
-            size="sm"
-            className="ml-auto"
-            onClick={startTranslate}
-          />
+          <span className="ml-auto flex flex-wrap items-center gap-2">
+            <TranslateTargetPicker
+              id="page-translate-target"
+              value={translateTarget}
+              onChange={setTranslateTarget}
+              disabled={translateMutation.isPending}
+            />
+            <SparkleButton
+              aria-label={t('pages.editor.toolbar.translate')}
+              size="sm"
+              loading={translateMutation.isPending}
+              onClick={startTranslate}
+            />
+          </span>
         </div>
       ) : null}
 
       {translateOpen ? (
-        <AiPreviewPanel
+        <AiResultPanel
           title={t('pages.editor.translate.title')}
           status={
             translateMutation.isPending ? 'pending' : translateMutation.isError ? 'error' : 'ready'
           }
-          pendingLabel={t('pages.editor.translate.pending')}
           {...(translateMutation.error
             ? { errorMessage: t(translateErrorKey(translateMutation.error)) }
             : {})}
+          {...(translateMutation.data ? { meta: translateMutation.data.meta } : {})}
           acceptLabel={t('pages.editor.translate.accept')}
           editLabel={t('pages.editor.translate.edit')}
-          discardLabel={t('pages.editor.translate.discard')}
-          retryLabel={t('pages.editor.translate.retry')}
           onRetry={startTranslate}
           onAccept={() => {
             if (editedTranslation && translateRange) {
@@ -336,15 +370,16 @@ export function PageEditor({
           }}
           onDiscard={closeTranslate}
         >
-          {translateMutation.data ? (
+          {editedTranslation ? (
             <textarea
               value={editedTranslation}
               onChange={(e) => setEditedTranslation(e.target.value)}
               rows={3}
+              aria-label={t('pages.editor.translate.title')}
               className="w-full resize-y rounded-sm border border-border bg-card p-2 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           ) : null}
-        </AiPreviewPanel>
+        </AiResultPanel>
       ) : null}
 
       <EditorContent

@@ -60,7 +60,12 @@
       "planPreviewTitle": "AI режа кўриниши",
       "applyFocus": "Асосий картани қўллаш",
       "focus": "Шундан бошланг: {title}",
-      "planApplied": "Асосий карта янгиланди"
+      "planApplied": "Асосий карта янгиланди",
+      "viewerYou": "Сиз",
+      "catchUp": "Нима ўзгарди",
+      "catchUpPreviewTitle": "Лойиҳада охирги ҳафта",
+      "catchUpDone": "Ёпиш",
+      "applyPlan": "Режани қўллаш"
     }
   }
 }
