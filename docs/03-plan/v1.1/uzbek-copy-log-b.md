@@ -261,3 +261,55 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `calendar.push.error.body` | Ulanishda muammo boʻldi. Qayta urinib koʻring. | Aloqa uzildi. Qayta urinib koʻring. |
 | `calendar.addTo.label` | Kalendarga qoʻshish | Taqvimga qoʻshish |
 | `calendar.addTo.hint` | Tadbirni oʻz kalendaringizga koʻchiradi. | Tadbirni oʻz taqvimingizga koʻchiradi. |
+
+## personal — 47 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `personal.eyebrow` | FAQAT SIZ UCHUN | FAQAT SIZGA |
+| `personal.description` | Davrlar, vazifalar, qaydlar, doska va fokus vaqti uchun shaxsiy maydoningiz. | Davrlar, vazifalar, qaydlar, oq taxta va diqqat vaqti — faqat sizga koʻrinadigan maydon. |
+| `personal.tabs.canvas` | Doska | Oq taxta |
+| `personal.privacy.note` | Bu maydonni faqat siz koʻrasiz — boʻlim boshligʻi ham, boshqa hech kim ham emas. | Bu yerdagilarni faqat siz koʻrasiz — boshqarma boshligʻi ham, boshqa hech kim ham koʻrmaydi. |
+| `personal.today.tasks.completedToast` | Bajarildi deb belgilandi | Bajarildi |
+| `personal.today.empty.title` | Bugun uchun hech narsa rejalashtirilmagan | Bugunga reja yoʻq |
+| `personal.today.empty.body` | Bu yerda koʻrish uchun vazifa qoʻshing yoki davr boshlang. | Vazifa qoʻshing yoki davr boshlang — shu yerda koʻrinadi. |
+| `personal.today.allDone.title` | Hozircha barchasi bajarildi | Hozircha hammasi bajarildi |
+| `personal.today.allDone.body` | Faol davrlar va kirish qutingizda boshqa hech narsa qolmadi. Osoyishtalikdan bahramand boʻling. | Faol davrlaringizda ham, yigʻmada ham boshqa vazifa qolmadi. |
+| `personal.today.focus` | Fokus | Diqqat |
+| `personal.today.period.progressAria` | Davr jarayoni | Davrning bajarilgan qismi |
+| `personal.today.rollover.bannerGoal` | “{goal}” davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi? | «{goal}» davri vaqti tugadi. Tugallanmagan vazifalarni yangi davrga koʻchirasizmi? |
+| `personal.sprints.empty.title` | Hali davrlar yoʻq | Hali davr yoʻq |
+| `personal.sprints.create.submit` | Davr yaratish | Davrni boshlash |
+| `personal.sprints.complete.action` | Yakunlangan deb belgilash | Yakunlash |
+| `personal.sprints.kind.custom` | Ixtiyoriy | Boshqa |
+| `personal.tasks.inbox` | Kirish qutisi | Yigʻma |
+| `personal.tasks.toggleDone` | Bajarilgan deb belgilash | Bajarildi deb belgilash |
+| `personal.tasks.indent` | Ichkariga surish (quyi vazifa qilish) | Quyi vazifaga aylantirish |
+| `personal.tasks.outdent` | Tashqariga chiqarish | Yuqoriga chiqarish |
+| `personal.tasks.empty.section` | Bu yerda hali vazifalar yoʻq. | Bu yerda hali vazifa yoʻq. |
+| `personal.notes.bodyPlaceholder` | Nimadir yozing... | Xohlagan narsangizni yozing |
+| `personal.notes.unpin` | Mahkamlashni bekor qilish | Mahkamlashni olib tashlash |
+| `personal.notes.empty.title` | Hali qaydlar yoʻq | Hali qayd yoʻq |
+| `personal.canvas.create` | Yangi doska | Yangi oq taxta |
+| `personal.canvas.newTitle` | Yangi doska | Yangi oq taxta |
+| `personal.canvas.back` | Doskalarga qaytish | Oq taxtalarga qaytish |
+| `personal.canvas.delete` | Doskani oʻchirish | Oq taxtani oʻchirish |
+| `personal.canvas.deleted.toast` | Doska oʻchirildi | Oq taxta oʻchirildi |
+| `personal.canvas.empty.title` | Hali doskalar yoʻq | Hali oq taxta yoʻq |
+| `personal.canvas.empty.body` | Doska — eskiz va eslatma qogʻozlari uchun erkin joy. | Oq taxta — eskiz va eslatma qogʻozlari uchun erkin maydon. |
+| `personal.canvas.addSticky` | Eslatma qogʻoz qoʻshish | Eslatma qogʻozi qoʻshish |
+| `personal.pomodoro.phase.focus` | Fokus | Diqqat |
+| `personal.pomodoro.action.startFocus` | Fokusni boshlash | Diqqat vaqtini boshlash |
+| `personal.pomodoro.action.pause` | Pauza | Toʻxtatib turish |
+| `personal.pomodoro.action.stop` | Toʻxtatish | Tugatish |
+| `personal.pomodoro.notifications.off` | Bildirishnomalar oʻchirilgan | Bildirishnomalar oʻchiq |
+| `personal.pomodoro.settings.focusMin` | Fokus (daqiqa) | Diqqat (daqiqa) |
+| `personal.pomodoro.settings.cyclesBeforeLong` | Uzoq tanaffusdan oldingi fokus soni | Uzoq tanaffusgacha nechta diqqat vaqti |
+| `personal.pomodoro.stats.todayFocus` | Bugungi fokus | Bugungi diqqat vaqti |
+| `personal.pomodoro.stats.weekFocus` | Shu haftalik fokus | Bu haftadagi diqqat vaqti |
+| `personal.pomodoro.stats.weekSessions` | Shu haftalik seanslar | Bu haftadagi seanslar |
+| `personal.pomodoro.log.empty.title` | Hali seanslar yoʻq | Hali seans yoʻq |
+| `personal.pomodoro.log.empty.body` | Bu yerda koʻrish uchun fokus seansini boshlang. | Diqqat vaqtini boshlang — shu yerda koʻrinadi. |
+| `personal.ai.discard` | Rad etish | Kerak emas |
+| `personal.ai.disclaimer` | AI takliflari xato boʻlishi mumkin — hech narsa tekshirmasdan qoʻshilmaydi. | AI takliflari xato boʻlishi mumkin — siz tasdiqlamaguningizcha hech narsa qoʻshilmaydi. |
+| `personal.ai.catchUp.savedToast` | Xulosa qaydlarga saqlandi | Qaydlarga saqlandi |
