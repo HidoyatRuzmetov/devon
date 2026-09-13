@@ -345,12 +345,10 @@ export default function ProjectPageScreen() {
                 title={t('projects.ai.catchUpPreviewTitle')}
                 status={catchUpAi.isPending ? 'pending' : catchUpAi.isError ? 'error' : 'ready'}
                 errorMessage={t('work.quickAdd.aiError')}
-                acceptLabel={t('projects.ai.catchUpDone')}
                 {...(catchUp ? { meta: catchUp.meta } : {})}
-                onAccept={() => {
-                  setCatchUp(null)
-                  catchUpAi.reset()
-                }}
+                // Nothing to accept: a briefing is something you read, and every risk it names is
+                // already a link to the card it is about.
+                readOnly
                 onDiscard={() => {
                   setCatchUp(null)
                   catchUpAi.reset()
