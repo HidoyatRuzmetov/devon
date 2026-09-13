@@ -150,3 +150,70 @@ Per-module before → after tables follow. Anything non-obvious carries a note u
 | `home.head.goals.empty` | Maqsad qoʻyilmagan. Birinchisini qoʻying — progress oʻzi hisoblanadi. | Maqsad qoʻyilmagan. Birinchisini qoʻying — bajarilgani oʻzi hisoblanadi. |
 | `home.head.catchUp.meaning` | Boʻlimning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan. | Boshqarmaning haftasi: yutuqlar, xavflar va kim ortiqcha yuklangan. |
 | `home.head.catchUp.idle` | Bir haftalik ish boʻyicha qisqa xulosa tayyorlaymi? Har bir fikr aniq kartaga tayanadi. | Hafta boʻyicha qisqa xulosa tayyorlansinmi? Har bir fikr aniq kartaga tayanadi. |
+
+## analytics — 47 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `analytics.eyebrow` | Hisobotlar | HISOBOTLAR |
+| `analytics.kpi.throughput` | Oʻtgan hafta bajarilgan kartochkalar | Oʻtgan hafta bajarilgan kartalar |
+| `analytics.kpi.open` | Ochiq kartochkalar | Ochiq kartalar |
+| `analytics.kpi.overdue` | Muddati oʻtgan kartochkalar | Muddati oʻtgan kartalar |
+| `analytics.kpi.onTimeRate` | Oʻtgan hafta oʻz vaqtida | Oʻtgan hafta muddatida |
+| `analytics.ask.title` | Tahlildan soʻrash | Savol bering |
+| `analytics.ask.placeholder` | Savol bering, masalan "bu oy muddati oʻtgan kartochkalar" | Masalan: bu oy muddati oʻtgan kartalar |
+| `analytics.ask.errors.forbidden` | Bu funksiya oʻchirilgan yoki AI byudjeti tugagan | Savol berish oʻchirilgan yoki AI byudjeti tugagan |
+| `analytics.filterBar.since` | Boshlanishi | Qaysi sanadan |
+| `analytics.filterBar.until` | Tugashi | Qaysi sanagacha |
+| `analytics.filterBar.removeTerm` | "{term}" filtrini olib tashlash | «{term}» filtrini olib tashlash |
+| `analytics.filterBar.showAdvanced` | Kengaytirilgan | Qoʻshimcha |
+| `analytics.filterBar.hideAdvanced` | Kengaytirilganni yashirish | Qoʻshimchani yashirish |
+| `analytics.savedFilters.shared` | Boʻlim bilan boʻlishilgan | Butun boshqarmaga ochiq |
+| `analytics.actions.export` | Eksport | Yuklab olish |
+| `analytics.actions.exportCsv` | CSV formatida yuklab olish | CSV yuklab olish |
+| `analytics.actions.exportPng` | Rasm sifatida yuklab olish | Rasm yuklab olish |
+| `analytics.actions.unpin` | Mahkamlashni bekor qilish | Mahkamlashni olib tashlash |
+| `analytics.actions.viewAsTable` | Jadval koʻrinishida koʻrish | Jadval koʻrinishi |
+| `analytics.actions.viewAsChart` | Diagramma koʻrinishida koʻrish | Diagramma koʻrinishi |
+| `analytics.legend.yes` | Kelaman | Boraman |
+| `analytics.legend.no` | Kelmayman | Bormayman |
+| `analytics.legend.waitlist` | Kutish roʻyxatida | Navbatda |
+| `analytics.sections.throughput.title` | Haftalik bajarilgan topshiriqlar | Haftada bajarilgan kartalar |
+| `analytics.sections.throughput.question` | Har hafta nechta topshiriq yakunlandi? | Har hafta nechta karta yakunlandi? |
+| `analytics.sections.throughput.empty` | Hali yakunlangan topshiriqlar yoʻq | Hali yakunlangan karta yoʻq |
+| `analytics.sections.onTimeRate.title` | Oʻz vaqtida bajarilish darajasi | Muddatida bajarilish ulushi |
+| `analytics.sections.onTimeRate.question` | Topshiriqlar muddatida bajarilyaptimi? | Kartalar muddatida bajarilyaptimi? |
+| `analytics.sections.onTimeRate.empty` | Baholash uchun yetarli maʼlumot yoʻq | Baholash uchun hali yetarli raqam yoʻq |
+| `analytics.sections.openVsOverdue.title` | Ochiq va muddati oʻtgan topshiriqlar | Ochiq va muddati oʻtgan kartalar |
+| `analytics.sections.openVsOverdue.question` | Ochiq ishlarning qanchasi muddatidan chiqib ketgan? | Ochiq ishlarning qanchasi kechikkan? |
+| `analytics.sections.openVsOverdue.empty` | Hozircha ochiq topshiriqlar yoʻq | Ochiq karta yoʻq |
+| `analytics.sections.loadPerPerson.empty` | Hozircha hech kimga topshiriq biriktirilmagan | Hech kimga karta biriktirilmagan |
+| `analytics.sections.loadPerUnit.empty` | Hozircha boʻlimlar boʻyicha maʼlumot yoʻq | Boʻlimlarga biriktirilgan karta yoʻq |
+| `analytics.sections.projectProgress.title` | Loyihalar boʻyicha jarayon | Loyihalarning bajarilishi |
+| `analytics.sections.projectProgress.empty` | Hali loyihalar yoʻq | Hali loyiha yoʻq |
+| `analytics.sections.eventsParticipation.question` | Tadbirlarga qanday javob berishmoqda? | Tadbirlarga qanday javob berilyapti? |
+| `analytics.sections.eventsParticipation.empty` | Bu davrda tadbirlar yoʻq | Bu davrda tadbir boʻlmagan |
+| `analytics.sections.pollTurnout.question` | Soʻrovnomalarga qancha kishi ovoz berdi? | Har bir soʻrovnomada nechta xodim ovoz berdi? |
+| `analytics.sections.pollTurnout.empty` | Hali soʻrovnomalar yoʻq | Hali soʻrovnoma yoʻq |
+| `analytics.sections.personal.title` | Shaxsiy koʻrsatkichlarim | Koʻrsatkichlarim |
+| `analytics.sections.personal.empty` | Hozircha shaxsiy koʻrsatkichlar yoʻq | Hozircha koʻrsatkich yigʻilmagan |
+| `analytics.personal.onTimeRate` | Bajarilganlarning oʻz vaqtidaligi | Muddatida bajarilgani |
+| `analytics.personal.focusMinutes` | Fokus daqiqalari | Diqqat daqiqalari |
+| `analytics.personal.upcomingEvents` | Yaqinlashib kelayotgan tadbirlar | Yaqin tadbirlar |
+| `analytics.empty.body` | Topshiriqlar va tadbirlar paydo boʻlgach, bu yerda hisobotlar koʻrinadi. | Kartalar va tadbirlar paydo boʻlgach, hisobotlar shu yerda koʻrinadi. |
+| `analytics.chartEmpty` | Hozircha maʼlumot yoʻq | Bu davr uchun raqam yoʻq |
+
+## automations — 10 ta satr oʻzgardi
+
+| kalit | oldin | keyin |
+|---|---|---|
+| `automations.description` | «Shunday boʻlsa — shuni qil». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring. | «Shunday boʻlsa — shunday qilinsin». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring. |
+| `automations.rule.suppressed` | Qoida hozir oʻchirilgan — quyidagi {count} ta ishga tushish u yoqilgan paytda boʻlgan, yangi kartalar uchun hech narsa bajarilmaydi. | Qoida hozir oʻchirilgan — bu {count} ta ishga tushish u yoqilgan paytda boʻlgan; yangi kartalar uchun hech narsa bajarilmaydi. |
+| `automations.trigger.cardCreated` | Karta yaratilganda | Karta qoʻshilganda |
+| `automations.action.addChecklist` | tekshirish roʻyxatini qoʻshish | bajarish roʻyxatini qoʻshish |
+| `automations.action.createFollowup` | davomi uchun karta yaratish | davomi uchun karta qoʻshish |
+| `automations.builder.daysAheadHint` | 1 dan 14 kungacha. | 1 kundan 14 kungacha. |
+| `automations.builder.checklistLabel` | Tekshirish roʻyxati | Bajarish roʻyxati |
+| `automations.builder.followupDueInDays` | Necha kunda | Necha kundan keyin |
+| `automations.runsPage.of` | {pages} sahifadan {page} chisi | {pages} sahifadan {page}-si |
+| `automations.forbiddenAction` | Ishlarni koʻrish | Doskani ochish |

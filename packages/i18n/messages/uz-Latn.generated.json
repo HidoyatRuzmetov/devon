@@ -1327,21 +1327,21 @@
   },
   "analytics": {
     "title": "Tahlil",
-    "eyebrow": "Hisobotlar",
+    "eyebrow": "HISOBOTLAR",
     "kpi": {
-      "throughput": "Oʻtgan hafta bajarilgan kartochkalar",
+      "throughput": "Oʻtgan hafta bajarilgan kartalar",
       "throughputQuestion": "oldingi haftaga nisbatan",
-      "open": "Ochiq kartochkalar",
+      "open": "Ochiq kartalar",
       "openQuestion": "oldingi haftaga nisbatan",
-      "overdue": "Muddati oʻtgan kartochkalar",
+      "overdue": "Muddati oʻtgan kartalar",
       "overdueQuestion": "oldingi haftaga nisbatan",
-      "onTimeRate": "Oʻtgan hafta oʻz vaqtida",
+      "onTimeRate": "Oʻtgan hafta muddatida",
       "onTimeRateQuestion": "oldingi haftaga nisbatan foiz punkti",
       "onTimeRateDenominator": "oʻtgan hafta muddati kelgan {due} tadan {onTime} tasi"
     },
     "ask": {
-      "title": "Tahlildan soʻrash",
-      "placeholder": "Savol bering, masalan \"bu oy muddati oʻtgan kartochkalar\"",
+      "title": "Savol bering",
+      "placeholder": "Masalan: bu oy muddati oʻtgan kartalar",
       "action": "Soʻrash",
       "pending": "Savol oʻqilmoqda…",
       "apply": "Filtrni qoʻllash",
@@ -1352,7 +1352,7 @@
       "resultNoFilter": "Buni filtrga aylantirib boʻlmadi — boshqacha soʻrab koʻring.",
       "errors": {
         "invalid": "Savolni tekshirib, qayta urinib koʻring",
-        "forbidden": "Bu funksiya oʻchirilgan yoki AI byudjeti tugagan",
+        "forbidden": "Savol berish oʻchirilgan yoki AI byudjeti tugagan",
         "failed": "AI bu safar javob bera olmadi"
       }
     },
@@ -1360,14 +1360,14 @@
       "placeholder": "assignee:@me status:active due:<today",
       "apply": "Qoʻllash",
       "clear": "Tozalash",
-      "since": "Boshlanishi",
-      "until": "Tugashi",
+      "since": "Qaysi sanadan",
+      "until": "Qaysi sanagacha",
       "activeTerms": "Filtrlar:",
-      "removeTerm": "\"{term}\" filtrini olib tashlash",
+      "removeTerm": "«{term}» filtrini olib tashlash",
       "dateRange": "Davr:",
       "presetDays": "Oxirgi {count} kun",
-      "showAdvanced": "Kengaytirilgan",
-      "hideAdvanced": "Kengaytirilganni yashirish"
+      "showAdvanced": "Qoʻshimcha",
+      "hideAdvanced": "Qoʻshimchani yashirish"
     },
     "savedFilters": {
       "title": "Saqlangan filtrlar",
@@ -1375,100 +1375,100 @@
       "namePlaceholder": "Filtr nomi",
       "save": "Saqlash",
       "delete": "Oʻchirish",
-      "shared": "Boʻlim bilan boʻlishilgan",
+      "shared": "Butun boshqarmaga ochiq",
       "empty": "Hali saqlangan filtr yoʻq"
     },
     "actions": {
-      "export": "Eksport",
-      "exportCsv": "CSV formatida yuklab olish",
-      "exportPng": "Rasm sifatida yuklab olish",
+      "export": "Yuklab olish",
+      "exportCsv": "CSV yuklab olish",
+      "exportPng": "Rasm yuklab olish",
       "pin": "Bosh sahifaga mahkamlash",
-      "unpin": "Mahkamlashni bekor qilish",
-      "viewAsTable": "Jadval koʻrinishida koʻrish",
-      "viewAsChart": "Diagramma koʻrinishida koʻrish"
+      "unpin": "Mahkamlashni olib tashlash",
+      "viewAsTable": "Jadval koʻrinishi",
+      "viewAsChart": "Diagramma koʻrinishi"
     },
     "legend": {
       "open": "Ochiq",
       "overdue": "Muddati oʻtgan",
       "done": "Bajarilgan",
-      "yes": "Kelaman",
-      "no": "Kelmayman",
+      "yes": "Boraman",
+      "no": "Bormayman",
       "maybe": "Balki",
-      "waitlist": "Kutish roʻyxatida",
+      "waitlist": "Navbatda",
       "unassigned": "Boʻlimsiz"
     },
     "sections": {
       "throughput": {
-        "title": "Haftalik bajarilgan topshiriqlar",
-        "question": "Har hafta nechta topshiriq yakunlandi?",
-        "empty": "Hali yakunlangan topshiriqlar yoʻq"
+        "title": "Haftada bajarilgan kartalar",
+        "question": "Har hafta nechta karta yakunlandi?",
+        "empty": "Hali yakunlangan karta yoʻq"
       },
       "onTimeRate": {
-        "title": "Oʻz vaqtida bajarilish darajasi",
-        "question": "Topshiriqlar muddatida bajarilyaptimi?",
+        "title": "Muddatida bajarilish ulushi",
+        "question": "Kartalar muddatida bajarilyaptimi?",
         "overall": "Umumiy: {percent}%",
-        "empty": "Baholash uchun yetarli maʼlumot yoʻq",
+        "empty": "Baholash uchun hali yetarli raqam yoʻq",
         "overallDenominator": "(tanlangan davrda muddati kelgan {due} tadan {onTime} tasi)"
       },
       "openVsOverdue": {
-        "title": "Ochiq va muddati oʻtgan topshiriqlar",
-        "question": "Ochiq ishlarning qanchasi muddatidan chiqib ketgan?",
-        "empty": "Hozircha ochiq topshiriqlar yoʻq"
+        "title": "Ochiq va muddati oʻtgan kartalar",
+        "question": "Ochiq ishlarning qanchasi kechikkan?",
+        "empty": "Ochiq karta yoʻq"
       },
       "loadPerPerson": {
         "title": "Xodimlar boʻyicha yuklama",
         "question": "Hozir kimning ustida qancha ish bor?",
-        "empty": "Hozircha hech kimga topshiriq biriktirilmagan"
+        "empty": "Hech kimga karta biriktirilmagan"
       },
       "loadPerUnit": {
         "title": "Boʻlimlar boʻyicha yuklama",
         "question": "Qaysi boʻlim eng band?",
-        "empty": "Hozircha boʻlimlar boʻyicha maʼlumot yoʻq"
+        "empty": "Boʻlimlarga biriktirilgan karta yoʻq"
       },
       "projectProgress": {
-        "title": "Loyihalar boʻyicha jarayon",
+        "title": "Loyihalarning bajarilishi",
         "question": "Har bir loyiha qay darajada bajarilgan?",
-        "empty": "Hali loyihalar yoʻq"
+        "empty": "Hali loyiha yoʻq"
       },
       "eventsParticipation": {
         "title": "Tadbirlarda ishtirok",
-        "question": "Tadbirlarga qanday javob berishmoqda?",
-        "empty": "Bu davrda tadbirlar yoʻq"
+        "question": "Tadbirlarga qanday javob berilyapti?",
+        "empty": "Bu davrda tadbir boʻlmagan"
       },
       "pollTurnout": {
         "title": "Soʻrovnomalarda qatnashish",
-        "question": "Soʻrovnomalarga qancha kishi ovoz berdi?",
-        "empty": "Hali soʻrovnomalar yoʻq"
+        "question": "Har bir soʻrovnomada nechta xodim ovoz berdi?",
+        "empty": "Hali soʻrovnoma yoʻq"
       },
       "personal": {
-        "title": "Shaxsiy koʻrsatkichlarim",
+        "title": "Koʻrsatkichlarim",
         "question": "Mening ishlarim qanday ketyapti?",
-        "empty": "Hozircha shaxsiy koʻrsatkichlar yoʻq"
+        "empty": "Hozircha koʻrsatkich yigʻilmagan"
       }
     },
     "personal": {
       "open": "Ochiq",
       "overdue": "Muddati oʻtgan",
       "doneThisWeek": "Shu hafta bajarilgan",
-      "onTimeRate": "Bajarilganlarning oʻz vaqtidaligi",
-      "focusMinutes": "Fokus daqiqalari",
-      "upcomingEvents": "Yaqinlashib kelayotgan tadbirlar"
+      "onTimeRate": "Muddatida bajarilgani",
+      "focusMinutes": "Diqqat daqiqalari",
+      "upcomingEvents": "Yaqin tadbirlar"
     },
     "empty": {
       "title": "Hali tahlil qiladigan narsa yoʻq",
-      "body": "Topshiriqlar va tadbirlar paydo boʻlgach, bu yerda hisobotlar koʻrinadi."
+      "body": "Kartalar va tadbirlar paydo boʻlgach, hisobotlar shu yerda koʻrinadi."
     },
     "pinDialog": {
       "title": "Bosh sahifaga mahkamlash",
       "titlePlaceholder": "Diagramma nomi",
       "confirm": "Mahkamlash"
     },
-    "chartEmpty": "Hozircha maʼlumot yoʻq"
+    "chartEmpty": "Bu davr uchun raqam yoʻq"
   },
   "automations": {
     "eyebrow": "AVTOMATLASHTIRISH",
     "title": "Qoidalar",
-    "description": "«Shunday boʻlsa — shuni qil». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
+    "description": "«Shunday boʻlsa — shunday qilinsin». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
     "create": "Qoida qoʻshish",
     "newTitle": "Yangi qoida",
     "created": "Qoida qoʻshildi",
@@ -1499,10 +1499,10 @@
       "edit": "{name} qoidasini tahrirlash",
       "duplicate": "{name} qoidasidan nusxa olish",
       "copyOf": "{name} — nusxa",
-      "suppressed": "Qoida hozir oʻchirilgan — quyidagi {count} ta ishga tushish u yoqilgan paytda boʻlgan, yangi kartalar uchun hech narsa bajarilmaydi."
+      "suppressed": "Qoida hozir oʻchirilgan — bu {count} ta ishga tushish u yoqilgan paytda boʻlgan; yangi kartalar uchun hech narsa bajarilmaydi."
     },
     "trigger": {
-      "cardCreated": "Karta yaratilganda",
+      "cardCreated": "Karta qoʻshilganda",
       "cardStatusChanged": "Holati oʻzgarganda",
       "cardAssigned": "Karta biriktirilganda",
       "cardDueSoon": "Muddati yaqinlashganda",
@@ -1516,8 +1516,8 @@
       "notifyUser": "xodimga xabar berish",
       "notifyHead": "boshliqqa xabar berish",
       "setStatus": "holatini oʻzgartirish",
-      "addChecklist": "tekshirish roʻyxatini qoʻshish",
-      "createFollowup": "davomi uchun karta yaratish"
+      "addChecklist": "bajarish roʻyxatini qoʻshish",
+      "createFollowup": "davomi uchun karta qoʻshish"
     },
     "builder": {
       "nameLabel": "Qoida nomi",
@@ -1528,7 +1528,7 @@
       "toStatusLabel": "Qaysi holatga oʻtganda",
       "anyStatus": "Har qanday holat",
       "daysAheadLabel": "Necha kun oldin",
-      "daysAheadHint": "1 dan 14 kungacha.",
+      "daysAheadHint": "1 kundan 14 kungacha.",
       "fieldLabel": "Qaysi maydon",
       "field": {
         "priority": "Muhimlik",
@@ -1549,10 +1549,10 @@
       "labelLabel": "Yorliq",
       "chooseLabel": "Yorliqni tanlang",
       "statusLabel": "Holat",
-      "checklistLabel": "Tekshirish roʻyxati",
+      "checklistLabel": "Bajarish roʻyxati",
       "checklistHint": "Har bir band — alohida qator.",
       "followupTitle": "Yangi karta nomi",
-      "followupDueInDays": "Necha kunda",
+      "followupDueInDays": "Necha kundan keyin",
       "invalid": "Qoida toʻliq emas — maydonlarni tekshiring."
     },
     "run": {
@@ -1589,9 +1589,9 @@
     "runsPage": {
       "previous": "Oldingi",
       "next": "Keyingi",
-      "of": "{pages} sahifadan {page} chisi"
+      "of": "{pages} sahifadan {page}-si"
     },
-    "forbiddenAction": "Ishlarni koʻrish"
+    "forbiddenAction": "Doskani ochish"
   },
   "calendar": {
     "title": "Kalendar",
