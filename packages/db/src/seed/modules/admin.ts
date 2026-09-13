@@ -15,6 +15,7 @@ import { DEMO_DEPARTMENT } from '../fixtures.js'
 import { demoId } from '../ids.js'
 import type { SeedModuleContext } from '../module-loader.js'
 import { asDepartment } from '../scope.js'
+import type { DemoScope } from '../reset-sweep.js'
 
 export const order = 900
 
@@ -123,4 +124,10 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   }
 
   return rows
+}
+/** The two showcase departments, for `reset-sweep.ts`. They are member-less by design, so this
+ * module creates no users. */
+export const scope: DemoScope = {
+  departmentIds: SHOWCASE_DEPARTMENTS.map((spec) => demoId(spec.key)),
+  userIds: [],
 }

@@ -276,7 +276,7 @@ describe('seed:demo / seed:reset idempotence (design §2.7 step 6, Testcontainer
       `select count(*)::bigint as n from audit.events where action in ('seed.demo_applied','seed.demo_reset')`,
     )
     expect(Number(audited.rows[0]!.n)).toBe(2)
-  })
+  }, 60_000)
 
   it('resetting again is a no-op', async () => {
     const second = await runResetDemo(process.env)
@@ -284,6 +284,163 @@ describe('seed:demo / seed:reset idempotence (design §2.7 step 6, Testcontainer
     expect(second.rowsDeleted).toBe(0)
     expect(await tableCounts()).toEqual(baseline)
   })
+
+  /**
+   * v1.1 critique SEV2 #24, and the reason it survived three fixes. Every row below is one the
+   * *product* writes and no seed module could ever name: a fill request a head actually sent, the
+   * day the analytics rollup wrote, a document the search indexer wrote, a run the automations
+   * engine appended, a card a presenter created and the comment somebody left on it, a notification
+   * and its delivery, a saved view, a calendar feed, a push subscription, a Telegram link, an
+   * upload, a personal task and the Pomodoro run against it.
+   *
+   * Before `reset-sweep.ts` this test would have failed on the very first of them --
+   * `field_requests_user_id_fkey`, then `analytics_daily_department_id_fkey`, then
+   * `ai_search_documents_department_id_fkey`, which is exactly the sequence the v1.1 report
+   * recorded against the real demo box. It exists so that "reset the demo before the presentation"
+   * is a property of a *used* instance, which is the only kind that ever needs it.
+   */
+  async function writeRowsTheProductWrites(): Promise<void> {
+    const one = async <T>(query: string, params: unknown[] = []): Promise<T | undefined> => {
+      const { rows } = await superuserClient.query(query, params)
+      return rows[0] as T | undefined
+    }
+    const dept = DEMO_DEPARTMENT.id
+    const head = DEMO_USERS[0]!.id
+    const member = DEMO_USERS[1]!.id
+    const card = (await one<{ id: string }>(
+      'select id from app.cards where department_id = $1 order by id limit 1',
+      [dept],
+    ))!
+    const fieldDef = (await one<{ id: string }>(
+      'select id from app.field_defs where department_id = $1 order by id limit 1',
+      [dept],
+    ))!
+    const rule = (await one<{ id: string }>(
+      'select id from app.automation_rules where department_id = $1 order by id limit 1',
+      [dept],
+    ))!
+    const sprint = await one<{ id: string }>(
+      'select id from app.personal_sprints where user_id = $1 order by id limit 1',
+      [member],
+    )
+
+    // Every row below gets a database-generated id -- never one any `demoId(...)` could produce,
+    // which is exactly what made them invisible to a reset that deleted by seeded id.
+    await superuserClient.query(
+      `insert into app.field_requests (department_id, def_id, user_id, requested_by_user_id)
+       values ($1, $2, $3, $4)`,
+      [dept, fieldDef.id, member, head],
+    )
+    await superuserClient.query(
+      `insert into app.analytics_daily (department_id, day) values ($1, current_date + 1)`,
+      [dept],
+    )
+    await superuserClient.query(
+      `insert into app.ai_search_documents (department_id, subject_type, subject_id)
+       values ($1, 'card', $2)`,
+      [dept, card.id],
+    )
+    await superuserClient.query(
+      `insert into app.automation_runs (department_id, rule_id, card_id, status)
+       values ($1, $2, $3, 'applied')`,
+      [dept, rule.id, card.id],
+    )
+    const appCard = (await one<{ id: string }>(
+      `insert into app.cards (department_id, title, created_by_user_id, assignee_user_id)
+       values ($1, 'Prezentatsiya paytida ochilgan karta', $2, $3) returning id`,
+      [dept, head, member],
+    ))!
+    await superuserClient.query(
+      `insert into app.card_comments (department_id, card_id, author_user_id, body)
+       values ($1, $2, $3, '{"text":"izoh"}'::jsonb)`,
+      [dept, appCard.id, head],
+    )
+    await superuserClient.query(
+      `insert into app.card_activity (department_id, card_id, kind, actor_user_id)
+       values ($1, $2, 'created', $3)`,
+      [dept, appCard.id, head],
+    )
+    await superuserClient.query(
+      `insert into app.card_time_logs (department_id, card_id, user_id, minutes)
+       values ($1, $2, $3, 30)`,
+      [dept, appCard.id, member],
+    )
+    await superuserClient.query(
+      `insert into app.focus_pins (department_id, user_id, card_id) values ($1, $2, $3)`,
+      [dept, member, appCard.id],
+    )
+    await superuserClient.query(
+      `insert into app.goals (department_id, title, created_by_user_id)
+       values ($1, 'Prezentatsiyada qoshilgan maqsad', $2)`,
+      [dept, head],
+    )
+    await superuserClient.query(
+      `insert into app.people_views (department_id, owner_user_id, name)
+       values ($1, $2, 'Mening korinishim')`,
+      [dept, head],
+    )
+    await superuserClient.query(
+      `insert into app.saved_views (department_id, owner_user_id, name)
+       values ($1, $2, 'Kechikkanlar')`,
+      [dept, head],
+    )
+    const notification = (await one<{ id: string }>(
+      `insert into app.notifications (user_id, department_id, type, reason, subject_type, title)
+       values ($1, $2, 'card.assigned', 'assigned', 'card', '{"uz-Latn":"Yangi vazifa"}'::jsonb)
+       returning id`,
+      [member, dept],
+    ))!
+    await superuserClient.query(
+      `insert into app.notification_deliveries (user_id, notification_id, channel)
+       values ($1, $2, 'inapp')`,
+      [member, notification.id],
+    )
+    await superuserClient.query(
+      `insert into app.calendar_feeds (user_id, secret) values ($1, 'kalendar-siri')`,
+      [member],
+    )
+    await superuserClient.query(
+      `insert into app.push_subscriptions (user_id, endpoint, p256dh, auth_secret)
+       values ($1, 'https://push.example/endpoint', 'p256dh', 'auth')`,
+      [member],
+    )
+    // Whichever demo account has not linked Telegram yet -- `telegram_links` is keyed by user, and
+    // the seed already links the two personas.
+    await superuserClient.query(
+      `insert into app.telegram_links (user_id, chat_id)
+       select id, 424242 from app.users
+       where id not in (select user_id from app.telegram_links) order by id limit 1`,
+    )
+    await superuserClient.query(
+      `insert into app.telegram_groups (department_id, chat_id, connected_by)
+       values ($1, -1001234567, $2)`,
+      [dept, head],
+    )
+    await superuserClient.query(
+      `insert into app.join_attempts (ok, department_id, user_id) values (true, $1, $2)`,
+      [dept, member],
+    )
+    await superuserClient.query(
+      `insert into app.outbox_events (type, payload, department_id)
+       values ('card.created', '{}'::jsonb, $1)`,
+      [dept],
+    )
+    await superuserClient.query(
+      `insert into app.uploads (user_id, purpose, key, mime, size, expires_at)
+       values ($1, 'avatar', 'k/1', 'image/png', 10, now() + interval '1 day')`,
+      [member],
+    )
+    const task = (await one<{ id: string }>(
+      `insert into app.personal_tasks (user_id, title, sprint_id)
+       values ($1, 'Prezentatsiyadan keyin', $2) returning id`,
+      [member, sprint?.id ?? null],
+    ))!
+    await superuserClient.query(
+      `insert into app.pomodoro_sessions (user_id, kind, started_at, task_id)
+       values ($1, 'focus', now(), $2)`,
+      [member, task.id],
+    )
+  }
 
   it('re-seeding after a reset writes the same rows again (deterministic, ON CONFLICT DO NOTHING-safe)', async () => {
     const reseeded = await runSeedDemo(process.env)
@@ -295,4 +452,33 @@ describe('seed:demo / seed:reset idempotence (design §2.7 step 6, Testcontainer
     expect(rows.map((r) => r.id)).toContain(DEMO_DEPARTMENT.id)
     expect(rows).toHaveLength(EXPECTED_DEPARTMENTS)
   })
+  it('seed:reset --demo survives a database people have actually used', async () => {
+    // The database is seeded again at this point -- the test above re-seeded it.
+    await writeRowsTheProductWrites()
+
+    const used = await tableCounts()
+    // Non-vacuous: the rows have to actually be there for the reset to have to survive them.
+    for (const table of [
+      'app.field_requests',
+      'app.analytics_daily',
+      'app.ai_search_documents',
+      'app.automation_runs',
+      'app.notifications',
+      'app.calendar_feeds',
+      'app.telegram_groups',
+      'app.people_views',
+      'app.outbox_events',
+      'app.pomodoro_sessions',
+    ]) {
+      expect(used[table], table).toBeGreaterThan(afterFirstSeed[table] ?? 0)
+    }
+
+    const reset = await runResetDemo(process.env)
+    expect(reset.deleted).toBe(true)
+
+    // Back to the pre-seed baseline -- including every row above, none of which any seed module
+    // could name. This is the assertion the three foreign-key crashes were hiding behind.
+    expect(await tableCounts()).toEqual(baseline)
+    expect(await isDemoFlag()).toBe(false)
+  }, 60_000)
 })

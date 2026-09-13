@@ -10,7 +10,24 @@ import { withContext, type RequestContext } from '../context.js'
 import * as schema from '../schema/index.js'
 import { DEMO_DELETE_ORDER, DEMO_DEPARTMENT, computeDemoChecksum } from './fixtures.js'
 import { assertSeedAllowed, type SeedEnv } from './guard.js'
-import { loadSeedModules } from './module-loader.js'
+import { loadSeedModules, type LoadedSeedModule } from './module-loader.js'
+import { sweepDemoResidue, type DemoScope } from './reset-sweep.js'
+
+/**
+ * Every department and every user the demo seed is responsible for: the foundation's
+ * (`DEMO_DELETE_ORDER`) plus whatever each module declares it creates. This is the scope
+ * `reset-sweep.ts` clears of rows nobody named -- see that file's header for why a reset expressed
+ * as "delete the rows I wrote" could never survive a box anyone had demonstrated from.
+ */
+function demoScopeOf(modules: readonly LoadedSeedModule[]): DemoScope {
+  const departmentIds = new Set<string>([DEMO_DEPARTMENT.id])
+  const userIds = new Set<string>(DEMO_DELETE_ORDER[2].ids)
+  for (const mod of modules) {
+    for (const id of mod.scope?.departmentIds ?? []) departmentIds.add(id)
+    for (const id of mod.scope?.userIds ?? []) userIds.add(id)
+  }
+  return { departmentIds: [...departmentIds], userIds: [...userIds] }
+}
 
 export const SEED_NAME = 'demo'
 const ADVISORY_LOCK_NAME = 'devon.seed'
@@ -202,7 +219,20 @@ export async function runResetDemo(
       // `runSeedDemo` is. A module without `reset()` (`core.ts`) contributes nothing here -- its rows
       // are `DEMO_DELETE_ORDER`, deleted below.
       const seedModules = await loadSeedModules()
-      let moduleRowsDeleted = 0
+
+      // First, everything that belongs to the demo scope whoever wrote it: the fill requests a head
+      // actually sent, the analytics day the rollup job wrote, the documents the search indexer
+      // wrote, the card a presenter created and the comment somebody left on it, the notification it
+      // produced. `reset-sweep.ts` explains why this -- and not deleting three named foreign keys --
+      // is the fix.
+      //
+      // Before the modules, not after: a module deletes its *seeded* parent rows by id (a personal
+      // sprint, a field definition, an automation rule), and an app-written child pointing at one of
+      // them blocks that delete just as surely as it blocks the department delete at the end. One
+      // pass over the whole scope, in child-before-parent order, leaves every module's `reset()`
+      // deleting only what is genuinely left -- usually nothing, which is exactly right.
+      let moduleRowsDeleted = await sweepDemoResidue(tx, demoScopeOf(seedModules))
+
       for (let i = seedModules.length - 1; i >= 0; i -= 1) {
         const reset = seedModules[i]!.reset
         if (reset) moduleRowsDeleted += await reset({ tx })

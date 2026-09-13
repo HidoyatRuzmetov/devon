@@ -29,6 +29,7 @@ import { demoId } from '../ids.js'
 import { asDepartment } from '../scope.js'
 import { EXTRA_USERS, extraUserId } from './accounts.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import type { DemoScope } from '../reset-sweep.js'
 
 export const order = 20
 
@@ -266,4 +267,10 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   }
 
   return rows
+}
+/** The two departments this module creates, for `reset-sweep.ts`. Their people come from
+ * `accounts.ts`'s roster, which contributes its own scope. */
+export const scope: DemoScope = {
+  departmentIds: NEW_DEPARTMENTS.map((spec) => demoId(spec.key)),
+  userIds: [],
 }

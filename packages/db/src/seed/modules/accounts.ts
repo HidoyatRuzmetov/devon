@@ -5,6 +5,7 @@
 import { inArray } from 'drizzle-orm'
 import * as schema from '../../schema/index.js'
 import { demoId } from '../ids.js'
+import type { DemoScope } from '../reset-sweep.js'
 import { demoPasswordHash } from '../fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'
 
@@ -179,6 +180,13 @@ function buildExtraUsers(): ExtraUser[] {
  * recomputing the same deterministic list. */
 export const EXTRA_USERS: readonly ExtraUser[] = buildExtraUsers()
 export const extraUserId = (u: ExtraUser): string => demoId(u.key)
+
+/** This module's users, for `reset-sweep.ts` -- every one of them can be logged into (they all share
+ * `DEMO_PASSWORD`), so every one of them can leave behind rows no seed module named. */
+export const scope: DemoScope = {
+  departmentIds: [],
+  userIds: EXTRA_USERS.map(extraUserId),
+}
 
 export async function seed(ctx: SeedModuleContext): Promise<number> {
   const { tx } = ctx

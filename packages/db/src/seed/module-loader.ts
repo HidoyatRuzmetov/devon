@@ -9,6 +9,7 @@
 import { existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import type { Tx } from '../context.js'
+import type { DemoScope } from './reset-sweep.js'
 
 export type SeedModuleContext = { tx: Tx }
 
@@ -29,6 +30,11 @@ export type SeedModule = {
    * department or are owner-only under RLS re-points the GUC with `scope.ts`'s `asDepartment`/`asUser`
    * exactly as its `seed()` did to write them. */
   reset?(ctx: SeedModuleContext): Promise<number>
+  /** The departments and users *this module creates*, if any. `demo.ts` unions every module's scope
+   * with the foundation's and hands the result to `reset-sweep.ts`, which is what makes
+   * `seed:reset --demo` survive a database people have actually demonstrated from -- see that file's
+   * header. A module that creates neither (most of them) omits this. */
+  scope?: DemoScope
 }
 
 /** A discovered module plus its filename. `demo.ts` folds the set of names into the run fingerprint,

@@ -39,6 +39,7 @@ import {
   standaloneCardTitle,
 } from '../work-fixtures.js'
 import type { SeedModuleContext } from '../module-loader.js'
+import type { DemoScope } from '../reset-sweep.js'
 import { DEMO_NOW } from '../clock.js'
 
 export const order = 90
@@ -498,4 +499,10 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
   deleted += deletedUsers.length
 
   return deleted
+}
+/** The fourteen roster accounts this module creates (the two fixture personas are `core.ts`'s), for
+ * `reset-sweep.ts`. */
+export const scope: DemoScope = {
+  departmentIds: [],
+  userIds: WORK_DEMO_USERS.map((u) => u.id),
 }
