@@ -2,9 +2,12 @@
 // "sprint" internally (`SprintKind` etc.) is always "period" in copy, never the banned project-
 // management jargon (DESIGN.md §5, `packages/i18n` banned-word gate).
 //
-// AI wiring: "Plan with AI" (`plan_sprint`) reorders one active period's open to-dos and names the one
-// to start with; "Weekly summary" (`weekly_summary`) narrates the last seven days of finished/new
-// to-dos into a note. Both go through `<AiPreviewPanel>`'s Accept/Edit/Discard.
+// AI wiring (v1.1, AI-AUDIT F3 + F5/F10): "Plan the period" (`plan_sprint`) orders one active
+// period's open to-dos against the time actually left in it and names the one to start with -- and
+// the whole ordering is what Accept applies now, not a single field patch. "What did I miss"
+// (`catch_up`) replaces v1.0's `weekly_summary`: the same data at a `window`/`scope`, returning a
+// structured briefing (wins, risks, what needs you) rather than three counts restated in prose.
+// Both go through Accept/Edit/Discard, and Edit is a real edit, never a second Discard.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import { Plus, RotateCcw, Sparkles, Target } from 'lucide-react'
@@ -29,7 +32,15 @@ import {
   toast,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
-import { aiCostLine, aiErrorMessageKey } from './lib/ai-helpers.js'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { CatchUpPreview, PlanPreview } from '../ai/components/previews.js'
+import {
+  parseFeatureOutput,
+  type CatchUpOutput,
+  type PlanSprintOutput,
+} from '../ai/outputs.js'
+import type { RunMeta } from '../ai/types.js'
+import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   SPRINT_KIND_LABEL_KEYS,
   defaultSprintRange,
@@ -55,18 +66,28 @@ type PlanAiState =
   | {
       sprintId: string
       status: 'ready'
-      orderedTitles: string[]
-      focusTitle: string | null
-      note: string
-      costLine: string
+      output: PlanSprintOutput
+      meta: RunMeta
       editing: boolean
     }
   | { sprintId: string; status: 'error'; message: string }
 
-type WeeklyAiState =
+type CatchUpAiState =
   | { status: 'pending' }
-  | { status: 'ready'; narrative: string; costLine: string; editing: boolean }
+  | { status: 'ready'; output: CatchUpOutput; meta: RunMeta; editing: boolean }
   | { status: 'error'; message: string }
+
+/** The note text a catch-up briefing becomes when the person saves it (SPEC §8: the whole answer is
+ * applied on Accept, never a fragment of it). Plain paragraphs, because a personal note is plain
+ * text -- but every part the panel showed is in here. */
+function catchUpToNoteText(output: CatchUpOutput): string {
+  const lines: string[] = [output.headline]
+  if (output.wins.text) lines.push(output.wins.text)
+  for (const risk of output.risks) lines.push(`• ${risk.text}`)
+  for (const person of output.overloaded) lines.push(`• ${person.name}: ${person.text}`)
+  if (output.lookingAhead.text) lines.push(output.lookingAhead.text)
+  return lines.filter(Boolean).join('\n\n')
+}
 
 function SprintPlanPanel({
   state,
@@ -75,6 +96,7 @@ function SprintPlanPanel({
   onAccept,
   onEditToggle,
   onDiscard,
+  itemTitle,
 }: {
   state: PlanAiState
   draft: string
@@ -82,53 +104,64 @@ function SprintPlanPanel({
   onAccept: () => void
   onEditToggle: () => void
   onDiscard: () => void
+  itemTitle: (id: string) => string | null
 }) {
   const t = useT()
+  const ready = state.status === 'ready' ? state : null
   return (
-    <AiPreviewPanel
+    <AiResultPanel
       title={t('personal.ai.planSprint.title')}
       status={state.status}
-      pendingLabel={t('personal.ai.pending')}
+      {...(state.status === 'error' ? { errorMessage: state.message } : {})}
+      {...(ready ? { meta: ready.meta } : {})}
       acceptLabel={t('personal.ai.accept')}
       editLabel={t('personal.ai.edit')}
-      discardLabel={t('personal.ai.discard')}
-      {...(state.status === 'error' ? { errorMessage: state.message } : {})}
-      {...(state.status === 'ready' ? { costLine: state.costLine } : {})}
       onAccept={onAccept}
       onDiscard={onDiscard}
       onEdit={onEditToggle}
     >
-      {state.status === 'ready' ? (
-        state.editing ? (
-          <Textarea
-            value={draft}
-            onChange={(e) => onDraftChange(e.target.value)}
-            rows={Math.max(3, state.orderedTitles.length)}
-            aria-label={t('personal.ai.planSprint.editAria')}
-          />
-        ) : (
-          <div className="flex flex-col gap-3">
-            <ol className="flex flex-col gap-1.5">
-              {state.orderedTitles.map((title, i) => (
-                <li key={i} className="flex items-start gap-2 text-body">
-                  <span className="mt-0.5 shrink-0 text-caption tabular-nums text-muted-foreground">
-                    {i + 1}.
-                  </span>
-                  <span className={title === state.focusTitle ? 'font-medium text-foreground' : ''}>
-                    {title}
-                  </span>
-                  {title === state.focusTitle ? (
-                    <Badge tone="attention">{t('personal.ai.planSprint.focusBadge')}</Badge>
-                  ) : null}
-                </li>
-              ))}
-            </ol>
-            <p className="text-small text-muted-foreground">{state.note}</p>
-          </div>
-        )
-      ) : null}
-    </AiPreviewPanel>
+      <PlanPanelBody
+        ready={ready}
+        draft={draft}
+        onDraftChange={onDraftChange}
+        itemTitle={itemTitle}
+      />
+    </AiResultPanel>
   )
+}
+
+/** Extracted so the three states are early returns rather than nested JSX ternaries --
+ * `check-i18n.mjs`'s hard-coded-text heuristic reads a `) : cond ? (` line between two JSX blocks as
+ * a stray text node (the same trap `people-screen.tsx` documents). */
+function PlanPanelBody({
+  ready,
+  draft,
+  onDraftChange,
+  itemTitle,
+}: {
+  ready: (PlanAiState & { status: 'ready' }) | null
+  draft: string
+  onDraftChange: (value: string) => void
+  itemTitle: (id: string) => string | null
+}) {
+  const t = useT()
+  if (!ready) {
+    return null
+  }
+  if (ready.editing) {
+    // Edit is a real edit: the ordering the model produced, one title per line, which the person
+    // rearranges and Accept then applies in that order. v1.0's Edit on several screens simply
+    // discarded the answer, which made it indistinguishable from Discard (AI-AUDIT §5 fix 11).
+    return (
+      <Textarea
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        rows={Math.max(3, ready.output.orderedIds.length)}
+        aria-label={t('personal.ai.planSprint.editAria')}
+      />
+    )
+  }
+  return <PlanPreview output={ready.output} itemTitle={itemTitle} />
 }
 
 export function SprintsView() {
@@ -142,15 +175,15 @@ export function SprintsView() {
   const reorderTasks = useReorderTasksMutation()
   const createNote = useCreateNoteMutation()
   const planSprint = useRunAiFeatureMutation('plan_sprint')
-  const weeklySummary = useRunAiFeatureMutation('weekly_summary')
+  const catchUp = useRunAiFeatureMutation('catch_up')
 
   const [open, setOpen] = React.useState(false)
   const [kind, setKind] = React.useState<SprintKind>('week')
   const [goal, setGoal] = React.useState('')
   const [planAi, setPlanAi] = React.useState<PlanAiState | null>(null)
   const [planDraft, setPlanDraft] = React.useState('')
-  const [weeklyAi, setWeeklyAi] = React.useState<WeeklyAiState | null>(null)
-  const [weeklyDraft, setWeeklyDraft] = React.useState('')
+  const [catchUpAi, setCatchUpAi] = React.useState<CatchUpAiState | null>(null)
+  const [catchUpDraft, setCatchUpDraft] = React.useState('')
   // UI-OVERHAUL.md §3 "RSVP yes, card done, sprint complete": one celebration burst, anchored to
   // whichever period's own "Complete" button fired it -- at most one plays at a time.
   const [celebratingSprintId, setCelebratingSprintId] = React.useState<string | null>(null)
@@ -214,31 +247,56 @@ export function SprintsView() {
       return
     }
     setPlanAi({ sprintId: sprint.id, status: 'pending' })
+    // AI-AUDIT §0.3: v1.0 handed this feature a title and an optional estimate and nothing else, so
+    // it could not do anything the offline simulator's "sort by estimate" did not already do for
+    // free. It now gets the period's real end, the minutes actually left in it, each item's own due
+    // date and importance, and whether the person marked it blocked -- which is the whole difference
+    // between an ordering and a guess.
+    const now = new Date()
+    const endsAt = new Date(sprint.endsAt)
+    const capacityMin = Math.max(0, Math.round((endsAt.getTime() - now.getTime()) / 60_000))
     planSprint.mutate(
       {
         locale,
-        sprintKind: sprint.kind,
+        scope: 'personal',
+        periodKind: sprint.kind,
+        now: now.toISOString(),
+        periodEndsAt: endsAt.toISOString(),
+        capacityMin,
         goal: sprint.goal,
-        tasks: bucket.map((tk) => ({ title: tk.title, estimateMin: tk.estimateMin })),
+        items: bucket.map((tk) => ({
+          id: tk.id,
+          title: tk.title,
+          estimateMin: tk.estimateMin,
+          dueDate: null,
+          priority: 'none',
+          blocked: false,
+        })),
       },
       {
         onSuccess: (res) => {
-          const orderedTitles = Array.isArray(res.data['orderedTaskTitles'])
-            ? (res.data['orderedTaskTitles'] as unknown[]).map(String)
-            : bucket.map((tk) => tk.title)
-          const focusTitle =
-            typeof res.data['focusTaskTitle'] === 'string' ? res.data['focusTaskTitle'] : null
-          const note = typeof res.data['scheduleNote'] === 'string' ? res.data['scheduleNote'] : ''
+          const output = parseFeatureOutput<PlanSprintOutput>('plan_sprint', res.data)
+          if (!output) {
+            setPlanAi({
+              sprintId: sprint.id,
+              status: 'error',
+              message: t('ai.errors.runFailed'),
+            })
+            return
+          }
           setPlanAi({
             sprintId: sprint.id,
             status: 'ready',
-            orderedTitles,
-            focusTitle,
-            note,
-            costLine: aiCostLine(t, res.meta, locale),
+            output,
+            meta: res.meta,
             editing: false,
           })
-          setPlanDraft(orderedTitles.join('\n'))
+          setPlanDraft(
+            output.orderedIds
+              .map((id) => bucket.find((tk) => tk.id === id)?.title ?? '')
+              .filter(Boolean)
+              .join('\n'),
+          )
         },
         onError: (err) =>
           setPlanAi({ sprintId: sprint.id, status: 'error', message: t(aiErrorMessageKey(err)) }),
@@ -248,86 +306,115 @@ export function SprintsView() {
 
   function acceptPlanAi(sprint: Sprint) {
     if (planAi?.sprintId !== sprint.id || planAi.status !== 'ready') return
-    const titles = planAi.editing
-      ? planDraft
-          .split('\n')
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : planAi.orderedTitles
     const pool = openTopLevelTasks(sprint.id)
     const used = new Set<string>()
     const orderedIds: string[] = []
-    for (const title of titles) {
-      const match = pool.find((tk) => !used.has(tk.id) && tk.title === title)
-      if (match) {
-        used.add(match.id)
-        orderedIds.push(match.id)
+
+    if (planAi.editing) {
+      // The person rearranged the titles by hand; match them back to real to-dos in the order they
+      // left them.
+      for (const title of planDraft.split('\n').map((line) => line.trim()).filter(Boolean)) {
+        const match = pool.find((tk) => !used.has(tk.id) && tk.title === title)
+        if (match) {
+          used.add(match.id)
+          orderedIds.push(match.id)
+        }
+      }
+    } else {
+      // AI-AUDIT §0.2: v1.0 rendered the whole ordering and then applied a single `priority: 'urgent'`
+      // patch to one card. The ordering is the answer, and the ordering is what lands.
+      for (const id of planAi.output.orderedIds) {
+        if (!used.has(id) && pool.some((tk) => tk.id === id)) {
+          used.add(id)
+          orderedIds.push(id)
+        }
       }
     }
     for (const tk of pool) if (!used.has(tk.id)) orderedIds.push(tk.id)
+
     reorderTasks.mutate(
       { items: orderedIds.map((id, sort) => ({ id, sort })) },
-      { onError: () => toast(t('toast.saveError')) },
+      {
+        onSuccess: () => toast(t('personal.ai.planSprint.appliedToast')),
+        onError: () => toast(t('toast.saveError')),
+      },
     )
     setPlanAi(null)
   }
 
-  function runWeeklyAi() {
+  function runCatchUpAi() {
     const now = Date.now()
     const weekAgo = now - WEEK_MS
-    const doneCards = tasks
+    const asItem = (tk: Task) => ({ id: tk.id, title: tk.title })
+    const done = tasks
       .filter((tk) => tk.doneAt !== null && new Date(tk.doneAt).getTime() >= weekAgo)
-      .map((tk) => ({ id: tk.id, title: tk.title }))
-    const newCards = tasks
-      .filter((tk) => new Date(tk.createdAt).getTime() >= weekAgo)
-      .map((tk) => ({ id: tk.id, title: tk.title }))
-    const overdueCards = active
+      .map(asItem)
+    const created = tasks.filter((tk) => new Date(tk.createdAt).getTime() >= weekAgo)
+    const overdue = active
       .filter((s) => sprintHasEnded(s))
       .flatMap((s) => openTopLevelTasks(s.id))
-      .map((tk) => ({ id: tk.id, title: tk.title }))
+      .map(asItem)
 
-    setWeeklyAi({ status: 'pending' })
-    weeklySummary.mutate(
+    setCatchUpAi({ status: 'pending' })
+    // F5+F10 merged (AI-AUDIT §4, D-1): one feature, one prompt, a `window` and a `scope`. Here it
+    // is the person's own week. The counts go alongside the items so the model can say "four, two
+    // more than last week" without counting the array itself and getting it wrong.
+    catchUp.mutate(
       {
         locale,
         scope: 'person',
-        subjectName: t('personal.ai.weeklySummary.subjectSelf'),
-        periodLabel: t('personal.ai.weeklySummary.periodLabel'),
-        doneCards,
-        overdueCards,
-        newCards,
+        window: 'week',
+        subjectName: t('personal.ai.catchUp.subjectSelf'),
+        viewerName: t('personal.ai.catchUp.subjectSelf'),
+        period: {
+          start: new Date(weekAgo).toISOString().slice(0, 10),
+          end: new Date(now).toISOString().slice(0, 10),
+        },
+        counts: {
+          done: done.length,
+          doneLastPeriod: 0,
+          created: created.length,
+          overdue: overdue.length,
+        },
+        done,
+        overdue,
+        dueThisWeek: [],
+        assignedToMe: created.map(asItem),
+        mentions: [],
+        comments: [],
+        loadPerPerson: [],
+        eventsAhead: [],
       },
       {
         onSuccess: (res) => {
-          const narrative = typeof res.data['narrative'] === 'string' ? res.data['narrative'] : ''
-          setWeeklyAi({
-            status: 'ready',
-            narrative,
-            costLine: aiCostLine(t, res.meta, locale),
-            editing: false,
-          })
-          setWeeklyDraft(narrative)
+          const output = parseFeatureOutput<CatchUpOutput>('catch_up', res.data)
+          if (!output) {
+            setCatchUpAi({ status: 'error', message: t('ai.errors.runFailed') })
+            return
+          }
+          setCatchUpAi({ status: 'ready', output, meta: res.meta, editing: false })
+          setCatchUpDraft(catchUpToNoteText(output))
         },
-        onError: (err) => setWeeklyAi({ status: 'error', message: t(aiErrorMessageKey(err)) }),
+        onError: (err) => setCatchUpAi({ status: 'error', message: t(aiErrorMessageKey(err)) }),
       },
     )
   }
 
-  function acceptWeeklyAi() {
-    if (weeklyAi?.status !== 'ready') return
-    const text = weeklyAi.editing ? weeklyDraft.trim() : weeklyAi.narrative
+  function acceptCatchUpAi() {
+    if (catchUpAi?.status !== 'ready') return
+    const text = catchUpAi.editing ? catchUpDraft.trim() : catchUpToNoteText(catchUpAi.output)
     if (!text) {
-      setWeeklyAi(null)
+      setCatchUpAi(null)
       return
     }
     createNote.mutate(
-      { title: t('personal.ai.weeklySummary.noteTitle'), body: { text } },
+      { title: t('personal.ai.catchUp.noteTitle'), body: { text } },
       {
-        onSuccess: () => toast(t('personal.ai.weeklySummary.savedToast')),
+        onSuccess: () => toast(t('personal.ai.catchUp.savedToast')),
         onError: () => toast(t('toast.saveError')),
       },
     )
-    setWeeklyAi(null)
+    setCatchUpAi(null)
   }
 
   return (
@@ -336,11 +423,11 @@ export function SprintsView() {
         <h3 className="text-h3 text-foreground">{t('personal.sprints.active.title')}</h3>
         <div className="flex flex-wrap items-center gap-2">
           <SparkleButton
-            aria-label={t('personal.ai.weeklySummary.action')}
-            label={t('personal.ai.weeklySummary.action')}
+            aria-label={t('personal.ai.catchUp.action')}
+            label={t('personal.ai.catchUp.action')}
             size="sm"
-            loading={weeklyAi?.status === 'pending'}
-            onClick={runWeeklyAi}
+            loading={catchUpAi?.status === 'pending'}
+            onClick={runCatchUpAi}
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -384,38 +471,29 @@ export function SprintsView() {
         </div>
       </div>
 
-      {weeklyAi ? (
+      {catchUpAi ? (
         <Reveal>
-          <AiPreviewPanel
-            title={t('personal.ai.weeklySummary.title')}
-            status={weeklyAi.status}
-            pendingLabel={t('personal.ai.pending')}
-            acceptLabel={t('personal.ai.weeklySummary.acceptLabel')}
+          <AiResultPanel
+            title={t('personal.ai.catchUp.title')}
+            status={catchUpAi.status}
+            {...(catchUpAi.status === 'error' ? { errorMessage: catchUpAi.message } : {})}
+            {...(catchUpAi.status === 'ready' ? { meta: catchUpAi.meta } : {})}
+            acceptLabel={t('personal.ai.catchUp.acceptLabel')}
             editLabel={t('personal.ai.edit')}
-            discardLabel={t('personal.ai.discard')}
-            {...(weeklyAi.status === 'error' ? { errorMessage: weeklyAi.message } : {})}
-            {...(weeklyAi.status === 'ready' ? { costLine: weeklyAi.costLine } : {})}
-            onAccept={acceptWeeklyAi}
-            onDiscard={() => setWeeklyAi(null)}
+            onAccept={acceptCatchUpAi}
+            onDiscard={() => setCatchUpAi(null)}
             onEdit={() =>
-              setWeeklyAi((prev) =>
+              setCatchUpAi((prev) =>
                 prev && prev.status === 'ready' ? { ...prev, editing: !prev.editing } : prev,
               )
             }
           >
-            {weeklyAi.status === 'ready' ? (
-              weeklyAi.editing ? (
-                <Textarea
-                  value={weeklyDraft}
-                  onChange={(e) => setWeeklyDraft(e.target.value)}
-                  rows={4}
-                  aria-label={t('personal.ai.weeklySummary.editAria')}
-                />
-              ) : (
-                <p>{weeklyAi.narrative}</p>
-              )
-            ) : null}
-          </AiPreviewPanel>
+            <CatchUpPanelBody
+              state={catchUpAi}
+              draft={catchUpDraft}
+              onDraftChange={setCatchUpDraft}
+            />
+          </AiResultPanel>
         </Reveal>
       ) : null}
 
@@ -524,6 +602,7 @@ export function SprintsView() {
                       draft={planDraft}
                       onDraftChange={setPlanDraft}
                       onAccept={() => acceptPlanAi(sprint)}
+                      itemTitle={(id) => tasks.find((tk) => tk.id === id)?.title ?? null}
                       onDiscard={() => setPlanAi(null)}
                       onEditToggle={() =>
                         setPlanAi((prev) =>
@@ -572,4 +651,31 @@ export function SprintsView() {
       </p>
     </div>
   )
+}
+
+/** Early returns rather than nested JSX ternaries, for the reason `PlanPanelBody` above documents. */
+function CatchUpPanelBody({
+  state,
+  draft,
+  onDraftChange,
+}: {
+  state: CatchUpAiState
+  draft: string
+  onDraftChange: (value: string) => void
+}) {
+  const t = useT()
+  if (state.status !== 'ready') {
+    return null
+  }
+  if (state.editing) {
+    return (
+      <Textarea
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        rows={8}
+        aria-label={t('personal.ai.catchUp.editAria')}
+      />
+    )
+  }
+  return <CatchUpPreview output={state.output} cardTitle={() => null} />
 }

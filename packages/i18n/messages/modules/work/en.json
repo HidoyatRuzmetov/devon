@@ -46,7 +46,8 @@
       "aiPreviewTitle": "AI-parsed card",
       "aiError": "Could not parse that text",
       "aiMeta": "{tokens} tokens · {ms} ms",
-      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood."
+      "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood.",
+      "duplicateTitle": "Something similar already exists"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",

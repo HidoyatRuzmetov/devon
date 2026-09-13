@@ -9,7 +9,7 @@
 // Below the answer, the raw retrieval is always shown. A reader who does not trust the paragraph can
 // read the four records it was built from, which is a better trust mechanism than a confidence score.
 import * as React from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../../lib/router.js'
 import { Search, Sparkles } from 'lucide-react'
 import { Badge, Button, Input, StateView } from '@devon/ui'
 import { useT, useLocale } from '@devon/i18n'

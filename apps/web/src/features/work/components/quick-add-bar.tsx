@@ -10,27 +10,39 @@
 import * as React from 'react'
 import { CalendarClock, Plus, UserRound } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import { AiPreviewPanel, Input, SparkleButton, toast } from '@devon/ui'
+import { Input, SparkleButton, toast } from '@devon/ui'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
-import { useCreateCardMutation } from '../hooks.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import { DuplicatePreview, QuickAddPreview } from '../../ai/components/previews.js'
+import {
+  parseFeatureOutput,
+  type DuplicateCheckOutput,
+  type QuickAddOutput,
+} from '../../ai/outputs.js'
+import type { RunMeta } from '../../ai/types.js'
+import { useBoardQuery, useCreateCardMutation, useLabelsQuery } from '../hooks.js'
 import { parseQuickAdd, resolveQuickAddAssignee } from '../lib/quick-add.js'
-import type { CardPriority, MemberSummary } from '../api.js'
-import { PRIORITY_LABEL_KEY, fullName } from '../lib/format.js'
-
-type AiQuickAddResult = {
-  title: string
-  assigneeName: string | null
-  dueDate: string | null
-  priority: CardPriority
-  labels: string[]
-}
-
-function isAiQuickAddResult(data: Record<string, unknown>): data is AiQuickAddResult {
-  return typeof data['title'] === 'string'
-}
+import type { MemberSummary } from '../api.js'
+import { fullName } from '../lib/format.js'
 
 function isoDateToUtcMidnight(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00.000Z`).toISOString()
+}
+
+/**
+ * AI-AUDIT §0.3, the headline defect: `quick_add_parse`'s system prompt orders the model to
+ * "resolve relative dates against today's date" and v1.0 never gave it one. Every "ertaga",
+ * "juma" and "завтра" was therefore either hallucinated or dropped. This is that date, in
+ * Asia/Tashkent -- the department's own clock, not the browser's, so a person travelling does not
+ * silently get yesterday's Friday.
+ */
+function todayInTashkent(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
 }
 
 export interface QuickAddBarProps {
@@ -54,13 +66,21 @@ export function QuickAddBar({
   const t = useT()
   const locale = useLocale()
   const [value, setValue] = React.useState('')
-  const [aiResult, setAiResult] = React.useState<AiQuickAddResult | null>(null)
-  const [aiMeta, setAiMeta] = React.useState<{ totalTokens: number; latencyMs: number } | null>(
-    null,
-  )
+  const [aiResult, setAiResult] = React.useState<QuickAddOutput | null>(null)
+  const [aiMeta, setAiMeta] = React.useState<RunMeta | null>(null)
+  // N-5: the duplicate check runs *after* a successful parse, on the parsed title -- never on every
+  // keystroke. One extra call, only when the person is about to create something, which is the only
+  // moment the answer can still change what they do.
+  const [duplicates, setDuplicates] = React.useState<DuplicateCheckOutput | null>(null)
   const createCard = useCreateCardMutation()
   const aiSettings = useAiSettingsQuery()
   const parseAi = useRunAiFeatureMutation('quick_add_parse')
+  const duplicateAi = useRunAiFeatureMutation('duplicate_check')
+  // Labels and projects come from the board the bar already sits on, so the model can return real
+  // ids instead of free-text names the Accept path would have to guess at (AI-AUDIT §0.2: v1.0 hard
+  // -coded `labels: []` and threw the model's answer away).
+  const labelsQuery = useLabelsQuery()
+  const boardQuery = useBoardQuery()
 
   const parsed = value.trim().length > 0 ? parseQuickAdd(value) : null
   const resolvedAssignee =
@@ -70,16 +90,14 @@ export function QuickAddBar({
     aiSettings.data !== undefined &&
     aiSettings.data.flags['quick_add_parse'] === true &&
     aiSettings.data.budgetStatus !== 'hard_stop'
+  const duplicateEnabled = aiSettings.data?.flags['duplicate_check'] === true
 
-  function resolveAiAssignee(name: string | null): MemberSummary | null {
-    if (!name) return null
-    const needle = name.trim().toLowerCase()
-    return (
-      members.find(
-        (m) => fullName(m).toLowerCase() === needle || m.givenName.toLowerCase() === needle,
-      ) ?? null
-    )
-  }
+  const labels = labelsQuery.data ?? []
+  const memberById = React.useMemo(
+    () => new Map(members.map((m) => [m.userId, m] as const)),
+    [members],
+  )
+  const labelById = React.useMemo(() => new Map(labels.map((l) => [l.id, l] as const)), [labels])
 
   async function submit() {
     if (!parsed || parsed.title.trim().length === 0) return
@@ -101,13 +119,55 @@ export function QuickAddBar({
   function runAiParse() {
     if (!value.trim()) return
     setAiResult(null)
+    setDuplicates(null)
     parseAi.mutate(
-      { text: value.trim(), memberNames: members.map((m) => fullName(m)), locale },
+      {
+        locale,
+        text: value.trim(),
+        // The four inputs v1.0 never supplied, which is why the feature "felt random":
+        today: todayInTashkent(),
+        members: members.map((m) => ({ userId: m.userId, fullName: fullName(m) })),
+        labels: labels.map((l) => ({ id: l.id, name: l.name })),
+        projects: [],
+        defaultAssigneeUserId,
+      },
       {
         onSuccess: (res) => {
-          if (!isAiQuickAddResult(res.data)) return
-          setAiResult(res.data)
-          setAiMeta({ totalTokens: res.meta.totalTokens, latencyMs: res.meta.latencyMs })
+          const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
+          if (!output) return
+          setAiResult(output)
+          setAiMeta(res.meta)
+          if (duplicateEnabled) runDuplicateCheck(output.title)
+        },
+      },
+    )
+  }
+
+  function runDuplicateCheck(title: string) {
+    const existing = (boardQuery.data?.columns ?? [])
+      .flatMap((column) => column.cards)
+      .concat(boardQuery.data?.unassigned ?? [])
+      .slice(0, 200)
+      .map((card) => ({
+        id: card.id,
+        title: card.title,
+        status: card.status === 'done' ? ('done' as const) : ('active' as const),
+        assigneeName: card.assigneeUserId
+          ? (memberById.get(card.assigneeUserId)?.givenName ?? null)
+          : null,
+        similarity: 0,
+      }))
+      // A prefilter, in the client, over the board this bar already has: the model is a
+      // *confirmation* call over a shortlist, never a search (AI-AUDIT §4, N-5).
+      .filter((card) => sharesAWord(card.title, title))
+      .slice(0, 10)
+    if (existing.length === 0) return
+    duplicateAi.mutate(
+      { locale, candidateTitle: title, candidateDescription: null, existing },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<DuplicateCheckOutput>('duplicate_check', res.data)
+          setDuplicates(output)
         },
       },
     )
@@ -115,17 +175,22 @@ export function QuickAddBar({
 
   async function acceptAi() {
     if (!aiResult) return
-    const assignee = resolveAiAssignee(aiResult.assigneeName)
     try {
       await createCard.mutateAsync({
         title: aiResult.title,
-        assigneeUserId: assignee?.userId ?? defaultAssigneeUserId,
+        assigneeUserId: aiResult.assigneeUserId ?? defaultAssigneeUserId,
         dueAt: aiResult.dueDate ? isoDateToUtcMidnight(aiResult.dueDate) : null,
         priority: aiResult.priority,
-        labels: [],
+        // AI-AUDIT §5 fix 3: v1.0 rendered the labels in the preview and then wrote `labels: []`.
+        // Everything the person saw is now what gets created. Ids the model invented were already
+        // dropped server-side by the feature's own `validateOutput`; this filter is the second
+        // belt, against a label deleted between the parse and the Accept.
+        labels: aiResult.labelIds.filter((id) => labelById.has(id)),
+        ...(aiResult.projectId ? { projectId: aiResult.projectId } : {}),
       })
       setValue('')
       setAiResult(null)
+      setDuplicates(null)
       parseAi.reset()
       onCreated?.()
       toast(t('work.quickAdd.created', { title: aiResult.title }))
@@ -133,8 +198,6 @@ export function QuickAddBar({
       toast(t('work.quickAdd.error'))
     }
   }
-
-  const aiAssignee = aiResult ? resolveAiAssignee(aiResult.assigneeName) : null
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -190,55 +253,83 @@ export function QuickAddBar({
       ) : null}
 
       {parseAi.isPending || aiResult || parseAi.isError ? (
-        <AiPreviewPanel
+        <AiResultPanel
           title={t('work.quickAdd.aiPreviewTitle')}
           status={parseAi.isPending ? 'pending' : parseAi.isError ? 'error' : 'ready'}
-          pendingLabel={t('work.quickAdd.aiParse')}
+          meta={aiMeta ?? undefined}
           errorMessage={t('work.quickAdd.aiError')}
           acceptLabel={t('work.ai.accept')}
           editLabel={t('work.ai.edit')}
-          discardLabel={t('work.ai.discard')}
-          retryLabel={t('work.ai.retry')}
           onAccept={() => void acceptAi()}
-          onEdit={() => setAiResult(null)}
+          // Edit puts the person back in the input with the model's title, which is the thing they
+          // most often want to adjust before creating. v1.0's Edit simply discarded the answer,
+          // making it indistinguishable from Discard (AI-AUDIT §5 fix 11, the same defect).
+          onEdit={() => {
+            if (aiResult) setValue(aiResult.title)
+            setAiResult(null)
+            setDuplicates(null)
+            parseAi.reset()
+          }}
           onDiscard={() => {
             setAiResult(null)
+            setDuplicates(null)
             parseAi.reset()
           }}
           onRetry={runAiParse}
-          {...(aiMeta
-            ? {
-                costLine: t('work.quickAdd.aiMeta', {
-                  tokens: aiMeta.totalTokens,
-                  ms: aiMeta.latencyMs,
-                }),
-              }
-            : {})}
         >
           {aiResult ? (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-small">
-              <dt className="text-muted-foreground">{t('work.field.title')}</dt>
-              <dd className="text-foreground">{aiResult.title}</dd>
-              <dt className="text-muted-foreground">{t('work.field.assignee')}</dt>
-              <dd className="text-foreground">
-                {aiAssignee ? fullName(aiAssignee) : t('work.field.unassigned')}
-              </dd>
-              <dt className="text-muted-foreground">{t('work.field.due')}</dt>
-              <dd className="text-foreground">
-                {aiResult.dueDate
-                  ? formatDate(new Date(isoDateToUtcMidnight(aiResult.dueDate)), locale)
-                  : '—'}
-              </dd>
-              {aiResult.priority !== 'none' ? (
-                <>
-                  <dt className="text-muted-foreground">{t('work.field.priority')}</dt>
-                  <dd className="text-foreground">{t(PRIORITY_LABEL_KEY[aiResult.priority])}</dd>
-                </>
+            <div className="flex flex-col gap-3">
+              <QuickAddPreview
+                output={aiResult}
+                memberName={(id) => {
+                  const member = memberById.get(id)
+                  return member ? fullName(member) : null
+                }}
+                labelName={(id) => labelById.get(id)?.name ?? null}
+                projectName={() => null}
+              />
+              {duplicates && duplicates.matches.length > 0 ? (
+                <section className="flex flex-col gap-1 rounded-sm border border-warning/40 bg-warning/10 px-3 py-2">
+                  <h4 className="text-caption font-medium uppercase tracking-wide text-muted-foreground">
+                    {t('work.quickAdd.duplicateTitle')}
+                  </h4>
+                  <DuplicatePreview
+                    output={duplicates}
+                    cardTitle={(id) =>
+                      (boardQuery.data?.columns ?? [])
+                        .flatMap((column) => column.cards)
+                        .concat(boardQuery.data?.unassigned ?? [])
+                        .find((card) => card.id === id)?.title ?? null
+                    }
+                  />
+                </section>
               ) : null}
-            </dl>
+            </div>
           ) : null}
-        </AiPreviewPanel>
+        </AiResultPanel>
       ) : null}
     </div>
   )
+}
+
+/**
+ * The duplicate prefilter's whole rule: two titles are worth a confirmation call when they share a
+ * word of four letters or more. Deliberately crude and deliberately local -- it exists to keep the
+ * model's input to ten candidates, not to decide anything. The real judgement is the model's, and
+ * the real authority is the person looking at the two titles side by side.
+ *
+ * Four letters because three-letter words in all four of this product's locales are almost entirely
+ * function words ("va", "bu", "для", "the"), and matching on those would shortlist the whole board.
+ */
+function sharesAWord(a: string, b: string): boolean {
+  const words = (text: string) =>
+    new Set(
+      text
+        .toLowerCase()
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter((word) => word.length >= 4),
+    )
+  const left = words(a)
+  for (const word of words(b)) if (left.has(word)) return true
+  return false
 }

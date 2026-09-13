@@ -10,7 +10,7 @@
 // checklist the Accept path then discards is worse than not rendering it -- the person believes they
 // asked for something and got nothing.
 import * as React from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../../../lib/router.js'
 import {
   AlertTriangle,
   ArrowRight,

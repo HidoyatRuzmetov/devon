@@ -46,7 +46,8 @@
       "aiPreviewTitle": "AI aniqlagan karta",
       "aiError": "Matnni aniqlab boʻlmadi",
       "aiMeta": "{tokens} token · {ms} ms",
-      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi."
+      "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
+      "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
