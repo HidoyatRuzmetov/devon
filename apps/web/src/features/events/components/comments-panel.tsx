@@ -1,14 +1,19 @@
 // Event discussion (TECH-SPEC §3.4 `event_comments`). Flat, newest-last, no threading -- matches the
 // scale of a department-wide event thread, not a project's activity feed.
 //
-// AI wiring (UI-OVERHAUL.md "AI helpers ... thread summary"): a `SparkleButton` runs the AI module's
-// `summarize_thread` feature over the visible comments and previews the result in an `AiPreviewPanel`
-// -- Accept drops the summary into the compose box so the person can review it once more and post it
-// themselves (TECH-SPEC §8: "the user always sees a preview and accepts", never an auto-post).
+// AI wiring (AI-AUDIT F7): `summarize_thread` over the visible comments, previewed as *decisions,
+// open questions and commitments* rather than one paragraph -- a long event thread is read for
+// exactly those three things. Accept drops the digest into the compose box so the person reviews it
+// once more and posts it themselves (TECH-SPEC §8: "the user always sees a preview and accepts",
+// never an auto-post).
+//
+// Two v1.1 fixes live here. The entry point is now gated on the department's AI flag and budget
+// (AI-AUDIT §5 fix 12 -- v1.0 rendered the sparkle unconditionally and let the call 403), and Edit is
+// no longer the same function as Accept (fix 11 -- both called the identical `onInsert`, which made
+// one of the two buttons a lie).
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import {
-  AiPreviewPanel,
   Avatar,
   Button,
   IconButton,
@@ -20,38 +25,80 @@ import {
   toast,
 } from '@devon/ui'
 import { Trash2 } from 'lucide-react'
-import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import { ThreadDigestPreview } from '../../ai/components/previews.js'
+import { parseFeatureOutput, type SummarizeThreadOutput } from '../../ai/outputs.js'
 import { useAddCommentMutation, useCommentsQuery, useDeleteCommentMutation } from '../hooks.js'
+import { useSession } from '../../../lib/session.js'
 
 function ThreadSummary({
+  eventId,
   eventTitle,
+  viewerName,
   comments,
   onInsert,
 }: {
+  eventId: string
   eventTitle: string
-  comments: { id: string; author: string; body: string }[]
+  viewerName: string
+  comments: { id: string; author: string; body: string; createdAt: string }[]
   onInsert: (text: string) => void
 }) {
   const t = useT()
   const locale = useLocale()
   const runMutation = useRunAiFeatureMutation('summarize_thread')
+  const aiSettings = useAiSettingsQuery()
   const [open, setOpen] = React.useState(false)
 
-  if (comments.length < 2) return null
+  const digest = runMutation.data
+    ? parseFeatureOutput<SummarizeThreadOutput>('summarize_thread', runMutation.data.data)
+    : null
+
+  // fix 12: the flag and the budget decide whether this affordance exists at all. A button that
+  // always appears and sometimes 403s teaches people not to trust buttons.
+  const aiEnabled =
+    aiSettings.data !== undefined &&
+    aiSettings.data.flags['summarize_thread'] === true &&
+    aiSettings.data.budgetStatus !== 'hard_stop'
+
+  if (comments.length < 2 || !aiEnabled) {
+    return null
+  }
 
   const handleRun = () => {
     setOpen(true)
     runMutation.mutate({
-      cardTitle: eventTitle,
-      comments: comments.map((c) => ({ id: c.id, author: c.author, text: c.body })),
       locale,
+      subject: { kind: 'event', id: eventId, title: eventTitle },
+      viewerName,
+      comments: comments.map((c) => ({
+        id: c.id,
+        author: c.author,
+        text: c.body,
+        createdAt: c.createdAt,
+      })),
     })
   }
 
-  const summary =
-    runMutation.data && typeof runMutation.data.data === 'object' && runMutation.data.data
-      ? ((runMutation.data.data as Record<string, unknown>)['summary'] as string | undefined)
-      : undefined
+  /** The digest as text a person can post: every line the panel showed, nothing invented, nothing
+   * dropped (SPEC §8 -- what the preview shows is what Accept applies). */
+  const asText = (output: SummarizeThreadOutput): string => {
+    const lines: string[] = []
+    if (output.decisions.length > 0) {
+      lines.push(`${t('ai.preview.thread.decisions')}:`)
+      for (const decision of output.decisions) lines.push(`- ${decision.text}`)
+    }
+    if (output.openQuestions.length > 0) {
+      lines.push(`${t('ai.preview.thread.openQuestions')}:`)
+      for (const question of output.openQuestions) lines.push(`- ${question.text}`)
+    }
+    if (output.commitments.length > 0) {
+      lines.push(`${t('ai.preview.thread.commitments')}:`)
+      for (const c of output.commitments) lines.push(`- ${c.who}: ${c.what}`)
+    }
+    return lines.join('\n')
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -60,34 +107,31 @@ function ThreadSummary({
         label={t('events.comments.summarize')}
         size="sm"
         className="self-start"
+        loading={runMutation.isPending}
         onClick={handleRun}
       />
       {open ? (
-        <AiPreviewPanel
+        <AiResultPanel
           title={t('events.comments.summarize')}
           status={runMutation.isPending ? 'pending' : runMutation.isError ? 'error' : 'ready'}
-          pendingLabel={t('events.comments.summaryPending')}
           errorMessage={t('events.comments.summaryFailed')}
           acceptLabel={t('events.comments.summaryAccept')}
           editLabel={t('events.comments.summaryEdit')}
-          discardLabel={t('events.comments.summaryDiscard')}
-          retryLabel={t('events.actions.retry')}
+          {...(runMutation.data ? { meta: runMutation.data.meta } : {})}
           onRetry={handleRun}
           onAccept={() => {
-            if (summary) onInsert(summary)
+            if (digest) onInsert(asText(digest))
             setOpen(false)
           }}
+          // fix 11: Edit fills the compose box and leaves the panel open, so the digest is still
+          // there to check the edit against. Accept fills it and closes. Different things.
           onEdit={() => {
-            if (summary) onInsert(summary)
-            setOpen(false)
+            if (digest) onInsert(asText(digest))
           }}
           onDiscard={() => setOpen(false)}
-          {...(runMutation.data
-            ? { costLine: t('ai.result.tokens', { count: runMutation.data.meta.totalTokens }) }
-            : {})}
         >
-          {summary}
-        </AiPreviewPanel>
+          {digest ? <ThreadDigestPreview output={digest} /> : null}
+        </AiResultPanel>
       ) : null}
     </div>
   )
@@ -95,6 +139,12 @@ function ThreadSummary({
 
 export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventTitle: string }) {
   const t = useT()
+  // The digest is written *for* the reader ("siz soʻragan savolga hali javob yoʻq"), which needs the
+  // reader's name -- never invented, always the session's own.
+  const { user } = useSession()
+  const viewerName = user
+    ? `${user.givenName} ${user.familyName}`.trim()
+    : t('events.comments.viewerFallback')
   const commentsQuery = useCommentsQuery(eventId, true)
   const addMutation = useAddCommentMutation(eventId)
   const deleteMutation = useDeleteCommentMutation(eventId)
@@ -171,11 +221,14 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
     <div className="flex flex-col gap-4">
       {commentsQuery.data ? (
         <ThreadSummary
+          eventId={eventId}
           eventTitle={eventTitle}
+          viewerName={viewerName}
           comments={commentsQuery.data.items.map((c) => ({
             id: c.id,
             author: `${c.author.givenName} ${c.author.familyName}`,
             body: c.body,
+            createdAt: c.createdAt,
           }))}
           onInsert={(text) => setBody((prev) => (prev ? `${prev}\n\n${text}` : text))}
         />

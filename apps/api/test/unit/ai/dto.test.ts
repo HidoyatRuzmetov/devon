@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { settingsToDto, traceToDto } from '../../../src/modules/ai/dto.js'
 import type { AiSettingsRow, TraceRow } from '../../../src/modules/ai/repo.js'
+import type { SearchBackendDto } from '../../../src/modules/ai/schemas.js'
+
+// v1.1: `settingsToDto` gained a fourth argument carrying the three things that are not derivable
+// from the settings row itself -- per-feature spend (AI-AUDIT §5 fix 15), whether a real key is
+// configured at all (SPEC §8 "Honesty") and which retrieval backend is live (EPIC-016). These tests
+// are about budget arithmetic and the circuit breaker, so they pass a fixed, uninteresting extra.
+const SEARCH: SearchBackendDto = {
+  backend: 'fts',
+  model: null,
+  dimensions: null,
+  reason: 'no_api_key',
+  checkedAt: '2026-09-12T00:00:00.000Z',
+  indexedCount: 0,
+  pendingEmbeddingCount: 0,
+}
+const EXTRA = { spendByFeature: {}, simulated: true, search: SEARCH }
 
 describe('settingsToDto', () => {
   const row: AiSettingsRow = {
@@ -11,7 +27,7 @@ describe('settingsToDto', () => {
   }
 
   it('reports ok well under the soft cap', () => {
-    const dto = settingsToDto(row, 10_000, true)
+    const dto = settingsToDto(row, 10_000, true, EXTRA)
     expect(dto.budgetStatus).toBe('ok')
     expect(dto.remainingUzs).toBe(990_000)
     expect(dto.flags).toEqual({ translate: true, plan_sprint: false })
@@ -20,18 +36,18 @@ describe('settingsToDto', () => {
   })
 
   it('reports soft_cap at or above the configured percentage', () => {
-    const dto = settingsToDto(row, 850_000, true)
+    const dto = settingsToDto(row, 850_000, true, EXTRA)
     expect(dto.budgetStatus).toBe('soft_cap')
   })
 
   it('reports hard_stop once spend reaches the cap, with zero remaining', () => {
-    const dto = settingsToDto(row, 1_000_000, true)
+    const dto = settingsToDto(row, 1_000_000, true, EXTRA)
     expect(dto.budgetStatus).toBe('hard_stop')
     expect(dto.remainingUzs).toBe(0)
   })
 
   it('reports hard_stop when no budget has been configured (cap = 0)', () => {
-    const dto = settingsToDto({ ...row, budget_uzs_per_month: 0 }, 0, true)
+    const dto = settingsToDto({ ...row, budget_uzs_per_month: 0 }, 0, true, EXTRA)
     expect(dto.budgetStatus).toBe('hard_stop')
   })
 
@@ -39,7 +55,7 @@ describe('settingsToDto', () => {
   // regardless of what the department head actually configured -- see `dto.ts`'s doc comment for why
   // this is the whole mechanism behind "AI off -> features hide".
   it('forces every flag false and reports the reason when AI is unavailable', () => {
-    const dto = settingsToDto(row, 10_000, false)
+    const dto = settingsToDto(row, 10_000, false, EXTRA)
     expect(dto.flags).toEqual({ translate: false, plan_sprint: false })
     expect(dto.available).toBe(false)
     expect(dto.unavailableReason).toBe('circuit_open')
@@ -63,6 +79,7 @@ describe('traceToDto', () => {
       retried: false,
       status: 'ok',
       created_at: '2026-09-08T07:00:00.000Z',
+      user_name: 'Karimova Nodira',
     }
     const dto = traceToDto(row)
     expect(dto).toEqual({
@@ -78,6 +95,7 @@ describe('traceToDto', () => {
       retried: false,
       status: 'ok',
       createdAt: '2026-09-08T07:00:00.000Z',
+      userName: 'Karimova Nodira',
     })
   })
 
@@ -95,6 +113,7 @@ describe('traceToDto', () => {
       retried: false,
       status: 'ok',
       created_at: new Date('2026-09-08T00:00:00.000Z'),
+      user_name: '',
     }
     expect(traceToDto(row).createdAt).toBe('2026-09-08T00:00:00.000Z')
   })

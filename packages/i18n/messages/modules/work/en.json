@@ -47,7 +47,8 @@
       "aiError": "Could not parse that text",
       "aiMeta": "{tokens} tokens · {ms} ms",
       "dialogHint": "Type a title. Or like this: “Nodira: report, Friday” — the assignee and the due date are understood.",
-      "fromTemplate": "Create from a template"
+      "fromTemplate": "Create from a template",
+      "duplicateTitle": "Something similar already exists"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -250,7 +251,17 @@
       "summarize": "Summarise with AI",
       "summarizePreviewTitle": "AI summary",
       "summarizeCitations": "Based on {count} comment(s)",
-      "postSummary": "Post as a comment"
+      "postSummary": "Post as a comment",
+      "viewerYou": "You",
+      "draftReply": "Draft a reply",
+      "draftReplyPreviewTitle": "Reply draft",
+      "useDraft": "Put it in the comment box",
+      "explainRisk": "Explain this risk",
+      "explainRiskPreviewTitle": "Why this card is at risk",
+      "suggestAssignee": "Who should take this",
+      "suggestAssigneePreviewTitle": "Suggested owners",
+      "boardDigest": "Who is running late",
+      "boardDigestPreviewTitle": "The riskiest work on the board"
     },
     "actions": {
       "create": "New card"

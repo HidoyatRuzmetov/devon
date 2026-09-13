@@ -1,17 +1,34 @@
 // The "clean up my quick-add text" AI wiring (TECH-SPEC §8 `quick_add_parse`), shared between
-// `today-view.tsx`'s single quick-add row and `tasks-view.tsx`'s one-per-section rows. Personal
-// to-dos have no assignee/due-date/priority fields (those are work-board concepts), so only the
-// cleaned-up `title` is ever used -- the rest of the feature's structured output is simply not
-// applicable here, which is honest rather than inventing fields this module does not have.
+// `today-view.tsx`'s single quick-add row and `tasks-view.tsx`'s one-per-section rows.
+//
+// A personal to-do has no assignee (I-1: the personal workspace is owner-only, and there is nobody
+// else in it), so `members` is genuinely empty here and the feature's assignee field is genuinely
+// unused -- that part of v1.0 was honest. What was *not* honest was calling the feature with no
+// `today` (AI-AUDIT §0.3): the prompt orders it to resolve "ertaga" and "jumagacha" against today's
+// date, and there was no date, so every relative date was invented or dropped. It is supplied now,
+// in Asia/Tashkent, and the parsed due date is kept alongside the title.
 import * as React from 'react'
 import type { useT, Locale } from '@devon/i18n'
 import { useRunAiFeatureMutation } from '../../ai/use-ai.js'
-import { aiCostLine, aiErrorMessageKey } from './ai-helpers.js'
+import { parseFeatureOutput, type QuickAddOutput } from '../../ai/outputs.js'
+import type { RunMeta } from '../../ai/types.js'
+import { aiErrorMessageKey } from './ai-helpers.js'
 
 export type QuickAddAiState =
   | { status: 'pending' }
-  | { status: 'ready'; title: string; costLine: string }
+  | { status: 'ready'; output: QuickAddOutput; meta: RunMeta }
   | { status: 'error'; message: string }
+
+/** Today in Asia/Tashkent -- the department's own clock, so a person travelling does not silently
+ * get yesterday's Friday. */
+export function todayInTashkent(): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Tashkent',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
 
 export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
   const runMutation = useRunAiFeatureMutation('quick_add_parse')
@@ -23,11 +40,23 @@ export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
       if (!trimmed) return
       setState({ status: 'pending' })
       runMutation.mutate(
-        { locale, text: trimmed, memberNames: [] },
+        {
+          locale,
+          text: trimmed,
+          today: todayInTashkent(),
+          members: [],
+          labels: [],
+          projects: [],
+          defaultAssigneeUserId: null,
+        },
         {
           onSuccess: (res) => {
-            const title = String(res.data['title'] ?? trimmed).trim() || trimmed
-            setState({ status: 'ready', title, costLine: aiCostLine(t, res.meta, locale) })
+            const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
+            if (!output) {
+              setState({ status: 'error', message: t('ai.errors.runFailed') })
+              return
+            }
+            setState({ status: 'ready', output, meta: res.meta })
           },
           onError: (err) => setState({ status: 'error', message: t(aiErrorMessageKey(err)) }),
         },

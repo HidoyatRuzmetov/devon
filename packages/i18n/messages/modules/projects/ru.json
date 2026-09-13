@@ -64,7 +64,11 @@
       "planPreviewTitle": "Предпросмотр плана ИИ",
       "applyFocus": "Применить главную задачу",
       "focus": "Начните с: {title}",
-      "planApplied": "Главная задача обновлена"
+      "planApplied": "Главная задача обновлена",
+      "viewerYou": "Вы",
+      "catchUp": "Что изменилось",
+      "catchUpPreviewTitle": "Проект за последнюю неделю",
+      "applyPlan": "Применить план"
     }
   }
 }

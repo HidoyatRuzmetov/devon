@@ -70,6 +70,9 @@ const HEAD_ONLY_ROUTES: readonly string[] = [
   'DELETE /api/v1/automations/:id',
   'GET /api/v1/automations/runs',
   'POST /api/v1/automations/pause-all',
+  // EPIC-016: rebuilding the AI search index re-embeds the department's rows, so its only visible
+  // effect is on AI spend -- it belongs with the budget, which is the head's.
+  'POST /api/v1/ai/search/reindex',
 ]
 
 /** Every route whose subject is `{kind:'authenticated'}` -- any signed-in session, said out loud

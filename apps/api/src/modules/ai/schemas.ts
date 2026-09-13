@@ -11,15 +11,33 @@ export const AI_FEATURE_IDS = [
   'subtask_breakdown',
   'plan_sprint',
   'deadline_risk',
-  'weekly_summary',
+  'catch_up',
   'draft_event',
   'summarize_thread',
   'nl_analytics',
   'translate',
-  'what_did_i_miss',
+  'draft_reply',
+  'board_risk_digest',
+  'suggest_assignee',
+  'duplicate_check',
+  'semantic_ask',
 ] as const
 export const aiFeatureSchema = z.enum(AI_FEATURE_IDS)
 export type AiFeatureId = z.infer<typeof aiFeatureSchema>
+
+/**
+ * v1.1 (AI-AUDIT §4, D-1): `weekly_summary` and `what_did_i_miss` were merged into `catch_up`, but
+ * `app.ai_traces` rows written before v1.1 still carry those two ids. They may never be *run* -- the
+ * route param validates against `aiFeatureSchema` above -- but every read path that returns a trace
+ * has to accept them, or the Usage tab 500s on its own history.
+ */
+export const AI_TRACE_FEATURE_IDS = [
+  ...AI_FEATURE_IDS,
+  'weekly_summary',
+  'what_did_i_miss',
+] as const
+export const aiTraceFeatureSchema = z.enum(AI_TRACE_FEATURE_IDS)
+export type AiTraceFeatureId = z.infer<typeof aiTraceFeatureSchema>
 
 export const featureParamsSchema = z.object({ feature: aiFeatureSchema })
 
@@ -57,6 +75,10 @@ const runMetaSchema = z.object({
   // spent, no new trace row). Optional/additive so an older client that has never seen this field
   // simply ignores it -- never required, never breaks a client built before it existed.
   cached: z.boolean().optional(),
+  // v1.1 SPEC §8 "Honesty": this answer came from `@devon/ai`'s offline simulator, not from GLM. The
+  // preview panel shows an amber "Namunaviy javob" strip and suppresses the model/cost/latency line
+  // rather than presenting a canned answer as if a ministry had paid a provider for it.
+  simulated: z.boolean(),
 })
 
 export type RunFeatureResponse = z.infer<typeof runFeatureResponseSchema>
@@ -68,6 +90,32 @@ export const runFeatureResponseSchema = z.object({
   data: z.record(z.string(), z.unknown()),
   meta: runMetaSchema,
 })
+
+/**
+ * EPIC-016. Which retrieval backend the Ask box and the palette's semantic search are using, and
+ * why. Probed at runtime against the configured key (`@devon/ai`'s `probeEmbeddings`) -- never a
+ * build-time assumption, because the ministry's GLM deployment is documented as chat-only and may or
+ * may not serve `/v1/embeddings`. `/ai` renders this as a sentence a head can read.
+ */
+export const searchBackendSchema = z.object({
+  backend: z.enum(['embeddings', 'fts']),
+  /** The embeddings model that answered the probe, when one did. */
+  model: z.string().nullable(),
+  dimensions: z.number().int().positive().nullable(),
+  reason: z.enum([
+    'ok',
+    'no_api_key',
+    'models_endpoint_unreachable',
+    'no_embeddings_model_listed',
+    'embeddings_endpoint_failed',
+    'dimension_mismatch',
+  ]),
+  checkedAt: z.iso.datetime({ offset: true }),
+  /** How many rows of this department are indexed, and how many still await an embedding. */
+  indexedCount: z.number().int().min(0),
+  pendingEmbeddingCount: z.number().int().min(0),
+})
+export type SearchBackendDto = z.infer<typeof searchBackendSchema>
 
 export const aiSettingsSchema = z.object({
   departmentId: z.string().uuid(),
@@ -89,6 +137,15 @@ export const aiSettingsSchema = z.object({
   // instead of just a disabled button.
   available: z.boolean(),
   unavailableReason: z.enum(['circuit_open']).nullable(),
+  // AI-AUDIT §5 fix 15: per-feature spend this month, head-only, so a head can switch off the one
+  // expensive helper instead of switching off AI. Absent (not empty) for a member, same rule as the
+  // four money fields above.
+  spendByFeature: z.record(z.string(), z.number().int().min(0)).optional(),
+  // v1.1 SPEC §8 "Honesty": is a real key configured at all? Everyone sees this -- a member pressing
+  // a sparkle button deserves to know the answer is simulated before they trust it.
+  simulated: z.boolean(),
+  /** Which backend semantic search and the Ask box actually run on right now (EPIC-016). */
+  search: searchBackendSchema,
 })
 export type AiSettingsDto = z.infer<typeof aiSettingsSchema>
 
@@ -107,7 +164,8 @@ export const patchAiSettingsBodySchema = z.object({
 export const traceDtoSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
-  feature: aiFeatureSchema,
+  /** May be a legacy id: a trace is history, and history does not get rewritten by a merge. */
+  feature: aiTraceFeatureSchema,
   model: z.string(),
   promptTokens: z.number().int(),
   completionTokens: z.number().int(),
@@ -124,6 +182,9 @@ export const traceDtoSchema = z.object({
     'blocked_flag',
   ]),
   createdAt: z.iso.datetime({ offset: true }),
+  /** SPEC §12 "the AI trace has a 'who ran it' column". Resolved from `app.users` in the same query
+   * so the Usage tab never has to fan out one profile lookup per row (I-9: no query in a loop). */
+  userName: z.string(),
 })
 export type TraceDto = z.infer<typeof traceDtoSchema>
 
@@ -133,4 +194,58 @@ export const usageQuerySchema = z.object({
 
 export const usageListResponseSchema = z.object({
   traces: z.array(traceDtoSchema),
+})
+
+// --- EPIC-016: semantic search + the Ask box -------------------------------------------------
+
+export const searchSubjectKindSchema = z.enum(['card', 'comment', 'page', 'event'])
+export type SearchSubjectKind = z.infer<typeof searchSubjectKindSchema>
+
+export const searchQuerySchema = z.object({
+  q: z.string().min(1).max(500),
+  limit: z.coerce.number().int().min(1).max(50).optional(),
+  /** Restrict to one kind -- the palette uses this for its per-section counts. */
+  kind: searchSubjectKindSchema.optional(),
+})
+
+export const searchHitSchema = z.object({
+  subjectType: searchSubjectKindSchema,
+  subjectId: z.string().uuid(),
+  title: z.string(),
+  /** A short, plain-text window around the match -- never the whole body. */
+  snippet: z.string(),
+  /** 0..1, comparable only within one response (cosine similarity or `ts_rank`, normalised). */
+  score: z.number(),
+  /** Which backend produced this hit, so a mixed FTS+trigram answer stays honest about it. */
+  via: z.enum(['embeddings', 'fts', 'trigram']),
+})
+export type SearchHitDto = z.infer<typeof searchHitSchema>
+
+export const searchResponseSchema = z.object({
+  hits: z.array(searchHitSchema),
+  backend: z.enum(['embeddings', 'fts']),
+})
+
+export const askBodySchema = z
+  .object({
+    question: z.string().min(3).max(500),
+    locale: z.enum(['uz-Latn', 'uz-Cyrl', 'ru', 'en']),
+  })
+  .strict()
+
+export type AskResponse = z.infer<typeof askResponseSchema>
+export const askResponseSchema = z.object({
+  /** `@devon/ai`'s `semantic_ask` output, re-validated client-side against the same Zod schema. */
+  data: z.record(z.string(), z.unknown()),
+  meta: runMetaSchema,
+  /** The retrieved sources the answer was allowed to cite, so the client can render real links
+   * instead of trusting an id the model produced. */
+  sources: z.array(searchHitSchema),
+  backend: z.enum(['embeddings', 'fts']),
+})
+
+export const reindexResponseSchema = z.object({
+  indexed: z.number().int().min(0),
+  embedded: z.number().int().min(0),
+  backend: z.enum(['embeddings', 'fts']),
 })

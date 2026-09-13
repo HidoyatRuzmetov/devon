@@ -83,6 +83,8 @@ export class GlmProviderError extends Error {
 }
 
 export class GlmProvider implements AiProvider {
+  /** v1.1 SPEC §8 "Honesty": a real endpoint, so every answer is a real model's. */
+  public readonly simulated = false
   private readonly baseUrl: string
   private readonly apiKey: string
   private readonly requestTimeoutMs: number

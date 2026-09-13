@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Sparkles } from 'lucide-react'
+import { MessageSquareText, Search, Sparkles } from 'lucide-react'
 import type { FeatureManifest } from '../types.js'
 
 const AiSettingsScreenLazy = React.lazy(() => import('./ai-settings-screen.js'))
@@ -19,7 +19,15 @@ const manifest: FeatureManifest = {
       action: 'ai.features.read',
     },
   ],
-  commands: [{ id: 'ai.open', labelKey: 'ai.title', path: '/ai' }],
+  // AI-AUDIT §5 fix 18: before v1.1 the palette knew exactly one AI thing -- "open /ai". The two
+  // entries a person actually wants from a keyboard are the ones that answer a question (`Soʻrash`)
+  // and the one that finds something across the whole department, so both get a command of their
+  // own, deep-linking to the tab rather than dropping the person on the screen's first tab to hunt.
+  commands: [
+    { id: 'ai.open', labelKey: 'ai.title', path: '/ai', icon: Sparkles },
+    { id: 'ai.ask', labelKey: 'ai.command.ask', path: '/ai?tab=ask', icon: MessageSquareText },
+    { id: 'ai.search', labelKey: 'ai.command.search', path: '/ai?tab=ask', icon: Search },
+  ],
 }
 
 export default manifest

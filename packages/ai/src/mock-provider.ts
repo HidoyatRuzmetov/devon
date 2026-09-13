@@ -20,6 +20,10 @@ export type MockProviderOptions = {
 }
 
 export class MockProvider implements AiProvider {
+  /** v1.1 SPEC §8 "Honesty": every answer from here is this repo's own simulator. `RunMeta.simulated`
+   * carries it to the UI, which shows an amber "Namunaviy javob" strip and suppresses the cost line
+   * -- a canned answer must never be presented as one a ministry paid a provider for. */
+  public readonly simulated = true
   private readonly script: ChatCompletionResult[] | null
   private readonly respond: ((request: ChatCompletionRequest) => ChatCompletionResult) | null
   private cursor = 0

@@ -6,12 +6,11 @@
 //
 // AI wiring (UI-OVERHAUL.md's brief for this area, TECH-SPEC §8): quick-add parsing cleans up a
 // free-typed line before it becomes a to-do, and subtask breakdown turns one to-do into a checklist --
-// both go through `<AiPreviewPanel>`'s Accept/Edit/Discard, never applying themselves.
+// both go through the AI result panel's Accept/Edit/Discard, never applying themselves.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { Plus, Sparkles } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import {
-  AiPreviewPanel,
   Card,
   Input,
   Reveal,
@@ -25,9 +24,18 @@ import {
   toastWithUndo,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { QuickAddPreview, SubtasksPreview } from '../ai/components/previews.js'
+import {
+  parseFeatureOutput,
+  type QuickAddOutput,
+  type SubtaskBreakdownOutput,
+} from '../ai/outputs.js'
+import type { RunMeta } from '../ai/types.js'
+import { todayInTashkent } from './lib/use-quick-add-ai.js'
 import { TaskRow } from './task-row.js'
 import { buildTree, flattenTree, isSelfOrDescendant, type TaskNode } from './task-tree.js'
-import { aiCostLine, aiErrorMessageKey } from './lib/ai-helpers.js'
+import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   useCreateTaskMutation,
   useDelayedDelete,
@@ -41,12 +49,18 @@ import type { Task } from './types.js'
 
 type QuickAddAiState =
   | { sectionKey: string; status: 'pending' }
-  | { sectionKey: string; status: 'ready'; title: string; costLine: string }
+  | { sectionKey: string; status: 'ready'; output: QuickAddOutput; meta: RunMeta }
   | { sectionKey: string; status: 'error'; message: string }
 
 type SubtaskAiState =
   | { taskId: string; status: 'pending' }
-  | { taskId: string; status: 'ready'; subtasks: string[]; costLine: string; editing: boolean }
+  | {
+      taskId: string
+      status: 'ready'
+      output: SubtaskBreakdownOutput
+      meta: RunMeta
+      editing: boolean
+    }
   | { taskId: string; status: 'error'; message: string }
 
 export function TasksView() {
@@ -204,16 +218,25 @@ export function TasksView() {
     if (!text) return
     setQuickAddAi({ sectionKey, status: 'pending' })
     quickAddParse.mutate(
-      { locale, text, memberNames: [] },
+      {
+        locale,
+        text,
+        // AI-AUDIT §0.3: the date the prompt needs to resolve "ertaga"/"jumagacha", which v1.0
+        // never supplied. A personal to-do has no assignee (I-1), so `members` is genuinely empty.
+        today: todayInTashkent(),
+        members: [],
+        labels: [],
+        projects: [],
+        defaultAssigneeUserId: null,
+      },
       {
         onSuccess: (res) => {
-          const title = String(res.data['title'] ?? text).trim() || text
-          setQuickAddAi({
-            sectionKey,
-            status: 'ready',
-            title,
-            costLine: aiCostLine(t, res.meta, locale),
-          })
+          const output = parseFeatureOutput<QuickAddOutput>('quick_add_parse', res.data)
+          if (!output) {
+            setQuickAddAi({ sectionKey, status: 'error', message: t('ai.errors.runFailed') })
+            return
+          }
+          setQuickAddAi({ sectionKey, status: 'ready', output, meta: res.meta })
         },
         onError: (err) =>
           setQuickAddAi({ sectionKey, status: 'error', message: t(aiErrorMessageKey(err)) }),
@@ -225,7 +248,7 @@ export function TasksView() {
     if (quickAddAi?.sectionKey !== sectionKey || quickAddAi.status !== 'ready') return
     const siblingCount = tasksInBucket(sprintId, null).length
     createTask.mutate(
-      { title: quickAddAi.title, sprintId, sort: siblingCount },
+      { title: quickAddAi.output.title, sprintId, sort: siblingCount },
       {
         onSuccess: () => {
           setQuickAdd((prev) => ({ ...prev, [sectionKey]: '' }))
@@ -238,7 +261,7 @@ export function TasksView() {
 
   function editQuickAddAi(sectionKey: string) {
     if (quickAddAi?.sectionKey !== sectionKey || quickAddAi.status !== 'ready') return
-    setQuickAdd((prev) => ({ ...prev, [sectionKey]: quickAddAi.title }))
+    setQuickAdd((prev) => ({ ...prev, [sectionKey]: quickAddAi.output.title }))
     setQuickAddAi(null)
     focusInput(`quickadd-${sectionKey}`)
   }
@@ -249,22 +272,28 @@ export function TasksView() {
       {
         locale,
         cardTitle: node.title,
-        cardDescription: node.notes ?? undefined,
+        cardDescription: node.notes ?? null,
         existingSubtasks: node.children.map((c) => c.title),
+        labels: [],
+        projectTitle: null,
+        dueInDays: null,
+        targetCount: 6,
       },
       {
         onSuccess: (res) => {
-          const subtasks = Array.isArray(res.data['subtasks'])
-            ? (res.data['subtasks'] as unknown[]).map(String).filter(Boolean)
-            : []
+          const output = parseFeatureOutput<SubtaskBreakdownOutput>('subtask_breakdown', res.data)
+          if (!output) {
+            setSubtaskAi({ taskId: node.id, status: 'error', message: t('ai.errors.runFailed') })
+            return
+          }
           setSubtaskAi({
             taskId: node.id,
             status: 'ready',
-            subtasks,
-            costLine: aiCostLine(t, res.meta, locale),
+            output,
+            meta: res.meta,
             editing: false,
           })
-          setSubtaskDraft(subtasks.join('\n'))
+          setSubtaskDraft(output.subtasks.map((item) => item.text).join('\n'))
         },
         onError: (err) =>
           setSubtaskAi({ taskId: node.id, status: 'error', message: t(aiErrorMessageKey(err)) }),
@@ -279,7 +308,7 @@ export function TasksView() {
           .split('\n')
           .map((s) => s.trim())
           .filter(Boolean)
-      : subtaskAi.subtasks
+      : subtaskAi.output.subtasks.map((item) => item.text)
     if (lines.length === 0) {
       setSubtaskAi(null)
       return
@@ -379,19 +408,15 @@ export function TasksView() {
                           className="py-2"
                           style={{ paddingInlineStart: `${(node.depth + 1) * 20}px` }}
                         >
-                          <AiPreviewPanel
+                          <AiResultPanel
                             title={t('personal.ai.subtasks.title')}
                             status={subtaskAi.status}
-                            pendingLabel={t('personal.ai.pending')}
                             acceptLabel={t('personal.ai.accept')}
                             editLabel={t('personal.ai.edit')}
-                            discardLabel={t('personal.ai.discard')}
                             {...(subtaskAi.status === 'error'
                               ? { errorMessage: subtaskAi.message }
                               : {})}
-                            {...(subtaskAi.status === 'ready'
-                              ? { costLine: subtaskAi.costLine }
-                              : {})}
+                            {...(subtaskAi.status === 'ready' ? { meta: subtaskAi.meta } : {})}
                             onAccept={() => void acceptSubtaskAi(node)}
                             onDiscard={() => setSubtaskAi(null)}
                             onEdit={() =>
@@ -402,29 +427,12 @@ export function TasksView() {
                               )
                             }
                           >
-                            {subtaskAi.status === 'ready' ? (
-                              subtaskAi.editing ? (
-                                <Textarea
-                                  value={subtaskDraft}
-                                  onChange={(e) => setSubtaskDraft(e.target.value)}
-                                  rows={Math.max(3, subtaskAi.subtasks.length)}
-                                  aria-label={t('personal.ai.subtasks.editAria')}
-                                />
-                              ) : (
-                                <ul className="flex flex-col gap-1.5">
-                                  {subtaskAi.subtasks.map((s, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-body">
-                                      <Sparkles
-                                        className="mt-0.5 size-3.5 shrink-0 text-primary"
-                                        aria-hidden="true"
-                                      />
-                                      <span>{s}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )
-                            ) : null}
-                          </AiPreviewPanel>
+                            <SubtaskPanelBody
+                              state={subtaskAi}
+                              draft={subtaskDraft}
+                              onDraftChange={setSubtaskDraft}
+                            />
+                          </AiResultPanel>
                         </div>
                       ) : null}
                     </React.Fragment>
@@ -463,27 +471,30 @@ export function TasksView() {
 
               {quickAddAiForSection ? (
                 <Reveal className="px-1 pb-1">
-                  <AiPreviewPanel
+                  <AiResultPanel
                     title={t('personal.ai.quickAdd.title')}
                     status={quickAddAiForSection.status}
-                    pendingLabel={t('personal.ai.pending')}
                     acceptLabel={t('personal.ai.accept')}
                     editLabel={t('personal.ai.edit')}
-                    discardLabel={t('personal.ai.discard')}
                     {...(quickAddAiForSection.status === 'error'
                       ? { errorMessage: quickAddAiForSection.message }
                       : {})}
                     {...(quickAddAiForSection.status === 'ready'
-                      ? { costLine: quickAddAiForSection.costLine }
+                      ? { meta: quickAddAiForSection.meta }
                       : {})}
                     onAccept={() => acceptQuickAddAi(sectionKey, section.sprintId)}
                     onDiscard={() => setQuickAddAi(null)}
                     onEdit={() => editQuickAddAi(sectionKey)}
                   >
                     {quickAddAiForSection.status === 'ready' ? (
-                      <p>{quickAddAiForSection.title}</p>
+                      <QuickAddPreview
+                        output={quickAddAiForSection.output}
+                        memberName={() => null}
+                        labelName={() => null}
+                        projectName={() => null}
+                      />
                     ) : null}
-                  </AiPreviewPanel>
+                  </AiResultPanel>
                 </Reveal>
               ) : null}
             </Card>
@@ -492,4 +503,32 @@ export function TasksView() {
       })}
     </Stagger>
   )
+}
+
+/** Early returns rather than a nested JSX ternary, for the reason `features/ai/components/previews.tsx`
+ * documents about `check-i18n.mjs`'s hard-coded-text heuristic. */
+function SubtaskPanelBody({
+  state,
+  draft,
+  onDraftChange,
+}: {
+  state: SubtaskAiState
+  draft: string
+  onDraftChange: (value: string) => void
+}) {
+  const t = useT()
+  if (state.status !== 'ready') {
+    return null
+  }
+  if (state.editing) {
+    return (
+      <Textarea
+        value={draft}
+        onChange={(e) => onDraftChange(e.target.value)}
+        rows={Math.max(3, state.output.subtasks.length)}
+        aria-label={t('personal.ai.subtasks.editAria')}
+      />
+    )
+  }
+  return <SubtasksPreview output={state.output} />
 }

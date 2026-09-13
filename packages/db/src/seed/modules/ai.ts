@@ -21,7 +21,9 @@ const D = (iso: string): Date => new Date(iso)
 
 // Every feature ships behind a flag, defaulting to off (TECH-SPEC §8) -- the demo turns every one of
 // them on so the whole product is exercisable out of the box, which is the whole point of `--demo`.
-// The ten keys mirror `@devon/ai`'s `AiFeature` union (kept as plain string literals here rather than
+// The fourteen keys mirror `@devon/ai`'s `AiFeature` union (v1.1: `weekly_summary` and
+// `what_did_i_miss` merged into `catch_up`; `draft_reply`, `board_risk_digest`, `suggest_assignee`,
+// `duplicate_check` and `semantic_ask` are new) (kept as plain string literals here rather than
 // importing that package's type: `packages/db` has no runtime or type dependency on `packages/ai`
 // today, and a demo-seed flags object is not worth introducing one for).
 const DEMO_FLAGS: Record<string, boolean> = {
@@ -29,12 +31,16 @@ const DEMO_FLAGS: Record<string, boolean> = {
   subtask_breakdown: true,
   plan_sprint: true,
   deadline_risk: true,
-  weekly_summary: true,
+  catch_up: true,
   draft_event: true,
   summarize_thread: true,
   nl_analytics: true,
   translate: true,
-  what_did_i_miss: true,
+  draft_reply: true,
+  board_risk_digest: true,
+  suggest_assignee: true,
+  duplicate_check: true,
+  semantic_ask: true,
 }
 
 type DemoTrace = {

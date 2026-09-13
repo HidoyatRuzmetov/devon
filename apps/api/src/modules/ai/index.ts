@@ -27,12 +27,19 @@ import {
 import * as service from './service.js'
 import {
   aiSettingsSchema,
+  askBodySchema,
+  askResponseSchema,
   featureParamsSchema,
   patchAiSettingsBodySchema,
+  reindexResponseSchema,
   runFeatureBodySchema,
   runFeatureResponseSchema,
+  searchBackendSchema,
+  searchQuerySchema,
+  searchResponseSchema,
   usageListResponseSchema,
   usageQuerySchema,
+  type AskResponse,
   type RunFeatureResponse,
 } from './schemas.js'
 
@@ -73,6 +80,26 @@ const departmentSubject = (req: { actor: { departmentId: string | null } | null 
   departmentId: req.actor?.departmentId ?? '',
 })
 
+const departmentManagedSubject = (req: {
+  actor: { departmentId: string | null } | null
+}): Subject => ({
+  kind: 'department_managed',
+  departmentId: req.actor?.departmentId ?? '',
+})
+
+/**
+ * v1.1 SPEC §2.2 + §8. Three helpers exist to answer a management question about *other people* --
+ * who is late (`board_risk_digest`), who should take this (`suggest_assignee`), and the department-
+ * wide `catch_up` scope the head dashboard's Monday briefing runs. Those are `department_managed`:
+ * head only, refused on the server, not merely hidden in the sidebar. Running them as a member was
+ * exactly the role leakage the CTO found.
+ *
+ * `catch_up` is the interesting one: the *feature* is a member's own "what did I miss", and only the
+ * `scope: 'department'` variant is managerial. The scope lives in the body, so the check that matters
+ * is in `service.runFeatureForActor`'s caller below, not in the subject -- see `headOnlyScopeGuard`.
+ */
+const HEAD_ONLY_FEATURES = new Set(['board_risk_digest', 'suggest_assignee'])
+
 /** `plan_sprint` is the only personal-workspace feature (TECH-SPEC §8): I-1 requires `{kind:
  * 'personal'}` for it specifically, never `department_child`, regardless of which department its
  * budget/flag happen to bill against. Every other feature is a department tool any member may use. */
@@ -80,6 +107,9 @@ function featureRunSubject(req: FastifyRequest): Subject {
   const params = req.params as { feature?: string }
   if (params.feature === 'plan_sprint') {
     return { kind: 'personal', ownerUserId: req.actor?.userId ?? '' }
+  }
+  if (params.feature && HEAD_ONLY_FEATURES.has(params.feature)) {
+    return departmentManagedSubject(req)
   }
   return {
     kind: 'department_child',
@@ -189,6 +219,20 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
+      // SPEC §8: `catch_up` is a member's own "what did I miss" -- except at `scope: 'department'`,
+      // which is the head's Monday briefing over everyone's work. The feature id alone cannot carry
+      // that distinction, so the scope is checked here, on the server, before a single token is
+      // spent. Hiding the scope in the client would leave a member one `curl` away from a summary of
+      // the whole department's week.
+      if (
+        req.params.feature === 'catch_up' &&
+        (req.body.input as { scope?: unknown }).scope === 'department' &&
+        !isHeadOf(req.actor, activeDepartmentId(req))
+      ) {
+        return sendProblem(reply, 'forbidden', {
+          errors: [{ path: 'scope', code: 'head_only' }],
+        })
+      }
       try {
         const outcome = await service.runFeatureForActor(toDbContext(req), {
           departmentId: activeDepartmentId(req),
@@ -228,6 +272,130 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       }
     },
   )
+
+  // --- EPIC-016: semantic search + the Ask box ------------------------------------------------
+  //
+  // Both read the department's own cards, comments, pages and events, so both are plain
+  // `department_child` reads: anything a member could open by clicking is something they may search
+  // for. Neither ever reaches the personal workspace (I-1) -- `app.ai_search_documents` only ever
+  // indexes department-owned tables, and its RLS policy is department-scoped on top of that.
+
+  app.get(
+    '/search',
+    {
+      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      schema: { querystring: searchQuerySchema, response: { 200: searchResponseSchema } },
+    },
+    async (req) => {
+      return service.runSearch(
+        toDbContext(req),
+        activeDepartmentId(req),
+        req.query.q,
+        req.query.limit ?? 12,
+        req.query.kind,
+      )
+    },
+  )
+
+  app.get(
+    '/search/backend',
+    {
+      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      schema: { response: { 200: searchBackendSchema } },
+    },
+    async (req) => service.describeSearchBackend(toDbContext(req), activeDepartmentId(req)),
+  )
+
+  app.post(
+    '/ask',
+    {
+      config: {
+        permission: { action: 'create', subject: departmentChildSubject },
+        // Same reasoning as `/features/:feature/run`: one question is one model call.
+        rateLimit: { max: 20, timeWindow: '1 minute' },
+      },
+      schema: { body: askBodySchema, response: { 200: askResponseSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      try {
+        const outcome = await service.ask(toDbContext(req), {
+          departmentId: activeDepartmentId(req),
+          userId: req.actor!.userId,
+          question: req.body.question,
+          locale: req.body.locale,
+        })
+        // Same boundary note as `/features/:feature/run` above: `service.ts` is plain business logic
+        // and widens the feature id back to `string`; `askResponseSchema` re-validates at the HTTP
+        // layer either way, so this cast is the schema's shape, not a trust shortcut.
+        return reply.send(outcome as unknown as AskResponse)
+      } catch (err) {
+        if (err instanceof AiFeatureDisabledError) {
+          return sendProblem(reply, 'forbidden', {
+            errors: [{ path: 'feature', code: 'disabled' }],
+          })
+        }
+        if (err instanceof AiBudgetExceededError) {
+          return sendProblem(reply, 'forbidden', { errors: [{ path: 'budget', code: 'exceeded' }] })
+        }
+        if (err instanceof AiInputValidationError) {
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'question', code: 'invalid' }],
+          })
+        }
+        if (err instanceof AiRunFailedError) return sendProblem(reply, 'internal')
+        if (err instanceof AiUnavailableError) return sendProblem(reply, 'maintenance')
+        throw err
+      }
+    },
+  )
+
+  app.post(
+    '/search/reindex',
+    {
+      // Rebuilding the index is a department-wide maintenance action whose only visible effect is on
+      // spend (it embeds); `department_managed` keeps it with the budget, where it belongs.
+      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      schema: { response: { 200: reindexResponseSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      return reply.send(await service.rebuildSearchIndex(toDbContext(req), activeDepartmentId(req)))
+    },
+  )
+
+  // The embedding sidecar (EPIC-016). Started on this plugin's own `onReady` and cleared on
+  // `onClose` -- never a module-level `setInterval`, so `buildApp()` in a unit test starts no
+  // background timer (H11.1 "timers cleared"), and never in `test`, where a fake provider and a
+  // truncated database would make it pure noise. It is a no-op on a deployment with no key, and a
+  // no-op again on one whose GLM has no embeddings model: `embedPendingTick` asks the probe first.
+  const SIDECAR_INTERVAL_MS = 60_000
+  let sidecar: NodeJS.Timeout | null = null
+  app.addHook('onReady', async () => {
+    if (app.devonConfig.NODE_ENV === 'test') return
+    sidecar = setInterval(() => {
+      void service
+        .embedPendingTick({
+          requestId: `ai-embed-${Date.now()}`,
+          userId: null,
+          actorRole: 'super_admin',
+          departmentId: null,
+          departmentRole: null,
+          actingForUserId: null,
+          viewAs: false,
+          ip: '127.0.0.1',
+          userAgent: 'devon-ai/embed-sidecar',
+        })
+        .catch((err: unknown) => {
+          app.log.warn({ err }, 'ai embedding sidecar tick failed')
+        })
+    }, SIDECAR_INTERVAL_MS)
+    sidecar.unref?.()
+  })
+  app.addHook('onClose', async () => {
+    if (sidecar) clearInterval(sidecar)
+    sidecar = null
+  })
 }
 
 export default aiRoutes

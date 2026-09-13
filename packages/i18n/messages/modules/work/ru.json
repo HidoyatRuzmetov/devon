@@ -47,7 +47,8 @@
       "aiError": "Не удалось распознать текст",
       "aiMeta": "{tokens} токенов · {ms} мс",
       "dialogHint": "Введите название. Можно так: «Нодира: отчёт, пятница» — исполнитель и срок распознаются сами.",
-      "fromTemplate": "Создать из шаблона"
+      "fromTemplate": "Создать из шаблона",
+      "duplicateTitle": "Похожее дело уже есть"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -250,7 +251,17 @@
       "summarize": "Подвести итог через ИИ",
       "summarizePreviewTitle": "Итог от ИИ",
       "summarizeCitations": "На основе {count} комментариев",
-      "postSummary": "Опубликовать как комментарий"
+      "postSummary": "Опубликовать как комментарий",
+      "viewerYou": "Вы",
+      "draftReply": "Написать черновик ответа",
+      "draftReplyPreviewTitle": "Черновик ответа",
+      "useDraft": "Вставить в поле комментария",
+      "explainRisk": "Объяснить этот риск",
+      "explainRiskPreviewTitle": "Почему стоит отметка риска",
+      "suggestAssignee": "Кому поручить",
+      "suggestAssigneePreviewTitle": "Предложенные исполнители",
+      "boardDigest": "Кто задерживает",
+      "boardDigestPreviewTitle": "Самые рискованные дела на доске"
     },
     "actions": {
       "create": "Новая задача"

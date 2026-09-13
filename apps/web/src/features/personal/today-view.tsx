@@ -6,7 +6,6 @@ import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
 import { Lock, Play, Plus, RotateCcw, Target, X } from 'lucide-react'
 import {
-  AiPreviewPanel,
   AllDoneIllustration,
   AnimatePresence,
   Badge,
@@ -27,6 +26,8 @@ import {
   toastWithUndo,
   useReducedMotion,
 } from '@devon/ui'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { QuickAddPreview } from '../ai/components/previews.js'
 import { useQuickAddAi } from './lib/use-quick-add-ai.js'
 import {
   SPRINT_KIND_LABEL_KEYS,
@@ -444,31 +445,38 @@ export function TodayView({
 
         {quickAddAi.state ? (
           <Reveal>
-            <AiPreviewPanel
+            <AiResultPanel
               title={t('personal.ai.quickAdd.title')}
               status={quickAddAi.state.status}
-              pendingLabel={t('personal.ai.pending')}
               acceptLabel={t('personal.ai.accept')}
               editLabel={t('personal.ai.edit')}
-              discardLabel={t('personal.ai.discard')}
               {...(quickAddAi.state.status === 'error'
                 ? { errorMessage: quickAddAi.state.message }
                 : {})}
-              {...(quickAddAi.state.status === 'ready'
-                ? { costLine: quickAddAi.state.costLine }
-                : {})}
-              onAccept={() =>
-                quickAddAi.state?.status === 'ready' && submitQuickAdd(quickAddAi.state.title)
-              }
+              {...(quickAddAi.state.status === 'ready' ? { meta: quickAddAi.state.meta } : {})}
+              onAccept={() => {
+                if (quickAddAi.state?.status === 'ready') {
+                  submitQuickAdd(quickAddAi.state.output.title)
+                }
+              }}
               onDiscard={quickAddAi.discard}
               onEdit={() => {
-                if (quickAddAi.state?.status === 'ready') setQuickAddText(quickAddAi.state.title)
+                if (quickAddAi.state?.status === 'ready') {
+                  setQuickAddText(quickAddAi.state.output.title)
+                }
                 quickAddAi.discard()
                 requestAnimationFrame(() => quickAddInputRef.current?.focus())
               }}
             >
-              {quickAddAi.state.status === 'ready' ? <p>{quickAddAi.state.title}</p> : null}
-            </AiPreviewPanel>
+              {quickAddAi.state.status === 'ready' ? (
+                <QuickAddPreview
+                  output={quickAddAi.state.output}
+                  memberName={() => null}
+                  labelName={() => null}
+                  projectName={() => null}
+                />
+              ) : null}
+            </AiResultPanel>
           </Reveal>
         ) : null}
       </section>

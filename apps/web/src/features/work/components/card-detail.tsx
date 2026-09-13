@@ -7,15 +7,14 @@
 // page (TECH-SPEC
 // "card peek panel and full card page"). AI actions (subtasks, summarise thread, translate the
 // description) are the preview-then-accept pattern UI-OVERHAUL.md's AI helpers row requires: a
-// `SparkleButton` next to the field it enhances, an `AiPreviewPanel` with Accept/Edit/Discard, and no
+// `SparkleButton` next to the field it enhances, an `AiResultPanel` with Accept/Edit/Discard, and no
 // path that writes a generated result into the card without that Accept.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
-import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
+import { useT, useLocale, formatDate, latinToCyrillic, type Locale } from '@devon/i18n'
 import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
 import {
-  AiPreviewPanel,
   Avatar,
   AvatarStack,
   Badge,
@@ -40,10 +39,34 @@ import {
   RISE_PX,
 } from '@devon/ui'
 import { replaceSearchParam } from '../../../lib/router.js'
-import { useSession } from '../../../lib/session.js'
+import { useDepartment, useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
-import type { AiFeatureId } from '../../ai/types.js'
+import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
+import {
+  AssigneeSuggestionsPreview,
+  DraftReplyPreview,
+  RiskExplainPreview,
+  SubtasksPreview,
+  ThreadDigestPreview,
+  TranslatePreview,
+} from '../../ai/components/previews.js'
+import {
+  TranslateTargetPicker,
+  defaultTranslateTarget,
+  isLocalTransliterationPair,
+} from '../../ai/components/translate-target.js'
+import { useSummaryQuery } from '../../analytics/use-analytics.js'
+import {
+  parseFeatureOutput,
+  type DeadlineRiskOutput,
+  type DraftReplyOutput,
+  type SuggestAssigneeOutput,
+  type SubtaskBreakdownOutput,
+  type SummarizeThreadOutput,
+  type TranslateOutput,
+} from '../../ai/outputs.js'
+import type { AiFeatureId, RunMeta } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
@@ -112,6 +135,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const locale = useLocale()
   const query = useCardQuery(cardId)
   const members = useMembers()
+  const { department } = useDepartment()
+  const isHead = department?.role === 'head'
   const labels = useLabelsQuery().data ?? []
   const projects = useProjectsQuery().data ?? []
   const { user } = useSession()
@@ -154,10 +179,38 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const translateEnabled = useAiFeatureEnabled('translate')
   const translateAi = useRunAiFeatureMutation('translate')
   const [translatePreview, setTranslatePreview] = React.useState<{
-    text: string
-    tokens: number
-    ms: number
+    output: TranslateOutput
+    meta: RunMeta | null
   } | null>(null)
+  // AI-AUDIT 0.1, the single biggest cause of "the AI just translates everything to Uzbek": v1.0
+  // called this feature with `locale` -- the reader's own UI language -- as the TARGET. A uz-Latn
+  // user pressing sparkle beside an Uzbek description asked GLM to translate Uzbek into Uzbek, and
+  // the prompt duly returned it lightly polished. Nothing ever asked which language they wanted.
+  const [translateTarget, setTranslateTarget] = React.useState<Locale>(() =>
+    defaultTranslateTarget(locale),
+  )
+
+  // F4, rebuilt as an *explainer* (AI-AUDIT §4, D-4). `computeRisk()` on the server already decided
+  // whether this card is at risk; two sources of truth for that would be a defect, not a feature.
+  // The model is handed that verdict and asked only to say why, in words, and name one thing to do.
+  const riskEnabled = useAiFeatureEnabled('deadline_risk')
+  const riskAi = useRunAiFeatureMutation('deadline_risk')
+  const [riskExplain, setRiskExplain] = React.useState<{
+    output: DeadlineRiskOutput
+    meta: RunMeta
+  } | null>(null)
+
+  // N-3. Head-only, on the server (`department_managed`) and here: "who should take this" reads
+  // every member's workload, which is management information, and the head is the one who chooses.
+  const assigneeAiEnabled = useAiFeatureEnabled('suggest_assignee') && isHead
+  const assigneeAi = useRunAiFeatureMutation('suggest_assignee')
+  const [assigneeSuggestions, setAssigneeSuggestions] = React.useState<{
+    output: SuggestAssigneeOutput
+    meta: RunMeta
+  } | null>(null)
+  // The load numbers the suggestion is allowed to reason over -- the department's own aggregates,
+  // fetched only when a head actually opens this sheet with the helper enabled.
+  const loadSummary = useSummaryQuery({})
 
   if (query.isPending) {
     return (
@@ -266,18 +319,118 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     const source = descDraft.trim()
     if (!source) return
     setTranslatePreview(null)
+    // D-2: uz-Latn to uz-Cyrl is a lookup table in `packages/i18n`, not a language model. Instant,
+    // free, and with no chance of a model quietly rewriting a card description while converting the
+    // script it is written in.
+    if (isLocalTransliterationPair(locale, translateTarget)) {
+      setTranslatePreview({
+        meta: null,
+        output: {
+          translatedText: latinToCyrillic(source),
+          detectedSourceLocale: locale,
+          alreadyInTarget: false,
+          uncertainTerms: [],
+        },
+      })
+      return
+    }
     translateAi.mutate(
-      { text: source, locale },
+      {
+        // `locale` is the reader's language and only shapes how uncertainty is phrased;
+        // `targetLocale` is what the text is translated into.
+        locale,
+        targetLocale: translateTarget,
+        sourceLocale: null,
+        text: source,
+        glossary: [],
+        preserve: [],
+      },
       {
         onSuccess: (res) => {
-          const data = res.data as { translatedText?: unknown }
-          if (typeof data.translatedText === 'string') {
-            setTranslatePreview({
-              text: data.translatedText,
-              tokens: res.meta.totalTokens,
-              ms: res.meta.latencyMs,
-            })
-          }
+          const output = parseFeatureOutput<TranslateOutput>('translate', res.data)
+          if (output) setTranslatePreview({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
+  function runRiskExplain() {
+    if (!card) return
+    setRiskExplain(null)
+    const today = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date())
+    const assignee = members.find((m) => m.userId === card.assigneeUserId)
+    riskAi.mutate(
+      {
+        locale,
+        card: {
+          id: card.id,
+          title: card.title,
+          // The server's verdict, passed through *unchanged*. `computeRisk()` already decided, the
+          // prompt is explicit that it may not re-decide, and re-spelling the three values into a
+          // generic severity scale on the way is how this call started failing its own input schema.
+          riskLevel: card.risk,
+          dueDate: card.dueAt ? card.dueAt.slice(0, 10) : null,
+          today,
+          checklistTotal: card.checklist.length,
+          checklistDone: card.checklist.filter((i) => i.doneAt !== null).length,
+          daysSinceUpdate: Math.max(
+            0,
+            Math.round((Date.now() - new Date(card.updatedAt).getTime()) / 86_400_000),
+          ),
+          assigneeName: assignee ? fullName(assignee) : null,
+          commentCount: card.comments.length,
+          blockedByTitles: [],
+          similarSlippedCount: 0,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<DeadlineRiskOutput>('deadline_risk', res.data)
+          if (output) setRiskExplain({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
+  function runSuggestAssignee() {
+    if (!card) return
+    setAssigneeSuggestions(null)
+    const loadByName = new Map(
+      (loadSummary.data?.loadPerPerson ?? []).map((person) => [person.userId, person] as const),
+    )
+    const candidates = members.map((member) => {
+      const load = loadByName.get(member.userId)
+      return {
+        userId: member.userId,
+        fullName: fullName(member),
+        openCount: load?.openCount ?? 0,
+        overdueCount: load?.overdueCount ?? 0,
+        recentLabels: [],
+        away: false,
+      }
+    })
+    if (candidates.length === 0) return
+    assigneeAi.mutate(
+      {
+        locale,
+        card: {
+          id: card.id,
+          title: card.title,
+          labels: [],
+          projectTitle: null,
+          estimateMin: null,
+        },
+        candidates,
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<SuggestAssigneeOutput>('suggest_assignee', res.data)
+          if (output) setAssigneeSuggestions({ output, meta: res.meta })
         },
       },
     )
@@ -285,8 +438,9 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
 
   async function acceptTranslate() {
     if (!translatePreview) return
-    setDescDraft(translatePreview.text)
-    await saveDescription(translatePreview.text)
+    const text = translatePreview.output.translatedText
+    setDescDraft(text)
+    await saveDescription(text)
     setTranslatePreview(null)
     translateAi.reset()
   }
@@ -346,7 +500,19 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             </Badge>
           ) : null}
           {card.risk !== 'none' ? (
-            <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
+            <span className="flex items-center gap-1.5">
+              <Badge tone={RISK_BADGE_TONE[card.risk]}>{t(RISK_LABEL_KEY[card.risk])}</Badge>
+              {/* The one place this helper belongs: beside the badge it explains. v1.0 had it
+                  reachable only by typing card ids into a textarea on /ai (AI-AUDIT §0.4). */}
+              {riskEnabled ? (
+                <SparkleButton
+                  aria-label={t('work.ai.explainRisk')}
+                  size="sm"
+                  loading={riskAi.isPending}
+                  onClick={runRiskExplain}
+                />
+              ) : null}
+            </span>
           ) : null}
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {/* A9: pin to my five. The server owns the ceiling and refuses a sixth; the button
@@ -393,6 +559,25 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
         </div>
       </header>
 
+      {riskAi.isPending || riskExplain || riskAi.isError ? (
+        <AiResultPanel
+          title={t('work.ai.explainRiskPreviewTitle')}
+          status={riskAi.isPending ? 'pending' : riskAi.isError ? 'error' : 'ready'}
+          errorMessage={t('work.quickAdd.aiError')}
+          {...(riskExplain ? { meta: riskExplain.meta } : {})}
+          // Read-only by design: this helper explains a verdict the server already reached. There is
+          // nothing to accept, and an Accept button over an explanation would read as a bug.
+          readOnly
+          onDiscard={() => {
+            setRiskExplain(null)
+            riskAi.reset()
+          }}
+          onRetry={runRiskExplain}
+        >
+          {riskExplain ? <RiskExplainPreview output={riskExplain.output} /> : null}
+        </AiResultPanel>
+      ) : null}
+
       {/* round2 SEV2: the two-column split ran the left column at ~170px inside the 480px sheet --
           a description textarea broke after four words, a three-word comment took four lines, and
           two field labels ("Havola manzilini kiriting"/"Izoh yozing" placeholders, in practice) were
@@ -403,12 +588,20 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           label={t('work.field.description')}
           action={
             translateEnabled && descDraft.trim() ? (
-              <SparkleButton
-                aria-label={t('work.ai.translate')}
-                size="sm"
-                loading={translateAi.isPending}
-                onClick={runTranslate}
-              />
+              <span className="flex flex-wrap items-center gap-2">
+                <TranslateTargetPicker
+                  id={`card-translate-target-${card.id}`}
+                  value={translateTarget}
+                  onChange={setTranslateTarget}
+                  disabled={translateAi.isPending}
+                />
+                <SparkleButton
+                  aria-label={t('work.ai.translate')}
+                  size="sm"
+                  loading={translateAi.isPending}
+                  onClick={runTranslate}
+                />
+              </span>
             ) : undefined
           }
         >
@@ -421,36 +614,30 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             className="w-full resize-y rounded-sm border border-border bg-card p-3 text-body text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {translateAi.isPending || translatePreview || translateAi.isError ? (
-            <AiPreviewPanel
+            <AiResultPanel
               className="mt-2"
               title={t('work.ai.translatePreviewTitle')}
               status={translateAi.isPending ? 'pending' : translateAi.isError ? 'error' : 'ready'}
-              pendingLabel={t('work.ai.translate')}
               errorMessage={t('work.quickAdd.aiError')}
               acceptLabel={t('work.ai.accept')}
               editLabel={t('work.ai.edit')}
-              discardLabel={t('work.ai.discard')}
-              retryLabel={t('work.ai.retry')}
+              {...(translatePreview?.meta ? { meta: translatePreview.meta } : {})}
               onAccept={() => void acceptTranslate()}
-              onEdit={() => setTranslatePreview(null)}
+              // Edit puts the translation in the textarea without saving it, so the person can adjust
+              // a term before it becomes the card's description. v1.0's Edit discarded the answer.
+              onEdit={() => {
+                if (translatePreview) setDescDraft(translatePreview.output.translatedText)
+                setTranslatePreview(null)
+                translateAi.reset()
+              }}
               onDiscard={() => {
                 setTranslatePreview(null)
                 translateAi.reset()
               }}
               onRetry={runTranslate}
-              {...(translatePreview
-                ? {
-                    costLine: t('work.quickAdd.aiMeta', {
-                      tokens: translatePreview.tokens,
-                      ms: translatePreview.ms,
-                    }),
-                  }
-                : {})}
             >
-              {translatePreview ? (
-                <p className="whitespace-pre-wrap">{translatePreview.text}</p>
-              ) : null}
-            </AiPreviewPanel>
+              {translatePreview ? <TranslatePreview output={translatePreview.output} /> : null}
+            </AiResultPanel>
           ) : null}
         </Field>
 
@@ -504,6 +691,46 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               }}
               placeholderKey="work.field.unassigned"
             />
+            {assigneeAiEnabled ? (
+              <SparkleButton
+                aria-label={t('work.ai.suggestAssignee')}
+                label={t('work.ai.suggestAssignee')}
+                size="sm"
+                className="mt-2"
+                loading={assigneeAi.isPending}
+                onClick={runSuggestAssignee}
+              />
+            ) : null}
+            {assigneeAi.isPending || assigneeSuggestions || assigneeAi.isError ? (
+              <AiResultPanel
+                className="mt-2"
+                title={t('work.ai.suggestAssigneePreviewTitle')}
+                status={assigneeAi.isPending ? 'pending' : assigneeAi.isError ? 'error' : 'ready'}
+                errorMessage={t('work.quickAdd.aiError')}
+                {...(assigneeSuggestions ? { meta: assigneeSuggestions.meta } : {})}
+                // No Accept: the head chooses a person from the list, one click per row. A single
+                // "Accept" over a ranked list of three people would mean "take the first", which is
+                // precisely the decision the guard rail says the head must make (AI-AUDIT N-3).
+                readOnly
+                onDiscard={() => {
+                  setAssigneeSuggestions(null)
+                  assigneeAi.reset()
+                }}
+                onRetry={runSuggestAssignee}
+              >
+                {assigneeSuggestions ? (
+                  <AssigneeSuggestionsPreview
+                    output={assigneeSuggestions.output}
+                    memberName={(id) => nameOf(members, id)}
+                    onChoose={(userId) => {
+                      void patchCard.mutateAsync({ id: card.id, patch: { assigneeUserId: userId } })
+                      setAssigneeSuggestions(null)
+                      assigneeAi.reset()
+                    }}
+                  />
+                ) : null}
+              </AiResultPanel>
+            ) : null}
           </Field>
           <Field label={t('work.field.giver')} flashedAt={giverFlash.flashedAt}>
             <MemberPicker
@@ -802,6 +1029,8 @@ function Checklist({
     id: string
     title: string
     description: { text: string } | null
+    /** So the step sizes can be judged against the time actually left (AI-AUDIT F2). */
+    dueAt: string | null
     checklist: Array<{
       id: string
       parentItemId: string | null
@@ -838,9 +1067,8 @@ function Checklist({
   const subtasksEnabled = useAiFeatureEnabled('subtask_breakdown')
   const subtaskAi = useRunAiFeatureMutation('subtask_breakdown')
   const [suggested, setSuggested] = React.useState<{
-    items: string[]
-    tokens: number
-    ms: number
+    output: SubtaskBreakdownOutput
+    meta: RunMeta
   } | null>(null)
 
   function runSubtaskAi() {
@@ -851,18 +1079,19 @@ function Checklist({
         cardTitle: card.title,
         cardDescription: card.description?.text ?? null,
         existingSubtasks: card.checklist.map((i) => i.text),
+        // v1.1: the feature is told what the card is about and how long is left, so its steps are
+        // sized against the real deadline instead of being six generic lines (AI-AUDIT F2).
+        labels: [],
+        projectTitle: null,
+        dueInDays: card.dueAt
+          ? Math.round((new Date(card.dueAt).getTime() - Date.now()) / 86_400_000)
+          : null,
         targetCount: 6,
       },
       {
         onSuccess: (res) => {
-          const data = res.data as { subtasks?: unknown }
-          if (Array.isArray(data.subtasks)) {
-            setSuggested({
-              items: data.subtasks.filter((s): s is string => typeof s === 'string'),
-              tokens: res.meta.totalTokens,
-              ms: res.meta.latencyMs,
-            })
-          }
+          const output = parseFeatureOutput<SubtaskBreakdownOutput>('subtask_breakdown', res.data)
+          if (output) setSuggested({ output, meta: res.meta })
         },
       },
     )
@@ -871,8 +1100,8 @@ function Checklist({
   async function acceptSubtasks() {
     if (!suggested) return
     const existing = new Set(card.checklist.map((i) => i.text.trim().toLowerCase()))
-    const toAdd = suggested.items
-      .map((line) => line.trim())
+    const toAdd = suggested.output.subtasks
+      .map((item) => item.text.trim())
       .filter((clean) => clean && !existing.has(clean.toLowerCase()))
     // TECH-SPEC §16 "no query in a loop": every new item is independent (each omits `orderKey`, the
     // same as the plain "Add an item" input already does), so one `Promise.all` is both correct and
@@ -934,45 +1163,29 @@ function Checklist({
         </div>
 
         {subtaskAi.isPending || suggested || subtaskAi.isError ? (
-          <AiPreviewPanel
+          <AiResultPanel
             title={t('work.ai.subtasksPreviewTitle')}
             status={subtaskAi.isPending ? 'pending' : subtaskAi.isError ? 'error' : 'ready'}
-            pendingLabel={t('work.ai.subtasks')}
             errorMessage={t('work.quickAdd.aiError')}
             acceptLabel={t('work.ai.accept')}
             editLabel={t('work.ai.edit')}
-            discardLabel={t('work.ai.discard')}
-            retryLabel={t('work.ai.retry')}
+            {...(suggested ? { meta: suggested.meta } : {})}
             onAccept={() => void acceptSubtasks()}
-            onEdit={() => setSuggested(null)}
+            // Edit drops the first suggested step into the "add an item" input so the person can
+            // reword it and add the rest by hand. v1.0's Edit threw the whole answer away.
+            onEdit={() => {
+              if (suggested?.output.subtasks[0]) setText(suggested.output.subtasks[0].text)
+              setSuggested(null)
+              subtaskAi.reset()
+            }}
             onDiscard={() => {
               setSuggested(null)
               subtaskAi.reset()
             }}
             onRetry={runSubtaskAi}
-            {...(suggested
-              ? {
-                  costLine: t('work.quickAdd.aiMeta', {
-                    tokens: suggested.tokens,
-                    ms: suggested.ms,
-                  }),
-                }
-              : {})}
           >
-            {suggested ? (
-              <ul className="flex flex-col gap-1">
-                {suggested.items.map((line, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <span
-                      className="size-1.5 shrink-0 rounded-full bg-primary"
-                      aria-hidden="true"
-                    />
-                    {line}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </AiPreviewPanel>
+            {suggested ? <SubtasksPreview output={suggested.output} /> : null}
+          </AiResultPanel>
         ) : null}
       </div>
     </Field>
@@ -1027,6 +1240,13 @@ function Comments({
 }) {
   const t = useT()
   const locale = useLocale()
+  // Both thread features write *for* a named reader and, for the reply, in the register their role
+  // carries -- a boshqarma boshligʻi's answer is phrased differently from one between colleagues.
+  // Neither is ever invented: both come from the session.
+  const { user } = useSession()
+  const { department } = useDepartment()
+  const viewerName = user ? `${user.givenName} ${user.familyName}`.trim() : t('work.ai.viewerYou')
+  const viewerRole: 'head' | 'member' = department?.role === 'head' ? 'head' : 'member'
   const commentsReduced = useReducedMotion()
   const [text, setText] = React.useState('')
   const addComment = useAddCommentMutation(cardId)
@@ -1045,11 +1265,16 @@ function Comments({
   const summarizeEnabled = useAiFeatureEnabled('summarize_thread')
   const summarizeAi = useRunAiFeatureMutation('summarize_thread')
   const [summary, setSummary] = React.useState<{
-    text: string
-    citedCount: number
-    tokens: number
-    ms: number
+    output: SummarizeThreadOutput
+    meta: RunMeta
   } | null>(null)
+
+  // N-1, the audit's highest-value addition: "draft a reply". The department writes in four
+  // languages and a junior xodim drafting a polite administrative answer is genuinely hard work.
+  // It composes into the comment box and never posts -- there is no code path here that sends.
+  const replyEnabled = useAiFeatureEnabled('draft_reply')
+  const replyAi = useRunAiFeatureMutation('draft_reply')
+  const [reply, setReply] = React.useState<{ output: DraftReplyOutput; meta: RunMeta } | null>(null)
 
   function runSummarize() {
     if (comments.length === 0) return
@@ -1057,35 +1282,80 @@ function Comments({
     summarizeAi.mutate(
       {
         locale,
-        cardTitle,
-        comments: comments.map((c) => {
-          const author = members.find((m) => m.userId === c.authorUserId)
-          return {
-            id: c.id,
-            author: author ? fullName(author) : t('work.activity.system'),
-            text: c.body.text,
-          }
-        }),
+        subject: { kind: 'card', id: cardId, title: cardTitle },
+        viewerName,
+        comments: threadForAi(),
       },
       {
         onSuccess: (res) => {
-          const data = res.data as { summary?: unknown; citedCommentIds?: unknown }
-          if (typeof data.summary === 'string') {
-            setSummary({
-              text: data.summary,
-              citedCount: Array.isArray(data.citedCommentIds) ? data.citedCommentIds.length : 0,
-              tokens: res.meta.totalTokens,
-              ms: res.meta.latencyMs,
-            })
-          }
+          const output = parseFeatureOutput<SummarizeThreadOutput>('summarize_thread', res.data)
+          if (output) setSummary({ output, meta: res.meta })
         },
       },
     )
   }
 
-  async function acceptSummary() {
+  function threadForAi() {
+    return comments.map((c) => {
+      const author = members.find((m) => m.userId === c.authorUserId)
+      return {
+        id: c.id,
+        author: author ? fullName(author) : t('work.activity.system'),
+        text: c.body.text,
+        createdAt: c.createdAt,
+      }
+    })
+  }
+
+  function runDraftReply() {
+    if (comments.length === 0) return
+    setReply(null)
+    replyAi.mutate(
+      {
+        locale,
+        subject: { kind: 'card', id: cardId, title: cardTitle },
+        viewerName,
+        viewerRole,
+        comments: threadForAi(),
+        tone: 'neutral',
+        intent: text.trim(),
+      },
+      {
+        onSuccess: (res) => {
+          const output = parseFeatureOutput<DraftReplyOutput>('draft_reply', res.data)
+          if (output) setReply({ output, meta: res.meta })
+        },
+      },
+    )
+  }
+
+  /** The digest as a comment a person can post -- decisions, open questions and commitments, each
+   * on its own line. Nothing invented, nothing dropped. */
+  function summaryAsComment(output: SummarizeThreadOutput): string {
+    const lines: string[] = []
+    if (output.decisions.length > 0) {
+      lines.push(`${t('ai.preview.thread.decisions')}:`)
+      for (const decision of output.decisions) lines.push(`- ${decision.text}`)
+    }
+    if (output.openQuestions.length > 0) {
+      lines.push(`${t('ai.preview.thread.openQuestions')}:`)
+      for (const question of output.openQuestions) lines.push(`- ${question.text}`)
+    }
+    if (output.commitments.length > 0) {
+      lines.push(`${t('ai.preview.thread.commitments')}:`)
+      for (const c of output.commitments) lines.push(`- ${c.who}: ${c.what}`)
+    }
+    return lines.join('\n')
+  }
+
+  /**
+   * AI-AUDIT §5 fix 13: v1.0's Accept **posted the summary as a comment**, immediately, with no
+   * second look -- the one thing TECH-SPEC §8 and the audit both say an AI feature must never do.
+   * Accept now fills the compose box. The person presses Send, or does not.
+   */
+  function acceptSummary() {
     if (!summary) return
-    await addComment.mutateAsync({ text: summary.text })
+    setText(summaryAsComment(summary.output))
     setSummary(null)
     summarizeAi.reset()
   }
@@ -1124,6 +1394,7 @@ function Comments({
             return (
               <motion.div
                 key={c.id}
+                id={`comment-${c.id}`}
                 className="flex gap-2"
                 initial={commentsReduced ? { opacity: 0 } : { opacity: 0, y: RISE_PX }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1155,33 +1426,60 @@ function Comments({
         </AnimatePresence>
 
         {summarizeAi.isPending || summary || summarizeAi.isError ? (
-          <AiPreviewPanel
+          <AiResultPanel
             title={t('work.ai.summarizePreviewTitle')}
             status={summarizeAi.isPending ? 'pending' : summarizeAi.isError ? 'error' : 'ready'}
-            pendingLabel={t('work.ai.summarize')}
             errorMessage={t('work.quickAdd.aiError')}
             acceptLabel={t('work.ai.postSummary')}
             editLabel={t('work.ai.edit')}
-            discardLabel={t('work.ai.discard')}
-            retryLabel={t('work.ai.retry')}
-            onAccept={() => void acceptSummary()}
-            onEdit={() => setSummary(null)}
+            {...(summary ? { meta: summary.meta } : {})}
+            onAccept={acceptSummary}
+            onEdit={() => {
+              if (summary) setText(summaryAsComment(summary.output))
+            }}
             onDiscard={() => {
               setSummary(null)
               summarizeAi.reset()
             }}
             onRetry={runSummarize}
-            {...(summary
-              ? {
-                  costLine:
-                    t('work.ai.summarizeCitations', { count: summary.citedCount }) +
-                    ' · ' +
-                    t('work.quickAdd.aiMeta', { tokens: summary.tokens, ms: summary.ms }),
-                }
-              : {})}
           >
-            {summary ? <p className="whitespace-pre-wrap">{summary.text}</p> : null}
-          </AiPreviewPanel>
+            {summary ? (
+              <ThreadDigestPreview
+                output={summary.output}
+                onJumpToComment={(commentId) => {
+                  document
+                    .getElementById(`comment-${commentId}`)
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }}
+              />
+            ) : null}
+          </AiResultPanel>
+        ) : null}
+
+        {replyAi.isPending || reply || replyAi.isError ? (
+          <AiResultPanel
+            title={t('work.ai.draftReplyPreviewTitle')}
+            status={replyAi.isPending ? 'pending' : replyAi.isError ? 'error' : 'ready'}
+            errorMessage={t('work.quickAdd.aiError')}
+            acceptLabel={t('work.ai.useDraft')}
+            editLabel={t('work.ai.edit')}
+            {...(reply ? { meta: reply.meta } : {})}
+            onAccept={() => {
+              if (reply) setText(reply.output.draft)
+              setReply(null)
+              replyAi.reset()
+            }}
+            onEdit={() => {
+              if (reply) setText(reply.output.draft)
+            }}
+            onDiscard={() => {
+              setReply(null)
+              replyAi.reset()
+            }}
+            onRetry={runDraftReply}
+          >
+            {reply ? <DraftReplyPreview output={reply.output} /> : null}
+          </AiResultPanel>
         ) : null}
 
         {typists.length > 0 ? (
@@ -1210,6 +1508,14 @@ function Comments({
               if (e.key === 'Enter') void submit()
             }}
           />
+          {replyEnabled && comments.length > 0 ? (
+            <SparkleButton
+              aria-label={t('work.ai.draftReply')}
+              size="sm"
+              loading={replyAi.isPending}
+              onClick={runDraftReply}
+            />
+          ) : null}
           <Button
             size="sm"
             variant="secondary"

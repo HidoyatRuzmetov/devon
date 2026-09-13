@@ -47,7 +47,8 @@
       "aiError": "Матнни аниқлаб бўлмади",
       "aiMeta": "{tokens} токен · {ms} мс",
       "dialogHint": "Сарлавҳани ёзинг. Истасангиз: «Нодира: ҳисобот, жума» — кимга ва қачонлиги ҳам тушунилади.",
-      "fromTemplate": "Андозадан яратиш"
+      "fromTemplate": "Андозадан яратиш",
+      "duplicateTitle": "Бунга ўхшаш иш аллақачон бор"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -250,7 +251,17 @@
       "summarize": "AI билан хулосалаш",
       "summarizePreviewTitle": "AI хулосаси",
       "summarizeCitations": "{count} та изоҳ асосида",
-      "postSummary": "Изоҳ сифатида жойлаш"
+      "postSummary": "Изоҳ сифатида жойлаш",
+      "viewerYou": "Сиз",
+      "draftReply": "Жавоб лойиҳасини ёзиш",
+      "draftReplyPreviewTitle": "Жавоб лойиҳаси",
+      "useDraft": "Изоҳ майдонига қўйиш",
+      "explainRisk": "Бу хавфни тушунтир",
+      "explainRiskPreviewTitle": "Хавф нима учун қўйилди",
+      "suggestAssignee": "Кимга топширай",
+      "suggestAssigneePreviewTitle": "Таклиф қилинган масъуллар",
+      "boardDigest": "Ким кечиктиряпти",
+      "boardDigestPreviewTitle": "Доскадаги энг хавфли ишлар"
     },
     "actions": {
       "create": "Янги вазифа"

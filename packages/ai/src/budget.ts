@@ -41,12 +41,27 @@ export function checkBudget(
   return { status, spentUzs, capUzs, remainingUzs, usedPct }
 }
 
-/** Whether a new call estimated to cost `estimatedCostUzs` may proceed at all -- the hard stop is
- * enforced *before* the call is made (an estimate from `maxTokens`, the worst case), not only after
- * the fact from the real usage the response reports back. A soft-cap department still gets to spend
- * right up to (and slightly over, on the call that crosses it) its cap; a hard-stop department cannot
- * start a new call once `spentUzs` has already reached `capUzs`. */
-export function canAffordCall(spentUzs: number, capUzs: number): boolean {
+/**
+ * Whether a new call may proceed at all -- the hard stop enforced *before* the call is made, from the
+ * worst case the gateway could actually request, rather than only afterwards from the usage the
+ * response reports back.
+ *
+ * v1.1 (AI-AUDIT G-4): this function existed, was exported, and was never called; the only gate in
+ * front of a provider call was `checkBudget`, i.e. "have you already exceeded the cap". The
+ * consequence was that the single call which crosses a department's monthly budget always went
+ * through, at up to `maxMaxTokens`. Passing `estimatedTokens` makes the question the right one:
+ * *would* this call exceed the cap.
+ *
+ * `estimatedTokens` of `0` keeps the old meaning exactly ("is there anything left at all"), which is
+ * what a caller that genuinely cannot estimate should pass.
+ */
+export function canAffordCall(
+  spentUzs: number,
+  capUzs: number,
+  estimatedTokens = 0,
+  pricePerMillionUzs: number = DEFAULT_PRICE_PER_MILLION_UZS,
+): boolean {
   if (capUzs <= 0) return false
-  return spentUzs < capUzs
+  if (spentUzs >= capUzs) return false
+  return spentUzs + tokensToCostUzs(estimatedTokens, pricePerMillionUzs) <= capUzs
 }

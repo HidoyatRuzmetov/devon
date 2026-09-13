@@ -14,8 +14,8 @@
   "profiles": {
     "fast": ["typecheck", "lint", "unit", "i18n", "secrets"],
     "item": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "e2e-smoke"],
-    "integration": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security"],
-    "release": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security", "perf", "deps"]
+    "integration": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security", "ai-evals"],
+    "release": ["typecheck", "lint", "unit", "i18n", "secrets", "build", "migrate", "e2e", "a11y", "bundle", "security", "perf", "deps", "ai-evals"]
   },
   "gates": {
     "typecheck": { "cmd": "pnpm -r --if-present typecheck", "blocking": true, "timeout_s": 600 },

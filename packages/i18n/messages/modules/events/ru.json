@@ -111,7 +111,9 @@
       "submitUpdate": "Сохранить изменения",
       "validation": {
         "endsBeforeStarts": "Окончание должно быть позже начала"
-      }
+      },
+      "aiDraftCarpool": "Поездка",
+      "aiDraftPickDate": "Какую дату берём?"
     },
     "diff": {
       "title": "Что изменилось",
@@ -174,7 +176,8 @@
       "summaryFailed": "Не удалось составить краткое изложение",
       "summaryAccept": "Вставить в комментарий",
       "summaryEdit": "Вставить и отредактировать",
-      "summaryDiscard": "Отклонить"
+      "summaryDiscard": "Отклонить",
+      "viewerFallback": "Вы"
     },
     "carpool": {
       "title": "Совместные поездки",

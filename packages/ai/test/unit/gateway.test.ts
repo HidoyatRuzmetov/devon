@@ -85,7 +85,7 @@ describe('run() — empty content + finish_reason length', () => {
     const result = await run({
       provider,
       config,
-      feature: 'weekly_summary',
+      feature: 'catch_up',
       messages,
       tool: echoTool,
       maxTokens: 1024,
@@ -106,7 +106,7 @@ describe('run() — empty content + finish_reason length', () => {
     const result = await run({
       provider,
       config,
-      feature: 'weekly_summary',
+      feature: 'catch_up',
       messages,
       tool: echoTool,
     })
@@ -130,7 +130,7 @@ describe('run() — tool-call schema validation', () => {
     const result = await run({ provider, config, feature: 'translate', messages, tool: echoTool })
     expect(provider.calls).toHaveLength(2)
     const retryMessages = provider.calls[1]?.messages ?? []
-    expect(retryMessages.some((m) => m.content?.includes('Validation errors'))).toBe(true)
+    expect(retryMessages.some((m) => m.content?.includes('was rejected'))).toBe(true)
     expect(result.ok).toBe(true)
     if (result.ok) expect(result.data.title).toBe('Fixed')
     if (result.ok) expect(result.meta.retried).toBe(true)

@@ -47,7 +47,8 @@
       "aiError": "Matnni aniqlab boʻlmadi",
       "aiMeta": "{tokens} token · {ms} ms",
       "dialogHint": "Sarlavhani yozing. Istasangiz: «Nodira: hisobot, juma» — kimga va qachonligi ham tushuniladi.",
-      "fromTemplate": "Andozadan yaratish"
+      "fromTemplate": "Andozadan yaratish",
+      "duplicateTitle": "Bunga oʻxshash ish allaqachon bor"
     },
     "filter": {
       "placeholder": "assignee:@me due:<=friday label:urgent",
@@ -250,7 +251,17 @@
       "summarize": "AI bilan xulosalash",
       "summarizePreviewTitle": "AI xulosasi",
       "summarizeCitations": "{count} ta izoh asosida",
-      "postSummary": "Izoh sifatida joylash"
+      "postSummary": "Izoh sifatida joylash",
+      "viewerYou": "Siz",
+      "draftReply": "Javob loyihasini yozish",
+      "draftReplyPreviewTitle": "Javob loyihasi",
+      "useDraft": "Izoh maydoniga qoʻyish",
+      "explainRisk": "Bu xavfni tushuntir",
+      "explainRiskPreviewTitle": "Xavf nima uchun qoʻyildi",
+      "suggestAssignee": "Kimga topshiray",
+      "suggestAssigneePreviewTitle": "Taklif qilingan masʼullar",
+      "boardDigest": "Kim kechiktiryapti",
+      "boardDigestPreviewTitle": "Doskadagi eng xavfli ishlar"
     },
     "actions": {
       "create": "Yangi vazifa"

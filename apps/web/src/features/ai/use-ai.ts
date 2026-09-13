@@ -50,3 +50,50 @@ export function useRunAiFeatureMutation(feature: AiFeatureId) {
     },
   })
 }
+
+// --- EPIC-016: semantic search + the Ask box ---------------------------------------------------
+
+/**
+ * Department-wide search behind the palette. `enabled` on a non-empty query so typing one character
+ * does not fire a request per keystroke -- the caller debounces the string it passes in.
+ */
+export function useDepartmentSearchQuery(query: string, limit = 12) {
+  return useQuery({
+    queryKey: ['ai', 'search', query, limit] as const,
+    queryFn: () => api.searchDepartment(query, limit),
+    enabled: query.trim().length >= 2,
+    staleTime: 30_000,
+  })
+}
+
+export function useSearchBackendQuery() {
+  return useQuery({
+    queryKey: ['ai', 'search', 'backend'] as const,
+    queryFn: api.fetchSearchBackend,
+  })
+}
+
+export function useAskMutation() {
+  const csrf = useCsrfToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (vars: { question: string; locale: 'uz-Latn' | 'uz-Cyrl' | 'ru' | 'en' }) =>
+      api.askDepartment(vars.question, vars.locale, csrf),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: KEYS.settings })
+      void qc.invalidateQueries({ queryKey: KEYS.usage })
+    },
+  })
+}
+
+export function useRebuildIndexMutation() {
+  const csrf = useCsrfToken()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.rebuildSearchIndex(csrf),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: KEYS.settings })
+      void qc.invalidateQueries({ queryKey: ['ai', 'search'] })
+    },
+  })
+}

@@ -4,7 +4,6 @@ import * as React from 'react'
 import { useT, useLocale, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { Check, Pin, PinOff, Plus, Trash2 } from 'lucide-react'
 import {
-  AiPreviewPanel,
   Button,
   Card,
   EmptyPersonalIllustration,
@@ -15,12 +14,21 @@ import {
   Stagger,
   StaggerItem,
   StateView,
-  Textarea,
   cn,
   toastWithUndo,
 } from '@devon/ui'
+import { latinToCyrillic } from '@devon/i18n'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
-import { aiCostLine, aiErrorMessageKey } from './lib/ai-helpers.js'
+import { AiResultPanel } from '../ai/components/ai-result-panel.js'
+import { TranslatePreview } from '../ai/components/previews.js'
+import {
+  TranslateTargetPicker,
+  defaultTranslateTarget,
+  isLocalTransliterationPair,
+} from '../ai/components/translate-target.js'
+import { parseFeatureOutput, type TranslateOutput } from '../ai/outputs.js'
+import type { RunMeta } from '../ai/types.js'
+import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   useCreateNoteMutation,
   useDelayedDelete,
@@ -44,16 +52,9 @@ function useDebouncedCallback<A extends unknown[]>(fn: (...args: A) => void, del
 /** The "other" locale to offer a one-click translation into -- Uzbek notes translate to Russian and
  * vice-versa, since that is the pairing a civil servant in this instance actually needs; a full
  * locale picker would be one more decision for a feature that is meant to be a single click. */
-const TRANSLATE_TARGET: Record<Locale, Locale> = {
-  'uz-Latn': 'ru',
-  'uz-Cyrl': 'ru',
-  ru: 'uz-Latn',
-  en: 'uz-Latn',
-}
-
 type TranslateAiState =
   | { status: 'pending' }
-  | { status: 'ready'; text: string; targetLocale: Locale; costLine: string }
+  | { status: 'ready'; output: TranslateOutput; meta: RunMeta | null; targetLocale: Locale }
   | { status: 'error'; message: string }
 
 function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
@@ -65,6 +66,12 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   const [text, setText] = React.useState(note.body.text)
   const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved'>('idle')
   const [translateAi, setTranslateAi] = React.useState<TranslateAiState | null>(null)
+  // AI-AUDIT §5 fix 1: the target language is asked, not assumed. v1.0's notes screen was the one
+  // caller that got this even roughly right, via a hard-coded "from Uzbek always to Russian" map --
+  // which is still a guess, and still wrong for anyone who wanted English.
+  const [targetLocale, setTargetLocale] = React.useState<Locale>(() =>
+    defaultTranslateTarget(locale),
+  )
   React.useEffect(() => setTitle(note.title), [note.title])
   React.useEffect(() => setText(note.body.text), [note.body.text])
 
@@ -84,22 +91,46 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   }
 
   const debouncedSaveText = useDebouncedCallback(saveBody, 600)
-  const targetLocale = TRANSLATE_TARGET[locale]
 
   function runTranslate() {
     if (!text.trim()) return
+    // D-2: uz-Latn → uz-Cyrl is a lookup table, not a language model. Instant, free, and with no
+    // chance of the model "improving" someone's note while converting the script.
+    if (isLocalTransliterationPair(locale, targetLocale)) {
+      setTranslateAi({
+        status: 'ready',
+        meta: null,
+        targetLocale,
+        output: {
+          translatedText: latinToCyrillic(text),
+          detectedSourceLocale: locale,
+          alreadyInTarget: false,
+          uncertainTerms: [],
+        },
+      })
+      return
+    }
     setTranslateAi({ status: 'pending' })
     translate.mutate(
-      { locale: targetLocale, sourceLocale: locale, text },
+      {
+        // `locale` is the READER's language (it only shapes how uncertainty is phrased);
+        // `targetLocale` is what the text is translated into. v1.0 conflated the two, which is the
+        // whole of AI-AUDIT §0.1.
+        locale,
+        targetLocale,
+        sourceLocale: locale,
+        text,
+        glossary: [],
+        preserve: [],
+      },
       {
         onSuccess: (res) => {
-          const translated = String(res.data['translatedText'] ?? '').trim()
-          setTranslateAi({
-            status: 'ready',
-            text: translated || text,
-            targetLocale,
-            costLine: aiCostLine(t, res.meta, locale),
-          })
+          const output = parseFeatureOutput<TranslateOutput>('translate', res.data)
+          if (!output) {
+            setTranslateAi({ status: 'error', message: t('ai.errors.runFailed') })
+            return
+          }
+          setTranslateAi({ status: 'ready', output, meta: res.meta, targetLocale })
         },
         onError: (err) => setTranslateAi({ status: 'error', message: t(aiErrorMessageKey(err)) }),
       },
@@ -156,15 +187,23 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
         placeholder={t('personal.notes.bodyPlaceholder')}
         className="min-h-24 w-full resize-y rounded-sm border border-transparent bg-transparent px-1 py-1 text-body text-foreground placeholder:text-muted-foreground focus-visible:border-border focus-visible:outline-none"
       />
-      <div className="flex items-center justify-between gap-2">
-        <SparkleButton
-          aria-label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
-          label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
-          size="sm"
-          loading={translateAi?.status === 'pending'}
-          disabled={!text.trim()}
-          onClick={runTranslate}
-        />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <TranslateTargetPicker
+            id={`note-translate-target-${note.id}`}
+            value={targetLocale}
+            onChange={setTargetLocale}
+            disabled={translateAi?.status === 'pending'}
+          />
+          <SparkleButton
+            aria-label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
+            label={t('personal.ai.translate.action', { locale: LOCALE_LABEL[targetLocale] })}
+            size="sm"
+            loading={translateAi?.status === 'pending'}
+            disabled={!text.trim()}
+            onClick={runTranslate}
+          />
+        </div>
         <span
           aria-live="polite"
           className="flex items-center gap-1 text-caption text-muted-foreground transition-opacity duration-(--dur-standard)"
@@ -183,34 +222,34 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
 
       {translateAi ? (
         <Reveal>
-          <AiPreviewPanel
+          <AiResultPanel
             title={t('personal.ai.translate.title', { locale: LOCALE_LABEL[targetLocale] })}
             status={translateAi.status}
-            pendingLabel={t('personal.ai.pending')}
+            {...(translateAi.status === 'error' ? { errorMessage: translateAi.message } : {})}
+            {...(translateAi.status === 'ready' && translateAi.meta
+              ? { meta: translateAi.meta }
+              : {})}
             acceptLabel={t('personal.ai.accept')}
             editLabel={t('personal.ai.edit')}
-            discardLabel={t('personal.ai.discard')}
-            {...(translateAi.status === 'error' ? { errorMessage: translateAi.message } : {})}
-            {...(translateAi.status === 'ready' ? { costLine: translateAi.costLine } : {})}
             onAccept={() => {
               if (translateAi.status !== 'ready') return
-              setText(translateAi.text)
-              saveBody(translateAi.text)
+              setText(translateAi.output.translatedText)
+              saveBody(translateAi.output.translatedText)
               setTranslateAi(null)
             }}
             onDiscard={() => setTranslateAi(null)}
             onEdit={() => {
               if (translateAi.status === 'ready') {
-                setText(translateAi.text)
-                debouncedSaveText(translateAi.text)
+                setText(translateAi.output.translatedText)
+                debouncedSaveText(translateAi.output.translatedText)
               }
               setTranslateAi(null)
             }}
           >
             {translateAi.status === 'ready' ? (
-              <Textarea value={translateAi.text} readOnly rows={4} />
+              <TranslatePreview output={translateAi.output} />
             ) : null}
-          </AiPreviewPanel>
+          </AiResultPanel>
         </Reveal>
       ) : null}
     </Card>

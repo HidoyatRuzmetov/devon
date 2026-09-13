@@ -111,7 +111,9 @@
       "submitUpdate": "Oʻzgarishlarni saqlash",
       "validation": {
         "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak"
-      }
+      },
+      "aiDraftCarpool": "Yoʻl-yoʻriq",
+      "aiDraftPickDate": "Qaysi sanani olamiz?"
     },
     "diff": {
       "title": "Nimalar oʻzgardi",
@@ -174,7 +176,8 @@
       "summaryFailed": "Muhokamani qisqacha bayon qilib boʻlmadi",
       "summaryAccept": "Izohga qoʻshish",
       "summaryEdit": "Qoʻshib, tahrirlash",
-      "summaryDiscard": "Rad etish"
+      "summaryDiscard": "Rad etish",
+      "viewerFallback": "Siz"
     },
     "carpool": {
       "title": "Birga borish",

@@ -1,7 +1,7 @@
 // Row -> API DTO mapping for the AI module (snake_case Postgres rows -> camelCase wire shapes),
 // exactly the same seam every other module's `dto.ts` already draws.
 import { checkBudget } from '@devon/ai'
-import type { AiSettingsDto, TraceDto } from './schemas.js'
+import type { AiSettingsDto, SearchBackendDto, TraceDto } from './schemas.js'
 import type { AiSettingsRow, TraceRow } from './repo.js'
 
 /** H8.1 graceful degradation: `available` is the `ai` circuit breaker's read-only state (see
@@ -17,6 +17,13 @@ export function settingsToDto(
   row: AiSettingsRow,
   spentUzsThisMonth: number,
   available: boolean,
+  extra: {
+    /** AI-AUDIT §5 fix 15 -- head-only, stripped again by `service.getSettingsWithUsage` for a member. */
+    spendByFeature: Record<string, number>
+    /** v1.1 SPEC §8 "Honesty": no key configured, so every answer comes from the offline simulator. */
+    simulated: boolean
+    search: SearchBackendDto
+  },
 ): AiSettingsDto {
   const budget = checkBudget(spentUzsThisMonth, row.budget_uzs_per_month, row.soft_cap_pct)
   const flags = available
@@ -33,6 +40,9 @@ export function settingsToDto(
     usedPct: budget.usedPct,
     available,
     unavailableReason: available ? null : 'circuit_open',
+    spendByFeature: extra.spendByFeature,
+    simulated: extra.simulated,
+    search: extra.search,
   }
 }
 
@@ -54,5 +64,6 @@ export function traceToDto(row: TraceRow): TraceDto {
     retried: row.retried,
     status: row.status,
     createdAt: toIso(row.created_at),
+    userName: row.user_name,
   }
 }
