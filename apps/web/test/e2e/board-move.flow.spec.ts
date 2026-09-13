@@ -65,13 +65,21 @@ test('@flow a card moves from one column (person) to another on the real board',
   expect(createRes.status()).toBe(201)
   const card = (await createRes.json()) as { id: string; version: number }
 
-  // 1. Real UI: the card is visible on the board (`/work`). The board defaults to showing only the
-  //    viewer's own column + Unassigned (`board-screen.tsx`'s `showAllMembers`, off by default,
-  //    persisted per-viewer) -- "Barcha xodimlar (N)" reveals every member's column, which this flow
-  //    needs since the card ends up in a *different* person's column after the move below.
+  // 1. Real UI: the card is visible on the board (`/work`).
+  //
+  //    This step used to click "Barcha xodimlar (N)" first, because the board defaulted to the
+  //    viewer's own column plus Unassigned. v1.1 SPEC §3.3 reversed that default -- "the board shows
+  //    the whole department grouped by boʻlim for everyone", with a "Hammasi | Mening" segmented
+  //    control over it -- and the reveal button was removed with the default it existed to undo
+  //    (`work.board.showAllMembers` is an orphaned message key as of this build). So the flow now
+  //    asserts what it always meant to: every member's column is on screen without being asked for,
+  //    which is what this test needs since the card lands in a *different* person's column below.
   await headPage.goto('/work')
-  await headPage.getByRole('button', { name: /Barcha xodimlar/ }).click()
   await expect(headPage.getByText(cardTitle)).toBeVisible()
+  // The claim the removed click used to establish, stated directly: the *other* member's column is
+  // on the board without anyone asking for it. That is what "Hammasi is the default for everyone"
+  // means, and it is what the rest of this flow depends on.
+  await expect(headPage.getByText('Test Member', { exact: false }).first()).toBeVisible()
 
   const boardBefore = await headContext.request.get('/api/v1/board')
   const before = (await boardBefore.json()) as {
