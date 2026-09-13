@@ -162,7 +162,14 @@ export default function AnalyticsScreen() {
       <StateView kind="empty" titleKey="analytics.empty.title" bodyKey="analytics.empty.body" />
     )
   } else {
-    regionKey = 'charts'
+    // Keyed on the range too, not just on "charts" (motion verdict F7). With the range change now
+    // running inside `React.startTransition`, React holds the charts that are already painted and
+    // skips the intermediate skeleton entirely -- which is the right behaviour for a list that is
+    // being refiltered, but it meant DESIGN.md §10's crossfade for this moment played on nothing at
+    // all. Re-keying on the range gives `AnimatePresence mode="wait"` a real old/new pair, so the
+    // previous charts fade out and the new ones fade in instead of the numbers simply being
+    // different.
+    regionKey = `charts:${value.since}:${value.until}:${value.filter}`
     region = (
       <div className="flex flex-col gap-6">
         <KpiOverviewRow summary={summary!} />

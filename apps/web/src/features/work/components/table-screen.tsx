@@ -140,11 +140,21 @@ export default function TableScreen() {
   const [density, setDensity] = useLocalStorageDensity()
   const [sort, setSort] = React.useState<SortState | null>(null)
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(280)
-  const scrollElRef = React.useRef<HTMLDivElement | null>(null)
+  // Motion verdict F6: the scroll element is *state*, not a ref, so `VirtualRows` below re-renders
+  // once it exists and TanStack Virtual can attach to it -- a child's layout effect runs before its
+  // parent's ref is attached, so a ref shared downwards would still be null on that first pass.
+  const [scrollEl, setScrollEl] = React.useState<HTMLDivElement | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const cards = React.useMemo(() => cardsQuery.data ?? [], [cardsQuery.data])
   const rowHeight = isDesktop ? (density === 'compact' ? 40 : 56) : MOBILE_ROW_HEIGHT
+  const setScrollerEl = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      setScrollEl(el)
+      heightRef(el)
+    },
+    [heightRef],
+  )
 
   const sorted = React.useMemo(() => {
     if (!sort) return cards
@@ -204,21 +214,6 @@ export default function TableScreen() {
     selectAll(checked, sortedIds)
   }
 
-  // Motion verdict F6: scrolling this list ran at ~10 fps (median frame 98.4 ms, 69 of 70 frames
-  // over budget). TanStack Virtual sets state on every scroll event, and with unstable inputs the
-  // whole ~25-row window re-rendered with it. `estimateSize` and `getItemKey` are `useCallback`s so
-  // the virtualiser is not re-created per render, and `getItemKey` keys by card id so React reuses a
-  // row's fiber as the window slides instead of remounting it under a positional key.
-  const estimateSize = React.useCallback(() => rowHeight, [rowHeight])
-  const getItemKey = React.useCallback((index: number) => sorted[index]?.id ?? index, [sorted])
-  const virtualizer = useVirtualizer({
-    count: sorted.length,
-    getScrollElement: () => scrollElRef.current,
-    estimateSize,
-    getItemKey,
-    overscan: 8,
-  })
-
   let body: React.ReactNode
   if (cardsQuery.isPending) {
     body = (
@@ -246,10 +241,7 @@ export default function TableScreen() {
     const someSelected = selected.size > 0 && !allSelected
     body = (
       <div
-        ref={(el) => {
-          scrollElRef.current = el
-          heightRef(el)
-        }}
+        ref={setScrollerEl}
         className="overflow-auto rounded-md border border-border"
         style={{ height: scrollerHeight }}
       >
@@ -323,32 +315,15 @@ export default function TableScreen() {
               />
             </div>
           )}
-          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
-            {virtualizer.getVirtualItems().map((vRow) => {
-              const card = sorted[vRow.index]!
-              return isDesktop ? (
-                <TableRow
-                  key={card.id}
-                  card={card}
-                  members={members}
-                  checked={selected.has(card.id)}
-                  onToggle={onRowToggle}
-                  top={vRow.start}
-                  height={vRow.size}
-                />
-              ) : (
-                <MobileTableRow
-                  key={card.id}
-                  card={card}
-                  members={members}
-                  checked={selected.has(card.id)}
-                  onToggle={onRowToggle}
-                  top={vRow.start}
-                  height={vRow.size}
-                />
-              )
-            })}
-          </div>
+          <VirtualRows
+            sorted={sorted}
+            members={members}
+            selected={selected}
+            onToggle={onRowToggle}
+            rowHeight={rowHeight}
+            isDesktop={isDesktop}
+            scrollEl={scrollEl}
+          />
         </div>
       </div>
     )
@@ -404,6 +379,73 @@ export default function TableScreen() {
       </WorkShell>
       <CardPeekDialog />
     </>
+  )
+}
+
+/** Only this component re-renders while the table scrolls.
+ *
+ * Motion verdict F6. TanStack Virtual sets state on every scroll event, and that state used to live
+ * in `TableScreen` -- so a scroll re-rendered the whole screen, `WorkShell` and all of its chrome
+ * included (measured: `WorkShell` accounted for 394 ms across 40 scrolled frames, ~10 ms of every
+ * frame's budget, for a header and a filter bar that cannot change while a list scrolls). Moving the
+ * virtualiser down here means a scroll tick re-renders the row window and nothing above it.
+ *
+ * `estimateSize` and `getItemKey` are `useCallback`s so the virtualiser is not rebuilt per render,
+ * and `getItemKey` keys by card id so React reuses a row's fiber as the window slides rather than
+ * remounting it under a positional key. */
+function VirtualRows({
+  sorted,
+  members,
+  selected,
+  onToggle,
+  rowHeight,
+  isDesktop,
+  scrollEl,
+}: {
+  sorted: Card[]
+  members: MemberSummary[]
+  selected: ReadonlySet<string>
+  onToggle: (id: string, checked: boolean, shiftKey: boolean) => void
+  rowHeight: number
+  isDesktop: boolean
+  scrollEl: HTMLDivElement | null
+}) {
+  const estimateSize = React.useCallback(() => rowHeight, [rowHeight])
+  const getItemKey = React.useCallback((index: number) => sorted[index]?.id ?? index, [sorted])
+  const virtualizer = useVirtualizer({
+    count: sorted.length,
+    getScrollElement: () => scrollEl,
+    estimateSize,
+    getItemKey,
+    overscan: 8,
+  })
+  return (
+    <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+      {virtualizer.getVirtualItems().map((vRow) => {
+        const card = sorted[vRow.index]!
+        return isDesktop ? (
+          <TableRow
+            key={card.id}
+            card={card}
+            members={members}
+            checked={selected.has(card.id)}
+            onToggle={onToggle}
+            top={vRow.start}
+            height={vRow.size}
+          />
+        ) : (
+          <MobileTableRow
+            key={card.id}
+            card={card}
+            members={members}
+            checked={selected.has(card.id)}
+            onToggle={onToggle}
+            top={vRow.start}
+            height={vRow.size}
+          />
+        )
+      })}
+    </div>
   )
 }
 
