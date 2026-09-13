@@ -31,7 +31,7 @@
       }
     },
     "filterBar": {
-      "placeholder": "ассигнеэ:@ме статус:аcтиве дуэ:<тодай",
+      "placeholder": "assignee:@me status:active due:<today",
       "apply": "Қўллаш",
       "clear": "Тозалаш",
       "since": "Қайси санадан",

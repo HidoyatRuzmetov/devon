@@ -72,7 +72,7 @@
       },
       "filterLabel": "Қайси карталарга",
       "filterHint": "Бўш қолдирилса — барча карталарга.",
-      "filterPlaceholder": "лабел:мурожаат",
+      "filterPlaceholder": "label:мурожаат",
       "actionLabel": "Амал",
       "addAction": "Яна амал қўшиш",
       "actionLimit": "Битта қоидада 5 тадан кўп амал бўлмайди",

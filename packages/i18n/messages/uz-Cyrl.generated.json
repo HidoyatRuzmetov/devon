@@ -1357,7 +1357,7 @@
       }
     },
     "filterBar": {
-      "placeholder": "ассигнеэ:@ме статус:аcтиве дуэ:<тодай",
+      "placeholder": "assignee:@me status:active due:<today",
       "apply": "Қўллаш",
       "clear": "Тозалаш",
       "since": "Қайси санадан",
@@ -1538,7 +1538,7 @@
       },
       "filterLabel": "Қайси карталарга",
       "filterHint": "Бўш қолдирилса — барча карталарга.",
-      "filterPlaceholder": "лабел:мурожаат",
+      "filterPlaceholder": "label:мурожаат",
       "actionLabel": "Амал",
       "addAction": "Яна амал қўшиш",
       "actionLimit": "Битта қоидада 5 тадан кўп амал бўлмайди",
