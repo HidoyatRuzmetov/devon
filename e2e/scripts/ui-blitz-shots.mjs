@@ -17,12 +17,20 @@
 //     --base http://127.0.0.1:5173 \
 //     --out agentic/ledger/ui-blitz/<timestamp>/final
 //
-// Every route x width x theme x locale combination is captured full-page. Role-aware login (package
-// `demo-super-admin`): a route whose `routes.json` entry has `auth: "super_admin"` (every `/admin/*`
-// tab) is captured signed in as the seeded super admin (`packages/db/src/seed/fixtures.ts`'s
-// `DEMO_SUPER_ADMIN`, login `admin.super` -- MODULE-GUIDE.md "Running the app"); every other route
-// (`auth: "session"` or `"public"`) is captured signed in as the demo head (`demo.boshliq`), exactly
-// as before. Before `DEMO_SUPER_ADMIN` existed, no seeded account held the `super_admin` role at all,
+// Every route x persona x width x theme x locale combination is captured full-page.
+//
+// Role-aware login. `routes.json`'s own `roles` field decides which persona (or personas) a route is
+// captured as; a route that names none falls back to the rule this script has always used --
+// `auth: "super_admin"` goes to the seeded super admin (`packages/db/src/seed/fixtures.ts`'s
+// `DEMO_SUPER_ADMIN`, login `admin.super` -- MODULE-GUIDE.md "Running the app"), everything else to
+// the demo head (`demo.boshliq`).
+//
+// v1.1 added the third persona and the reason for it: SPEC §2 is a claim about what a xodim may and
+// may not reach, and a set taken entirely as the boshqarma boshligʻi cannot show whether that claim
+// holds. Every head-only destination therefore lists `["head", "member"]`, and the set carries both
+// the real screen and the no-permission state `demo.xodim` meets on it. A non-head capture's
+// filename gains a `__member`/`__super_admin` segment; a head capture's filename is byte-identical
+// to what this script produced before, so round-over-round diffs in `agentic/ledger/` still line up. Before `DEMO_SUPER_ADMIN` existed, no seeded account held the `super_admin` role at all,
 // so every `/admin*` capture was necessarily the route's own no-permission state
 // (`agentic/ledger/ui-blitz/2026-09-07T11-25-00-05-00/report.md`'s "One gap up front") -- this script
 // now exercises the console itself. Missing routes are reported, never silently skipped -- a
@@ -59,6 +67,26 @@ const LOGIN = argOf('login', 'demo.boshliq')
 const PASSWORD = argOf('password', 'Ishonchli#2026')
 const SUPER_LOGIN = argOf('superLogin', 'admin.super')
 const SUPER_PASSWORD = argOf('superPassword', 'Ishonchli#2026')
+// v1.1: the third persona. SPEC §2 is a claim about what a xodim may and may not reach, and a
+// screenshot set taken entirely as the boshqarma boshligʻi cannot show whether that claim holds --
+// a head-only screen and the no-permission state a member meets on it are two different pictures,
+// and the evidence needs both.
+const MEMBER_LOGIN = argOf('memberLogin', 'demo.xodim')
+const MEMBER_PASSWORD = argOf('memberPassword', 'Ishonchli#2026')
+
+/** Which persona each `routes.json` entry is captured as. `roles` is the route's own answer; absent,
+ * the rule is the one this script has always used -- `auth: "super_admin"` goes to the super admin,
+ * everything else to the head. */
+function rolesFor(route) {
+  if (route.roles && route.roles.length > 0) return route.roles
+  return route.auth === 'super_admin' ? ['super_admin'] : ['head']
+}
+
+const CREDENTIALS = {
+  head: { login: LOGIN, password: PASSWORD },
+  member: { login: MEMBER_LOGIN, password: MEMBER_PASSWORD },
+  super_admin: { login: SUPER_LOGIN, password: SUPER_PASSWORD },
+}
 
 const SIZES = [
   { name: '1440', width: 1440, height: 900 },
@@ -100,7 +128,7 @@ async function loadRoutes() {
  * context. Factored out of `main()` so a session can be run once per credential (head, super admin)
  * per size/theme/locale cell without duplicating the sign-in/locale/capture/restore choreography.
  */
-async function captureSession(browser, { credentials, routesForSession, size, theme, locale, failures }) {
+async function captureSession(browser, { credentials, role, routesForSession, size, theme, locale, failures }) {
   if (routesForSession.length === 0) return
 
   const context = await browser.newContext({
@@ -122,6 +150,10 @@ async function captureSession(browser, { credentials, routesForSession, size, th
 
   const page = await context.newPage()
   const label = `${size.name}/${theme}/${locale}/${credentials.login}`
+  // The filename carries the persona only when it is not the head, so every shot this script has
+  // ever produced keeps the exact name it had (`dod.mjs` and the round-over-round diffs in
+  // `agentic/ledger/` both compare by filename) and the new ones are self-describing.
+  const roleSuffix = role === 'head' ? '' : `__${role}`
 
   try {
     await page.goto(`${BASE}/login`, { waitUntil: 'networkidle' })
@@ -155,7 +187,7 @@ async function captureSession(browser, { credentials, routesForSession, size, th
       // Let entrance animations/staggers settle so a shot is of the screen, not of frame 3
       // (`ui-foundation-shots.mjs` verified 900ms is enough for this catalogue's longest stagger).
       await page.waitForTimeout(900)
-      const file = join(OUT, `${route.slug}__${size.name}__${theme}__${locale}.png`)
+      const file = join(OUT, `${route.slug}${roleSuffix}__${size.name}__${theme}__${locale}.png`)
       await page.screenshot({ path: file, fullPage: true })
       console.log(`[ui-blitz-shots] ${file}`)
     } catch (error) {
@@ -178,12 +210,14 @@ async function captureSession(browser, { credentials, routesForSession, size, th
 
 async function main() {
   const routes = await loadRoutes()
-  // Role-aware split (package `demo-super-admin`): `routes.json`'s `auth` field is the single source
-  // of truth for which credential a route needs -- `super_admin` routes go to `DEMO_SUPER_ADMIN`,
-  // everything else (`session`/`public`) goes to the demo head, exactly as `auth.ts`/the app's own
-  // route guard already decides at runtime.
-  const headRoutes = routes.filter((r) => r.auth !== 'super_admin')
-  const superAdminRoutes = routes.filter((r) => r.auth === 'super_admin')
+  // Role-aware split. `routes.json`'s own `roles` field decides (falling back to `auth`, which is
+  // how this script always behaved), so adding a persona to a route is one line in the manifest and
+  // no change here.
+  const byRole = {
+    head: routes.filter((r) => rolesFor(r).includes('head')),
+    member: routes.filter((r) => rolesFor(r).includes('member')),
+    super_admin: routes.filter((r) => rolesFor(r).includes('super_admin')),
+  }
   await mkdir(OUT, { recursive: true })
   const browser = await chromium.launch()
   const failures = []
@@ -199,22 +233,20 @@ async function main() {
   for (const locale of LOCALES) {
     for (const size of SIZES) {
       for (const theme of THEMES) {
-        await captureSession(browser, {
-          credentials: { login: LOGIN, password: PASSWORD },
-          routesForSession: headRoutes,
-          size,
-          theme,
-          locale,
-          failures,
-        })
-        await captureSession(browser, {
-          credentials: { login: SUPER_LOGIN, password: SUPER_PASSWORD },
-          routesForSession: superAdminRoutes,
-          size,
-          theme,
-          locale,
-          failures,
-        })
+        for (const role of ['head', 'member', 'super_admin']) {
+          // eslint-disable-next-line no-await-in-loop -- three short-lived sessions in turn, never
+          // concurrent: neither account's locale setting or session cookie may leak into another's
+          // capture, which is the whole reason they are separate contexts.
+          await captureSession(browser, {
+            credentials: CREDENTIALS[role],
+            role,
+            routesForSession: byRole[role],
+            size,
+            theme,
+            locale,
+            failures,
+          })
+        }
       }
     }
   }

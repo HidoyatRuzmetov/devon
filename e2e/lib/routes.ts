@@ -8,6 +8,7 @@ import { E2E_DIR } from './env.js'
 
 export type RouteAuth = 'public' | 'session' | 'super_admin'
 export type RouteChrome = 'auth' | 'app'
+export type RouteRole = 'head' | 'member' | 'super_admin'
 
 export interface RouteEntry {
   path: string
@@ -17,6 +18,10 @@ export interface RouteEntry {
   chrome: RouteChrome
   requires?: readonly string[]
   heading?: string
+  /** v1.1: which personas the screenshot manifest captures this route as. Absent = the head alone,
+   * which is every route's original behaviour. A head-only destination lists both, so the set
+   * carries the real screen *and* the no-permission state a xodim meets on it. */
+  roles?: readonly RouteRole[]
 }
 
 let cached: RouteEntry[] | null = null

@@ -7,7 +7,11 @@
       "slug": "root",
       "auth": "session",
       "chrome": "app",
-      "heading": "home.eyebrow"
+      "heading": "home.eyebrow",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/login",
@@ -23,7 +27,9 @@
       "slug": "setup",
       "auth": "public",
       "chrome": "auth",
-      "requires": ["setup_token"],
+      "requires": [
+        "setup_token"
+      ],
       "heading": "setup.used.title"
     },
     {
@@ -40,7 +46,11 @@
       "slug": "inbox",
       "auth": "session",
       "chrome": "app",
-      "heading": "inbox.title"
+      "heading": "inbox.title",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/work",
@@ -48,7 +58,11 @@
       "slug": "work",
       "auth": "session",
       "chrome": "app",
-      "heading": "work.title"
+      "heading": "work.title",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/work/table",
@@ -112,7 +126,11 @@
       "slug": "people",
       "auth": "session",
       "chrome": "app",
-      "heading": "structure.people.title"
+      "heading": "structure.people.title",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/structure",
@@ -136,7 +154,11 @@
       "slug": "analytics",
       "auth": "session",
       "chrome": "app",
-      "heading": "analytics.title"
+      "heading": "analytics.title",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/ai",
@@ -144,7 +166,11 @@
       "slug": "ai",
       "auth": "session",
       "chrome": "app",
-      "heading": "ai.title"
+      "heading": "ai.title",
+      "roles": [
+        "head",
+        "member"
+      ]
     },
     {
       "path": "/departments",
@@ -209,6 +235,186 @@
       "auth": "public",
       "chrome": "app",
       "heading": "state.notfound.title"
+    },
+    {
+      "path": "/people/table",
+      "name": "people",
+      "slug": "peopletable",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "people.table.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/people/me",
+      "name": "people",
+      "slug": "peopleme",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "people.person.own.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/work/workload",
+      "name": "work",
+      "slug": "workworkload",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.workload.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/work/templates",
+      "name": "work",
+      "slug": "worktemplates",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.templates.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/work/archive",
+      "name": "work",
+      "slug": "workarchive",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.view.archive",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/goals",
+      "name": "work",
+      "slug": "goals",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.goals.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/fields",
+      "name": "fields",
+      "slug": "fields",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "fields.manager.nav",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/automations",
+      "name": "automations",
+      "slug": "automations",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "automations.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/department",
+      "name": "departments",
+      "slug": "department",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "departments.settings.title",
+      "roles": [
+        "head",
+        "member"
+      ]
+    },
+    {
+      "path": "/calendar",
+      "name": "calendar",
+      "slug": "calendar",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "calendar.title"
+    },
+    {
+      "path": "/inbox/preferences",
+      "name": "inbox",
+      "slug": "inboxpreferences",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "inbox.preferences.title"
+    },
+    {
+      "path": "/inbox/telegram",
+      "name": "inbox",
+      "slug": "inboxtelegram",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "telegram.title"
+    },
+    {
+      "path": "/projects/view",
+      "name": "projects",
+      "slug": "projectsview",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "projects.title"
+    },
+    {
+      "path": "/work/card",
+      "name": "work",
+      "slug": "workcard",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "work.card.peekTitle"
+    },
+    {
+      "path": "/departments/new",
+      "name": "departments",
+      "slug": "departmentsnew",
+      "auth": "session",
+      "chrome": "app",
+      "heading": "departments.create.title"
+    },
+    {
+      "path": "/departments/requests",
+      "name": "departments",
+      "slug": "departmentsrequests",
+      "auth": "super_admin",
+      "chrome": "app",
+      "heading": "departments.approvalQueue.title"
+    },
+    {
+      "path": "/register",
+      "name": "accounts",
+      "slug": "register",
+      "auth": "public",
+      "chrome": "auth",
+      "heading": "accounts.register.title"
+    },
+    {
+      "path": "/join",
+      "name": "departments",
+      "slug": "join",
+      "auth": "public",
+      "chrome": "auth",
+      "heading": "departments.join.title"
     }
   ]
 }

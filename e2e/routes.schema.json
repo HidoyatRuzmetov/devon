@@ -38,6 +38,13 @@
             "enum": ["auth", "app"],
             "description": "Which shell wraps this route (apps/web/src/app.tsx's RouteOutlet): \"auth\" (AuthShell) issues zero API calls, so its organic state renders with apps/web alone; \"app\" (AppShell) always calls GET /api/v1/me + /api/v1/instance for the chrome, so its organic state needs apps/api reachable even when the route's own content (a forced state, or /404) does not."
           },
+          "roles": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "enum": ["head", "member", "super_admin"] },
+            "description": "v1.1: which personas this route is captured as. Absent means the head alone (every route's original behaviour). A head-only destination lists [\"head\", \"member\"] so the screenshot set carries BOTH the real screen and the no-permission state a xodim meets on it -- SPEC §2 is a claim about two people, and a set with only one of them in it cannot show whether it holds."
+          },
           "requires": {
             "type": "array",
             "items": { "type": "string", "enum": ["setup_token"] },

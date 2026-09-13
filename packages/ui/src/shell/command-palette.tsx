@@ -145,6 +145,12 @@ function CommandPaletteBody({
               <Command.Group
                 key={group.heading}
                 heading={<span data-shell-label>{group.heading}</span>}
+                // cmdk hides a whole group whose items all score zero against the typed text, and
+                // `forceMount` on an item does not rescue it from that -- the group has to be
+                // mounted too. A group of server-matched rows (the semantic-search section) would
+                // otherwise be filtered away by the client using the very query the server just
+                // answered, which is how that section rendered nothing at all the first time.
+                {...(group.items.some((item) => item.alwaysVisible) ? { forceMount: true } : {})}
                 className={GROUP_HEADING_CLASS}
               >
                 {group.items.map((item) => (
