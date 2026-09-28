@@ -28,6 +28,7 @@
 #   sudo bash scripts/install.sh --dry-run          # print what it WOULD do, change nothing
 #   sudo bash scripts/install.sh --domain work.ministry.uz --email devops@ministry.uz
 #   sudo bash scripts/install.sh --backup-dir /srv/backups/devon --firewall
+#   sudo bash scripts/install.sh --deploy-public-key /tmp/devon-github-deploy.pub
 #   sudo bash scripts/install.sh --skip-docker      # Docker already managed by the ministry's own image
 set -euo pipefail
 
@@ -42,6 +43,7 @@ INSTALL_DIR="$ROOT"
 DRY_RUN=0
 SKIP_DOCKER=0
 WITH_FIREWALL=0
+DEPLOY_PUBLIC_KEY=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -49,6 +51,7 @@ while [ $# -gt 0 ]; do
     --email) ADMIN_EMAIL="$2"; shift 2 ;;
     --backup-dir) BACKUP_DIR="$2"; shift 2 ;;
     --user) DEVON_USER="$2"; shift 2 ;;
+    --deploy-public-key) DEPLOY_PUBLIC_KEY="$2"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --skip-docker) SKIP_DOCKER=1; shift ;;
     --firewall) WITH_FIREWALL=1; shift ;;
@@ -160,15 +163,39 @@ fi
 # ------------------------------------------------------------------------------------------------
 if id -u "$DEVON_USER" >/dev/null 2>&1; then
   say "user '$DEVON_USER' already exists"
+  do_it usermod --shell /bin/bash "$DEVON_USER"
 else
   say "creating system user '$DEVON_USER' ..."
-  do_it useradd --system --create-home --home-dir "/home/$DEVON_USER" --shell /usr/sbin/nologin "$DEVON_USER"
+  do_it useradd --system --create-home --home-dir "/home/$DEVON_USER" --shell /bin/bash "$DEVON_USER"
 fi
 # Membership in `docker` is effectively root on this host. That is intentional and unavoidable for
-# an account that must run `docker compose`, and it is why this account has no login shell.
+# the deployment account that runs `docker compose`. Interactive administration still uses the
+# cloud-image account and its separate key; this account accepts only the deployment key installed
+# with --deploy-public-key.
 if getent group docker >/dev/null 2>&1; then
   do_it usermod -aG docker "$DEVON_USER"
   say "'$DEVON_USER' is in the docker group"
+fi
+
+if [ -n "$DEPLOY_PUBLIC_KEY" ]; then
+  [ -f "$DEPLOY_PUBLIC_KEY" ] || die "deployment public key not found: $DEPLOY_PUBLIC_KEY"
+  say "installing the deployment-only SSH public key for '$DEVON_USER' ..."
+  do_it install -d -m 0700 -o "$DEVON_USER" -g "$DEVON_USER" "/home/$DEVON_USER/.ssh"
+  do_it install -m 0600 -o "$DEVON_USER" -g "$DEVON_USER" \
+    "$DEPLOY_PUBLIC_KEY" "/home/$DEVON_USER/.ssh/authorized_keys"
+
+  # remote-deploy.sh may start the pre-release backup, but no other root command is needed.
+  # Docker-group membership is already intentionally equivalent to host root for this deploy user;
+  # keeping sudo scoped prevents an accidental `sudo <anything>` in the workflow.
+  SUDOERS_FILE="/etc/sudoers.d/devon-deploy"
+  if [ "$DRY_RUN" = "1" ]; then
+    say "(dry-run) would allow '$DEVON_USER' to start devon-backup.service without a password"
+  else
+    printf '%s ALL=(root) NOPASSWD: /usr/bin/systemctl start devon-backup.service\n' \
+      "$DEVON_USER" > "$SUDOERS_FILE"
+    chmod 0440 "$SUDOERS_FILE"
+    visudo -cf "$SUDOERS_FILE" >/dev/null
+  fi
 fi
 
 # ------------------------------------------------------------------------------------------------

@@ -9,6 +9,10 @@
 # mounted PEM files instead (see the commented block below) and never needs Caddy's public ACME path,
 # which would fail on an air-gapped network anyway.
 {
+	# IP-only deployments do not send SNI consistently. This fallback lets Caddy select the
+	# internally-issued certificate until a real DNS name is configured.
+	default_sni {$DEVON_DEFAULT_SNI:localhost}
+
 	# Caddy's admin API stays on the container's loopback only -- it is not published in
 	# docker-compose.yml, so it is unreachable outside the container regardless.
 	admin 127.0.0.1:2019

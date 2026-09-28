@@ -7,6 +7,16 @@ dist-sourcemaps/
 .env
 .env.*
 !.env.example
+# Production/deployment credentials and generated access material must never enter Git.
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+*.ovpn
+*.kubeconfig
+deploy-secrets/
+.deployed-images.env
 coverage/
 playwright-report/
 test-results/

@@ -1,0 +1,147 @@
+name: Deploy production
+
+# CI remains the authority: production is deployed only after the existing integration gate has
+# completed successfully for main. A manual run is available for retrying an already-tested commit.
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Full commit SHA to deploy (defaults to main)
+        required: false
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+    steps:
+      - name: Resolve release commit
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_SHA: ${{ inputs.commit_sha }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            sha="${MANUAL_SHA:-${GITHUB_SHA}}"
+          else
+            sha="$WORKFLOW_SHA"
+          fi
+          case "$sha" in
+            *[!0-9a-fA-F]*|'') echo "Invalid commit SHA" >&2; exit 1 ;;
+          esac
+          if [ "${#sha}" -ne 40 ]; then
+            echo "A full 40-character commit SHA is required" >&2
+            exit 1
+          fi
+          echo "sha=${sha,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the tested commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.release.outputs.sha }}
+
+      - name: Validate deployment secrets
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          for name in PROD_HOST PROD_USER PROD_SSH_KEY PROD_SSH_KNOWN_HOSTS; do
+            if [ -z "${!name:-}" ]; then
+              echo "Missing required GitHub Actions secret: $name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Build and publish immutable production images
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          image_root="ghcr.io/${owner}/devon"
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build --pull -f apps/api/Dockerfile -t "${image_root}-api:${RELEASE_SHA}" .
+          docker build --pull -f apps/web/Dockerfile -t "${image_root}-web:${RELEASE_SHA}" .
+          docker push "${image_root}-api:${RELEASE_SHA}"
+          docker push "${image_root}-web:${RELEASE_SHA}"
+
+      - name: Configure deployment SSH
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "$PROD_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$PROD_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 0600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+
+      - name: Install release manifests without touching server secrets
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          set -euo pipefail
+          port="${PROD_PORT:-22}"
+          tar -czf - \
+            infra/docker-compose.prod.yml \
+            infra/Caddyfile \
+            infra/maintenance \
+            infra/backup \
+            scripts/remote-deploy.sh \
+            tools/backup \
+            | ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
+                'umask 027; install -d -m 0750 /opt/devon; tar -xzf - -C /opt/devon'
+
+      - name: Authenticate the server to GHCR for this deployment
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+        run: |
+          set -euo pipefail
+          port="${PROD_PORT:-22}"
+          printf '%s' "$GHCR_TOKEN" | ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
+            "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin"
+
+      - name: Deploy with backup, migration, readiness gate, and image rollback
+        env:
+          PROD_HOST: ${{ secrets.PROD_HOST }}
+          PROD_PORT: ${{ secrets.PROD_PORT }}
+          PROD_USER: ${{ secrets.PROD_USER }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          port="${PROD_PORT:-22}"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          image_root="ghcr.io/${owner}/devon"
+          ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
+            "bash /opt/devon/scripts/remote-deploy.sh \
+              '${image_root}-api:${RELEASE_SHA}' \
+              '${image_root}-web:${RELEASE_SHA}' \
+              '${RELEASE_SHA}'"
+
