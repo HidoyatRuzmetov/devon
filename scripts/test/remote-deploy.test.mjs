@@ -14,14 +14,17 @@ const posix = (path) =>
 
 // Execute the real deployment script with only its fixed root redirected to a temporary fixture.
 // Every external service command is a mock executable; no Docker daemon or server is contacted.
-function deploy(scenario) {
+function deploy(scenario, { previousManifest = true } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'devon-deploy-test-'))
   const root = posix(dir)
   mkdirSync(join(dir, 'bin'))
   mkdirSync(join(dir, 'infra'))
   writeFileSync(join(dir, '.env'), 'DEVON_PUBLIC_URL=https://fixture.invalid\n')
   writeFileSync(join(dir, '.deployed-images.env'), previous)
-  writeFileSync(join(dir, 'infra/.previous-docker-compose.prod.yml'), 'fixture')
+  writeFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'candidate manifest')
+  if (previousManifest) {
+    writeFileSync(join(dir, 'infra/.previous-docker-compose.prod.yml'), 'previous manifest')
+  }
   writeFileSync(
     join(dir, 'deploy.sh'),
     source
@@ -33,7 +36,7 @@ set -eu
 name="\${0##*/}"
 printf '%s %s image=%s\\n' "$name" "$*" "\${DEVON_API_IMAGE:-none}" >> "$TEST_ROOT/calls"
 case "$name" in
-  sudo) exit 0 ;;
+  sudo) if [ "$SCENARIO" = backup-start-failed ]; then exit 17; fi ;;
   systemctl) if [ "$SCENARIO" = backup-failed ]; then echo exit-code; else echo success; fi ;;
   flock|sleep) exit 0 ;;
   seq) echo 1 ;;
@@ -45,6 +48,10 @@ case "$name" in
       [ "$SCENARIO" = stopped ]
     elif [[ "$*" == 'volume inspect devon_postgres_data' ]]; then
       [ "$SCENARIO" = orphan-volume ]
+    elif [[ "$*" == 'pull '* ]]; then
+      if [ "$SCENARIO" = pull-failed ]; then exit 42; fi
+    elif [[ "$*" == *' postgres valkey clamav centrifugo' ]]; then
+      if [ "$SCENARIO" = data-tier-failed ]; then exit 43; fi
     elif [[ "$*" == *' run '* ]]; then
       [ "$SCENARIO" != migration-failed ]
     elif [[ "$*" == *' api web caddy' ]]; then
@@ -66,6 +73,7 @@ esac
       output: result.stdout + result.stderr,
       calls: readFileSync(join(dir, 'calls'), 'utf8'),
       state: readFileSync(join(dir, '.deployed-images.env'), 'utf8'),
+      manifest: readFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'utf8'),
     }
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -79,14 +87,17 @@ test('successful backup permits migration, readiness and atomic release recordin
   assert.ok(result.calls.indexOf('cli-migrate.ts') < result.calls.indexOf(' api web caddy'))
   assert.match(result.state, /DEVON_API_IMAGE=new-api/)
   assert.match(result.state, new RegExp(sha))
+  assert.equal(result.manifest, 'candidate manifest')
 })
 
-for (const scenario of ['backup-failed', 'stopped', 'orphan-volume']) {
+for (const scenario of ['backup-failed', 'backup-start-failed', 'stopped', 'orphan-volume']) {
   test(`${scenario} refuses deployment before pulling or migrating`, () => {
     const result = deploy(scenario)
     assert.notEqual(result.status, 0)
     assert.doesNotMatch(result.calls, /docker pull|cli-migrate/)
     assert.equal(result.state, previous)
+    assert.equal(result.manifest, 'previous manifest')
+    if (scenario === 'backup-start-failed') assert.equal(result.status, 17)
   })
 }
 
@@ -94,6 +105,7 @@ test('genuinely empty installation can proceed without a database backup', () =>
   const result = deploy('initial')
   assert.equal(result.status, 0, result.output)
   assert.doesNotMatch(result.calls, /systemctl start/)
+  assert.equal(result.manifest, 'candidate manifest')
 })
 
 test('migration failure leaves previous application and release state untouched', () => {
@@ -101,6 +113,7 @@ test('migration failure leaves previous application and release state untouched'
   assert.notEqual(result.status, 0)
   assert.doesNotMatch(result.calls, / api web caddy/)
   assert.equal(result.state, previous)
+  assert.equal(result.manifest, 'previous manifest')
 })
 
 for (const scenario of ['rollout-failed', 'readiness-failed']) {
@@ -109,5 +122,25 @@ for (const scenario of ['rollout-failed', 'readiness-failed']) {
     assert.notEqual(result.status, 0)
     assert.match(result.calls, /previous-docker-compose.prod.yml.*api web caddy image=old-api/)
     assert.equal(result.state, previous)
+    assert.equal(result.manifest, 'previous manifest')
   })
 }
+
+for (const [scenario, code] of [
+  ['pull-failed', 42],
+  ['data-tier-failed', 43],
+]) {
+  test(`${scenario} restores the persisted manifest and preserves the original exit code`, () => {
+    const result = deploy(scenario)
+    assert.equal(result.status, code, result.output)
+    assert.doesNotMatch(result.calls, /cli-migrate| api web caddy/)
+    assert.equal(result.state, previous)
+    assert.equal(result.manifest, 'previous manifest')
+  })
+}
+
+test('a failed first deployment without a prior manifest leaves the candidate file in place', () => {
+  const result = deploy('pull-failed', { previousManifest: false })
+  assert.equal(result.status, 42, result.output)
+  assert.equal(result.manifest, 'candidate manifest')
+})

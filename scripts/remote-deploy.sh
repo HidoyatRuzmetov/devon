@@ -28,6 +28,27 @@ cd "$ROOT"
 exec 9>"$LOCK_FILE"
 flock -n 9 || { echo "another production deployment is already running" >&2; exit 75; }
 
+# The workflow installs the candidate manifest before this script runs. Every failed deployment
+# must restore the previous file as well as any running images, otherwise the next workflow saves
+# the failed candidate as its rollback manifest. Arm this only after acquiring the deployment lock.
+restore_manifest_on_failure() {
+  local code=$?
+  local manifest="$ROOT/infra/docker-compose.prod.yml"
+  local previous="$ROOT/infra/.previous-docker-compose.prod.yml"
+  local tmp="${manifest}.restore.$$"
+  trap - EXIT
+  if [ "$code" -ne 0 ] && [ -f "$previous" ]; then
+    if cp -- "$previous" "$tmp" && mv -f -- "$tmp" "$manifest"; then
+      echo "[deploy] restored previous Compose manifest after deployment failure" >&2
+    else
+      rm -f -- "$tmp" || true
+      echo "[deploy] ERROR: could not restore previous Compose manifest; operator repair required" >&2
+    fi
+  fi
+  exit "$code"
+}
+trap restore_manifest_on_failure EXIT
+
 set -a
 # shellcheck disable=SC1091
 . "$ROOT/.env"
