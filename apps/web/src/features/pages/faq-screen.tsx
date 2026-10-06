@@ -4,7 +4,7 @@ import { Input, PageHeader } from '@devon/ui'
 import { RouterLink } from '../../lib/router.js'
 
 const GROUPS = [
-  { id: 'daily', items: ['start', 'head', 'find'] },
+  { id: 'daily', items: ['start', 'head', 'admin', 'find'] },
   { id: 'work', items: ['projects', 'delete', 'files'] },
   { id: 'account', items: ['profile', 'telegram', 'ai'] },
 ] as const
@@ -12,6 +12,7 @@ const GROUPS = [
 const NEXT_STEPS = {
   start: { href: '/work/mine', label: 'work.view.mine' },
   head: { href: '/work/workload', label: 'work.workload.title' },
+  admin: { href: '/admin', label: 'admin.console.title' },
   find: { href: '/work', label: 'work.title' },
   projects: { href: '/projects', label: 'projects.title' },
   delete: { href: '/work/archive', label: 'work.view.archive' },

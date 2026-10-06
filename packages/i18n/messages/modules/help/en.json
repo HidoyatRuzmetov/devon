@@ -20,7 +20,11 @@
       },
       "find": {
         "q": "How do I find something without browsing every menu?",
-        "a": "Press Ctrl+K (Command+K on Mac) to open quick navigation and search. In Work, use Mine for your own responsibilities and filters to narrow the board. Completed cards leave the active board: look in Archive or the project's completed cards. Quick help is always pinned at the top of the knowledge base."
+        "a": "Press Ctrl+K (Command+K on Mac) to open quick navigation and search. In Work, use Mine and filters. Marking a standalone card done sends it to Archive. A group-project card marked done stays in its project with completed status. Both leave the active people board. Quick help is always pinned at the top of the knowledge base."
+      },
+      "admin": {
+        "q": "I am the superadmin. What should I check first?",
+        "a": "Open Administration and check system health: database, queue, files, backups, Telegram and AI. If something is not configured, follow the setup guidance there. Review department requests before approving them. Use Audit to see who changed or deleted something.\nDepartment heads manage daily work; you keep the platform and account access working."
       },
       "projects": {
         "q": "When should I use a card or a group project, and how do I change it?",

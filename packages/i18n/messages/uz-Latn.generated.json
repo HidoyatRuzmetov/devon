@@ -2559,7 +2559,11 @@
       },
       "find": {
         "q": "Kerakli narsani barcha menyularni ochmasdan qanday topaman?",
-        "a": "Ctrl+K (Macʼda Command+K) tezkor qidiruv va boʻlimlarga oʻtishni ochadi. Ishlar boʻlimida Mening vazifalarim va filtrlardan foydalaning. Bajarilgan kartochkalar faol doskadan chiqadi: ularni Arxivdan yoki loyihaning bajarilgan vazifalaridan qidiring. Tezkor yordam bilimlar bazasining yuqorisida doim turadi."
+        "a": "Ctrl+K (Macʼda Command+K) tezkor qidiruv va boʻlimlarga oʻtishni ochadi. Ishlar boʻlimida Mening vazifalarim va filtrlardan foydalaning. Alohida kartochkani bajarilgan deb belgilasangiz, u Arxivga oʻtadi. Guruh loyihasidagi kartochka esa loyihada bajarilgan holatda qoladi. Ikkalasi ham xodimlarning faol doskasidan chiqadi. Tezkor yordam bilimlar bazasining yuqorisida doim turadi."
+      },
+      "admin": {
+        "q": "Men superadminman. Avval nimani tekshiraman?",
+        "a": "Administrator boʻlimini ochib, tizim holatini tekshiring: maʼlumotlar bazasi, navbat, fayllar, zaxira nusxalar, Telegram va AI. Biror xizmat sozlanmagan boʻlsa, shu yerdagi sozlash koʻrsatmasiga amal qiling. Boshqarma ochish soʻrovlarini tasdiqlashdan oldin koʻrib chiqing. Kim nimani oʻzgartirgan yoki oʻchirganini Audit jurnalidan topasiz.\nKundalik ishlarni boshliqlar boshqaradi; siz platforma va hisoblarga kirishning ishlashini taʼminlaysiz."
       },
       "projects": {
         "q": "Kartochka va guruh loyihasidan qachon foydalanaman? Ularni qanday oʻzgartiraman?",

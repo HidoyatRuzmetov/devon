@@ -8,8 +8,9 @@ describe('quick help', () => {
   it('keeps answers folded, searches answer text, and explains empty results', () => {
     setLocale('en')
     const { container } = render(<FaqScreen />)
-    expect(container.querySelectorAll('details')).toHaveLength(9)
+    expect(container.querySelectorAll('details')).toHaveLength(10)
     expect(container.querySelectorAll('details[open]')).toHaveLength(0)
+    expect(screen.getByText('I am the superadmin. What should I check first?')).toBeInTheDocument()
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'quiet hours' } })
     expect(container.querySelectorAll('details')).toHaveLength(1)
     expect(container.querySelectorAll('details[open]')).toHaveLength(1)
