@@ -29,8 +29,8 @@ name: devon
 x-logging: &default-logging
   driver: json-file
   options:
-    max-size: "10m"
-    max-file: "10"
+    max-size: '10m'
+    max-file: '10'
 
 # H18.1 graceful shutdown: generous headroom before Compose sends SIGKILL. This value is now load-
 # bearing, not anticipatory -- `apps/api/src/server.ts` registers SIGTERM/SIGINT handlers that run
@@ -62,14 +62,23 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required in production}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?POSTGRES_SUPERUSER_PASSWORD is required in production -- never the .env.example default}
-    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements", "-c", "pg_stat_statements.track=all", "-c", "pg_stat_statements.max=10000"]
+    command:
+      [
+        'postgres',
+        '-c',
+        'shared_preload_libraries=pg_stat_statements',
+        '-c',
+        'pg_stat_statements.track=all',
+        '-c',
+        'pg_stat_statements.max=10000',
+      ]
     # No `ports:` -- production Postgres is reachable only from the `devon` network (H1.2 least
     # exposure). `infra/backup/*.sh` and any operator `psql` already run from a throwaway container on
     # this same network (see those scripts' own comments), so nothing needs the host port.
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-devon}"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d ${POSTGRES_DB:-devon}']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -77,7 +86,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
+          cpus: '2'
           memory: 2g
     networks: [devon]
 
@@ -86,9 +95,9 @@ services:
     container_name: devon-valkey
     restart: unless-stopped
     logging: *default-logging
-    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    command: ['valkey-server', '--save', '', '--appendonly', 'no']
     healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
+      test: ['CMD', 'valkey-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 20
@@ -96,7 +105,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 256m
     networks: [devon]
 
@@ -116,6 +125,8 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
+      STORAGE_LOCAL_DIR: /repo/apps/api/.data/storage
+      DEVON_BACKUP_STATUS_FILE: /run/devon-backup/latest.json
       # `.env`'s `DATABASE_URL`/`POSTGRES_HOST` are written from the host process's point of view
       # (design.md convention already used by infra/backup/*.sh) -- inside this compose network the
       # right hostname is the service name, so it is fixed here rather than trusted from the file.
@@ -126,7 +137,7 @@ services:
       valkey:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:3000/healthz"]
+      test: ['CMD', 'wget', '-q', '-O-', 'http://127.0.0.1:3000/healthz']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -134,11 +145,12 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
+          cpus: '2'
           memory: 1g
     read_only: false # STORAGE_DRIVER=local writes under apps/api/.data/storage (owned by the image's non-root user)
     volumes:
       - api_storage:/repo/apps/api/.data/storage
+      - ${BACKUP_STATUS_DIR:-/var/lib/devon/backup-status}:/run/devon-backup:ro
     networks: [devon]
 
   worker:
@@ -161,7 +173,7 @@ services:
       valkey:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:3000/healthz"]
+      test: ['CMD', 'wget', '-q', '-O-', 'http://127.0.0.1:3000/healthz']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -169,7 +181,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: '1'
           memory: 512m
       # H12.1 "worker horizontally scalable": `docker compose -f infra/docker-compose.prod.yml up -d
       # --scale worker=3`. Safe per apps/api/Dockerfile.worker's own comment (skip-locked / fired-guard
@@ -187,7 +199,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1:8080/"]
+      test: ['CMD', 'wget', '-q', '-O-', 'http://127.0.0.1:8080/']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -195,7 +207,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 128m
     networks: [devon]
 
@@ -212,8 +224,8 @@ services:
       CADDY_TLS_MODE: ${CADDY_TLS_MODE:-internal}
       DEVON_DEFAULT_SNI: ${DEVON_DEFAULT_SNI:-localhost}
     ports:
-      - "${CADDY_HTTP_PORT:-80}:80"
-      - "${CADDY_HTTPS_PORT:-443}:443"
+      - '${CADDY_HTTP_PORT:-80}:80'
+      - '${CADDY_HTTPS_PORT:-443}:443'
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./maintenance:/srv/maintenance:ro
@@ -225,33 +237,36 @@ services:
       web:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "caddy", "validate", "--config", "/etc/caddy/Caddyfile"]
+      test: ['CMD', 'caddy', 'validate', '--config', '/etc/caddy/Caddyfile']
       interval: 30s
       timeout: 10s
       retries: 3
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: '1'
           memory: 256m
     networks: [devon]
 
   # --- Optional add-ons: same `profiles:` names as infra/docker-compose.yml, opt-in the same way. ----
 
   minio:
-    profiles: ["minio"]
-    image: minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b
+    profiles: ['minio']
+    image: devon-minio:d0cada583fce
+    build:
+      context: ./minio
+      target: server
     container_name: devon-minio
     restart: unless-stopped
     logging: *default-logging
-    command: ["server", "/data", "--console-address", ":9001"]
+    command: ['server', '/data', '--console-address', ':9001']
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required -- never the .env.example default}
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:9000/minio/health/live']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -259,12 +274,12 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: '1'
           memory: 1g
     networks: [devon]
 
   clamav:
-    profiles: ["clamav"]
+    profiles: ['clamav']
     image: clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
     container_name: devon-clamav
     restart: unless-stopped
@@ -272,7 +287,7 @@ services:
     volumes:
       - clamav_data:/var/lib/clamav
     healthcheck:
-      test: ["CMD-SHELL", "clamdcheck.sh || exit 1"]
+      test: ['CMD-SHELL', 'clamdcheck.sh || exit 1']
       interval: 30s
       timeout: 10s
       retries: 5
@@ -280,25 +295,25 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: '1'
           memory: 2g
     networks: [devon]
 
   centrifugo:
-    profiles: ["centrifugo"]
+    profiles: ['centrifugo']
     image: centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
     container_name: devon-centrifugo
     restart: unless-stopped
     logging: *default-logging
-    command: ["centrifugo"]
+    command: ['centrifugo']
     environment:
-      CENTRIFUGO_HTTP_SERVER_ADDRESS: "0.0.0.0"
-      CENTRIFUGO_HTTP_API_INSECURE: "false"
+      CENTRIFUGO_HTTP_SERVER_ADDRESS: '0.0.0.0'
+      CENTRIFUGO_HTTP_API_INSECURE: 'false'
       CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:?CENTRIFUGO_TOKEN_HMAC_SECRET_KEY is required}
       CENTRIFUGO_HTTP_API_KEY: ${CENTRIFUGO_API_KEY:?CENTRIFUGO_API_KEY is required}
-      CENTRIFUGO_HEALTH_ENABLED: "true"
+      CENTRIFUGO_HEALTH_ENABLED: 'true'
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8000/health"]
+      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8000/health']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -308,6 +323,6 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
+          cpus: '1'
           memory: 512m
     networks: [devon]

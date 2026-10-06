@@ -271,7 +271,7 @@ const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(savedFilterToDto(outcome.row))
+      return reply.type('application/json').send(savedFilterToDto(outcome.row))
     },
   )
 

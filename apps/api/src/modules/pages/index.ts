@@ -174,7 +174,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const row = await repo.getPage(activeDepartmentId(req), req.params.id, ctxFrom(req))
       if (!row) return sendProblem(reply, 'not_found')
-      return reply.send(pageToDto(row))
+      return reply.type('application/json').send(pageToDto(row))
     },
   )
 
@@ -221,7 +221,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(pageToDto(outcome.row))
+      return reply.type('application/json').send(pageToDto(outcome.row))
     },
   )
 
@@ -310,7 +310,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!row) return sendProblem(reply, 'not_found')
-      return reply.send(versionToDto(row))
+      return reply.type('application/json').send(versionToDto(row))
     },
   )
 
@@ -338,7 +338,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(pageToDto(outcome.row))
+      return reply.type('application/json').send(pageToDto(outcome.row))
     },
   )
 
@@ -403,7 +403,7 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(templateToDto(outcome.row))
+      return reply.type('application/json').send(templateToDto(outcome.row))
     },
   )
 

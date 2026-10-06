@@ -101,22 +101,27 @@ function SortHeader({
 }) {
   const active = sort?.field === field
   return (
-    <button
-      type="button"
-      onClick={() => onSort(field)}
-      className="flex items-center gap-1 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
+    <div
+      role="columnheader"
+      aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
-      {label}
-      {active ? (
-        sort!.dir === 'asc' ? (
-          <ArrowUp className="size-3" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className="flex items-center gap-1 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
+      >
+        {label}
+        {active ? (
+          sort!.dir === 'asc' ? (
+            <ArrowUp className="size-3" aria-hidden="true" />
+          ) : (
+            <ArrowDown className="size-3" aria-hidden="true" />
+          )
         ) : (
-          <ArrowDown className="size-3" aria-hidden="true" />
-        )
-      ) : (
-        <ArrowUpDown className="size-3 opacity-40" aria-hidden="true" />
-      )}
-    </button>
+          <ArrowUpDown className="size-3 opacity-40" aria-hidden="true" />
+        )}
+      </button>
+    </div>
   )
 }
 
@@ -249,17 +254,24 @@ export default function TableScreen() {
             390px viewport is what made the mobile table "a horizontally-scrolled data grid" (round3
             #30); `MobileTableRow`'s stacked layout needs no fixed width at all, so it is simply
             omitted below `md`. */}
-        <div style={isDesktop ? { minWidth: 1020 } : undefined}>
+        <div
+          role="table"
+          aria-label={t('work.view.table')}
+          style={isDesktop ? { minWidth: 1020 } : undefined}
+        >
           {isDesktop ? (
             <div
+              role="row"
               className="sticky top-0 z-10 grid items-center gap-2 border-b border-border bg-card px-2"
               style={{ gridTemplateColumns: GRID_COLUMNS, height: 40 }}
             >
-              <Checkbox
-                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                onCheckedChange={(v) => toggleAll(v === true)}
-                aria-label={t('work.table.selectAll')}
-              />
+              <div role="columnheader">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(v) => toggleAll(v === true)}
+                  aria-label={t('work.table.selectAll')}
+                />
+              </div>
               <SortHeader
                 field="title"
                 label={t('work.field.title')}
@@ -420,7 +432,7 @@ function VirtualRows({
     overscan: 8,
   })
   return (
-    <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+    <div role="rowgroup" style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
       {virtualizer.getVirtualItems().map((vRow) => {
         const card = sorted[vRow.index]!
         return isDesktop ? (
@@ -545,58 +557,69 @@ const TableRow = React.memo(function TableRow({
           className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
         />
       ) : null}
-      <Checkbox
-        checked={checked}
-        onPointerDown={(e) => {
-          shiftRef.current = e.shiftKey
-        }}
-        onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
-        aria-label={card.title}
-      />
-      {editingTitle ? (
-        <Input
-          autoFocus
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={commitTitle}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              e.currentTarget.blur()
-            } else if (e.key === 'Escape') {
-              setTitle(card.title)
-              setEditingTitle(false)
-            }
+      <div role="cell">
+        <Checkbox
+          checked={checked}
+          onPointerDown={(e) => {
+            shiftRef.current = e.shiftKey
           }}
-          className="h-9 border-primary bg-transparent"
+          onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
+          aria-label={card.title}
         />
-      ) : (
-        <button
-          type="button"
-          title={card.title}
-          onClick={() => setEditingTitle(true)}
-          className="h-9 min-w-0 truncate rounded-sm px-2 text-left text-body text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {card.title}
-        </button>
-      )}
-      <MemberPicker
-        members={members}
-        value={card.assigneeUserId}
-        onChange={(userId) => patchCard.mutate({ id: card.id, patch: { assigneeUserId: userId } })}
-        placeholderKey="work.field.unassigned"
-        triggerClassName="w-full border-transparent bg-transparent px-2 hover:border-border hover:bg-accent"
-      />
-      <Select
-        aria-label={t('work.field.priority')}
-        value={card.priority}
-        onChange={(e) =>
-          patchCard.mutate({ id: card.id, patch: { priority: e.target.value as CardPriority } })
-        }
-        options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
-        className="h-9 border-transparent bg-transparent px-2 text-small hover:border-border"
-      />
-      <span className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+      </div>
+      <div role="cell" className="min-w-0">
+        {editingTitle ? (
+          <Input
+            autoFocus
+            aria-label={t('work.field.title')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                e.currentTarget.blur()
+              } else if (e.key === 'Escape') {
+                setTitle(card.title)
+                setEditingTitle(false)
+              }
+            }}
+            className="h-9 border-primary bg-transparent"
+          />
+        ) : (
+          <button
+            type="button"
+            title={card.title}
+            onClick={() => setEditingTitle(true)}
+            className="h-9 min-w-0 truncate rounded-sm px-2 text-left text-body text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {card.title}
+          </button>
+        )}
+      </div>
+      <div role="cell" className="min-w-0">
+        <MemberPicker
+          members={members}
+          value={card.assigneeUserId}
+          onChange={(userId) =>
+            patchCard.mutate({ id: card.id, patch: { assigneeUserId: userId } })
+          }
+          placeholderKey="work.field.unassigned"
+          triggerClassName="w-full border-transparent bg-transparent px-2 hover:border-border hover:bg-accent"
+        />
+      </div>
+      <div role="cell">
+        <Select
+          aria-label={t('work.field.priority')}
+          value={card.priority}
+          onChange={(e) =>
+            patchCard.mutate({ id: card.id, patch: { priority: e.target.value as CardPriority } })
+          }
+          options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
+          className="h-9 border-transparent bg-transparent px-2 text-small hover:border-border"
+        />
+      </div>
+      <span role="cell" className="flex min-w-0 items-center gap-1.5 overflow-hidden">
         {/* Round-2 verification report #3 regression: the date trigger was `w-full shrink-0`, so on
             an overdue row it refused to give up any width to the risk badge next to it -- the badge
             got laid out past the cell's right edge and printed on top of the HOLAT column's status
@@ -626,7 +649,7 @@ const TableRow = React.memo(function TableRow({
             })()
           : null}
       </span>
-      <span className="overflow-hidden">
+      <span role="cell" className="overflow-hidden">
         <Badge tone="neutral" className="whitespace-nowrap">
           {t(`work.status.${card.status}`)}
         </Badge>
@@ -704,15 +727,17 @@ const MobileTableRow = React.memo(function MobileTableRow({
           className="absolute inset-y-1 left-0 w-0.75 rounded-full bg-destructive"
         />
       ) : null}
-      <Checkbox
-        checked={checked}
-        onPointerDown={(e) => {
-          shiftRef.current = e.shiftKey
-        }}
-        onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
-        aria-label={card.title}
-      />
-      <div className="min-w-0 flex-1">
+      <div role="cell">
+        <Checkbox
+          checked={checked}
+          onPointerDown={(e) => {
+            shiftRef.current = e.shiftKey
+          }}
+          onCheckedChange={(v) => onToggle(card.id, v === true, shiftRef.current)}
+          aria-label={card.title}
+        />
+      </div>
+      <div role="cell" className="min-w-0 flex-1">
         <p className="truncate text-body text-foreground">{card.title}</p>
         <p className="truncate text-caption text-muted-foreground">{metaParts.join(' · ')}</p>
       </div>

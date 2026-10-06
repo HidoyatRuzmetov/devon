@@ -286,11 +286,30 @@ const linkStatusSchema = z.object({
   linkedAt: z.string().nullable(),
   mutedUntil: z.string().nullable(),
   botUsername: z.string().nullable(),
+  configured: z.boolean().default(true),
+  available: z.boolean().default(true),
+  canConnectGroup: z.boolean().default(false),
 })
 export type LinkStatusDto = z.infer<typeof linkStatusSchema>
 
 export function fetchTelegramStatus(): Promise<LinkStatusDto> {
   return apiClient.get('/api/v1/telegram/status', linkStatusSchema)
+}
+
+const telegramSetupSchema = z.object({
+  botConfigured: z.boolean(),
+  botUsername: z.string().nullable(),
+  miniappUrl: z.string(),
+  memberCount: z.number(),
+  linkedMemberCount: z.number(),
+  groupCount: z.number(),
+})
+
+export function fetchTelegramSetup(departmentId: string) {
+  return apiClient.get(
+    `/api/v1/telegram/departments/${departmentId}/setup-checklist`,
+    telegramSetupSchema,
+  )
 }
 
 const linkCodeSchema = z.object({

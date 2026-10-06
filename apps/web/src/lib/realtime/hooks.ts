@@ -167,7 +167,10 @@ export function useSignalWhile(
 /** Query keys a live message invalidates. Kept as one table rather than scattered through the
  * features, so "which event refreshes what" is answerable in one place -- and so a feature that adds
  * an event name only has to add a row here. */
-const INVALIDATIONS: ReadonlyArray<{ match: RegExp; keys: readonly (readonly string[])[] }> = [
+const INVALIDATIONS: ReadonlyArray<{
+  match: RegExp
+  keys: readonly (readonly string[])[]
+}> = [
   {
     match: /^work\.card\./,
     keys: [

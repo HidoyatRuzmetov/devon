@@ -9,6 +9,7 @@
 // from a route that skipped that check), so this is a deliberate, reviewed RLS-evaluation choice, never
 // a stand-in for it.
 import { randomBytes, randomUUID } from 'node:crypto'
+import { probeStorage, probeAi, probeTelegram, probeBackups } from './health-probes.js'
 import { and, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
 import { normalizeUz, schema, withContext, type Tx } from '@devon/db'
 import { verifyPassword } from '../../lib/password.js'
@@ -686,6 +687,7 @@ export type AuditEventRow = {
   action: string
   subjectType: string
   subjectId: string | null
+  subjectTitle: string | null
 }
 
 export async function listAuditEvents(input: {
@@ -740,9 +742,11 @@ export async function listAuditEvents(input: {
       action: string
       subject_type: string
       subject_id: string | null
+      subject_title: string | null
     }>(sql`
       select e.seq, e.id, e.at, e.actor_user_id, e.actor_role, e.department_id, e.action,
         e.subject_type, e.subject_id,
+        case when e.action = 'work.card_deleted' then e.before->>'title' else null end as subject_title,
         u.given_name as actor_given_name, u.family_name as actor_family_name
       from audit.events e
       left join app.users u on u.id = e.actor_user_id
@@ -769,6 +773,7 @@ export async function listAuditEvents(input: {
         action: r.action,
         subjectType: r.subject_type,
         subjectId: r.subject_id,
+        subjectTitle: r.subject_title,
       })),
       nextCursor: hasMore && last ? Number(last.seq) : null,
     }
@@ -863,97 +868,12 @@ export async function getSystemHealth(): Promise<{
     }
   })()
 
-  const storage: HealthCheck = await (async () => {
-    const dir = process.env['DEVON_STORAGE_DIR']
-    if (!dir) return { status: 'not_configured', detail: null, latencyMs: null }
-    try {
-      const { statfs } = await import('node:fs/promises')
-      const stats = await statfs(dir)
-      const freeBytes = stats.bfree * stats.bsize
-      const freeGb = Math.round((freeBytes / 1024 ** 3) * 10) / 10
-      return {
-        status: freeGb < 2 ? 'degraded' : 'ok',
-        detail: { code: 'storage.free', params: { gb: freeGb } },
-        latencyMs: null,
-      }
-    } catch (err) {
-      return {
-        status: 'down',
-        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
-        latencyMs: null,
-      }
-    }
-  })()
-
-  const telegram: HealthCheck = await (async () => {
-    try {
-      const rows = await withContext(ctx, (tx) =>
-        tx.raw<{ present: boolean; groups: string }>(sql`
-          select (to_regclass('app.telegram_groups') is not null) as present,
-            case when to_regclass('app.telegram_groups') is null then '0'
-              else (select count(*)::text from app.telegram_groups) end as groups
-        `),
-      )
-      if (!rows[0]?.present) return { status: 'not_configured', detail: null, latencyMs: null }
-      return {
-        status: 'ok',
-        detail: { code: 'telegram.connected', params: { count: Number(rows[0].groups) } },
-        latencyMs: null,
-      }
-    } catch {
-      return { status: 'not_configured', detail: null, latencyMs: null }
-    }
-  })()
-
-  const ai: HealthCheck = await (async () => {
-    const apiKey = process.env['AI_API_KEY']
-    if (!apiKey) return { status: 'not_configured', detail: null, latencyMs: null }
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 3000)
-      const { ms } = await timed(() =>
-        fetch('https://api-llm.gpu.uz/v1/models', {
-          headers: { authorization: `Bearer ${apiKey}` },
-          signal: controller.signal,
-        }),
-      )
-      clearTimeout(timeout)
-      return { status: 'ok', detail: null, latencyMs: ms }
-    } catch (err) {
-      return {
-        status: 'down',
-        detail: { code: 'error.raw', params: { message: rawErrorMessage(err, 'unreachable') } },
-        latencyMs: null,
-      }
-    }
-  })()
-
-  const backups: HealthCheck = await (async () => {
-    const dir = process.env['DEVON_BACKUP_DIR']
-    if (!dir) return { status: 'not_configured', detail: null, latencyMs: null }
-    try {
-      const { readdir, stat } = await import('node:fs/promises')
-      const { join } = await import('node:path')
-      const entries = await readdir(dir)
-      if (entries.length === 0)
-        return { status: 'degraded', detail: { code: 'backups.none' }, latencyMs: null }
-      // H3.1: stat every backup file entry independently in parallel, not one at a time.
-      const stats = await Promise.all(entries.map((entry) => stat(join(dir, entry))))
-      const newest = stats.reduce((max, s) => Math.max(max, s.mtimeMs), 0)
-      const ageHours = (Date.now() - newest) / 3_600_000
-      return {
-        status: ageHours > 48 ? 'degraded' : 'ok',
-        detail: { code: 'backups.latest', params: { hours: Math.round(ageHours) } },
-        latencyMs: null,
-      }
-    } catch (err) {
-      return {
-        status: 'down',
-        detail: { code: 'error.raw', params: { message: rawErrorMessage(err) } },
-        latencyMs: null,
-      }
-    }
-  })()
+  const [storage, telegram, ai, backups] = await Promise.all([
+    probeStorage(),
+    probeTelegram(),
+    probeAi(),
+    probeBackups(),
+  ])
 
   return { checkedAt: new Date(), db, queue, storage, telegram, ai, backups }
 }

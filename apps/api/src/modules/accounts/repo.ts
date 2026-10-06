@@ -13,7 +13,7 @@ import { generateToken, sha256Hex } from '../../lib/tokens.js'
 import { decryptSecret, encryptSecret } from './crypto.js'
 import { generateRecoveryCodes, generateTotpSecret, otpauthUri, verifyTotp } from './totp.js'
 import type { AuditCtx, UserRecord } from '../../types.js'
-import type { RegisterBody } from './schemas.js'
+import type { RegisterBody, PatchProfileBody } from './schemas.js'
 
 const LOGIN_CHALLENGE_TTL_MINUTES = 10
 const ACCOUNT_DELETION_GRACE_DAYS = 30
@@ -21,6 +21,32 @@ const LOCKOUT_THRESHOLD = 5
 const LOCKOUT_MINUTES = 15
 
 export class LoginTaken extends Error {}
+
+/** Identity changes are self-service, while role and department remain management operations. */
+export async function patchProfile(userId: string, patch: PatchProfileBody, ctx: AuditCtx) {
+  try {
+    return await withContext(toDbContext(ctx), async (tx) => {
+      const rows = await tx.drizzle
+        .update(schema.users)
+        .set({ ...patch, updatedAt: new Date() })
+        .where(eq(schema.users.id, userId))
+        .returning()
+      if (!rows[0]) return null
+      tx.audit({
+        action: 'accounts.profile_updated',
+        subjectType: 'user',
+        subjectId: userId,
+        after: { fields: Object.keys(patch) },
+      })
+      tx.emit({ type: 'accounts.profile.updated', payload: { userId, fields: Object.keys(patch) } })
+      return toUserRecord(rows[0])
+    })
+  } catch (err) {
+    if (isUniqueViolation(err) || (err instanceof Error && isUniqueViolation(err.cause)))
+      throw new LoginTaken()
+    throw err
+  }
+}
 
 function anonymousCtx(requestId = randomUUID()) {
   return {

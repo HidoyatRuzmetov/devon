@@ -13,6 +13,23 @@ const baseEnv = {
 }
 
 describe('loadConfig production boot guard (H7.3, H17.1)', () => {
+  it('never opts a development server into Telegram polling implicitly', () => {
+    expect(loadConfig({ ...baseEnv, NODE_ENV: 'development' }).TELEGRAM_POLLING_ENABLED).toBe(false)
+    expect(
+      loadConfig({
+        ...baseEnv,
+        NODE_ENV: 'development',
+        TELEGRAM_POLLING_ENABLED: 'true',
+      }).TELEGRAM_POLLING_ENABLED,
+    ).toBe(true)
+    expect(() =>
+      loadConfig({
+        ...baseEnv,
+        NODE_ENV: 'development',
+        TELEGRAM_POLLING_ENABLED: 'yes',
+      }),
+    ).toThrow()
+  })
   it('refuses to start in production with the .env.example CSRF_SECRET placeholder', () => {
     expect(() =>
       loadConfig({
@@ -90,7 +107,10 @@ describe('loadConfig production boot guard (H7.3, H17.1)', () => {
   })
 
   it('reads STORAGE_S3_FORCE_PATH_STYLE=false as false (z.coerce.boolean would say true)', () => {
-    const config = loadConfig({ ...baseEnv, STORAGE_S3_FORCE_PATH_STYLE: 'false' })
+    const config = loadConfig({
+      ...baseEnv,
+      STORAGE_S3_FORCE_PATH_STYLE: 'false',
+    })
     expect(config.STORAGE_S3_FORCE_PATH_STYLE).toBe(false)
     expect(loadConfig(baseEnv).STORAGE_S3_FORCE_PATH_STYLE).toBe(true)
   })

@@ -54,6 +54,7 @@ import {
 import { MyFieldsSection } from '../fields/components/my-fields-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
+import { ProfileSection } from './profile-section.js'
 
 /** Every user eventually opens this list (item handoff), and a real department can rack up dozens
  * of stale sessions -- five is enough to answer "is this me right now?" without turning the account
@@ -654,6 +655,7 @@ const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNav
   {
     headingKey: 'accounts.settings.profile',
     items: [
+      { id: 'section-profile', labelKey: 'profileEdit.heading', icon: ClipboardList },
       { id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon },
       // v1.1 SPEC §5: the boshqarma's own columns about this person. `id: 'fields'` is deliberate --
       // it is the anchor `/account#fields` that a fill request's inbox row and its Telegram
@@ -745,6 +747,7 @@ export default function AccountSettingsScreen() {
         <SettingsSubNav className="sticky top-4 hidden shrink-0 basis-48 lg:block" />
         <SettingsSubNav className="lg:hidden" flat />
         <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
+          <ProfileSection />
           <PhotoSection />
           <MyFieldsSection />
           <SessionsSection />

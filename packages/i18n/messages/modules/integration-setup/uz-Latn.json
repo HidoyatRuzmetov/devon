@@ -1,0 +1,12 @@
+{
+  "integrationSetup": {
+    "title": "Telegramni uch qadamda ulang",
+    "description": "Ish eslatmalarini Telegramda oling va qachon kelishini sozlang.",
+    "link": "Quyidan ulash kodini oling, botni oching va «Boshlash»ni bosing. Bu sahifani ochiq qoldiring: ulanish avtomatik tasdiqlanadi.",
+    "preferences": "Bildirishnoma sozlamalarida xabarlar, jamlanmalar va tinch vaqtni tanlang. Telegramni ulash bu sozlamalarni oʻzgartirmaydi.",
+    "commands": "Buyruqlar uchun botga /help, ish maydonini Telegramda ochish uchun /app yuboring.",
+    "group": "Boshqarma guruhi uchun: botni guruhga qoʻshing, quyidan guruh kodini oling va toʻliq /connect buyrugʻini guruhga yuboring.",
+    "progress": "Ulangan: {total} xodimdan {linked} nafari · {groups} ta guruh",
+    "telegramUnavailable": "Bot hozir javob bermayapti. Kiruvchi xabarlar ishlashda davom etadi. Birozdan keyin urinib koʻring yoki administratorga murojaat qiling."
+  }
+}

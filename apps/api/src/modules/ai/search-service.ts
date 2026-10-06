@@ -122,6 +122,7 @@ export async function search(
   if (backend === 'embeddings') {
     const probe = await getEmbeddingsProbe()
     try {
+      // nosemgrep: query-in-loop -- One provider batch per iteration; failure must stop subsequent reads/writes.
       const result = await embed({
         config: aiConfig,
         model: probe.model ?? aiConfig.embeddingsModel,
@@ -176,6 +177,7 @@ export async function embedPending(
 
   let embedded = 0
   for (let batch = 0; batch < maxBatches; batch++) {
+    // nosemgrep: query-in-loop -- Next bounded batch depends on previous embeddings being persisted, otherwise it rereads the same rows.
     const rows = await withContext(ctx, (tx) =>
       searchRepo.listRowsNeedingEmbedding(tx, departmentId, MAX_EMBED_BATCH),
     )
@@ -183,6 +185,7 @@ export async function embedPending(
 
     let vectors: number[][]
     try {
+      // nosemgrep: query-in-loop -- One provider batch per iteration; failure must stop subsequent reads/writes.
       const result = await embed({
         config: aiConfig,
         model: probe.model,
@@ -195,6 +198,7 @@ export async function embedPending(
       break
     }
 
+    // nosemgrep: query-in-loop -- Persist current provider output before selecting the next stale batch.
     await withContext(ctx, (tx) =>
       searchRepo.writeEmbeddings(
         tx,
@@ -234,5 +238,9 @@ export async function similarCards(
 ): Promise<{ id: string; title: string; score: number }[]> {
   await searchRepo.refreshIndex(tx, departmentId)
   const rows = await searchRepo.similarCardTitles(tx, departmentId, title, limit, excludeCardId)
-  return rows.map((row) => ({ id: row.subject_id, title: row.title, score: row.score }))
+  return rows.map((row) => ({
+    id: row.subject_id,
+    title: row.title,
+    score: row.score,
+  }))
 }

@@ -55,8 +55,7 @@ import { fileURLToPath } from 'node:url'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(HERE, '..', '..')
 
-const MC_IMAGE =
-  'minio/mc:RELEASE.2025-04-08T15-39-49Z@sha256:7e3efb09c22c0882fbf341b9d99f61f94ae6c4c20a06f2f1a2b20ea8993d8952'
+const MC_IMAGE = 'devon-mc:e929f89ceeed'
 
 // ---------------------------------------------------------------------------------------------
 // tiny helpers
@@ -120,7 +119,10 @@ function fail(message) {
 }
 
 function nowStamp() {
-  return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z')
+  return new Date()
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d+Z$/, 'Z')
 }
 
 function humanBytes(n) {
@@ -166,24 +168,59 @@ for (let i = 0; i < args.length; i += 1) {
     return v
   }
   switch (a) {
-    case '--file': opts.file = next(); break
-    case '--backup-dir': opts.backupDir = next(); break
-    case '--compose-file': opts.composeFile = next(); break
-    case '--network': opts.network = next(); break
-    case '--pg-host': opts.pgHost = next(); break
-    case '--database': opts.database = next(); break
-    case '--scratch-db': opts.scratchDb = next(); break
-    case '--minio-bucket': opts.minioBucket = next(); break
-    case '--storage-bucket': opts.storageBucket = next(); break
-    case '--scratch-bucket': opts.scratchBucketPrefix = next(); break
-    case '--report': opts.report = next(); break
-    case '--keep': opts.keep = true; break
-    case '--skip-minio': opts.skipMinio = true; break
-    case '--skip-migrate-verify': opts.skipMigrateVerify = true; break
-    case '--json': opts.json = true; break
+    case '--file':
+      opts.file = next()
+      break
+    case '--backup-dir':
+      opts.backupDir = next()
+      break
+    case '--compose-file':
+      opts.composeFile = next()
+      break
+    case '--network':
+      opts.network = next()
+      break
+    case '--pg-host':
+      opts.pgHost = next()
+      break
+    case '--database':
+      opts.database = next()
+      break
+    case '--scratch-db':
+      opts.scratchDb = next()
+      break
+    case '--minio-bucket':
+      opts.minioBucket = next()
+      break
+    case '--storage-bucket':
+      opts.storageBucket = next()
+      break
+    case '--scratch-bucket':
+      opts.scratchBucketPrefix = next()
+      break
+    case '--report':
+      opts.report = next()
+      break
+    case '--keep':
+      opts.keep = true
+      break
+    case '--skip-minio':
+      opts.skipMinio = true
+      break
+    case '--skip-migrate-verify':
+      opts.skipMigrateVerify = true
+      break
+    case '--json':
+      opts.json = true
+      break
     case '-h':
     case '--help':
-      console.log(readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter((l) => l.startsWith('//')).join('\n'))
+      console.log(
+        readFileSync(fileURLToPath(import.meta.url), 'utf8')
+          .split('\n')
+          .filter((l) => l.startsWith('//'))
+          .join('\n'),
+      )
       process.exit(0)
       break
     default:
@@ -203,12 +240,25 @@ const DATABASE = opts.database ?? process.env['POSTGRES_DB'] ?? 'devon'
 const SUPERUSER_PASSWORD = process.env['POSTGRES_SUPERUSER_PASSWORD'] ?? 'devon_local_dev_root'
 const TS = nowStamp()
 const SCRATCH_DB = opts.scratchDb ?? `devon_drill_${TS.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-const SCRATCH_BUCKET_PREFIX = opts.scratchBucketPrefix ?? `devon-drill-${TS.toLowerCase().replace(/[^a-z0-9]/g, '')}`
-const REPORT_PATH = resolve(ROOT, opts.report ?? join('agentic', 'ledger', 'backups', `restore-drill-${TS}.md`))
+const SCRATCH_BUCKET_PREFIX =
+  opts.scratchBucketPrefix ?? `devon-drill-${TS.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+const REPORT_PATH = resolve(
+  ROOT,
+  opts.report ?? join('agentic', 'ledger', 'backups', `restore-drill-${TS}.md`),
+)
 
-const MINIO_ENDPOINT = process.env['BACKUP_MINIO_ENDPOINT'] ?? process.env['STORAGE_S3_ENDPOINT'] ?? 'http://minio:9000'
-const MINIO_ACCESS_KEY = process.env['BACKUP_MINIO_ACCESS_KEY'] ?? process.env['STORAGE_S3_ACCESS_KEY'] ?? process.env['MINIO_ROOT_USER'] ?? ''
-const MINIO_SECRET_KEY = process.env['BACKUP_MINIO_SECRET_KEY'] ?? process.env['STORAGE_S3_SECRET_KEY'] ?? process.env['MINIO_ROOT_PASSWORD'] ?? ''
+const MINIO_ENDPOINT =
+  process.env['BACKUP_MINIO_ENDPOINT'] ?? process.env['STORAGE_S3_ENDPOINT'] ?? 'http://minio:9000'
+const MINIO_ACCESS_KEY =
+  process.env['BACKUP_MINIO_ACCESS_KEY'] ??
+  process.env['STORAGE_S3_ACCESS_KEY'] ??
+  process.env['MINIO_ROOT_USER'] ??
+  ''
+const MINIO_SECRET_KEY =
+  process.env['BACKUP_MINIO_SECRET_KEY'] ??
+  process.env['STORAGE_S3_SECRET_KEY'] ??
+  process.env['MINIO_ROOT_PASSWORD'] ??
+  ''
 const MINIO_BUCKET = opts.minioBucket ?? process.env['BACKUP_MINIO_BUCKET'] ?? 'devon-backups'
 const STORAGE_BUCKET = opts.storageBucket ?? process.env['STORAGE_S3_BUCKET'] ?? 'devon'
 
@@ -236,25 +286,31 @@ if (!PG_IMAGE) fail(`could not read the postgres image reference from ${COMPOSE_
 // docker wrappers
 // ---------------------------------------------------------------------------------------------
 
-const dockerPgBase = () => [
-  'run', '--rm', '--network', opts.network,
-  '-e', 'PGPASSWORD',
-  PG_IMAGE,
-]
+const dockerPgBase = () => ['run', '--rm', '--network', opts.network, '-e', 'PGPASSWORD', PG_IMAGE]
 
 const pgEnv = { PGPASSWORD: SUPERUSER_PASSWORD }
 
 async function psql(db, sql, { tuplesOnly = true } = {}) {
   const flags = tuplesOnly ? ['-tA', '-F', '|'] : []
-  return run('docker', [...dockerPgBase(), 'psql', '-h', PG_HOST, '-U', 'postgres', '-d', db, ...flags, '-c', sql], { env: pgEnv })
+  return run(
+    'docker',
+    [...dockerPgBase(), 'psql', '-h', PG_HOST, '-U', 'postgres', '-d', db, ...flags, '-c', sql],
+    { env: pgEnv },
+  )
 }
 
 async function createScratchDb(name) {
-  return run('docker', [...dockerPgBase(), 'createdb', '-h', PG_HOST, '-U', 'postgres', name], { env: pgEnv })
+  return run('docker', [...dockerPgBase(), 'createdb', '-h', PG_HOST, '-U', 'postgres', name], {
+    env: pgEnv,
+  })
 }
 
 async function dropScratchDb(name) {
-  return run('docker', [...dockerPgBase(), 'dropdb', '-h', PG_HOST, '-U', 'postgres', '--if-exists', '--force', name], { env: pgEnv })
+  return run(
+    'docker',
+    [...dockerPgBase(), 'dropdb', '-h', PG_HOST, '-U', 'postgres', '--if-exists', '--force', name],
+    { env: pgEnv },
+  )
 }
 
 async function mc(script) {
@@ -263,15 +319,27 @@ async function mc(script) {
   // container only.
   const scheme = MINIO_ENDPOINT.startsWith('https://') ? 'https://' : 'http://'
   const bare = MINIO_ENDPOINT.replace(/^https?:\/\//, '')
-  return run('docker', [
-    'run', '--rm', '--network', opts.network, '--entrypoint', 'sh',
-    '-e', 'MC_HOST_drill',
-    MC_IMAGE, '-c', script,
-  ], {
-    env: {
-      MC_HOST_drill: `${scheme}${encodeURIComponent(MINIO_ACCESS_KEY)}:${encodeURIComponent(MINIO_SECRET_KEY)}@${bare}`,
+  return run(
+    'docker',
+    [
+      'run',
+      '--rm',
+      '--network',
+      opts.network,
+      '--entrypoint',
+      'sh',
+      '-e',
+      'MC_HOST_drill',
+      MC_IMAGE,
+      '-c',
+      script,
+    ],
+    {
+      env: {
+        MC_HOST_drill: `${scheme}${encodeURIComponent(MINIO_ACCESS_KEY)}:${encodeURIComponent(MINIO_SECRET_KEY)}@${bare}`,
+      },
     },
-  })
+  )
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -324,7 +392,8 @@ async function main() {
   console.log(`[drill] scratch database ${SCRATCH_DB}`)
 
   const docker = await run('docker', ['version', '--format', '{{.Server.Version}}'])
-  if (docker.code !== 0) fail('docker is not available -- this drill restores into a real container')
+  if (docker.code !== 0)
+    fail('docker is not available -- this drill restores into a real container')
 
   const backupFile = findLatestBackup()
   if (!backupFile) {
@@ -341,34 +410,146 @@ async function main() {
   let tempDir = null
   if (backupFile.endsWith('.gpg')) {
     const passphrase = process.env['BACKUP_ENCRYPTION_PASSPHRASE']
-    if (!passphrase) fail(`${basename(backupFile)} is encrypted but BACKUP_ENCRYPTION_PASSPHRASE is not set`)
+    if (!passphrase)
+      fail(`${basename(backupFile)} is encrypted but BACKUP_ENCRYPTION_PASSPHRASE is not set`)
     tempDir = mkdtempSync(join(tmpdir(), 'devon-drill-'))
     cleanupTasks.push(() => rmSync(tempDir, { recursive: true, force: true }))
     restoreSource = join(tempDir, 'restore.dump')
     // The passphrase goes in on stdin, never in argv -- `ps`/`docker inspect` on a shared ops box
     // would otherwise show the passphrase that protects every backup on the host.
-    const gpg = await run('gpg', [
-      '--batch', '--yes', '--pinentry-mode', 'loopback',
-      '--passphrase-fd', '0',
-      '--decrypt', '--output', restoreSource, backupFile,
-    ], { input: `${passphrase}\n` })
+    const gpg = await run(
+      'gpg',
+      [
+        '--batch',
+        '--yes',
+        '--pinentry-mode',
+        'loopback',
+        '--passphrase-fd',
+        '0',
+        '--decrypt',
+        '--output',
+        restoreSource,
+        backupFile,
+      ],
+      { input: `${passphrase}\n` },
+    )
     if (gpg.code !== 0) fail(`gpg decrypt failed: ${gpg.stderr.trim()}`)
-    addCheck('encrypted backup decrypts with BACKUP_ENCRYPTION_PASSPHRASE', true, basename(backupFile))
+    addCheck(
+      'encrypted backup decrypts with BACKUP_ENCRYPTION_PASSPHRASE',
+      true,
+      basename(backupFile),
+    )
+  }
+
+  // Restore uploaded files into a disposable directory as well. Reading only the tar index would
+  // miss truncated file contents; extraction exercises every archived byte without touching live storage.
+  const dumpPath = backupFile.replace(/\.gpg$/, '')
+  const fileArchive = [`${dumpPath}.files.tar.gpg`, `${dumpPath}.files.tar`].find(existsSync)
+  if (!fileArchive) {
+    addCheck(
+      'uploaded file snapshot restores into scratch storage',
+      process.env['BACKUP_STORAGE_VOLUME'] ? false : null,
+      process.env['BACKUP_STORAGE_VOLUME']
+        ? 'configured file volume has no matching snapshot'
+        : 'local file volume backup not configured',
+    )
+  } else {
+    const scratchFiles = mkdtempSync(join(tmpdir(), 'devon-files-drill-'))
+    cleanupTasks.push(() => rmSync(scratchFiles, { recursive: true, force: true }))
+    const extractedDir = join(scratchFiles, 'extracted')
+    mkdirSync(extractedDir)
+    let archiveSource = fileArchive
+    let decrypted = true
+    if (fileArchive.endsWith('.gpg')) {
+      archiveSource = join(scratchFiles, 'files.tar')
+      const passphrase = process.env['BACKUP_ENCRYPTION_PASSPHRASE']
+      const result = passphrase
+        ? await run(
+            'gpg',
+            [
+              '--batch',
+              '--yes',
+              '--pinentry-mode',
+              'loopback',
+              '--passphrase-fd',
+              '0',
+              '--decrypt',
+              '--output',
+              archiveSource,
+              fileArchive,
+            ],
+            { input: `${passphrase}\n` },
+          )
+        : { code: 1 }
+      decrypted = result.code === 0
+    }
+    const extracted = decrypted
+      ? await run('docker', [
+          'run',
+          '--rm',
+          '--network',
+          'none',
+          ...(typeof process.getuid === 'function'
+            ? ['--user', `${process.getuid()}:${process.getgid()}`]
+            : []),
+          '--entrypoint',
+          'tar',
+          '-v',
+          `${dirname(archiveSource)}:/backup:ro`,
+          '-v',
+          `${extractedDir}:/restore`,
+          PG_IMAGE,
+          '-xf',
+          `/backup/${basename(archiveSource)}`,
+          '-C',
+          '/restore',
+          '--no-same-owner',
+          '--no-same-permissions',
+        ])
+      : { code: 1 }
+    addCheck(
+      'uploaded file snapshot restores into scratch storage',
+      extracted.code === 0,
+      extracted.code === 0
+        ? `${basename(fileArchive)} decrypted and fully extracted`
+        : 'snapshot decryption or scratch extraction failed',
+    )
   }
 
   // --- 2. restore into the scratch database ---------------------------------------------------
   const created = await createScratchDb(SCRATCH_DB)
   if (created.code !== 0) fail(`createdb ${SCRATCH_DB} failed: ${created.stderr.trim()}`)
-  if (!opts.keep) cleanupTasks.push(async () => { await dropScratchDb(SCRATCH_DB) })
+  if (!opts.keep)
+    cleanupTasks.push(async () => {
+      await dropScratchDb(SCRATCH_DB)
+    })
 
   const started = Date.now()
   const fd = openSync(restoreSource, 'r')
   let restore
   try {
-    restore = await run('docker', [
-      'run', '--rm', '-i', '--network', opts.network, '-e', 'PGPASSWORD', PG_IMAGE,
-      'pg_restore', '-h', PG_HOST, '-U', 'postgres', '-d', SCRATCH_DB, '--no-owner',
-    ], { env: pgEnv, stdinFd: fd })
+    restore = await run(
+      'docker',
+      [
+        'run',
+        '--rm',
+        '-i',
+        '--network',
+        opts.network,
+        '-e',
+        'PGPASSWORD',
+        PG_IMAGE,
+        'pg_restore',
+        '-h',
+        PG_HOST,
+        '-U',
+        'postgres',
+        '-d',
+        SCRATCH_DB,
+        '--no-owner',
+      ],
+      { env: pgEnv, stdinFd: fd },
+    )
   } finally {
     closeSync(fd)
   }
@@ -378,10 +559,21 @@ async function main() {
   addCheck(
     'pg_restore into the scratch database exits cleanly',
     restore.code === 0,
-    restore.code === 0 ? `${restoreSeconds}s` : restore.stderr.trim().split('\n').slice(-3).join(' / '),
+    restore.code === 0
+      ? `${restoreSeconds}s`
+      : restore.stderr.trim().split('\n').slice(-3).join(' / '),
   )
   if (restore.code !== 0) {
-    await writeReport({ backupFile, backupBytes, restoreSeconds, rows: [], manifestPath: null, minio: null, migrationRows: [], migrateVerify: null })
+    await writeReport({
+      backupFile,
+      backupBytes,
+      restoreSeconds,
+      rows: [],
+      manifestPath: null,
+      minio: null,
+      migrationRows: [],
+      migrateVerify: null,
+    })
     await cleanup()
     process.exit(1)
   }
@@ -389,12 +581,18 @@ async function main() {
   // --- 3. migrations present in the RESTORED database ----------------------------------------
   const migrationsDir = join(ROOT, 'packages', 'db', 'migrations')
   const expectedMigrations = existsSync(migrationsDir)
-    ? readdirSync(migrationsDir).filter((f) => f.endsWith('.sql')).sort()
+    ? readdirSync(migrationsDir)
+        .filter((f) => f.endsWith('.sql'))
+        .sort()
     : []
   const appliedQuery = await psql(SCRATCH_DB, 'select name from app._migrations order by name;')
-  const appliedMigrations = appliedQuery.code === 0
-    ? appliedQuery.stdout.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-    : []
+  const appliedMigrations =
+    appliedQuery.code === 0
+      ? appliedQuery.stdout
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean)
+      : []
   const missing = expectedMigrations.filter((m) => !appliedMigrations.includes(m))
   const unknown = appliedMigrations.filter((m) => !expectedMigrations.includes(m))
   addCheck(
@@ -403,15 +601,24 @@ async function main() {
     appliedQuery.code !== 0
       ? 'app._migrations unreadable in the restored database'
       : `${appliedMigrations.length}/${expectedMigrations.length} present` +
-        (missing.length ? `; missing: ${missing.join(', ')}` : '') +
-        (unknown.length ? `; ahead of this checkout: ${unknown.join(', ')}` : ''),
+          (missing.length ? `; missing: ${missing.join(', ')}` : '') +
+          (unknown.length ? `; ahead of this checkout: ${unknown.join(', ')}` : ''),
   )
-  const migrationRows = expectedMigrations.map((m) => ({ name: m, present: appliedMigrations.includes(m) }))
+  const migrationRows = expectedMigrations.map((m) => ({
+    name: m,
+    present: appliedMigrations.includes(m),
+  }))
 
   // RLS is the tenancy invariant (I-1). A restore that came back without policies would look
   // perfectly healthy on row counts and silently serve every department's rows to everyone.
-  const policiesLive = await psql(DATABASE, "select count(*) from pg_policies where schemaname in ('app','audit');")
-  const policiesRestored = await psql(SCRATCH_DB, "select count(*) from pg_policies where schemaname in ('app','audit');")
+  const policiesLive = await psql(
+    DATABASE,
+    "select count(*) from pg_policies where schemaname in ('app','audit');",
+  )
+  const policiesRestored = await psql(
+    SCRATCH_DB,
+    "select count(*) from pg_policies where schemaname in ('app','audit');",
+  )
   const livePolicyCount = Number(policiesLive.stdout.trim() || '-1')
   const restoredPolicyCount = Number(policiesRestored.stdout.trim() || '-2')
   addCheck(
@@ -428,7 +635,11 @@ async function main() {
     const expected = manifest.table_counts ?? {}
     const keys = Object.keys(expected)
     if (keys.length === 0) {
-      addCheck('row-count manifest has table counts', false, `${basename(manifestPath)} lists no tables`)
+      addCheck(
+        'row-count manifest has table counts',
+        false,
+        `${basename(manifestPath)} lists no tables`,
+      )
     } else {
       // ONE union query, not one round trip per table: ~85 tables × a container start each measured
       // in minutes on this host, and the counts would then span a multi-minute window of a live,
@@ -465,11 +676,17 @@ async function main() {
         mismatches.length === 0,
         mismatches.length === 0
           ? `${rows.length} tables compared`
-          : mismatches.map((m) => `${m.table}: expected ${m.expected}, restored ${m.restored ?? 'ERR'}`).join('; '),
+          : mismatches
+              .map((m) => `${m.table}: expected ${m.expected}, restored ${m.restored ?? 'ERR'}`)
+              .join('; '),
       )
     }
   } else {
-    addCheck('row-count manifest found next to the backup', null, `${basename(manifestPath)} missing -- backup predates the manifest feature`)
+    addCheck(
+      'row-count manifest found next to the backup',
+      null,
+      `${basename(manifestPath)} missing -- backup predates the manifest feature`,
+    )
   }
 
   // --- 5. migrate:verify (the repository's own `migrate` gate) --------------------------------
@@ -477,7 +694,9 @@ async function main() {
   if (opts.skipMigrateVerify) {
     addCheck('pnpm --filter @devon/db migrate:verify', null, '--skip-migrate-verify')
   } else {
-    console.log('[drill] running migrate:verify (starts its own Testcontainers Postgres; a few minutes) ...')
+    console.log(
+      '[drill] running migrate:verify (starts its own Testcontainers Postgres; a few minutes) ...',
+    )
     // `spawn` without a shell cannot execute a Windows shim: `pnpm` on win32 is `pnpm.cmd`/`pnpm.ps1`
     // in the corepack shim directory, and asking for bare `pnpm` fails with ENOENT (exit -1) -- which
     // the drill would otherwise report as "migrate:verify failed" on a Windows rehearsal host.
@@ -488,15 +707,32 @@ async function main() {
     const tailOf = (s, n) => s.split(/\r?\n/).filter(Boolean).slice(-n).join('\n')
     migrateVerify = {
       code: mv.code,
-      tail: mv.code === 0 ? tailOf(mv.stdout, 12) : `${tailOf(mv.stdout, 8)}\n--- stderr ---\n${tailOf(mv.stderr, 8)}`,
+      tail:
+        mv.code === 0
+          ? tailOf(mv.stdout, 12)
+          : `${tailOf(mv.stdout, 8)}\n--- stderr ---\n${tailOf(mv.stderr, 8)}`,
     }
-    addCheck('pnpm --filter @devon/db migrate:verify', mv.code === 0, mv.code === 0 ? 'all sections pass' : `exit ${mv.code}`)
+    addCheck(
+      'pnpm --filter @devon/db migrate:verify',
+      mv.code === 0,
+      mv.code === 0 ? 'all sections pass' : `exit ${mv.code}`,
+    )
   }
 
   // --- 6. MinIO mirror restored into a scratch bucket -----------------------------------------
   let minio = null
   if (opts.skipMinio) {
     addCheck('MinIO mirror restores into a scratch bucket', null, '--skip-minio')
+  } else if (
+    process.env['BACKUP_MIRROR_TO_MINIO'] !== '1' &&
+    !opts.minioBucket &&
+    !opts.storageBucket
+  ) {
+    addCheck(
+      'MinIO mirror restores into a scratch bucket',
+      null,
+      'off-host mirroring is not enabled (BACKUP_MIRROR_TO_MINIO=1); stored credentials alone do not enable it',
+    )
   } else if (!MINIO_ACCESS_KEY || !MINIO_SECRET_KEY) {
     addCheck(
       'MinIO mirror restores into a scratch bucket',
@@ -510,7 +746,9 @@ async function main() {
       { name: STORAGE_BUCKET, label: 'application object store', required: false },
     ]
     for (const source of sources) {
-      const scratchBucket = `${SCRATCH_BUCKET_PREFIX}-${source.name}`.slice(0, 62).replace(/[^a-z0-9-]/g, '-')
+      const scratchBucket = `${SCRATCH_BUCKET_PREFIX}-${source.name}`
+        .slice(0, 62)
+        .replace(/[^a-z0-9-]/g, '-')
       const exists = await mc(`mc ls drill/${source.name} >/dev/null 2>&1 && echo yes || echo no`)
       if (exists.stdout.trim() !== 'yes') {
         addCheck(
@@ -522,7 +760,10 @@ async function main() {
         )
         continue
       }
-      if (!opts.keep) cleanupTasks.push(async () => { await mc(`mc rb --force drill/${scratchBucket} >/dev/null 2>&1 || true`) })
+      if (!opts.keep)
+        cleanupTasks.push(async () => {
+          await mc(`mc rb --force drill/${scratchBucket} >/dev/null 2>&1 || true`)
+        })
       const mirrored = await mc(
         `mc mb --ignore-existing drill/${scratchBucket} && mc mirror --quiet --overwrite drill/${source.name} drill/${scratchBucket}`,
       )
@@ -532,7 +773,11 @@ async function main() {
           .split(/\r?\n/)
           .filter(Boolean)
           .map((l) => {
-            try { return JSON.parse(l) } catch { return null }
+            try {
+              return JSON.parse(l)
+            } catch {
+              return null
+            }
           })
           .filter((e) => e && e.key)
           .map((e) => ({ key: e.key, size: Number(e.size ?? 0) }))
@@ -543,9 +788,17 @@ async function main() {
       const scratchObjects = await listOf(scratchBucket)
       const sameCount = sourceObjects.length === scratchObjects.length
       const sameBytes =
-        sourceObjects.reduce((s, o) => s + o.size, 0) === scratchObjects.reduce((s, o) => s + o.size, 0)
-      const identical = sameCount && sameBytes &&
-        sourceObjects.every((o, i) => scratchObjects[i] && scratchObjects[i].key === o.key && scratchObjects[i].size === o.size)
+        sourceObjects.reduce((s, o) => s + o.size, 0) ===
+        scratchObjects.reduce((s, o) => s + o.size, 0)
+      const identical =
+        sameCount &&
+        sameBytes &&
+        sourceObjects.every(
+          (o, i) =>
+            scratchObjects[i] &&
+            scratchObjects[i].key === o.key &&
+            scratchObjects[i].size === o.size,
+        )
       minio.buckets.push({
         label: source.label,
         source: source.name,
@@ -575,14 +828,25 @@ async function main() {
     }
   }
 
-  await writeReport({ backupFile, backupBytes, restoreSeconds, rows, manifestPath, minio, migrationRows, migrateVerify })
+  await writeReport({
+    backupFile,
+    backupBytes,
+    restoreSeconds,
+    rows,
+    manifestPath,
+    minio,
+    migrationRows,
+    migrateVerify,
+  })
 
   const failed = checks.filter((c) => c.ok === false)
   const skipped = checks.filter((c) => c.ok === null)
   await cleanup()
 
   if (opts.json) {
-    console.log(JSON.stringify({ ts: TS, backup: basename(backupFile), restoreSeconds, checks }, null, 2))
+    console.log(
+      JSON.stringify({ ts: TS, backup: basename(backupFile), restoreSeconds, checks }, null, 2),
+    )
   }
   console.log(
     `[drill] ${failed.length === 0 ? 'PASS' : 'FAIL'}: ${checks.length - failed.length - skipped.length} passed, ` +
@@ -595,30 +859,52 @@ async function main() {
 // report
 // ---------------------------------------------------------------------------------------------
 
-async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, manifestPath, minio, migrationRows, migrateVerify }) {
+async function writeReport({
+  backupFile,
+  backupBytes,
+  restoreSeconds,
+  rows,
+  manifestPath,
+  minio,
+  migrationRows,
+  migrateVerify,
+}) {
   const failed = checks.filter((c) => c.ok === false)
   const skipped = checks.filter((c) => c.ok === null)
-  const verdict = failed.length === 0 ? (skipped.length ? 'PASS (with skipped checks)' : 'PASS') : 'FAIL'
+  const verdict =
+    failed.length === 0 ? (skipped.length ? 'PASS (with skipped checks)' : 'PASS') : 'FAIL'
   const mismatches = rows.filter((r) => r.restored !== r.expected)
   const drifted = rows.filter((r) => r.live !== null && r.live !== r.expected)
 
   const out = []
   out.push(`# Restore drill -- ${TS}`)
   out.push('')
-  out.push(`**Qisqacha (uz-Latn):** Eng so'nggi zaxira nusxasi vaqtinchalik ma'lumotlar bazasiga tiklandi, ` +
-    `migratsiyalar va qatorlar soni solishtirildi, MinIO nusxasi vaqtinchalik bucketga qaytarildi. Natija: **${verdict}**.`)
+  out.push(
+    `**Qisqacha (uz-Latn):** Eng so'nggi zaxira nusxasi vaqtinchalik ma'lumotlar bazasiga tiklandi, ` +
+      `migratsiyalar va qatorlar soni solishtirildi, MinIO nusxasi vaqtinchalik bucketga qaytarildi. Natija: **${verdict}**.`,
+  )
   out.push('')
-  out.push(`**Verdict: ${verdict}** -- ${checks.length - failed.length - skipped.length} passed, ${failed.length} failed, ${skipped.length} skipped.`)
+  out.push(
+    `**Verdict: ${verdict}** -- ${checks.length - failed.length - skipped.length} passed, ${failed.length} failed, ${skipped.length} skipped.`,
+  )
   out.push('')
   out.push('| Field | Value |')
   out.push('|---|---|')
   out.push(`| Backup file | \`${basename(backupFile)}\` (${humanBytes(backupBytes)}) |`)
-  out.push(`| Source database | \`${DATABASE}\` on \`${PG_HOST}\` (docker network \`${opts.network}\`) |`)
-  out.push(`| Scratch database | \`${SCRATCH_DB}\` (${opts.keep ? 'kept: --keep' : 'dropped after the drill'}) |`)
+  out.push(
+    `| Source database | \`${DATABASE}\` on \`${PG_HOST}\` (docker network \`${opts.network}\`) |`,
+  )
+  out.push(
+    `| Scratch database | \`${SCRATCH_DB}\` (${opts.keep ? 'kept: --keep' : 'dropped after the drill'}) |`,
+  )
   out.push(`| Postgres image | \`${PG_IMAGE}\` |`)
   out.push(`| Restore duration | ${restoreSeconds}s |`)
-  out.push(`| Manifest | ${manifestPath && existsSync(manifestPath) ? `\`${basename(manifestPath)}\`` : 'absent'} |`)
-  out.push(`| Command | \`node tools/backup/restore-drill.mjs${args.length ? ` ${args.join(' ')}` : ''}\` |`)
+  out.push(
+    `| Manifest | ${manifestPath && existsSync(manifestPath) ? `\`${basename(manifestPath)}\`` : 'absent'} |`,
+  )
+  out.push(
+    `| Command | \`node tools/backup/restore-drill.mjs${args.length ? ` ${args.join(' ')}` : ''}\` |`,
+  )
   out.push('')
   out.push('## Checks')
   out.push('')
@@ -634,7 +920,9 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
     const present = migrationRows.filter((m) => m.present).length
     out.push(`## Migrations in the restored database (\`app._migrations\`)`)
     out.push('')
-    out.push(`${present}/${migrationRows.length} migration files from \`packages/db/migrations/\` are recorded as applied in the restored database.`)
+    out.push(
+      `${present}/${migrationRows.length} migration files from \`packages/db/migrations/\` are recorded as applied in the restored database.`,
+    )
     const missingRows = migrationRows.filter((m) => !m.present)
     if (missingRows.length) {
       out.push('')
@@ -649,7 +937,7 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
     out.push('## `pnpm --filter @devon/db migrate:verify`')
     out.push('')
     out.push(
-      'This is the repository\'s own `migrate` gate. It starts its OWN Testcontainers Postgres -- it ' +
+      "This is the repository's own `migrate` gate. It starts its OWN Testcontainers Postgres -- it " +
         'cannot be pointed at the restored database -- so it proves the migration set is internally ' +
         'consistent, idempotent and keeps RLS/audit immutability intact; the restored bytes are checked ' +
         'by the `app._migrations` and row-count sections above.',
@@ -677,17 +965,22 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
     out.push('|---|---:|---:|---:|')
     for (const r of rows) {
       const flag = r.restored === r.expected ? '' : ' ⚠'
-      out.push(`| \`${r.table}\` | ${r.expected} | ${r.restored ?? 'ERR'}${flag} | ${r.live ?? '-'} |`)
+      out.push(
+        `| \`${r.table}\` | ${r.expected} | ${r.restored ?? 'ERR'}${flag} | ${r.live ?? '-'} |`,
+      )
     }
     out.push('')
     if (mismatches.length) {
       out.push('### Mismatches (drill failure)')
       out.push('')
-      for (const m of mismatches) out.push(`- \`${m.table}\`: expected ${m.expected}, restored ${m.restored ?? 'ERR'}`)
+      for (const m of mismatches)
+        out.push(`- \`${m.table}\`: expected ${m.expected}, restored ${m.restored ?? 'ERR'}`)
       out.push('')
     }
     if (drifted.length) {
-      out.push(`_${drifted.length} table(s) have grown since the dump was taken (expected on a live system)._`)
+      out.push(
+        `_${drifted.length} table(s) have grown since the dump was taken (expected on a live system)._`,
+      )
       out.push('')
     }
   }
@@ -701,7 +994,9 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
       out.push('| Bucket | Role | Objects | Bytes | Restored into | Byte-for-byte identical |')
       out.push('|---|---|---:|---:|---|---|')
       for (const b of minio.buckets) {
-        out.push(`| \`${b.source}\` | ${b.label} | ${b.objects} | ${humanBytes(b.bytes)} | \`${b.scratch}\`${opts.keep ? '' : ' (removed)'} | ${b.identical ? 'yes' : 'no'} |`)
+        out.push(
+          `| \`${b.source}\` | ${b.label} | ${b.objects} | ${humanBytes(b.bytes)} | \`${b.scratch}\`${opts.keep ? '' : ' (removed)'} | ${b.identical ? 'yes' : 'no'} |`,
+        )
       }
     } else {
       out.push('No bucket could be mirrored -- see the checks table.')
@@ -713,15 +1008,27 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
   out.push('')
   out.push('| Failing check | First action |')
   out.push('|---|---|')
-  out.push('| `pg_restore ... exits cleanly` | The newest backup is unusable. Drill the previous one (`--file`) and treat the gap as a live incident: `docs/ops/RUNBOOK.md` → "Backup or drill failed". |')
-  out.push('| `restored database lists every migration` | The dump was taken while migrations were mid-flight, or `pg_restore` dropped objects. Re-take a backup and re-drill before trusting it. |')
-  out.push('| `row-level-security policies survive the restore` | A restore from this backup would serve cross-department rows (I-1). Do not cut over to it. |')
-  out.push('| `every table restores with the row count recorded at dump time` | Data loss between dump and restore. Compare the named tables against the live database before using this backup for anything. |')
-  out.push('| `MinIO ... restores into a scratch bucket` | The off-host copy is missing or incomplete: a host loss or a wipe would take the backups with it. Check `BACKUP_MIRROR_TO_MINIO` and the backup job log. |')
+  out.push(
+    '| `pg_restore ... exits cleanly` | The newest backup is unusable. Drill the previous one (`--file`) and treat the gap as a live incident: `docs/ops/RUNBOOK.md` → "Backup or drill failed". |',
+  )
+  out.push(
+    '| `restored database lists every migration` | The dump was taken while migrations were mid-flight, or `pg_restore` dropped objects. Re-take a backup and re-drill before trusting it. |',
+  )
+  out.push(
+    '| `row-level-security policies survive the restore` | A restore from this backup would serve cross-department rows (I-1). Do not cut over to it. |',
+  )
+  out.push(
+    '| `every table restores with the row count recorded at dump time` | Data loss between dump and restore. Compare the named tables against the live database before using this backup for anything. |',
+  )
+  out.push(
+    '| `MinIO ... restores into a scratch bucket` | The off-host copy is missing or incomplete: a host loss or a wipe would take the backups with it. Check `BACKUP_MIRROR_TO_MINIO` and the backup job log. |',
+  )
   out.push('')
   out.push('---')
   out.push('')
-  out.push('Generated by `tools/backup/restore-drill.mjs` (HARDENING H19.1). Weekly schedule: `infra/backup/systemd/devon-restore-drill.timer` or `infra/backup/crontab.example`. Quarterly checklist: `docs/ops/CHECKLIST-QUARTERLY-DRILL.md`.')
+  out.push(
+    'Generated by `tools/backup/restore-drill.mjs` (HARDENING H19.1). Weekly schedule: `infra/backup/systemd/devon-restore-drill.timer` or `infra/backup/crontab.example`. Quarterly checklist: `docs/ops/CHECKLIST-QUARTERLY-DRILL.md`.',
+  )
   out.push('')
 
   mkdirSync(dirname(REPORT_PATH), { recursive: true })
@@ -729,8 +1036,12 @@ async function writeReport({ backupFile, backupBytes, restoreSeconds, rows, mani
   console.log(`[drill] report written to ${REPORT_PATH}`)
 }
 
-process.on('SIGINT', () => { void cleanup().then(() => process.exit(130)) })
-process.on('SIGTERM', () => { void cleanup().then(() => process.exit(143)) })
+process.on('SIGINT', () => {
+  void cleanup().then(() => process.exit(130))
+})
+process.on('SIGTERM', () => {
+  void cleanup().then(() => process.exit(143))
+})
 
 main().catch(async (err) => {
   console.error('[drill] unexpected failure:', err)

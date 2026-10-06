@@ -1,0 +1,17 @@
+{
+  "attachments": {
+    "title": "Fayllar",
+    "add": "Fayl yuklash",
+    "empty": "Hali fayl biriktirilmagan.",
+    "hint": "PDF, Word, Excel, PowerPoint, matn, CSV va rasmlar. Fayllar ulashishdan oldin tekshiriladi.",
+    "saved": "Fayl biriktirildi",
+    "removed": "Fayl olib tashlandi",
+    "removeName": "{name} faylini olib tashlash",
+    "uploading": "Fayl yuklanmoqda…",
+    "scanning": "Fayl tekshirilmoqda…",
+    "scanUnavailable": "Faylni tekshirish vaqtincha ishlamayapti. Yuklashni tugatish uchun qayta urinib koʻring.",
+    "tooLarge": "Fayl server hajm chegarasidan katta. Kichikroq fayl tanlang.",
+    "infected": "Faylda zararli dastur aniqlandi va u rad etildi.",
+    "error": "Amalni bajarib boʻlmadi. Fayl turini tekshirib, qayta urinib koʻring."
+  }
+}

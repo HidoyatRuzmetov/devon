@@ -1,0 +1,32 @@
+{
+  "profileEdit": {
+    "heading": "Profil",
+    "title": "Lavozim",
+    "description": "Hamkasblaringiz koʻradigan maʼlumotlar va kirish loginingizni yangilang.",
+    "edit": "Profilni tahrirlash",
+    "givenName": "Ism",
+    "familyName": "Familiya",
+    "patronymic": "Otasining ismi",
+    "login": "Login",
+    "email": "Elektron pochta",
+    "loginHint": "Loginda kichik lotin harflari, raqamlar, nuqta, chiziqcha yoki pastki chiziqdan foydalaning. Keyingi safar yangi login bilan kiring.",
+    "saved": "Profil saqlandi",
+    "loginTaken": "Bu login band. Boshqasini tanlang.",
+    "error": "Saqlab boʻlmadi. Maydonlarni tekshirib, qayta urinib koʻring."
+  },
+  "projectEdit": {
+    "edit": "Loyihani tahrirlash",
+    "description": "Tavsif",
+    "status": "Holat",
+    "start": "Boshlanish sanasi",
+    "target": "Tugash muddati",
+    "colour": "Rang",
+    "membersHint": "Loyiha egasi doim ishtirokchi boʻladi. Ishtirokchi chiqarilganda uning kartochkalari va tarixi saqlanadi.",
+    "saved": "Loyiha saqlandi",
+    "conflict": "Loyihani boshqa ishtirokchi yangiladi. Oynani yoping, sahifani yangilang va qayta urinib koʻring.",
+    "error": "Saqlab boʻlmadi. Ishtirokchilarni tekshirib, qayta urinib koʻring.",
+    "convert": "Odam qoʻshish · guruh loyihasiga aylantirish",
+    "convertHint": "Hamkasblarni tanlang. Bu kartochka yangi guruh loyihasining birinchi umumiy kartochkasi boʻladi. Izohlar, nazorat roʻyxati va fayllar saqlanadi. Loyiha va ishtirokchilarni keyin ham tahrirlash mumkin.",
+    "converted": "Guruh loyihasi yaratildi"
+  }
+}

@@ -116,15 +116,19 @@ export const NAV_GROUPS: readonly NavGroup[] = [
 
 /**
  * v1.1 critique SEV1 #5. A xodim's nav has four groups and fits; a boshqarma boshligʻi's has six
- * and does not. So the head starts with the three *working* groups folded and Boshqaruv open --
- * which is the same statement SPEC §3 makes about the product ("the head's home is for management,
- * the member's home is for working"), applied to the nav. A folded group still shows the row you
- * are standing on, so a head who is on the board sees Vazifalar in ISH regardless.
+ * and does not. Keep everyday work open; fold team, knowledge, management and account
+ * administration. Hiding the board and projects on the first visit made the head's main workflow
+ * harder to discover than configuration. A folded group still shows the current destination.
  *
  * This is only the first-run default: the moment anyone toggles a group the whole set is persisted
  * per user and this is never consulted again.
  */
-export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = ['work', 'team', 'knowledge']
+export const DEFAULT_COLLAPSED_GROUPS_HEAD: readonly string[] = [
+  'team',
+  'knowledge',
+  'manage-head',
+  'manage',
+]
 
 /** The five areas the bottom tab bar carries at 390 px (UI-OVERHAUL.md §2: "bottom tab bar for the
  * five most used areas"). Everything else stays one tap away behind ☰, which opens the full sidebar

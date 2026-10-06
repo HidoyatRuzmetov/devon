@@ -96,7 +96,15 @@ export async function requestAvatarUpload(
   const key = avatarOriginalKey(userId, id)
   const expiresAt = new Date(app.devon.now().getTime() + uploadUrlTtlSeconds * 1000)
   const upload = await app.devon.createUpload(
-    { id, userId, purpose: 'avatar', key, mime: input.contentType, size: input.size, expiresAt },
+    {
+      id,
+      userId,
+      purpose: 'avatar',
+      key,
+      mime: input.contentType,
+      size: input.size,
+      expiresAt,
+    },
     ctx,
   )
   const presigned = await store.presignPut(key, {
@@ -283,17 +291,39 @@ export async function retryPendingScans(
   let finalized = 0
   let stillPending = 0
   let resolvedOtherwise = 0
-  for (const { id, userId } of pending) {
-    const user = await app.devon.findUserById(userId)
-    if (!user) continue // the account was deleted since; the hourly sweep still cleans up its row
-    try {
-      const result = await finalizeAvatar(app, user, id, scanRetryAuditCtx())
-      if (result.ok) finalized += 1
-      else if (result.reason === 'scanner_unavailable') stillPending += 1
-      else resolvedOtherwise += 1
-    } catch (err) {
-      app.log.warn({ err, uploadId: id }, 'storage: scan retry failed for one upload, continuing')
-    }
+  // Different accounts can scan concurrently. Preserve the pending order within an account
+  // because finalizing its later upload replaces the avatar published by its earlier upload.
+  const byUser = new Map<string, typeof pending>()
+  for (const upload of pending)
+    byUser.set(upload.userId, [...(byUser.get(upload.userId) ?? []), upload])
+  const groups = [...byUser.values()]
+  for (let offset = 0; offset < groups.length; offset += 4) {
+    await Promise.all(
+      groups.slice(offset, offset + 4).map(async (uploads) => {
+        for (const { id, userId } of uploads) {
+          // nosemgrep: query-in-loop -- same-account uploads must publish in order; accounts run in bounded parallel batches.
+          const user = await app.devon.findUserById(userId)
+          if (!user) continue // the account was deleted since; the hourly sweep still cleans up its row
+          try {
+            // nosemgrep: query-in-loop -- a later avatar for this account replaces the preceding finalized avatar.
+            const result = await finalizeAvatar(app, user, id, scanRetryAuditCtx())
+            if (result.ok) finalized += 1
+            else if (result.reason === 'scanner_unavailable') stillPending += 1
+            else resolvedOtherwise += 1
+          } catch (err) {
+            app.log.warn(
+              { err, uploadId: id },
+              'storage: scan retry failed for one upload, continuing',
+            )
+          }
+        }
+      }),
+    )
   }
-  return { checked: pending.length, finalized, stillPending, resolvedOtherwise }
+  return {
+    checked: pending.length,
+    finalized,
+    stillPending,
+    resolvedOtherwise,
+  }
 }

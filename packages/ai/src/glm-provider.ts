@@ -120,17 +120,20 @@ export class GlmProvider implements AiProvider {
         : {}),
     }
 
+    // One deadline covers transport retries AND reading the response body. Fetch resolves on
+    // headers, so clearing its timer there leaves a stalled JSON body unbounded.
+    const deadline = Date.now() + (request.timeoutMs ?? this.requestTimeoutMs)
     let lastError: unknown
     for (let attempt = 0; attempt <= this.maxTransportRetries; attempt++) {
+      const remainingMs = deadline - Date.now()
+      if (remainingMs <= 0) throw new GlmProviderError('GLM request timed out')
       const controller = new AbortController()
       // SEV2 #23: whichever is tighter -- this deployment's configured per-attempt ceiling, or what
       // the caller has left of the run's whole budget.
-      const attemptTimeoutMs =
-        request.timeoutMs !== undefined && request.timeoutMs > 0
-          ? Math.min(request.timeoutMs, this.requestTimeoutMs)
-          : this.requestTimeoutMs
+      const attemptTimeoutMs = Math.min(remainingMs, this.requestTimeoutMs)
       const timer = setTimeout(() => controller.abort(), attemptTimeoutMs)
       try {
+        // nosemgrep: query-in-loop -- bounded transport retry; each attempt depends on the previous failure and shares one deadline.
         const res = await this.fetchImpl(`${this.baseUrl}/chat/completions`, {
           method: 'POST',
           headers: {
@@ -140,16 +143,13 @@ export class GlmProvider implements AiProvider {
           body: JSON.stringify(body),
           signal: controller.signal,
         })
-        clearTimeout(timer)
-
         if (!res.ok) {
-          const text = await res.text().catch(() => '')
-          throw new GlmProviderError(
-            `GLM request failed with status ${res.status}: ${text.slice(0, 500)}`,
-            res.status,
-          )
+          // Provider bodies may echo prompts or credentials. Status is enough to diagnose the
+          // failure; never propagate that untrusted body into API logs or user-facing errors.
+          throw new GlmProviderError(`GLM request failed with status ${res.status}`, res.status)
         }
 
+        // nosemgrep: query-in-loop -- reads this attempt's response before deciding whether a sequential retry is needed.
         const parsed = (await res.json()) as WireResponse
         const choice = parsed.choices[0]
         if (!choice) throw new GlmProviderError('GLM response had no choices')
@@ -174,17 +174,18 @@ export class GlmProvider implements AiProvider {
           usage,
         }
       } catch (err) {
-        clearTimeout(timer)
         lastError = err
         // A `GlmProviderError` from a non-ok HTTP status is a real answer, not a transport failure --
         // never retried. Only a genuine transport failure (abort/timeout, network error, malformed
         // JSON) is worth one bounded retry.
         if (err instanceof GlmProviderError) throw err
         if (attempt === this.maxTransportRetries) break
+      } finally {
+        clearTimeout(timer)
       }
     }
     throw lastError instanceof Error
-      ? new GlmProviderError(`GLM request failed after retries: ${lastError.message}`)
+      ? new GlmProviderError('GLM request failed after bounded transport retries')
       : new GlmProviderError('GLM request failed after retries')
   }
 }

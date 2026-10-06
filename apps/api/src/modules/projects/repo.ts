@@ -5,8 +5,69 @@
 // members' subjective tasks").
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { ProjectDTO } from './schemas.js'
+
+export class InvalidProjectMembers extends Error {}
+
+/** Promote in one transaction so retries cannot leave duplicate or half-created projects. */
+export async function createFromCard(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+  members: string[],
+) {
+  return withContext(ctx, async (tx) => {
+    const cards = await tx.raw<{
+      title: string
+      description: ProjectRow['description']
+      project_id: string | null
+    }>(sql`
+      select title, description, project_id from app.cards where id = ${cardId}
+        and department_id = ${departmentId} and deleted_at is null for update`)
+    const card = cards[0]
+    if (!card) return { ok: false as const, reason: 'not_found' as const }
+    if (card.project_id) return { ok: false as const, reason: 'conflict' as const }
+    const selected = await checkedMembers(tx, departmentId, ctx.userId!, members)
+    const id = randomUUID()
+    await tx.raw(sql`insert into app.projects (id, department_id, title, description, owner_user_id, members, status)
+      values (${id}, ${departmentId}, ${card.title}, ${card.description ? JSON.stringify(card.description) : null}::jsonb,
+        ${ctx.userId}, ${sql.param(selected)}::uuid[], 'active')`)
+    await tx.raw(sql`update app.cards set project_id = ${id}, project_scope = 'objective', kind = 'project_task',
+      updated_at = now(), version = version + 1 where id = ${cardId}`)
+    tx.audit({
+      action: 'projects.created_from_card',
+      subjectType: 'project',
+      subjectId: id,
+      departmentId,
+      after: { cardId, members: selected },
+    })
+    tx.audit({
+      action: 'work.card_updated',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+      after: { projectId: id, projectScope: 'objective', kind: 'project_task' },
+    })
+    tx.emit({
+      type: 'projects.project.created',
+      payload: { projectId: id, actorUserId: ctx.userId },
+      departmentId,
+    })
+    tx.emit({ type: 'work.card.updated', payload: { cardId }, departmentId })
+    const rows = await tx.raw<ProjectRow>(sql`select * from app.projects where id = ${id}`)
+    return { ok: true as const, project: toProjectDTO(rows[0]!, await getProgress(tx, id)) }
+  })
+}
+
+async function checkedMembers(tx: Tx, departmentId: string, owner: string, members: string[]) {
+  const ids = [...new Set([owner, ...members])]
+  const active = await tx.raw<{ user_id: string }>(sql`select user_id from app.memberships
+    where department_id = ${departmentId} and status = 'active' and deleted_at is null
+      and user_id = any(${sql.param(ids)}::uuid[])`)
+  if (ids.some((id) => !active.some((m) => m.user_id === id))) throw new InvalidProjectMembers()
+  return ids
+}
 
 type ProjectRow = {
   id: string
@@ -169,6 +230,7 @@ export async function createProject(
 ): Promise<ProjectDTO> {
   return withContext(ctx, async (tx) => {
     const id = randomUUID()
+    const members = await checkedMembers(tx, input.departmentId, input.ownerUserId, input.members)
     const description = input.description
       ? { format: 'markdown' as const, text: input.description }
       : null
@@ -192,7 +254,7 @@ export async function createProject(
           ) values (
             ${id}, ${input.departmentId}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
-            ${input.colour ?? '#6366f1'}, ${input.ownerUserId}, ${sql.param(input.members)}::uuid[],
+            ${input.colour ?? '#6366f1'}, ${input.ownerUserId}, ${sql.param(members)}::uuid[],
             ${input.status ?? 'planning'}, ${input.startOn ?? null}, ${input.targetOn ?? null},
             ${JSON.stringify(milestones)}::jsonb
           )`,
@@ -246,8 +308,8 @@ export async function patchProject(
   expectedVersion: number | undefined,
 ): Promise<PatchProjectResult> {
   return withContext(ctx, async (tx) => {
-    const before = await tx.raw<{ version: number }>(
-      sql`select version from app.projects where id = ${id} and department_id = ${departmentId} and deleted_at is null`,
+    const before = await tx.raw<{ version: number; owner_user_id: string; members: string[] }>(
+      sql`select version, owner_user_id, members from app.projects where id = ${id} and department_id = ${departmentId} and deleted_at is null for update`,
     )
     if (!before[0]) return { ok: false, reason: 'not_found' }
     if (expectedVersion !== undefined && before[0].version !== expectedVersion) {
@@ -266,7 +328,15 @@ export async function patchProject(
     if (patch.ownerUserId !== undefined) sets.push(sql`owner_user_id = ${patch.ownerUserId}`)
     // sql.param(): the bare array here hits the same "cannot cast type record to uuid[]" / empty-
     // array syntax error bug this file's `createProject` header comment explains.
-    if (patch.members !== undefined) sets.push(sql`members = ${sql.param(patch.members)}::uuid[]`)
+    if (patch.members !== undefined || patch.ownerUserId !== undefined) {
+      const members = await checkedMembers(
+        tx,
+        departmentId,
+        patch.ownerUserId ?? before[0].owner_user_id,
+        patch.members ?? before[0].members,
+      )
+      sets.push(sql`members = ${sql.param(members)}::uuid[]`)
+    }
     if (patch.status !== undefined) sets.push(sql`status = ${patch.status}`)
     if (patch.startOn !== undefined) sets.push(sql`start_on = ${patch.startOn}`)
     if (patch.targetOn !== undefined) sets.push(sql`target_on = ${patch.targetOn}`)
@@ -279,6 +349,7 @@ export async function patchProject(
       departmentId,
       after: patch,
     })
+    tx.emit({ type: 'projects.project.updated', payload: { projectId: id }, departmentId })
 
     const rows = await tx.raw<ProjectRow>(
       sql`select id, title, description, colour, cover_key, owner_user_id, members, status,
@@ -297,7 +368,7 @@ export async function addMilestone(
 ): Promise<ProjectDTO | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{ milestones: ProjectRow['milestones'] }>(
-      sql`select milestones from app.projects where id = ${projectId} and department_id = ${departmentId} and deleted_at is null`,
+      sql`select milestones from app.projects where id = ${projectId} and department_id = ${departmentId} and deleted_at is null for update`,
     )
     if (!rows[0]) return null
     const milestones = [
@@ -308,6 +379,14 @@ export async function addMilestone(
       sql`update app.projects set milestones = ${JSON.stringify(milestones)}::jsonb, updated_at = now(), version = version + 1
           where id = ${projectId}`,
     )
+    tx.audit({
+      action: 'projects.milestones_updated',
+      subjectType: 'project',
+      subjectId: projectId,
+      departmentId,
+      after: { milestones },
+    })
+    tx.emit({ type: 'projects.project.updated', payload: { projectId }, departmentId })
     const after = await tx.raw<ProjectRow>(
       sql`select id, title, description, colour, cover_key, owner_user_id, members, status,
                  start_on, target_on, milestones, created_at, updated_at, version
@@ -330,7 +409,7 @@ export async function patchMilestone(
 ): Promise<ProjectDTO | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{ milestones: ProjectRow['milestones'] }>(
-      sql`select milestones from app.projects where id = ${projectId} and department_id = ${departmentId} and deleted_at is null`,
+      sql`select milestones from app.projects where id = ${projectId} and department_id = ${departmentId} and deleted_at is null for update`,
     )
     if (!rows[0]) return null
     const found = rows[0].milestones.find((m) => m.id === milestoneId)
@@ -350,6 +429,14 @@ export async function patchMilestone(
       sql`update app.projects set milestones = ${JSON.stringify(milestones)}::jsonb, updated_at = now(), version = version + 1
           where id = ${projectId}`,
     )
+    tx.audit({
+      action: 'projects.milestones_updated',
+      subjectType: 'project',
+      subjectId: projectId,
+      departmentId,
+      after: { milestones },
+    })
+    tx.emit({ type: 'projects.project.updated', payload: { projectId }, departmentId })
     const after = await tx.raw<ProjectRow>(
       sql`select id, title, description, colour, cover_key, owner_user_id, members, status,
                  start_on, target_on, milestones, created_at, updated_at, version

@@ -16,21 +16,41 @@ function useCsrfToken(): string {
   return meQuery.data?.csrfToken ?? ''
 }
 
+function useAiScope() {
+  const { data: me } = useMeQuery()
+  const departmentId = me?.activeDepartmentId ?? me?.memberships[0]?.departmentId ?? null
+  return {
+    key: [me?.user.id ?? null, departmentId, me?.actingForUserId ?? null] as const,
+    enabled: Boolean(me && departmentId),
+  }
+}
+
 export function useAiSettingsQuery() {
-  return useQuery({ queryKey: KEYS.settings, queryFn: api.fetchAiSettings })
+  const scope = useAiScope()
+  return useQuery({
+    queryKey: [...KEYS.settings, ...scope.key],
+    queryFn: api.fetchAiSettings,
+    enabled: scope.enabled,
+  })
 }
 
 export function usePatchAiSettingsMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const scope = useAiScope()
   return useMutation({
     mutationFn: (input: PatchAiSettingsInput) => api.patchAiSettings(input, csrf),
-    onSuccess: (settings) => qc.setQueryData(KEYS.settings, settings),
+    onSuccess: (settings) => qc.setQueryData([...KEYS.settings, ...scope.key], settings),
   })
 }
 
 export function useAiUsageQuery() {
-  return useQuery({ queryKey: KEYS.usage, queryFn: () => api.fetchAiUsage(50) })
+  const scope = useAiScope()
+  return useQuery({
+    queryKey: [...KEYS.usage, ...scope.key],
+    queryFn: () => api.fetchAiUsage(50),
+    enabled: scope.enabled,
+  })
 }
 
 /**
@@ -59,18 +79,21 @@ export function useRunAiFeatureMutation(feature: AiFeatureId) {
  * does not fire a request per keystroke -- the caller debounces the string it passes in.
  */
 export function useDepartmentSearchQuery(query: string, limit = 12) {
+  const scope = useAiScope()
   return useQuery({
-    queryKey: ['ai', 'search', query, limit] as const,
+    queryKey: ['ai', 'search', ...scope.key, query, limit] as const,
     queryFn: () => api.searchDepartment(query, limit),
-    enabled: query.trim().length >= 2,
+    enabled: scope.enabled && query.trim().length >= 2,
     staleTime: 30_000,
   })
 }
 
 export function useSearchBackendQuery() {
+  const scope = useAiScope()
   return useQuery({
-    queryKey: ['ai', 'search', 'backend'] as const,
+    queryKey: ['ai', 'search', 'backend', ...scope.key] as const,
     queryFn: api.fetchSearchBackend,
+    enabled: scope.enabled,
   })
 }
 
@@ -109,10 +132,11 @@ export function useRebuildIndexMutation() {
  * the reader.
  */
 export function useBriefingQuery(enabled: boolean) {
+  const scope = useAiScope()
   return useQuery({
-    queryKey: KEYS.briefing,
+    queryKey: [...KEYS.briefing, ...scope.key],
     queryFn: api.fetchBriefing,
-    enabled,
+    enabled: enabled && scope.enabled,
     staleTime: 60_000,
     refetchInterval: (query) => {
       const status = query.state.data?.briefing?.status

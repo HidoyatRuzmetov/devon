@@ -148,7 +148,7 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.kind,
         req.body.label,
       )
-      return reply.send(feedDto(row, publicUrl))
+      return reply.type('application/json').send(feedDto(row, publicUrl))
     },
   )
 
@@ -170,7 +170,7 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const row = await rotateFeed(auditCtxFromReq(req), req.actor!.userId, req.params.id)
       if (!row) return reply.code(404).send({ code: 'not_found' })
-      return reply.send(feedDto(row, publicUrl))
+      return reply.type('application/json').send(feedDto(row, publicUrl))
     },
   )
 

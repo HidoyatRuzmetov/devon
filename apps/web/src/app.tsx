@@ -5,6 +5,8 @@ import { useT } from '@devon/i18n'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
 import { useMeQuery } from './lib/session.js'
+import { useForcedState } from './lib/forced-state.js'
+import { ForcedStateBlock } from './shell/forced-state-block.js'
 import { navigate, useRouteName, useRoutePath } from './lib/router.js'
 import { usePageHead } from './lib/page-meta.js'
 import { matchFeatureRoute } from './features/registry.js'
@@ -101,13 +103,20 @@ function coreTitleKey(name: ReturnType<typeof useRouteName>): string {
   }
 }
 
-function RouteOutlet() {
+export function RouteOutlet() {
   const path = useRoutePath()
   const name = useRouteName()
   const t = useT()
   const meQuery = useMeQuery()
+  const forced = useForcedState()
 
   const featureRoute = matchFeatureRoute(path)
+  const requiresSession = !AUTH_ROUTES.has(path) && (Boolean(featureRoute) || name === 'home')
+  const signedOut =
+    requiresSession && !meQuery.isPending && !meQuery.isError && meQuery.data === null
+  React.useEffect(() => {
+    if (signedOut && !forced) navigate('/login', { replace: true })
+  }, [signedOut, forced])
   // H23.1: every route's `<title>`/`<meta name="robots">`/canonical link, set unconditionally
   // (before the early returns below) so the Rules of Hooks hold regardless of which branch renders.
   // `AUTH_ROUTES` are the public entry points (H23.1: "login, join... noindex" is only for *app*
@@ -117,6 +126,37 @@ function RouteOutlet() {
     description: AUTH_ROUTES.has(path) ? t('auth.tagline') : undefined,
     noindex: !AUTH_ROUTES.has(path),
   })
+
+  // Resolve the session before mounting any private feature (or its mutation hooks). A slow /me
+  // request used to let useCsrfToken throw and permanently trip the route error boundary.
+  // Test-only forced states render safely without mounting the private feature, too.
+  if (requiresSession && forced) {
+    const Shell = meQuery.data ? AppShell : AuthShell
+    return (
+      <Shell>
+        <ForcedStateBlock kind={forced} />
+      </Shell>
+    )
+  }
+  if (requiresSession && meQuery.isError) {
+    return (
+      <AuthShell>
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          bodyKey="state.error.body"
+          action={{ labelKey: 'state.error.action', onAction: () => void meQuery.refetch() }}
+        />
+      </AuthShell>
+    )
+  }
+  if (requiresSession && !meQuery.data) {
+    return (
+      <AuthShell>
+        <RouteFallback />
+      </AuthShell>
+    )
+  }
 
   if (isSuperAdminRoute(path) && meQuery.data && meQuery.data.user.role !== 'super_admin') {
     return (

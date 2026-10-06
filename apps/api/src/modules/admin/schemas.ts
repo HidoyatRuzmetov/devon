@@ -163,6 +163,7 @@ export const auditEventRowSchema = z.object({
   action: z.string(),
   subjectType: z.string(),
   subjectId: z.string().nullable(),
+  subjectTitle: z.string().nullable().optional(),
 })
 export const auditEventListSchema = z.object({
   events: z.array(auditEventRowSchema),

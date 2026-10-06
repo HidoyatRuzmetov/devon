@@ -20,14 +20,17 @@ concurrency:
 permissions:
   contents: read
   packages: write
+  actions: read
 
 jobs:
   deploy:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository &&
        github.event.workflow_run.head_branch == 'main')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: production
     steps:
@@ -58,6 +61,17 @@ jobs:
         with:
           ref: ${{ steps.release.outputs.sha }}
 
+      - name: Require passing CI for this exact current main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
+        run: |
+          set -euo pipefail
+          current="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
+          [ "$current" = "$RELEASE_SHA" ] || { echo 'Refusing a stale or non-main deployment'; exit 1; }
+          passed="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&event=push&status=success" --jq '.total_count')"
+          [ "$passed" -gt 0 ] || { echo 'This commit has no successful CI push run'; exit 1; }
+
       - name: Validate deployment secrets
         env:
           PROD_HOST: ${{ secrets.PROD_HOST }}
@@ -84,6 +98,11 @@ jobs:
           echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker build --pull -f apps/api/Dockerfile -t "${image_root}-api:${RELEASE_SHA}" .
           docker build --pull -f apps/web/Dockerfile -t "${image_root}-web:${RELEASE_SHA}" .
+          for image in "${image_root}-api:${RELEASE_SHA}" "${image_root}-web:${RELEASE_SHA}"; do
+            docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+              -v devon-trivy-cache:/root/.cache/trivy aquasec/trivy:0.74.0 \
+              image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$image"
+          done
           docker push "${image_root}-api:${RELEASE_SHA}"
           docker push "${image_root}-web:${RELEASE_SHA}"
 
@@ -100,21 +119,27 @@ jobs:
 
       - name: Install release manifests without touching server secrets
         env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ steps.release.outputs.sha }}
           PROD_HOST: ${{ secrets.PROD_HOST }}
           PROD_PORT: ${{ secrets.PROD_PORT }}
           PROD_USER: ${{ secrets.PROD_USER }}
         run: |
           set -euo pipefail
+          current="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
+          [ "$current" = "$RELEASE_SHA" ] || { echo 'Main changed during build; refusing stale deployment'; exit 1; }
           port="${PROD_PORT:-22}"
           tar -czf - \
             infra/docker-compose.prod.yml \
+            infra/docker-compose.yml \
             infra/Caddyfile \
             infra/maintenance \
             infra/backup \
             scripts/remote-deploy.sh \
             tools/backup \
+            packages/db/migrations \
             | ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
-                'umask 027; install -d -m 0750 /opt/devon; tar -xzf - -C /opt/devon'
+                'set -eu; umask 027; install -d -m 0750 /opt/devon; if [ -f /opt/devon/infra/docker-compose.prod.yml ]; then cp /opt/devon/infra/docker-compose.prod.yml /opt/devon/infra/.previous-docker-compose.prod.yml; fi; tar -xzf - -C /opt/devon'
 
       - name: Authenticate the server to GHCR for this deployment
         env:
@@ -144,4 +169,3 @@ jobs:
               '${image_root}-api:${RELEASE_SHA}' \
               '${image_root}-web:${RELEASE_SHA}' \
               '${RELEASE_SHA}'"
-

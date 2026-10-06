@@ -116,6 +116,12 @@ const configSchema = z
       .min(1)
       .optional()
       .transform((v) => (v ? v : undefined)),
+    // Sharing a production token with local dev must not delete its webhook and steal updates.
+    // Enable polling deliberately only for a dedicated development bot.
+    TELEGRAM_POLLING_ENABLED: z
+      .enum(['true', 'false'])
+      .default('false')
+      .transform((value) => value === 'true'),
     TELEGRAM_BOT_USERNAME: z
       .string()
       .trim()

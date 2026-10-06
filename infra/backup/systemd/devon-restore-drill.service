@@ -16,7 +16,7 @@ WorkingDirectory=/opt/devon
 # --skip-migrate-verify: the migrate:verify suite starts its own Testcontainers Postgres and is
 # already run by CI on every push; leave it out of the unattended weekly job and keep it for the
 # quarterly drill (docs/ops/CHECKLIST-QUARTERLY-DRILL.md), which a human watches.
-ExecStart=/usr/bin/node /opt/devon/tools/backup/restore-drill.mjs --skip-migrate-verify
+ExecStart=/usr/local/bin/node /opt/devon/tools/backup/restore-drill.mjs --skip-migrate-verify
 User=devon
 Group=devon
 # BACKUP_DIR must match the backup job's. Keep it OUTSIDE /opt/devon if the sentinel's wipe switch

@@ -145,6 +145,7 @@ function patchCardInCaches(
 }
 
 function invalidateCard(qc: QueryClient, id: string): void {
+  void qc.invalidateQueries({ queryKey: ['projects'] })
   void qc.invalidateQueries({ queryKey: BOARD_KEY })
   void qc.invalidateQueries({ queryKey: CARDS_KEY })
   void qc.invalidateQueries({ queryKey: CARD_KEY(id) })
@@ -158,6 +159,7 @@ export function useCreateCardMutation() {
   return useMutation({
     mutationFn: (input: api.CreateCardInput) => api.createCard(input, csrf),
     onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects'] })
       void qc.invalidateQueries({ queryKey: BOARD_KEY })
       void qc.invalidateQueries({ queryKey: CARDS_KEY })
     },
@@ -230,6 +232,22 @@ export function useRestoreCardMutation() {
   return useMutation({
     mutationFn: (id: string) => api.restoreCard(id, csrf),
     onSuccess: (_data, id) => invalidateCard(qc, id),
+  })
+}
+
+export function useDeleteCardMutation(undo = false) {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  const t = useT()
+  return useMutation({
+    mutationFn: (id: string) => (undo ? api.undoDeleteCard(id, csrf) : api.deleteCard(id, csrf)),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['work'] })
+      void qc.invalidateQueries({ queryKey: ['projects'] })
+      void qc.invalidateQueries({ queryKey: ['analytics'] })
+      void qc.invalidateQueries({ queryKey: ['inbox', 'notifications'] })
+    },
+    onError: () => toast(t('work.deletion.failed')),
   })
 }
 

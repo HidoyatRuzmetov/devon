@@ -27,6 +27,7 @@ on:
     paths:
       - 'tools/backup/**'
       - 'infra/backup/**'
+      - 'infra/minio/**'
       - 'infra/docker-compose.yml'
       - 'packages/db/migrations/**'
       - '.github/workflows/restore-drill.yml'
@@ -44,8 +45,8 @@ env:
 jobs:
   drill:
     name: restore drill (backup -> scratch database + scratch bucket)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -56,11 +57,14 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: package.json
+          node-version: '22.23.3'
           cache: pnpm
 
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build MinIO and backup client from pinned official source
+        run: bash infra/minio/build.sh
 
       # Compose (not `services:`) on purpose: the drill and the backup scripts run `docker run
       # --network devon`, and this is what creates that network with the exact digest-pinned images
@@ -114,6 +118,7 @@ jobs:
 
       - name: Restore drill (scratch database + scratch bucket, full comparison)
         env:
+          BACKUP_MIRROR_TO_MINIO: '1'
           POSTGRES_DB: devon
           POSTGRES_SUPERUSER_PASSWORD: devon_local_dev_root
           BACKUP_DIR: ${{ runner.temp }}/devon-backups

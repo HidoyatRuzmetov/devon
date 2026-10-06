@@ -294,7 +294,7 @@ export async function consumeGroupConnectCode(
 
     await tx.raw(sql`
       insert into app.telegram_groups (department_id, chat_id, title, connected_by, kinds, connect_key_used)
-      values (${row.department_id}, ${chatId}::bigint, ${title}, ${connectedBy}, '{}'::text[], ${code})
+      values (${row.department_id}, ${chatId}::bigint, ${title}, ${connectedBy}, '{events,polls,announcements}'::text[], ${code})
       on conflict (chat_id) where disconnected_at is null do update set
         department_id = excluded.department_id, title = excluded.title, connected_by = excluded.connected_by
     `)

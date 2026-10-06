@@ -330,7 +330,11 @@ export async function previousValue(
 
 // --- memberships ------------------------------------------------------------------------------------
 
-export type MemberRow = { membership_id: string; user_id: string; locale: string | null }
+export type MemberRow = {
+  membership_id: string
+  user_id: string
+  locale: string | null
+}
 
 /** Active memberships of the department, with each person's own locale -- the Telegram message and the
  * inbox row are both rendered in it. One query, never one per person. */
@@ -377,7 +381,11 @@ export async function membershipUserMap(
 
 // --- fill requests ------------------------------------------------------------------------------------
 
-export type ProgressRow = { filled: string; total: string; open_requests: string }
+export type ProgressRow = {
+  filled: string
+  total: string
+  open_requests: string
+}
 
 /**
  * Progress for one definition: how many active members have an answer, how many there are, and how
@@ -424,7 +432,11 @@ export async function progressFor(
   return new Map(
     rows.map((r) => [
       r.def_id,
-      { filled: Number(r.filled), total: Number(r.total), openRequests: Number(r.open_requests) },
+      {
+        filled: Number(r.filled),
+        total: Number(r.total),
+        openRequests: Number(r.open_requests),
+      },
     ]),
   )
 }
@@ -570,7 +582,11 @@ export async function openRequestsFor(
 export async function departmentsNeedingReminders(
   tx: Tx,
 ): Promise<{ department_id: string; def_id: string; reminder_days: number }[]> {
-  return tx.raw<{ department_id: string; def_id: string; reminder_days: number }>(sql`
+  return tx.raw<{
+    department_id: string
+    def_id: string
+    reminder_days: number
+  }>(sql`
     select r.department_id, r.def_id, d.reminder_days
     from app.field_requests r
     join app.field_defs d on d.id = r.def_id

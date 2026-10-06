@@ -505,4 +505,33 @@ describe('ClamAV before visibility', () => {
     expect(state.users[0]!.avatarKey).not.toBeNull()
     await app.close()
   })
+
+  it('retries accounts concurrently with at most four lookups and never overlaps one account', async () => {
+    const { app } = await setup()
+    const userIds = Array.from({ length: 9 }, (_, i) => `missing-${i}`)
+    app.devon.listPendingAvatarUploads = async () =>
+      userIds.flatMap((userId) => [
+        { id: `${userId}-first`, userId },
+        { id: `${userId}-second`, userId },
+      ])
+    let inFlight = 0
+    let peak = 0
+    const active = new Set<string>()
+    const seen: string[] = []
+    app.devon.findUserById = async (userId) => {
+      expect(active.has(userId)).toBe(false)
+      active.add(userId)
+      peak = Math.max(peak, ++inFlight)
+      await new Promise<void>((resolve) => setTimeout(resolve, 2))
+      active.delete(userId)
+      inFlight -= 1
+      seen.push(userId)
+      return null
+    }
+    const { retryPendingScans } = await import('../../../src/modules/accounts/avatar-service.js')
+    expect(await retryPendingScans(app)).toMatchObject({ checked: 18, finalized: 0 })
+    expect(peak).toBe(4)
+    expect(seen).toHaveLength(18)
+    await app.close()
+  })
 })

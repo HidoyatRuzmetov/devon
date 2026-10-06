@@ -49,6 +49,21 @@ export const loginIdSchema = z
   .max(64)
   .regex(/^[a-z0-9._-]+$/, 'lowercase letters, digits, dot, dash, underscore only')
 
+export const profileSchema = z
+  .object({
+    login: loginIdSchema,
+    email: z.string().email().max(256).nullable(),
+    givenName: z.string().trim().min(1).max(100),
+    familyName: z.string().trim().min(1).max(100),
+    patronymic: z.string().trim().max(100).nullable(),
+    title: z.string().trim().max(150).nullable(),
+  })
+  .strict()
+export const patchProfileBodySchema = profileSchema
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, { message: 'empty patch' })
+export type PatchProfileBody = z.infer<typeof patchProfileBodySchema>
+
 export const registerBodySchema = z
   .object({
     login: loginIdSchema,

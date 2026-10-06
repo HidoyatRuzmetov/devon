@@ -18,6 +18,7 @@ import {
   SheetContent,
   StateView,
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
   toast,
@@ -27,7 +28,11 @@ import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import { approveRequest, fetchAllRequests, rejectRequest, type DepartmentRequest } from './api.js'
 
-const STATUS_TONE = { pending: 'neutral', approved: 'success', rejected: 'destructive' } as const
+const STATUS_TONE = {
+  pending: 'neutral',
+  approved: 'success',
+  rejected: 'destructive',
+} as const
 
 export default function ApprovalQueueScreen() {
   const t = useT()
@@ -44,7 +49,9 @@ export default function ApprovalQueueScreen() {
   })
 
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ['departments', 'requests', 'all'] })
+    queryClient.invalidateQueries({
+      queryKey: ['departments', 'requests', 'all'],
+    })
 
   const approve = useMutation({
     mutationFn: (id: string) => approveRequest(id, meQuery.data?.csrfToken ?? ''),
@@ -77,7 +84,10 @@ export default function ApprovalQueueScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => query.refetch(),
+        }}
       />
     )
   }
@@ -85,53 +95,58 @@ export default function ApprovalQueueScreen() {
   const requests = query.data.requests
 
   return (
-    <div className="flex flex-col gap-6">
+    <Tabs
+      value={filter}
+      onValueChange={(v) => setFilter(v as typeof filter)}
+      className="flex flex-col gap-6"
+    >
       <PageHeader
         title={t('departments.approvalQueue.title')}
         tabs={
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-            <TabsList>
-              <TabsTrigger value="pending">
-                {t('departments.approvalQueue.filterPending')}
-              </TabsTrigger>
-              <TabsTrigger value="all">{t('departments.approvalQueue.filterAll')}</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <TabsList>
+            <TabsTrigger value="pending">
+              {t('departments.approvalQueue.filterPending')}
+            </TabsTrigger>
+            <TabsTrigger value="all">{t('departments.approvalQueue.filterAll')}</TabsTrigger>
+          </TabsList>
         }
       />
 
-      {requests.length === 0 ? (
-        <StateView kind="empty" titleKey="departments.approvalQueue.empty.title" />
-      ) : (
-        <Reveal>
-          <DataList label={t('departments.approvalQueue.title')}>
-            {requests.map((r) => (
-              <DataRow
-                key={r.id}
-                interactive
-                onClick={() => setOpenRequest(r)}
-                trailing={
-                  <>
-                    <Badge tone={STATUS_TONE[r.status]}>
-                      {t(`departments.pending.status.${r.status}`)}
-                    </Badge>
-                    <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
-                  </>
-                }
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-body font-medium text-foreground">{r.name}</p>
-                  <p className="truncate text-small text-muted-foreground">
-                    {t('departments.approvalQueue.requestedBy')}: {r.requesterName} ·{' '}
-                    {t('departments.approvalQueue.unitsCount', { count: r.units.length })}
-                  </p>
-                </div>
-              </DataRow>
-            ))}
-          </DataList>
-        </Reveal>
-      )}
-
+      <TabsContent value={filter}>
+        {requests.length === 0 ? (
+          <StateView kind="empty" titleKey="departments.approvalQueue.empty.title" />
+        ) : (
+          <Reveal>
+            <DataList label={t('departments.approvalQueue.title')}>
+              {requests.map((r) => (
+                <DataRow
+                  key={r.id}
+                  interactive
+                  onClick={() => setOpenRequest(r)}
+                  trailing={
+                    <>
+                      <Badge tone={STATUS_TONE[r.status]}>
+                        {t(`departments.pending.status.${r.status}`)}
+                      </Badge>
+                      <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                    </>
+                  }
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-body font-medium text-foreground">{r.name}</p>
+                    <p className="truncate text-small text-muted-foreground">
+                      {t('departments.approvalQueue.requestedBy')}: {r.requesterName} ·{' '}
+                      {t('departments.approvalQueue.unitsCount', {
+                        count: r.units.length,
+                      })}
+                    </p>
+                  </div>
+                </DataRow>
+              ))}
+            </DataList>
+          </Reveal>
+        )}
+      </TabsContent>
       <Sheet
         direction="right"
         open={openRequest !== null}
@@ -175,7 +190,9 @@ export default function ApprovalQueueScreen() {
 
               <div className="flex flex-col gap-2">
                 <span className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                  {t('departments.approvalQueue.unitsCount', { count: openRequest.units.length })}
+                  {t('departments.approvalQueue.unitsCount', {
+                    count: openRequest.units.length,
+                  })}
                 </span>
                 {openRequest.units.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">
@@ -246,6 +263,6 @@ export default function ApprovalQueueScreen() {
           ) : null}
         </SheetContent>
       </Sheet>
-    </div>
+    </Tabs>
   )
 }

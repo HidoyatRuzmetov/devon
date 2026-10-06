@@ -1,0 +1,12 @@
+{
+  "integrationSetup": {
+    "title": "Connect Telegram in three steps",
+    "description": "Get work reminders in Telegram and choose how often they arrive.",
+    "link": "Get a connection code below, open the bot and press Start. Keep this page open: it confirms the connection automatically.",
+    "preferences": "Open Notification preferences to choose alerts, summaries and quiet hours. Linking alone does not change those preferences.",
+    "commands": "Send /help in the bot for commands, or /app to open your workspace inside Telegram.",
+    "group": "For a department group: add the bot to your group, get a group connection code below, then paste the full /connect command into the group.",
+    "progress": "Connected: {linked} of {total} people · {groups} groups",
+    "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator."
+  }
+}

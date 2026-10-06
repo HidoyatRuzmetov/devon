@@ -67,7 +67,7 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
       select cm.department_id, 'comment', cm.id, coalesce(c.title, ''),
              left(${docText(sql`cm.body`)}, ${BODY_CHARS})
       from app.card_comments cm
-      join app.cards c on c.id = cm.card_id
+      join app.cards c on c.id = cm.card_id and c.deleted_at is null
       where cm.department_id = ${departmentId} and cm.deleted_at is null
       on conflict (department_id, subject_type, subject_id) do update
         set title = excluded.title, body = excluded.body, updated_at = now()
@@ -99,6 +99,7 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
 
   let touched = 0
   for (const statement of statements) {
+    // nosemgrep: query-in-loop -- Four bulk INSERT SELECT statements share one transaction connection; never per-row queries.
     const rows = await tx.raw<{ id: string }>(sql`${statement} returning id`)
     touched += rows.length
   }
@@ -112,7 +113,8 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
         (d.subject_type = 'card'
           and not exists (select 1 from app.cards c where c.id = d.subject_id and c.deleted_at is null))
         or (d.subject_type = 'comment'
-          and not exists (select 1 from app.card_comments cm where cm.id = d.subject_id and cm.deleted_at is null))
+          and not exists (select 1 from app.card_comments cm join app.cards c on c.id = cm.card_id
+            where cm.id = d.subject_id and cm.deleted_at is null and c.deleted_at is null))
         or (d.subject_type = 'page'
           and not exists (select 1 from app.pages p where p.id = d.subject_id and p.deleted_at is null))
         or (d.subject_type = 'event'
@@ -123,7 +125,10 @@ export async function refreshIndex(tx: Tx, departmentId: string): Promise<number
   return touched
 }
 
-export type IndexStats = { indexedCount: number; pendingEmbeddingCount: number }
+export type IndexStats = {
+  indexedCount: number
+  pendingEmbeddingCount: number
+}
 
 export async function indexStats(tx: Tx, departmentId: string): Promise<IndexStats> {
   const rows = await tx.raw<{ indexed: number; pending: number }>(sql`
@@ -140,7 +145,12 @@ export async function indexStats(tx: Tx, departmentId: string): Promise<IndexSta
   }
 }
 
-export type StaleRow = { id: string; title: string; body: string; content_hash: string }
+export type StaleRow = {
+  id: string
+  title: string
+  body: string
+  content_hash: string
+}
 
 /** The embedding sidecar's work queue: rows whose text differs from what was embedded last time. */
 export async function listRowsNeedingEmbedding(
@@ -163,7 +173,11 @@ export async function listRowsNeedingEmbedding(
 /** Writes a whole batch of vectors back in ONE statement (I-9). */
 export async function writeEmbeddings(
   tx: Tx,
-  rows: readonly { id: string; contentHash: string; vector: readonly number[] }[],
+  rows: readonly {
+    id: string
+    contentHash: string
+    vector: readonly number[]
+  }[],
   model: string,
 ): Promise<void> {
   if (rows.length === 0) return

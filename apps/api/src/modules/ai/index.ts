@@ -156,7 +156,7 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const dto = await service.patchSettings(toDbContext(req), activeDepartmentId(req), req.body)
-      return reply.send(dto)
+      return reply.type('application/json').send(dto)
     },
   )
 
@@ -254,7 +254,7 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         // `service.ts`'s `RunFeatureOutcome` widens it back to `string` at its own boundary (it is a
         // plain business-logic function, not itself a Zod consumer) -- `runFeatureResponseSchema`
         // re-validates this at the HTTP layer regardless, so the cast is safe, not a trust shortcut.
-        reply.send(outcome as unknown as RunFeatureResponse)
+        reply.type('application/json').send(outcome as unknown as RunFeatureResponse)
       } catch (err) {
         if (err instanceof AiInputValidationError) {
           return sendProblem(reply, 'validation_failed', {
@@ -299,8 +299,13 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/search',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { querystring: searchQuerySchema, response: { 200: searchResponseSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        querystring: searchQuerySchema,
+        response: { 200: searchResponseSchema },
+      },
     },
     async (req) => {
       return service.runSearch(
@@ -316,7 +321,9 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/search/backend',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
       schema: { response: { 200: searchBackendSchema } },
     },
     async (req) => service.describeSearchBackend(toDbContext(req), activeDepartmentId(req)),
@@ -344,7 +351,7 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         // Same boundary note as `/features/:feature/run` above: `service.ts` is plain business logic
         // and widens the feature id back to `string`; `askResponseSchema` re-validates at the HTTP
         // layer either way, so this cast is the schema's shape, not a trust shortcut.
-        return reply.send(outcome as unknown as AskResponse)
+        return reply.type('application/json').send(outcome as unknown as AskResponse)
       } catch (err) {
         if (err instanceof AiFeatureDisabledError) {
           return sendProblem(reply, 'forbidden', {
@@ -352,7 +359,9 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
           })
         }
         if (err instanceof AiBudgetExceededError) {
-          return sendProblem(reply, 'forbidden', { errors: [{ path: 'budget', code: 'exceeded' }] })
+          return sendProblem(reply, 'forbidden', {
+            errors: [{ path: 'budget', code: 'exceeded' }],
+          })
         }
         if (err instanceof AiInputValidationError) {
           return sendProblem(reply, 'validation_failed', {
@@ -380,7 +389,9 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
       // `department_managed`, not `department_child`: the briefing reads the whole department's week
       // -- who is late and who is overloaded -- which SPEC §2.2 makes a head-only question, refused
       // on the server rather than hidden in the sidebar.
-      config: { permission: { action: 'read', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'read', subject: departmentManagedSubject },
+      },
       schema: { response: { 200: briefingResponseSchema } },
     },
     async (req) => {
@@ -433,11 +444,13 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         locale: req.body.locale,
         userId: req.actor?.userId ?? null,
       })
-      return reply.send(
-        outcome.accepted
-          ? { status: outcome.status, retryAfterMs: null }
-          : { status: 'ready' as const, retryAfterMs: outcome.retryAfterMs },
-      )
+      return reply
+        .type('application/json')
+        .send(
+          outcome.accepted
+            ? { status: outcome.status, retryAfterMs: null }
+            : { status: 'ready' as const, retryAfterMs: outcome.retryAfterMs },
+        )
     },
   )
 
@@ -446,12 +459,16 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
     {
       // Rebuilding the index is a department-wide maintenance action whose only visible effect is on
       // spend (it embeds); `department_managed` keeps it with the budget, where it belongs.
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: { response: { 200: reindexResponseSchema } },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      return reply.send(await service.rebuildSearchIndex(toDbContext(req), activeDepartmentId(req)))
+      return reply
+        .type('application/json')
+        .send(await service.rebuildSearchIndex(toDbContext(req), activeDepartmentId(req)))
     },
   )
 

@@ -43,6 +43,7 @@ function chatIdOf(ctx: Context): string | null {
 async function requireLinkedUser(
   ctx: Context,
 ): Promise<{ userId: string; locale: BotLocale } | null> {
+  if (ctx.chat?.type !== 'private') return null
   const chatId = chatIdOf(ctx)
   if (!chatId) return null
   const resolved = await resolveUserByChatId(chatId)
@@ -95,6 +96,9 @@ export function registerBotHandlers(bot: Bot): void {
     const chatId = chatIdOf(ctx)
     const locale = localeFromTelegram(ctx)
     if (!chatId) return
+    // A personal link receives private reminders and reset codes. Never bind it to a group,
+    // even when somebody pastes their one-time code into the wrong conversation.
+    if (ctx.chat.type !== 'private') return
     if (!code) {
       await ctx.reply(tb(locale, 'help'))
       return

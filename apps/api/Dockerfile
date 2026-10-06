@@ -4,24 +4,14 @@
 # isolation because of `workspace:*` deps and the shared lockfile):
 #   docker build -f apps/api/Dockerfile -t devon-api:<tag> .
 #
-# Why this runs via `tsx`, not compiled `dist/*.js`, in production (documented, not hidden):
-# `apps/api` itself compiles cleanly (`tsc -p tsconfig.json` -> `dist/`), but every workspace package
-# it imports (`@devon/db`, `@devon/contracts`, `@devon/ai`) declares `"exports": {".": "./src/index.ts"}`
-# -- TypeScript source, with no built `dist` published in its `exports` map. A plain `node dist/
-# server.js` in a *pruned* production install therefore cannot resolve `import ... from '@devon/db'`
-# at all (there is no dist for it to find). `pnpm start`/`scripts/start.mjs` never exercises the
-# `tsc`-then-`node` path either -- every environment today runs through `tsx` (`turbo run dev` ->
-# `tsx watch src/server.ts`), so shipping the identical, already-proven-in-CI execution path in
-# production is the honest choice here rather than a from-scratch, untested compiled-JS boot path.
-# Fixing this properly is an `apps/api`+`packages/*` change (give every workspace package a real
-# `build` + a `dist`-pointing `exports` map) that is out of this package's edit scope (ops-tooling
-# only touches infra/, tools/, docs/ops/, Dockerfiles, scripts/, and root `package.json` scripts) --
-# flagged in `agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md` for a follow-up
-# package to pick up. Running via `tsx` means `devDependencies` stay in the runtime image (`tsx`,
-# `typescript`); this image is therefore not minimal, but it is real and it boots.
+# Workspace packages export TypeScript source. The production dependency graph includes tsx,
+# which executes the API and the deployment migration CLI; TypeScript, test runners, package
+# managers and build caches are not runtime dependencies. CI typechecks before image creation.
+# Keep /repo/apps/api/node_modules/.bin/tsx and /repo/packages/db/src/cli-migrate.ts compatible
+# with scripts/remote-deploy.sh until the migration entrypoint is deliberately changed together.
 #
 # syntax=docker/dockerfile:1
-ARG NODE_IMAGE=node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+ARG NODE_IMAGE=node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
 
 FROM ${NODE_IMAGE} AS base
 # Corepack ships with Node 22 but its shipped pnpm shim needs enabling once; pin the exact pnpm the
@@ -29,7 +19,7 @@ FROM ${NODE_IMAGE} AS base
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
 WORKDIR /repo
 
-# --- deps: install the full workspace's dependencies from the lockfile (cached while only source, not
+# --- deps: install production workspace dependencies from the lockfile (cached while only source, not
 #     package.json/pnpm-lock.yaml, changes). ---------------------------------------------------------
 FROM base AS deps
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json tsconfig.base.json ./
@@ -44,10 +34,13 @@ COPY packages/ui/package.json packages/ui/package.json
 # `--frozen-lockfile`: a production image must never silently resolve a different dependency tree than
 # the one CI's gates tested (H18.1 reproducible builds). Every workspace package's manifest is copied
 # above so pnpm's workspace linker sees the whole graph even though only apps/api's code follows.
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod
 
 # --- runtime: only what `tsx src/server.ts` needs at process-start, nothing from apps/web/e2e/docs. --
-FROM base AS runtime
+FROM ${NODE_IMAGE} AS runtime
+WORKDIR /repo
+# Runtime has no package managers or their bundled dependency trees.
+RUN rm -rf /usr/local/lib/node_modules /opt/yarn-v* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production
 RUN addgroup -g 10001 -S devon && adduser -u 10001 -S devon -G devon
 COPY --from=deps /repo/node_modules ./node_modules
@@ -62,7 +55,7 @@ COPY apps/api apps/api
 # Each workspace package's OWN `node_modules` (pnpm symlinks into the root `.pnpm` store for that
 # package's specific deps -- `shamefullyHoist: false` in pnpm-workspace.yaml means these are not
 # optional) -- overwriting the plain source copy above with source+node_modules together.
-COPY --from=deps /repo/packages/config/node_modules packages/config/node_modules
+
 COPY --from=deps /repo/packages/contracts/node_modules packages/contracts/node_modules
 COPY --from=deps /repo/packages/db/node_modules packages/db/node_modules
 COPY --from=deps /repo/packages/ai/node_modules packages/ai/node_modules
@@ -78,17 +71,6 @@ EXPOSE 3000
 # a container healthcheck needs, no credentials to bake in. `wget` ships in the alpine base already.
 HEALTHCHECK --interval=15s --timeout=5s --start-period=20s --retries=5 \
   CMD wget -q -O- http://127.0.0.1:3000/healthz || exit 1
-# Graceful shutdown (H18.1) -- KNOWN GAP, verified empirically while building this image (`docker
-# stop` a running container, exit code 143): `apps/api/src/server.ts` registers no `process.on
-# ('SIGTERM', ...)` handler at all, so Node's own default disposition for an unhandled SIGTERM tears
-# the process down immediately -- Fastify's `close()` and the outbox/reminder/upload-sweep timers'
-# `onClose` stop hooks never run. This is *safe* (not silently corrupting): every one of those loops
-# is written to tolerate being killed mid-cycle and resumed cold (`events-worker.ts`'s `for update
-# skip locked`, `reminder-worker.ts`'s fired-guarded `update ... returning id`) -- but it is not
-# *graceful*: an in-flight HTTP request gets no drain window and is simply cut off. Fixing this needs
-# a `process.on('SIGTERM', ...)` handler in `apps/api/src/server.ts` that awaits `app.close()` before
-# exiting, which is out of this package's edit scope (ops-tooling touches infra/, tools/, docs/ops/,
-# Dockerfiles, scripts/, not `apps/api/src`) -- flagged in `agentic/ledger/hardening/
-# 2026-09-08T06-45-00-05-00/ops-tooling.md` for a follow-up package. `stop_grace_period` in
-# infra/docker-compose.prod.yml is set generously anyway, in case that handler lands later.
+# server.ts registers graceful SIGTERM/SIGINT shutdown: close Fastify, stop workers and drain
+# the database pool within 25 seconds. Compose allows 30 seconds before forcing termination.
 CMD ["node_modules/.bin/tsx", "src/server.ts"]

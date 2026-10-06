@@ -154,9 +154,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const visibleEntries = resolveNavEntries(NAV_ENTRIES, navCtx)
   const inboxCount = counts['inbox'] ?? 0
 
-  // SEV1 #5. A head's nav has six groups where a xodim's has four, which is exactly the 285 px of
-  // overflow the CTO hit at 1440x900. A head therefore starts with the three working groups folded
-  // (a folded group still shows the row you are standing on); a xodim starts with nothing folded.
+  // A head starts with daily work visible and secondary/team/management groups folded.
+  // A folded group still shows the current route; members start with nothing folded.
   // The moment anyone toggles a group their own set is persisted and this default is never
   // consulted again.
   const effectiveCollapsedGroups =

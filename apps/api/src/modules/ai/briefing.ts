@@ -75,7 +75,11 @@ function jobContext(departmentId: string | null, userId: string | null): Request
  */
 export async function computeBriefing(
   departmentId: string,
-  options: { locale?: string; requestedBy?: string | null; log?: FastifyBaseLogger } = {},
+  options: {
+    locale?: string
+    requestedBy?: string | null
+    log?: FastifyBaseLogger
+  } = {},
 ): Promise<BriefingStatus> {
   const day = tashkentDateString()
   const locale = options.locale ?? 'uz-Latn'
@@ -186,7 +190,11 @@ export async function requestBriefing(
   if (existing && existing.status === 'ready') {
     const age = Date.now() - new Date(existing.updatedAt).getTime()
     if (age < REFRESH_COOLDOWN_MS) {
-      return { accepted: false, reason: 'cooldown', retryAfterMs: REFRESH_COOLDOWN_MS - age }
+      return {
+        accepted: false,
+        reason: 'cooldown',
+        retryAfterMs: REFRESH_COOLDOWN_MS - age,
+      }
     }
   }
 
@@ -201,7 +209,11 @@ export async function requestBriefing(
     await boss
       .send(
         QUEUE_BRIEFING,
-        { departmentId: params.departmentId, locale: params.locale, userId: params.userId },
+        {
+          departmentId: params.departmentId,
+          locale: params.locale,
+          userId: params.userId,
+        },
         { retryLimit: 2, retryBackoff: true, expireInSeconds: 360 },
       )
       .catch(() => {
@@ -241,6 +253,7 @@ export async function runNightlyBriefings(log: FastifyBaseLogger): Promise<numbe
   // Sequential, never `Promise.all`: see the worker's own comment -- thirty four-minute calls fired
   // at one GLM endpoint at once is an outage, not a nightly job.
   for (let i = 0; i < departments.length; i += 1) {
+    // nosemgrep: query-in-loop -- Serialize costly calls to the shared GLM endpoint; each call owns a department budget.
     const status = await computeBriefing(departments[i]!, { log })
     if (status === 'ready') ready += 1
   }
@@ -267,28 +280,31 @@ export async function startBriefingJobs(
     instance.on('error', (err: unknown) => log.error({ err }, 'ai: pg-boss reported an error'))
     await instance.start()
     await instance.createQueue(QUEUE_BRIEFING).catch(() => {})
-    await instance.work<{ departmentId?: string; locale?: string; userId?: string | null }>(
-      QUEUE_BRIEFING,
-      async (jobs) => {
-        const batch = Array.isArray(jobs) ? jobs : [jobs]
-        // A plain indexed loop, and sequential on purpose: each iteration is a multi-minute GLM call
-        // against one endpoint with one budget. `Promise.all` over a batch of these is how a
-        // background job becomes an outage, so the dependency between iterations is the provider
-        // itself (TECH-SPEC §16's exception, stated here rather than assumed).
-        for (let i = 0; i < batch.length; i += 1) {
-          const data = batch[i]?.data ?? {}
-          if (!data.departmentId) {
-            await runNightlyBriefings(log)
-            continue
-          }
-          await computeBriefing(data.departmentId, {
-            locale: data.locale ?? 'uz-Latn',
-            requestedBy: data.userId ?? null,
-            log,
-          })
+    await instance.work<{
+      departmentId?: string
+      locale?: string
+      userId?: string | null
+    }>(QUEUE_BRIEFING, async (jobs) => {
+      const batch = Array.isArray(jobs) ? jobs : [jobs]
+      // A plain indexed loop, and sequential on purpose: each iteration is a multi-minute GLM call
+      // against one endpoint with one budget. `Promise.all` over a batch of these is how a
+      // background job becomes an outage, so the dependency between iterations is the provider
+      // itself (TECH-SPEC §16's exception, stated here rather than assumed).
+      for (let i = 0; i < batch.length; i += 1) {
+        const data = batch[i]?.data ?? {}
+        if (!data.departmentId) {
+          // nosemgrep: query-in-loop -- Queue batches must not start overlapping nightly sweeps on one provider.
+          await runNightlyBriefings(log)
+          continue
         }
-      },
-    )
+        // nosemgrep: query-in-loop -- Queue jobs intentionally share a single provider concurrency slot.
+        await computeBriefing(data.departmentId, {
+          locale: data.locale ?? 'uz-Latn',
+          requestedBy: data.userId ?? null,
+          log,
+        })
+      }
+    })
     // A job with no `departmentId` is the nightly sweep (the branch above), so one queue carries
     // both shapes and there is one worker to reason about rather than two.
     await instance.schedule(QUEUE_BRIEFING, '0 5 * * *', null, { tz: TZ })

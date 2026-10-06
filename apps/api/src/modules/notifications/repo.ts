@@ -199,7 +199,7 @@ export async function listNotifications(userId: string, opts: ListOpts): Promise
       select id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
              event_at, read_at, archived_at, snoozed_until, created_at
       from app.notifications
-      where ${statusClause} ${reasonClause} ${cursorClause}
+      where app.notification_is_visible(id) and ${statusClause} ${reasonClause} ${cursorClause}
       order by created_at desc
       limit ${opts.limit + 1}
     `)
@@ -210,7 +210,7 @@ export async function listNotifications(userId: string, opts: ListOpts): Promise
 
     const unreadRows = await tx.raw<{ n: string }>(sql`
       select count(*)::text as n from app.notifications
-      where archived_at is null and read_at is null
+      where app.notification_is_visible(id) and archived_at is null and read_at is null
         and (snoozed_until is null or snoozed_until <= now())
     `)
     const unreadCount = Number(unreadRows[0]?.n ?? '0')
@@ -292,7 +292,7 @@ export async function getNotificationById(
     const rows = await tx.raw<NotificationSqlRow>(sql`
       select id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
              event_at, read_at, archived_at, snoozed_until, created_at
-      from app.notifications where id = ${id}
+      from app.notifications where id = ${id} and app.notification_is_visible(id)
     `)
     const row = rows[0]
     return row ? fromSqlRow(row) : null
@@ -555,7 +555,7 @@ export async function listDueNotificationsNeedingTelegram(
       select n.id, n.type, n.reason, n.subject_type, n.subject_id, n.department_id, n.title, n.body,
              n.deep_link, n.event_at, n.read_at, n.archived_at, n.snoozed_until, n.created_at
       from app.notifications n
-      where n.reason = 'due' and n.read_at is null and n.archived_at is null
+      where app.notification_is_visible(n.id) and n.reason = 'due' and n.read_at is null and n.archived_at is null
         and (n.snoozed_until is null or n.snoozed_until <= now())
         and not exists (
           select 1 from app.notification_deliveries d
@@ -574,7 +574,7 @@ export async function unreadCountsByReason(userId: string): Promise<ReasonCounts
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
-      where read_at is null and archived_at is null and (snoozed_until is null or snoozed_until <= now())
+      where app.notification_is_visible(id) and read_at is null and archived_at is null and (snoozed_until is null or snoozed_until <= now())
       group by reason
     `)
     const out: ReasonCounts = {}
@@ -587,7 +587,7 @@ export async function countsByReasonSince(userId: string, since: Date): Promise<
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
-      where created_at >= ${since}
+      where app.notification_is_visible(id) and created_at >= ${since}
       group by reason
     `)
     const out: ReasonCounts = {}
@@ -631,7 +631,7 @@ export async function listUpcomingForIcs(userId: string, fromDaysAgo = 7): Promi
       event_at: Date | string
     }>(sql`
       select id, title, deep_link, event_at from app.notifications
-      where event_at is not null and event_at >= now() - (${fromDaysAgo} || ' days')::interval
+      where app.notification_is_visible(id) and event_at is not null and event_at >= now() - (${fromDaysAgo} || ' days')::interval
       order by event_at asc
       limit 200
     `)

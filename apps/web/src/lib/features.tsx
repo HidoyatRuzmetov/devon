@@ -21,6 +21,8 @@ export type UseFeaturesResult = {
   /** True until the department's settings have loaded. A gated screen should render its skeleton
    * rather than flashing "this is off" and then revealing itself. */
   isLoading: boolean
+  isError: boolean
+  retry: () => void
 }
 
 /** Every switch for the department the viewer is currently working in. */
@@ -41,8 +43,12 @@ export function useFeatures(): UseFeaturesResult {
       // simply gets that switch's default instead of `undefined` leaking into a boolean prop.
       features: resolveFeatures(query.data?.settings.features),
       isLoading: Boolean(departmentId) && query.isPending,
+      isError: query.isError,
+      retry: () => {
+        void query.refetch()
+      },
     }),
-    [departmentId, query.data, query.isPending],
+    [departmentId, query.data, query.isPending, query.isError, query.refetch],
   )
 }
 

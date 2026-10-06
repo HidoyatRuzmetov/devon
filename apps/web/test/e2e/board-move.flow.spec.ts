@@ -15,7 +15,6 @@ import {
   newFlowContext,
   uniqueLogin,
 } from './flow-api.js'
-import { seedAiSettingsRow } from './flow-db.js'
 
 test('@flow a card moves from one column (person) to another on the real board', async ({
   browser,
@@ -25,26 +24,22 @@ test('@flow a card moves from one column (person) to another on the real board',
 
   const headContext = await newFlowContext(browser)
   const headPage = await headContext.newPage()
-  const head = { login: uniqueLogin('flow.bhead'), password: examplePassword() }
-  const { departmentId, joinKey, joinPassword } = await createApprovedDepartment(
-    headContext,
-    superAdminContext,
-    {
-      headLogin: head.login,
-      headPassword: head.password,
-      departmentName: `Board flow ${head.login.slice(-8)}`,
-    },
-  )
+  const head = {
+    login: uniqueLogin('flow.bhead'),
+    password: examplePassword(),
+  }
+  const { joinKey, joinPassword } = await createApprovedDepartment(headContext, superAdminContext, {
+    headLogin: head.login,
+    headPassword: head.password,
+    departmentName: `Board flow ${head.login.slice(-8)}`,
+  })
   await superAdminContext.close()
-  // Works around a confirmed product bug, not this flow's own concern -- see `flow-db.ts`'s
-  // `seedAiSettingsRow` header and `cross-department-access.test.ts`'s "AI settings" `it.fails`:
-  // `/work` renders `QuickAddBar`, which calls `useAiSettingsQuery`, which 500s for any department
-  // whose `ai_department_settings` row does not exist yet (RLS rejects the lazy-insert for a real
-  // head). Without this, the board never even renders for a freshly-approved department.
-  seedAiSettingsRow(departmentId)
 
   const memberContext = await newFlowContext(browser)
-  const member = { login: uniqueLogin('flow.bmember'), password: examplePassword() }
+  const member = {
+    login: uniqueLogin('flow.bmember'),
+    password: examplePassword(),
+  }
   await joinDepartmentAsNewUser(memberContext, {
     login: member.login,
     password: member.password,

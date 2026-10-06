@@ -38,7 +38,7 @@
         "healthTitle": "System health",
         "healthSeeAll": "See all",
         "healthUnavailable": "Health status is unavailable right now.",
-        "backupsUnconfigured": "Backups are not configured — nothing on this instance is being backed up.",
+        "backupsUnconfigured": "Backup monitoring is not configured. Ask your administrator to verify the backup schedule.",
         "backupsConfigure": "Configure",
         "userCountBreakdown": "By department"
       },

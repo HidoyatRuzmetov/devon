@@ -24,16 +24,16 @@ fi
 node agentic/scripts/check-secrets.mjs
 ```
 
-The target repository currently contains only an unrelated placeholder commit. After reviewing the
-working tree and creating the local commit, publish this repository as the authoritative `main`
-history with:
+Publish reviewed changes through a pull request, wait for CI, and merge into `main`.
+For an authorized direct release, fetch first and use a normal fast-forward push:
 
 ```bash
-git push --force-with-lease -u origin main
+git fetch origin
+git push origin main
 ```
 
-Do not run that command until the intended local commit exists. There is no long-lived `dev` branch;
-development and testing stay local, while successful CI on `main` is the production release gate.
+Never replace the remote history to deploy. Successful CI for the exact current `main` commit is
+the production release gate, including manually retried deployments.
 
 ## Required GitHub Actions secrets
 
@@ -65,13 +65,34 @@ human-friendly name.
 ## Release behavior
 
 1. CI's integration profile must pass for `main`.
-2. API and web images are tagged with the full commit SHA and pushed to GHCR.
+2. API and web images are built, scanned for fixable high/critical vulnerabilities, tagged with the
+   full commit SHA, and pushed to GHCR. The workflow checks again that `main` has not advanced.
 3. Only non-secret operational manifests are copied to `/opt/devon`.
 4. The server takes an encrypted backup if a database already exists.
 5. Migrations run before the new application containers.
-6. `/readyz` gates success. A failed rollout restores the previous images.
+6. `/readyz` gates success. A failed rollout restores the previous images and Compose manifest.
 
 Production never starts the separate `worker` Compose service on the 8 GB ECS because the API entry
 point already runs the durable background loops. This avoids running the same HTTP server and loops
 twice. PostgreSQL, Valkey, ClamAV, Centrifugo, API, web, and Caddy remain enabled. Uploads use the
 persistent local-storage volume on the 500 GB data disk; the optional MinIO profile is not enabled.
+
+## Backup monitoring and recovery
+
+`BACKUP_STORAGE_VOLUME=devon_api_storage` includes uploaded files alongside the encrypted database
+dump. The successful backup publishes only timestamp and size to `/var/lib/devon/backup-status`;
+the API reads that directory read-only and cannot read the backup archives or their passphrase.
+The weekly restore drill decrypts and restores both artifacts into disposable scratch locations,
+then checks migrations, table counts, and row-security policies.
+
+This installation deliberately keeps backups on the local data disk (operator decision, 2026-10-06).
+It does not claim protection against loss of the entire server. `BACKUP_MIRROR_TO_MINIO=1` is a
+separate opt-in; having old MinIO credentials alone does not activate mirroring.
+
+## Dependency automation
+
+Renovate requires the repository-level `RENOVATE_TOKEN` secret. Use a fine-grained token restricted
+to `devon`, with write permissions for Contents, Pull requests, Issues, Commit statuses, and
+Workflows, and read permission for Dependabot alerts. Record its expiry and rotate it before that
+date. The workflow reports a specific configuration error when the secret is missing; it does not
+substitute a token whose pull requests would fail to trigger CI.

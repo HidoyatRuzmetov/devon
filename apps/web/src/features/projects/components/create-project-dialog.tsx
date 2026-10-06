@@ -9,6 +9,7 @@ import { useCreateCardMutation, useMembers } from '../../work/hooks.js'
 import { useWorkTemplatesQuery } from '../../work/hooks-plus.js'
 import { readProjectPayload } from '../../work/components/template-preview.js'
 import { fullName } from '../../work/lib/format.js'
+import { useActor } from '../../../lib/can.js'
 import {
   useCreateFromTemplateMutation,
   useCreateProjectMutation,
@@ -26,12 +27,16 @@ function offsetToIso(days: number | undefined): string | undefined {
 
 export function CreateProjectDialog() {
   const t = useT()
+  const actor = useActor()
+  const head = actor?.memberships.some(
+    (m) => m.departmentId === actor.departmentId && m.role === 'head',
+  )
   const [open, setOpen] = React.useState(false)
   // v1.1 SPEC §7.2 adds a third source: the department/personal project templates the head curates
   // in `/work/templates`, alongside the built-in ones v1.0 shipped.
-  const [mode, setMode] = React.useState<'scratch' | 'template' | 'gallery'>('template')
+  const [mode, setMode] = React.useState<'scratch' | 'template' | 'gallery'>('scratch')
   const [title, setTitle] = React.useState('')
-  const [ownerUserId, setOwnerUserId] = React.useState('')
+  const [ownerUserId, setOwnerUserId] = React.useState(actor?.userId ?? '')
   const [memberIds, setMemberIds] = React.useState<string[]>([])
   const [templateKey, setTemplateKey] = React.useState('')
   const [galleryId, setGalleryId] = React.useState('')
@@ -42,7 +47,8 @@ export function CreateProjectDialog() {
   const createProject = useCreateProjectMutation()
   const createFromTemplate = useCreateFromTemplateMutation()
   const createCard = useCreateCardMutation()
-  const galleryTemplates = useWorkTemplatesQuery('project').data ?? []
+  const galleryData = useWorkTemplatesQuery('project').data
+  const galleryTemplates = React.useMemo(() => galleryData ?? [], [galleryData])
   const search = useSearchParams()
 
   // The gallery's "Create a project" button navigates here with the template already chosen
@@ -76,12 +82,12 @@ export function CreateProjectDialog() {
 
   function reset() {
     setTitle('')
-    setOwnerUserId('')
+    setOwnerUserId(actor?.userId ?? '')
     setMemberIds([])
   }
 
   async function submit() {
-    if (!ownerUserId || memberIds.length === 0) return
+    if (!ownerUserId) return
     try {
       if (mode === 'gallery') {
         const template = galleryTemplates.find((tpl) => tpl.id === galleryId)
@@ -237,6 +243,7 @@ export function CreateProjectDialog() {
             </span>
             <select
               value={ownerUserId}
+              disabled={!head}
               onChange={(e) => setOwnerUserId(e.target.value)}
               className="h-11 rounded-sm border border-border bg-card px-3"
             >
@@ -260,7 +267,8 @@ export function CreateProjectDialog() {
                 <label key={m.userId} className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={memberIds.includes(m.userId)}
+                    checked={m.userId === ownerUserId || memberIds.includes(m.userId)}
+                    disabled={m.userId === ownerUserId}
                     onChange={() => toggleMember(m.userId)}
                   />
                   {fullName(m)}
@@ -272,7 +280,7 @@ export function CreateProjectDialog() {
           <Button
             onClick={() => void submit()}
             loading={pending}
-            disabled={!ownerUserId || memberIds.length === 0}
+            disabled={!ownerUserId || (mode === 'scratch' && !title.trim())}
           >
             {t('projects.create.submit')}
           </Button>

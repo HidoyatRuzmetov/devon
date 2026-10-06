@@ -39,7 +39,7 @@
     "eslint": "10.10.0",
     "prettier": "3.7.1",
     "testcontainers": "12.1.0",
-    "tsx": "4.23.13",
+    "tsx": "4.23.15",
     "typescript": "5.9.3",
     "vitest": "4.1.11"
   }

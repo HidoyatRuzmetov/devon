@@ -1,0 +1,26 @@
+{
+  "admin": {
+    "console": {
+      "health": {
+        "detail": {
+          "storage": {
+            "unavailable": "Fayllar xotirasi ochilmadi yoki yozishga ruxsat yoʻq."
+          },
+          "ai": {
+            "rejected": "AI xizmati sozlangan kalitni qabul qilmadi.",
+            "modelUnavailable": "Sozlangan AI modeli bu kalit uchun mavjud emas.",
+            "unreachable": "AI xizmatiga ulanib boʻlmadi."
+          },
+          "telegram": {
+            "unreachable": "Telegram botiga ulanib boʻlmadi.",
+            "webhookMismatch": "Telegram xabarlari bu serverga ulanmagan. Bot integratsiyasini qayta ishga tushiring yoki webhook sozlamalarini tekshiring.",
+            "deliveryDelayed": "Telegram xabarlari kechikmoqda. Server ishlashini va bot xabarlari yetkazilishini tekshiring."
+          },
+          "backups": {
+            "unreadable": "Zaxira nusxa holatini oʻqib boʻlmadi."
+          }
+        }
+      }
+    }
+  }
+}

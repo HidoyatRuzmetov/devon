@@ -82,7 +82,9 @@ export default function CreateRequestScreen() {
       ),
     onSuccess: () => {
       setForceForm(false)
-      void queryClient.invalidateQueries({ queryKey: ['departments', 'requests', 'mine'] })
+      void queryClient.invalidateQueries({
+        queryKey: ['departments', 'requests', 'mine'],
+      })
     },
   })
 
@@ -93,7 +95,10 @@ export default function CreateRequestScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => requestsQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => requestsQuery.refetch(),
+        }}
       />
     )
   }

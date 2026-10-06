@@ -34,3 +34,6 @@ tools/perf/*/out/
 
 # MCP browser server scratch output
 .playwright-mcp/
+.codex-*.log
+.codex-*.json
+artifacts/

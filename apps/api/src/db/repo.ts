@@ -100,7 +100,7 @@ async function selectUserById(tx: Tx, id: string): Promise<UserRecord | null> {
 type UploadRow = {
   id: string
   user_id: string
-  purpose: 'avatar'
+  purpose: 'avatar' | 'card_attachment'
   key: string
   mime: string
   size: number

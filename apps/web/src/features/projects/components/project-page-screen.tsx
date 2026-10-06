@@ -1,13 +1,7 @@
-// The project page (TECH-SPEC §5, EPIC-005: "project page shows milestones, members' loads and the
-// timeline"). Objective/subjective tasks are `app.cards` rows scoped to this project -- there is no
-// dedicated "list this project's cards" endpoint, so this reuses the work module's own filter grammar
-// (`project:"<title>"`, exactly what a person could type into the work module's own filter bar) via
-// `GET /api/v1/cards`, then splits the result by `projectScope` client-side. Objective/subjective are
-// rendered as tabs (DESIGN.md's Jakob map: "project page with task tabs, members strip, milestones").
-// Milestones render as an ordered list by due date, doubling as this page's "timeline" -- a dedicated
-// Gantt (`work`'s `TimelineScreen` already has one for cards) was judged not worth a second bespoke
-// SVG for six milestones per project at this build's scale.
+// Project cards are loaded by immutable project id and paginated, so renaming a project or sharing
+// a title with another project cannot silently move/hide its tasks.
 import * as React from 'react'
+import { can } from '@devon/contracts'
 import { useQuery } from '@tanstack/react-query'
 import { CalendarClock, ChevronLeft } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -36,6 +30,8 @@ import {
   toastWithUndo,
 } from '@devon/ui'
 import { RouterLink, useSearchParams } from '../../../lib/router.js'
+import { useActor } from '../../../lib/can.js'
+import { EditProjectDialog } from './edit-project-dialog.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
@@ -53,15 +49,20 @@ import {
   useProjectQuery,
 } from '../hooks.js'
 
-function useProjectCards(title: string | undefined) {
+function useProjectCards(projectId: string | undefined) {
   return useQuery({
-    queryKey: ['projects', 'cards', title],
-    // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
-    // max(100)`) -- asking for 300 always got a flat 422 (H1: confirmed live, every project page's
-    // task list silently rendered "0/0" instead of erroring loudly). A project outgrowing 100 open
-    // objective+subjective cards needs real pagination here, not a bigger magic number to outrun.
-    queryFn: async () => (await fetchCards({ q: `project:"${title}"`, limit: 100 })).items,
-    enabled: Boolean(title),
+    queryKey: ['work', 'cards', { projectId }],
+    queryFn: async () => {
+      const cards: Card[] = []
+      let cursor: string | undefined
+      do {
+        const page = await fetchCards({ projectId, cursor, limit: 100 })
+        cards.push(...page.items)
+        cursor = page.nextCursor ?? undefined
+      } while (cursor)
+      return cards
+    },
+    enabled: Boolean(projectId),
   })
 }
 
@@ -70,9 +71,13 @@ function TaskRow({ card }: { card: Card }) {
   return (
     <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
       <Checkbox
+        disabled={card.canEdit === false || patchCard.isPending}
         checked={card.status === 'done'}
         onCheckedChange={(v) =>
-          patchCard.mutate({ id: card.id, patch: { status: v === true ? 'done' : 'active' } })
+          patchCard.mutate({
+            id: card.id,
+            patch: { status: v === true ? 'done' : 'active' },
+          })
         }
         celebrate
         size="sm"
@@ -94,12 +99,13 @@ function TaskRow({ card }: { card: Card }) {
 
 export default function ProjectPageScreen() {
   const t = useT()
+  const actor = useActor()
   const locale = useLocale()
   const search = useSearchParams()
   const id = search.get('id')
   const projectQuery = useProjectQuery(id)
   const members = useMembers()
-  const cardsQuery = useProjectCards(projectQuery.data?.title)
+  const cardsQuery = useProjectCards(projectQuery.data?.id)
   const createCard = useCreateCardMutation()
   const patchProject = usePatchProjectMutation(id ?? '')
   const patchCard = usePatchCardMutation()
@@ -115,7 +121,10 @@ export default function ProjectPageScreen() {
     aiSettings.data !== undefined &&
     aiSettings.data.flags['plan_sprint'] === true &&
     aiSettings.data.budgetStatus !== 'hard_stop'
-  const [plan, setPlan] = React.useState<{ output: PlanSprintOutput; meta: RunMeta } | null>(null)
+  const [plan, setPlan] = React.useState<{
+    output: PlanSprintOutput
+    meta: RunMeta
+  } | null>(null)
 
   // N-4: "Juma kunidan beri nima oʻzgardi?" over this project's own cards. The same `catch_up`
   // prompt as the personal and department briefings, at `scope: 'project'` -- one feature, three
@@ -125,9 +134,10 @@ export default function ProjectPageScreen() {
     aiSettings.data !== undefined &&
     aiSettings.data.flags['catch_up'] === true &&
     aiSettings.data.budgetStatus !== 'hard_stop'
-  const [catchUp, setCatchUp] = React.useState<{ output: CatchUpOutput; meta: RunMeta } | null>(
-    null,
-  )
+  const [catchUp, setCatchUp] = React.useState<{
+    output: CatchUpOutput
+    meta: RunMeta
+  } | null>(null)
 
   if (!id) {
     return <StateView kind="empty" titleKey="projects.noIdTitle" bodyKey="projects.noIdBody" />
@@ -141,12 +151,20 @@ export default function ProjectPageScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void projectQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void projectQuery.refetch(),
+        }}
       />
     )
   }
 
   const project = projectQuery.data
+  const canEdit = can(actor, 'update', {
+    kind: 'owned',
+    departmentId: actor?.departmentId ?? '',
+    ownerUserIds: [project.ownerUserId, ...project.members],
+  }).allowed
   const cards = cardsQuery.data ?? []
   const objective = cards.filter((c) => c.projectScope === 'objective')
   const subjective = cards.filter((c) => c.projectScope === 'subjective')
@@ -285,6 +303,11 @@ export default function ProjectPageScreen() {
           {t('projects.title')}
         </RouterLink>
         <header className="flex flex-col gap-3">
+          {canEdit ? (
+            <div className="self-end">
+              <EditProjectDialog project={project} />
+            </div>
+          ) : null}
           <div className="flex items-center gap-3">
             <ProgressRing
               value={percent}
@@ -387,18 +410,29 @@ export default function ProjectPageScreen() {
                       aria-hidden="true"
                     />
                     <Checkbox
+                      disabled={!canEdit || patchMilestone.isPending}
                       checked={m.doneAt !== null}
                       onCheckedChange={(v) => {
-                        patchMilestone.mutate({
-                          milestoneId: m.id,
-                          patch: { done: v === true },
-                        })
+                        patchMilestone.mutate(
+                          {
+                            milestoneId: m.id,
+                            patch: { done: v === true },
+                          },
+                          {
+                            onSuccess: () => {
+                              if (v === true)
+                                toast(
+                                  t('projects.milestone.completedToast', {
+                                    title: m.title,
+                                  }),
+                                )
+                            },
+                          },
+                        )
                         // round2 SEV2 "milestone completion has no celebration": the checkbox's own
                         // `celebrate` already bursts on check -- this toast is the same "named
                         // moment" acknowledgement `personal.sprints.complete.toast` gives a
                         // completed sprint, so a milestone reads as just as real a finish line.
-                        if (v === true)
-                          toast(t('projects.milestone.completedToast', { title: m.title }))
                       }}
                       celebrate
                       size="sm"
@@ -417,25 +451,29 @@ export default function ProjectPageScreen() {
                 </StaggerItem>
               ))}
           </Stagger>
-          <div className="flex gap-2 pl-3">
-            <Input
-              value={newMilestone}
-              onChange={(e) => setNewMilestone(e.target.value)}
-              placeholder={t('projects.milestone.addPlaceholder')}
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                if (newMilestone.trim()) {
-                  addMilestone.mutate({ title: newMilestone.trim() })
-                  setNewMilestone('')
-                }
-              }}
-            >
-              {t('work.action.save')}
-            </Button>
-          </div>
+          {canEdit ? (
+            <div className="flex gap-2 pl-3">
+              <Input
+                value={newMilestone}
+                onChange={(e) => setNewMilestone(e.target.value)}
+                placeholder={t('projects.milestone.addPlaceholder')}
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  if (newMilestone.trim()) {
+                    addMilestone.mutate(
+                      { title: newMilestone.trim() },
+                      { onSuccess: () => setNewMilestone('') },
+                    )
+                  }
+                }}
+              >
+                {t('work.action.save')}
+              </Button>
+            </div>
+          ) : null}
         </section>
 
         <Tabs defaultValue="objective" className="flex flex-col gap-3">
@@ -461,7 +499,7 @@ export default function ProjectPageScreen() {
                       : 0,
                 })}
               </span>
-              {planEnabled && openObjective.length > 0 ? (
+              {canEdit && planEnabled && openObjective.length > 0 ? (
                 <SparkleButton
                   aria-label={t('projects.ai.plan')}
                   size="sm"
@@ -470,35 +508,59 @@ export default function ProjectPageScreen() {
                 />
               ) : null}
             </div>
-            {cardsQuery.isPending ? (
-              <Skeleton className="h-20 w-full" />
-            ) : (
+            {cardsQuery.isError ? (
+              <StateView
+                kind="error"
+                titleKey="state.error.title"
+                action={{
+                  labelKey: 'state.error.action',
+                  onAction: () => void cardsQuery.refetch(),
+                }}
+              />
+            ) : null}
+            {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
+            {!cardsQuery.isPending && !cardsQuery.isError ? (
               <div className="flex flex-col gap-1 rounded-md border border-border p-2">
                 {objective.map((card) => (
                   <TaskRow key={card.id} card={card} />
                 ))}
-                <div className="flex gap-2 pt-1">
-                  <Input
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    placeholder={t('projects.card.addObjectivePlaceholder')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && newObjective.trim()) {
-                        createCard.mutate({
+                {canEdit ? (
+                  <form
+                    className="flex gap-2 pt-1"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      if (!newObjective.trim() || createCard.isPending) return
+                      createCard.mutate(
+                        {
                           title: newObjective.trim(),
                           assigneeUserId: project.ownerUserId,
                           giverUserId: project.ownerUserId,
                           projectId: project.id,
                           projectScope: 'objective',
                           kind: 'project_task',
-                        })
-                        setNewObjective('')
-                      }
+                        },
+                        { onSuccess: () => setNewObjective('') },
+                      )
                     }}
-                  />
-                </div>
+                  >
+                    <Input
+                      value={newObjective}
+                      onChange={(e) => setNewObjective(e.target.value)}
+                      placeholder={t('projects.card.addObjectivePlaceholder')}
+                      aria-label={t('projects.card.addObjectivePlaceholder')}
+                    />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant="secondary"
+                      disabled={!newObjective.trim() || createCard.isPending}
+                    >
+                      {t('work.action.save')}
+                    </Button>
+                  </form>
+                ) : null}
               </div>
-            )}
+            ) : null}
 
             {planAi.isPending || plan || planAi.isError ? (
               <AiResultPanel
@@ -531,7 +593,14 @@ export default function ProjectPageScreen() {
           </TabsContent>
 
           <TabsContent value="subjective" className="flex flex-col gap-3">
-            {project.members.map((memberId) => {
+            {[
+              ...new Set([
+                ...project.members,
+                ...subjective
+                  .map((c) => c.assigneeUserId)
+                  .filter((id): id is string => Boolean(id)),
+              ]),
+            ].map((memberId) => {
               const member = members.find((m) => m.userId === memberId)
               if (!member) return null
               const memberTasks = subjective.filter((c) => c.assigneeUserId === memberId)
@@ -558,11 +627,13 @@ export default function ProjectPageScreen() {
                   {memberTasks.map((card) => (
                     <TaskRow key={card.id} card={card} />
                   ))}
-                  <SubjectiveAddRow
-                    projectId={project.id}
-                    assigneeUserId={memberId}
-                    giverUserId={project.ownerUserId}
-                  />
+                  {canEdit ? (
+                    <SubjectiveAddRow
+                      projectId={project.id}
+                      assigneeUserId={memberId}
+                      giverUserId={project.ownerUserId}
+                    />
+                  ) : null}
                 </div>
               )
             })}
@@ -570,18 +641,25 @@ export default function ProjectPageScreen() {
         </Tabs>
 
         <footer className="flex gap-2 border-t border-border pt-4">
-          {project.status !== 'archived' ? (
+          {canEdit && project.status !== 'archived' ? (
             <Button
               size="sm"
               variant="secondary"
               onClick={() => {
                 const previousStatus = project.status
-                patchProject.mutate({ status: 'archived' })
-                toastWithUndo({
-                  message: t('projects.action.archived', { title: project.title }),
-                  undoLabel: t('action.undo'),
-                  onUndo: () => patchProject.mutate({ status: previousStatus }),
-                })
+                patchProject.mutate(
+                  { status: 'archived' },
+                  {
+                    onSuccess: () =>
+                      toastWithUndo({
+                        message: t('projects.action.archived', {
+                          title: project.title,
+                        }),
+                        undoLabel: t('action.undo'),
+                        onUndo: () => patchProject.mutate({ status: previousStatus }),
+                      }),
+                  },
+                )
               }}
             >
               {t('projects.action.archive')}
@@ -607,25 +685,38 @@ function SubjectiveAddRow({
   const [text, setText] = React.useState('')
   const createCard = useCreateCardMutation()
   return (
-    <div className="flex gap-2 pt-1">
+    <form
+      className="flex gap-2 pt-1"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (!text.trim() || createCard.isPending) return
+        createCard.mutate(
+          {
+            title: text.trim(),
+            assigneeUserId,
+            giverUserId,
+            projectId,
+            projectScope: 'subjective',
+            kind: 'project_task',
+          },
+          { onSuccess: () => setText('') },
+        )
+      }}
+    >
       <Input
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t('projects.card.addSubjectivePlaceholder')}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && text.trim()) {
-            createCard.mutate({
-              title: text.trim(),
-              assigneeUserId,
-              giverUserId,
-              projectId,
-              projectScope: 'subjective',
-              kind: 'project_task',
-            })
-            setText('')
-          }
-        }}
+        aria-label={t('projects.card.addSubjectivePlaceholder')}
       />
-    </div>
+      <Button
+        type="submit"
+        size="sm"
+        variant="secondary"
+        disabled={!text.trim() || createCard.isPending}
+      >
+        {t('work.action.save')}
+      </Button>
+    </form>
   )
 }

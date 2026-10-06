@@ -1,0 +1,7 @@
+{
+  "featureState": {
+    "off": "This feature is turned off",
+    "headHelp": "Your department has not enabled this feature yet. Open Features in department settings to turn it on.",
+    "memberHelp": "Ask your department head to enable this feature."
+  }
+}

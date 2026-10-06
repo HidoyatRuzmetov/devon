@@ -8,6 +8,7 @@ if [ "$#" -ne 3 ]; then
   exit 64
 fi
 
+
 API_IMAGE="$1"
 WEB_IMAGE="$2"
 RELEASE_SHA="$3"
@@ -47,17 +48,30 @@ if [ -f "$STATE_FILE" ]; then
   PREVIOUS_RELEASE_SHA="${DEVON_RELEASE_SHA:-}"
 fi
 
+# The first automated deploy may follow a manually built release with no state file yet.
+if [ -z "$PREVIOUS_API_IMAGE" ]; then
+  PREVIOUS_API_IMAGE="$(docker inspect --format '{{.Image}}' devon-api 2>/dev/null || true)"
+  PREVIOUS_WEB_IMAGE="$(docker inspect --format '{{.Image}}' devon-web 2>/dev/null || true)"
+fi
+
 take_backup() {
   if "${COMPOSE[@]}" ps --status running postgres | grep -q postgres; then
     echo "[deploy] taking the required pre-deployment backup"
     sudo -n systemctl start devon-backup.service
-    while systemctl is-active --quiet devon-backup.service; do sleep 2; done
-    systemctl is-failed --quiet devon-backup.service && {
+    if [ "$(systemctl show devon-backup.service --property=Result --value)" != success ]; then
       echo "[deploy] backup service failed; deployment refused" >&2
       return 1
-    }
+    fi
+    return 0
   else
-    echo "[deploy] initial deployment: no running database exists to back up"
+    # A stopped database (or a surviving data volume after container removal) is not a fresh
+    # installation. Starting it and migrating without a backup would put existing data at risk.
+    if docker inspect devon-postgres >/dev/null 2>&1 || \
+       docker volume inspect devon_postgres_data >/dev/null 2>&1; then
+      echo "[deploy] existing database is not running; restore database health and take a backup before deployment" >&2
+      return 1
+    fi
+    echo "[deploy] initial deployment: no database container or data volume exists to back up"
   fi
 }
 
@@ -81,6 +95,9 @@ rollback_images() {
   echo "[deploy] rolling back images to ${PREVIOUS_RELEASE_SHA:-previous release}" >&2
   export DEVON_API_IMAGE="$PREVIOUS_API_IMAGE"
   export DEVON_WEB_IMAGE="$PREVIOUS_WEB_IMAGE"
+  if [ -f "$ROOT/infra/.previous-docker-compose.prod.yml" ]; then
+    COMPOSE=(docker compose --env-file "$ROOT/.env" -f "$ROOT/infra/.previous-docker-compose.prod.yml" --profile clamav --profile centrifugo)
+  fi
   "${COMPOSE[@]}" up -d --no-build --wait --wait-timeout 600 api web caddy
   wait_ready
 }

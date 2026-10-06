@@ -23,6 +23,81 @@ function jsonResponse(body: unknown, ok = true, status = 200): Response {
 }
 
 describe('GlmProvider', () => {
+  it('keeps the timeout active while the response body is still arriving', async () => {
+    vi.useFakeTimers()
+    try {
+      const fetchImpl = vi.fn(
+        async (_url: unknown, init: RequestInit) =>
+          ({
+            ok: true,
+            json: () =>
+              new Promise((_resolve, reject) => {
+                init.signal!.addEventListener('abort', () => reject(new Error('aborted')), {
+                  once: true,
+                })
+              }),
+          }) as Response,
+      )
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl: fetchImpl as typeof fetch,
+      })
+      const pending = expect(
+        provider.complete({ ...REQUEST, timeoutMs: 1000 }),
+      ).rejects.toBeInstanceOf(GlmProviderError)
+      await vi.advanceTimersByTimeAsync(1000)
+      await pending
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('spends only the remaining request budget on a transport retry', async () => {
+    vi.useFakeTimers()
+    try {
+      const fetchImpl = vi.fn(
+        (_url: unknown, init: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init.signal!.addEventListener('abort', () => reject(new Error('aborted')), {
+              once: true,
+            })
+            if (fetchImpl.mock.calls.length === 1)
+              setTimeout(() => reject(new Error('network down')), 700)
+          }),
+      )
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl: fetchImpl as typeof fetch,
+      })
+      const pending = expect(
+        provider.complete({ ...REQUEST, timeoutMs: 1000 }),
+      ).rejects.toBeInstanceOf(GlmProviderError)
+      await vi.advanceTimersByTimeAsync(1000)
+      await pending
+      expect(fetchImpl).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not expose provider response bodies in error messages', async () => {
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl: vi
+        .fn()
+        .mockResolvedValue(jsonResponse({ error: 'private input echoed by provider' }, false, 403)),
+    })
+    await expect(provider.complete(REQUEST)).rejects.toThrow('GLM request failed with status 403')
+    await expect(provider.complete(REQUEST)).rejects.not.toThrow('private input')
+  })
+
   it("maps a successful response into the package's own ChatCompletionResult shape", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       jsonResponse({

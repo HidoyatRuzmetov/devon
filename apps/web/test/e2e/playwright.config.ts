@@ -48,7 +48,7 @@ export default defineConfig({
   // specs need `apps/api` running (`global-setup.ts` brings that up, on `FLOW_API_PORT`); `API_PORT`
   // here is what `src/vite.config.ts`'s proxy reads to pick the same target.
   webServer: {
-    command: 'pnpm --filter @devon/web dev',
+    command: 'pnpm --filter @devon/web dev --mode test',
     url: FLOW_WEB_BASE_URL,
     reuseExistingServer: !process.env['CI'],
     timeout: 60_000,

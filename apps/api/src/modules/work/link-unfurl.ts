@@ -32,7 +32,7 @@ function isPrivateIPv4(ip: string): boolean {
     ['192.0.0.0', 24],
     ['192.168.0.0', 16],
     ['198.18.0.0', 15],
-    ['224.0.0.0', 4], // multicast+
+    ['224.0.0.0', 3], // multicast and reserved upper range
   ]
   return ranges.some(([base, bits]) => ipv4InCidr(ip, base, bits))
 }
@@ -41,7 +41,8 @@ function isPrivateIPv6(ip: string): boolean {
   const lower = ip.toLowerCase()
   return (
     lower === '::1' ||
-    lower.startsWith('fe80:') || // link-local
+    /^fe[89ab][0-9a-f]:/.test(lower) || // full link-local /10
+    lower.startsWith('ff') || // multicast
     lower.startsWith('fc') ||
     lower.startsWith('fd') || // unique local
     lower === '::' ||
@@ -63,7 +64,11 @@ export async function assertPublicUrl(url: URL): Promise<ResolvedAddress[]> {
   if (url.username || url.password) {
     throw new UnsafeUrlError('URLs with embedded credentials are not allowed')
   }
+  // WHATWG URL retains IPv6 brackets; net.isIPv6 and DNS require the bare address.
   const hostname = url.hostname
+    .replace(/^\[|\]$/g, '')
+    .replace(/\.$/, '')
+    .toLowerCase()
   if (hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local')) {
     throw new UnsafeUrlError('local hostnames are not allowed')
   }

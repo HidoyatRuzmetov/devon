@@ -36,7 +36,9 @@ spec:
         seccompProfile: { type: RuntimeDefault }
       containers:
         - name: minio
-          image: minio/minio:RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b
+          # Build via infra/minio/build.sh and import into each k3s node's containerd first.
+          image: devon-minio:d0cada583fce
+          imagePullPolicy: Never
           args: ['server', '/data', '--console-address', ':9001']
           envFrom:
             - secretRef: { name: devon-secrets }

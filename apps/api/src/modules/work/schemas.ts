@@ -191,6 +191,7 @@ export const patchCardBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const cardListQuerySchema = z.object({
+  projectId: z.string().uuid().optional(),
   q: z.string().max(500).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),

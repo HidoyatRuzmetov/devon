@@ -55,7 +55,7 @@ import {
   Target,
   Users2,
 } from 'lucide-react'
-import { navigate } from '../../lib/router.js'
+import { navigate, RouterLink } from '../../lib/router.js'
 import { avatarUrl } from '../../lib/avatar.js'
 import { useSession, useDepartment } from '../../lib/session.js'
 import { fetchMembers, type Member } from '../structure/api.js'
@@ -676,12 +676,15 @@ export function HeadDashboard(): React.JSX.Element {
                 const percent = Math.round(project.progress * 100)
                 return (
                   <li key={project.id} className="flex flex-col gap-1">
-                    <span className="flex items-baseline justify-between gap-2">
+                    <RouterLink
+                      href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+                      className="flex items-baseline justify-between gap-2 rounded-sm hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                    >
                       <span className="min-w-0 truncate text-small">{project.title}</span>
                       <span className="tabular-nums text-caption text-muted-foreground">
                         {formatNumber(percent, locale)}%
                       </span>
-                    </span>
+                    </RouterLink>
                     <Progress
                       value={percent}
                       label={t('home.head.projects.progressAria', { title: project.title })}

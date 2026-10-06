@@ -35,7 +35,7 @@ export type CreateUploadInput = {
   /** Chosen by the caller (it is also part of the object key), never by the database. */
   id: string
   userId: string
-  purpose: 'avatar'
+  purpose: 'avatar' | 'card_attachment'
   key: string
   mime: string
   size: number

@@ -150,7 +150,9 @@ export const fieldValueDtoSchema = z.object({
   updatedAt: z.string().nullable(),
 })
 
-export const valuesResponseSchema = z.object({ values: z.array(fieldValueDtoSchema) })
+export const valuesResponseSchema = z.object({
+  values: z.array(fieldValueDtoSchema),
+})
 
 export const setValueSchema = z
   .object({

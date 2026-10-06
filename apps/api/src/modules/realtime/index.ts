@@ -424,7 +424,9 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
         payload: { sharedCanvasId: row.id, scope: row.scope, targetId: row.targetId },
         actorUserId: userId,
       })
-      return reply.send(toShareDto(row, { canEdit: true, canManage: true }))
+      return reply
+        .type('application/json')
+        .send(toShareDto(row, { canEdit: true, canManage: true }))
     },
   )
 
@@ -504,7 +506,7 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
       // tell "no such canvas" from "someone else's canvas".
       if (!audience) return reply.code(404).send({ code: 'not_found' })
       if (!audience.mayWatch) return reply.code(403).send({ code: 'forbidden' })
-      return reply.send(
+      return reply.type('application/json').send(
         toShareDto(audience.share, {
           canEdit: audience.mayEdit,
           canManage: audience.share.ownerUserId === req.actor!.userId,
@@ -566,7 +568,7 @@ const realtimeRoutes: FastifyPluginAsyncZod = async (app) => {
         payload: { sharedCanvasId: row.id, version: row.version },
         actorUserId: req.actor!.userId,
       })
-      return reply.send(
+      return reply.type('application/json').send(
         toShareDto(row, {
           canEdit: true,
           canManage: row.ownerUserId === req.actor!.userId,

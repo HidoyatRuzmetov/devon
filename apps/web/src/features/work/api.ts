@@ -196,6 +196,7 @@ export function fetchBoard(): Promise<Board> {
 }
 
 export type CardListQuery = {
+  projectId?: string | undefined
   q?: string | undefined
   mine?: boolean | undefined
   cursor?: string | undefined
@@ -204,6 +205,7 @@ export type CardListQuery = {
 
 export function fetchCards(query: CardListQuery = {}): Promise<z.infer<typeof cardListSchema>> {
   const params = new URLSearchParams()
+  if (query.projectId) params.set('projectId', query.projectId)
   if (query.q) params.set('q', query.q)
   if (query.mine) params.set('mine', 'true')
   if (query.cursor) params.set('cursor', query.cursor)
@@ -270,6 +272,19 @@ export function patchCard(
     `/api/v1/cards/${encodeURIComponent(id)}`,
     patch,
     cardDetailSchema,
+    csrfToken,
+  )
+}
+
+export async function deleteCard(id: string, csrfToken: string): Promise<void> {
+  await apiClient.delete(`/api/v1/cards/${encodeURIComponent(id)}`, csrfToken)
+}
+
+export async function undoDeleteCard(id: string, csrfToken: string): Promise<void> {
+  await apiClient.post(
+    `/api/v1/cards/${encodeURIComponent(id)}/undo-delete`,
+    {},
+    z.void(),
     csrfToken,
   )
 }

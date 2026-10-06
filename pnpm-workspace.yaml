@@ -5,6 +5,27 @@ packages:
 # Exact pins everywhere (TECH-SPEC.md §1.2): pnpm writes exact versions, never ranges, on `pnpm add`.
 saveExact: true
 
+# Preserve publisher provenance and reject non-registry transitive dependencies.
+trustPolicy: no-downgrade
+# Existing exact lockfile pins, reviewed 2026-10-06; no wildcard exemptions.
+# eslint-config-prettier 9.1.2 is the patched 9.x release (GHSA-f29h-pxvx-f335).
+# semver 6.x and undici-types 6.x are legacy dependencies whose older release lines
+# predate their publishers' current provenance. Integrity remains pinned in pnpm-lock.yaml.
+trustPolicyExclude:
+  - eslint-config-prettier@9.1.2
+  - semver@6.3.1
+  - undici-types@6.21.0
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+
+# Security patches for transitive dependencies; stay within each consumer's major line.
+overrides:
+  'brace-expansion@1': 1.1.20
+  'brace-expansion@2': 2.1.6
+  'brace-expansion@5': 5.0.11
+  '@grpc/grpc-js@1.14.4': 1.14.5
+  'source-map-js@1.2.1': 1.2.2
+
 # Fail loudly on a Node/pnpm mismatch instead of installing anyway (I-18: no surprise later). Verified
 # against pnpm 11.15.0: as of pnpm 10+, install-behaviour settings like this one live here, not in
 # .npmrc -- `.npmrc`'s `engine-strict`/`save-exact` are silently ignored by `pnpm add`/`pnpm install`
@@ -21,13 +42,15 @@ strictPeerDependencies: false
 shamefullyHoist: false
 
 allowBuilds:
-  argon2: set this to true or false
+  argon2: false
   cpu-features: true
   esbuild: true
   protobufjs: true
   ssh2: true
 
 minimumReleaseAgeExclude:
+  # Reviewed security fix for indexed-source-map denial of service, published 2026-09-30.
+  - 'source-map-js@1.2.2'
   - '@tanstack/react-virtual@3.14.11'
   - '@tanstack/virtual-core@3.17.9'
   - '@oxc-transform-react/binding-android-arm-eabi@0.149.0'

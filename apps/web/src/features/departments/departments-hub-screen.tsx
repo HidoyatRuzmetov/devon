@@ -132,7 +132,9 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
     onSuccess: (result) => {
       setRevealedPassword(result.password)
       setConfirmOpen(false)
-      void queryClient.invalidateQueries({ queryKey: ['departments', 'invite', departmentId] })
+      void queryClient.invalidateQueries({
+        queryKey: ['departments', 'invite', departmentId],
+      })
     },
   })
 
@@ -174,7 +176,12 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
               field -- now an inline icon button next to it, the same recipe the sentinel key field
               uses. */}
           <div className="flex items-center gap-2">
-            <Input readOnly value={link} className="min-w-0 flex-1 font-mono text-small" />
+            <Input
+              aria-label={t('departments.invite.title')}
+              readOnly
+              value={link}
+              className="min-w-0 flex-1 font-mono text-small"
+            />
             <IconButton
               aria-label={t('departments.invite.copyInvite')}
               onClick={copyInvitation}
@@ -212,7 +219,14 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
             camera can find, not the current colour scheme. round2 SEV3 "the QR does not fade in". */}
         <Reveal className="flex shrink-0 flex-col items-center gap-1.5">
           <div className="rounded-md border border-border bg-white p-3">
-            <QRCodeSVG value={link} size={112} fgColor="#000000" bgColor="#ffffff" />
+            <QRCodeSVG
+              role="img"
+              aria-label={t('departments.invite.qrLabel')}
+              value={link}
+              size={112}
+              fgColor="#000000"
+              bgColor="#ffffff"
+            />
           </div>
           <span className="text-caption text-muted-foreground">
             {t('departments.invite.qrLabel')}
@@ -231,7 +245,12 @@ function InviteBlock({ departmentId }: { departmentId: string }) {
           </Button>
         </div>
         {revealedPassword ? (
-          <Input readOnly value={revealedPassword} className="font-mono text-small" />
+          <Input
+            aria-label={t('departments.invite.passwordLabel')}
+            readOnly
+            value={revealedPassword}
+            className="font-mono text-small"
+          />
         ) : (
           <p className="text-caption text-muted-foreground">
             {t('departments.invite.passwordHiddenNotice')}
