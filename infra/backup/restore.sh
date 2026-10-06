@@ -59,6 +59,15 @@ run_pg() { docker run --rm --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_P
 # Encrypted backups (backup.sh's BACKUP_ENCRYPTION_PASSPHRASE path, H19.1) decrypt to a throwaway
 # plaintext file for the duration of this restore only.
 DECRYPTED=""
+cleanup() {
+  local code=$?
+  trap - EXIT
+  if [ -n "$DECRYPTED" ]; then
+    shred -u "$DECRYPTED" 2>/dev/null || rm -f "$DECRYPTED" || true
+  fi
+  exit "$code"
+}
+trap cleanup EXIT
 RESTORE_SOURCE="$BACKUP_FILE"
 if [[ "$BACKUP_FILE" == *.gpg ]]; then
   if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
@@ -66,10 +75,9 @@ if [[ "$BACKUP_FILE" == *.gpg ]]; then
     exit 1
   fi
   DECRYPTED="$(mktemp "${TMPDIR:-/tmp}/devon-restore-XXXXXX.dump")"
-  gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+  printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
     --decrypt --output "$DECRYPTED" "$BACKUP_FILE"
   RESTORE_SOURCE="$DECRYPTED"
-  trap '[ -n "$DECRYPTED" ] && { shred -u "$DECRYPTED" 2>/dev/null || rm -f "$DECRYPTED"; }' EXIT
 fi
 
 EXISTS="$(run_pg psql -h "$POSTGRES_HOST" -U postgres -tA -c "select 1 from pg_database where datname='$TARGET_DB'")"

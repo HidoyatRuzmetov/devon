@@ -54,8 +54,8 @@ jobs:
       - name: Start isolated test services
         run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
 
-      - name: Verify deployment recovery paths
-        run: node --test scripts/test/remote-deploy.test.mjs
+      - name: Verify deployment and backup recovery paths
+        run: node --test scripts/test/*.test.mjs
 
       # The `security` gate (agentic/gates.json) shells out to Semgrep and Trivy directly -- neither
       # is an npm package, so CI provisions them here rather than pretending a `pnpm install` covers
@@ -85,7 +85,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: last-gate-report
-          path: agentic/ledger/last-gate.json
+          path: |
+            agentic/ledger/last-gate.json
+            agentic/ledger/gate-logs/**
           if-no-files-found: warn
           retention-days: 30
 
@@ -139,8 +141,8 @@ jobs:
       - name: Start isolated test services
         run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
 
-      - name: Verify deployment recovery paths
-        run: node --test scripts/test/remote-deploy.test.mjs
+      - name: Verify deployment and backup recovery paths
+        run: node --test scripts/test/*.test.mjs
 
       # See the `gate` job's identical step above for why this is a checksummed release download
       # rather than the vendor's `curl | sh` one-liner.
@@ -162,7 +164,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: last-gate-report-release
-          path: agentic/ledger/last-gate.json
+          path: |
+            agentic/ledger/last-gate.json
+            agentic/ledger/gate-logs/**
           if-no-files-found: warn
           retention-days: 90
 

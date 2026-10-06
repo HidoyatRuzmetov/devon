@@ -200,7 +200,10 @@ if [ "${BACKUP_MIRROR_TO_MINIO:-0}" = "1" ]; then
     if [ -f "$DUMP.files.tar.gpg" ]; then MC_FILES="$(basename "$DUMP.files.tar.gpg")";
     elif [ -f "$DUMP.files.tar" ]; then MC_FILES="$(basename "$DUMP.files.tar")"; fi
     export MC_DUMP MC_MANIFEST MC_FILES MC_BUCKET
-    docker run --rm --network devon --entrypoint sh \
+    # Match the backup owner: encrypted dumps are intentionally mode 0600. The image defaults
+    # to non-root; a root-run system backup needs the existing operator UID to read these files.
+    docker run --rm --network devon --user "$(id -u):$(id -g)" --entrypoint sh \
+      -e MC_CONFIG_DIR=/tmp/mc \
       -e MC_HOST_backup -e MC_DUMP -e MC_MANIFEST -e MC_FILES -e MC_BUCKET \
       -v "$BACKUP_DIR:/backups:ro" \
       devon-mc:e929f89ceeed \

@@ -23,6 +23,10 @@ RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache
 
 FROM alpine:3.24@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6 AS runtime
 COPY --from=source /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+RUN addgroup -g 1000 minio && adduser -D -u 1000 -G minio minio \
+    && mkdir -p /data /home/minio/.mc \
+    && chown -R 1000:1000 /data /home/minio
+ENV HOME=/home/minio
 
 FROM runtime AS server
 LABEL org.opencontainers.image.source="https://github.com/minio/minio" \
@@ -31,6 +35,7 @@ LABEL org.opencontainers.image.source="https://github.com/minio/minio" \
 COPY --from=server-build /out/minio /usr/bin/minio
 COPY --from=server-build /src/LICENSE /licenses/minio-LICENSE
 EXPOSE 9000 9001
+USER 1000:1000
 ENTRYPOINT ["minio"]
 
 FROM runtime AS client
@@ -39,4 +44,5 @@ LABEL org.opencontainers.image.source="https://github.com/minio/mc" \
       org.opencontainers.image.licenses="AGPL-3.0-only"
 COPY --from=client-build /out/mc /usr/bin/mc
 COPY --from=client-build /src/LICENSE /licenses/mc-LICENSE
+USER 1000:1000
 ENTRYPOINT ["mc"]

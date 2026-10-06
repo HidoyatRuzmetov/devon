@@ -969,7 +969,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       // Every goal on the page is computed from the SAME already-loaded card array -- eight goals
       // are still one card query, not eight (I-14).
       const filterable = makeFilterableFactory(members, labels, projectNames)
-      return reply.send(
+      return reply.type('application/json').send(
         goals.map((goal) => ({
           ...goal,
           ...plus.computeGoalValue(

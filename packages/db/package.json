@@ -13,7 +13,7 @@
     "lint": "eslint --config ../config/eslint/base.js . && prettier --check --config ../config/prettier.config.js --ignore-unknown \"src/**/*.ts\" \"test/**/*.ts\" \"*.ts\" \"*.json\"",
     "test:unit": "vitest run --config test/vitest.config.ts",
     "build": "tsc -p tsconfig.json",
-    "migrate:verify": "tsx test/migrate-verify.ts",
+    "migrate:verify": "tsx test/migrate-verify.ts && vitest run --config test/vitest.integration.config.ts test/integration/pool-recovery.test.ts",
     "migrate:apply": "tsx src/cli-migrate.ts",
     "tenancy:report": "tsx test/tenancy-report.ts",
     "audit:prove": "tsx test/audit-prove.ts",

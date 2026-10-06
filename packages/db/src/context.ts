@@ -83,31 +83,46 @@ function poolEnvInt(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? n : fallback
 }
 
+/** pg removes failed idle clients itself. Observe that background error without turning a
+ * recoverable disconnected socket into an uncaught EventEmitter error (which also dumps client
+ * credentials). Active query failures still reject normally; no transaction is retried here. */
+function observeIdleErrors(candidate: Pool): Pool {
+  candidate.on('error', (error: Error & { code?: string }) => {
+    console.warn('@devon/db: idle connection removed', {
+      name: error.name,
+      code: error.code ?? 'unknown',
+    })
+  })
+  return candidate
+}
+
 function getPool(): Pool {
   if (pool) return pool
   const connectionString = process.env['DATABASE_URL']
   if (!connectionString) {
     throw new Error('@devon/db: DATABASE_URL is not set')
   }
-  pool = new Pool({
-    connectionString,
-    // Sized, not left at node-postgres's default of 10 (H3.3). Override per process via env.
-    max: poolEnvInt('DB_POOL_MAX', 20),
-    min: poolEnvInt('DB_POOL_MIN', 2),
-    // A connection idle longer than this is closed, not held open forever -- bounds the pool back
-    // down toward `min` once a traffic spike passes (H11.1 "bounded ... caches").
-    idleTimeoutMillis: poolEnvInt('DB_POOL_IDLE_TIMEOUT_MS', 30_000),
-    // Fail fast with a clear pool-exhaustion error instead of a request hanging indefinitely when
-    // every slot is busy (H8.1 "graceful degradation", H16.1 "no ... stuck" loading states) -- a
-    // request that cannot get a connection within 5s is not going to get useful work done anyway.
-    connectionTimeoutMillis: poolEnvInt('DB_POOL_CONN_TIMEOUT_MS', 5_000),
-    // Per-statement ceiling so one runaway query cannot hold a connection (and its transaction's
-    // locks) forever -- PgBouncer-safe because it is a `pg` client-side option sent as a startup
-    // parameter on every physical connection, not a session `SET` that could leak across a pooled
-    // connection's next borrower (H3.3's `set_config(..., true)` note above is the analogous
-    // guarantee for the tenancy GUCs).
-    statement_timeout: poolEnvInt('DB_STATEMENT_TIMEOUT_MS', 15_000),
-  })
+  pool = observeIdleErrors(
+    new Pool({
+      connectionString,
+      // Sized, not left at node-postgres's default of 10 (H3.3). Override per process via env.
+      max: poolEnvInt('DB_POOL_MAX', 20),
+      min: poolEnvInt('DB_POOL_MIN', 2),
+      // A connection idle longer than this is closed, not held open forever -- bounds the pool back
+      // down toward `min` once a traffic spike passes (H11.1 "bounded ... caches").
+      idleTimeoutMillis: poolEnvInt('DB_POOL_IDLE_TIMEOUT_MS', 30_000),
+      // Fail fast with a clear pool-exhaustion error instead of a request hanging indefinitely when
+      // every slot is busy (H8.1 "graceful degradation", H16.1 "no ... stuck" loading states) -- a
+      // request that cannot get a connection within 5s is not going to get useful work done anyway.
+      connectionTimeoutMillis: poolEnvInt('DB_POOL_CONN_TIMEOUT_MS', 5_000),
+      // Per-statement ceiling so one runaway query cannot hold a connection (and its transaction's
+      // locks) forever -- PgBouncer-safe because it is a `pg` client-side option sent as a startup
+      // parameter on every physical connection, not a session `SET` that could leak across a pooled
+      // connection's next borrower (H3.3's `set_config(..., true)` note above is the analogous
+      // guarantee for the tenancy GUCs).
+      statement_timeout: poolEnvInt('DB_STATEMENT_TIMEOUT_MS', 15_000),
+    }),
+  )
   return pool
 }
 
@@ -118,7 +133,7 @@ function getPool(): Pool {
  */
 export function configurePool(connectionString: string): void {
   const previous = pool
-  pool = new Pool({ connectionString })
+  pool = observeIdleErrors(new Pool({ connectionString }))
   if (previous) void previous.end()
 }
 

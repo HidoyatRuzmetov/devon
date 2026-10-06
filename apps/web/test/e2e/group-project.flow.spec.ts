@@ -122,7 +122,7 @@ test('@flow group project: objective + subjective tasks complete and progress re
 
   // Real UI, reloaded: the project's progress ring reads 100%.
   await headPage.reload()
-  await expect(headPage.getByText('100')).toBeVisible()
+  await expect(headPage.getByText('100', { exact: true })).toBeVisible()
 
   await headContext.close()
 })

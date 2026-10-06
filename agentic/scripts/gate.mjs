@@ -44,6 +44,8 @@ const tail = (s, n = 60) => s.trim().split(/\r?\n/).slice(-n).join('\n')
 
 const results = []
 const startedAt = new Date().toISOString()
+const logDir = join(cwd, 'agentic', 'ledger', 'gate-logs')
+mkdirSync(logDir, { recursive: true })
 for (const name of names) {
   const g = cfg.gates[name]
   if (!g) { results.push({ name, status: 'fail', blocking: true, tolerated: false, ms: 0, tail: `unknown gate "${name}" in gates.json` }); continue }
@@ -56,6 +58,9 @@ for (const name of names) {
   if (skipReason) { results.push({ name, status: 'skipped', blocking, tolerated, ms: 0, tail: `SKIPPED: ${skipReason}. A skipped gate is NOT a pass.` }); continue }
   process.stdout.write(`[gate] ${name} … `)
   const r = await run(g.cmd, g.timeout_s || 600)
+  // Keep the bounded diagnostic buffer: a long exception can otherwise hide its cause above the
+  // short console tail. CI uploads this alongside the summary, including when later gates fail.
+  writeFileSync(join(logDir, `${name.replace(/[^a-zA-Z0-9_-]/g, '_')}.log`), r.out)
   const status = r.code === 0 ? 'pass' : 'fail'
   console.log(`${status.toUpperCase()} (${(r.ms / 1000).toFixed(1)}s)`)
   results.push({ name, status, blocking, tolerated, ms: r.ms, code: r.code, cmd: g.cmd, tail: status === 'pass' ? tail(r.out, 5) : tail(r.out, 80) })

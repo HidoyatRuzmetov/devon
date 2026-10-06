@@ -26,7 +26,7 @@ async function inspect(page: Page, path: string, info: TestInfo) {
   await expect(page.locator('main')).toBeVisible()
   await expect
     .soft(
-      page.getByRole('heading', { name: 'Could not load the data', exact: true }),
+      page.getByRole('heading', { name: /^(Could not load the data|Yuklab boʻlmadi)$/ }),
       `${path}: data must load`,
     )
     .toHaveCount(0)
@@ -142,7 +142,8 @@ test('@a11y @flow superadmin: all administration routes', async ({ browser }, in
   const context = await newFlowContext(browser)
   try {
     await loginAsSuperAdmin(context)
-    expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
+    // This bootstrap account is shared with the admin-console flow. Inspect its default Uzbek
+    // interface without changing a persisted preference while another test is using the account.
     const page = await context.newPage()
     for (const route of inventory.routes.filter((r) => r.auth === 'super_admin')) {
       // Routes share one browser page; navigation and inspection must be sequential.

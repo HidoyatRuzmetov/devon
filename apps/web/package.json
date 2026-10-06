@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit -p src/tsconfig.json",
     "lint": "eslint --config src/lint/eslint.config.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown \"src/**/*.{ts,tsx,css,html}\" \"test/**/*.{ts,tsx}\" \"*.json\"",
     "test:unit": "vitest run --config test/vitest.config.ts",
-    "test:e2e": "playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y",
-    "test:a11y": "playwright test --config test/e2e/playwright.config.ts --grep @a11y"
+    "test:e2e": "playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --output test-results/e2e",
+    "test:a11y": "playwright test --config test/e2e/playwright.config.ts --grep @a11y --output test-results/a11y"
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "3.1.0",
