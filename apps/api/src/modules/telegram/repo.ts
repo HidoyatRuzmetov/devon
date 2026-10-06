@@ -112,11 +112,19 @@ export async function consumeLinkCode(
       id: string
       user_id: string
       expires_at: Date
+      previously_linked: boolean
     }>(sql`
-      select id, user_id, expires_at from app.telegram_link_codes where code = ${code}
+      select c.id, c.user_id, c.expires_at,
+        exists(select 1 from app.telegram_links l where l.user_id = c.user_id
+          and l.chat_id = ${chatId}::bigint and l.link_code_used = c.code
+          and l.unlinked_at is null) as previously_linked
+      from app.telegram_link_codes c where c.code = ${code}
     `)
     const row = rows[0]
     if (!row) return { ok: false, reason: 'not_found' }
+    // A successful transaction followed by a failed Telegram reply can be retried safely, but
+    // only the identical active chat/code pair receives success. Never re-link a consumed code.
+    if (row.previously_linked) return { ok: true, userId: row.user_id }
     if (row.expires_at.getTime() < Date.now()) return { ok: false, reason: 'expired' }
 
     const consumed = await tx.raw<{ id: string }>(sql`
@@ -124,7 +132,13 @@ export async function consumeLinkCode(
       where id = ${row.id} and consumed_at is null
       returning id
     `)
-    if (consumed.length === 0) return { ok: false, reason: 'already_used' }
+    if (consumed.length === 0) {
+      const linked = await tx.raw<{ user_id: string }>(sql`
+        select user_id from app.telegram_links where user_id = ${row.user_id}
+          and chat_id = ${chatId}::bigint and link_code_used = ${code} and unlinked_at is null
+      `)
+      return linked[0] ? { ok: true, userId: row.user_id } : { ok: false, reason: 'already_used' }
+    }
 
     await tx.raw(sql`
       insert into app.telegram_links (user_id, chat_id, link_code_used, locale_at_link)

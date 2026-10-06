@@ -219,6 +219,7 @@ export function TasksView() {
     setQuickAddAi({ sectionKey, status: 'pending' })
     quickAddParse.mutate(
       {
+        scope: 'personal',
         locale,
         text,
         // AI-AUDIT §0.3: the date the prompt needs to resolve "ertaga"/"jumagacha", which v1.0

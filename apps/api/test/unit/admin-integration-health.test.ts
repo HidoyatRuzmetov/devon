@@ -58,6 +58,33 @@ describe('Telegram health authenticates the configured bot', () => {
   }
   const webhookUrl = 'https://configured.example/api/v1/telegram/webhook/dummy-webhook-secret'
 
+  it.each([
+    { url: '', active: true, status: 'ok' },
+    { url: '', active: false, status: 'down' },
+    { url: webhookUrl, active: true, status: 'down' },
+  ])(
+    'requires a live polling consumer and no webhook ($status)',
+    async ({ url, active, status }) => {
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(Response.json({ ok: true }))
+        .mockResolvedValueOnce(Response.json({ ok: true, result: { url } }))
+      expect(
+        (
+          await probeTelegram(
+            {
+              NODE_ENV: 'production',
+              TELEGRAM_BOT_TOKEN: 'fixture',
+              TELEGRAM_TRANSPORT: 'polling',
+            },
+            fetchImpl,
+            () => active,
+          )
+        ).status,
+      ).toBe(status)
+    },
+  )
+
   it('respects the development transport opt-in without contacting a production bot', async () => {
     const fetchImpl = vi.fn()
     expect(
@@ -97,6 +124,12 @@ describe('Telegram health authenticates the configured bot', () => {
   )
 
   it.each([
+    {
+      pending_update_count: 7,
+      last_error_date: Math.floor(Date.now() / 1000),
+      last_error_message: 'SSL certificate verify failed',
+      status: 'down',
+    },
     { pending_update_count: 1, last_error_date: Math.floor(Date.now() / 1000), status: 'degraded' },
     { pending_update_count: 101, last_error_date: 0, status: 'degraded' },
     { pending_update_count: 0, last_error_date: Math.floor(Date.now() / 1000), status: 'ok' },

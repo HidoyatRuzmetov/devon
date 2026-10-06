@@ -71,7 +71,8 @@ async function expireCode(
 
 async function main(): Promise<void> {
   const db = await startProveDatabase()
-  const server = await startProveServer(db)
+  // Test mode never contacts Telegram; the routes still require configured transport credentials.
+  const server = await startProveServer(db, { TELEGRAM_BOT_TOKEN: '123456:dummy-test-token' })
   console.log(`api listening at ${server.baseUrl}`)
 
   try {
@@ -146,11 +147,21 @@ async function main(): Promise<void> {
     assertTrue(isIsoTimestamp(linkCode.expiresAt), 'link code expiresAt is an ISO timestamp')
     assertEqual((await getStatus()).linked, false, 'not linked before /start')
 
-    step("consumeLinkCode (the bot's /start <code>): valid, then already_used, then not_found")
+    step('consumeLinkCode: valid, idempotent same-chat retry, refused other-chat replay, not_found')
     const linked = await consumeLinkCode(linkCode.code, PERSONAL_CHAT_ID, 'uz-Latn')
     assertEqual(linked.ok ? linked.userId : linked.reason, user.id, 'valid code links the issuer')
     const again = await consumeLinkCode(linkCode.code, PERSONAL_CHAT_ID, 'uz-Latn')
-    assertEqual(again.ok ? 'ok' : again.reason, 'already_used', 'second use of the same code')
+    assertEqual(again.ok ? 'ok' : again.reason, 'ok', 'same-chat delivery retry is idempotent')
+    const stolen = await consumeLinkCode(
+      linkCode.code,
+      String(Number(PERSONAL_CHAT_ID) + 1),
+      'uz-Latn',
+    )
+    assertEqual(
+      stolen.ok ? 'ok' : stolen.reason,
+      'already_used',
+      'another chat cannot reuse a consumed code',
+    )
     const unknown = await consumeLinkCode('NOSUCHCD', PERSONAL_CHAT_ID, 'uz-Latn')
     assertEqual(unknown.ok ? 'ok' : unknown.reason, 'not_found', 'unknown code')
 

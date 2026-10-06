@@ -47,15 +47,10 @@ import {
   useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
-import { BarChart3, Database, Gauge, RefreshCw, Sparkles } from 'lucide-react'
+import { BarChart3, Database, Gauge, Sparkles } from 'lucide-react'
 import { useDepartment, useSession } from '../../lib/session.js'
 import { AskPanel } from './ask-panel.js'
-import {
-  useAiSettingsQuery,
-  useAiUsageQuery,
-  usePatchAiSettingsMutation,
-  useRebuildIndexMutation,
-} from './use-ai.js'
+import { useAiSettingsQuery, useAiUsageQuery, usePatchAiSettingsMutation } from './use-ai.js'
 import {
   AI_FEATURE_IDS,
   HEAD_ONLY_FEATURES,
@@ -191,10 +186,9 @@ function SimulatedBanner() {
 /** EPIC-016: which retrieval backend is live, why, and what the head can do about it. Written as a
  * sentence, not a status code -- "keyword search, because this GLM deployment does not offer an
  * embeddings model" is a thing a boshqarma boshligʻi can act on or accept. */
-function SearchBackendCard({ search, isHead }: { search: AiSettings['search']; isHead: boolean }) {
+function SearchBackendCard({ search }: { search: AiSettings['search'] }) {
   const t = useT()
   const locale = useLocale()
-  const rebuild = useRebuildIndexMutation()
   return (
     <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -211,31 +205,7 @@ function SearchBackendCard({ search, isHead }: { search: AiSettings['search']; i
           pending: formatNumber(search.pendingEmbeddingCount, locale),
         })}
       </p>
-      {isHead ? (
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          <Button
-            variant="secondary"
-            size="sm"
-            loading={rebuild.isPending}
-            onClick={() =>
-              rebuild.mutate(undefined, {
-                onSuccess: (result) =>
-                  toast(
-                    t('ai.search.rebuilt', {
-                      indexed: formatNumber(result.indexed, locale),
-                      embedded: formatNumber(result.embedded, locale),
-                    }),
-                  ),
-                onError: () => toast(t('toast.saveError')),
-              })
-            }
-          >
-            <RefreshCw className="size-3.5" aria-hidden="true" />
-            {t('ai.search.rebuild')}
-          </Button>
-          <span className="text-caption text-muted-foreground">{t('ai.search.rebuildHint')}</span>
-        </div>
-      ) : null}
+      <p className="text-small text-muted-foreground">{t('ai.search.automaticContext')}</p>
     </div>
   )
 }
@@ -398,7 +368,7 @@ function HelpersTab() {
         </div>
       ) : null}
 
-      <SearchBackendCard search={settings.search} isHead={isHead} />
+      <SearchBackendCard search={settings.search} />
 
       <div className="flex flex-col gap-1 rounded-md border border-border bg-card p-4">
         <h3 className="text-small font-medium text-foreground">{t('ai.flags.title')}</h3>

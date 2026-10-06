@@ -29,9 +29,11 @@ import {
   toast,
   toastWithUndo,
 } from '@devon/ui'
-import { RouterLink, useSearchParams } from '../../../lib/router.js'
+import { RouterLink, useSearchParams, navigate } from '../../../lib/router.js'
 import { useActor } from '../../../lib/can.js'
 import { EditProjectDialog } from './edit-project-dialog.js'
+import { MilestoneActions } from './milestone-actions.js'
+import { taskProgress } from '../progress.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
@@ -47,6 +49,7 @@ import {
   usePatchMilestoneMutation,
   usePatchProjectMutation,
   useProjectQuery,
+  useDeleteProjectMutation,
 } from '../hooks.js'
 
 function useProjectCards(projectId: string | undefined) {
@@ -93,6 +96,11 @@ function TaskRow({ card }: { card: Card }) {
       >
         {card.title}
       </button>
+      {card.checklistTotal > 0 ? (
+        <span className="text-caption tabular-nums text-muted-foreground">
+          {card.checklistDone}/{card.checklistTotal}
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -111,6 +119,8 @@ export default function ProjectPageScreen() {
   const patchCard = usePatchCardMutation()
   const addMilestone = useAddMilestoneMutation(id ?? '')
   const patchMilestone = usePatchMilestoneMutation(id ?? '')
+  const deleteProject = useDeleteProjectMutation()
+  const undoDelete = useDeleteProjectMutation(true)
 
   const [newMilestone, setNewMilestone] = React.useState('')
   const [newObjective, setNewObjective] = React.useState('')
@@ -166,10 +176,33 @@ export default function ProjectPageScreen() {
     ownerUserIds: [project.ownerUserId, ...project.members],
   }).allowed
   const cards = cardsQuery.data ?? []
-  const objective = cards.filter((c) => c.projectScope === 'objective')
+  const objective = cards.filter((c) => c.projectScope !== 'subjective')
   const subjective = cards.filter((c) => c.projectScope === 'subjective')
   const percent = Math.round(project.progress * 100)
+  const canDelete = can(actor, 'delete', {
+    kind: 'owned',
+    departmentId: actor?.departmentId ?? '',
+    ownerUserIds: [project.ownerUserId],
+  }).allowed
   const openObjective = objective.filter((c) => c.status !== 'done')
+
+  async function removeProject() {
+    try {
+      await deleteProject.mutateAsync(project.id)
+      navigate('/projects')
+      toastWithUndo({
+        message: t('projectLifecycle.deleted'),
+        undoLabel: t('action.undo'),
+        durationMs: 20_000,
+        onUndo: async () => {
+          await undoDelete.mutateAsync(project.id)
+          navigate(`/projects/view?id=${encodeURIComponent(project.id)}`)
+        },
+      })
+    } catch {
+      /* The mutation hook reports the error. */
+    }
+  }
 
   function runPlanAi() {
     if (openObjective.length === 0) return
@@ -335,6 +368,7 @@ export default function ProjectPageScreen() {
               ) : null}
             </div>
           </div>
+          <p className="text-caption text-muted-foreground">{t('projectLifecycle.progressHint')}</p>
           {project.members.length > 0 ? (
             <AvatarStack
               label={t('projects.field.members')}
@@ -447,6 +481,7 @@ export default function ProjectPageScreen() {
                         {formatDate(new Date(m.dueOn), locale)}
                       </span>
                     ) : null}
+                    {canEdit ? <MilestoneActions projectId={project.id} milestone={m} /> : null}
                   </div>
                 </StaggerItem>
               ))}
@@ -457,10 +492,12 @@ export default function ProjectPageScreen() {
                 value={newMilestone}
                 onChange={(e) => setNewMilestone(e.target.value)}
                 placeholder={t('projects.milestone.addPlaceholder')}
+                aria-label={t('projects.milestone.addPlaceholder')}
               />
               <Button
                 size="sm"
                 variant="secondary"
+                disabled={!newMilestone.trim() || addMilestone.isPending}
                 onClick={() => {
                   if (newMilestone.trim()) {
                     addMilestone.mutate(
@@ -490,13 +527,7 @@ export default function ProjectPageScreen() {
             <div className="flex items-center justify-between gap-2">
               <span className="text-caption text-muted-foreground">
                 {t('projects.tile.progress', {
-                  percent:
-                    objective.length > 0
-                      ? Math.round(
-                          (objective.filter((c) => c.status === 'done').length / objective.length) *
-                            100,
-                        )
-                      : 0,
+                  percent: Math.round(taskProgress(objective) * 100),
                 })}
               </span>
               {canEdit && planEnabled && openObjective.length > 0 ? (
@@ -641,6 +672,21 @@ export default function ProjectPageScreen() {
         </Tabs>
 
         <footer className="flex gap-2 border-t border-border pt-4">
+          {canDelete ? (
+            <div className="flex flex-col gap-1">
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={deleteProject.isPending}
+                onClick={() => void removeProject()}
+              >
+                {t('projectLifecycle.delete')}
+              </Button>
+              <p className="text-caption text-muted-foreground">
+                {t('projectLifecycle.deleteHint')}
+              </p>
+            </div>
+          ) : null}
           {canEdit && project.status !== 'archived' ? (
             <Button
               size="sm"

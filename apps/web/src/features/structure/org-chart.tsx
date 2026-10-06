@@ -4,24 +4,27 @@
 // views can never disagree about the shape of the tree. UI-OVERHAUL.md's Jakob row for this screen
 // (Miro/Lucidchart org charts): unit colours, vacancies dashed, zoom/pan, click to open a side panel.
 import * as React from 'react'
-import { motion } from 'motion/react'
 import { useT } from '@devon/i18n'
-import { Button, IconButton, Sheet, SheetContent, unitHueClass, useReducedMotion } from '@devon/ui'
+import { Button, IconButton, Sheet, SheetContent, unitHueClass, toast } from '@devon/ui'
 import { Download, Minus, Plus, RotateCcw, X } from 'lucide-react'
 import type { TreeActions, TreeNode } from './unit-tree.js'
 import { RoleChips } from './unit-tree.js'
 import { fullName } from './member-card.js'
 
-const NODE_W = 188
-const NODE_H = 88
+const NODE_W = 244
+const NODE_H = 116
 const H_GAP = 28
 const V_GAP = 56
 const MARGIN = 32
-const MIN_SCALE = 0.4
+const MIN_SCALE = 0.15
 const MAX_SCALE = 2
-const NAME_MAX_CHARS = 20
-// The name label starts at x=16 and needs room to breathe before the node's right edge.
-const NAME_AVAILABLE_WIDTH = NODE_W - 16 - 12
+function nameLines(name: string): string[] {
+  if (name.length <= 28) return [name]
+  const space = name.lastIndexOf(' ', 28)
+  const split = space > 10 ? space : 28
+  const rest = name.slice(split).trim()
+  return [name.slice(0, split), rest.length > 28 ? `${rest.slice(0, 27)}…` : rest]
+}
 
 interface Positioned extends Omit<TreeNode, 'children'> {
   x: number
@@ -120,11 +123,26 @@ export function OrgChart({
   departmentName: string
 }) {
   const t = useT()
-  const reduced = useReducedMotion()
   const svgRef = React.useRef<SVGSVGElement>(null)
   const viewportRef = React.useRef<HTMLDivElement>(null)
-  const { nodes, width, height } = React.useMemo(() => layout(roots), [roots])
-  const [focusedId, setFocusedId] = React.useState<string | null>(nodes[0]?.id ?? null)
+  const chartRoots = React.useMemo<TreeNode[]>(
+    () => [
+      {
+        id: 'department-root',
+        parentUnitId: null,
+        name: departmentName,
+        colour: null,
+        sort: 0,
+        path: '',
+        version: 1,
+        children: roots.map((root) => ({ ...root, parentUnitId: 'department-root' })),
+      },
+    ],
+    [roots, departmentName],
+  )
+  const { nodes, width, height } = React.useMemo(() => layout(chartRoots), [chartRoots])
+  const [exporting, setExporting] = React.useState(false)
+  const [focusedId, setFocusedId] = React.useState<string | null>('department-root')
   const [panelUnitId, setPanelUnitId] = React.useState<string | null>(null)
   const [zoom, setZoom] = React.useState(1)
   const [pan, setPan] = React.useState({ x: 0, y: 0 })
@@ -137,8 +155,24 @@ export function OrgChart({
 
   const nodeRefs = React.useRef(new Map<string, SVGGElement>())
   React.useEffect(() => {
-    if (focusedId) nodeRefs.current.get(focusedId)?.focus()
+    if (focusedId && svgRef.current?.contains(document.activeElement)) {
+      const node = nodeRefs.current.get(focusedId)
+      node?.focus()
+      node?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    }
   }, [focusedId])
+  React.useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const fit = () => {
+      setZoom(Math.max(MIN_SCALE, Math.min(1, (viewport.clientWidth - 32) / width)))
+      setPan({ x: 0, y: 0 })
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(viewport)
+    return () => observer.disconnect()
+  }, [width])
 
   const byId = React.useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
   const byParentDepth = React.useMemo(() => {
@@ -176,7 +210,9 @@ export function OrgChart({
   const clampZoom = (v: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, v))
   const zoomBy = (factor: number) => setZoom((z) => clampZoom(Math.round(z * factor * 100) / 100))
   const resetView = () => {
-    setZoom(1)
+    setZoom(
+      Math.max(MIN_SCALE, Math.min(1, ((viewportRef.current?.clientWidth ?? width) - 32) / width)),
+    )
     setPan({ x: 0, y: 0 })
   }
 
@@ -187,7 +223,7 @@ export function OrgChart({
   }
 
   const onPointerDown = (e: React.PointerEvent) => {
-    if (e.button !== 0) return
+    if (e.button !== 0 || (e.target as Element).closest('[role=treeitem]')) return
     panState.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y }
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }
@@ -204,8 +240,29 @@ export function OrgChart({
   const exportPng = async () => {
     const svg = svgRef.current
     if (!svg) return
-    const scale = 2
-    const serialized = new XMLSerializer().serializeToString(svg)
+    setExporting(true)
+    const scale = Math.min(2, 8192 / Math.max(width, height))
+    // External SVG images cannot resolve our CSS classes/variables. Inline their computed paint
+    // and typography; export the full tree independently of viewport zoom and pan.
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    const originals = [svg, ...svg.querySelectorAll('*')]
+    const copies = [clone, ...clone.querySelectorAll('*')]
+    originals.forEach((element, index) => {
+      const styles = getComputedStyle(element)
+      const copy = copies[index] as SVGElement
+      for (const property of [
+        'fill',
+        'stroke',
+        'stroke-width',
+        'font-size',
+        'font-weight',
+        'opacity',
+      ]) {
+        copy.style.setProperty(property, styles.getPropertyValue(property))
+      }
+      copy.style.fontFamily = 'Arial, sans-serif'
+    })
+    const serialized = new XMLSerializer().serializeToString(clone)
     const svgBlob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' })
     const url = URL.createObjectURL(svgBlob)
     try {
@@ -219,7 +276,7 @@ export function OrgChart({
       canvas.width = width * scale
       canvas.height = height * scale
       const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) throw new Error('Canvas unavailable')
       ctx.fillStyle = '#ffffff'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
@@ -230,7 +287,10 @@ export function OrgChart({
       document.body.appendChild(a)
       a.click()
       a.remove()
+    } catch {
+      toast.error(t('structure.units.chart.exportError'))
     } finally {
+      setExporting(false)
       URL.revokeObjectURL(url)
     }
   }
@@ -266,17 +326,17 @@ export function OrgChart({
             <RotateCcw className="size-4" aria-hidden="true" />
           </IconButton>
         </div>
-        <Button variant="secondary" size="sm" onClick={exportPng}>
+        <Button variant="secondary" size="sm" onClick={exportPng} disabled={exporting}>
           <Download className="size-4" aria-hidden="true" />
           {t('structure.units.chart.exportPng')}
         </Button>
       </div>
-      <p className="sr-only" id="org-chart-keyboard-hint">
+      <p className="text-small text-muted-foreground" id="org-chart-keyboard-hint">
         {t('structure.units.chart.keyboardHint')}
       </p>
       <div
         ref={viewportRef}
-        className="relative h-[min(70vh,640px)] touch-none overflow-hidden rounded-md border border-border bg-card"
+        className="relative h-[min(70vh,640px)] touch-none overflow-auto rounded-md border border-border bg-card"
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -294,6 +354,7 @@ export function OrgChart({
           <svg
             ref={svgRef}
             role="tree"
+            aria-label={departmentName}
             aria-describedby="org-chart-keyboard-hint"
             width={width}
             height={height}
@@ -318,40 +379,35 @@ export function OrgChart({
               }
               if (e.key === 'Enter' && focusedId) {
                 e.preventDefault()
-                setPanelUnitId(focusedId)
+                if (focusedId !== 'department-root') setPanelUnitId(focusedId)
               }
             }}
           >
             <rect x={0} y={0} width={width} height={height} fill="var(--color-card)" />
-            {/* round2 SEV3.5 "connectors do not draw": each one draws from parent to child instead
-                of simply being present -- `pathLength` (a transform-equivalent motion reads natively
-                on an SVG `path`), staggered a beat behind the node it leads to so the line reads as
-                following the node down rather than racing ahead of it. */}
+            {/* Fixed SVG transforms keep connectors aligned and exportable at every zoom level. */}
             {nodes.map((node) =>
-              node.children.map((child, childIndex) => (
-                <motion.path
+              node.children.map((child) => (
+                <path
                   key={`${node.id}-${child.id}`}
                   d={`M ${node.x + MARGIN} ${node.y + NODE_H + MARGIN} V ${node.y + NODE_H + V_GAP / 2 + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
                   fill="none"
-                  stroke="var(--color-border)"
+                  stroke="var(--color-muted-foreground)"
                   strokeWidth={1.5}
-                  initial={reduced ? { opacity: 0 } : { pathLength: 0, opacity: 0.6 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{
-                    duration: reduced ? 0.15 : 0.35,
-                    ease: 'easeOut',
-                    delay: reduced ? 0 : 0.08 + childIndex * 0.02,
-                  }}
                 />
               )),
             )}
-            {nodes.map((node, nodeIndex) => {
+            {nodes.map((node) => {
+              const isDepartment = node.id === 'department-root'
               const roles = actions.rolesByUnit.get(node.id) ?? []
               const head = roles.find((r) => r.role === 'head')
-              const headMember = head ? actions.membersById.get(head.userId) : undefined
+              const headMember = isDepartment
+                ? [...actions.membersById.values()].find((m) => m.membershipRole === 'head')
+                : head
+                  ? actions.membersById.get(head.userId)
+                  : undefined
               const isFocused = node.id === focusedId
               return (
-                <motion.g
+                <g
                   key={node.id}
                   ref={(el) => {
                     if (el) nodeRefs.current.set(node.id, el)
@@ -360,36 +416,20 @@ export function OrgChart({
                   role="treeitem"
                   aria-label={node.name}
                   aria-selected={isFocused}
+                  aria-level={node.depth + 1}
                   tabIndex={isFocused ? 0 : -1}
-                  // round2 SEV3.5 "nodes appear staggered": fade + rise, one small step per node in
-                  // the tree's own top-down draw order (`layout()`'s `place` visits root before
-                  // children) -- capped so a large department's chart still settles quickly.
-                  initial={
-                    reduced
-                      ? { opacity: 0, x: node.x - NODE_W / 2 + MARGIN, y: node.y + MARGIN }
-                      : {
-                          opacity: 0,
-                          x: node.x - NODE_W / 2 + MARGIN,
-                          y: node.y + MARGIN + 8,
-                        }
-                  }
-                  animate={{
-                    opacity: 1,
-                    x: node.x - NODE_W / 2 + MARGIN,
-                    y: node.y + MARGIN,
-                  }}
-                  transition={{
-                    duration: reduced ? 0.15 : 0.3,
-                    ease: 'easeOut',
-                    delay: reduced ? 0 : Math.min(nodeIndex, 24) * 0.03,
-                  }}
+                  transform={`translate(${node.x - NODE_W / 2 + MARGIN} ${node.y + MARGIN})`}
                   onFocus={() => setFocusedId(node.id)}
                   onClick={() => {
                     setFocusedId(node.id)
-                    setPanelUnitId(node.id)
+                    if (!isDepartment) setPanelUnitId(node.id)
                   }}
                   style={{ cursor: 'pointer', outline: 'none' }}
                 >
+                  <title>
+                    {node.name}
+                    {headMember ? ` — ${fullName(headMember)}` : ''}
+                  </title>
                   <rect
                     width={NODE_W}
                     height={NODE_H}
@@ -399,41 +439,32 @@ export function OrgChart({
                     strokeWidth={isFocused ? 2 : 1}
                   />
                   <rect x={0} y={0} width={6} height={NODE_H} rx={3} fill={unitFillVar(node)} />
-                  {/* Two-layer overflow guard (§25: "org chart nodes must not overflow their box at
-                      long names"): character-count slicing handles the common case, and `textLength`
-                      + `lengthAdjust` forces the SVG renderer to compress whatever remains into the
-                      node's own width regardless of script or glyph width -- a guarantee char-count
-                      alone can't give across locales. A native `<title>` carries the full name as a
-                      hover tooltip either way. */}
                   <text
                     x={16}
                     y={24}
-                    className="fill-foreground text-body"
+                    className="fill-foreground text-small"
                     style={{ fontWeight: 600 }}
-                    {...(node.name.length > NAME_MAX_CHARS
-                      ? {
-                          textLength: NAME_AVAILABLE_WIDTH,
-                          lengthAdjust: 'spacingAndGlyphs' as const,
-                        }
-                      : {})}
                   >
-                    {node.name.length > NAME_MAX_CHARS
-                      ? `${node.name.slice(0, NAME_MAX_CHARS - 1)}…`
-                      : node.name}
-                    <title>{node.name}</title>
+                    {nameLines(node.name).map((line, index) => (
+                      <tspan key={index} x={16} dy={index ? 18 : 0}>
+                        {line}
+                      </tspan>
+                    ))}
                   </text>
-                  {head ? (
+                  {headMember ? (
                     <>
-                      <circle cx={24} cy={48} r={11} fill={unitFillVar(node)} />
-                      <text x={24} y={52} textAnchor="middle" className="fill-white text-caption">
+                      <circle cx={24} cy={70} r={11} fill={unitFillVar(node)} />
+                      <text x={24} y={74} textAnchor="middle" className="fill-white text-caption">
                         {headMember
                           ? `${headMember.givenName.charAt(0)}${headMember.familyName.charAt(0)}`.toUpperCase()
                           : '?'}
                       </text>
-                      <text x={40} y={44} className="fill-foreground text-caption">
-                        {headMember ? fullName(headMember) : head.userId}
+                      <text x={40} y={66} className="fill-foreground text-caption">
+                        {fullName(headMember).length > 27
+                          ? `${fullName(headMember).slice(0, 26)}…`
+                          : fullName(headMember)}
                       </text>
-                      <text x={40} y={58} className="fill-muted-foreground text-caption">
+                      <text x={40} y={80} className="fill-muted-foreground text-caption">
                         {t('structure.units.chart.headBadge')}
                       </text>
                     </>
@@ -444,22 +475,26 @@ export function OrgChart({
                           gap in the org reads at a glance. */}
                       <circle
                         cx={24}
-                        cy={48}
+                        cy={70}
                         r={11}
                         fill="none"
                         stroke="var(--color-illustration-muted)"
                         strokeWidth={2}
                         strokeDasharray="3 3"
                       />
-                      <text x={40} y={52} className="fill-muted-foreground text-caption">
+                      <text x={40} y={74} className="fill-muted-foreground text-caption">
                         {t('structure.units.chart.noHead')}
                       </text>
                     </>
                   )}
                   <text x={16} y={NODE_H - 10} className="fill-muted-foreground text-caption">
-                    {t('structure.units.chart.memberCount', { count: roles.length })}
+                    {t('structure.units.chart.memberCount', {
+                      count: isDepartment
+                        ? actions.membersById.size
+                        : (actions.memberCountByUnit.get(node.id) ?? 0),
+                    })}
                   </text>
-                </motion.g>
+                </g>
               )
             })}
           </svg>

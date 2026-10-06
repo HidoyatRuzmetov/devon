@@ -139,12 +139,14 @@
         "card": "Karta",
         "comment": "Izoh",
         "page": "Sahifa",
-        "event": "Tadbir"
+        "event": "Tadbir",
+        "project": "Guruh loyihasi"
       },
       "palette": {
         "heading": "Qidiruv natijalari",
         "headingSemantic": "Maʼnoviy qidiruv"
-      }
+      },
+      "automaticContext": "Har bir soʻrov uchun maʼlumotlar avtomatik yigʻiladi. Yordamchiga faqat kerakli yozuvlar yuboriladi, qidiruv oʻzi yangilanadi. Maʼlumotlari oʻzgarmagan bir xil soʻrov besh daqiqa davomida qoʻshimcha AI xarajatisiz oldingi javobdan foydalanishi mumkin."
     },
     "errors": {
       "invalidInput": "Maydonlarni tekshirib, qayta urinib koʻring",

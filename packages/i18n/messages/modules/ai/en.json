@@ -139,12 +139,14 @@
         "card": "Card",
         "comment": "Comment",
         "page": "Page",
-        "event": "Event"
+        "event": "Event",
+        "project": "Group project"
       },
       "palette": {
         "heading": "Search results",
         "headingSemantic": "Meaning-based search"
-      }
+      },
+      "automaticContext": "Context is prepared automatically for each request. Each helper receives only relevant records; search refreshes itself. Identical requests with unchanged context can reuse an answer for five minutes without another AI charge."
     },
     "errors": {
       "invalidInput": "Check the fields and try again",

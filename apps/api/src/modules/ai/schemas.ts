@@ -208,7 +208,7 @@ export const usageListResponseSchema = z.object({
 
 // --- EPIC-016: semantic search + the Ask box -------------------------------------------------
 
-export const searchSubjectKindSchema = z.enum(['card', 'comment', 'page', 'event'])
+export const searchSubjectKindSchema = z.enum(['card', 'comment', 'page', 'event', 'project'])
 export type SearchSubjectKind = z.infer<typeof searchSubjectKindSchema>
 
 export const searchQuerySchema = z.object({

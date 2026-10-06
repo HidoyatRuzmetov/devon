@@ -41,6 +41,7 @@ export function useQuickAddAi(t: ReturnType<typeof useT>, locale: Locale) {
       setState({ status: 'pending' })
       runMutation.mutate(
         {
+          scope: 'personal',
           locale,
           text: trimmed,
           today: todayInTashkent(),

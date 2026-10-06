@@ -220,7 +220,7 @@ export type RunFeatureResponse = z.infer<typeof runFeatureResponseSchema>
 // --- EPIC-016: semantic search + the Ask box ---------------------------------------------------
 
 export const searchHitSchema = z.object({
-  subjectType: z.enum(['card', 'comment', 'page', 'event']),
+  subjectType: z.enum(['card', 'comment', 'page', 'event', 'project']),
   subjectId: z.string().uuid(),
   title: z.string(),
   snippet: z.string(),
@@ -278,6 +278,8 @@ export const reindexResponseSchema = z.object({
 /** Where a search hit lives, so the palette and the Ask box link to the same place. */
 export function searchHitHref(hit: Pick<SearchHit, 'subjectType' | 'subjectId'>): string {
   switch (hit.subjectType) {
+    case 'project':
+      return `/projects/view?id=${encodeURIComponent(hit.subjectId)}`
     case 'card':
       return `/work/card?id=${hit.subjectId}`
     case 'comment':
@@ -296,6 +298,13 @@ export function parseRef(
 ): { subjectType: SearchHit['subjectType']; subjectId: string } | null {
   const [kind, id] = ref.split(':')
   if (!id) return null
-  if (kind !== 'card' && kind !== 'comment' && kind !== 'page' && kind !== 'event') return null
+  if (
+    kind !== 'card' &&
+    kind !== 'comment' &&
+    kind !== 'page' &&
+    kind !== 'event' &&
+    kind !== 'project'
+  )
+    return null
   return { subjectType: kind, subjectId: id }
 }

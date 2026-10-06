@@ -15,7 +15,7 @@
 import { sql, type SQL } from 'drizzle-orm'
 import type { Tx } from '@devon/db'
 
-export type SearchSubjectKind = 'card' | 'comment' | 'page' | 'event'
+export type SearchSubjectKind = 'card' | 'comment' | 'page' | 'event' | 'project'
 
 export type SearchHitRow = {
   subject_type: SearchSubjectKind

@@ -713,6 +713,7 @@ export const EVAL_CASES: EvalCase[] = [
           done: [],
           overdue: [],
           dueThisWeek: [],
+          loadPerPerson: [],
         },
         check: (out: unknown) => {
           const o = out as CatchUp

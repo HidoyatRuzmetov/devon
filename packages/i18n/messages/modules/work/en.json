@@ -136,7 +136,10 @@
       "reassigned": "Reassigned to {name}",
       "giverChanged": "Delegated by {name}",
       "undo": "Undo",
-      "saveFailed": "Could not save it. The previous value is back."
+      "saveFailed": "Could not save it. The previous value is back.",
+      "editChecklistItem": "Edit checklist item",
+      "saveChecklistItem": "Save item",
+      "cancelChecklistEdit": "Cancel editing"
     },
     "priority": {
       "none": "No priority",

@@ -1,6 +1,6 @@
 // Exercises the wire mapping and bounded-retry behaviour against an injected `fetchImpl`, never the
 // real network (glm-api-instruction.md's base URL is never dialled from a test).
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GlmProvider, GlmProviderError } from '../../src/glm-provider.js'
 import type { ChatCompletionRequest } from '../../src/types.js'
 
@@ -22,7 +22,216 @@ function jsonResponse(body: unknown, ok = true, status = 200): Response {
   } as unknown as Response
 }
 
+afterEach(() => vi.useRealTimers())
+
+function successfulResponse() {
+  return jsonResponse({ choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] })
+}
+
 describe('GlmProvider', () => {
+  it.each([429, 503])(
+    'honours Retry-After seconds for HTTP %s and retries without reading error bodies',
+    async (status) => {
+      vi.useFakeTimers()
+      const response = new Response('private provider body', {
+        status,
+        headers: { 'Retry-After': '2' },
+      })
+      const read = vi.spyOn(response, 'text')
+      const cancel = vi.spyOn(response.body!, 'cancel')
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(response)
+        .mockResolvedValueOnce(successfulResponse())
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl,
+      })
+      const pending = provider.complete(REQUEST)
+      await vi.advanceTimersByTimeAsync(1999)
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect((await pending).content).toBe('ok')
+      expect(fetchImpl).toHaveBeenCalledTimes(2)
+      expect(read).not.toHaveBeenCalled()
+      expect(cancel).toHaveBeenCalledOnce()
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
+
+  it('honours Retry-After HTTP dates relative to the shared deadline', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-10-06T10:00:00Z'))
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(null, {
+          status: 429,
+          headers: { 'Retry-After': 'Tue, 06 Oct 2026 10:00:03 GMT' },
+        }),
+      )
+      .mockResolvedValueOnce(successfulResponse())
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    const pending = provider.complete(REQUEST)
+    await vi.advanceTimersByTimeAsync(2999)
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect((await pending).content).toBe('ok')
+  })
+
+  it.each([undefined, 'invalid', '-1'])(
+    'uses bounded fallback backoff for missing/invalid Retry-After %s',
+    async (header) => {
+      vi.useFakeTimers()
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(null, {
+            status: 503,
+            ...(header === undefined ? {} : { headers: { 'Retry-After': header } }),
+          }),
+        )
+        .mockResolvedValueOnce(successfulResponse())
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl,
+      })
+      const pending = provider.complete(REQUEST)
+      await vi.advanceTimersByTimeAsync(999)
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect((await pending).content).toBe('ok')
+    },
+  )
+
+  it('does not retry early when Retry-After consumes or exceeds the remaining deadline', async () => {
+    vi.useFakeTimers()
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 429, headers: { 'Retry-After': '5' } }))
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    await expect(provider.complete(REQUEST)).rejects.toMatchObject({ status: 429 })
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('spends only the remaining deadline after HTTP backoff, including a stalled successful body', async () => {
+    vi.useFakeTimers()
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 429, headers: { 'Retry-After': '2' } }))
+      .mockImplementationOnce(async (_url: unknown, init: RequestInit) => ({
+        ok: true,
+        json: () =>
+          new Promise((_resolve, reject) => {
+            init.signal!.addEventListener('abort', () => reject(new Error('body aborted')), {
+              once: true,
+            })
+          }),
+      }))
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    const pending = expect(provider.complete(REQUEST)).rejects.toBeInstanceOf(GlmProviderError)
+    await vi.advanceTimersByTimeAsync(5000)
+    await pending
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('shares one retry budget across HTTP and transport errors, preventing nested retry multiplication', async () => {
+    vi.useFakeTimers()
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 503, headers: { 'Retry-After': '0' } }))
+      .mockRejectedValueOnce(new Error('network down'))
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    const pending = expect(provider.complete(REQUEST)).rejects.toBeInstanceOf(GlmProviderError)
+    await vi.runAllTimersAsync()
+    await pending
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops at the retry limit for repeated 429 responses and preserves only the status', async () => {
+    vi.useFakeTimers()
+    const fetchImpl = vi.fn().mockImplementation(
+      async () =>
+        new Response('private provider body', {
+          status: 429,
+          headers: { 'Retry-After': '0' },
+        }),
+    )
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl,
+    })
+    const pending = expect(provider.complete(REQUEST)).rejects.toMatchObject({
+      status: 429,
+      message: 'GLM request failed with status 429',
+    })
+    await vi.runAllTimersAsync()
+    await pending
+    expect(fetchImpl).toHaveBeenCalledTimes(2)
+  })
+
+  it.each([401, 403])(
+    'never retries authentication/authorization HTTP %s even with Retry-After',
+    async (status) => {
+      const fetchImpl = vi
+        .fn()
+        .mockResolvedValue(
+          new Response('private provider body', { status, headers: { 'Retry-After': '0' } }),
+        )
+      const provider = new GlmProvider({
+        baseUrl: 'https://example.test/v1',
+        apiKey: 'fixture',
+        requestTimeoutMs: 5000,
+        fetchImpl,
+      })
+      await expect(provider.complete(REQUEST)).rejects.toMatchObject({ status })
+      expect(fetchImpl).toHaveBeenCalledTimes(1)
+    },
+  )
+
+  it('honours disabled retries for HTTP overload as well as transport failures', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(new Response(null, { status: 503, headers: { 'Retry-After': '0' } }))
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      maxTransportRetries: 0,
+      fetchImpl,
+    })
+    await expect(provider.complete(REQUEST)).rejects.toMatchObject({ status: 503 })
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
   it('keeps the timeout active while the response body is still arriving', async () => {
     vi.useFakeTimers()
     try {

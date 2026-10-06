@@ -68,6 +68,94 @@ async function sql<T>(query: string, values: unknown[]) {
 }
 
 describe('card deletion and audit retention', () => {
+  it('serializes child creation with parent deletion so no live orphan remains', async () => {
+    await Promise.all(
+      Array.from({ length: 5 }, async () => {
+        const card = await createCard()
+        const response = await request(`/cards/${card.id}/checklist`, owner, 'POST', {
+          text: 'Parent',
+        })
+        const parent = (await response.json()) as { id: string }
+        const [addition, deletion] = await Promise.all([
+          request(`/cards/${card.id}/checklist`, owner, 'POST', {
+            text: 'Concurrent child',
+            parentItemId: parent.id,
+          }),
+          request(`/cards/${card.id}/checklist/${parent.id}`, owner, 'DELETE'),
+        ])
+        expect([201, 404]).toContain(addition.status)
+        expect(deletion.status).toBe(204)
+        const remaining = await sql<{ id: string }>(
+          'select id from app.card_checklist_items where card_id = $1 and deleted_at is null',
+          [card.id],
+        )
+        expect(remaining).toEqual([])
+      }),
+    )
+  })
+  it('keeps checklist order stable through completion and rename, scopes parents, and retains deleted branches in audit', async () => {
+    const card = await createCard()
+    const add = async (text: string, parentItemId?: string) => {
+      const response = await request(`/cards/${card.id}/checklist`, owner, 'POST', {
+        text,
+        parentItemId,
+      })
+      expect(response.status).toBe(201)
+      return (await response.json()) as { id: string }
+    }
+    const first = await add('First')
+    const second = await add('Second')
+    const third = await add('Third')
+    const read = async () =>
+      (await (await request(`/cards/${card.id}`, owner)).json()) as {
+        checklist: { id: string; text: string; doneAt: string | null }[]
+      }
+    const ids = (await read()).checklist.map((item) => item.id)
+    expect(ids).toEqual([first.id, second.id, third.id])
+    expect(
+      (
+        await request(`/cards/${card.id}/checklist/${second.id}`, owner, 'PATCH', {
+          done: true,
+          text: 'Revised second',
+        })
+      ).status,
+    ).toBe(204)
+    const after = await read()
+    expect(after.checklist.map((item) => item.id)).toEqual(ids)
+    expect(after.checklist[0]?.doneAt).toBeNull()
+    expect(after.checklist[1]).toMatchObject({ text: 'Revised second', doneAt: expect.any(String) })
+    const other = await createCard()
+    expect(
+      (
+        await request(`/cards/${other.id}/checklist`, owner, 'POST', {
+          text: 'Wrong parent',
+          parentItemId: first.id,
+        })
+      ).status,
+    ).toBe(404)
+    const child = await add('Child', second.id)
+    expect(
+      (
+        await request(`/cards/${card.id}/checklist/${second.id}`, colleague, 'PATCH', {
+          text: 'Forbidden',
+        })
+      ).status,
+    ).toBe(403)
+    expect(
+      (await request(`/cards/${card.id}/checklist/${second.id}`, owner, 'DELETE')).status,
+    ).toBe(204)
+    expect((await read()).checklist.map((item) => item.id)).toEqual([first.id, third.id])
+    const retained = await sql<{ id: string }>(
+      'select id from app.card_checklist_items where id = any($1::uuid[]) and deleted_at is not null',
+      [[second.id, child.id]],
+    )
+    expect(retained).toHaveLength(2)
+    const audit = await sql<{ before: { itemIds: string[] } }>(
+      "select before from audit.events where subject_id = $1 and action = 'work.checklist_item_deleted'",
+      [second.id],
+    )
+    expect(audit[0]?.before.itemIds).toEqual(expect.arrayContaining([second.id, child.id]))
+  })
   it('denies unrelated members, other departments, missing CSRF and anonymous callers', async () => {
     const card = await createCard()
     expect((await request(`/cards/${card.id}`, colleague, 'DELETE')).status).toBe(403)

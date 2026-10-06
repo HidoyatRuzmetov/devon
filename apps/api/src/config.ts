@@ -122,6 +122,7 @@ const configSchema = z
       .enum(['true', 'false'])
       .default('false')
       .transform((value) => value === 'true'),
+    TELEGRAM_TRANSPORT: z.enum(['webhook', 'polling']).default('webhook'),
     TELEGRAM_BOT_USERNAME: z
       .string()
       .trim()
@@ -138,6 +139,9 @@ const configSchema = z
           'TELEGRAM_WEBHOOK_SECRET must be 32-256 characters of A-Z a-z 0-9 _ - (Telegram’s own ' +
           'secret_token alphabet), generated from a CSPRNG: `openssl rand -base64 32 | tr "+/" "-_"`',
       }),
+    // Optional separate TLS endpoint/public certificate for IP-only installations. Never a key.
+    TELEGRAM_WEBHOOK_BASE_URL: z.string().url().startsWith('https://').optional(),
+    TELEGRAM_WEBHOOK_CERTIFICATE_PATH: z.string().trim().min(1).optional(),
   })
   .superRefine((cfg, ctx) => {
     if (cfg.STORAGE_DRIVER === 's3') {
@@ -158,7 +162,12 @@ const configSchema = z
     // H1.14: a bot configured in production with no webhook secret would either fall back to long
     // polling (a second, unmonitored ingress) or register a webhook whose only protection is the
     // bot token itself. Refused at boot, like every other production-only guard in this file.
-    if (cfg.NODE_ENV === 'production' && cfg.TELEGRAM_BOT_TOKEN && !cfg.TELEGRAM_WEBHOOK_SECRET) {
+    if (
+      cfg.NODE_ENV === 'production' &&
+      cfg.TELEGRAM_TRANSPORT === 'webhook' &&
+      cfg.TELEGRAM_BOT_TOKEN &&
+      !cfg.TELEGRAM_WEBHOOK_SECRET
+    ) {
       ctx.addIssue({
         code: 'custom',
         path: ['TELEGRAM_WEBHOOK_SECRET'],

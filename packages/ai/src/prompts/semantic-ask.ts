@@ -22,12 +22,13 @@ import { idSchema, localeSchema } from '../schemas.js'
 import { standardUserContent, type FeatureSpec, type ValidateOutcome } from '../feature-spec.js'
 import type { Locale } from '../types.js'
 
-export const askSourceKindSchema = z.enum(['card', 'comment', 'page', 'event'])
+export const askSourceKindSchema = z.enum(['card', 'comment', 'page', 'event', 'project'])
 export type AskSourceKind = z.infer<typeof askSourceKindSchema>
 
 export const semanticAskInputSchema = z.object({
   locale: localeSchema,
-  question: z.string().min(1).max(400),
+  question: z.string().min(1).max(500),
+  comparisonScope: z.enum(['individual', 'projects', 'all']).nullable().default(null),
   /** Which retrieval backend actually produced these passages -- stated to the model only so it
    * knows how much to trust the ordering, and surfaced in the UI so the reader knows too. */
   backend: z.enum(['embeddings', 'fts']),
@@ -44,7 +45,7 @@ export const semanticAskInputSchema = z.object({
         score: z.number().min(0).max(1).default(0),
       }),
     )
-    .max(12)
+    .max(40)
     .default([]),
 })
 export type SemanticAskInput = z.infer<typeof semanticAskInputSchema>
@@ -74,6 +75,9 @@ function systemPrompt(input: SemanticAskInput): string {
     inputs: `A JSON object: question, backend (${input.backend}), and passages[] with ref, kind, id, title, excerpt and a retrieval score. ${input.passages.length} passage(s) were found.`,
     instructions: [
       'Answer the question in at most four sentences, using only what the passages say.',
+      'When comparisonScope is present, compare the supplied live work units for possible overlap. Each group project is one unit: its members doing assigned tasks is intended collaboration, never duplication. Compare independent tasks assigned to different people, or distinct group projects. Do not claim people are unaware of each other; suggest checking coordination.',
+      'A shared topic alone is not duplicated effort. Compare deliverable, scope, stage and period. Describe uncertain similarities as potential overlap and cite both units. For individual scope, never substitute a group project as a match. For projects scope, compare distinct projects, not their internal tasks.',
+      'Comparison snapshots are bounded to at most 40 active work units. Never claim an exhaustive department-wide audit or that no duplicate exists anywhere; qualify conclusions to the supplied records.',
       'If the passages do not answer the question — or answer only a different question that happens to share words — set answered false, leave answer empty, and write one helpful sentence in followUp. This is the correct answer far more often than it feels like it should be.',
       'citations: the refs your answer rests on, copied exactly, in the order they support it. An answer with answered true must cite at least one.',
       'Never merge two passages into a claim neither of them makes.',

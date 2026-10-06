@@ -20,7 +20,6 @@ import {
   Badge,
   Button,
   Celebrate,
-  Checkbox,
   Chip,
   Collapsible,
   DatePicker,
@@ -35,7 +34,6 @@ import {
   Skeleton,
   SparkleButton,
   StateView,
-  Strikethrough,
   toast,
   toastWithUndo,
   useCelebrate,
@@ -73,6 +71,7 @@ import type { AiFeatureId, RunMeta } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 import { CardAttachments } from './card-attachments.js'
+import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
 import { CardCustomFields } from '../../fields/index.js'
@@ -976,7 +975,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
 
         <CardAttachments cardId={card.id} canEdit={canEdit} />
 
-        <Checklist card={card} />
+        <Checklist card={card} canEdit={canEdit} />
 
         {/* v1.1 SPEC §7 -- estimate + time log, dependencies, repeat, reminders. */}
         <CardPlusSections
@@ -1065,12 +1064,14 @@ function useFieldFlash(): {
 
 function Field({
   label,
+  grouped = false,
   action,
   children,
   flashedAt,
   rejectedAt,
 }: {
   label: string
+  grouped?: boolean
   action?: React.ReactNode
   children: React.ReactNode
   /** round2 SEV2 "property edits commit with no feedback": a token from `useFieldFlash`. Each new
@@ -1089,8 +1090,12 @@ function Field({
     return () => cancelAnimationFrame(raf)
   }, [rejectedAt])
 
+  const Container = grouped ? 'section' : 'label'
   return (
-    <label className="flex flex-col gap-1.5 text-small">
+    <Container
+      className="flex flex-col gap-1.5 text-small"
+      {...(grouped ? { 'aria-label': label } : {})}
+    >
       <span className="flex items-center gap-2">
         <span className="text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {label}
@@ -1107,13 +1112,15 @@ function Field({
           {children}
         </FlashOnChange>
       </Shake>
-    </label>
+    </Container>
   )
 }
 
 function Checklist({
   card,
+  canEdit,
 }: {
+  canEdit: boolean
   card: {
     id: string
     title: string
@@ -1201,11 +1208,28 @@ function Checklist({
     toast(t('work.ai.subtasksAdded', { count: toAdd.length }))
   }
 
+  function renderItem(item: (typeof card.checklist)[number]): React.ReactNode {
+    return (
+      <div key={item.id} className="flex flex-col gap-1">
+        <ChecklistRow
+          item={item}
+          canEdit={canEdit}
+          onSave={(text) => patchItem.mutateAsync({ itemId: item.id, patch: { text } })}
+          onToggle={(done) => patchItem.mutate({ itemId: item.id, patch: { done } })}
+          onDelete={() => deleteItem.mutate(item.id)}
+        />
+        {childrenOf(item.id).length ? (
+          <div className="pl-4">{childrenOf(item.id).map(renderItem)}</div>
+        ) : null}
+      </div>
+    )
+  }
   return (
     <Field
+      grouped
       label={`${t('work.field.checklist')} (${done}/${card.checklist.length})`}
       action={
-        subtasksEnabled ? (
+        subtasksEnabled && canEdit ? (
           <SparkleButton
             aria-label={t('work.ai.subtasks')}
             size="sm"
@@ -1217,39 +1241,41 @@ function Checklist({
     >
       <div className="relative flex flex-col gap-1">
         <Celebrate play={checklistCelebrate.play} onDone={checklistCelebrate.onDone} radius={30} />
-        {topLevel.map((item) => (
-          <div key={item.id} className="flex flex-col gap-1">
-            <ChecklistRow
-              item={item}
-              onToggle={(done_) => patchItem.mutate({ itemId: item.id, patch: { done: done_ } })}
-              onDelete={() => deleteItem.mutate(item.id)}
-            />
-            {childrenOf(item.id).map((child) => (
-              <div key={child.id} className="pl-6">
-                <ChecklistRow
-                  item={child}
-                  onToggle={(done_) =>
-                    patchItem.mutate({ itemId: child.id, patch: { done: done_ } })
-                  }
-                  onDelete={() => deleteItem.mutate(child.id)}
-                />
-              </div>
-            ))}
-          </div>
-        ))}
-        <div className="flex gap-2 pt-1">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t('work.card.addChecklistItem')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && text.trim()) {
-                addItem.mutate({ text: text.trim() })
-                setText('')
-              }
+        {topLevel.map(renderItem)}
+        {canEdit ? (
+          <form
+            className="flex gap-2 pt-1"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!text.trim() || addItem.isPending) return
+              addItem.mutate(
+                { text: text.trim() },
+                {
+                  onSuccess: () => setText(''),
+                  onError: () => toast.error(t('toast.saveError')),
+                },
+              )
             }}
-          />
-        </div>
+          >
+            <Input
+              aria-label={t('work.card.addChecklistItem')}
+              disabled={addItem.isPending}
+              maxLength={500}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={t('work.card.addChecklistItem')}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!text.trim() || addItem.isPending}
+              aria-label={t('work.card.addChecklistItem')}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              {t('work.action.save')}
+            </Button>
+          </form>
+        ) : null}
 
         {subtaskAi.isPending || suggested || subtaskAi.isError ? (
           <AiResultPanel
@@ -1278,37 +1304,6 @@ function Checklist({
         ) : null}
       </div>
     </Field>
-  )
-}
-
-function ChecklistRow({
-  item,
-  onToggle,
-  onDelete,
-}: {
-  item: { id: string; text: string; doneAt: string | null }
-  onToggle: (done: boolean) => void
-  onDelete: () => void
-}) {
-  const t = useT()
-  return (
-    <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
-      <Checkbox
-        checked={item.doneAt !== null}
-        onCheckedChange={(v) => onToggle(v === true)}
-        celebrate
-        size="sm"
-        aria-label={item.text}
-      />
-      {/* The box already draws its check and fires its burst; this is the third beat -- the line
-          arriving across the text over the same `--dur-standard`, on every wrapped line of it. */}
-      <Strikethrough done={item.doneAt !== null} className="flex-1 text-small text-foreground">
-        {item.text}
-      </Strikethrough>
-      <IconButton aria-label={t('work.action.delete')} onClick={onDelete}>
-        <Trash2 className="size-3.5" />
-      </IconButton>
-    </div>
   )
 }
 

@@ -151,6 +151,7 @@ services:
     volumes:
       - api_storage:/repo/apps/api/.data/storage
       - ${BACKUP_STATUS_DIR:-/var/lib/devon/backup-status}:/run/devon-backup:ro
+      - ./certs:/run/devon-public-certs:ro
     networks: [devon]
 
   worker:
@@ -312,6 +313,19 @@ services:
       CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_TOKEN_HMAC_SECRET_KEY:?CENTRIFUGO_TOKEN_HMAC_SECRET_KEY is required}
       CENTRIFUGO_HTTP_API_KEY: ${CENTRIFUGO_API_KEY:?CENTRIFUGO_API_KEY is required}
       CENTRIFUGO_HEALTH_ENABLED: 'true'
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS: ${DEVON_PUBLIC_URL:?DEVON_PUBLIC_URL is required}
+      CENTRIFUGO_CLIENT_ALLOW_ANONYMOUS_CONNECT_WITHOUT_TOKEN: 'false'
+      CENTRIFUGO_ENGINE_TYPE: redis
+      CENTRIFUGO_ENGINE_REDIS_ADDRESS: redis://valkey:6379
+      CENTRIFUGO_ENGINE_REDIS_PREFIX: devon
+      CENTRIFUGO_CHANNEL_NAMESPACES: >-
+        [{"name":"dept","presence":false,"join_leave":false,"history_size":0},
+         {"name":"board","presence":true,"join_leave":true,"force_push_join_leave":true,
+          "allow_presence_for_subscriber":true},
+         {"name":"personal","presence":false,"allow_user_limited_channels":true,
+          "allow_subscribe_for_client":true},
+         {"name":"canvas","presence":true,"join_leave":true,"force_push_join_leave":true,
+          "allow_presence_for_subscriber":true,"allow_publish_for_subscriber":true}]
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8000/health']
       interval: 10s

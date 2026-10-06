@@ -1,0 +1,14 @@
+{
+  "projectLifecycle": {
+    "editMilestone": "Bosqichni tahrirlash",
+    "editMilestoneLabel": "Bosqichni tahrirlash: {title}",
+    "milestoneTitle": "Bosqich nomi",
+    "milestoneDue": "Muddat (ixtiyoriy)",
+    "deleteMilestone": "Bosqichni oʻchirish",
+    "milestoneDeleted": "Bosqich oʻchirildi.",
+    "delete": "Loyihani oʻchirish",
+    "deleted": "Loyiha va uning vazifalari oʻchirildi. Hozir bekor qilishingiz mumkin.",
+    "deleteHint": "Loyihaning vazifalari ham jamoa ish joyidan olib tashlanadi. Tarix superadminda saqlanadi.",
+    "progressHint": "Natijaga bajarilgan vazifalar va hali tugamagan vazifalarning bajarilgan bandlari kiradi."
+  }
+}

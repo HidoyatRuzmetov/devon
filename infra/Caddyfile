@@ -98,7 +98,7 @@
 	}
 
 	# Realtime fan-out (Centrifugo), only reachable once that profile is started.
-	handle /realtime/* {
+	handle_path /realtime/* {
 		reverse_proxy centrifugo:8000
 	}
 

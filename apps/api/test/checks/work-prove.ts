@@ -320,7 +320,7 @@ async function main(): Promise<void> {
       "the second department's board shows none of the first department's cards",
     )
 
-    step('projects: create from the built-in template, then complete a milestone')
+    step('projects: create from the built-in template, add a chosen milestone, then complete it')
     const templatesRes = await fetch(`${server.baseUrl}/api/v1/projects/templates`, {
       headers: { cookie },
     })
@@ -342,8 +342,20 @@ async function main(): Promise<void> {
       progress: number
     }
     assertEqual(project.progress, 0, 'a fresh project has zero progress')
+    assertEqual(project.milestones.length, 0, 'a fresh project has no invented milestones')
+    const addMilestoneRes = await fetch(
+      `${server.baseUrl}/api/v1/projects/${project.id}/milestones`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ title: 'Chosen checkpoint' }),
+      },
+    )
+    assertEqual(addMilestoneRes.status, 200, 'milestone creation status')
+    const withMilestone = (await addMilestoneRes.json()) as { milestones: { id: string }[] }
+    assertEqual(withMilestone.milestones.length, 1, 'one explicitly created milestone')
     const milestoneRes = await fetch(
-      `${server.baseUrl}/api/v1/projects/${project.id}/milestones/${project.milestones[0]!.id}`,
+      `${server.baseUrl}/api/v1/projects/${project.id}/milestones/${withMilestone.milestones[0]!.id}`,
       { method: 'PATCH', headers, body: JSON.stringify({ done: true }) },
     )
     assertEqual(milestoneRes.status, 200, 'milestone complete status')

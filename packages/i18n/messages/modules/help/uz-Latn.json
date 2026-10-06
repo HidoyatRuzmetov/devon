@@ -28,11 +28,11 @@
       },
       "projects": {
         "q": "Kartochka va guruh loyihasidan qachon foydalanaman? Ularni qanday oʻzgartiraman?",
-        "a": "Bitta ish uchun, masalan hisobot tayyorlash uchun kartochka yarating. Bir nechta vazifa va umumiy natija uchun guruh loyihasini tanlang. Hamkasblarni jalb qilish uchun kartochkangizdagi guruh loyihasiga oʻtkazish amalini tanlang. Mavjud loyihani ochib, ruxsatingiz boʻlsa uning maʼlumotlari va aʼzolarini tahrirlang."
+        "a": "Bitta ish uchun kartochka, umumiy natija uchun guruh loyihasi yarating. Hamkasblarni jalb qilish uchun kartochkadagi guruh loyihasiga oʻtkazish amalini tanlang. Loyihada ruxsatingiz boʻlsa maʼlumotlar va aʼzolarni tahrirlang. Faqat kerakli bosqichlarni qoʻshing; bosqich yonidagi Tahrirlash orqali nomi yoki muddatini oʻzgartirish, uni oʻchirish mumkin. Nazorat roʻyxatida band matnini bosib bajarilgan deb belgilang, qalam bilan tahrirlang, savatcha bilan oʻchiring."
       },
       "delete": {
         "q": "Bajarish, arxivlash va oʻchirishning farqi nima?",
-        "a": "Natija tayyor boʻlsa, ishni bajarilgan deb belgilang. Keyinroq kerak boʻladigan kartochkani arxivlang; uni Arxivdan tiklash mumkin. Keraksiz kartochkani ichidagi Oʻchirish tugmasi bilan oʻchiring. Darhol chiqadigan xabarda Bekor qilish tugmasi bor.\nOʻchirilgan kartochka jamoa koʻrinishlaridan yoʻqoladi. Superadmin audit jurnalida kim va qachon oʻchirganini koʻra oladi; yozuv saqlanadi. Oʻzingiz yaratgan, bergan yoki olgan kartochkani oʻzgartira va oʻchira olasiz; boshliq boshqarmaning barcha kartochkalarini boshqaradi."
+        "a": "Natija tayyor boʻlsa, ishni bajarilgan deb belgilang. Arxiv kartochkani keyinroq uchun saqlaydi; uni Arxivdan tiklash mumkin. Oʻchirish kartochkani jamoa koʻrinishlaridan olib tashlaydi. Loyiha egasi yoki boshliq loyiha pastidagi Loyihani oʻchirish tugmasidan foydalanishi mumkin; uning kartochkalari ham olib tashlanadi. Adashsangiz, xabardagi Bekor qilish tugmasini darhol bosing. Oʻchirilgan yozuvlar superadmin audit jurnalida saqlanadi. Oʻzingiz yaratgan, topshirgan yoki olgan kartochkalarni boshqara olasiz; boshliq barcha boshqarma kartochkalarini boshqaradi."
       },
       "files": {
         "q": "Vazifaga kerakli materialni qanday ulashaman?",
@@ -48,12 +48,14 @@
       },
       "ai": {
         "q": "AIʼdan qanday foydalanaman? Ishlamasa nima qilaman?",
-        "a": "Ishlayotgan joyingiz yonidagi yulduzcha tugmasidan foydalaning: masalan, nazorat roʻyxati yonida qadamlar taklifi yoki izohlar yonida xulosa. Natijani koʻrib chiqib, qabul qiling yoki tahrirlang. AI javobi qoralama: ismlar, sanalar va faktlarni tekshiring.\nTugma yoʻq boʻlsa, boshliq funksiyaning yoqilganini tekshirishi mumkin. Soʻrov xato bersa, bir marta qayta urining; yana ishlamasa, superadmindan AI xizmatini tekshirishni soʻrang."
+        "a": "Nazorat roʻyxati yoki izohlar yonidagi yulduzchani bosing yoki AI boʻlimida savol bering. AI sizga ochiq boʻlgan joriy maʼlumotlardan foydalanadi; kontekstni alohida tayyorlash shart emas. Javobni qabul qilishdan oldin tekshiring. Takrorlarni izlashda alohida ishlar yoki guruh loyihalari haqida soʻrang. Masalan: ikki kishi bir hisobotni alohida tayyorlasa, ish takrorlanishi mumkin; bir loyihada raqamlarni yigʻish va hisobotni tekshirish esa hamkorlikdir. Tugma yoʻq boʻlsa, boshliq funksiya sozlamasini tekshirsin. Soʻrov xato bersa, bir marta qayta urining, keyin superadminga murojaat qiling."
       }
     }
   },
   "work": {
-    "composer": { "quickEntry": "Tez kiritish va AI (ixtiyoriy)" },
+    "composer": {
+      "quickEntry": "Tez kiritish va AI (ixtiyoriy)"
+    },
     "deletion": {
       "done": "Kartochka oʻchirildi. Yozuv administrator audit jurnalida saqlandi.",
       "failed": "Amal bajarilmadi. Kartochkani yangilab, qayta urining; bekor qilish 30 soniya davomida mumkin.",

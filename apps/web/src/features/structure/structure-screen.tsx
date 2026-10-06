@@ -19,6 +19,7 @@ import {
   Reveal,
   StateView,
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
   toast,
@@ -295,22 +296,20 @@ export default function StructureScreen() {
 
   const tabs =
     units.length === 0 ? undefined : (
-      <Tabs value={view} onValueChange={(v) => setView(v as View)}>
-        <TabsList>
-          <TabsTrigger value="tree">
-            <List className="size-4" aria-hidden="true" />
-            {t('structure.units.view.tree')}
-          </TabsTrigger>
-          <TabsTrigger value="chart">
-            <Network className="size-4" aria-hidden="true" />
-            {t('structure.units.view.chart')}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <TabsList>
+        <TabsTrigger value="tree">
+          <List className="size-4" aria-hidden="true" />
+          {t('structure.units.view.tree')}
+        </TabsTrigger>
+        <TabsTrigger value="chart">
+          <Network className="size-4" aria-hidden="true" />
+          {t('structure.units.view.chart')}
+        </TabsTrigger>
+      </TabsList>
     )
 
   return (
-    <div className="flex flex-col gap-6">
+    <Tabs value={view} onValueChange={(v) => setView(v as View)} className="flex flex-col gap-6">
       <DepartmentHeader
         titleKey="structure.units.title"
         subtitleKey="structure.units.subtitle"
@@ -333,7 +332,7 @@ export default function StructureScreen() {
         </Reveal>
       ) : null}
 
-      {body}
+      {units.length === 0 ? body : <TabsContent value={view}>{body}</TabsContent>}
 
       <AddUnitDialog
         open={addParentId !== undefined}
@@ -410,7 +409,7 @@ export default function StructureScreen() {
           setAssignUnitId(null)
         }}
       />
-    </div>
+    </Tabs>
   )
 }
 

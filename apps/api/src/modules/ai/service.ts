@@ -17,6 +17,8 @@ import {
 import type { AiProvider } from '@devon/ai'
 import * as search from './search-service.js'
 import * as repo from './repo.js'
+import { prepareFeatureInput } from './request-context.js'
+import { comparisonContext, comparisonScope } from './ask-context.js'
 import { markReady } from './briefing-repo.js'
 import { tashkentDateString } from '../analytics/aggregate.js'
 import { settingsToDto, traceToDto } from './dto.js'
@@ -341,10 +343,25 @@ export async function runFeatureForActor(
   // response was recorded must not keep serving it), but *not* by the budget check below: a cache hit
   // spends no new tokens, so it must never be blocked by (or count against) the budget that exists to
   // limit real spend.
-  const cacheKey = cacheKeyFor(params.departmentId, params.feature, params.input)
+  const input = await prepareFeatureInput(ctx, params.departmentId, params.feature, params.input)
+  const cacheKey = cacheKeyFor(
+    `${params.departmentId}:${params.userId}:${aiConfig.model}`,
+    params.feature,
+    input,
+  )
   const cached = getCached(cacheKey)
   if (cached) {
-    return { ...cached, meta: { ...cached.meta, cached: true } }
+    return {
+      ...cached,
+      meta: {
+        ...cached.meta,
+        cached: true,
+        costUzs: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+      },
+    }
   }
 
   const budget = checkBudget(spent, settings.budget_uzs_per_month, settings.soft_cap_pct)
@@ -399,7 +416,7 @@ export async function runFeatureForActor(
     // `inputSchema`/registry lookup; the route param was already validated against the identical
     // literal tuple in `schemas.ts` before this function was ever called.
     feature: params.feature as Parameters<typeof runAiFeature>[0]['feature'],
-    input: params.input,
+    input,
   })
 
   const verdict = classifyAiOutcomeForBreaker(result)
@@ -508,12 +525,13 @@ const ASK_PASSAGES = 8
  * does not exist" is the one failure a reader cannot detect for themselves.
  */
 export async function ask(ctx: RequestContext, params: AskParams): Promise<AskOutcome> {
-  const { hits, backend } = await search.search(
-    ctx,
-    params.departmentId,
-    params.question,
-    ASK_PASSAGES,
-  )
+  const scope = comparisonScope(params.question)
+  const { hits, backend } = scope
+    ? {
+        hits: await comparisonContext(ctx, params.departmentId, params.question, scope),
+        backend: 'fts' as const,
+      }
+    : await search.search(ctx, params.departmentId, params.question, ASK_PASSAGES)
 
   const passages = hits.map((hit) => ({
     ref: `${hit.subjectType}:${hit.subjectId}`,
@@ -533,6 +551,7 @@ export async function ask(ctx: RequestContext, params: AskParams): Promise<AskOu
       backend,
       question: params.question,
       passages,
+      comparisonScope: scope,
     },
   })
 

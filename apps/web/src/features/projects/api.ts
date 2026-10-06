@@ -125,7 +125,7 @@ export function patchProject(
 
 export function addMilestone(
   id: string,
-  input: { title: string; dueOn?: string | null },
+  input: { title: string; dueOn?: string | null; done?: boolean },
   csrfToken: string,
 ): Promise<Project> {
   return apiClient.post(
@@ -146,6 +146,31 @@ export function patchMilestone(
     `/api/v1/projects/${encodeURIComponent(id)}/milestones/${encodeURIComponent(milestoneId)}`,
     patch,
     projectSchema,
+    csrfToken,
+  )
+}
+
+export function deleteMilestone(
+  id: string,
+  milestoneId: string,
+  csrfToken: string,
+): Promise<Project> {
+  return apiClient.delete(
+    `/api/v1/projects/${encodeURIComponent(id)}/milestones/${encodeURIComponent(milestoneId)}`,
+    projectSchema,
+    csrfToken,
+  )
+}
+
+export function deleteProject(id: string, csrfToken: string): Promise<void> {
+  return apiClient.delete(`/api/v1/projects/${encodeURIComponent(id)}`, csrfToken)
+}
+
+export function undoDeleteProject(id: string, csrfToken: string): Promise<void> {
+  return apiClient.post(
+    `/api/v1/projects/${encodeURIComponent(id)}/undo-delete`,
+    {},
+    z.void(),
     csrfToken,
   )
 }

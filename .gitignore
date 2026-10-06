@@ -38,3 +38,5 @@ tools/perf/*/out/
 .codex-*.log
 .codex-*.json
 artifacts/
+infra/telegram-tls/
+infra/certs/

@@ -10,6 +10,12 @@ import type { ProjectDTO } from './schemas.js'
 
 export class InvalidProjectMembers extends Error {}
 
+// Persist the selected colour once. A new project gets a varied label; edits never recolour it.
+const PROJECT_COLOURS = ['#6366f1', '#d97706', '#0891b2', '#9333ea', '#db2777', '#2563eb']
+function defaultColour(id: string) {
+  return PROJECT_COLOURS[Number.parseInt(id.slice(0, 8), 16) % PROJECT_COLOURS.length]!
+}
+
 /** Promote in one transaction so retries cannot leave duplicate or half-created projects. */
 export async function createFromCard(
   ctx: RequestContext,
@@ -30,9 +36,9 @@ export async function createFromCard(
     if (card.project_id) return { ok: false as const, reason: 'conflict' as const }
     const selected = await checkedMembers(tx, departmentId, ctx.userId!, members)
     const id = randomUUID()
-    await tx.raw(sql`insert into app.projects (id, department_id, title, description, owner_user_id, members, status)
+    await tx.raw(sql`insert into app.projects (id, department_id, title, description, owner_user_id, members, status, colour)
       values (${id}, ${departmentId}, ${card.title}, ${card.description ? JSON.stringify(card.description) : null}::jsonb,
-        ${ctx.userId}, ${sql.param(selected)}::uuid[], 'active')`)
+        ${ctx.userId}, ${sql.param(selected)}::uuid[], 'active', ${defaultColour(id)})`)
     await tx.raw(sql`update app.cards set project_id = ${id}, project_scope = 'objective', kind = 'project_task',
       updated_at = now(), version = version + 1 where id = ${cardId}`)
     tx.audit({
@@ -91,11 +97,11 @@ type ProgressRow = {
   objective_done: number
   subjective_total: number
   subjective_done: number
+  completion: number
 }
 
 function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
   const total = Number(progress.objective_total) + Number(progress.subjective_total)
-  const done = Number(progress.objective_done) + Number(progress.subjective_done)
   return {
     id: row.id,
     title: row.title,
@@ -108,7 +114,7 @@ function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
     startOn: row.start_on,
     targetOn: row.target_on,
     milestones: row.milestones ?? [],
-    progress: total === 0 ? 0 : done / total,
+    progress: total === 0 ? 0 : Number(progress.completion) / total,
     objectiveTotal: Number(progress.objective_total),
     objectiveDone: Number(progress.objective_done),
     subjectiveTotal: Number(progress.subjective_total),
@@ -123,18 +129,7 @@ async function getProgress(
   tx: { raw<R>(q: SQL): Promise<R[]> },
   projectId: string,
 ): Promise<ProgressRow> {
-  const rows = await tx.raw<ProgressRow>(
-    sql`select
-          count(*) filter (where project_scope = 'objective') as objective_total,
-          count(*) filter (where project_scope = 'objective' and status = 'done') as objective_done,
-          count(*) filter (where project_scope = 'subjective') as subjective_total,
-          count(*) filter (where project_scope = 'subjective' and status = 'done') as subjective_done
-        from app.cards
-        where project_id = ${projectId} and deleted_at is null`,
-  )
-  return (
-    rows[0] ?? { objective_total: 0, objective_done: 0, subjective_total: 0, subjective_done: 0 }
-  )
+  return (await getProgressBatch(tx, [projectId])).get(projectId) ?? EMPTY_PROGRESS
 }
 
 const EMPTY_PROGRESS: ProgressRow = {
@@ -142,6 +137,7 @@ const EMPTY_PROGRESS: ProgressRow = {
   objective_done: 0,
   subjective_total: 0,
   subjective_done: 0,
+  completion: 0,
 }
 
 /** H3.1: the batched form of `getProgress` for a whole page of projects -- one `group by project_id`
@@ -159,15 +155,25 @@ async function getProgressBatch(
   )
   const rows = await tx.raw<ProgressRow & { project_id: string }>(
     sql`select
-          project_id,
-          count(*) filter (where project_scope = 'objective') as objective_total,
-          count(*) filter (where project_scope = 'objective' and status = 'done') as objective_done,
-          count(*) filter (where project_scope = 'subjective') as subjective_total,
-          count(*) filter (where project_scope = 'subjective' and status = 'done') as subjective_done
-        from app.cards
-        where project_id in (${idList})
-          and deleted_at is null
-        group by project_id`,
+          c.project_id,
+          count(*) filter (where c.project_scope <> 'subjective') as objective_total,
+          count(*) filter (where c.project_scope <> 'subjective' and (c.status = 'done' or c.done_at is not null)) as objective_done,
+          count(*) filter (where c.project_scope = 'subjective') as subjective_total,
+          count(*) filter (where c.project_scope = 'subjective' and (c.status = 'done' or c.done_at is not null)) as subjective_done,
+          sum(case when c.status = 'done' or c.done_at is not null then 1.0
+            when coalesce(checklist.total, 0) > 0 then checklist.done::numeric / checklist.total
+            else 0 end) as completion
+        from app.cards c
+        left join (
+          select item.card_id, count(*) as total, count(*) filter (where item.done_at is not null) as done
+          from app.card_checklist_items item
+          join app.cards parent on parent.id = item.card_id
+          where parent.project_id in (${idList}) and parent.deleted_at is null and item.deleted_at is null
+          group by item.card_id
+        ) checklist on checklist.card_id = c.id
+        where c.project_id in (${idList}) and c.deleted_at is null
+          and (c.status <> 'archived' or c.done_at is not null)
+        group by c.project_id`,
   )
   return new Map(rows.map((r) => [r.project_id, r]))
 }
@@ -254,7 +260,7 @@ export async function createProject(
           ) values (
             ${id}, ${input.departmentId}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
-            ${input.colour ?? '#6366f1'}, ${input.ownerUserId}, ${sql.param(members)}::uuid[],
+            ${input.colour ?? defaultColour(id)}, ${input.ownerUserId}, ${sql.param(members)}::uuid[],
             ${input.status ?? 'planning'}, ${input.startOn ?? null}, ${input.targetOn ?? null},
             ${JSON.stringify(milestones)}::jsonb
           )`,
@@ -276,12 +282,7 @@ export async function createProject(
                  start_on, target_on, milestones, created_at, updated_at, version
           from app.projects where id = ${id}`,
     )
-    return toProjectDTO(rows[0]!, {
-      objective_total: 0,
-      objective_done: 0,
-      subjective_total: 0,
-      subjective_done: 0,
-    })
+    return toProjectDTO(rows[0]!, EMPTY_PROGRESS)
   })
 }
 
@@ -364,7 +365,7 @@ export async function addMilestone(
   ctx: RequestContext,
   departmentId: string,
   projectId: string,
-  input: { title: string; dueOn?: string | null | undefined },
+  input: { title: string; dueOn?: string | null | undefined; done?: boolean | undefined },
 ): Promise<ProjectDTO | null> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{ milestones: ProjectRow['milestones'] }>(
@@ -373,7 +374,12 @@ export async function addMilestone(
     if (!rows[0]) return null
     const milestones = [
       ...rows[0].milestones,
-      { id: randomUUID(), title: input.title, dueOn: input.dueOn ?? null, doneAt: null },
+      {
+        id: randomUUID(),
+        title: input.title,
+        dueOn: input.dueOn ?? null,
+        doneAt: input.done ? new Date().toISOString() : null,
+      },
     ]
     await tx.raw(
       sql`update app.projects set milestones = ${JSON.stringify(milestones)}::jsonb, updated_at = now(), version = version + 1
@@ -442,6 +448,34 @@ export async function patchMilestone(
                  start_on, target_on, milestones, created_at, updated_at, version
           from app.projects where id = ${projectId}`,
     )
+    return toProjectDTO(after[0]!, await getProgress(tx, projectId))
+  })
+}
+
+export async function deleteMilestone(
+  ctx: RequestContext,
+  departmentId: string,
+  projectId: string,
+  milestoneId: string,
+) {
+  return withContext(ctx, async (tx) => {
+    const rows = await tx.raw<ProjectRow>(sql`select * from app.projects where id = ${projectId}
+      and department_id = ${departmentId} and deleted_at is null for update`)
+    const before = rows[0]
+    const removed = before?.milestones.find((m) => m.id === milestoneId)
+    if (!before || !removed) return null
+    const milestones = before.milestones.filter((m) => m.id !== milestoneId)
+    const after =
+      await tx.raw<ProjectRow>(sql`update app.projects set milestones = ${JSON.stringify(milestones)}::jsonb,
+      updated_at = now(), version = version + 1 where id = ${projectId} returning *`)
+    tx.audit({
+      action: 'projects.milestone_deleted',
+      subjectType: 'project',
+      subjectId: projectId,
+      departmentId,
+      before: removed,
+    })
+    tx.emit({ type: 'projects.project.updated', payload: { projectId }, departmentId })
     return toProjectDTO(after[0]!, await getProgress(tx, projectId))
   })
 }

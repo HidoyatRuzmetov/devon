@@ -46,11 +46,12 @@
         "headBadge": "Head",
         "deputyBadge": "Deputy",
         "memberCount": "{count} people",
-        "keyboardHint": "Use the arrow keys to move between units",
+        "keyboardHint": "Use arrows to move between units. Click a unit for its people. Drag the background to pan.",
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out",
         "resetView": "Reset view",
-        "closePanel": "Close"
+        "closePanel": "Close",
+        "exportError": "The image could not be exported. Try again."
       },
       "validation": {
         "nameRequired": "Enter a name"

@@ -38,6 +38,7 @@ import { useCreateCardFromTemplateMutation, useWorkTemplatesQuery } from '../hoo
 import { parseQuickAdd, resolveQuickAddAssignee } from '../lib/quick-add.js'
 import type { MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
+import { useProjectsQuery } from '../../projects/hooks.js'
 
 function isoDateToUtcMidnight(isoDate: string): string {
   return new Date(`${isoDate}T00:00:00.000Z`).toISOString()
@@ -99,6 +100,7 @@ export function QuickAddBar({
   // ids instead of free-text names the Accept path would have to guess at (AI-AUDIT §0.2: v1.0 hard
   // -coded `labels: []` and threw the model's answer away).
   const labelsQuery = useLabelsQuery()
+  const projectsQuery = useProjectsQuery()
   const boardQuery = useBoardQuery()
 
   const parsed = value.trim().length > 0 ? parseQuickAdd(value) : null
@@ -175,26 +177,9 @@ export function QuickAddBar({
   }
 
   function runDuplicateCheck(title: string) {
-    const existing = (boardQuery.data?.columns ?? [])
-      .flatMap((column) => column.cards)
-      .concat(boardQuery.data?.unassigned ?? [])
-      .slice(0, 200)
-      .map((card) => ({
-        id: card.id,
-        title: card.title,
-        status: card.status === 'done' ? ('done' as const) : ('active' as const),
-        assigneeName: card.assigneeUserId
-          ? (memberById.get(card.assigneeUserId)?.givenName ?? null)
-          : null,
-        similarity: 0,
-      }))
-      // A prefilter, in the client, over the board this bar already has: the model is a
-      // *confirmation* call over a shortlist, never a search (AI-AUDIT §4, N-5).
-      .filter((card) => sharesAWord(card.title, title))
-      .slice(0, 10)
-    if (existing.length === 0) return
+    // The server retrieves a fresh shortlist of independent tasks; loaded board pages are not a cache to maintain.
     duplicateAi.mutate(
-      { locale, candidateTitle: title, candidateDescription: null, existing },
+      { locale, candidateTitle: title, candidateDescription: null },
       {
         onSuccess: (res) => {
           const output = parseFeatureOutput<DuplicateCheckOutput>('duplicate_check', res.data)
@@ -371,7 +356,9 @@ export function QuickAddBar({
                   return member ? fullName(member) : null
                 }}
                 labelName={(id) => labelById.get(id)?.name ?? null}
-                projectName={() => null}
+                projectName={(id) =>
+                  projectsQuery.data?.find((project) => project.id === id)?.title ?? null
+                }
               />
               {duplicates && duplicates.matches.length > 0 ? (
                 <section className="flex flex-col gap-1 rounded-sm border border-warning/40 bg-warning/10 px-3 py-2">
@@ -395,26 +382,4 @@ export function QuickAddBar({
       ) : null}
     </div>
   )
-}
-
-/**
- * The duplicate prefilter's whole rule: two titles are worth a confirmation call when they share a
- * word of four letters or more. Deliberately crude and deliberately local -- it exists to keep the
- * model's input to ten candidates, not to decide anything. The real judgement is the model's, and
- * the real authority is the person looking at the two titles side by side.
- *
- * Four letters because three-letter words in all four of this product's locales are almost entirely
- * function words ("va", "bu", "для", "the"), and matching on those would shortlist the whole board.
- */
-function sharesAWord(a: string, b: string): boolean {
-  const words = (text: string) =>
-    new Set(
-      text
-        .toLowerCase()
-        .split(/[^\p{L}\p{N}]+/u)
-        .filter((word) => word.length >= 4),
-    )
-  const left = words(a)
-  for (const word of words(b)) if (left.has(word)) return true
-  return false
 }

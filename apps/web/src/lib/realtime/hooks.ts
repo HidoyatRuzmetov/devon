@@ -172,12 +172,8 @@ const INVALIDATIONS: ReadonlyArray<{
   keys: readonly (readonly string[])[]
 }> = [
   {
-    match: /^work\.card\./,
-    keys: [
-      ['work', 'board'],
-      ['work', 'cards'],
-      ['work', 'archive'],
-    ],
+    match: /^work\.(card|checklist)\./,
+    keys: [['work'], ['projects']],
   },
   { match: /^projects\./, keys: [['projects'], ['work', 'board']] },
   { match: /^events\./, keys: [['events']] },
@@ -188,7 +184,11 @@ const INVALIDATIONS: ReadonlyArray<{
   { match: /^inbox\.notification\./, keys: [['inbox', 'notifications']] },
 ]
 
-function invalidateFor(queryClient: QueryClient, type: string): void {
+function invalidateFor(queryClient: QueryClient, type: string, cardId?: unknown): void {
+  // The last checklist mutation refetches committed state. A live echo during an optimistic
+  // toggle must not overwrite the newer local state with an intermediate server response.
+  if (type.startsWith('work.') && typeof cardId === 'string' &&
+      queryClient.isMutating({ mutationKey: ['work', 'checklist', cardId] }) > 0) return
   for (const rule of INVALIDATIONS) {
     if (!rule.match.test(type)) continue
     for (const key of rule.keys) void queryClient.invalidateQueries({ queryKey: [...key] })
@@ -214,10 +214,10 @@ export function useRealtimeBridge(): void {
   const channels = React.useMemo(() => realtimeChannels(), [status])
 
   useChannel(signedIn ? (channels?.department ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type)
+    invalidateFor(queryClient, message.type, message.payload['cardId'])
   })
   useChannel(signedIn ? (channels?.personal ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type)
+    invalidateFor(queryClient, message.type, message.payload['cardId'])
   })
 
   // Kick the connection off on the first render of a signed-in shell. `subscribeChannel` connects
@@ -226,5 +226,16 @@ export function useRealtimeBridge(): void {
   React.useEffect(() => {
     if (!signedIn) return
     void ensureRealtimeConnection()
+    const reconnect = () => void ensureRealtimeConnection()
+    window.addEventListener('online', reconnect)
+    return () => window.removeEventListener('online', reconnect)
   }, [signedIn])
+
+  // A failed initial config/token request must recover without requiring a page reload. The
+  // WebSocket library handles normal transport reconnects; this also retries bootstrap failures.
+  React.useEffect(() => {
+    if (!signedIn || status !== 'error') return
+    const timer = window.setTimeout(() => void ensureRealtimeConnection(), 20_000)
+    return () => window.clearTimeout(timer)
+  }, [signedIn, status])
 }

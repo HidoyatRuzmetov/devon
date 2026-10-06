@@ -273,7 +273,11 @@ export function useAddChecklistItemMutation(cardId: string) {
 export function usePatchChecklistItemMutation(cardId: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const t = useT()
+  const mutationKey = ['work', 'checklist', cardId]
   return useMutation({
+    mutationKey,
+    scope: { id: `checklist-${cardId}` },
     mutationFn: ({
       itemId,
       patch,
@@ -281,7 +285,8 @@ export function usePatchChecklistItemMutation(cardId: string) {
       itemId: string
       patch: Parameters<typeof api.patchChecklistItem>[2]
     }) => api.patchChecklistItem(cardId, itemId, patch, csrf),
-    onMutate: ({ itemId, patch }) => {
+    onMutate: async ({ itemId, patch }) => {
+      await qc.cancelQueries({ queryKey: CARD_KEY(cardId) })
       const prev = qc.getQueryData<CardDetail>(CARD_KEY(cardId))
       if (prev) {
         qc.setQueryData<CardDetail>(CARD_KEY(cardId), {
@@ -302,12 +307,24 @@ export function usePatchChecklistItemMutation(cardId: string) {
           ),
         })
       }
-      return { prev }
+      return { previousItem: prev?.checklist.find((it) => it.id === itemId) }
     },
-    onError: (_err, _vars, context) => {
-      if (context?.prev) qc.setQueryData(CARD_KEY(cardId), context.prev)
+    onError: (_err, { itemId }, context) => {
+      const previousItem = context?.previousItem
+      if (previousItem)
+        qc.setQueryData<CardDetail>(CARD_KEY(cardId), (current) =>
+          current
+            ? {
+                ...current,
+                checklist: current.checklist.map((it) => (it.id === itemId ? previousItem : it)),
+              }
+            : current,
+        )
+      toast.error(t('toast.saveError'))
     },
-    onSettled: () => invalidateCard(qc, cardId),
+    onSettled: () => {
+      if (qc.isMutating({ mutationKey }) === 1) invalidateCard(qc, cardId)
+    },
   })
 }
 

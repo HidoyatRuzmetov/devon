@@ -3,6 +3,7 @@ import { constants } from 'node:fs'
 import { join } from 'node:path'
 import { loadAiConfig } from '@devon/ai'
 import { HeadBucketCommand, S3Client } from '@aws-sdk/client-s3'
+import { isTelegramPollingHealthy } from '../telegram/polling.js'
 
 export type ProbeResult = {
   status: 'ok' | 'degraded' | 'down' | 'not_configured'
@@ -76,6 +77,7 @@ export async function probeAi(
 export async function probeTelegram(
   env: NodeJS.ProcessEnv = process.env,
   fetchImpl: typeof fetch = fetch,
+  pollingHealthy: () => boolean = isTelegramPollingHealthy,
 ): Promise<ProbeResult> {
   const token = env['TELEGRAM_BOT_TOKEN']
   if (!token) return result('not_configured')
@@ -92,22 +94,43 @@ export async function probeTelegram(
       return result('down', 'telegram.unreachable')
     if (env['NODE_ENV'] === 'production') {
       const secret = env['TELEGRAM_WEBHOOK_SECRET']
-      const baseUrl = env['DEVON_PUBLIC_URL']?.replace(/\/+$/, '')
-      if (!secret || !baseUrl) return result('down', 'telegram.webhookMismatch')
+      const baseUrl = (env['TELEGRAM_WEBHOOK_BASE_URL'] || env['DEVON_PUBLIC_URL'])?.replace(
+        /\/+$/,
+        '',
+      )
+      const polling = env['TELEGRAM_TRANSPORT'] === 'polling'
+      if (!polling && (!secret || !baseUrl)) return result('down', 'telegram.webhookMismatch')
       const response = await fetchImpl(`https://api.telegram.org/bot${token}/getWebhookInfo`, {
         signal,
       })
       if (!response.ok) return result('down', 'telegram.unreachable')
       const webhook = (await response.json()) as {
         ok?: boolean
-        result?: { url?: string; pending_update_count?: number; last_error_date?: number }
+        result?: {
+          url?: string
+          pending_update_count?: number
+          last_error_date?: number
+          last_error_message?: string
+        }
       }
       if (!webhook.ok) return result('down', 'telegram.unreachable')
+      if (polling) {
+        if (webhook.result?.url || !pollingHealthy())
+          return result('down', 'telegram.deliveryDelayed')
+        return { ...result('ok'), latencyMs: Date.now() - started }
+      }
       // Do not follow, log or return Telegram's URL: it includes our secret and may point elsewhere.
       if (webhook.result?.url !== `${baseUrl}/api/v1/telegram/webhook/${secret}`)
         return result('down', 'telegram.webhookMismatch')
       const pending = webhook.result.pending_update_count ?? 0
       const errorAge = Date.now() / 1000 - (webhook.result.last_error_date ?? 0)
+      if (
+        pending > 0 &&
+        errorAge >= 0 &&
+        errorAge < 900 &&
+        /SSL|certificate|\b(?:401|403|404)\b/i.test(webhook.result.last_error_message ?? '')
+      )
+        return result('down', 'telegram.deliveryDelayed')
       if (pending > 100 || (pending > 0 && errorAge >= 0 && errorAge < 900))
         return result('degraded', 'telegram.deliveryDelayed')
     }

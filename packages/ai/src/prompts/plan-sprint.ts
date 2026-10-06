@@ -328,7 +328,8 @@ export const planSprintSpec: FeatureSpec<PlanSprintInput, PlanSprintOutput> = {
       summary: { type: 'string', minLength: 1, maxLength: 400 },
     },
   },
-  defaultMaxTokens: 1536,
+  // GLM-5.3 needs room to calculate capacity and still emit the structured plan.
+  defaultMaxTokens: 3072,
   temperature: 0,
   systemPrompt,
   buildUserContent: standardUserContent,

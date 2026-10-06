@@ -46,11 +46,12 @@
         "headBadge": "Boshliq",
         "deputyBadge": "Oʻrinbosar",
         "memberCount": "{count} kishi",
-        "keyboardHint": "Boʻlimlar orasida oʻq tugmalari bilan yuring",
+        "keyboardHint": "Boʻlimlar orasida oʻqlar bilan yuring. Xodimlarni koʻrish uchun boʻlimni bosing. Sxemani surish uchun fonni torting.",
         "zoomIn": "Kattalashtirish",
         "zoomOut": "Kichiklashtirish",
         "resetView": "Koʻrinishni tiklash",
-        "closePanel": "Yopish"
+        "closePanel": "Yopish",
+        "exportError": "Rasmni saqlab boʻlmadi. Qayta urinib koʻring."
       },
       "validation": {
         "nameRequired": "Nomini yozing."

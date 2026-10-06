@@ -65,11 +65,26 @@ export type GlmProviderOptions = {
   baseUrl: string
   apiKey: string
   requestTimeoutMs: number
-  /** Bounded retries for a transport-level failure only (timeout, DNS, connection reset) -- never for
-   * an HTTP error status, which is a real answer from the server, not a "try again" situation. Coding
-   * standard §16: "every external call has a timeout and bounded retries". */
+  /** Shared retry budget for transport failures and transient HTTP 429/503 responses. The option
+   * name remains compatible with existing callers. Defaults to one retry total; zero disables
+   * retries. All attempts, backoff and body reads share the original request deadline. */
   maxTransportRetries?: number
   fetchImpl?: typeof fetch
+}
+
+function retryDelayMs(header: string | null, attempt: number): number {
+  if (header?.trim()) {
+    const value = header.trim()
+    const seconds = Number(value)
+    if (Number.isFinite(seconds)) {
+      if (seconds >= 0) return seconds * 1000
+    } else {
+      const date = Date.parse(value)
+      if (Number.isFinite(date)) return Math.max(0, date - Date.now())
+    }
+  }
+  // Missing/invalid Retry-After: avoid immediately hammering an overloaded provider.
+  return Math.min(1000 * 2 ** attempt, 5000)
 }
 
 export class GlmProviderError extends Error {
@@ -146,7 +161,24 @@ export class GlmProvider implements AiProvider {
         if (!res.ok) {
           // Provider bodies may echo prompts or credentials. Status is enough to diagnose the
           // failure; never propagate that untrusted body into API logs or user-facing errors.
-          throw new GlmProviderError(`GLM request failed with status ${res.status}`, res.status)
+          const failure = new GlmProviderError(
+            `GLM request failed with status ${res.status}`,
+            res.status,
+          )
+          // Cancel the unread error stream; it is not needed for retry decisions or diagnostics.
+          void res.body?.cancel().catch(() => {})
+          if ((res.status === 429 || res.status === 503) && attempt < this.maxTransportRetries) {
+            const delayMs = retryDelayMs(res.headers.get('retry-after'), attempt)
+            // Never shorten a provider's requested wait to fit our budget: refuse instead of
+            // retrying too early. Leave time for a new attempt, which checks the deadline again.
+            if (delayMs >= deadline - Date.now()) throw failure
+            controller.abort()
+            clearTimeout(timer)
+            // nosemgrep: query-in-loop -- Retry-After wait depends on this response and shares the same bounded attempt count/deadline.
+            await new Promise<void>((resolve) => setTimeout(resolve, delayMs))
+            continue
+          }
+          throw failure
         }
 
         // nosemgrep: query-in-loop -- reads this attempt's response before deciding whether a sequential retry is needed.
@@ -175,9 +207,8 @@ export class GlmProvider implements AiProvider {
         }
       } catch (err) {
         lastError = err
-        // A `GlmProviderError` from a non-ok HTTP status is a real answer, not a transport failure --
-        // never retried. Only a genuine transport failure (abort/timeout, network error, malformed
-        // JSON) is worth one bounded retry.
+        // Eligible 429/503 responses are handled above. Authentication, other HTTP errors and
+        // malformed provider choices never retry; transport failures use the remaining shared budget.
         if (err instanceof GlmProviderError) throw err
         if (attempt === this.maxTransportRetries) break
       } finally {

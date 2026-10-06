@@ -136,7 +136,10 @@
       "reassigned": "Karta {name}ga oʻtkazildi",
       "giverChanged": "Topshiriq beruvchi: {name}",
       "undo": "Bekor qilish",
-      "saveFailed": "Saqlab boʻlmadi. Oldingi qiymat qaytdi."
+      "saveFailed": "Saqlab boʻlmadi. Oldingi qiymat qaytdi.",
+      "editChecklistItem": "Bandni tahrirlash",
+      "saveChecklistItem": "Bandni saqlash",
+      "cancelChecklistEdit": "Tahrirni bekor qilish"
     },
     "priority": {
       "none": "Belgilanmagan",

@@ -9,6 +9,7 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
 import * as repo from './repo.js'
+import * as lifecycle from './lifecycle-repo.js'
 import { getCardOwners } from '../work/repo.js'
 import {
   addMilestoneBodySchema,
@@ -80,21 +81,13 @@ function requireDepartmentId(req: {
   return req.actor?.departmentId ?? null
 }
 
-/** The one built-in template (TECH-SPEC §5's group-projects deliverable list: "templates" plural in
- * the epic list, "one template" in this build's own scope note) -- a generic project shape (kickoff,
- * mid checkpoint, wrap-up) any department can start from, offsets in days from the project's
- * `startOn`. */
+/** Built-in starter has no invented deadlines/checkpoints. Users add their own milestones. */
 const PROJECT_TEMPLATES = [
   {
     key: 'standard-project',
     title: 'Standart loyiha',
-    description:
-      'Boshlanishi, oraliq nazorat va yakunlash bosqichlariga ega umumiy loyiha shabloni.',
-    milestones: [
-      { title: 'Boshlash', offsetDays: 0 },
-      { title: 'Oraliq nazorat', offsetDays: 30 },
-      { title: 'Yakunlash', offsetDays: 60 },
-    ],
+    description: 'Bosqichlari va muddatlari jamoa tomonidan belgilanadigan loyiha.',
+    milestones: [] as { title: string; offsetDays: number }[],
   },
 ] as const
 
@@ -103,6 +96,77 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (error instanceof repo.InvalidProjectMembers) return sendProblem(reply, 'validation_failed')
     throw error
   })
+  app.delete(
+    '/projects/:id',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const ctx = contextFromRequest(req)
+      const project = await repo.getProject(ctx, ctx.departmentId!, req.params.id)
+      if (!project) return sendProblem(reply, 'not_found')
+      if (
+        !can(req.actor, 'delete', {
+          kind: 'owned',
+          departmentId: ctx.departmentId!,
+          ownerUserIds: [project.ownerUserId],
+        }).allowed
+      )
+        return sendProblem(reply, 'forbidden')
+      if (!(await lifecycle.deleteProject(ctx, project.id))) return sendProblem(reply, 'not_found')
+      return reply.code(204).send()
+    },
+  )
+  app.post(
+    '/projects/:id/undo-delete',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      if (!(await lifecycle.undoProjectDeletion(contextFromRequest(req), req.params.id)))
+        return sendProblem(reply, 'not_found')
+      return reply.code(204).send()
+    },
+  )
+  app.delete(
+    '/projects/:id/milestones/:milestoneId',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: milestoneParamsSchema, response: { 200: projectSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      if (!(await requireProjectOwnership(req, reply, departmentId, req.params.id)).ok) return
+      const result = await repo.deleteMilestone(
+        contextFromRequest(req),
+        departmentId,
+        req.params.id,
+        req.params.milestoneId,
+      )
+      if (!result) return sendProblem(reply, 'not_found')
+      return reply.type('application/json').send(result)
+    },
+  )
   app.post(
     '/projects/from-card',
     {

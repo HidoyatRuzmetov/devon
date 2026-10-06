@@ -25,6 +25,8 @@ import { sendProblem } from '../../lib/problem-reply.js'
 import { registerBotHandlers } from './bot.js'
 import { tb, type BotLocale } from './templates.js'
 import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
+import { webhookOptions } from './webhook-options.js'
+import { startTelegramPolling } from './polling.js'
 import {
   botUsername as resolvedBotUsername,
   configureTelegram,
@@ -66,6 +68,7 @@ function readWebhookSecret(app: { devonConfig: Config }): string | null {
 
 /** Process-wide, bounded (`webhook-guard.ts`). One bot per process, so one window. */
 const replayWindow = new UpdateReplayWindow()
+const pendingUpdates = new Set<number>()
 
 let botHandlersRegistered = false
 let pollingHandle: { stop(): Promise<void> } | null = null
@@ -443,14 +446,25 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
       // captured delivery replayed against this endpoint is answered 200 (so a genuine Telegram
       // retry is never re-driven either) but is not handled a second time.
       const updateId = (req.body as { update_id?: unknown }).update_id
+      if (
+        pendingUpdates.size >= 120 ||
+        (typeof updateId === 'number' && pendingUpdates.has(updateId))
+      ) {
+        return reply.code(503).send({ ok: false })
+      }
       if (typeof updateId !== 'number' || !replayWindow.accept(updateId)) {
         reply.code(200).send({ ok: true })
         return
       }
+      pendingUpdates.add(updateId)
       try {
         await current.handleUpdate(req.body as unknown as Update)
-      } catch (err) {
-        req.log.error({ err }, 'telegram: webhook update handling failed')
+      } catch {
+        replayWindow.release(updateId)
+        req.log.error({}, 'telegram: webhook update handling failed; delivery will be retried')
+        return reply.code(503).send({ ok: false })
+      } finally {
+        pendingUpdates.delete(updateId)
       }
       return reply.code(200).send({ ok: true })
     },
@@ -473,6 +487,12 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         {},
         'telegram: bot.init() failed (no network to Telegram, or an invalid token) -- staying in no-op mode',
       )
+      if (
+        app.devonConfig.TELEGRAM_TRANSPORT === 'polling' ||
+        app.devonConfig.NODE_ENV !== 'production'
+      ) {
+        pollingHandle = startTelegramPolling(activeBot, app.devonConfig, app.log)
+      }
       return
     }
 
@@ -503,10 +523,18 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     }
 
     const secret = readWebhookSecret(app)
-    if (app.devonConfig.NODE_ENV === 'production' && secret) {
-      const url = `${publicUrl().replace(/\/+$/, '')}/api/v1/telegram/webhook/${secret}`
+    if (
+      app.devonConfig.NODE_ENV === 'production' &&
+      app.devonConfig.TELEGRAM_TRANSPORT === 'webhook' &&
+      secret
+    ) {
+      const baseUrl = app.devonConfig.TELEGRAM_WEBHOOK_BASE_URL ?? publicUrl()
+      const url = `${baseUrl.replace(/\/+$/, '')}/api/v1/telegram/webhook/${secret}`
       try {
-        await activeBot.api.setWebhook(url, { secret_token: secret })
+        await activeBot.api.setWebhook(
+          url,
+          await webhookOptions(secret, app.devonConfig.TELEGRAM_WEBHOOK_CERTIFICATE_PATH),
+        )
         // H1.11/H1.1: the URL contains the webhook secret -- logging it (as this line used to)
         // wrote a live credential into every log sink and every backup of them. The path is a
         // constant plus that secret, so there is nothing left worth logging but the fact.
@@ -520,35 +548,13 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         // never silently steal another instance's deliveries or change production transport.
       }
     } else {
-      pollingHandle = startPolling(activeBot, app.log)
+      pollingHandle = startTelegramPolling(activeBot, app.devonConfig, app.log)
     }
   })
 
   app.addHook('onClose', async () => {
     if (pollingHandle) await pollingHandle.stop().catch(() => {})
   })
-}
-
-function startPolling(
-  bot: NonNullable<ReturnType<typeof getBot>>,
-  log: {
-    info: (o: unknown, m?: string) => void
-    error: (o: unknown, m?: string) => void
-  },
-): { stop(): Promise<void> } {
-  // Fire-and-forget: `bot.start()` resolves only once polling stops, so this must not be awaited by
-  // the caller (MODULE-GUIDE.md's own "no query in a loop"-style caution generalises: never await an
-  // intentionally long-running loop from a boot hook).
-  void bot
-    .start({
-      onStart: () =>
-        log.info(
-          {},
-          'telegram: long-polling fallback started (local dev -- no TELEGRAM_WEBHOOK_SECRET/production webhook)',
-        ),
-    })
-    .catch(() => log.error({}, 'telegram: long-polling loop exited'))
-  return { stop: () => bot.stop() }
 }
 
 export default telegramRoutes

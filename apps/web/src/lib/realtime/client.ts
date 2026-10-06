@@ -56,6 +56,7 @@ let status: RealtimeStatus = 'idle'
 let config: RealtimeConfig | null = null
 let centrifuge: Centrifuge | null = null
 let connecting: Promise<Centrifuge | null> | null = null
+let generation = 0
 
 function setStatus(next: RealtimeStatus): void {
   if (status === next) return
@@ -133,18 +134,23 @@ function deliver(channel: string, data: unknown, info?: ClientInfo): void {
 }
 
 async function connect(): Promise<Centrifuge | null> {
-  if (centrifuge) return centrifuge
+  if (centrifuge) {
+    if (centrifuge.state === 'disconnected') centrifuge.connect()
+    return centrifuge
+  }
   if (connecting) return connecting
 
-  connecting = (async () => {
+  const attemptGeneration = generation
+  const pending = (async () => {
     setStatus('connecting')
     try {
-      config = await fetchRealtimeConfig()
+      const resolvedConfig = await fetchRealtimeConfig()
+      if (generation !== attemptGeneration) return null
+      config = resolvedConfig
     } catch {
       // Not signed in yet, or the API is unreachable. Neither is an error worth showing: the caller
       // is a background bridge, and the screens have their fallbacks.
-      setStatus('off')
-      connecting = null
+      if (generation === attemptGeneration) setStatus('error')
       return null
     }
     if (!config.enabled || !config.url) {
@@ -154,6 +160,7 @@ async function connect(): Promise<Centrifuge | null> {
     }
 
     const { Centrifuge: CentrifugeCtor } = await import('centrifuge')
+    if (generation !== attemptGeneration) return null
     const client = new CentrifugeCtor(config.url, {
       // Re-asked on every reconnect and whenever the token expires, so a person removed from a
       // department stops receiving its channels within one token life (ten minutes) rather than
@@ -166,10 +173,13 @@ async function connect(): Promise<Centrifuge | null> {
       maxServerPingDelay: 10_000,
     })
 
-    client.on('connected', () => setStatus('connected'))
-    client.on('connecting', () => setStatus('connecting'))
-    client.on('disconnected', () => setStatus('error'))
-    client.on('error', () => setStatus('error'))
+    const updateStatus = (next: RealtimeStatus) => {
+      if (generation === attemptGeneration) setStatus(next)
+    }
+    client.on('connected', () => updateStatus('connected'))
+    client.on('connecting', () => updateStatus('connecting'))
+    client.on('disconnected', () => updateStatus('error'))
+    client.on('error', () => updateStatus('error'))
     // Server-side subscriptions (the personal inbox channel, named in the connection token) arrive
     // here rather than on a `Subscription`.
     client.on('publication', (ctx: PublicationContext & { channel: string }) => {
@@ -178,9 +188,20 @@ async function connect(): Promise<Centrifuge | null> {
 
     centrifuge = client
     client.connect()
-    connecting = null
     return client
   })()
+    .catch(() => {
+      if (generation === attemptGeneration) {
+        centrifuge?.disconnect()
+        centrifuge = null
+        setStatus('error')
+      }
+      return null
+    })
+    .finally(() => {
+      if (connecting === pending) connecting = null
+    })
+  connecting = pending
 
   return connecting
 }
@@ -226,10 +247,10 @@ async function ensureChannel(channel: string): Promise<ChannelEntry> {
     }
     channels.set(channel, entry)
   }
-  if (entry.sub || entry.serverSide) return entry
+  if (entry.sub) return entry
 
   const client = await connect()
-  if (!client) return entry
+  if (!client || entry.serverSide || channels.get(channel) !== entry) return entry
   if (entry.sub) return entry
 
   const sub =
@@ -346,6 +367,7 @@ export async function publishToCanvas(
 
 /** Sign-out, or a department switch: drop everything and start clean on the next subscription. */
 export function resetRealtime(): void {
+  generation++
   for (const [, entry] of channels) {
     entry.sub?.unsubscribe()
     if (entry.sub) centrifuge?.removeSubscription(entry.sub)

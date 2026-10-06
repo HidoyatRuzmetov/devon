@@ -16,6 +16,7 @@ import { z } from 'zod'
 import { tokensToCostUzs } from './budget.js'
 import type { AiConfig } from './config.js'
 import { trimHistory } from './trim.js'
+import { normalizeToolArguments } from './normalize-tool-arguments.js'
 import type {
   AiFeature,
   AiProvider,
@@ -212,7 +213,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
   // (TECH-SPEC §8: "one retry with the error"): a model that both mis-shapes and misattributes on the
   // same answer does not get two chances to bill the department. -------------------------------------
   const judge = (candidate: unknown): { problem: string } | { problem: null; output: T } => {
-    const result = tool.schema.safeParse(candidate)
+    const result = tool.schema.safeParse(normalizeToolArguments(candidate, tool.parameters))
     if (!result.success) return { problem: z.prettifyError(result.error) }
     if (!options.validate) return { problem: null, output: result.data }
     const verdict = options.validate(result.data)

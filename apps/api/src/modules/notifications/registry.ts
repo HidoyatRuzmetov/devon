@@ -491,6 +491,10 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   },
 
   // --- work ---------------------------------------------------------------------------------------
+  'work.checklist.updated': {
+    notify: false,
+    why: 'Checklist edits refresh live task views without producing an inbox notification per checkbox.',
+  },
   'work.card.deleted': {
     notify: false,
     why: 'Refresh live views without sending links to deleted work; the audit retains the deletion.',

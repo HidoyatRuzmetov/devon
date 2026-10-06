@@ -136,7 +136,10 @@
       "reassigned": "Карта {name}га ўтказилди",
       "giverChanged": "Топшириқ берувчи: {name}",
       "undo": "Бекор қилиш",
-      "saveFailed": "Сақлаб бўлмади. Олдинги қиймат қайтди."
+      "saveFailed": "Сақлаб бўлмади. Олдинги қиймат қайтди.",
+      "editChecklistItem": "Бандни таҳрирлаш",
+      "saveChecklistItem": "Бандни сақлаш",
+      "cancelChecklistEdit": "Таҳрирни бекор қилиш"
     },
     "priority": {
       "none": "Белгиланмаган",

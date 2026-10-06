@@ -1,0 +1,14 @@
+{
+  "projectLifecycle": {
+    "editMilestone": "Edit milestone",
+    "editMilestoneLabel": "Edit milestone: {title}",
+    "milestoneTitle": "Milestone name",
+    "milestoneDue": "Due date (optional)",
+    "deleteMilestone": "Delete milestone",
+    "milestoneDeleted": "Milestone deleted.",
+    "delete": "Delete project",
+    "deleted": "Project and its tasks deleted. You can undo this now.",
+    "deleteHint": "Also removes this project's tasks from the team’s workspace. History remains available to the superadmin.",
+    "progressHint": "Progress includes completed tasks and completed checklist steps in unfinished tasks."
+  }
+}

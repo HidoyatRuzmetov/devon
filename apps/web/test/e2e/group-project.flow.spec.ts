@@ -53,7 +53,8 @@ test('@flow group project: objective + subjective tasks complete and progress re
     members: [me.user.id],
   })
   expect(createRes.status()).toBe(201)
-  const project = (await createRes.json()) as { id: string }
+  const project = (await createRes.json()) as { id: string; milestones: unknown[]; colour: string }
+  expect(project.milestones).toEqual([])
 
   // Real UI: the project page renders (title, and both task-scope tabs).
   await headPage.goto(`/projects/view?id=${project.id}`)
@@ -94,10 +95,25 @@ test('@flow group project: objective + subjective tasks complete and progress re
   expect(before.objectiveDone).toBe(0)
   expect(before.subjectiveDone).toBe(0)
 
+  // Checklist steps are real partial progress, even before the task itself is marked done.
+  const stepResponse = await authedPost(headContext, `/api/v1/cards/${objective.id}/checklist`, {
+    text: 'First step',
+  })
+  const step = (await stepResponse.json()) as { id: string }
+  await authedPost(headContext, `/api/v1/cards/${objective.id}/checklist`, { text: 'Second step' })
+  await authedPatch(headContext, `/api/v1/cards/${objective.id}/checklist/${step.id}`, {
+    done: true,
+  })
+  await headPage.reload()
+  await expect(headPage.getByText('25', { exact: true })).toBeVisible()
+
   // Complete both tasks -- the real `PATCH /cards/:id` state transition.
+  const latestObjective = (await (
+    await headContext.request.get(`/api/v1/cards/${objective.id}`)
+  ).json()) as { version: number }
   const doneObjective = await authedPatch(headContext, `/api/v1/cards/${objective.id}`, {
     status: 'done',
-    version: objective.version,
+    version: latestObjective.version,
   })
   expect(doneObjective.status()).toBe(200)
   const doneSubjective = await authedPatch(headContext, `/api/v1/cards/${subjective.id}`, {
@@ -123,6 +139,34 @@ test('@flow group project: objective + subjective tasks complete and progress re
   // Real UI, reloaded: the project's progress ring reads 100%.
   await headPage.reload()
   await expect(headPage.getByText('100', { exact: true })).toBeVisible()
+
+  // Create only a chosen checkpoint, then edit/delete/undo it using actual controls.
+  const addMilestone = headPage.getByPlaceholder('Bosqich nomini yozing')
+  await addMilestone.fill('Chosen checkpoint')
+  await addMilestone.locator('..').getByRole('button', { name: 'Saqlash', exact: true }).click()
+  await headPage
+    .getByRole('button', { name: 'Bosqichni tahrirlash: Chosen checkpoint', exact: true })
+    .click()
+  const milestoneDialog = headPage.getByRole('dialog')
+  await milestoneDialog.getByLabel('Bosqich nomi', { exact: true }).fill('Updated checkpoint')
+  await milestoneDialog.getByLabel('Muddat (ixtiyoriy)').fill('2027-02-02')
+  await milestoneDialog.getByRole('button', { name: 'Saqlash', exact: true }).click()
+  await expect(headPage.getByText('Updated checkpoint', { exact: true })).toBeVisible()
+  await headPage
+    .getByRole('button', { name: 'Bosqichni tahrirlash: Updated checkpoint', exact: true })
+    .click()
+  await milestoneDialog.getByRole('button', { name: 'Bosqichni oʻchirish', exact: true }).click()
+  await expect(headPage.getByText('Updated checkpoint', { exact: true })).toHaveCount(0)
+  await headPage.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
+  await expect(headPage.getByText('Updated checkpoint', { exact: true })).toBeVisible()
+
+  // Project deletion hides its tasks, and undo remains usable after navigation unmounts the page.
+  await headPage.getByRole('button', { name: 'Loyihani oʻchirish', exact: true }).click()
+  await expect(headPage).toHaveURL(/\/projects$/)
+  await headPage.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
+  await expect(headPage).toHaveURL(new RegExp(`/projects/view\\?id=${project.id}`))
+  await expect(headPage.getByText('100', { exact: true })).toBeVisible()
+  await expect(headPage.getByText('Flow objective task', { exact: true })).toBeVisible()
 
   await headContext.close()
 })

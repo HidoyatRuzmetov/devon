@@ -69,7 +69,7 @@ export function useAddMilestoneMutation(id: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
-    mutationFn: (input: { title: string; dueOn?: string | null }) =>
+    mutationFn: (input: { title: string; dueOn?: string | null; done?: boolean }) =>
       api.addMilestone(id, input, csrf),
     onError: () => toast(t('projectEdit.error')),
     onSuccess: (project) => {
@@ -95,6 +95,35 @@ export function usePatchMilestoneMutation(id: string) {
     onSuccess: (project) => {
       qc.setQueryData(PROJECT_KEY(id), project)
       void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
+    },
+  })
+}
+
+export function useDeleteMilestoneMutation(id: string) {
+  const t = useT()
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (milestoneId: string) => api.deleteMilestone(id, milestoneId, csrf),
+    onError: () => toast(t('projectEdit.error')),
+    onSuccess: (project) => {
+      qc.setQueryData(PROJECT_KEY(id), project)
+      void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
+    },
+  })
+}
+
+export function useDeleteProjectMutation(undo = false) {
+  const t = useT()
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (id: string) =>
+      undo ? api.undoDeleteProject(id, csrf) : api.deleteProject(id, csrf),
+    onError: () => toast(t('projectEdit.error')),
+    onSuccess: () => {
+      for (const key of ['projects', 'work', 'analytics', 'inbox'])
+        void qc.invalidateQueries({ queryKey: [key] })
     },
   })
 }

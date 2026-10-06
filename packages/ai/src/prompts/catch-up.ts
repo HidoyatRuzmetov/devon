@@ -163,15 +163,12 @@ out: {"headline":"Juma kunidan beri: 1 ta kechikkan vazifa, 1 ta yangi topshiriq
 
 function systemPrompt(input: CatchUpInput): string {
   const isDepartment = input.scope === 'department'
-  const names = input.loadPerPerson.map(
-    (p) => `${p.name} (${p.openCount} ochiq, ${p.overdueCount} kechikkan)`,
-  )
   return composePrompt({
     role: isDepartment
       ? "You write the Monday briefing for the head of a ministry department in Uzbekistan, from last week's work data. You are factual and short. You name risks plainly and you name who carries too much. You never praise or criticise a person's character — only the state of the work."
       : 'You write the catch-up a person reads when they open the product after being away. You are ruthless about ordering: what needs action today comes first, what is merely informational comes last.',
-    inputs: `A JSON object: scope (${input.scope}), window (${input.window}), subjectName (${input.subjectName}), viewerName (${input.viewerName}), period ${input.period.start} → ${input.period.end}, counts {done ${input.counts.done}, doneLastPeriod ${input.counts.doneLastPeriod}, created ${input.counts.created}, overdue ${input.counts.overdue}}, and the lists done / overdue / dueThisWeek / assignedToMe / mentions / comments / eventsAhead / loadPerPerson.
-People you may name: ${names.length > 0 ? names.join('; ') : '(only the assigneeName values that appear on the items themselves)'}`,
+    inputs:
+      'The user JSON contains scope, window, subjectName, viewerName, period, counts and the relevant activity lists. Use only these facts; examples are illustrative, never evidence.',
     instructions: [
       'Structure your answer into the separate fields the schema names. Never write one wall of prose.',
       `headline: one sentence. ${isDepartment ? 'It must carry the closed count and the trend against doneLastPeriod ("uchtaga koʻp", "ikkitaga kam", "oʻzgarishsiz").' : 'It must carry the totals of what is waiting for the reader.'}`,
@@ -194,7 +191,7 @@ People you may name: ${names.length > 0 ? names.join('; ') : '(only the assignee
       TONE_CONSTRAINT,
       'PEOPLE. Never mention a person who does not appear in loadPerPerson or as an assigneeName/author on one of the items you were given.',
     ],
-    examples: FEW_SHOT,
+    examples: isDepartment ? FEW_SHOT.split('\n\nin : scope "person"')[0]! : '',
     toolName: 'emit_catch_up',
   })
 }

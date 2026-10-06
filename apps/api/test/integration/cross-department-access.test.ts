@@ -160,7 +160,16 @@ describe('projects (work module) -- department_child, actor-context scoped', () 
       milestones: { id: string }[]
     }
     projectId = project.id
-    milestoneId = project.milestones[0]!.id
+    expect(project.milestones).toEqual([])
+    const milestone = await fetch(`${baseUrl}/api/v1/projects/${projectId}/milestones`, {
+      method: 'POST',
+      headers: aHead.headers,
+      body: JSON.stringify({ title: 'Department A checkpoint' }),
+    })
+    expect(milestone.status).toBe(200)
+    const withMilestone = (await milestone.json()) as { milestones: { id: string }[] }
+    expect(withMilestone.milestones).toHaveLength(1)
+    milestoneId = withMilestone.milestones[0]!.id
   })
 
   it('a different department cannot GET the project by id', async () => {

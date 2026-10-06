@@ -28,11 +28,11 @@
       },
       "projects": {
         "q": "When should I use a card or a group project, and how do I change it?",
-        "a": "Use a card for one piece of work, such as preparing a report. Use a group project for a shared outcome with several tasks. Open your card and choose the group-project action to bring in colleagues. Open an existing project to edit its details and members when you have permission."
+        "a": "Use a card for one piece of work, or a group project for a shared outcome. To bring in colleagues, open your card and choose the group-project action. In a project, edit its details and members when you have permission. Add only the milestones you need; Edit beside a milestone lets you change its name or date, or delete it. In a checklist, click the item text to mark it done, the pencil to edit it, or the bin to delete it."
       },
       "delete": {
         "q": "What is the difference between finishing, archiving and deleting?",
-        "a": "Finish work when its result is ready. Archive a card if you want to keep it for later; you can restore it from Archive. Delete an unnecessary card with Delete inside the card. Undo is available immediately in the notification.\nDeleted cards disappear from the team's views. The superadmin can trace who deleted a card and when in the audit log; its record is retained. You can change or delete cards you created, assigned or received; the department head can manage all department cards."
+        "a": "Finish work when its result is ready. Archive keeps a card for later; restore it from Archive. Delete removes a card from team views. A project owner or department head can use Delete project at the bottom of the project; this also removes its cards. Use Undo in the message immediately if you made a mistake. Deleted records remain traceable in the superadmin audit log. You can manage cards you created, assigned or received; the head can manage all department cards."
       },
       "files": {
         "q": "How do I share supporting material on a card?",
@@ -48,12 +48,14 @@
       },
       "ai": {
         "q": "How do I use AI, and what should I do if it fails?",
-        "a": "Use the sparkle button next to the work you are doing: for example, suggested steps beside a checklist or a summary beside comments. Review the preview, then accept or edit it. AI output is a draft: check names, dates and facts.\nIf a button is missing, the department head can check whether that feature is enabled. If a request fails, retry once; if it still fails, ask the superadmin to check the AI service."
+        "a": "Use the sparkle beside a checklist or comments, or ask a question in AI. It uses current information you may access; you do not need to prepare a context snapshot. Review the answer before accepting it. For possible duplicates, ask about independent work or group projects. Example: two people separately preparing the same report may overlap; collecting figures and reviewing that report within one project are collaboration. If a button is missing, ask the head to check the feature setting. If a request fails, retry once, then ask the superadmin to check the service."
       }
     }
   },
   "work": {
-    "composer": { "quickEntry": "Quick entry and AI (optional)" },
+    "composer": {
+      "quickEntry": "Quick entry and AI (optional)"
+    },
     "deletion": {
       "done": "Card deleted. Its record remains in the admin audit log.",
       "failed": "Could not complete the action. Refresh the card and try again; undo is available for 30 seconds.",

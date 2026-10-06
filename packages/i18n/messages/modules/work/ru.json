@@ -136,7 +136,10 @@
       "reassigned": "Задача передана: {name}",
       "giverChanged": "Поставил задачу: {name}",
       "undo": "Вернуть",
-      "saveFailed": "Не удалось сохранить. Прежнее значение возвращено."
+      "saveFailed": "Не удалось сохранить. Прежнее значение возвращено.",
+      "editChecklistItem": "Изменить пункт",
+      "saveChecklistItem": "Сохранить пункт",
+      "cancelChecklistEdit": "Отменить изменения"
     },
     "priority": {
       "none": "Без приоритета",

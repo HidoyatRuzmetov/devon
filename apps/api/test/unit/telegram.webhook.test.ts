@@ -3,7 +3,8 @@
 // compared only the copy of the secret in the URL path -- a value that Caddy writes to
 // `/data/access.log` for every request -- and never looked at `X-Telegram-Bot-Api-Secret-Token`,
 // the header Telegram's own documentation names as the way to prove a delivery is yours.
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
+import { getBot } from '../../src/modules/telegram/transport.js'
 import { buildTestApp } from './test-app.js'
 import {
   secretsEqual,
@@ -24,6 +25,7 @@ async function webhookApp() {
 const UPDATE = { update_id: 1001, message: { message_id: 1, text: 'hello' } }
 
 describe('POST /api/v1/telegram/webhook/:secret (H1.14)', () => {
+  afterEach(() => vi.restoreAllMocks())
   it('refuses a delivery with the right path secret but no secret-token header', async () => {
     const { app } = await webhookApp()
     const res = await app.inject({
@@ -74,15 +76,36 @@ describe('POST /api/v1/telegram/webhook/:secret (H1.14)', () => {
 
   it('accepts a delivery with both copies of the secret', async () => {
     const { app } = await webhookApp()
+    vi.spyOn(getBot()!, 'handleUpdate').mockResolvedValueOnce(undefined)
     const res = await app.inject({
       method: 'POST',
       url: `/api/v1/telegram/webhook/${SECRET}`,
       headers: { [TELEGRAM_SECRET_HEADER]: SECRET },
       payload: UPDATE,
     })
-    // 200 regardless of what grammY makes of the update body (the handler swallows and logs that,
-    // so Telegram never retries a delivery this process has already taken responsibility for).
+    // Only successful processing acknowledges the update to Telegram.
     expect(res.statusCode).toBe(200)
+    await app.close()
+  })
+
+  it('allows Telegram to retry a failed handler but suppresses a successful replay', async () => {
+    const { app } = await webhookApp()
+    const handler = vi
+      .spyOn(getBot()!, 'handleUpdate')
+      .mockRejectedValueOnce(new Error('private provider detail'))
+      .mockResolvedValueOnce(undefined)
+    const request = {
+      method: 'POST' as const,
+      url: `/api/v1/telegram/webhook/${SECRET}`,
+      headers: { [TELEGRAM_SECRET_HEADER]: SECRET },
+      payload: { ...UPDATE, update_id: 1010 },
+    }
+    const failed = await app.inject(request)
+    expect(failed.statusCode).toBe(503)
+    expect(failed.body).not.toContain('private')
+    expect((await app.inject(request)).statusCode).toBe(200)
+    expect((await app.inject(request)).statusCode).toBe(200)
+    expect(handler).toHaveBeenCalledTimes(2)
     await app.close()
   })
 })

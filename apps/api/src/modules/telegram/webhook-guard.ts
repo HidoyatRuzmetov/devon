@@ -64,4 +64,9 @@ export class UpdateReplayWindow {
   get size(): number {
     return this.#seen.size
   }
+
+  /** A failed handler has not acknowledged delivery; allow Telegram's bounded retries to retry it. */
+  release(updateId: number): void {
+    this.#seen.delete(updateId)
+  }
 }

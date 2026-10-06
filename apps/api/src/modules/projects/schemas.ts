@@ -69,13 +69,14 @@ export const patchProjectBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const addMilestoneBodySchema = z.object({
-  title: z.string().min(1).max(200),
-  dueOn: z.string().nullable().optional(),
+  title: z.string().trim().min(1).max(200),
+  dueOn: dateSchema.nullable().optional(),
+  done: z.boolean().optional(),
 })
 
 export const patchMilestoneBodySchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  dueOn: z.string().nullable().optional(),
+  title: z.string().trim().min(1).max(200).optional(),
+  dueOn: dateSchema.nullable().optional(),
   done: z.boolean().optional(),
 })
 

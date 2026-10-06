@@ -273,10 +273,15 @@ export async function getCard(
  * the predicate that closes it. Used inside the child write transactions themselves rather than in
  * the handlers, so a new child route cannot forget it.
  */
-async function cardIsVisible(tx: Tx, departmentId: string, cardId: string): Promise<boolean> {
+async function cardIsVisible(
+  tx: Tx,
+  departmentId: string,
+  cardId: string,
+  lock = false,
+): Promise<boolean> {
   const rows = await tx.raw<{ one: number }>(
     sql`select 1 as one from app.cards
-        where id = ${cardId} and department_id = ${departmentId} and deleted_at is null`,
+        where id = ${cardId} and department_id = ${departmentId} and deleted_at is null ${lock ? sql`for update` : sql``}`,
   )
   return rows.length > 0
 }
@@ -357,7 +362,7 @@ export async function getChecklist(ctx: RequestContext, cardId: string) {
       sql`select id, card_id, parent_item_id, text, done_at, assignee_user_id, due_at, order_key, version
           from app.card_checklist_items
           where card_id = ${cardId} and deleted_at is null
-          order by order_key asc`,
+          order by order_key asc, created_at asc, id asc`,
     )
     return rows.map((r) => ({
       id: r.id,
@@ -466,6 +471,14 @@ type CreateCardInput = {
 
 export async function createCard(ctx: RequestContext, input: CreateCardInput): Promise<CardDTO> {
   return withContext(ctx, async (tx) => {
+    // Serialize against project deletion: a card cannot be attached to a foreign/tombstoned
+    // project, nor appear after its project's child-deletion sweep has already completed.
+    if (input.projectId) {
+      const projects = await tx.raw<{ id: string }>(sql`select id from app.projects
+        where id = ${input.projectId} and department_id = ${input.departmentId} and deleted_at is null for share`)
+      if (!projects[0])
+        throw Object.assign(new Error('Project is unavailable'), { statusCode: 422 })
+    }
     const id = randomUUID()
     const description = input.description
       ? { format: 'markdown' as const, text: input.description }
@@ -487,7 +500,7 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
             ${id}, ${input.departmentId}, ${input.kind ?? 'task'}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
             ${input.assigneeUserId ?? null}, ${input.giverUserId ?? input.createdByUserId},
-            ${input.projectId ?? null}, ${input.projectScope ?? 'none'}, ${input.priority ?? 'none'},
+            ${input.projectId ?? null}, ${input.projectScope ?? (input.projectId ? 'objective' : 'none')}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
             ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,
             ${input.orderKey ?? 'a0'}, ${input.createdByUserId},
@@ -727,7 +740,13 @@ export async function addChecklistItem(
   },
 ): Promise<string | null> {
   return withContext(ctx, async (tx) => {
-    if (!(await cardIsVisible(tx, departmentId, cardId))) return null
+    if (!(await cardIsVisible(tx, departmentId, cardId, true))) return null
+    if (input.parentItemId) {
+      const parent = await tx.raw<{ id: string }>(sql`select id from app.card_checklist_items
+        where id = ${input.parentItemId} and card_id = ${cardId}
+          and department_id = ${departmentId} and deleted_at is null for update`)
+      if (!parent.length) return null
+    }
     const id = randomUUID()
     await tx.raw(
       sql`insert into app.card_checklist_items
@@ -743,6 +762,11 @@ export async function addChecklistItem(
       action: 'work.checklist_item_added',
       subjectType: 'card_checklist_item',
       subjectId: id,
+      departmentId,
+    })
+    tx.emit({
+      type: 'work.checklist.updated',
+      payload: { cardId, actorUserId: ctx.userId },
       departmentId,
     })
     return id
@@ -763,6 +787,7 @@ export async function patchChecklistItem(
   },
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (!(await cardIsVisible(tx, departmentId, cardId, true))) return false
     const sets: SQL[] = [sql`updated_at = now()`, sql`version = version + 1`]
     if (patch.text !== undefined) sets.push(sql`text = ${patch.text}`)
     if (patch.done !== undefined) sets.push(sql`done_at = ${patch.done ? sql`now()` : null}`)
@@ -775,7 +800,7 @@ export async function patchChecklistItem(
           where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
           returning card_id`,
     )
-    if (result.length > 0)
+    if (result.length > 0) {
       tx.audit({
         action: 'work.checklist_item_updated',
         subjectType: 'card_checklist_item',
@@ -783,6 +808,12 @@ export async function patchChecklistItem(
         departmentId,
         after: patch,
       })
+      tx.emit({
+        type: 'work.checklist.updated',
+        payload: { cardId, actorUserId: ctx.userId },
+        departmentId,
+      })
+    }
     return result.length > 0
   })
 }
@@ -794,18 +825,32 @@ export async function deleteChecklistItem(
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (!(await cardIsVisible(tx, departmentId, cardId, true))) return false
     const result = await tx.raw<{ id: string }>(
-      sql`update app.card_checklist_items set deleted_at = now(), updated_at = now()
-          where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
-          returning id`,
+      sql`with recursive subtree as (
+            select id from app.card_checklist_items where id = ${itemId}
+              and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
+            union
+            select child.id from app.card_checklist_items child join subtree parent on child.parent_item_id = parent.id
+              where child.card_id = ${cardId} and child.department_id = ${departmentId} and child.deleted_at is null
+          )
+          update app.card_checklist_items set deleted_at = now(), updated_at = now(), version = version + 1
+          where id in (select id from subtree) returning id`,
     )
-    if (result.length > 0)
+    if (result.length > 0) {
       tx.audit({
         action: 'work.checklist_item_deleted',
         subjectType: 'card_checklist_item',
         subjectId: itemId,
         departmentId,
+        before: { cardId, itemIds: result.map((row) => row.id) },
       })
+      tx.emit({
+        type: 'work.checklist.updated',
+        payload: { cardId, actorUserId: ctx.userId },
+        departmentId,
+      })
+    }
     return result.length > 0
   })
 }
@@ -997,6 +1042,7 @@ export async function undoDeleteCard(
       set deleted_at = null, deleted_by_user_id = null, updated_at = now(), version = version + 1
       where id = ${cardId} and department_id = ${departmentId}
         and deleted_by_user_id = ${actorUserId} and deleted_at >= now() - interval '30 seconds'
+        and deleted_by_project_id is null
       returning id`)
     if (rows.length === 0) return false
     tx.audit({

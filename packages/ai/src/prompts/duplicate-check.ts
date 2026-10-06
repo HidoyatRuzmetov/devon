@@ -32,7 +32,7 @@ export const duplicateCheckInputSchema = z.object({
         similarity: z.number().min(0).max(1).default(0),
       }),
     )
-    .min(1)
+    .min(0)
     .max(10),
 })
 export type DuplicateCheckInput = z.infer<typeof duplicateCheckInputSchema>
@@ -68,6 +68,7 @@ function systemPrompt(input: DuplicateCheckInput): string {
     inputs: `A JSON object: candidateTitle, candidateDescription, and existing[] with id, title, status, assigneeName and a machine similarity score between 0 and 1.`,
     instructions: [
       'A "duplicate" means the same work would be done twice. Same deliverable, same scope. A different wording of the same job is a duplicate; the next stage of the same job is not.',
+      'These candidates are independent tasks, not assignments within a shared group project. Never infer duplication from ordinary collaboration or from a shared project name. If existing is empty, return matches [] and verdict "none".',
       '"related" means work worth linking to but not merging — a neighbouring stage, the same project, the same document at a different step.',
       'Return at most three matches, the strongest first. Most of the time the correct answer is an empty array.',
       'reason: one sentence saying what makes them the same work, or what connects them. Never restate the two titles back at the reader.',
