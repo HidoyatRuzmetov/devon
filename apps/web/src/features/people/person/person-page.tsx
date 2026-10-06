@@ -119,7 +119,10 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
         kind="forbidden"
         titleKey="people.person.denied.title"
         bodyKey="people.person.denied.body"
-        action={{ labelKey: 'people.person.denied.action', onAction: () => navigate('/people/me') }}
+        action={{
+          labelKey: 'people.person.denied.action',
+          onAction: () => navigate('/people/me'),
+        }}
       />
     )
   }
@@ -129,7 +132,10 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
         kind="empty"
         titleKey="people.person.missing.title"
         bodyKey="people.person.missing.body"
-        action={{ labelKey: 'people.person.missing.action', onAction: () => navigate('/people') }}
+        action={{
+          labelKey: 'people.person.missing.action',
+          onAction: () => navigate('/people'),
+        }}
       />
     )
   }
@@ -139,7 +145,10 @@ export function PersonPage({ userId, onBack }: PersonPageProps): React.JSX.Eleme
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void overviewQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void overviewQuery.refetch(),
+        }}
       />
     )
   }
@@ -280,35 +289,35 @@ function PersonHeaderCard({
           {header.title ?? t('people.person.noTitle')}
         </p>
         <dl className="flex flex-wrap gap-x-6 gap-y-1 text-caption">
-          <span className="flex gap-1">
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.formalName')}</dt>
             <dd>{formal}</dd>
-          </span>
-          <span className="flex gap-1">
+          </div>
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.unit')}</dt>
             <dd>{header.unit ?? t('people.person.meta.noUnit')}</dd>
-          </span>
-          <span className="flex gap-1">
+          </div>
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.unitRole')}</dt>
             <dd>
               {header.unitRole
                 ? t(`people.table.unitRole.${header.unitRole}`)
                 : t('people.person.meta.noUnitRole')}
             </dd>
-          </span>
-          <span className="flex gap-1">
+          </div>
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.joined')}</dt>
             <dd className="tabular-nums">{formatDate(new Date(header.joinedAt), locale)}</dd>
-          </span>
-          <span className="flex gap-1">
+          </div>
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.lastActive')}</dt>
             <dd>
               {header.lastActiveAt
                 ? formatRelativeTime(new Date(header.lastActiveAt), locale)
                 : t('people.person.meta.never')}
             </dd>
-          </span>
-          <span className="flex gap-1">
+          </div>
+          <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.telegram')}</dt>
             {/* v1.1 critique SEV3 #33: this read "Telegram  Ha". "Ha" is the answer to a question
                 nobody asked out loud -- the field is a *state*, and a state is named, not agreed
@@ -318,7 +327,7 @@ function PersonHeaderCard({
                 ? t('people.person.meta.telegramLinked')
                 : t('people.person.meta.telegramNotLinked')}
             </dd>
-          </span>
+          </div>
         </dl>
       </div>
 
@@ -355,9 +364,10 @@ function OverviewTab({
   t: Translate
   locale: ReturnType<typeof useLocale>
 }): React.JSX.Element {
-  const tiles = KPI_KEYS.map((key) => ({ key, spec: getIndicator(key)! })).filter(
-    (tile) => tile.spec && data.indicators[tile.key] !== undefined,
-  )
+  const tiles = KPI_KEYS.map((key) => ({
+    key,
+    spec: getIndicator(key)!,
+  })).filter((tile) => tile.spec && data.indicators[tile.key] !== undefined)
 
   return (
     <div className="flex flex-col gap-5">
@@ -486,7 +496,10 @@ function TasksTab({
           value={role}
           onValueChange={setRole}
           options={[
-            { value: 'assignee', label: t('people.person.tasks.role.assignee') },
+            {
+              value: 'assignee',
+              label: t('people.person.tasks.role.assignee'),
+            },
             { value: 'giver', label: t('people.person.tasks.role.giver') },
           ]}
         />
@@ -519,7 +532,10 @@ function TasksTab({
               kind="error"
               titleKey="state.error.title"
               bodyKey="state.error.body"
-              action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+              action={{
+                labelKey: 'state.error.action',
+                onAction: () => void query.refetch(),
+              }}
             />
           )
         }
@@ -582,7 +598,9 @@ function ProjectsTab({
               </div>
               <Progress
                 value={progress}
-                label={t('people.person.projects.progressAria', { title: project.title })}
+                label={t('people.person.projects.progressAria', {
+                  title: project.title,
+                })}
               />
               <p className="text-caption text-muted-foreground">
                 {t('people.person.projects.progress', {
@@ -755,7 +773,10 @@ function ActivityTab({
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void query.refetch(),
+        }}
       />
     )
   }

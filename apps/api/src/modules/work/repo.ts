@@ -232,13 +232,14 @@ export async function getProjectNames(
 export async function listCards(
   ctx: RequestContext,
   departmentId: string,
-  options: { excludeArchived?: boolean } = {},
+  options: { excludeArchived?: boolean; projectId?: string | undefined } = {},
 ): Promise<CardDTO[]> {
   return withContext(ctx, async (tx) => {
     const statusFilter = options.excludeArchived ? sql`and c.status != 'archived'` : sql``
+    const projectFilter = options.projectId ? sql`and c.project_id = ${options.projectId}` : sql``
     const rows = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)}
-          where c.department_id = ${departmentId} and c.deleted_at is null ${statusFilter}
+          where c.department_id = ${departmentId} and c.deleted_at is null ${statusFilter} ${projectFilter}
           order by c.due_at asc nulls last, c.order_key asc
           limit 5000`,
     )
@@ -751,6 +752,7 @@ export async function addChecklistItem(
 export async function patchChecklistItem(
   ctx: RequestContext,
   departmentId: string,
+  cardId: string,
   itemId: string,
   patch: {
     text?: string | undefined
@@ -770,9 +772,17 @@ export async function patchChecklistItem(
     if (patch.orderKey !== undefined) sets.push(sql`order_key = ${patch.orderKey}`)
     const result = await tx.raw<{ card_id: string }>(
       sql`update app.card_checklist_items set ${sql.join(sets, sql`, `)}
-          where id = ${itemId} and department_id = ${departmentId} and deleted_at is null
+          where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
           returning card_id`,
     )
+    if (result.length > 0)
+      tx.audit({
+        action: 'work.checklist_item_updated',
+        subjectType: 'card_checklist_item',
+        subjectId: itemId,
+        departmentId,
+        after: patch,
+      })
     return result.length > 0
   })
 }
@@ -780,14 +790,22 @@ export async function patchChecklistItem(
 export async function deleteChecklistItem(
   ctx: RequestContext,
   departmentId: string,
+  cardId: string,
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const result = await tx.raw<{ id: string }>(
       sql`update app.card_checklist_items set deleted_at = now(), updated_at = now()
-          where id = ${itemId} and department_id = ${departmentId} and deleted_at is null
+          where id = ${itemId} and card_id = ${cardId} and department_id = ${departmentId} and deleted_at is null
           returning id`,
     )
+    if (result.length > 0)
+      tx.audit({
+        action: 'work.checklist_item_deleted',
+        subjectType: 'card_checklist_item',
+        subjectId: itemId,
+        departmentId,
+      })
     return result.length > 0
   })
 }
@@ -938,6 +956,60 @@ export async function listArchiveForMember(
   })
 }
 
+/** Retains the row and children. Audit snapshots remain visible to the superadmin. */
+export async function deleteCard(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+  actorUserId: string,
+): Promise<boolean> {
+  return withContext(ctx, async (tx) => {
+    const rows = await tx.raw<{ snapshot: Record<string, unknown> }>(sql`
+      select to_jsonb(c) as snapshot from app.cards c
+      where c.id = ${cardId} and c.department_id = ${departmentId} and c.deleted_at is null
+      for update
+    `)
+    if (!rows[0]) return false
+    await tx.raw(sql`update app.cards set deleted_at = now(), deleted_by_user_id = ${actorUserId}, updated_at = now(), version = version + 1
+      where id = ${cardId} and department_id = ${departmentId}`)
+    tx.audit({
+      action: 'work.card_deleted',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+      before: rows[0].snapshot,
+      after: { deletedByUserId: actorUserId },
+    })
+    tx.emit({ type: 'work.card.deleted', departmentId, payload: { cardId, actorUserId } })
+    return true
+  })
+}
+
+/** Undo is deliberately narrow: same actor, same department, within 30 seconds. */
+export async function undoDeleteCard(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+  actorUserId: string,
+): Promise<boolean> {
+  return withContext(ctx, async (tx) => {
+    const rows = await tx.raw<{ id: string }>(sql`update app.cards
+      set deleted_at = null, deleted_by_user_id = null, updated_at = now(), version = version + 1
+      where id = ${cardId} and department_id = ${departmentId}
+        and deleted_by_user_id = ${actorUserId} and deleted_at >= now() - interval '30 seconds'
+      returning id`)
+    if (rows.length === 0) return false
+    tx.audit({
+      action: 'work.card_delete_undone',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+    })
+    tx.emit({ type: 'work.card.restored', departmentId, payload: { cardId, actorUserId } })
+    return true
+  })
+}
+
 export async function restoreCard(
   ctx: RequestContext,
   departmentId: string,
@@ -947,7 +1019,7 @@ export async function restoreCard(
   return withContext(ctx, async (tx) => {
     const result = await tx.raw<{ id: string }>(
       sql`update app.cards set status = 'active', archived_at = null, updated_at = now(), version = version + 1
-          where id = ${cardId} and department_id = ${departmentId} and status = 'archived'
+          where id = ${cardId} and department_id = ${departmentId} and status = 'archived' and deleted_at is null
           returning id`,
     )
     if (result.length === 0) return false

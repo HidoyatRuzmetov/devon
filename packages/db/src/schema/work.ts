@@ -148,6 +148,7 @@ export const attachments = appSchema.table('attachments', {
   scanStatus: attachmentScanStatusEnum('scan_status').notNull().default('pending'),
   thumbKey: text('thumb_key'),
   uploadedByUserId: uuid('uploaded_by_user_id').notNull(),
+  deletedByUserId: uuid('deleted_by_user_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 })

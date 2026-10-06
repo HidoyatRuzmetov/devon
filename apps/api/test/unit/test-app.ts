@@ -15,6 +15,7 @@ const STORAGE_TMP_DIR = mkdtempSync(join(tmpdir(), 'devon-storage-test-'))
 export function testConfig(overrides: Partial<Config> = {}): Config {
   return {
     NODE_ENV: 'test',
+    TELEGRAM_POLLING_ENABLED: false,
     API_PORT: 0,
     DEVON_PUBLIC_URL: 'http://localhost:5173',
     DEVON_ALLOWED_ORIGINS: '',

@@ -21,6 +21,8 @@ function fill(template: string, params?: Params): string {
 
 const STRINGS: Record<BotLocale, Record<string, string>> = {
   'uz-Latn': {
+    'command.help': 'Yordam va buyruqlar',
+    'command.mute': 'Bildirishnomalarni vaqtincha oʻchirish',
     maintenance: 'Ilova hozir texnik xizmatda. Birozdan soʻng qaytadan urinib koʻring.',
     'link.prompt_needed':
       'Bu buyruq hisobingiz ulangandan keyin ishlaydi. Ilovaning Sozlamalar boʻlimidan ulang.',
@@ -74,6 +76,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'miniapp.break_done': 'Tanaffus tugadi ({minutes} daqiqa). Ishni davom ettiramizmi?',
   },
   'uz-Cyrl': {
+    'command.help': 'Ёрдам ва буйруқлар',
+    'command.mute': 'Билдиришномаларни вақтинча ўчириш',
     maintenance: 'Илова ҳозир техник хизматда. Бироздан сўнг қайтадан уриниб кўринг.',
     'link.prompt_needed':
       'Бу буйруқ ҳисобингиз улангандан кейин ишлайди. Илованинг Созламалар бўлимидан уланг.',
@@ -126,6 +130,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'miniapp.break_done': 'Танаффус тугади ({minutes} дақиқа). Ишни давом эттирамизми?',
   },
   ru: {
+    'command.help': 'Помощь и команды',
+    'command.mute': 'Временно отключить уведомления',
     maintenance: 'Система сейчас находится в режиме техобслуживания. Попробуйте снова чуть позже.',
     'link.prompt_needed':
       'Эта команда доступна только после привязки аккаунта. Привяжите его в Настройках приложения.',
@@ -179,6 +185,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'miniapp.break_done': 'Перерыв окончен ({minutes} мин). Возвращаемся к работе?',
   },
   en: {
+    'command.help': 'Help and commands',
+    'command.mute': 'Temporarily mute notifications',
     maintenance: 'The system is currently in maintenance mode. Please try again shortly.',
     'link.prompt_needed':
       'This command only works after your account is linked. Link it from Settings in the app.',

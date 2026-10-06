@@ -1,0 +1,26 @@
+{
+  "admin": {
+    "console": {
+      "health": {
+        "detail": {
+          "storage": {
+            "unavailable": "Storage is unavailable or not writable."
+          },
+          "ai": {
+            "rejected": "The AI provider rejected the configured credentials.",
+            "modelUnavailable": "The configured AI model is unavailable for this key.",
+            "unreachable": "The AI provider could not be reached."
+          },
+          "telegram": {
+            "unreachable": "The Telegram bot could not be reached.",
+            "webhookMismatch": "Telegram delivery is not connected to this server. Restart the bot integration or check the webhook settings.",
+            "deliveryDelayed": "Telegram updates are delayed. Check server availability and bot delivery."
+          },
+          "backups": {
+            "unreadable": "Backup status could not be read."
+          }
+        }
+      }
+    }
+  }
+}

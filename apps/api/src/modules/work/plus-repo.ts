@@ -112,8 +112,10 @@ export async function listDependencyEdges(
 ): Promise<Array<{ id: string; cardId: string; blockedByCardId: string }>> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{ id: string; card_id: string; blocked_by_card_id: string }>(
-      sql`select id, card_id, blocked_by_card_id from app.card_dependencies
-          where department_id = ${departmentId}
+      sql`select d.id, d.card_id, d.blocked_by_card_id from app.card_dependencies d
+          join app.cards c on c.id = d.card_id and c.deleted_at is null
+          join app.cards blocker on blocker.id = d.blocked_by_card_id and blocker.deleted_at is null
+          where d.department_id = ${departmentId}
           limit 5000`,
     )
     return rows.map((r) => ({
@@ -360,10 +362,11 @@ export async function listReminders(
       note: string | null
       sent_at: Date | null
     }>(
-      sql`select id, card_id, remind_at, note, sent_at from app.card_reminders
-          where department_id = ${departmentId} and card_id = ${cardId} and user_id = ${userId}
-            and deleted_at is null
-          order by remind_at asc`,
+      sql`select r.id, r.card_id, r.remind_at, r.note, r.sent_at from app.card_reminders r
+          join app.cards c on c.id = r.card_id and c.deleted_at is null
+          where r.department_id = ${departmentId} and r.card_id = ${cardId} and r.user_id = ${userId}
+            and r.deleted_at is null
+          order by r.remind_at asc`,
     )
     return rows.map((r) => ({
       id: r.id,
@@ -1388,15 +1391,16 @@ export async function claimDueReminders(
       card_title: string
     }>(
       sql`with due as (
-            select id from app.card_reminders
-            where sent_at is null and deleted_at is null and remind_at <= now()
+            select r.id from app.card_reminders r
+            join app.cards c on c.id = r.card_id and c.deleted_at is null
+            where r.sent_at is null and r.deleted_at is null and r.remind_at <= now()
             order by remind_at asc
             limit ${limit}
-            for update skip locked
+            for update of r skip locked
           )
           update app.card_reminders r set sent_at = now()
           from due, app.cards c
-          where r.id = due.id and c.id = r.card_id
+          where r.id = due.id and c.id = r.card_id and c.deleted_at is null
           returning r.id, r.department_id, r.card_id, r.user_id, r.note, c.title as card_title`,
     )
     return rows.map((r) => ({

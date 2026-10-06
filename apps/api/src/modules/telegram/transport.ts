@@ -33,7 +33,12 @@ let telegramConfig: Pick<
 
 export function configureTelegram(config: Config): void {
   telegramConfig = {
-    TELEGRAM_BOT_TOKEN: config.TELEGRAM_BOT_TOKEN,
+    // A copied local .env must neither consume production updates nor send demo notifications
+    // through the production bot. Tests inject an in-memory bot and never run boot wiring.
+    TELEGRAM_BOT_TOKEN:
+      config.NODE_ENV === 'development' && !config.TELEGRAM_POLLING_ENABLED
+        ? undefined
+        : config.TELEGRAM_BOT_TOKEN,
     TELEGRAM_BOT_USERNAME: config.TELEGRAM_BOT_USERNAME,
     DEVON_PUBLIC_URL: config.DEVON_PUBLIC_URL,
   }
@@ -45,6 +50,12 @@ function readToken(): string | null {
 
 export function isTelegramConfigured(): boolean {
   return readToken() !== null
+}
+
+/** Prefer Telegram's verified identity over a stale or missing optional environment hint. */
+export function botUsername(): string | null {
+  if (cachedBot?.isInited()) return cachedBot.botInfo.username
+  return telegramConfig?.TELEGRAM_BOT_USERNAME ?? null
 }
 
 export function publicUrl(): string {
@@ -61,7 +72,7 @@ export function getBot(): Bot | null {
     return null
   }
   if (cachedBot && cachedToken === token) return cachedBot
-  cachedBot = new Bot(token)
+  cachedBot = new Bot(token, { client: { timeoutSeconds: 10 } })
   cachedToken = token
   return cachedBot
 }
@@ -231,7 +242,7 @@ export async function sendVerificationCode(
 
 /** Read-only breaker status for the admin health page (`modules/admin/repo.ts`) -- never mutates. */
 export function isTelegramAvailable(): boolean {
-  return telegramBreaker.isCallAllowed()
+  return isTelegramConfigured() && Boolean(cachedBot?.isInited()) && telegramBreaker.isCallAllowed()
 }
 
 /**

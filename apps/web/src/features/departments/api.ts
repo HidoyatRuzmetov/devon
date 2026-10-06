@@ -26,7 +26,9 @@ export const departmentRequestSchema = z.object({
   createdDepartmentId: z.string().uuid().nullable(),
 })
 export type DepartmentRequest = z.infer<typeof departmentRequestSchema>
-const requestListSchema = z.object({ requests: z.array(departmentRequestSchema) })
+const requestListSchema = z.object({
+  requests: z.array(departmentRequestSchema),
+})
 
 export function createDepartmentRequest(
   input: {
@@ -97,7 +99,9 @@ export const departmentDetailSchema = z.object({
   memberCount: z.number().int(),
 })
 export type DepartmentDetail = z.infer<typeof departmentDetailSchema>
-const departmentListSchema = z.object({ departments: z.array(departmentDetailSchema) })
+const departmentListSchema = z.object({
+  departments: z.array(departmentDetailSchema),
+})
 
 export function fetchMyDepartments() {
   return apiClient.get('/api/v1/departments/mine', departmentListSchema)
@@ -239,7 +243,9 @@ const joinRequestSchema = z.object({
   requestedAt: z.string(),
 })
 export type JoinRequest = z.infer<typeof joinRequestSchema>
-const joinRequestListSchema = z.object({ requests: z.array(joinRequestSchema) })
+const joinRequestListSchema = z.object({
+  requests: z.array(joinRequestSchema),
+})
 
 export function fetchJoinRequests(id: string) {
   return apiClient.get(`/api/v1/departments/${id}/join-requests`, joinRequestListSchema)

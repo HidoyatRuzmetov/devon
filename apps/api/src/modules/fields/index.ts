@@ -194,7 +194,11 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   const valuesReadSubject = (r: FastifyRequest) => {
     const departmentId = activeDepartmentId(r)
     const actorUserId = r.actor?.userId ?? ''
-    const query = (r.query ?? {}) as { subjectType?: string; subjectIds?: string; userIds?: string }
+    const query = (r.query ?? {}) as {
+      subjectType?: string
+      subjectIds?: string
+      userIds?: string
+    }
     if (query.subjectType === 'card') {
       // Card values are department-transparent, exactly like the card they hang off.
       return { kind: 'department_child' as const, departmentId }
@@ -207,7 +211,11 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     const onlyMe =
       subjectIds.length === 0 && userIds.length === 1 && userIds[0] === actorUserId && actorUserId
     if (onlyMe) {
-      return { kind: 'owned' as const, departmentId, ownerUserIds: [actorUserId] }
+      return {
+        kind: 'owned' as const,
+        departmentId,
+        ownerUserIds: [actorUserId],
+      }
     }
     return { kind: 'department_managed' as const, departmentId }
   }
@@ -219,7 +227,11 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     const body = (r.body ?? {}) as { subjectUserId?: string | null }
     const actorUserId = r.actor?.userId ?? ''
     const target = body.subjectUserId ?? actorUserId
-    return { kind: 'owned' as const, departmentId, ownerUserIds: target ? [target] : [] }
+    return {
+      kind: 'owned' as const,
+      departmentId,
+      ownerUserIds: target ? [target] : [],
+    }
   }
 
   // --- definitions ---------------------------------------------------------------------------------
@@ -227,8 +239,13 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/defs',
     {
-      config: { permission: { action: 'read', subject: departmentChildSubject } },
-      schema: { querystring: defsQuerySchema, response: { 200: defsResponseSchema } },
+      config: {
+        permission: { action: 'read', subject: departmentChildSubject },
+      },
+      schema: {
+        querystring: defsQuerySchema,
+        response: { 200: defsResponseSchema },
+      },
     },
     async (req) => {
       const departmentId = activeDepartmentId(req)
@@ -250,7 +267,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/defs',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: { body: createDefSchema, response: { 201: defResponseSchema } },
     },
     async (req, reply) => {
@@ -284,7 +303,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/defs/:id',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: {
         params: defParamsSchema,
         body: updateDefSchema,
@@ -300,7 +321,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
           patch: {
             ...(req.body.label !== undefined ? { label: compactMap(req.body.label) } : {}),
             ...(req.body.description !== undefined
-              ? { description: req.body.description ? compactMap(req.body.description) : null }
+              ? {
+                  description: req.body.description ? compactMap(req.body.description) : null,
+                }
               : {}),
             ...(req.body.type !== undefined ? { type: req.body.type } : {}),
             ...(req.body.options !== undefined
@@ -330,7 +353,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/defs/:id/archive',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: { params: defParamsSchema, response: { 200: defResponseSchema } },
     },
     async (req, reply) => {
@@ -352,7 +377,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/defs/:id/restore',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: { params: defParamsSchema, response: { 200: defResponseSchema } },
     },
     async (req, reply) => {
@@ -374,7 +401,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/defs/reorder',
     {
-      config: { permission: { action: 'update', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'update', subject: departmentManagedSubject },
+      },
       schema: { body: reorderSchema, response: { 204: z.void() } },
     },
     async (req, reply) => {
@@ -391,7 +420,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/defs/:id/notify',
     {
-      config: { permission: { action: 'create', subject: departmentManagedSubject } },
+      config: {
+        permission: { action: 'create', subject: departmentManagedSubject },
+      },
       schema: {
         params: defParamsSchema,
         body: notifyScopeSchema.optional(),
@@ -418,8 +449,13 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/notify',
     {
-      config: { permission: { action: 'create', subject: departmentManagedSubject } },
-      schema: { body: notifyManySchema, response: { 200: notifyManyResponseSchema } },
+      config: {
+        permission: { action: 'create', subject: departmentManagedSubject },
+      },
+      schema: {
+        body: notifyManySchema,
+        response: { 200: notifyManyResponseSchema },
+      },
     },
     async (req, reply) => {
       try {
@@ -442,7 +478,10 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/values',
     {
       config: { permission: { action: 'read', subject: valuesReadSubject } },
-      schema: { querystring: valuesQuerySchema, response: { 200: valuesResponseSchema } },
+      schema: {
+        querystring: valuesQuerySchema,
+        response: { 200: valuesResponseSchema },
+      },
     },
     async (req) => {
       const departmentId = activeDepartmentId(req)
@@ -454,7 +493,9 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         isHead: isHeadOf(req.actor, departmentId),
         actorUserId: req.actor!.userId,
       })
-      return { values: values.map((v) => ({ ...v, value: wireValue(v.value) })) }
+      return {
+        values: values.map((v) => ({ ...v, value: wireValue(v.value) })),
+      }
     },
   )
 
@@ -513,7 +554,10 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/me',
     {
       config: { permission: { action: 'update', subject: ownAccountSubject } },
-      schema: { body: setManySchema, response: { 200: myFieldsResponseSchema } },
+      schema: {
+        body: setManySchema,
+        response: { 200: myFieldsResponseSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = activeDepartmentId(req)
@@ -523,8 +567,7 @@ const fieldsRoutes: FastifyPluginAsyncZod = async (app) => {
         // form, not over rows (I-14).
         for (let i = 0; i < req.body.items.length; i += 1) {
           const item = req.body.items[i]!
-          // nosemgrep: query-in-loop -- one form submission, at most 50 fields, each its own audited
-          // transaction; see this handler's comment.
+          // nosemgrep: query-in-loop -- repeated defIds are allowed; preserve submitted write order and stop on first invalid value.
           await service.setValue(toDbContext(req), {
             departmentId,
             actorUserId: req.actor!.userId,

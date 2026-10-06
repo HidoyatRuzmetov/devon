@@ -24,7 +24,7 @@ import {
 } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
-import { useSearchParams, navigate } from '../../lib/router.js'
+import { useSearchParams, navigate, RouterLink } from '../../lib/router.js'
 import { fetchMembers } from '../structure/api.js'
 import { useDepartment } from '../../lib/session.js'
 import {
@@ -479,6 +479,13 @@ export default function PagesScreen() {
         }
       />
 
+      <RouterLink
+        href="/help"
+        className="flex flex-col gap-1 rounded-md border border-primary/20 bg-primary/5 p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+      >
+        <span className="font-medium text-primary">{t('help.title')}</span>
+        <span className="text-small text-muted-foreground">{t('help.description')}</span>
+      </RouterLink>
       {tab === 'onboarding' && canManageOnboarding ? (
         <OnboardingTemplatesPanel />
       ) : (

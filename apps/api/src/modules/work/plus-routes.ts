@@ -148,7 +148,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!(await repo.cardExists(ctx, departmentId, req.params.id))) {
         return sendProblem(reply, 'not_found')
       }
-      return reply.send(await plus.getDependencies(ctx, departmentId, req.params.id))
+      return reply
+        .type('application/json')
+        .send(await plus.getDependencies(ctx, departmentId, req.params.id))
     },
   )
 
@@ -353,14 +355,18 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send([])
-      return reply.send(
-        await plus.listReminders(
-          contextFromRequest(req),
-          departmentId,
-          req.params.id,
-          req.actor!.userId,
-        ),
-      )
+      if (!(await repo.cardExists(contextFromRequest(req), departmentId, req.params.id)))
+        return sendProblem(reply, 'not_found')
+      return reply
+        .type('application/json')
+        .send(
+          await plus.listReminders(
+            contextFromRequest(req),
+            departmentId,
+            req.params.id,
+            req.actor!.userId,
+          ),
+        )
     },
   )
 
@@ -443,7 +449,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
         // shortcut around the rule.
         (ownerUserIds) => isHead || ownerUserIds.includes(me),
       )
-      return reply.send(result)
+      return reply.type('application/json').send(result)
     },
   )
 
@@ -515,7 +521,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       const rows = await plus.listTemplates(contextFromRequest(req), departmentId, req.query.kind)
       const isHead = isHeadOf(req.actor, departmentId)
       const me = req.actor!.userId
-      return reply.send(
+      return reply.type('application/json').send(
         rows.map((row) => ({
           ...row,
           canManage: row.ownerUserId === me || (row.scope === 'department' && isHead),
@@ -963,7 +969,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       // Every goal on the page is computed from the SAME already-loaded card array -- eight goals
       // are still one card query, not eight (I-14).
       const filterable = makeFilterableFactory(members, labels, projectNames)
-      return reply.send(
+      return reply.type('application/json').send(
         goals.map((goal) => ({
           ...goal,
           ...plus.computeGoalValue(

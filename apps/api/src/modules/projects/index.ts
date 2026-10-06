@@ -9,10 +9,12 @@ import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
 import * as repo from './repo.js'
+import { getCardOwners } from '../work/repo.js'
 import {
   addMilestoneBodySchema,
   createFromTemplateBodySchema,
   createProjectBodySchema,
+  createFromCardBodySchema,
   idParamsSchema,
   milestoneParamsSchema,
   patchMilestoneBodySchema,
@@ -97,6 +99,41 @@ const PROJECT_TEMPLATES = [
 ] as const
 
 const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
+  app.setErrorHandler((error, _req, reply) => {
+    if (error instanceof repo.InvalidProjectMembers) return sendProblem(reply, 'validation_failed')
+    throw error
+  })
+  app.post(
+    '/projects/from-card',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: createFromCardBodySchema, response: { 201: projectSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      const ctx = contextFromRequest(req)
+      const owners = await getCardOwners(ctx, departmentId, req.body.cardId)
+      if (!owners) return sendProblem(reply, 'not_found')
+      if (
+        !can(req.actor, 'update', {
+          kind: 'owned',
+          departmentId,
+          ownerUserIds: owners.ownerUserIds,
+        }).allowed
+      )
+        return sendProblem(reply, 'forbidden')
+      const result = await repo.createFromCard(ctx, departmentId, req.body.cardId, req.body.members)
+      if (!result.ok) return sendProblem(reply, result.reason)
+      return reply.code(201).send(result.project)
+    },
+  )
+
   app.get(
     '/projects',
     {
@@ -224,7 +261,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       const departmentId = requireDepartmentId(req)!
       const project = await repo.getProject(contextFromRequest(req), departmentId, req.params.id)
       if (!project) return sendProblem(reply, 'not_found')
-      return reply.send(project)
+      return reply.type('application/json').send(project)
     },
   )
 
@@ -266,7 +303,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (!result.ok)
         return sendProblem(reply, result.reason === 'conflict' ? 'conflict' : 'not_found')
-      return reply.send(result.project)
+      return reply.type('application/json').send(result.project)
     },
   )
 
@@ -297,7 +334,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
       )
       if (!project) return sendProblem(reply, 'not_found')
-      return reply.send(project)
+      return reply.type('application/json').send(project)
     },
   )
 
@@ -329,7 +366,7 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body,
       )
       if (!project) return sendProblem(reply, 'not_found')
-      return reply.send(project)
+      return reply.type('application/json').send(project)
     },
   )
 }

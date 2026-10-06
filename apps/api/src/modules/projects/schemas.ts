@@ -2,6 +2,7 @@
 import { z } from 'zod'
 
 export const projectStatusSchema = z.enum(['planning', 'active', 'on_hold', 'done', 'archived'])
+const dateSchema = z.iso.date()
 
 export const milestoneSchema = z.object({
   id: z.string(),
@@ -36,7 +37,7 @@ export type ProjectDTO = z.infer<typeof projectSchema>
 export const projectListSchema = z.array(projectSchema)
 
 export const createProjectBodySchema = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().trim().min(1).max(200),
   description: z.string().max(20000).optional(),
   colour: z
     .string()
@@ -45,8 +46,8 @@ export const createProjectBodySchema = z.object({
   ownerUserId: z.string().uuid(),
   members: z.array(z.string().uuid()).min(1),
   status: projectStatusSchema.optional(),
-  startOn: z.string().optional(),
-  targetOn: z.string().optional(),
+  startOn: dateSchema.optional(),
+  targetOn: dateSchema.optional(),
   milestones: z
     .array(z.object({ title: z.string().min(1), dueOn: z.string().nullable() }))
     .optional(),
@@ -54,14 +55,14 @@ export const createProjectBodySchema = z.object({
 
 export const patchProjectBodySchema = z
   .object({
-    title: z.string().min(1).max(200),
+    title: z.string().trim().min(1).max(200),
     description: z.string().max(20000).nullable(),
     colour: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     ownerUserId: z.string().uuid(),
     members: z.array(z.string().uuid()).min(1),
     status: projectStatusSchema,
-    startOn: z.string().nullable(),
-    targetOn: z.string().nullable(),
+    startOn: dateSchema.nullable(),
+    targetOn: dateSchema.nullable(),
     version: z.number().int(),
   })
   .partial()
@@ -79,6 +80,12 @@ export const patchMilestoneBodySchema = z.object({
 })
 
 export const idParamsSchema = z.object({ id: z.string().uuid() })
+export const createFromCardBodySchema = z
+  .object({
+    cardId: z.string().uuid(),
+    members: z.array(z.string().uuid()).min(1),
+  })
+  .strict()
 export const milestoneParamsSchema = z.object({ id: z.string().uuid(), milestoneId: z.string() })
 
 export const templateSchema = z.object({
@@ -94,5 +101,5 @@ export const createFromTemplateBodySchema = z.object({
   title: z.string().min(1).max(200).optional(),
   ownerUserId: z.string().uuid(),
   members: z.array(z.string().uuid()).min(1),
-  startOn: z.string().optional(),
+  startOn: dateSchema.optional(),
 })

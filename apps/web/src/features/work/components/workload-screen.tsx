@@ -463,8 +463,11 @@ function Row({
   // SEV2 #29: one name format, and it is the one every other casual list in the product uses.
   const name = fullName(row.member)
   return (
-    <>
-      <StaggerItem className="sticky left-0 z-10 flex items-center gap-2 bg-card py-1.5 pr-3">
+    <div role="row" className="contents">
+      <StaggerItem
+        role="rowheader"
+        className="sticky left-0 z-10 flex items-center gap-2 bg-card py-1.5 pr-3"
+      >
         <Avatar
           alt={name}
           decorative
@@ -484,7 +487,7 @@ function Row({
         </div>
       </StaggerItem>
       {row.cells.map((cell) => (
-        <StaggerItem key={cell.weekStart}>
+        <StaggerItem key={cell.weekStart} role="cell">
           <Cell
             cell={cell}
             capacity={capacity}
@@ -497,7 +500,7 @@ function Row({
           />
         </StaggerItem>
       ))}
-    </>
+    </div>
   )
 }
 
@@ -539,25 +542,28 @@ function Grid({
         role="table"
         aria-label={t('work.workload.title')}
       >
-        <div className="sticky left-0 z-10 bg-card" />
-        {workload.weekStarts.map((weekStart) => (
-          <div
-            key={weekStart}
-            className={cn(
-              'pb-1 text-center text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing)',
-              weekStart === currentWeek
-                ? 'rounded-t-sm border-b-2 border-primary text-primary'
-                : 'text-muted-foreground',
-            )}
-          >
-            {formatDate(new Date(weekStart), locale)}
-            {weekStart === currentWeek ? (
-              <span className="block text-caption normal-case tracking-normal text-primary">
-                {t('work.workload.currentWeek')}
-              </span>
-            ) : null}
-          </div>
-        ))}
+        <div role="row" className="contents">
+          <div role="columnheader" className="sticky left-0 z-10 bg-card" />
+          {workload.weekStarts.map((weekStart) => (
+            <div
+              key={weekStart}
+              role="columnheader"
+              className={cn(
+                'pb-1 text-center text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing)',
+                weekStart === currentWeek
+                  ? 'rounded-t-sm border-b-2 border-primary text-primary'
+                  : 'text-muted-foreground',
+              )}
+            >
+              {formatDate(new Date(weekStart), locale)}
+              {weekStart === currentWeek ? (
+                <span className="block text-caption normal-case tracking-normal text-primary">
+                  {t('work.workload.currentWeek')}
+                </span>
+              ) : null}
+            </div>
+          ))}
+        </div>
         {/* SEV2 #12: `display:contents` keeps the stagger container out of the grid's own layout, so
             every cell stays a direct grid item while the rows still enter in sequence. `animateKey`
             re-runs the stagger when the week window or the colour mode changes. */}

@@ -13,7 +13,6 @@ import {
   loginAsSuperAdmin,
   uniqueLogin,
 } from './flow-api.js'
-import { seedAiSettingsRow } from './flow-db.js'
 
 test('@flow group project: objective + subjective tasks complete and progress reflects it', async ({
   browser,
@@ -23,17 +22,16 @@ test('@flow group project: objective + subjective tasks complete and progress re
 
   const headContext = await newFlowContext(browser)
   const headPage = await headContext.newPage()
-  const head = { login: uniqueLogin('flow.phead'), password: examplePassword() }
-  const { departmentId } = await createApprovedDepartment(headContext, superAdminContext, {
+  const head = {
+    login: uniqueLogin('flow.phead'),
+    password: examplePassword(),
+  }
+  await createApprovedDepartment(headContext, superAdminContext, {
     headLogin: head.login,
     headPassword: head.password,
     departmentName: `Project flow ${head.login.slice(-8)}`,
   })
-  // Works around a confirmed product bug, not this flow's own concern -- see `flow-db.ts`'s
-  // `seedAiSettingsRow` header and `cross-department-access.test.ts`'s "AI settings" `it.fails`:
-  // the project page calls `useAiSettingsQuery`, which 500s for any department whose
-  // `ai_department_settings` row does not exist yet (RLS rejects the lazy-insert for a real head).
-  seedAiSettingsRow(departmentId)
+
   await superAdminContext.close()
 
   const meRes = await headContext.request.get('/api/v1/me')
@@ -41,7 +39,10 @@ test('@flow group project: objective + subjective tasks complete and progress re
 
   const templatesRes = await headContext.request.get('/api/v1/projects/templates')
   expect(templatesRes.status()).toBe(200)
-  const templates = (await templatesRes.json()) as { key: string; title: string }[]
+  const templates = (await templatesRes.json()) as {
+    key: string
+    title: string
+  }[]
   expect(templates.length).toBeGreaterThan(0)
 
   const projectTitle = `Flow project ${Date.now()}`
@@ -67,7 +68,10 @@ test('@flow group project: objective + subjective tasks complete and progress re
     assigneeUserId: me.user.id,
   })
   expect(objectiveRes.status()).toBe(201)
-  const objective = (await objectiveRes.json()) as { id: string; version: number }
+  const objective = (await objectiveRes.json()) as {
+    id: string
+    version: number
+  }
 
   const subjectiveRes = await authedPost(headContext, '/api/v1/cards', {
     title: 'Flow subjective task',
@@ -76,7 +80,10 @@ test('@flow group project: objective + subjective tasks complete and progress re
     assigneeUserId: me.user.id,
   })
   expect(subjectiveRes.status()).toBe(201)
-  const subjective = (await subjectiveRes.json()) as { id: string; version: number }
+  const subjective = (await subjectiveRes.json()) as {
+    id: string
+    version: number
+  }
 
   const beforeRes = await headContext.request.get(`/api/v1/projects/${project.id}`)
   const before = (await beforeRes.json()) as {
@@ -115,7 +122,7 @@ test('@flow group project: objective + subjective tasks complete and progress re
 
   // Real UI, reloaded: the project's progress ring reads 100%.
   await headPage.reload()
-  await expect(headPage.getByText('100')).toBeVisible()
+  await expect(headPage.getByText('100', { exact: true })).toBeVisible()
 
   await headContext.close()
 })

@@ -78,6 +78,7 @@ async function* auditExportRows(query: {
   let cursor: number | undefined
   let emitted = 0
   for (;;) {
+    // nosemgrep: query-in-loop -- the next page requires this page's cursor; streaming bounds memory.
     const { rows, nextCursor } = await repo.listAuditEvents({
       ...filters,
       cursor,
@@ -110,7 +111,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   const instanceSubject = () => ({ kind: 'instance' as const })
   // Blitz finding: distinct from `instanceSubject` on purpose -- see `@devon/contracts`'s
   // `instance_exit_view_as` case for why the exit route cannot reuse `{kind:'instance'}`.
-  const instanceExitViewAsSubject = () => ({ kind: 'instance_exit_view_as' as const })
+  const instanceExitViewAsSubject = () => ({
+    kind: 'instance_exit_view_as' as const,
+  })
 
   function auditCtx(req: FastifyRequest) {
     return {
@@ -128,7 +131,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/instance',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: adminInstanceSchema } },
     },
     async () => {
@@ -136,14 +141,20 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         app.devon.getInstanceSettings(),
         app.devon.countUsers(),
       ])
-      return { isDemo: settings.isDemo, registrationOpen: settings.registrationOpen, userCount }
+      return {
+        isDemo: settings.isDemo,
+        registrationOpen: settings.registrationOpen,
+        userCount,
+      }
     },
   )
 
   app.get(
     '/audit/verify',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: chainVerificationSchema } },
     },
     async () => {
@@ -164,7 +175,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/departments',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: {
         querystring: adminDepartmentListQuerySchema,
         response: { 200: adminDepartmentListSchema },
@@ -173,7 +186,10 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     async (req) => {
       const { rows, nextCursor } = await repo.listDepartments(req.query)
       return {
-        departments: rows.map((d) => ({ ...d, createdAt: d.createdAt.toISOString() })),
+        departments: rows.map((d) => ({
+          ...d,
+          createdAt: d.createdAt.toISOString(),
+        })),
         nextCursor,
       }
     },
@@ -182,8 +198,13 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/departments/:id',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { params: departmentIdParamsSchema, response: { 200: adminDepartmentDetailSchema } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: adminDepartmentDetailSchema },
+      },
     },
     async (req, reply) => {
       const detail = await repo.getDepartmentDetail(req.params.id)
@@ -191,15 +212,23 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      return reply.send({ ...detail, createdAt: detail.createdAt.toISOString() })
+      return reply.send({
+        ...detail,
+        createdAt: detail.createdAt.toISOString(),
+      })
     },
   )
 
   app.post(
     '/departments/:id/pause',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { params: departmentIdParamsSchema, body: pauseDepartmentBodySchema },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        params: departmentIdParamsSchema,
+        body: pauseDepartmentBodySchema,
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -215,7 +244,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/departments/:id/resume',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -232,7 +263,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/departments/:id/archive',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -249,7 +282,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/departments/:id/restore',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -271,7 +306,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/departments/:id/view-as',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: departmentIdParamsSchema },
     },
     async (req, reply) => {
@@ -291,7 +328,12 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/view-as/stop',
     {
-      config: { permission: { action: 'administer', subject: instanceExitViewAsSubject } },
+      config: {
+        permission: {
+          action: 'administer',
+          subject: instanceExitViewAsSubject,
+        },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -310,8 +352,13 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/accounts',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { querystring: adminUserListQuerySchema, response: { 200: adminUserListSchema } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        querystring: adminUserListQuerySchema,
+        response: { 200: adminUserListSchema },
+      },
     },
     async (req) => {
       const { rows, nextCursor } = await repo.searchUsers(req.query)
@@ -329,8 +376,13 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/accounts/:id',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { params: userIdParamsSchema, response: { 200: adminUserDetailSchema } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        params: userIdParamsSchema,
+        response: { 200: adminUserDetailSchema },
+      },
     },
     async (req, reply) => {
       const detail = await repo.getUserDetail(req.params.id)
@@ -350,7 +402,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/accounts/:id/lock',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: userIdParamsSchema, body: lockUserBodySchema },
     },
     async (req, reply) => {
@@ -367,7 +421,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/accounts/:id/unlock',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: userIdParamsSchema },
     },
     async (req, reply) => {
@@ -384,7 +440,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/accounts/:id/force-2fa-reset',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: userIdParamsSchema },
     },
     async (req, reply) => {
@@ -397,7 +455,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/accounts/:id/anonymize',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { params: userIdParamsSchema },
     },
     async (req, reply) => {
@@ -416,7 +476,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/analytics',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: adminAnalyticsSchema } },
     },
     async () => {
@@ -430,19 +492,29 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/audit/events',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { querystring: auditEventQuerySchema, response: { 200: auditEventListSchema } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        querystring: auditEventQuerySchema,
+        response: { 200: auditEventListSchema },
+      },
     },
     async (req) => {
       const { rows, nextCursor } = await repo.listAuditEvents(req.query)
-      return { events: rows.map((e) => ({ ...e, at: e.at.toISOString() })), nextCursor }
+      return {
+        events: rows.map((e) => ({ ...e, at: e.at.toISOString() })),
+        nextCursor,
+      }
     },
   )
 
   app.get(
     '/audit/export',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { querystring: auditEventQuerySchema },
     },
     async (req, reply) => {
@@ -466,7 +538,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/health',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: adminHealthSchema } },
     },
     async () => {
@@ -480,7 +554,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/maintenance',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: maintenanceStateSchema } },
     },
     async () => {
@@ -492,7 +568,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/maintenance',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { body: patchMaintenanceBodySchema },
     },
     async (req, reply) => {
@@ -505,7 +583,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     '/registration',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { body: patchRegistrationBodySchema },
     },
     async (req, reply) => {
@@ -520,7 +600,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/sentinel/status',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: sentinelStatusSchema } },
     },
     async () => {
@@ -536,7 +618,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/sentinel/rotate-key',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: sentinelKeyResultSchema } },
     },
     async (req, reply) => {
@@ -549,7 +633,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/wipe/status',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
       schema: { response: { 200: wipeStatusSchema } },
     },
     async () => {
@@ -568,8 +654,13 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/wipe/start',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
-      schema: { body: startWipeBodySchema, response: { 200: wipeStartResultSchema } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
+      schema: {
+        body: startWipeBodySchema,
+        response: { 200: wipeStartResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -603,7 +694,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/wipe/cancel',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -619,7 +712,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   app.post(
     '/wipe/execute',
     {
-      config: { permission: { action: 'administer', subject: instanceSubject } },
+      config: {
+        permission: { action: 'administer', subject: instanceSubject },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -633,7 +728,9 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
   )
 
   app.setNotFoundHandler(async (req, reply) => {
-    const allowed = await denyForSubject(req, reply, 'administer', { kind: 'instance' })
+    const allowed = await denyForSubject(req, reply, 'administer', {
+      kind: 'instance',
+    })
     if (!allowed) return
     sendProblem(reply, 'not_found')
   })

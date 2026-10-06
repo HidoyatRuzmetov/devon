@@ -528,7 +528,12 @@ export async function ask(ctx: RequestContext, params: AskParams): Promise<AskOu
     departmentId: params.departmentId,
     userId: params.userId,
     feature: 'semantic_ask',
-    input: { locale: params.locale, backend, question: params.question, passages },
+    input: {
+      locale: params.locale,
+      backend,
+      question: params.question,
+      passages,
+    },
   })
 
   const allowed = new Set(passages.map((passage) => passage.ref))
@@ -568,7 +573,11 @@ export async function describeSearchBackend(
 export async function rebuildSearchIndex(
   ctx: RequestContext,
   departmentId: string,
-): Promise<{ indexed: number; embedded: number; backend: 'embeddings' | 'fts' }> {
+): Promise<{
+  indexed: number
+  embedded: number
+  backend: 'embeddings' | 'fts'
+}> {
   return search.rebuildIndex(ctx, departmentId)
 }
 
@@ -591,6 +600,7 @@ export async function embedPendingTick(ctx: RequestContext): Promise<number> {
   )
   let embedded = 0
   for (const row of departments) {
+    // nosemgrep: query-in-loop -- At most ten departments, two batches each; serialize shared provider usage to bound load.
     embedded += await search.embedPending(
       { ...ctx, departmentId: row.department_id },
       row.department_id,

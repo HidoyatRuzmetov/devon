@@ -31,7 +31,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-COMPOSE_FILE="$ROOT/infra/docker-compose.yml"
+COMPOSE_FILE="${BACKUP_COMPOSE_FILE:-$ROOT/infra/docker-compose.yml}"
 
 BACKUP_DIR="${BACKUP_DIR:-$ROOT/backups}"
 BACKUP_KEEP_DAYS="${BACKUP_KEEP_DAYS:-30}"
@@ -74,7 +74,13 @@ OUT="$DUMP"
 # empty $DUMP by then -- an empty file left on disk would later look like a real (if empty) backup to
 # verify.sh's "most recent file" logic. The trap removes it (and anything derived from it) on any
 # non-zero exit from this point on.
-trap 'rm -f "$DUMP" "$DUMP.gpg" "$DUMP.manifest.json"' ERR
+cleanup_failed_backup() {
+  local code=$?
+  if [ "$code" -ne 0 ]; then
+    rm -f "$DUMP" "$DUMP.gpg" "$DUMP.manifest.json" "$DUMP.files.tar" "$DUMP.files.tar.gpg"
+  fi
+}
+trap cleanup_failed_backup EXIT
 
 # --- row-count manifest (the quarterly drill's "did everything actually come back" check, H19.1) ----
 # Taken BEFORE pg_dump, and as ONE atomic multi-table query (not N sequential per-table `docker run`s
@@ -143,7 +149,7 @@ if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
     exit 1
   fi
   echo "[backup] encrypting $DUMP (AES256, symmetric) -> $DUMP.gpg"
-  gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+  printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
     --symmetric --cipher-algo AES256 --output "$DUMP.gpg" "$DUMP"
   shred -u "$DUMP" 2>/dev/null || rm -f "$DUMP"
   OUT="$DUMP.gpg"
@@ -157,7 +163,22 @@ FINAL_SIZE="$(wc -c < "$OUT" | tr -d ' ')"
 printf '%s %s %s %s\n' "$TS" "$(basename "$OUT")" "$FINAL_SIZE" "$SHA" >> "$BACKUP_DIR/manifest.log"
 echo "[backup] wrote $OUT (${FINAL_SIZE} bytes, sha256 ${SHA})"
 
-trap - ERR
+# Local uploads live on a separate volume; a database dump alone cannot restore attachments.
+# Optional on developer machines; the production installer explicitly selects its volume.
+if [ -n "${BACKUP_STORAGE_VOLUME:-}" ]; then
+  STORAGE_ARCHIVE="$DUMP.files.tar"
+  docker volume inspect "$BACKUP_STORAGE_VOLUME" >/dev/null
+  docker run --rm --network none --entrypoint tar \
+    -v "$BACKUP_STORAGE_VOLUME:/storage:ro" "$POSTGRES_IMAGE" \
+    -C /storage -cf - . > "$STORAGE_ARCHIVE"
+  if [ -n "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
+    printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+      --symmetric --cipher-algo AES256 --output "$STORAGE_ARCHIVE.gpg" "$STORAGE_ARCHIVE"
+    shred -u "$STORAGE_ARCHIVE" 2>/dev/null || rm -f "$STORAGE_ARCHIVE"
+  fi
+fi
+
+# Keep failure cleanup armed through object backup, mirror, retention and status publication.
 
 # --- off-host mirror (H19.1 "MinIO mirror") -----------------------------------------------------------
 if [ "${BACKUP_MIRROR_TO_MINIO:-0}" = "1" ]; then
@@ -169,12 +190,26 @@ if [ "${BACKUP_MIRROR_TO_MINIO:-0}" = "1" ]; then
     echo "[backup] BACKUP_MIRROR_TO_MINIO=1 but no access key/secret resolved (BACKUP_MINIO_* or STORAGE_S3_*) -- skipping mirror." >&2
   else
     echo "[backup] mirroring $(basename "$OUT") (+ manifest) to MinIO ${MC_ENDPOINT}/${MC_BUCKET}"
-    docker run --rm --network devon --entrypoint sh \
-      -e MC_HOST_backup="http://${MC_ACCESS_KEY}:${MC_SECRET_KEY}@${MC_ENDPOINT#http://}" \
+    # Preserve HTTPS and URL-encode credentials; pass them through the environment, never argv.
+    MC_HOST_backup="$(MC_ENDPOINT="$MC_ENDPOINT" MC_ACCESS_KEY="$MC_ACCESS_KEY" MC_SECRET_KEY="$MC_SECRET_KEY" node -e \
+      'const u=new URL(process.env.MC_ENDPOINT); u.username=process.env.MC_ACCESS_KEY; u.password=process.env.MC_SECRET_KEY; process.stdout.write(u.href)')"
+    export MC_HOST_backup
+    MC_DUMP="$(basename "$OUT")"
+    MC_MANIFEST="$(basename "$DUMP.manifest.json")"
+    MC_FILES=""
+    if [ -f "$DUMP.files.tar.gpg" ]; then MC_FILES="$(basename "$DUMP.files.tar.gpg")";
+    elif [ -f "$DUMP.files.tar" ]; then MC_FILES="$(basename "$DUMP.files.tar")"; fi
+    export MC_DUMP MC_MANIFEST MC_FILES MC_BUCKET
+    # Match the backup owner: encrypted dumps are intentionally mode 0600. The image defaults
+    # to non-root; a root-run system backup needs the existing operator UID to read these files.
+    docker run --rm --network devon --user "$(id -u):$(id -g)" --entrypoint sh \
+      -e MC_CONFIG_DIR=/tmp/mc \
+      -e MC_HOST_backup -e MC_DUMP -e MC_MANIFEST -e MC_FILES -e MC_BUCKET \
       -v "$BACKUP_DIR:/backups:ro" \
-      minio/mc:RELEASE.2025-04-08T15-39-49Z@sha256:7e3efb09c22c0882fbf341b9d99f61f94ae6c4c20a06f2f1a2b20ea8993d8952 \
-      -c "mc mb --ignore-existing backup/${MC_BUCKET} && mc cp /backups/$(basename "$OUT") backup/${MC_BUCKET}/ && mc cp /backups/$(basename "$DUMP.manifest.json") backup/${MC_BUCKET}/" \
+      devon-mc:e929f89ceeed \
+      -c 'mc mb --ignore-existing "backup/$MC_BUCKET" && mc cp "/backups/$MC_DUMP" "backup/$MC_BUCKET/" && mc cp "/backups/$MC_MANIFEST" "backup/$MC_BUCKET/" && { [ -z "$MC_FILES" ] || mc cp "/backups/$MC_FILES" "backup/$MC_BUCKET/"; }' \
       || echo "[backup] WARNING: MinIO mirror failed -- the local backup is still valid; investigate before the next verify.sh run." >&2
+    unset MC_HOST_backup MC_ACCESS_KEY MC_SECRET_KEY
   fi
 fi
 
@@ -216,9 +251,19 @@ for f in "${sorted[@]}"; do
   if [ "$is_monthly_keeper" = true ]; then continue; fi
   if find "$f" -mtime +"$BACKUP_KEEP_DAYS" -print -quit 2>/dev/null | grep -q .; then
     echo "[backup] pruning $f (older than ${BACKUP_KEEP_DAYS}d, beyond the ${BACKUP_MIN_KEEP} most recent, not a monthly keeper)"
-    rm -f "$f" "$f.manifest.json"
+    base="${f%.gpg}"
+    rm -f "$f" "$base.manifest.json" "$base.files.tar" "$base.files.tar.gpg"
     pruned=$((pruned + 1))
   fi
 done
 
 echo "[backup] done. ${#sorted[@]} backup(s) present before pruning, ${pruned} pruned, ${#monthly_keeper[@]} monthly keeper(s) protected."
+
+# Publish only success metadata, outside the secret-bearing backup directory. The API receives
+# this directory read-only and cannot read dumps or the encryption passphrase.
+if [ -n "${BACKUP_STATUS_DIR:-}" ]; then
+  mkdir -p "$BACKUP_STATUS_DIR"
+  printf '{"completedAt":"%s","bytes":%s}\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$FINAL_SIZE" > "$BACKUP_STATUS_DIR/latest.json.tmp"
+  chmod 0644 "$BACKUP_STATUS_DIR/latest.json.tmp"
+  mv -f "$BACKUP_STATUS_DIR/latest.json.tmp" "$BACKUP_STATUS_DIR/latest.json"
+fi

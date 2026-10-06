@@ -1,0 +1,73 @@
+{
+  "help": {
+    "title": "Quick help",
+    "description": "Find a short answer and get back to work.",
+    "search": "Search help, for example: delete or Telegram",
+    "noResults": "No matching answer. Try a shorter word, such as project, profile or Telegram.",
+    "groups": {
+      "daily": "Your working day",
+      "work": "Tasks and projects",
+      "account": "Profile and connected services"
+    },
+    "items": {
+      "start": {
+        "q": "I am an employee. Where should I start?",
+        "a": "Start with Home and choose one card for today. In Work, use Mine to see what is assigned to you. Open a card to read the request, check its deadline and add a comment when you need help. Mark it done when the result is ready.\nYour Personal workspace is private: use it for your own plans and notes."
+      },
+      "head": {
+        "q": "I am a department head. How do I keep work moving?",
+        "a": "Start with Home to review overdue work and upcoming deadlines. Open Work to see each person's workload. Create a card with a clear result, one responsible person and a deadline. Use a group project when several people share one outcome. Check comments and progress before adding more tasks."
+      },
+      "find": {
+        "q": "How do I find something without browsing every menu?",
+        "a": "Press Ctrl+K (Command+K on Mac) to open quick navigation and search. In Work, use Mine and filters. Marking a standalone card done sends it to Archive. A group-project card marked done stays in its project with completed status. Both leave the active people board. Quick help is always pinned at the top of the knowledge base."
+      },
+      "admin": {
+        "q": "I am the superadmin. What should I check first?",
+        "a": "Open Administration and check system health: database, queue, files, backups, Telegram and AI. If something is not configured, follow the setup guidance there. Review department requests before approving them. Use Audit to see who changed or deleted something.\nDepartment heads manage daily work; you keep the platform and account access working."
+      },
+      "projects": {
+        "q": "When should I use a card or a group project, and how do I change it?",
+        "a": "Use a card for one piece of work, such as preparing a report. Use a group project for a shared outcome with several tasks. Open your card and choose the group-project action to bring in colleagues. Open an existing project to edit its details and members when you have permission."
+      },
+      "delete": {
+        "q": "What is the difference between finishing, archiving and deleting?",
+        "a": "Finish work when its result is ready. Archive a card if you want to keep it for later; you can restore it from Archive. Delete an unnecessary card with Delete inside the card. Undo is available immediately in the notification.\nDeleted cards disappear from the team's views. The superadmin can trace who deleted a card and when in the audit log; its record is retained. You can change or delete cards you created, assigned or received; the department head can manage all department cards."
+      },
+      "files": {
+        "q": "How do I share supporting material on a card?",
+        "a": "Open the card and find Files. Choose a file from your device; it becomes available after the security scan. Colleagues who can open the card can download its files. If the scan is temporarily unavailable, use Retry when it is available again.\nYou can also add a shared document URL under Links. Give it a useful title and check that colleagues have access to the source."
+      },
+      "profile": {
+        "q": "Where do I change my name, username or position?",
+        "a": "Open your profile from the account menu and edit your profile details. Save the changes before leaving. Your username is used to sign in, so use the updated username next time. Department membership and your head/member role are separate from the position shown on your profile."
+      },
+      "telegram": {
+        "q": "How do I connect Telegram and control notifications?",
+        "a": "Open notification settings and connect your Telegram account using the link shown there; start the bot to finish linking. Choose which notifications you want and set quiet hours. A department head can connect a group from Telegram settings.\nIf no connection link is available or delivery fails, ask the superadmin to check the bot configuration. A token on the server alone does not connect your personal account."
+      },
+      "ai": {
+        "q": "How do I use AI, and what should I do if it fails?",
+        "a": "Use the sparkle button next to the work you are doing: for example, suggested steps beside a checklist or a summary beside comments. Review the preview, then accept or edit it. AI output is a draft: check names, dates and facts.\nIf a button is missing, the department head can check whether that feature is enabled. If a request fails, retry once; if it still fails, ask the superadmin to check the AI service."
+      }
+    }
+  },
+  "work": {
+    "composer": { "quickEntry": "Quick entry and AI (optional)" },
+    "deletion": {
+      "done": "Card deleted. Its record remains in the admin audit log.",
+      "failed": "Could not complete the action. Refresh the card and try again; undo is available for 30 seconds.",
+      "hint": "Remove from the team’s views; retain its record for the superadmin."
+    }
+  },
+  "admin": {
+    "console": {
+      "audit": {
+        "verb": {
+          "work.card_deleted": "deleted a card",
+          "work.card_delete_undone": "undid card deletion"
+        }
+      }
+    }
+  }
+}

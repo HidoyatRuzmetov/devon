@@ -6,8 +6,21 @@
 // without re-deriving every screen's exact DOM for state this suite is not trying to prove.
 import { readFileSync } from 'node:fs'
 import { randomBytes, randomUUID } from 'node:crypto'
-import type { APIResponse, Browser, BrowserContext } from '@playwright/test'
+import { test, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 import { FLOW_SUPERADMIN_FILE, FLOW_WEB_BASE_URL, type FlowSuperAdmin } from './flow-env.js'
+
+let clientSequence = 0
+
+/** Model separate clients behind the local test proxy. Otherwise every independent user and CI
+ * retry shares loopback's ten registrations/minute allowance. Keep the production limiter enabled:
+ * requests within one context still share a fixed IP and consume its normal quota. The benchmark
+ * address range is never contacted; Fastify's existing proxy support only reads it as client IP. */
+export function flowClientHeaders(): Record<string, string> {
+  const worker = test.info().workerIndex
+  const client = ++clientSequence
+  if (worker > 255 || client > 254) throw new Error('flow client address pool exhausted')
+  return { 'x-forwarded-for': `198.18.${worker}.${client}` }
+}
 
 /** `browser.newContext()` does not automatically pick up `playwright.config.ts`'s `use.baseURL` the
  * way the `context`/`page` test fixtures do -- every flow spec that needs a *second* (or third)
@@ -15,7 +28,10 @@ import { FLOW_SUPERADMIN_FILE, FLOW_WEB_BASE_URL, type FlowSuperAdmin } from './
  * bare Playwright call, so its `context.request.post('/api/v1/...')` calls resolve against the right
  * server instead of erroring on a relative URL with no base. */
 export function newFlowContext(browser: Browser): Promise<BrowserContext> {
-  return browser.newContext({ baseURL: FLOW_WEB_BASE_URL })
+  return browser.newContext({
+    baseURL: FLOW_WEB_BASE_URL,
+    extraHTTPHeaders: flowClientHeaders(),
+  })
 }
 
 export function uniqueLogin(prefix: string): string {

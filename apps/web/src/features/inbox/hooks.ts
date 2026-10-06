@@ -240,11 +240,14 @@ export function usePutDepartmentSettingsMutation(departmentId: string | null) {
 
 // --- Telegram: personal ------------------------------------------------------------------------------
 
-export function useTelegramStatusQuery(): UseQueryResult<
-  Awaited<ReturnType<typeof fetchTelegramStatus>>,
-  Error
-> {
-  return useQuery({ queryKey: ['telegram', 'status'], queryFn: fetchTelegramStatus })
+export function useTelegramStatusQuery(
+  pollWhileLinking = false,
+): UseQueryResult<Awaited<ReturnType<typeof fetchTelegramStatus>>, Error> {
+  return useQuery({
+    queryKey: ['telegram', 'status'],
+    queryFn: fetchTelegramStatus,
+    refetchInterval: (query) => (pollWhileLinking && !query.state.data?.linked ? 3000 : false),
+  })
 }
 
 export function useTelegramLinkCodeMutation() {
@@ -272,11 +275,12 @@ export function useTelegramMuteMutation() {
 
 // --- Telegram: department groups ----------------------------------------------------------------
 
-export function useDepartmentGroupsQuery(departmentId: string | null) {
+export function useDepartmentGroupsQuery(departmentId: string | null, pollWhileConnecting = false) {
   return useQuery({
     queryKey: ['telegram', 'groups', departmentId],
     queryFn: () => fetchDepartmentGroups(departmentId as string),
     enabled: Boolean(departmentId),
+    refetchInterval: pollWhileConnecting ? 5000 : false,
   })
 }
 

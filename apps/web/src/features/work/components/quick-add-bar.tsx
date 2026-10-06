@@ -11,6 +11,7 @@ import * as React from 'react'
 import { CalendarClock, FileStack, Plus, UserRound } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -122,16 +123,18 @@ export function QuickAddBar({
 
   async function submit() {
     if (!parsed || parsed.title.trim().length === 0) return
+    // A colon can be ordinary punctuation. Never discard an unresolved prefix as a person's name.
+    const title = parsed.assigneeToken && !resolvedAssignee ? value.trim() : parsed.title
     try {
       await createCard.mutateAsync({
-        title: parsed.title,
+        title,
         assigneeUserId: resolvedAssignee?.userId ?? defaultAssigneeUserId,
         dueAt: parsed.dueAt ? parsed.dueAt.toISOString() : null,
       })
       setValue('')
       setAiResult(null)
       onCreated?.()
-      toast(t('work.quickAdd.created', { title: parsed.title }))
+      toast(t('work.quickAdd.created', { title }))
     } catch {
       toast(t('work.quickAdd.error'))
     }
@@ -250,6 +253,16 @@ export function QuickAddBar({
           disabled={createCard.isPending}
           className={compact ? 'h-9 text-small' : undefined}
         />
+        {!compact ? (
+          <Button
+            size="sm"
+            onClick={() => void submit()}
+            loading={createCard.isPending}
+            disabled={!value.trim()}
+          >
+            {t('work.actions.create')}
+          </Button>
+        ) : null}
         {cardTemplates.length > 0 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

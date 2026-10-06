@@ -89,6 +89,8 @@ export default defineConfig(({ command, mode }) => {
     },
     server: {
       port: webPort,
+      // Browser tests need a stable page while axe inspects its DOM, even if a local editor saves.
+      hmr: mode !== 'test',
       // Explicit loopback IPv4 host, not the `localhost` default: on this host Node resolves
       // `localhost` to `::1` first, so Vite's listener is IPv6-only and a client dialling the literal
       // `127.0.0.1` (as `test/e2e/playwright.config.ts`'s `webServer.url` and every same-origin check

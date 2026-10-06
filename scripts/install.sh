@@ -153,10 +153,7 @@ fi
 say "installing host tools (ca-certificates, curl, gnupg, git) ..."
 do_it apt-get install -y -qq ca-certificates curl gnupg git
 
-if ! command -v node >/dev/null 2>&1; then
-  warn "node is not installed. tools/backup/restore-drill.mjs (the weekly drill) needs Node >= 22."
-  warn "  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs"
-fi
+do_it bash "$INSTALL_DIR/scripts/install-node-runtime.sh"
 
 # ------------------------------------------------------------------------------------------------
 # 3. the service account
@@ -202,7 +199,9 @@ fi
 # 4. directories
 # ------------------------------------------------------------------------------------------------
 say "creating directories ..."
-do_it mkdir -p "$BACKUP_DIR" /etc/devon
+do_it mkdir -p "$BACKUP_DIR" /etc/devon /var/lib/devon/backup-status
+do_it chown "$DEVON_USER:$DEVON_USER" /var/lib/devon/backup-status
+do_it chmod 0755 /var/lib/devon/backup-status
 do_it chown -R "$DEVON_USER:$DEVON_USER" "$BACKUP_DIR"
 # 0700: a backup is a complete copy of every person's data in the department. Anything wider makes
 # every local account on this host a reader of it.
@@ -306,7 +305,7 @@ CENTRIFUGO_TIMEOUT_MS=3000
 # Without AI_API_KEY the gateway falls back to a mock provider and every AI feature hides itself --
 # a correct, fully usable deployment, just without the AI helpers.
 AI_BASE_URL=https://api-llm.gpu.uz/v1
-AI_MODEL=glm-5.2
+AI_MODEL=glm-5.3
 AI_API_KEY=CHANGE-ME-or-delete-this-line
 AI_REQUEST_TIMEOUT_MS=60000
 
@@ -360,6 +359,9 @@ else
     echo "BACKUP_KEEP_DAYS=30"
     echo "BACKUP_KEEP_MONTHS=12"
     echo "BACKUP_MIN_KEEP=3"
+    echo "BACKUP_STATUS_DIR=/var/lib/devon/backup-status"
+    echo "BACKUP_STORAGE_VOLUME=devon_api_storage"
+    echo "BACKUP_COMPOSE_FILE=${INSTALL_DIR}/infra/docker-compose.prod.yml"
     echo "# Off-host mirror (H19.1). Point this at storage on a DIFFERENT machine, or a disk failure"
     echo "# here takes the backups with it. Falls back to the app's STORAGE_S3_* if unset."
     echo "BACKUP_MIRROR_TO_MINIO=0"

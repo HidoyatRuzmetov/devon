@@ -167,7 +167,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!departmentId) return reply.send({ items: [], nextCursor: null })
       const ctx = contextFromRequest(req)
       const [cards, members, labels, projectNames, fieldValues] = await Promise.all([
-        repo.listCards(ctx, departmentId, {}),
+        repo.listCards(ctx, departmentId, { projectId: req.query.projectId }),
         repo.getMembers(ctx, departmentId),
         repo.getLabels(ctx, departmentId),
         repo.getProjectNames(ctx, departmentId),
@@ -189,9 +189,11 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       }
 
       let filtered = cards
+      if (req.query.projectId)
+        filtered = filtered.filter((c) => c.projectId === req.query.projectId)
       if (req.query.q && req.query.q.trim().length > 0) {
         const query = parseFilterQuery(req.query.q)
-        filtered = cards.filter((c) =>
+        filtered = filtered.filter((c) =>
           matchesFilterQuery(
             toFilterable(c, projectNames, labelNames, unitNames, fieldValues),
             query,
@@ -375,6 +377,60 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
+  app.delete(
+    '/cards/:id',
+    {
+      config: {
+        permission: {
+          action: 'delete',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      if (!(await requireCardOwnership(req, reply, departmentId, req.params.id)).ok) return
+      if (
+        !(await repo.deleteCard(
+          contextFromRequest(req),
+          departmentId,
+          req.params.id,
+          req.actor!.userId,
+        ))
+      )
+        return sendProblem(reply, 'not_found')
+      return reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/cards/:id/undo-delete',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { params: idParamsSchema, response: { 204: z.undefined() } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      if (
+        !(await repo.undoDeleteCard(
+          contextFromRequest(req),
+          requireDepartmentId(req)!,
+          req.params.id,
+          req.actor!.userId,
+        ))
+      )
+        return sendProblem(reply, 'not_found')
+      return reply.code(204).send()
+    },
+  )
+
   app.post(
     '/cards/:id/restore',
     {
@@ -458,6 +514,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const ok = await repo.patchChecklistItem(
         contextFromRequest(req),
         departmentId,
+        req.params.id,
         req.params.itemId,
         req.body,
       )
@@ -493,6 +550,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const ok = await repo.deleteChecklistItem(
         contextFromRequest(req),
         departmentId,
+        req.params.id,
         req.params.itemId,
       )
       if (!ok) return sendProblem(reply, 'not_found')
@@ -550,7 +608,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!(await repo.cardExists(ctx, requireDepartmentId(req)!, req.params.id))) {
         return sendProblem(reply, 'not_found')
       }
-      return reply.send(await repo.getActivity(ctx, req.params.id))
+      return reply.type('application/json').send(await repo.getActivity(ctx, req.params.id))
     },
   )
 
@@ -722,7 +780,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         // new URL none of those checks have run against), and bounds the body at 200 kB and the
         // whole call at 4 s (`modules/work/link-unfurl.ts`, `test/unit/link-unfurl.test.ts`).
         // nosemgrep: javascript.lang.security.audit.ssrf.ssrf-requests
-        reply.send(await unfurlLink(req.body.url))
+        reply.type('application/json').send(await unfurlLink(req.body.url))
       } catch (err) {
         if (err instanceof UnsafeUrlError) {
           return sendProblem(reply, 'validation_failed', {

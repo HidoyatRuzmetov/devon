@@ -17,15 +17,15 @@ function useCsrfToken(): string {
   return me.csrfToken
 }
 
-/** The run log is the only part of this module that changes without anybody clicking: the engine
- * writes to it whenever a card moves. A slow poll keeps "did my rule fire?" answerable without a
- * transport this build does not have. */
-const RUNS_POLL_MS = 15000
-
+// Run changes arrive through the shared department realtime bridge.
 export function useAutomationRulesQuery(
   enabled = true,
 ): UseQueryResult<api.AutomationRule[], Error> {
-  return useQuery({ queryKey: RULES_KEY, queryFn: api.fetchAutomationRules, enabled })
+  return useQuery({
+    queryKey: RULES_KEY,
+    queryFn: api.fetchAutomationRules,
+    enabled,
+  })
 }
 
 export function useAutomationRunsQuery(
@@ -36,7 +36,6 @@ export function useAutomationRunsQuery(
     queryKey: RUNS_KEY(query),
     queryFn: () => api.fetchAutomationRuns(query),
     enabled,
-    refetchInterval: RUNS_POLL_MS,
   })
 }
 

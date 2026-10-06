@@ -21,6 +21,7 @@ coverage/
 playwright-report/
 test-results/
 agentic/ledger/last-gate.json
+agentic/ledger/gate-logs/
 agentic/.unlock
 tools/gate-mutation/.tmp/
 tools/gate-mutation/.tmp-evidence.*
@@ -34,3 +35,6 @@ tools/perf/*/out/
 
 # MCP browser server scratch output
 .playwright-mcp/
+.codex-*.log
+.codex-*.json
+artifacts/

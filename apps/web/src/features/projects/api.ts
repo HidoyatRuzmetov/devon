@@ -75,6 +75,14 @@ export function createProject(input: CreateProjectInput, csrfToken: string): Pro
   return apiClient.post('/api/v1/projects', input, projectSchema, csrfToken)
 }
 
+export function createProjectFromCard(
+  cardId: string,
+  members: string[],
+  csrfToken: string,
+): Promise<Project> {
+  return apiClient.post('/api/v1/projects/from-card', { cardId, members }, projectSchema, csrfToken)
+}
+
 export type CreateFromTemplateInput = {
   templateKey: string
   title?: string | undefined

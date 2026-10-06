@@ -53,6 +53,21 @@ POSTGRES_IMAGE="$(postgres_image "$COMPOSE_FILE")"
 run_pg() { docker run --rm --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" "$@"; }
 
 DECRYPTED=""
+TARGET_DB="devon_drill_$(date -u +%Y%m%dT%H%M%SZ)"
+CREATED_DB=false
+cleanup() {
+  local code=$?
+  trap - EXIT
+  if [ "$CREATED_DB" = true ]; then
+    run_pg dropdb -h "$POSTGRES_HOST" -U postgres --if-exists "$TARGET_DB" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$DECRYPTED" ]; then
+    shred -u "$DECRYPTED" 2>/dev/null || rm -f "$DECRYPTED" || true
+  fi
+  exit "$code"
+}
+# Decryption may fail after writing partial plaintext, so register cleanup first.
+trap cleanup EXIT
 RESTORE_SOURCE="$TARGET_FILE"
 if [[ "$TARGET_FILE" == *.gpg ]]; then
   if [ -z "${BACKUP_ENCRYPTION_PASSPHRASE:-}" ]; then
@@ -60,21 +75,15 @@ if [[ "$TARGET_FILE" == *.gpg ]]; then
     exit 1
   fi
   DECRYPTED="$(mktemp "${TMPDIR:-/tmp}/devon-drill-XXXXXX.dump")"
-  gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_ENCRYPTION_PASSPHRASE" \
+  printf '%s' "$BACKUP_ENCRYPTION_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
     --decrypt --output "$DECRYPTED" "$TARGET_FILE"
   RESTORE_SOURCE="$DECRYPTED"
 fi
 
-TARGET_DB="devon_drill_$(date -u +%Y%m%dT%H%M%SZ)"
-cleanup() {
-  run_pg dropdb -h "$POSTGRES_HOST" -U postgres --if-exists "$TARGET_DB" >/dev/null 2>&1 || true
-  [ -n "$DECRYPTED" ] && { shred -u "$DECRYPTED" 2>/dev/null || rm -f "$DECRYPTED"; }
-}
-trap cleanup EXIT
-
 echo "[drill] restoring $TARGET_FILE into throwaway database $TARGET_DB ..."
 START_EPOCH="$(date -u +%s)"
 run_pg createdb -h "$POSTGRES_HOST" -U postgres "$TARGET_DB"
+CREATED_DB=true
 docker run --rm -i --network devon -e PGPASSWORD="${POSTGRES_SUPERUSER_PASSWORD}" "$POSTGRES_IMAGE" \
   pg_restore -h "$POSTGRES_HOST" -U postgres -d "$TARGET_DB" --no-owner < "$RESTORE_SOURCE"
 END_EPOCH="$(date -u +%s)"

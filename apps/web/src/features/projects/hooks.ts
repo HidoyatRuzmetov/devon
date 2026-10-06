@@ -1,6 +1,8 @@
 // React Query hooks for the group-projects module -- same shape as `../work/hooks.ts`.
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { useMeQuery } from '../../lib/session.js'
+import { useT } from '@devon/i18n'
+import { toast } from '@devon/ui'
 import * as api from './api.js'
 import type { Project, ProjectTemplate } from './api.js'
 
@@ -49,10 +51,12 @@ export function useCreateFromTemplateMutation() {
 }
 
 export function usePatchProjectMutation(id: string) {
+  const t = useT()
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
     mutationFn: (patch: api.PatchProjectInput) => api.patchProject(id, patch, csrf),
+    onError: () => toast(t('projectEdit.error')),
     onSuccess: (project) => {
       qc.setQueryData(PROJECT_KEY(id), project)
       void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
@@ -61,16 +65,22 @@ export function usePatchProjectMutation(id: string) {
 }
 
 export function useAddMilestoneMutation(id: string) {
+  const t = useT()
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
     mutationFn: (input: { title: string; dueOn?: string | null }) =>
       api.addMilestone(id, input, csrf),
-    onSuccess: (project) => qc.setQueryData(PROJECT_KEY(id), project),
+    onError: () => toast(t('projectEdit.error')),
+    onSuccess: (project) => {
+      qc.setQueryData(PROJECT_KEY(id), project)
+      void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
+    },
   })
 }
 
 export function usePatchMilestoneMutation(id: string) {
+  const t = useT()
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
@@ -81,6 +91,10 @@ export function usePatchMilestoneMutation(id: string) {
       milestoneId: string
       patch: { title?: string; dueOn?: string | null; done?: boolean }
     }) => api.patchMilestone(id, milestoneId, patch, csrf),
-    onSuccess: (project) => qc.setQueryData(PROJECT_KEY(id), project),
+    onError: () => toast(t('projectEdit.error')),
+    onSuccess: (project) => {
+      qc.setQueryData(PROJECT_KEY(id), project)
+      void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
+    },
   })
 }

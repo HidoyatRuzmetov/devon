@@ -7,6 +7,7 @@ import { expect, test } from '@playwright/test'
 import {
   csrfToken,
   examplePassword,
+  flowClientHeaders,
   loginAsSuperAdmin,
   newFlowContext,
   stripSecureCookies,
@@ -17,6 +18,8 @@ test('@flow register -> department request -> super_admin approval -> invite -> 
   page,
   browser,
 }) => {
+  // The built-in page fixture needs the same independent client identity as newFlowContext.
+  await page.context().setExtraHTTPHeaders(flowClientHeaders())
   const headLogin = uniqueLogin('flow.head')
   const headPassword = examplePassword()
   const departmentName = `Raqamli xizmatlar ${headLogin.slice(-8)}`

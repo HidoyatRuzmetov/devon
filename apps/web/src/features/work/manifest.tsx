@@ -6,6 +6,7 @@ import { GaugeCircle, KanbanSquare, Target } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
 import { prefetchBoard } from './hooks.js'
+import { DepartmentFeatureScreen } from '../../lib/department-feature-screen.js'
 
 const BoardScreen = React.lazy(() => import('./components/board-screen.js'))
 const TableScreen = React.lazy(() => import('./components/table-screen.js'))
@@ -15,9 +16,31 @@ const MineScreen = React.lazy(() => import('./components/mine-screen.js'))
 const ArchiveScreen = React.lazy(() => import('./components/archive-screen.js'))
 const CardPageScreen = React.lazy(() => import('./components/card-page-screen.js'))
 // v1.1 SPEC §7: the three screens the work-plus features earned of their own.
-const WorkloadScreen = React.lazy(() => import('./components/workload-screen.js'))
 const TemplatesScreen = React.lazy(() => import('./components/templates-screen.js'))
-const GoalsScreen = React.lazy(() => import('./components/goals-screen.js'))
+const WorkloadRoute = React.lazy(async () => {
+  const { default: WorkloadScreen } = await import('./components/workload-screen.js')
+  return {
+    default: function WorkloadRoute() {
+      return (
+        <DepartmentFeatureScreen feature="workload" action="work.workload.read">
+          <WorkloadScreen />
+        </DepartmentFeatureScreen>
+      )
+    },
+  }
+})
+const GoalsRoute = React.lazy(async () => {
+  const { default: GoalsScreen } = await import('./components/goals-screen.js')
+  return {
+    default: function GoalsRoute() {
+      return (
+        <DepartmentFeatureScreen feature="goals" action="goals.read">
+          <GoalsScreen />
+        </DepartmentFeatureScreen>
+      )
+    },
+  }
+})
 
 const manifest: FeatureManifest = {
   name: 'work',
@@ -29,9 +52,9 @@ const manifest: FeatureManifest = {
     { path: '/work/mine', component: MineScreen, titleKey: 'work.view.mine' },
     { path: '/work/archive', component: ArchiveScreen, titleKey: 'work.view.archive' },
     { path: '/work/card', component: CardPageScreen, titleKey: 'work.card.peekTitle' },
-    { path: '/work/workload', component: WorkloadScreen, titleKey: 'work.workload.title' },
+    { path: '/work/workload', component: WorkloadRoute, titleKey: 'work.workload.title' },
     { path: '/work/templates', component: TemplatesScreen, titleKey: 'work.templates.title' },
-    { path: '/goals', component: GoalsScreen, titleKey: 'work.goals.title' },
+    { path: '/goals', component: GoalsRoute, titleKey: 'work.goals.title' },
   ],
   // H5.2 "prefetch on hover/focus": warms the board query before the click that navigates here.
   sidebar: [

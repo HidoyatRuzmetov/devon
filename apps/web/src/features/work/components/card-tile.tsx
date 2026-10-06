@@ -363,17 +363,10 @@ export function CardTile({
   const cardBody = (
     <div
       ref={ref}
-      role="button"
-      tabIndex={0}
+      role="group"
+      aria-label={card.title}
       data-dragging={isDragging || undefined}
       data-dnd-card={card.id}
-      onClick={() => onOpen(card.id)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onOpen(card.id)
-        }
-      }}
       onPointerDown={onTouchPointerDown}
       onPointerMove={onTouchPointerMove}
       onPointerUp={onTouchPointerUp}
@@ -425,8 +418,14 @@ export function CardTile({
       ) : null}
 
       <div className="flex items-start justify-between gap-2">
-        <p className="text-small font-medium leading-snug text-foreground">{card.title}</p>
-        <div className="flex shrink-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={() => onOpen(card.id)}
+          className="text-left text-small font-medium leading-snug text-foreground after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+        >
+          {card.title}
+        </button>
+        <div className="relative z-10 flex shrink-0 items-center gap-1">
           {canMove ? (
             <span
               className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"

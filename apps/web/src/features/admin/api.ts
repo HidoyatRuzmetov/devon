@@ -196,6 +196,7 @@ export const auditEventRowSchema = z.object({
   action: z.string(),
   subjectType: z.string(),
   subjectId: z.string().nullable(),
+  subjectTitle: z.string().nullable().optional(),
 })
 export type AuditEventRow = z.infer<typeof auditEventRowSchema>
 const auditEventListSchema = z.object({

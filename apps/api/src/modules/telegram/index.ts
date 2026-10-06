@@ -23,8 +23,16 @@ import {
 import { isHeadOf } from '../../lib/actor.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { registerBotHandlers } from './bot.js'
+import { tb, type BotLocale } from './templates.js'
 import { secretsEqual, TELEGRAM_SECRET_HEADER, UpdateReplayWindow } from './webhook-guard.js'
-import { configureTelegram, getBot, isTelegramConfigured, publicUrl } from './transport.js'
+import {
+  botUsername as resolvedBotUsername,
+  configureTelegram,
+  getBot,
+  isTelegramAvailable,
+  isTelegramConfigured,
+  publicUrl,
+} from './transport.js'
 import miniappRoutes, { miniappUrl } from './miniapp.js'
 import { setupCounts } from './miniapp-repo.js'
 import { setupChecklistSchema } from './miniapp-schemas.js'
@@ -89,12 +97,21 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const status = await getLinkStatus(req.actor!.userId)
-      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME ?? null
+      const botUsername = resolvedBotUsername()
+      const departmentId = req.actor?.departmentId
+      const canConnectGroup = Boolean(
+        departmentId &&
+        (isHeadOf(req.actor, departmentId) ||
+          (await readWhoCanConnectGroup(departmentId)) === 'everyone'),
+      )
       return reply.send({
         linked: status.linked,
         linkedAt: status.linkedAt ? status.linkedAt.toISOString() : null,
         mutedUntil: status.mutedUntil ? status.mutedUntil.toISOString() : null,
         botUsername,
+        configured: isTelegramConfigured(),
+        available: isTelegramAvailable(),
+        canConnectGroup,
       })
     },
   )
@@ -115,8 +132,9 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
+      if (!isTelegramConfigured()) return sendProblem(reply, 'internal')
       const { code, expiresAt } = await issueLinkCode(req.actor!.userId)
-      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME
+      const botUsername = resolvedBotUsername()
       const deepLink = botUsername ? `https://t.me/${botUsername}?start=${code}` : null
       let qrDataUrl: string | null = null
       if (deepLink) {
@@ -356,7 +374,7 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
         },
         departmentId,
       )
-      const botUsername = app.devonConfig.TELEGRAM_BOT_USERNAME ?? null
+      const botUsername = resolvedBotUsername()
       const configured = isTelegramConfigured()
       const selfLinked = await getLinkStatus(req.actor!.userId)
       return reply.send({
@@ -442,33 +460,64 @@ const telegramRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.addHook('onReady', async () => {
     if (!isTelegramConfigured() || app.devonConfig.NODE_ENV === 'test') return
+    if (app.devonConfig.NODE_ENV !== 'production' && !app.devonConfig.TELEGRAM_POLLING_ENABLED) {
+      app.log.info({}, 'telegram: development polling disabled; production webhook left untouched')
+      return
+    }
     const activeBot = getBot()
     if (!activeBot) return
     try {
       await activeBot.init()
-    } catch (err) {
+    } catch {
       app.log.warn(
-        { err },
+        {},
         'telegram: bot.init() failed (no network to Telegram, or an invalid token) -- staying in no-op mode',
       )
       return
     }
 
+    // Make the existing commands and Mini App discoverable in Telegram itself. People should
+    // not need to remember /help or ask an operator to finish a separate BotFather setup.
+    try {
+      const commands = (locale: BotLocale) => [
+        { command: 'app', description: tb(locale, 'miniapp.open') },
+        { command: 'help', description: tb(locale, 'command.help') },
+        { command: 'today', description: tb(locale, 'today.header') },
+        { command: 'mytasks', description: tb(locale, 'miniapp.open_inbox') },
+        { command: 'events', description: tb(locale, 'miniapp.open_events') },
+        { command: 'mute', description: tb(locale, 'command.mute') },
+      ]
+      await Promise.all([
+        activeBot.api.setMyCommands(commands('uz-Latn')),
+        activeBot.api.setMyCommands(commands('ru'), { language_code: 'ru' }),
+        activeBot.api.setMyCommands(commands('en'), { language_code: 'en' }),
+      ])
+      const url = miniappUrl()
+      if (url.startsWith('https://')) {
+        await activeBot.api.setChatMenuButton({
+          menu_button: { type: 'web_app', text: 'Devon', web_app: { url } },
+        })
+      }
+    } catch {
+      app.log.warn({}, 'telegram: command/menu setup failed; existing commands remain usable')
+    }
+
     const secret = readWebhookSecret(app)
     if (app.devonConfig.NODE_ENV === 'production' && secret) {
-      const url = `${publicUrl()}/api/v1/telegram/webhook/${secret}`
+      const url = `${publicUrl().replace(/\/+$/, '')}/api/v1/telegram/webhook/${secret}`
       try {
         await activeBot.api.setWebhook(url, { secret_token: secret })
         // H1.11/H1.1: the URL contains the webhook secret -- logging it (as this line used to)
         // wrote a live credential into every log sink and every backup of them. The path is a
         // constant plus that secret, so there is nothing left worth logging but the fact.
         app.log.info({}, 'telegram: webhook registered')
-      } catch (err) {
+      } catch {
         app.log.warn(
-          { err },
-          'telegram: setWebhook failed -- falling back to long polling for this process',
+          {},
+          'telegram: setWebhook failed; inbound delivery is unavailable until webhook registration succeeds',
         )
-        pollingHandle = startPolling(activeBot, app.log)
+        // Starting grammY polling deletes the configured webhook. A failed registration must
+        // never silently steal another instance's deliveries or change production transport.
       }
     } else {
       pollingHandle = startPolling(activeBot, app.log)
@@ -498,7 +547,7 @@ function startPolling(
           'telegram: long-polling fallback started (local dev -- no TELEGRAM_WEBHOOK_SECRET/production webhook)',
         ),
     })
-    .catch((err) => log.error({ err }, 'telegram: long-polling loop exited'))
+    .catch(() => log.error({}, 'telegram: long-polling loop exited'))
   return { stop: () => bot.stop() }
 }
 

@@ -83,6 +83,7 @@ export function AvatarPicker({
           type="file"
           accept={AVATAR_ACCEPT}
           className="sr-only"
+          aria-label={t(hasPhoto ? 'accounts.photo.change' : 'accounts.photo.choose')}
           aria-describedby={hintId}
           disabled={disabled || busy !== null}
           onChange={handleChange}

@@ -2,7 +2,13 @@
 // itself so components never call `fetch`/`useQuery` with a hand-rolled key -- every consumer of "am
 // I signed in" or "what does this instance look like" reads the same cached query.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type UseQueryResult,
+} from '@tanstack/react-query'
 import { setLocale, type Locale } from '@devon/i18n'
 import {
   ApiError,
@@ -68,17 +74,19 @@ export function useLocaleMutation() {
   })
 }
 
+/** Cancel in-flight reads before dropping every private cache, including mutation results. */
+export async function clearSessionCache(queryClient: QueryClient): Promise<void> {
+  await queryClient.cancelQueries()
+  queryClient.clear()
+  queryClient.setQueryData(['me'], null)
+  storeDepartmentId(null)
+}
+
 export function useLogoutMutation() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: apiLogout,
-    onSettled: () => {
-      // The session is gone server-side (or was already) either way; drop every cached response that
-      // could have carried a signed-in shape (AC-13: a captured cookie must not keep working, and the
-      // client must not keep rendering as if it did).
-      queryClient.setQueryData(['me'], null)
-      queryClient.removeQueries({ queryKey: ['admin'] })
-    },
+    onSettled: () => clearSessionCache(queryClient),
   })
 }
 

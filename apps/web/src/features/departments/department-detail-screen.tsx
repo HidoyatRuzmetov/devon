@@ -31,6 +31,7 @@ import {
   StateView,
   Switch,
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
   toast,
@@ -90,12 +91,18 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
     mutationFn: () =>
       patchDepartmentSettings(
         id,
-        { allowSelfAssign, allowStructureEdit, whoCanConnectTelegramGroup: telegramPerm },
+        {
+          allowSelfAssign,
+          allowStructureEdit,
+          whoCanConnectTelegramGroup: telegramPerm,
+        },
         meQuery.data?.csrfToken ?? '',
       ),
     onSuccess: () => {
       toast(t('departments.settings.saved'))
-      void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+      void queryClient.invalidateQueries({
+        queryKey: ['departments', 'detail', id],
+      })
     },
   })
 
@@ -108,7 +115,10 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => deptQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => deptQuery.refetch(),
+        }}
         compact
       />
     )
@@ -188,7 +198,9 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
           </div>
         </div>
       </SectionCard>
-      <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
+      <div id="features">
+        <FeaturesCard id={id} isHead={isHead} features={deptQuery.data.settings.features} />
+      </div>
     </div>
   )
 }
@@ -243,7 +255,10 @@ function InviteTab({ id }: { id: string }) {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => inviteQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => inviteQuery.refetch(),
+        }}
         compact
       />
     )
@@ -256,7 +271,10 @@ function InviteTab({ id }: { id: string }) {
 
   function copyInviteText() {
     if (!link || !revealedPassword) return
-    const text = t('departments.invite.inviteText', { link, password: revealedPassword })
+    const text = t('departments.invite.inviteText', {
+      link,
+      password: revealedPassword,
+    })
     void navigator.clipboard.writeText(text).then(() => toast(t('departments.invite.copiedInvite')))
   }
 
@@ -276,7 +294,12 @@ function InviteTab({ id }: { id: string }) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex flex-1 flex-col gap-2">
               <div className="flex items-center gap-2">
-                <Input readOnly value={link} className="min-w-0 flex-1 font-mono text-small" />
+                <Input
+                  aria-label={t('departments.invite.title')}
+                  readOnly
+                  value={link}
+                  className="min-w-0 flex-1 font-mono text-small"
+                />
                 <IconButton
                   aria-label={t('departments.invite.copyLink')}
                   onClick={() => {
@@ -305,7 +328,14 @@ function InviteTab({ id }: { id: string }) {
                 camera can find, not the current colour scheme. */}
             <div className="flex shrink-0 flex-col items-center gap-1.5">
               <div className="rounded-md border border-border bg-white p-3">
-                <QRCodeSVG value={link} size={128} fgColor="#000000" bgColor="#ffffff" />
+                <QRCodeSVG
+                  role="img"
+                  aria-label={t('departments.invite.qrLabel')}
+                  value={link}
+                  size={128}
+                  fgColor="#000000"
+                  bgColor="#ffffff"
+                />
               </div>
               <span className="text-caption text-muted-foreground">
                 {t('departments.invite.qrLabel')}
@@ -329,7 +359,12 @@ function InviteTab({ id }: { id: string }) {
           {revealedPassword ? (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
-                <Input readOnly value={revealedPassword} className="font-mono text-small" />
+                <Input
+                  aria-label={t('departments.invite.passwordLabel')}
+                  readOnly
+                  value={revealedPassword}
+                  className="font-mono text-small"
+                />
                 <Button size="sm" onClick={copyInviteText}>
                   {t('departments.invite.copyInvite')}
                 </Button>
@@ -409,8 +444,12 @@ function JoinRequestsCard({ id }: { id: string }) {
   })
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['departments', 'joinRequests', id] })
-    void queryClient.invalidateQueries({ queryKey: ['departments', 'members', id] })
+    void queryClient.invalidateQueries({
+      queryKey: ['departments', 'joinRequests', id],
+    })
+    void queryClient.invalidateQueries({
+      queryKey: ['departments', 'members', id],
+    })
   }
 
   // Approving somebody into the boshqarma is the moment a person joins a team -- the one decision on
@@ -459,7 +498,10 @@ function JoinRequestsCard({ id }: { id: string }) {
           kind="error"
           titleKey="state.error.title"
           bodyKey="state.error.body"
-          action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => query.refetch(),
+          }}
           compact
         />
       </SectionCard>
@@ -509,7 +551,12 @@ function JoinRequestsCard({ id }: { id: string }) {
                         size="sm"
                         variant="secondary"
                         disabled={decide.isPending}
-                        onClick={() => decide.mutate({ userId: r.userId, decision: 'reject' })}
+                        onClick={() =>
+                          decide.mutate({
+                            userId: r.userId,
+                            decision: 'reject',
+                          })
+                        }
                       >
                         {t('departments.joinRequests.reject')}
                       </Button>
@@ -517,7 +564,12 @@ function JoinRequestsCard({ id }: { id: string }) {
                         <Button
                           size="sm"
                           disabled={decide.isPending}
-                          onClick={() => decide.mutate({ userId: r.userId, decision: 'approve' })}
+                          onClick={() =>
+                            decide.mutate({
+                              userId: r.userId,
+                              decision: 'approve',
+                            })
+                          }
                         >
                           {t('departments.joinRequests.approve')}
                         </Button>
@@ -575,7 +627,9 @@ function FeaturesCard({
     mutationFn: (patch: Partial<Record<FeatureKey, boolean>>) =>
       putFeatures(id, patch, meQuery.data?.csrfToken ?? ''),
     onSuccess: (_result, patch) => {
-      void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+      void queryClient.invalidateQueries({
+        queryKey: ['departments', 'detail', id],
+      })
       const [key, value] = Object.entries(patch)[0] ?? []
       if (!key) return
       toast(t(value ? 'departments.features.onToast' : 'departments.features.offToast'), {
@@ -750,7 +804,9 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
   } | null>(null)
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['departments', 'members', id] })
+    void queryClient.invalidateQueries({
+      queryKey: ['departments', 'members', id],
+    })
     void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
   }
   const remove = useMutation({
@@ -803,7 +859,10 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => membersQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => membersQuery.refetch(),
+        }}
         compact
       />
     )
@@ -950,7 +1009,9 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
         loading={request.isPending}
         onConfirm={() => request.mutate()}
         typedConfirmValue={departmentName}
-        typedConfirmLabel={t('departments.settings.typedConfirmLabel', { name: departmentName })}
+        typedConfirmLabel={t('departments.settings.typedConfirmLabel', {
+          name: departmentName,
+        })}
       />
     </SectionCard>
   )
@@ -1014,7 +1075,10 @@ export default function DepartmentDetailScreen() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => deptQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => deptQuery.refetch(),
+        }}
       />
     )
   }
@@ -1024,30 +1088,40 @@ export default function DepartmentDetailScreen() {
   const myUserId = meQuery.data?.user.id ?? ''
 
   return (
-    <div className="flex flex-col gap-6">
+    <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col gap-6">
       <PageHeader
         eyebrow={t('departments.title')}
         title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}
         tabs={
-          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-            <TabsList>
-              <TabsTrigger value="general">{t('departments.settings.general')}</TabsTrigger>
-              {isHead ? (
-                <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
-              ) : null}
-              <TabsTrigger value="members">{t('departments.members.title')}</TabsTrigger>
-              {isHead ? (
-                <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
-              ) : null}
-            </TabsList>
-          </Tabs>
+          <TabsList>
+            <TabsTrigger value="general">{t('departments.settings.general')}</TabsTrigger>
+            {isHead ? (
+              <TabsTrigger value="invite">{t('departments.invite.title')}</TabsTrigger>
+            ) : null}
+            <TabsTrigger value="members">{t('departments.members.title')}</TabsTrigger>
+            {isHead ? (
+              <TabsTrigger value="danger">{t('departments.settings.dangerZone')}</TabsTrigger>
+            ) : null}
+          </TabsList>
         }
       />
 
-      {tab === 'general' ? <GeneralTab id={id} isHead={isHead} /> : null}
-      {tab === 'invite' && isHead ? <InviteTab id={id} /> : null}
-      {tab === 'members' ? <MembersTab id={id} isHead={isHead} myUserId={myUserId} /> : null}
-      {tab === 'danger' && isHead ? <DangerTab id={id} departmentName={dept.name} /> : null}
-    </div>
+      <TabsContent value="general">
+        <GeneralTab id={id} isHead={isHead} />
+      </TabsContent>
+      {isHead ? (
+        <TabsContent value="invite">
+          <InviteTab id={id} />
+        </TabsContent>
+      ) : null}
+      <TabsContent value="members">
+        <MembersTab id={id} isHead={isHead} myUserId={myUserId} />
+      </TabsContent>
+      {isHead ? (
+        <TabsContent value="danger">
+          <DangerTab id={id} departmentName={dept.name} />
+        </TabsContent>
+      ) : null}
+    </Tabs>
   )
 }

@@ -4,33 +4,16 @@
 # Build from the REPO ROOT, same as apps/api/Dockerfile:
 #   docker build -f apps/api/Dockerfile.worker -t devon-worker:<tag> .
 #
-# IMPORTANT, read before assuming this is a distinct binary: as of this package (ops-tooling), Devon's
-# background work -- the outbox drain (`@devon/db`'s `startEventsWorker`), the event-reminder scan
-# (`apps/api/src/modules/events/reminder-worker.ts`) and the upload retention sweep
-# (`apps/api/src/modules/accounts/upload-sweeper.ts`) -- is started from inside `apps/api/src/
-# server.ts`'s `main()`, the exact same entry point that also opens the HTTP listener. There is no
-# `apps/api` "worker-only" mode/flag in the application code (out of this package's edit scope --
-# ops-tooling touches infra/, tools/, docs/ops/, Dockerfiles, scripts/, not `apps/api/src`). This image
-# is therefore byte-for-byte the same runtime as `apps/api/Dockerfile`, run as its own Compose service
-# so it can be scaled, restarted and resource-limited independently of the replica(s) Caddy actually
-# routes traffic to.
-#
-# This duplication is deliberately SAFE, not just convenient: every one of those three background
-# loops is documented and written to tolerate more than one process running it concurrently --
-# `events-worker.ts` uses `for update skip locked` explicitly "so a future second worker process never
-# double-runs" a domain event; `reminder-worker.ts`'s fire step is a fired-guarded `update ... returning
-# id` (a second process's identical update affects zero rows once the first has committed); the upload
-# sweep's status flip is the same fired-guard shape. Running this image as a second replica is exactly
-# the "future second worker process" those comments were written for -- not a promise that the API
-# port doesn't also start, which it does (nothing outside `apps/api` routes to it; see infra/Caddyfile,
-# which only ever proxies to the `api` service name).
-#
-# Once `apps/api` grows a real `--worker-only` entry point (skips `app.listen`, keeps the three
-# background loops), only this file's final `CMD` needs to change -- flagged for a follow-up package in
-# agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-tooling.md.
+# This optional service currently uses the same production runtime and server.ts entrypoint as
+# the API, including its HTTP listener and durable background workers. The single-server deploy
+# script does not launch this extra replica. Enable it only when additional worker capacity is
+# intended; it is not a separate worker-only executable. Domain-event locking and fired guards
+# coordinate replicated workers. A future worker-only entrypoint should change this CMD explicitly.
+# Only production dependencies are installed; tsx is a production dependency because workspace
+# packages export TypeScript source. Graceful shutdown is registered in server.ts.
 #
 # syntax=docker/dockerfile:1
-ARG NODE_IMAGE=node:22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+ARG NODE_IMAGE=node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
 
 FROM ${NODE_IMAGE} AS base
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
@@ -46,9 +29,12 @@ COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/i18n/package.json packages/i18n/package.json
 COPY packages/ui/package.json packages/ui/package.json
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod
 
-FROM base AS runtime
+FROM ${NODE_IMAGE} AS runtime
+WORKDIR /repo
+# Runtime has no package managers or their bundled dependency trees.
+RUN rm -rf /usr/local/lib/node_modules /opt/yarn-v* /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production
 RUN addgroup -g 10001 -S devon && adduser -u 10001 -S devon -G devon
 COPY --from=deps /repo/node_modules ./node_modules
@@ -60,7 +46,7 @@ COPY packages/db packages/db
 COPY packages/ai packages/ai
 COPY packages/i18n packages/i18n
 COPY apps/api apps/api
-COPY --from=deps /repo/packages/config/node_modules packages/config/node_modules
+
 COPY --from=deps /repo/packages/contracts/node_modules packages/contracts/node_modules
 COPY --from=deps /repo/packages/db/node_modules packages/db/node_modules
 COPY --from=deps /repo/packages/ai/node_modules packages/ai/node_modules

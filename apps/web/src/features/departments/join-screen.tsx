@@ -103,7 +103,9 @@ export default function JoinScreen() {
           <h1 className="text-h2 text-foreground">{t('departments.join.byLink.title')}</h1>
           {previewQuery.data ? (
             <p className="text-small text-muted-foreground">
-              {t('departments.join.byLink.body', { name: previewQuery.data.name })}
+              {t('departments.join.byLink.body', {
+                name: previewQuery.data.name,
+              })}
             </p>
           ) : null}
           {/* Told before the password is typed, not after: "you are in" and "you are in a queue"

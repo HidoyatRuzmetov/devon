@@ -138,7 +138,11 @@ export async function createRule(
       subjectType: 'automation_rule',
       subjectId: id,
       departmentId,
-      after: { name: input.name, trigger: input.trigger, enabled: input.enabled },
+      after: {
+        name: input.name,
+        trigger: input.trigger,
+        enabled: input.enabled,
+      },
     })
     return id
   })
@@ -257,7 +261,11 @@ export type RunRow = {
 export async function listRuns(
   ctx: RequestContext,
   departmentId: string,
-  options: { ruleId?: string | undefined; limit: number; cursor?: string | undefined },
+  options: {
+    ruleId?: string | undefined
+    limit: number
+    cursor?: string | undefined
+  },
 ): Promise<{ items: RunRow[]; nextCursor: string | null; total: number }> {
   return withContext(ctx, async (tx) => {
     const ruleFilter = options.ruleId ? sql` and r.rule_id = ${options.ruleId}` : sql``
@@ -272,11 +280,11 @@ export async function listRuns(
       detail: { actions?: string[]; reason?: string; error?: string } | null
       at: Date
     }>(
-      sql`select r.id, r.rule_id, ar.name as rule_name, r.card_id, c.title as card_title,
+      sql`select r.id, r.rule_id, ar.name as rule_name, c.id as card_id, c.title as card_title,
                  r.status, r.detail, r.at
           from app.automation_runs r
           join app.automation_rules ar on ar.id = r.rule_id
-          left join app.cards c on c.id = r.card_id
+          left join app.cards c on c.id = r.card_id and c.deleted_at is null
           where r.department_id = ${departmentId}${ruleFilter}${cursorFilter}
           order by r.at desc
           limit ${options.limit + 1}`,
@@ -342,6 +350,12 @@ export async function recordRun(
             where id = ${input.ruleId}`,
       )
     }
+    // Publish identifiers only; clients refetch the authorized run log after this transaction.
+    tx.emit({
+      type: 'automations.run.recorded',
+      departmentId,
+      payload: { ruleId: input.ruleId, cardId: input.cardId },
+    })
   })
 }
 

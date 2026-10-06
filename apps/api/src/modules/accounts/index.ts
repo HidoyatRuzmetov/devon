@@ -40,6 +40,8 @@ import {
   passwordResetRequestBodySchema,
   userIdParamsSchema,
   accountStatusMessageSchema,
+  profileSchema,
+  patchProfileBodySchema,
 } from './schemas.js'
 
 const SESSION_ABSOLUTE_SECONDS = 30 * 24 * 60 * 60
@@ -110,6 +112,53 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       // the very request that sets the cookie (found live: the post-registration photo upload was
       // 403ing on its first CSRF-checked call because the body carried an empty token).
       return reply.code(201).send({ user: toAccountPublicUser(user), csrfToken: session.rawCsrf })
+    },
+  )
+
+  app.get(
+    '/profile',
+    {
+      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      schema: { response: { 200: profileSchema } },
+    },
+    async (req, reply) => {
+      const user = req.actorUser!
+      return reply.send({
+        login: user.login,
+        email: user.email,
+        givenName: user.givenName,
+        familyName: user.familyName,
+        patronymic: user.patronymic,
+        title: user.title,
+      })
+    },
+  )
+
+  app.patch(
+    '/profile',
+    {
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
+      schema: { body: patchProfileBodySchema, response: { 200: profileSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      try {
+        const user = await repo.patchProfile(req.actor!.userId, req.body, auditCtx(req))
+        if (!user) return sendProblem(reply, 'not_found')
+        return reply.send({
+          login: user.login,
+          email: user.email,
+          givenName: user.givenName,
+          familyName: user.familyName,
+          patronymic: user.patronymic,
+          title: user.title,
+        })
+      } catch (error) {
+        if (error instanceof repo.LoginTaken) return sendProblem(reply, 'conflict')
+        throw error
+      }
     },
   )
 

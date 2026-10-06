@@ -207,6 +207,18 @@ function str(f: EventFacts, key: string): string {
  * the emit sites statically and asserts this key set equals that name set.
  */
 export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Object.freeze({
+  'automations.run.recorded': {
+    notify: false,
+    why: 'Run log invalidation uses realtime without adding inbox noise.',
+  },
+  'accounts.profile.updated': {
+    notify: false,
+    why: 'Self-service identity edits update the directory without notifying every colleague.',
+  },
+  'projects.project.updated': {
+    notify: false,
+    why: 'Project settings and milestone edits refresh the project without creating inbox noise.',
+  },
   // --- accounts -----------------------------------------------------------------------------------
   'accounts.user.registered': {
     notify: false,
@@ -479,6 +491,14 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   },
 
   // --- work ---------------------------------------------------------------------------------------
+  'work.card.deleted': {
+    notify: false,
+    why: 'Refresh live views without sending links to deleted work; the audit retains the deletion.',
+  },
+  'work.card.restored': {
+    notify: false,
+    why: 'Undo restores visibility; no second notification for an immediately corrected action.',
+  },
   'work.card.created': {
     notify: true,
     reason: 'assigned',

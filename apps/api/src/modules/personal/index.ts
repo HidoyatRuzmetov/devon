@@ -117,7 +117,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(sprintToDto(outcome.row))
+      return reply.type('application/json').send(sprintToDto(outcome.row))
     },
   )
 
@@ -190,7 +190,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await repo.patchTask(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(taskToDto(outcome.row))
+      return reply.type('application/json').send(taskToDto(outcome.row))
     },
   )
 
@@ -262,7 +262,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await repo.patchNote(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(noteToDto(outcome.row))
+      return reply.type('application/json').send(noteToDto(outcome.row))
     },
   )
 
@@ -303,7 +303,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const row = await repo.getCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
       if (!row) return sendProblem(reply, 'not_found')
-      return reply.send(canvasToDto(row))
+      return reply.type('application/json').send(canvasToDto(row))
     },
   )
 
@@ -340,7 +340,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
-      return reply.send(canvasToDto(outcome.row))
+      return reply.type('application/json').send(canvasToDto(outcome.row))
     },
   )
 
@@ -381,7 +381,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const row = await repo.patchPomodoroSettings(req.actor!.userId, req.body, ctxFrom(req))
-      return reply.send(pomodoroSettingsToDto(row))
+      return reply.type('application/json').send(pomodoroSettingsToDto(row))
     },
   )
 
@@ -434,7 +434,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (!row) return sendProblem(reply, 'not_found')
-      return reply.send(pomodoroSessionToDto(row))
+      return reply.type('application/json').send(pomodoroSessionToDto(row))
     },
   )
 

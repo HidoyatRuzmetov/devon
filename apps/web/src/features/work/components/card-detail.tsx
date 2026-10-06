@@ -41,7 +41,7 @@ import {
   useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
-import { replaceSearchParam } from '../../../lib/router.js'
+import { navigate, replaceSearchParam } from '../../../lib/router.js'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useIsDarkTheme } from '../../../lib/theme.js'
 import { useRunAiFeatureMutation, useAiSettingsQuery } from '../../ai/use-ai.js'
@@ -71,6 +71,8 @@ import {
 } from '../../ai/outputs.js'
 import type { AiFeatureId, RunMeta } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
+import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
+import { CardAttachments } from './card-attachments.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
 import { CardCustomFields } from '../../fields/index.js'
@@ -81,6 +83,7 @@ import {
   useCardQuery,
   useCreateLabelMutation,
   useDeleteChecklistItemMutation,
+  useDeleteCardMutation,
   useLabelsQuery,
   useMembers,
   usePatchCardMutation,
@@ -146,6 +149,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const isDark = useIsDarkTheme()
   const patchCard = usePatchCardMutation()
   const restoreCard = useRestoreCardMutation()
+  const deleteCard = useDeleteCardMutation()
+  const undoDelete = useDeleteCardMutation(true)
   const toggleWatcher = useToggleWatcherMutation()
   const createLabel = useCreateLabelMutation()
   const unfurl = useUnfurlMutation()
@@ -272,6 +277,23 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
       doneCelebrate.fire()
       toast(t('work.card.done'))
     }
+  }
+
+  async function deleteNow() {
+    const id = card!.id
+    deleteCard.mutate(id, {
+      onSuccess: () => {
+        toastWithUndo({
+          message: t('work.deletion.done'),
+          undoLabel: t('action.undo'),
+          // Leave time to read and recover, with a margin inside the server's 30-second window.
+          durationMs: 20_000,
+          onUndo: () => undoDelete.mutate(id),
+        })
+        if (onClose) onClose()
+        else navigate('/work')
+      },
+    })
   }
 
   async function archiveNow() {
@@ -537,7 +559,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 {pinned ? t('work.focus.unpin') : t('work.focus.pin')}
               </Button>
             ) : null}
-            {card.status === 'active' ? (
+            {canEdit && card.status === 'active' ? (
               <span className="relative inline-flex">
                 <Button size="sm" onClick={() => void markDone()} loading={patchCard.isPending}>
                   {t('work.card.markDone')}
@@ -545,19 +567,33 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 <Celebrate play={doneCelebrate.play} onDone={doneCelebrate.onDone} />
               </span>
             ) : null}
-            {card.status !== 'archived' ? (
-              <Button size="sm" variant="secondary" onClick={() => void archiveNow()}>
-                {t('work.card.archive')}
-              </Button>
-            ) : (
+            {canEdit &&
+              (card.status !== 'archived' ? (
+                <Button size="sm" variant="secondary" onClick={() => void archiveNow()}>
+                  {t('work.card.archive')}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void restoreCard.mutateAsync(card.id)}
+                >
+                  {t('work.card.restore')}
+                </Button>
+              ))}
+            {canEdit ? (
               <Button
                 size="sm"
-                variant="secondary"
-                onClick={() => void restoreCard.mutateAsync(card.id)}
+                variant="ghost"
+                loading={deleteCard.isPending}
+                onClick={() => void deleteNow()}
+                title={t('work.deletion.hint')}
               >
-                {t('work.card.restore')}
+                <Trash2 className="size-4" aria-hidden="true" />
+                {t('work.action.delete')}
               </Button>
-            )}
+            ) : null}
+            {canEdit && !card.projectId ? <ConvertProjectDialog cardId={card.id} /> : null}
           </div>
         </div>
       </header>
@@ -937,6 +973,8 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             </div>
           </div>
         </Field>
+
+        <CardAttachments cardId={card.id} canEdit={canEdit} />
 
         <Checklist card={card} />
 

@@ -247,7 +247,7 @@ const peopleRoutes: FastifyPluginAsyncZod = async (app) => {
         },
       )
       if (!outcome.ok) return sendProblem(reply, outcomeProblem(outcome.reason))
-      return reply.send(outcome.view)
+      return reply.type('application/json').send(outcome.view)
     },
   )
 

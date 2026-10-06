@@ -1,0 +1,32 @@
+{
+  "profileEdit": {
+    "heading": "Profile",
+    "title": "Position",
+    "description": "Update the details colleagues see and the login you use to sign in.",
+    "edit": "Edit profile",
+    "givenName": "First name",
+    "familyName": "Last name",
+    "patronymic": "Patronymic",
+    "login": "Username",
+    "email": "Email",
+    "loginHint": "Use lowercase letters, numbers, dots, dashes or underscores for your username. Use the new username next time you sign in.",
+    "saved": "Profile saved",
+    "loginTaken": "That username is already taken. Choose another.",
+    "error": "Could not save. Check the fields and try again."
+  },
+  "projectEdit": {
+    "edit": "Edit project",
+    "description": "Description",
+    "status": "Status",
+    "start": "Start date",
+    "target": "Target date",
+    "colour": "Colour",
+    "membersHint": "The owner is always included. Removing someone keeps their existing cards and history.",
+    "saved": "Project saved",
+    "conflict": "Someone updated this project. Close this window, refresh and try again.",
+    "error": "Could not save. Check the selected people and try again.",
+    "convert": "Add people · make a group project",
+    "convertHint": "Choose your teammates. This card becomes the first shared card in a new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
+    "converted": "Group project created"
+  }
+}

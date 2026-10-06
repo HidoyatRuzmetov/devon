@@ -134,6 +134,7 @@ export async function runRecurrenceScan(log: FastifyBaseLogger): Promise<number>
       // Sequential on purpose: each instance is a write the *next* iteration's "has a newer
       // instance already?" answer depends on, so running them concurrently could let one series
       // produce two cards. A background tick, not a request path.
+      // nosemgrep: query-in-loop -- recurrence series writes are ordered to prevent duplicate successor creation.
       await repo.createCard(departmentContext(card.departmentId, card.createdByUserId), {
         departmentId: card.departmentId,
         title: card.title,

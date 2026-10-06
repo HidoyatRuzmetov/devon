@@ -155,6 +155,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
     if (outOfTime()) return timedOut()
     let result
     try {
+      // nosemgrep: query-in-loop -- at most two attempts; truncation of the first determines the second token budget.
       result = await provider.complete({
         model: config.model,
         messages,

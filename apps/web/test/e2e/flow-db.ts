@@ -96,27 +96,3 @@ export function bootstrapFlowDatabase(): FlowDatabase {
   const appUrl = `postgres://${FLOW_APP_ROLE}:${encodeURIComponent(appPassword)}@${FLOW_DB_HOST}:${FLOW_DB_PORT}/${FLOW_DB_NAME}`
   return { appUrl }
 }
-
-/**
- * Test-fixture workaround for a confirmed product bug (see `tests.md`'s "requires external
- * configuration" / bug log, and `cross-department-access.test.ts`'s `it.fails` regression probe for
- * the same root cause): `GET /api/v1/ai/settings` lazily INSERTs a department's default AI-settings
- * row on first read, and that INSERT is rejected by `ai_department_settings_write`'s RLS policy for
- * every real department head (the policy checks the *instance-wide* actor role, which is never
- * `'head'` -- only `super_admin` can ever pass it). Concretely, this means the real `/work` and
- * `/projects/view` screens 500 the moment they render for *any* freshly-approved department, because
- * both call `useAiSettingsQuery` (`quick-add-bar.tsx`, `project-page-screen.tsx`).
- *
- * Pre-seeding the row here -- as the Postgres superuser, bypassing RLS entirely, exactly like
- * `apps/api/test/checks/pg-fixture.ts`'s own header describes for test setup -- is not a workaround
- * for anything this suite is trying to *prove*: `board-move`/`group-project`'s point is the card/task
- * state transition and its board/project-page rendering, not re-litigating this already-filed bug on
- * every run. Fixing the RLS policy (or `ai/index.ts`'s `toDbContext` passing the department membership
- * role instead of `Actor.role`) is out of this package's TOUCHES (`apps/api/src/**`).
- */
-export function seedAiSettingsRow(departmentId: string): void {
-  runPsqlInContainer(
-    `insert into app.ai_department_settings (department_id) values ('${departmentId}') on conflict (department_id) do nothing;`,
-    FLOW_DB_NAME,
-  )
-}

@@ -26,6 +26,7 @@ import {
   type MalwareScanner,
 } from '../lib/storage/clamav.js'
 import { ALLOWED_IMAGE_TYPES } from '../lib/storage/image.js'
+import { ATTACHMENT_TYPES } from '../lib/storage/attachment-types.js'
 import { createLocalStore, type LocalStore } from '../lib/storage/local-store.js'
 import type { ObjectStore } from '../lib/storage/object-store.js'
 import { createS3Store } from '../lib/storage/s3-store.js'
@@ -110,8 +111,9 @@ function registerLocalRoutes(
   // Raw-body parser for exactly the allowed image types, bounded by the upload limit before a byte
   // past it is buffered. No other route in the app accepts an image body, so registering this on the
   // root context (this plugin is fastify-plugin-wrapped) changes nothing for JSON routes.
+  app.removeContentTypeParser('text/plain')
   app.addContentTypeParser(
-    [...ALLOWED_IMAGE_TYPES],
+    [...new Set([...ALLOWED_IMAGE_TYPES, ...Object.values(ATTACHMENT_TYPES)])],
     { parseAs: 'buffer', bodyLimit: maxUploadBytes },
     (_req, body, done) => done(null, body),
   )
@@ -134,6 +136,13 @@ function registerLocalRoutes(
       if (!payload || payload.method !== 'PUT' || payload.userId !== req.actor!.userId) {
         sendProblem(reply, 'not_found')
         return
+      }
+      if (payload.key.startsWith('attachments/')) {
+        const uploadId = payload.key.split('/').at(-2) ?? ''
+        const upload = await app.devon.findOwnUpload(uploadId, req.actor!.userId)
+        if (!upload || upload.key !== payload.key || upload.status !== 'pending') {
+          return sendProblem(reply, 'not_found')
+        }
       }
       const contentType = (req.headers['content-type'] ?? '').split(';')[0]!.trim().toLowerCase()
       if (!payload.contentType || contentType !== payload.contentType) {

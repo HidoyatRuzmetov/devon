@@ -29,7 +29,10 @@ import {
 } from './schemas.js'
 
 function departmentManagedSubject(departmentId: string | null) {
-  return { kind: 'department_managed' as const, departmentId: departmentId ?? '' }
+  return {
+    kind: 'department_managed' as const,
+    departmentId: departmentId ?? '',
+  }
 }
 
 function requireDepartmentId(req: { actor: { departmentId: string | null } | null }) {
@@ -168,12 +171,15 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
         },
       },
-      schema: { querystring: runsQuerySchema, response: { 200: automationRunListSchema } },
+      schema: {
+        querystring: runsQuerySchema,
+        response: { 200: automationRunListSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return reply.send({ items: [], nextCursor: null, total: 0 })
-      return reply.send(
+      return reply.type('application/json').send(
         await repo.listRuns(contextFromRequest(req), departmentId, {
           ruleId: req.query.ruleId,
           limit: req.query.limit ?? 50,

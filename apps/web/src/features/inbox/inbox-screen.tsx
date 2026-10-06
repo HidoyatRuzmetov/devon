@@ -666,6 +666,9 @@ export default function InboxScreen() {
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               {t('inbox.preferences.title')}
             </Button>
+            <Button variant="secondary" size="sm" onClick={() => navigate('/inbox/telegram')}>
+              {t('telegram.title')}
+            </Button>
           </>
         }
         tabs={<InboxTabs status={status} onChange={setStatus} unreadCount={unreadCount} />}

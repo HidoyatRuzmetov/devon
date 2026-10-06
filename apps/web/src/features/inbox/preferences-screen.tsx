@@ -380,6 +380,11 @@ export default function PreferencesScreen() {
         eyebrow={t('inbox.eyebrow')}
         title={t('inbox.preferences.title')}
         description={t('inbox.preferences.body')}
+        actions={
+          <Button variant="secondary" onClick={() => navigate('/inbox/telegram')}>
+            {t('telegram.title')}
+          </Button>
+        }
       />
 
       <PrefsMatrixBody query={prefsQuery} />

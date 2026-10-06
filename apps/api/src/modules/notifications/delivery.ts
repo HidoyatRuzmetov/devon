@@ -8,6 +8,7 @@ import {
   getDepartmentQuietDefault,
   getPersonalQuietHours,
   getPrefs,
+  getNotificationById,
   recordDelivery,
   systemAuditCtx,
   type NotificationRow,
@@ -56,6 +57,10 @@ export async function deliverNotification(
 
     const chatId = await resolveTelegramChatId(userId)
     if (!chatId) return // not linked -- nothing to deliver, and nothing to record (no delivery was attempted)
+
+    // Outbox events and reminder jobs can arrive after a card was deleted. Preserve their history,
+    // but do not send its retained title to a user whose inbox can no longer display the card.
+    if (!(await getNotificationById(userId, notification.id))) return
 
     const departmentDefault = notification.departmentId
       ? await getDepartmentQuietDefault(notification.departmentId)

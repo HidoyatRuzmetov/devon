@@ -158,6 +158,9 @@ function AuditRow({ event }: { event: AuditEventRow }) {
           </Badge>
         ) : null}
         <span className="text-small text-muted-foreground">{verb ?? `: ${event.action}`}</span>
+        {event.subjectTitle ? (
+          <span className="w-full text-small text-foreground">{event.subjectTitle}</span>
+        ) : null}
       </div>
       {subjectRoute ? (
         <RouterLink href={subjectRoute} className="shrink-0">

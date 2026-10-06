@@ -10,6 +10,7 @@
 import * as React from 'react'
 import { useT, useLocale, formatNumber } from '@devon/i18n'
 import {
+  Button,
   Card,
   Celebrate,
   cn,
@@ -665,6 +666,17 @@ export default function HomeScreen() {
           dashboard (people, load, risk, decisions); a xodim keeps the working view (due from me,
           needs my decision, around me, sprint, focus). Both are fed by endpoints the viewer is
           allowed to call, so neither is a client-side illusion. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={() => navigate(isHead ? '/work' : '/work/mine')}>
+          {t(isHead ? 'work.view.board' : 'work.view.mine')}
+        </Button>
+        <Button variant="secondary" onClick={() => navigate('/work?new=1')}>
+          {t('work.actions.create')}
+        </Button>
+        <Button variant="ghost" onClick={() => navigate('/help')}>
+          {t('help.title')}
+        </Button>
+      </div>
       {isHead ? <HeadDashboard /> : <Dashboard hasAvatar={Boolean(user.avatarKey)} />}
     </div>
   )

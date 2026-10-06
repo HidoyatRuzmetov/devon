@@ -1,0 +1,17 @@
+{
+  "attachments": {
+    "title": "Files",
+    "add": "Upload a file",
+    "empty": "No files attached yet.",
+    "hint": "PDF, Word, Excel, PowerPoint, text, CSV and images. Files are checked before sharing.",
+    "saved": "File attached",
+    "removed": "File removed",
+    "removeName": "Remove {name}",
+    "uploading": "Uploading file…",
+    "scanning": "Checking file…",
+    "scanUnavailable": "The file check is temporarily unavailable. Try again to finish this upload.",
+    "tooLarge": "This file exceeds the server's upload limit. Choose a smaller file.",
+    "infected": "The file failed the malware check and was rejected.",
+    "error": "Could not complete the file action. Check the file type and try again."
+  }
+}

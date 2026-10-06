@@ -38,7 +38,9 @@ export type AiConfig = {
 }
 
 export const DEFAULT_BASE_URL = 'https://api-llm.gpu.uz/v1'
-export const DEFAULT_MODEL = 'glm-5.2'
+// The configured ministry endpoint advertises glm-5.3 (verified 2026-10-06).
+// AI_MODEL remains an explicit override for deployments with another allowed model.
+export const DEFAULT_MODEL = 'glm-5.3'
 export const DEFAULT_PRICE_PER_MILLION_UZS = 19_500
 export const MIN_MAX_TOKENS = 1024
 export const DEFAULT_MAX_MAX_TOKENS = 8192

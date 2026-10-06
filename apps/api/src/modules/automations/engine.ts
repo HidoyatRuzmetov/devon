@@ -212,7 +212,10 @@ async function applyActions(
         break
       case 'create_followup':
         if (action.title) {
-          followUp = { title: action.title, dueInDays: action.dueInDays ?? null }
+          followUp = {
+            title: action.title,
+            dueInDays: action.dueInDays ?? null,
+          }
         }
         break
     }
@@ -321,9 +324,7 @@ export async function evaluateTrigger(
 
   for (let i = 0; i < rules.length; i += 1) {
     const rule = rules[i]!
-    // eslint-disable-next-line no-await-in-loop -- rules on one card are sequential by design: the
-    // second rule must see what the first one wrote, and the chain guard below depends on that
-    // order. Never more than 50 rules (`listEnabledRulesForTrigger`'s own limit).
+    // nosemgrep: query-in-loop -- ordered rules share the chain guard and write the same card.
     const outcome = await evaluateOneRule(log, ctx, departmentId, rule, card, filterable, chain, {
       trigger,
       actorUserId,
@@ -345,7 +346,11 @@ async function evaluateOneRule(
   card: CardFacts,
   filterable: FilterableCard,
   chain: ChainEntry,
-  context: { trigger: AutomationTrigger; actorUserId: string | null; timeBased: boolean },
+  context: {
+    trigger: AutomationTrigger
+    actorUserId: string | null
+    timeBased: boolean
+  },
 ): Promise<'applied' | 'skipped' | 'failed'> {
   const skip = async (reason: string) => {
     await repo.recordRun(ctx, departmentId, {
@@ -476,44 +481,47 @@ export async function runTimeTriggerScan(log: FastifyBaseLogger): Promise<void> 
   // nightly job does -- the policies in migration 1100 allow that instance-level read and nothing
   // else about it: every *write* below happens under a per-department `systemContext`.
   const departments = await repo.listDepartmentsWithTimeTriggers(scanContext())
-  for (let i = 0; i < departments.length; i += 1) {
-    const departmentId = departments[i]!.departmentId
-    const ctx = systemContext(departmentId, null)
-    try {
-      // eslint-disable-next-line no-await-in-loop -- one department's scan must finish before the
-      // next starts so a slow department cannot fan out into hundreds of concurrent transactions;
-      // this is a background tick, not a request path.
-      const dueSoonRules = await repo.listEnabledRulesForTrigger(ctx, departmentId, 'card_due_soon')
-      // eslint-disable-next-line no-await-in-loop -- see above.
-      const overdueRules = await repo.listEnabledRulesForTrigger(ctx, departmentId, 'card_overdue')
-      const jobs: Array<{ trigger: 'card_due_soon' | 'card_overdue'; daysAhead: number }> = []
-      if (dueSoonRules.length > 0) {
-        jobs.push({
-          trigger: 'card_due_soon',
-          daysAhead: Math.max(...dueSoonRules.map((r) => r.triggerConfig.daysAhead ?? 2)),
-        })
-      }
-      if (overdueRules.length > 0) jobs.push({ trigger: 'card_overdue', daysAhead: 0 })
-
-      for (let j = 0; j < jobs.length; j += 1) {
-        const job = jobs[j]!
-        // eslint-disable-next-line no-await-in-loop -- two iterations at most (due-soon, overdue).
-        const cards = await repo.listCardsForTimeTrigger(
-          ctx,
-          departmentId,
-          job.trigger,
-          job.daysAhead,
-        )
-        for (let k = 0; k < cards.length; k += 1) {
-          // eslint-disable-next-line no-await-in-loop -- sequential on purpose: each card's rules
-          // may write to that card, and a background tick must not stampede the pool.
-          await evaluateTrigger(log, departmentId, cards[k]!.id, job.trigger, null, {
-            timeBased: true,
-          })
+  // Independent departments run in bounded batches; each card's rule order remains sequential.
+  for (let offset = 0; offset < departments.length; offset += 2) {
+    await Promise.all(
+      departments.slice(offset, offset + 2).map(async ({ departmentId }) => {
+        const ctx = systemContext(departmentId, null)
+        try {
+          const [dueSoonRules, overdueRules] = await Promise.all([
+            repo.listEnabledRulesForTrigger(ctx, departmentId, 'card_due_soon'),
+            repo.listEnabledRulesForTrigger(ctx, departmentId, 'card_overdue'),
+          ])
+          const jobs: Array<{ trigger: 'card_due_soon' | 'card_overdue'; daysAhead: number }> = []
+          if (dueSoonRules.length > 0)
+            jobs.push({
+              trigger: 'card_due_soon',
+              daysAhead: Math.max(...dueSoonRules.map((r) => r.triggerConfig.daysAhead ?? 2)),
+            })
+          if (overdueRules.length > 0) jobs.push({ trigger: 'card_overdue', daysAhead: 0 })
+          await Promise.all(
+            jobs.map(async (job) => {
+              // nosemgrep: query-in-loop -- this is a Promise.all callback; jobs run concurrently in bounded department batches.
+              const cards = await repo.listCardsForTimeTrigger(
+                ctx,
+                departmentId,
+                job.trigger,
+                job.daysAhead,
+              )
+              for (let start = 0; start < cards.length; start += 4) {
+                await Promise.all(
+                  cards.slice(start, start + 4).map((card) =>
+                    evaluateTrigger(log, departmentId, card.id, job.trigger, null, {
+                      timeBased: true,
+                    }),
+                  ),
+                )
+              }
+            }),
+          )
+        } catch (err) {
+          log.error({ err, departmentId }, 'automations: time-trigger scan failed for a department')
         }
-      }
-    } catch (err) {
-      log.error({ err, departmentId }, 'automations: time-trigger scan failed for a department')
-    }
+      }),
+    )
   }
 }

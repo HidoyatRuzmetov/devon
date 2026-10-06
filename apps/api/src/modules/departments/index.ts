@@ -35,8 +35,14 @@ import {
 } from './schemas.js'
 
 const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
-  const ownAccount = (userId: string) => ({ kind: 'own_account' as const, userId })
-  const department = (departmentId: string) => ({ kind: 'department' as const, departmentId })
+  const ownAccount = (userId: string) => ({
+    kind: 'own_account' as const,
+    userId,
+  })
+  const department = (departmentId: string) => ({
+    kind: 'department' as const,
+    departmentId,
+  })
   /** Head-only for reads and writes alike (SPEC §2.1) -- the join queue and a password reset are
    * management surfaces, not department-child ones. */
   const departmentManaged = (departmentId: string) => ({
@@ -112,7 +118,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/requests',
     {
       config: {
-        permission: { action: 'create', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'create',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
       },
       schema: { body: createDepartmentRequestBodySchema },
     },
@@ -126,7 +135,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/requests/mine',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: departmentRequestListSchema } },
     },
     async (req, reply) => {
@@ -165,7 +179,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'conflict')
         return
       }
-      return reply.send(result)
+      return reply.type('application/json').send(result)
     },
   )
 
@@ -191,7 +205,12 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/mine',
     {
-      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      config: {
+        permission: {
+          action: 'read',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
+      },
       schema: { response: { 200: departmentListSchema } },
     },
     async (req, reply) => {
@@ -209,7 +228,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChild((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, response: { 200: departmentDetailSchema } },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: departmentDetailSchema },
+      },
     },
     async (req, reply) => {
       const role = myRoleIn(req, req.params.id)
@@ -222,7 +244,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      return reply.send(deptToView(detail))
+      return reply.type('application/json').send(deptToView(detail))
     },
   )
 
@@ -235,7 +257,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => department((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, body: patchDepartmentSettingsBodySchema },
+      schema: {
+        params: departmentIdParamsSchema,
+        body: patchDepartmentSettingsBodySchema,
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -273,7 +298,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => department((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, response: { 200: inviteViewSchema } },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: inviteViewSchema },
+      },
     },
     async (req, reply) => {
       const invite = await repo.getInvite(req.params.id, req.actor!.userId)
@@ -342,7 +370,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => department((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, body: setJoinPasswordBodySchema },
+      schema: {
+        params: departmentIdParamsSchema,
+        body: setJoinPasswordBodySchema,
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -360,7 +391,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => department((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, body: setJoinApprovalBodySchema },
+      schema: {
+        params: departmentIdParamsSchema,
+        body: setJoinApprovalBodySchema,
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -375,7 +409,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/join/:key',
     {
       config: { permission: { public: true } },
-      schema: { params: joinKeyParamsSchema, response: { 200: joinPreviewSchema } },
+      schema: {
+        params: joinKeyParamsSchema,
+        response: { 200: joinPreviewSchema },
+      },
     },
     async (req, reply) => {
       const preview = await repo.getJoinPreview(req.params.key)
@@ -383,7 +420,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
-      return reply.send(preview)
+      return reply.type('application/json').send(preview)
     },
   )
 
@@ -391,7 +428,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
     '/join',
     {
       config: {
-        permission: { action: 'create', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+        permission: {
+          action: 'create',
+          subject: (r) => ownAccount(r.actor?.userId ?? ''),
+        },
         rateLimit: { max: 10, timeWindow: '1 minute' },
       },
       schema: { body: joinBodySchema, response: { 200: joinResultSchema } },
@@ -408,7 +448,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, result.reason === 'rate_limited' ? 'rate_limited' : 'not_found')
         return
       }
-      return reply.send({ departmentId: result.departmentId, status: result.status })
+      return reply.send({
+        departmentId: result.departmentId,
+        status: result.status,
+      })
     },
   )
 
@@ -423,7 +466,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentChild((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, response: { 200: memberListSchema } },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: memberListSchema },
+      },
     },
     async (req, reply) => {
       const role = myRoleIn(req, req.params.id)
@@ -503,7 +549,10 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           subject: (r) => departmentManaged((r.params as { id: string }).id),
         },
       },
-      schema: { params: departmentIdParamsSchema, response: { 200: joinRequestListSchema } },
+      schema: {
+        params: departmentIdParamsSchema,
+        response: { 200: joinRequestListSchema },
+      },
     },
     async (req, reply) => {
       const rows = await repo.listJoinRequests(req.params.id, auditCtx(req))
@@ -541,6 +590,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
       async (req, reply) => {
         if (!checkCsrf(req, reply)) return
+        // nosemgrep: query-in-loop -- registration loop creates callbacks; each HTTP request executes one decision.
         const ok = await repo.decideJoinRequest(
           req.params.id,
           req.params.userId,

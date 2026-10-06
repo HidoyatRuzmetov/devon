@@ -16,6 +16,9 @@ export const linkStatusSchema = z.object({
   linkedAt: z.string().datetime().nullable(),
   mutedUntil: z.string().datetime().nullable(),
   botUsername: z.string().nullable(),
+  configured: z.boolean(),
+  available: z.boolean(),
+  canConnectGroup: z.boolean(),
 })
 
 export const linkCodeSchema = z.object({

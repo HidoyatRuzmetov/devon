@@ -206,7 +206,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           callerIsHead(req),
           req.params.eventId,
         )
-        reply.send(event)
+        reply.type('application/json').send(event)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -232,7 +232,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.params.eventId,
           req.body,
         )
-        reply.send(updated)
+        reply.type('application/json').send(updated)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -258,7 +258,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.params.eventId,
           req.body.reason,
         )
-        reply.send(cancelled)
+        reply.type('application/json').send(cancelled)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -274,7 +274,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       try {
         const ics = await service.exportEventIcs(toDbContext(req), req.params.eventId)
-        reply.send(ics)
+        reply.type('application/json').send(ics)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -298,7 +298,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.params.eventId,
           req.body,
         )
-        reply.send(updated)
+        reply.type('application/json').send(updated)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -588,7 +588,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.params.pollId,
           req.body.optionIds,
         )
-        reply.send(poll)
+        reply.type('application/json').send(poll)
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
@@ -666,7 +666,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.actor!.userId,
         req.params.eventId,
       )
-      return reply.send(result)
+      return reply.type('application/json').send(result)
     },
   )
 

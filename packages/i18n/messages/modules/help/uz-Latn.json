@@ -1,0 +1,73 @@
+{
+  "help": {
+    "title": "Tezkor yordam",
+    "description": "Qisqa javobni toping va ishingizni davom ettiring.",
+    "search": "Yordamdan qidirish, masalan: oʻchirish yoki Telegram",
+    "noResults": "Mos javob topilmadi. Loyiha, profil yoki Telegram kabi qisqaroq soʻzni sinab koʻring.",
+    "groups": {
+      "daily": "Ish kuningiz",
+      "work": "Vazifalar va loyihalar",
+      "account": "Profil va ulangan xizmatlar"
+    },
+    "items": {
+      "start": {
+        "q": "Men xodimman. Nimadan boshlayman?",
+        "a": "Bosh sahifadan boshlang va bugun bajaradigan bitta vazifani tanlang. Ishlar boʻlimida Mening vazifalarim orqali sizga biriktirilgan ishlarni koʻring. Kartochkani ochib, talab va muddatni tekshiring. Yordam kerak boʻlsa, izoh yozing. Natija tayyor boʻlganda bajarilgan deb belgilang.\nShaxsiy maydon faqat sizga koʻrinadi: unda oʻz rejalaringiz va qaydlaringizni saqlang."
+      },
+      "head": {
+        "q": "Men boshliqman. Ishlarni qanday boshqaraman?",
+        "a": "Bosh sahifada kechikkan ishlar va yaqin muddatlarni koʻrib chiqing. Ishlar boʻlimida har bir xodimning yuklamasini tekshiring. Kartochka yaratganda kutilgan natija, bitta masʼul va muddatni belgilang. Bir natija ustida bir necha kishi ishlasa, guruh loyihasidan foydalaning. Yangi topshiriq berishdan oldin mavjud ishlarning izohlari va holatini koʻring."
+      },
+      "find": {
+        "q": "Kerakli narsani barcha menyularni ochmasdan qanday topaman?",
+        "a": "Ctrl+K (Macʼda Command+K) tezkor qidiruv va boʻlimlarga oʻtishni ochadi. Ishlar boʻlimida Mening vazifalarim va filtrlardan foydalaning. Alohida kartochkani bajarilgan deb belgilasangiz, u Arxivga oʻtadi. Guruh loyihasidagi kartochka esa loyihada bajarilgan holatda qoladi. Ikkalasi ham xodimlarning faol doskasidan chiqadi. Tezkor yordam bilimlar bazasining yuqorisida doim turadi."
+      },
+      "admin": {
+        "q": "Men superadminman. Avval nimani tekshiraman?",
+        "a": "Administrator boʻlimini ochib, tizim holatini tekshiring: maʼlumotlar bazasi, navbat, fayllar, zaxira nusxalar, Telegram va AI. Biror xizmat sozlanmagan boʻlsa, shu yerdagi sozlash koʻrsatmasiga amal qiling. Boshqarma ochish soʻrovlarini tasdiqlashdan oldin koʻrib chiqing. Kim nimani oʻzgartirgan yoki oʻchirganini Audit jurnalidan topasiz.\nKundalik ishlarni boshliqlar boshqaradi; siz platforma va hisoblarga kirishning ishlashini taʼminlaysiz."
+      },
+      "projects": {
+        "q": "Kartochka va guruh loyihasidan qachon foydalanaman? Ularni qanday oʻzgartiraman?",
+        "a": "Bitta ish uchun, masalan hisobot tayyorlash uchun kartochka yarating. Bir nechta vazifa va umumiy natija uchun guruh loyihasini tanlang. Hamkasblarni jalb qilish uchun kartochkangizdagi guruh loyihasiga oʻtkazish amalini tanlang. Mavjud loyihani ochib, ruxsatingiz boʻlsa uning maʼlumotlari va aʼzolarini tahrirlang."
+      },
+      "delete": {
+        "q": "Bajarish, arxivlash va oʻchirishning farqi nima?",
+        "a": "Natija tayyor boʻlsa, ishni bajarilgan deb belgilang. Keyinroq kerak boʻladigan kartochkani arxivlang; uni Arxivdan tiklash mumkin. Keraksiz kartochkani ichidagi Oʻchirish tugmasi bilan oʻchiring. Darhol chiqadigan xabarda Bekor qilish tugmasi bor.\nOʻchirilgan kartochka jamoa koʻrinishlaridan yoʻqoladi. Superadmin audit jurnalida kim va qachon oʻchirganini koʻra oladi; yozuv saqlanadi. Oʻzingiz yaratgan, bergan yoki olgan kartochkani oʻzgartira va oʻchira olasiz; boshliq boshqarmaning barcha kartochkalarini boshqaradi."
+      },
+      "files": {
+        "q": "Vazifaga kerakli materialni qanday ulashaman?",
+        "a": "Kartochkani ochib, Fayllar boʻlimini toping. Qurilmangizdan fayl tanlang; xavfsizlik tekshiruvidan soʻng u ochiladi. Kartochkani koʻra oladigan hamkasblar fayllarni yuklab olishi mumkin. Tekshiruv vaqtincha ishlamasa, keyinroq qayta urining.\nHavolalar boʻlimida umumiy hujjat manzilini ham qoʻshishingiz mumkin. Tushunarli nom bering va hamkasblar manbani ochishga ruxsati borligini tekshiring."
+      },
+      "profile": {
+        "q": "Ismim, foydalanuvchi nomim yoki lavozimimni qayerda oʻzgartiraman?",
+        "a": "Hisob menyusidan profilingizni oching va maʼlumotlaringizni tahrirlang. Chiqishdan oldin saqlang. Foydalanuvchi nomi tizimga kirish uchun ishlatiladi: keyingi safar yangisini kiriting. Boshqarmaga aʼzolik va boshliq/xodim roli profilda koʻrsatilgan lavozimdan alohida."
+      },
+      "telegram": {
+        "q": "Telegramni qanday ulayman va xabarnomalarni boshqaraman?",
+        "a": "Xabarnoma sozlamalarini oching va koʻrsatilgan havola orqali Telegram hisobingizni ulang; ulashni yakunlash uchun botni ishga tushiring. Qaysi xabarlarni olishni va tinch vaqtni tanlang. Boshliq Telegram sozlamalaridan guruhni ulashi mumkin.\nUlash havolasi yoʻq yoki xabar kelmayotgan boʻlsa, superadmindan bot sozlamalarini tekshirishni soʻrang. Serverda token borligi shaxsiy hisobingiz ulanganini anglatmaydi."
+      },
+      "ai": {
+        "q": "AIʼdan qanday foydalanaman? Ishlamasa nima qilaman?",
+        "a": "Ishlayotgan joyingiz yonidagi yulduzcha tugmasidan foydalaning: masalan, nazorat roʻyxati yonida qadamlar taklifi yoki izohlar yonida xulosa. Natijani koʻrib chiqib, qabul qiling yoki tahrirlang. AI javobi qoralama: ismlar, sanalar va faktlarni tekshiring.\nTugma yoʻq boʻlsa, boshliq funksiyaning yoqilganini tekshirishi mumkin. Soʻrov xato bersa, bir marta qayta urining; yana ishlamasa, superadmindan AI xizmatini tekshirishni soʻrang."
+      }
+    }
+  },
+  "work": {
+    "composer": { "quickEntry": "Tez kiritish va AI (ixtiyoriy)" },
+    "deletion": {
+      "done": "Kartochka oʻchirildi. Yozuv administrator audit jurnalida saqlandi.",
+      "failed": "Amal bajarilmadi. Kartochkani yangilab, qayta urining; bekor qilish 30 soniya davomida mumkin.",
+      "hint": "Jamoa koʻrinishlaridan olib tashlanadi; superadmin uchun yozuv saqlanadi."
+    }
+  },
+  "admin": {
+    "console": {
+      "audit": {
+        "verb": {
+          "work.card_deleted": "kartochkani oʻchirdi",
+          "work.card_delete_undone": "kartochka oʻchirilishini bekor qildi"
+        }
+      }
+    }
+  }
+}

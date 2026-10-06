@@ -340,7 +340,9 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (req, reply) => {
-      return reply.send(await getDepartmentSettings(req.params.departmentId))
+      return reply
+        .type('application/json')
+        .send(await getDepartmentSettings(req.params.departmentId))
     },
   )
 
@@ -369,7 +371,7 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.params.departmentId,
         req.body,
       )
-      return reply.send(updated)
+      return reply.type('application/json').send(updated)
     },
   )
 

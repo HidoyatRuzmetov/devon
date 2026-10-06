@@ -197,10 +197,12 @@ export type JobRunnerHandle = { stop(): Promise<void> }
  * are swallowed -- a metrics poll must never be the reason a job scheduler looks unhealthy. */
 async function pollQueueMetrics(boss: PgBoss): Promise<void> {
   try {
-    for (const name of [QUEUE_REMINDER_DUE, QUEUE_DIGEST_PERSONAL, QUEUE_DIGEST_DEPARTMENT]) {
-      const queue = await boss.getQueue(name)
-      queuePendingGauge.set(queue?.queuedCount ?? 0, { queue: name })
-    }
+    await Promise.all(
+      [QUEUE_REMINDER_DUE, QUEUE_DIGEST_PERSONAL, QUEUE_DIGEST_DEPARTMENT].map(async (name) => {
+        const queue = await boss.getQueue(name)
+        queuePendingGauge.set(queue?.queuedCount ?? 0, { queue: name })
+      }),
+    )
     const dlq = await boss.getQueue(QUEUE_DEAD_LETTER)
     queueDeadLetterGauge.set(dlq?.queuedCount ?? 0, { queue: 'notifications' })
   } catch {
@@ -252,7 +254,9 @@ export async function startJobRunner(
 
     await boss.schedule(QUEUE_REMINDER_DUE, '0 * * * *', null, { tz: TZ })
     await boss.schedule(QUEUE_DIGEST_PERSONAL, '30 8 * * *', null, { tz: TZ })
-    await boss.schedule(QUEUE_DIGEST_DEPARTMENT, '0 18 * * 5', null, { tz: TZ })
+    await boss.schedule(QUEUE_DIGEST_DEPARTMENT, '0 18 * * 5', null, {
+      tz: TZ,
+    })
 
     // H15.1 "queue metrics": same started-here-only, cleared-on-stop shape as
     // `accounts/scan-retry-worker.ts` (H11.1 "timers cleared") -- one interval, never left running
@@ -280,4 +284,9 @@ export async function startJobRunner(
   }
 }
 
-export const _internal = { runReminderDue, runDigestPersonal, runDigestDepartment, summarizeCounts }
+export const _internal = {
+  runReminderDue,
+  runDigestPersonal,
+  runDigestDepartment,
+  summarizeCounts,
+}

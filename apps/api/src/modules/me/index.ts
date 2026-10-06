@@ -122,16 +122,18 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
         app.devon.listActiveMembershipsForUser(updated.id),
       ])
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      return reply.send(
-        toMe(
-          updated,
-          memberships,
-          settings.isDemo,
-          csrfToken,
-          req.actor?.viewAs?.departmentId ?? null,
-          req.actor?.departmentId ?? null,
-        ),
-      )
+      return reply
+        .type('application/json')
+        .send(
+          toMe(
+            updated,
+            memberships,
+            settings.isDemo,
+            csrfToken,
+            req.actor?.viewAs?.departmentId ?? null,
+            req.actor?.departmentId ?? null,
+          ),
+        )
     },
   )
 
@@ -177,16 +179,18 @@ const meRoutes: FastifyPluginAsyncZod = async (app) => {
 
       const settings = await app.devon.getInstanceSettings()
       const csrfToken = req.cookies[CSRF_COOKIE_NAME] ?? ''
-      return reply.send(
-        toMe(
-          req.actorUser!,
-          memberships,
-          settings.isDemo,
-          csrfToken,
-          req.actor?.viewAs?.departmentId ?? null,
-          departmentId,
-        ),
-      )
+      return reply
+        .type('application/json')
+        .send(
+          toMe(
+            req.actorUser!,
+            memberships,
+            settings.isDemo,
+            csrfToken,
+            req.actor?.viewAs?.departmentId ?? null,
+            departmentId,
+          ),
+        )
     },
   )
 }

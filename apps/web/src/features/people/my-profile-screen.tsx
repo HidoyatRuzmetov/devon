@@ -12,7 +12,7 @@ import { useForcedState } from '../../lib/forced-state.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { useOnline } from '../../lib/use-online.js'
 import { useSession } from '../../lib/session.js'
-import { navigate } from '../../lib/router.js'
+import { navigate, RouterLink } from '../../lib/router.js'
 import { PersonPage } from './person/person-page.js'
 
 export default function MyProfileScreen(): React.JSX.Element {
@@ -51,6 +51,12 @@ export default function MyProfileScreen(): React.JSX.Element {
         description={t('people.person.own.description')}
       />
       <div className="mt-5">
+        <RouterLink
+          href="/account#section-profile"
+          className="mb-4 inline-flex text-small text-primary underline"
+        >
+          {t('profileEdit.edit')}
+        </RouterLink>
         <PersonPage userId="me" />
       </div>
     </PageContainer>

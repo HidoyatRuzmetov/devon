@@ -38,7 +38,7 @@
         "healthTitle": "Tizim holati",
         "healthSeeAll": "Barchasini koʻrish",
         "healthUnavailable": "Tizim holati hali kelmadi.",
-        "backupsUnconfigured": "Zaxira nusxalar sozlanmagan — bu serverda hech narsa zaxiralanmayapti.",
+        "backupsUnconfigured": "Zaxira nusxalar nazorati sozlanmagan. Administrator zaxiralash jadvalini tekshirsin.",
         "backupsConfigure": "Sozlash",
         "userCountBreakdown": "Boshqarmalar kesimida"
       },

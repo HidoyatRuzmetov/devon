@@ -4,6 +4,22 @@ import { z } from 'zod'
 import { ApiError, apiClient } from '../../lib/api-client.js'
 import type { Locale } from '@devon/i18n'
 
+const profileSchema = z.object({
+  login: z.string(),
+  email: z.string().nullable(),
+  givenName: z.string(),
+  familyName: z.string(),
+  patronymic: z.string().nullable(),
+  title: z.string().nullable(),
+})
+export type AccountProfile = z.infer<typeof profileSchema>
+export function fetchProfile(): Promise<AccountProfile> {
+  return apiClient.get('/api/v1/accounts/profile', profileSchema)
+}
+export function saveProfile(profile: AccountProfile, csrfToken: string): Promise<AccountProfile> {
+  return apiClient.patch('/api/v1/accounts/profile', profile, profileSchema, csrfToken)
+}
+
 export type RegisterInput = {
   login: string
   email?: string | undefined

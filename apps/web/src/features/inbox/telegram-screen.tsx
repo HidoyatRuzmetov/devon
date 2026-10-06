@@ -3,6 +3,7 @@
 // only renders for the head of the active department (the same `department`-subject write the API
 // itself requires, `apps/api/src/modules/telegram/index.ts`) -- a member sees just their own link.
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDateTime, formatTime } from '@devon/i18n'
 import {
   Badge,
@@ -20,7 +21,7 @@ import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { GROUP_KINDS, type GroupKind, type TelegramGroupDto } from './api.js'
+import { fetchTelegramSetup, GROUP_KINDS, type GroupKind, type TelegramGroupDto } from './api.js'
 import {
   useDepartmentGroupsQuery,
   useDisconnectGroupMutation,
@@ -86,8 +87,10 @@ function TelegramPhoneMock({
 function PersonalLinkCard() {
   const t = useT()
   const locale = useLocale()
-  const statusQuery = useTelegramStatusQuery()
   const linkCode = useTelegramLinkCodeMutation()
+  const statusQuery = useTelegramStatusQuery(
+    Boolean(linkCode.data && Date.parse(linkCode.data.expiresAt) > Date.now()),
+  )
   const unlink = useTelegramUnlinkMutation()
   const mute = useTelegramMuteMutation()
 
@@ -100,13 +103,16 @@ function PersonalLinkCard() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => statusQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => statusQuery.refetch(),
+        }}
       />
     )
   }
 
   const status = statusQuery.data
-  if (!status.botUsername) {
+  if (!status.configured || !status.botUsername) {
     return (
       <SectionCard title={t('telegram.personal.title')}>
         <StateView
@@ -142,6 +148,11 @@ function PersonalLinkCard() {
         </Reveal>
 
         <div className="min-w-0 flex-1">
+          {!status.available ? (
+            <p role="status" className="mb-3 text-small text-warning">
+              {t('integrationSetup.telegramUnavailable')}
+            </p>
+          ) : null}
           {status.linked ? (
             <div className="flex flex-col gap-4">
               <div>
@@ -179,6 +190,12 @@ function PersonalLinkCard() {
                 ) : null}
               </div>
               <div>
+                <Button asChild variant="secondary">
+                  <a href={`https://t.me/${status.botUsername}`} target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" aria-hidden="true" />
+                    {t('telegram.personal.openInTelegram')}
+                  </a>
+                </Button>
                 <Button
                   variant="ghost"
                   onClick={() =>
@@ -207,7 +224,7 @@ function PersonalLinkCard() {
                   ) : null}
                   <div className="flex flex-col gap-2">
                     <code className="rounded-sm bg-muted px-3 py-2 text-h4 tracking-widest">
-                      {linkCode.data.code}
+                      /start {linkCode.data.code}
                     </code>
                     {linkCode.data.deepLink ? (
                       <Button asChild size="sm" variant="secondary">
@@ -230,6 +247,11 @@ function PersonalLinkCard() {
                   {t('telegram.personal.connectButton')}
                 </Button>
               </div>
+              {linkCode.isError ? (
+                <p role="alert" className="text-small text-destructive">
+                  {t('toast.saveError')}
+                </p>
+              ) : null}
             </div>
           )}
         </div>
@@ -243,11 +265,13 @@ function GroupRow({
   onToggleKind,
   onDisconnect,
   disconnecting,
+  updating,
 }: {
   group: TelegramGroupDto
   onToggleKind: (kind: GroupKind, on: boolean) => void
   onDisconnect: () => void
   disconnecting: boolean
+  updating: boolean
 }) {
   const t = useT()
   return (
@@ -272,6 +296,7 @@ function GroupRow({
               <input
                 type="checkbox"
                 checked={checked}
+                disabled={updating}
                 onChange={(e) => onToggleKind(kind, e.target.checked)}
                 className="size-3.5 rounded-sm border-border"
               />
@@ -284,7 +309,9 @@ function GroupRow({
   )
 }
 
-type GroupsListProps = { query: ReturnType<typeof useDepartmentGroupsQuery> } & {
+type GroupsListProps = {
+  query: ReturnType<typeof useDepartmentGroupsQuery>
+} & {
   disconnect: ReturnType<typeof useDisconnectGroupMutation>
 } & { putKinds: ReturnType<typeof usePutGroupKindsMutation> }
 
@@ -299,7 +326,10 @@ function GroupsList({ query, disconnect, putKinds }: GroupsListProps) {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => query.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => query.refetch(),
+        }}
         className="mt-3"
       />
     )
@@ -321,6 +351,7 @@ function GroupsList({ query, disconnect, putKinds }: GroupsListProps) {
           key={group.id}
           group={group}
           disconnecting={disconnect.isPending && disconnect.variables === group.id}
+          updating={putKinds.isPending}
           onDisconnect={() =>
             disconnect.mutate(group.id, {
               onSuccess: () => toast(t('telegram.group.disconnected')),
@@ -339,29 +370,34 @@ function GroupsList({ query, disconnect, putKinds }: GroupsListProps) {
   )
 }
 
-function GroupsCard({ departmentId }: { departmentId: string }) {
+function GroupsCard({ departmentId, canManage }: { departmentId: string; canManage: boolean }) {
   const t = useT()
   const locale = useLocale()
-  const groupsQuery = useDepartmentGroupsQuery(departmentId)
   const connectCode = useGroupConnectCodeMutation(departmentId)
+  const groupsQuery = useDepartmentGroupsQuery(
+    canManage ? departmentId : null,
+    Boolean(connectCode.data && Date.parse(connectCode.data.expiresAt) > Date.now()),
+  )
   const putKinds = usePutGroupKindsMutation(departmentId)
   const disconnect = useDisconnectGroupMutation(departmentId)
 
   return (
     <SectionCard title={t('telegram.group.title')} description={t('telegram.group.body')}>
-      <GroupsList query={groupsQuery} disconnect={disconnect} putKinds={putKinds} />
+      {canManage ? (
+        <GroupsList query={groupsQuery} disconnect={disconnect} putKinds={putKinds} />
+      ) : null}
 
       <div className="mt-4 flex flex-col gap-3">
         {connectCode.data ? (
           <div className="rounded-sm bg-muted p-3">
             <p className="text-small text-muted-foreground">{t('telegram.group.codeBody')}</p>
             <div className="mt-2 flex items-center gap-2">
-              <code className="text-h4 tracking-widest">{connectCode.data.code}</code>
+              <code className="text-h4 tracking-widest">/connect {connectCode.data.code}</code>
               <IconButton
                 aria-label={t('telegram.group.copyCode')}
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(connectCode.data!.code)
+                    await navigator.clipboard.writeText(`/connect ${connectCode.data!.code}`)
                     toast(t('toast.copied'))
                   } catch {
                     toast(t('toast.saveError'))
@@ -387,7 +423,48 @@ function GroupsCard({ departmentId }: { departmentId: string }) {
             {t('telegram.group.connectButton')}
           </Button>
         </div>
+        {connectCode.isError ? (
+          <p role="alert" className="text-small text-destructive">
+            {t('toast.saveError')}
+          </p>
+        ) : null}
       </div>
+    </SectionCard>
+  )
+}
+
+function SetupGuide({ departmentId }: { departmentId: string | null }) {
+  const t = useT()
+  const setup = useQuery({
+    queryKey: ['telegram', 'setup', departmentId],
+    queryFn: () => fetchTelegramSetup(departmentId!),
+    enabled: Boolean(departmentId),
+  })
+  return (
+    <SectionCard
+      title={t('integrationSetup.title')}
+      description={t('integrationSetup.description')}
+    >
+      <ol className="list-decimal space-y-2 pl-5 text-small text-muted-foreground">
+        <li>{t('integrationSetup.link')}</li>
+        <li>{t('integrationSetup.preferences')}</li>
+        <li>{t('integrationSetup.commands')}</li>
+      </ol>
+      {departmentId ? (
+        <p className="mt-4 text-small text-muted-foreground">{t('integrationSetup.group')}</p>
+      ) : null}
+      {setup.data ? (
+        <p className="mt-3 text-small">
+          {t('integrationSetup.progress', {
+            linked: setup.data.linkedMemberCount,
+            total: setup.data.memberCount,
+            groups: setup.data.groupCount,
+          })}
+        </p>
+      ) : null}
+      <Button variant="secondary" className="mt-4" onClick={() => navigate('/inbox/preferences')}>
+        {t('inbox.preferences.title')}
+      </Button>
     </SectionCard>
   )
 }
@@ -398,6 +475,7 @@ export default function TelegramScreen() {
   const online = useOnline()
   const meQuery = useMeQuery()
   const { department, departmentId } = useDepartment()
+  const telegram = useTelegramStatusQuery()
 
   const settled = !meQuery.isPending
 
@@ -420,7 +498,10 @@ export default function TelegramScreen() {
         kind="offline"
         titleKey="state.offline.banner"
         bodyKey="state.offline.empty"
-        action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => window.location.reload(),
+        }}
       />
     )
   }
@@ -431,9 +512,13 @@ export default function TelegramScreen() {
     <div className="mx-auto flex max-w-160 flex-col gap-6">
       <PageHeader eyebrow={t('inbox.eyebrow')} title={t('telegram.title')} />
 
+      <SetupGuide departmentId={isHead ? departmentId : null} />
+
       <PersonalLinkCard />
 
-      {isHead && departmentId ? <GroupsCard departmentId={departmentId} /> : null}
+      {departmentId && telegram.data?.configured && (isHead || telegram.data?.canConnectGroup) ? (
+        <GroupsCard departmentId={departmentId} canManage={isHead} />
+      ) : null}
     </div>
   )
 }

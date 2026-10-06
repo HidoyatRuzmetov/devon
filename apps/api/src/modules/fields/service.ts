@@ -245,12 +245,21 @@ export async function createDef(ctx: RequestContext, input: CreateDefInput): Pro
       action: 'fields.definition_created',
       subjectType: 'field_def',
       subjectId: row.id,
-      after: { key: row.key, appliesTo: row.applies_to, type: row.type, visibleTo: row.visible_to },
+      after: {
+        key: row.key,
+        appliesTo: row.applies_to,
+        type: row.type,
+        visibleTo: row.visible_to,
+      },
     })
     tx.emit({
       type: 'fields.definition.created',
       departmentId: input.departmentId,
-      payload: { defId: row.id, actorUserId: input.actorUserId, appliesTo: row.applies_to },
+      payload: {
+        defId: row.id,
+        actorUserId: input.actorUserId,
+        appliesTo: row.applies_to,
+      },
     })
 
     return toDto(row, null)
@@ -299,8 +308,16 @@ export async function updateDef(
       action: 'fields.definition_updated',
       subjectType: 'field_def',
       subjectId: row.id,
-      before: { visibleTo: before.visible_to, required: before.required, sort: before.sort },
-      after: { visibleTo: row.visible_to, required: row.required, sort: row.sort },
+      before: {
+        visibleTo: before.visible_to,
+        required: before.required,
+        sort: before.sort,
+      },
+      after: {
+        visibleTo: row.visible_to,
+        required: row.required,
+        sort: row.sort,
+      },
     })
     tx.emit({
       type: 'fields.definition.updated',
@@ -334,7 +351,11 @@ export async function setArchived(
     tx.emit({
       type: 'fields.definition.archived',
       departmentId: input.departmentId,
-      payload: { defId: row.id, actorUserId: input.actorUserId, archived: input.archived },
+      payload: {
+        defId: row.id,
+        actorUserId: input.actorUserId,
+        archived: input.archived,
+      },
     })
 
     return toDto(row, null)
@@ -520,7 +541,12 @@ export async function notifyToFill(
   })
 }
 
-export type NotifyManyResult = { asked: number; reminded: number; defs: number; people: number }
+export type NotifyManyResult = {
+  asked: number
+  reminded: number
+  defs: number
+  people: number
+}
 
 /**
  * "Ask to fill", every scope the product has (SPEC §4.3/§5, v1.1 critique SEV2 #6).
@@ -567,43 +593,55 @@ export async function notifyMany(
     let touchedDefs = 0
     const people = new Set<string>()
 
-    for (const def of wanted) {
-      const cohort = (missing.get(def.id) ?? []).filter((u) => u !== input.actorUserId)
-      if (cohort.length === 0) continue
-      touchedDefs += 1
-      const created = await repo.createRequests(
-        tx,
-        input.departmentId,
-        def.id,
-        input.actorUserId,
-        cohort,
+    // Definitions are independent; batch four at a time while each create/remind pair stays ordered.
+    for (let offset = 0; offset < wanted.length; offset += 4) {
+      await Promise.all(
+        wanted.slice(offset, offset + 4).map(async (def) => {
+          const cohort = (missing.get(def.id) ?? []).filter((u) => u !== input.actorUserId)
+          if (cohort.length === 0) return
+          touchedDefs += 1
+          // nosemgrep: query-in-loop -- Promise.all runs four definitions concurrently; each definition's create precedes its reminder.
+          const created = await repo.createRequests(
+            tx,
+            input.departmentId,
+            def.id,
+            input.actorUserId,
+            cohort,
+          )
+          const nudged =
+            created.length === 0
+              ? // nosemgrep: query-in-loop -- depends on this definition's create result; independent definitions are already batched.
+                await repo.markRemindedFor(tx, input.departmentId, def.id, cohort)
+              : []
+          asked += created.length
+          reminded += nudged.length
+          for (const userId of [...created, ...nudged]) {
+            people.add(userId)
+            tx.emit({
+              type: 'fields.request.created',
+              departmentId: input.departmentId,
+              payload: {
+                defId: def.id,
+                key: def.key,
+                userId,
+                actorUserId: input.actorUserId,
+                reminder: created.length === 0,
+              },
+            })
+          }
+          tx.audit({
+            action: 'fields.fill_requested',
+            subjectType: 'field_def',
+            subjectId: def.id,
+            after: {
+              key: def.key,
+              asked: created.length,
+              reminded: nudged.length,
+              scoped: true,
+            },
+          })
+        }),
       )
-      const nudged =
-        created.length === 0
-          ? await repo.markRemindedFor(tx, input.departmentId, def.id, cohort)
-          : []
-      asked += created.length
-      reminded += nudged.length
-      for (const userId of [...created, ...nudged]) {
-        people.add(userId)
-        tx.emit({
-          type: 'fields.request.created',
-          departmentId: input.departmentId,
-          payload: {
-            defId: def.id,
-            key: def.key,
-            userId,
-            actorUserId: input.actorUserId,
-            reminder: created.length === 0,
-          },
-        })
-      }
-      tx.audit({
-        action: 'fields.fill_requested',
-        subjectType: 'field_def',
-        subjectId: def.id,
-        after: { key: def.key, asked: created.length, reminded: nudged.length, scoped: true },
-      })
     }
 
     return { asked, reminded, defs: touchedDefs, people: people.size }
@@ -629,7 +667,13 @@ export async function sweepReminders(
       tx.emit({
         type: 'fields.request.created',
         departmentId: input.departmentId,
-        payload: { defId: row.id, key: row.key, userId, actorUserId: null, reminder: true },
+        payload: {
+          defId: row.id,
+          key: row.key,
+          userId,
+          actorUserId: null,
+          reminder: true,
+        },
       })
     }
     if (reminded.length > 0) {
