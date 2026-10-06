@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -14,12 +14,16 @@ const posix = (path) =>
 
 // Execute the real deployment script with only its fixed root redirected to a temporary fixture.
 // Every external service command is a mock executable; no Docker daemon or server is contacted.
-function deploy(scenario, { previousManifest = true } = {}) {
+function deploy(scenario, { previousManifest = true, dotenv } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'devon-deploy-test-'))
   const root = posix(dir)
   mkdirSync(join(dir, 'bin'))
   mkdirSync(join(dir, 'infra'))
-  writeFileSync(join(dir, '.env'), 'DEVON_PUBLIC_URL=https://fixture.invalid\n')
+  writeFileSync(
+    join(dir, '.env'),
+    dotenv ??
+      'DEVON_PUBLIC_URL=https://fixture.invalid\nMIGRATION_DATABASE_URL=postgres://dummy@fixture/db\n',
+  )
   writeFileSync(join(dir, '.deployed-images.env'), previous)
   writeFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'candidate manifest')
   if (previousManifest) {
@@ -35,6 +39,10 @@ function deploy(scenario, { previousManifest = true } = {}) {
 set -eu
 name="\${0##*/}"
 printf '%s %s image=%s\\n' "$name" "$*" "\${DEVON_API_IMAGE:-none}" >> "$TEST_ROOT/calls"
+if [[ "$*" == *'cli-migrate.ts'* ]]; then
+  printf '%s' "$MIGRATION_DATABASE_URL" > "$TEST_ROOT/migration-url"
+  printf '%s' "\${DANGEROUS_DOTENV_VALUE:-not-exported}" > "$TEST_ROOT/unrelated-value"
+fi
 case "$name" in
   sudo) if [ "$SCENARIO" = backup-start-failed ]; then exit 17; fi ;;
   systemctl) if [ "$SCENARIO" = backup-failed ]; then echo exit-code; else echo success; fi ;;
@@ -74,6 +82,13 @@ esac
       calls: readFileSync(join(dir, 'calls'), 'utf8'),
       state: readFileSync(join(dir, '.deployed-images.env'), 'utf8'),
       manifest: readFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'utf8'),
+      migrationUrl: existsSync(join(dir, 'migration-url'))
+        ? readFileSync(join(dir, 'migration-url'), 'utf8')
+        : null,
+      unrelatedValue: existsSync(join(dir, 'unrelated-value'))
+        ? readFileSync(join(dir, 'unrelated-value'), 'utf8')
+        : null,
+      injectedCommandRan: existsSync(join(dir, 'dotenv-executed')),
     }
   } finally {
     rmSync(dir, { recursive: true, force: true })
@@ -144,3 +159,50 @@ test('a failed first deployment without a prior manifest leaves the candidate fi
   assert.equal(result.status, 42, result.output)
   assert.equal(result.manifest, 'candidate manifest')
 })
+
+test('dotenv values are data: spaces, shell substitutions and quoted punctuation never execute', () => {
+  const migrationUrl =
+    'postgres://dummy:$(touch dotenv-executed)`touch dotenv-executed`$word#part@fixture/db'
+  const result = deploy('success', {
+    dotenv: [
+      '# Dotenv syntax must not be interpreted as shell syntax.',
+      'DEVON_PUBLIC_URL="https://fixture.invalid" # supported comment',
+      `MIGRATION_DATABASE_URL='${migrationUrl}'`,
+      'TELEGRAM_WEBHOOK_SECRET=  dummy value with unquoted spaces  ',
+      'DANGEROUS_DOTENV_VALUE=$(touch dotenv-executed); `touch dotenv-executed`',
+      'export MULTILINE_DUMMY="first line',
+      'second line"',
+      '',
+    ].join('\r\n'),
+  })
+  assert.equal(result.status, 0, result.output)
+  assert.equal(result.migrationUrl, migrationUrl)
+  assert.equal(result.unrelatedValue, 'not-exported')
+  assert.equal(result.injectedCommandRan, false)
+  assert.doesNotMatch(result.output, /postgres:\/\//)
+  assert.match(result.calls, /https:\/\/fixture.invalid\/readyz/)
+})
+
+test('dotenv trims surrounding whitespace for the values used by deployment', () => {
+  const result = deploy('success', {
+    dotenv:
+      'DEVON_PUBLIC_URL=  https://fixture.invalid  \nMIGRATION_DATABASE_URL=  postgres://dummy@fixture/db  \n',
+  })
+  assert.equal(result.status, 0, result.output)
+  assert.equal(result.migrationUrl, 'postgres://dummy@fixture/db')
+  assert.match(result.calls, /https:\/\/fixture.invalid\/readyz/)
+})
+
+for (const variable of ['MIGRATION_DATABASE_URL', 'DEVON_PUBLIC_URL']) {
+  test(`missing ${variable} refuses deployment before backup, pull or migration`, () => {
+    const dotenv =
+      variable === 'MIGRATION_DATABASE_URL'
+        ? 'DEVON_PUBLIC_URL=https://fixture.invalid\n'
+        : 'MIGRATION_DATABASE_URL=postgres://dummy@fixture/db\n'
+    const result = deploy('success', { dotenv })
+    assert.equal(result.status, 78, result.output)
+    assert.doesNotMatch(result.calls, /systemctl|docker pull|cli-migrate/)
+    assert.equal(result.manifest, 'previous manifest')
+    assert.equal(result.state, previous)
+  })
+}

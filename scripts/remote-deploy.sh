@@ -49,10 +49,31 @@ restore_manifest_on_failure() {
 }
 trap restore_manifest_on_failure EXIT
 
-set -a
-# shellcheck disable=SC1091
-. "$ROOT/.env"
-set +a
+# Dotenv is configuration data, not shell code: unquoted spaces, `$()`, backticks and quoted
+# multiline values must never execute here. Compose reads the full file itself below; the shell
+# needs only these two values. Node 22 is installed by scripts/install-node-runtime.sh.
+read_dotenv_value() {
+  node -e '
+    try {
+      const { parseEnv } = require("node:util");
+      const { readFileSync } = require("node:fs");
+      const value = parseEnv(readFileSync(process.argv[1], "utf8"))[process.argv[2]];
+      if (typeof value !== "string" || !value.trim() || value.includes("\0")) process.exit(78);
+      process.stdout.write(value);
+    } catch {
+      // Never expose parser errors, file contents or credentials in deployment logs.
+      process.exit(78);
+    }
+  ' "$ROOT/.env" "$1"
+}
+command -v node >/dev/null || { echo "[deploy] Node 22 runtime missing; refusing to deploy" >&2; exit 78; }
+MIGRATION_DATABASE_URL="$(read_dotenv_value MIGRATION_DATABASE_URL)" || {
+  echo "[deploy] cannot read required MIGRATION_DATABASE_URL from dotenv" >&2; exit 78;
+}
+DEVON_PUBLIC_URL="$(read_dotenv_value DEVON_PUBLIC_URL)" || {
+  echo "[deploy] cannot read required DEVON_PUBLIC_URL from dotenv" >&2; exit 78;
+}
+export MIGRATION_DATABASE_URL DEVON_PUBLIC_URL
 
 COMPOSE=(docker compose --env-file "$ROOT/.env" -f "$ROOT/infra/docker-compose.prod.yml" \
   --profile clamav --profile centrifugo)
