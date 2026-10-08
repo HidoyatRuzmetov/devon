@@ -8,10 +8,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "home.eyebrow",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/login",
@@ -27,9 +24,7 @@
       "slug": "setup",
       "auth": "public",
       "chrome": "auth",
-      "requires": [
-        "setup_token"
-      ],
+      "requires": ["setup_token"],
       "heading": "setup.used.title"
     },
     {
@@ -47,10 +42,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "inbox.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/work",
@@ -59,10 +51,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/work/table",
@@ -127,10 +116,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "structure.people.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/structure",
@@ -155,10 +141,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "analytics.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/ai",
@@ -167,10 +150,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "ai.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/departments",
@@ -251,10 +231,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "people.table.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/people/me",
@@ -263,10 +240,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "people.person.own.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/work/workload",
@@ -275,10 +249,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.workload.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/work/templates",
@@ -287,10 +258,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.templates.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/work/archive",
@@ -299,10 +267,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.view.archive",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/goals",
@@ -311,10 +276,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "work.goals.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/fields",
@@ -323,10 +285,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "fields.manager.nav",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/automations",
@@ -335,10 +294,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "automations.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/department",
@@ -347,10 +303,7 @@
       "auth": "session",
       "chrome": "app",
       "heading": "departments.settings.title",
-      "roles": [
-        "head",
-        "member"
-      ]
+      "roles": ["head", "member"]
     },
     {
       "path": "/calendar",
@@ -361,7 +314,7 @@
       "heading": "calendar.title"
     },
     {
-      "path": "/inbox/preferences",
+      "path": "/account/notifications",
       "name": "inbox",
       "slug": "inboxpreferences",
       "auth": "session",
@@ -369,7 +322,7 @@
       "heading": "inbox.preferences.title"
     },
     {
-      "path": "/inbox/telegram",
+      "path": "/account/telegram",
       "name": "inbox",
       "slug": "inboxtelegram",
       "auth": "session",

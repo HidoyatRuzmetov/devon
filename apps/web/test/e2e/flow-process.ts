@@ -32,7 +32,12 @@ export function spawnManaged(
       shell: true,
     }) as ChildProcessWithoutNullStreams
   } else {
-    child = spawn(command, args, { cwd: opts.cwd, env: opts.env }) as ChildProcessWithoutNullStreams
+    // Own a process group so pnpm -> tsx -> node is stopped together on Linux CI, too.
+    child = spawn(command, args, {
+      cwd: opts.cwd,
+      env: opts.env,
+      detached: true,
+    }) as ChildProcessWithoutNullStreams
   }
   const capture = (buf: Buffer) => {
     for (const line of buf.toString('utf8').split(/\r?\n/)) {
@@ -54,23 +59,49 @@ export function spawnManaged(
   }
   child.stdout?.on('data', capture)
   child.stderr?.on('data', capture)
+  let stopPromise: Promise<void> | null = null
+
+  async function stopTree(): Promise<void> {
+    if (!isWin && child.pid) {
+      const signalGroup = (signal: NodeJS.Signals | 0): boolean => {
+        try {
+          process.kill(-child.pid!, signal)
+          return true
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'ESRCH') return false
+          throw error
+        }
+      }
+      if (!signalGroup('SIGTERM')) return
+      // The launcher can exit before the API releases its port and pool. Wait for the whole group,
+      // with a bounded kill fallback for a child that cannot finish its shutdown.
+      const deadline = Date.now() + 5000
+      while (signalGroup(0)) {
+        if (Date.now() >= deadline) {
+          signalGroup('SIGKILL')
+          break
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50))
+      }
+      return
+    }
+    if (child.exitCode !== null || child.killed) return
+    await new Promise<void>((resolve) => {
+      const finish = () => {
+        clearTimeout(timeout)
+        resolve()
+      }
+      const timeout = setTimeout(finish, 5000)
+      child.once('exit', finish)
+      // Windows requires taskkill /T to reach pnpm -> tsx -> node.
+      if (child.pid) spawn(`taskkill /pid ${child.pid} /T /F`, [], { shell: true })
+    })
+  }
 
   return {
     lines,
-    async stop() {
-      if (child.exitCode !== null || child.killed) return
-      await new Promise<void>((resolve) => {
-        child.once('exit', () => resolve())
-        // Windows has no SIGTERM semantics for a shell-spawned tree; taskkill /T reaches the whole
-        // process tree (pnpm -> node), same problem `scripts/start.mjs`'s own SIGINT/SIGTERM forwarder
-        // would otherwise leave orphaned on Windows.
-        if (isWin && child.pid) {
-          spawn(`taskkill /pid ${child.pid} /T /F`, [], { shell: true })
-        } else {
-          child.kill('SIGTERM')
-        }
-        setTimeout(() => resolve(), 5000)
-      })
+    stop() {
+      return (stopPromise ??= stopTree())
     },
   }
 }
