@@ -4394,7 +4394,8 @@
     "delete": "Delete project",
     "deleted": "Project and its tasks deleted. You can undo this now.",
     "deleteHint": "Also removes this project's tasks from the team’s workspace. History remains available to the superadmin.",
-    "progressHint": "Progress includes completed tasks and completed checklist steps in unfinished tasks."
+    "progressHint": "Progress comes from tasks and checklist steps, or completed milestones when there are no tasks.",
+    "milestonesProgress": "{done}/{total} milestones"
   },
   "projects": {
     "eyebrow": "PROJECTS",

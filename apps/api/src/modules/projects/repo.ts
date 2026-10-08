@@ -102,6 +102,17 @@ type ProgressRow = {
 
 function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
   const total = Number(progress.objective_total) + Number(progress.subjective_total)
+  const milestones = row.milestones ?? []
+  // Milestone-only projects are real work too. Once tasks exist, keep their measured completion
+  // authoritative instead of double-counting checkpoints that describe the same work.
+  const completion =
+    total > 0
+      ? Number(progress.completion) / total
+      : milestones.length > 0
+        ? milestones.filter((milestone) => Boolean(milestone.doneAt)).length / milestones.length
+        : row.status === 'done'
+          ? 1
+          : 0
   return {
     id: row.id,
     title: row.title,
@@ -113,8 +124,8 @@ function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
     status: row.status,
     startOn: row.start_on,
     targetOn: row.target_on,
-    milestones: row.milestones ?? [],
-    progress: total === 0 ? 0 : Number(progress.completion) / total,
+    milestones,
+    progress: completion,
     objectiveTotal: Number(progress.objective_total),
     objectiveDone: Number(progress.objective_done),
     subjectiveTotal: Number(progress.subjective_total),

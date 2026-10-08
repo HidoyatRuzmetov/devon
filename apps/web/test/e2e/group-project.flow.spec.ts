@@ -61,6 +61,27 @@ test('@flow group project: objective + subjective tasks complete and progress re
   await expect(headPage.getByText('Boshqarma vazifalari')).toBeVisible()
   await expect(headPage.getByText('Oʻz vazifalarim')).toBeVisible()
 
+  // Existing production projects can track work entirely with milestones and no task cards.
+  const firstMilestone = await authedPost(
+    headContext,
+    `/api/v1/projects/${project.id}/milestones`,
+    {
+      title: 'Initial discovery',
+    },
+  )
+  const discovery = (await firstMilestone.json()) as { milestones: { id: string }[] }
+  await authedPost(headContext, `/api/v1/projects/${project.id}/milestones`, { title: 'Approval' })
+  await authedPatch(
+    headContext,
+    `/api/v1/projects/${project.id}/milestones/${discovery.milestones[0]!.id}`,
+    { done: true },
+  )
+  await headPage.reload()
+  await expect(headPage.getByText('50', { exact: true })).toBeVisible()
+  await headPage.goto('/projects')
+  await expect(headPage.getByText('1/2 bosqich', { exact: true })).toBeVisible()
+  await headPage.goto(`/projects/view?id=${project.id}`)
+
   // One objective task, one subjective task, both for this project.
   const objectiveRes = await authedPost(headContext, '/api/v1/cards', {
     title: 'Flow objective task',
@@ -94,6 +115,7 @@ test('@flow group project: objective + subjective tasks complete and progress re
   }
   expect(before.objectiveDone).toBe(0)
   expect(before.subjectiveDone).toBe(0)
+  expect(before.progress).toBe(0)
 
   // Checklist steps are real partial progress, even before the task itself is marked done.
   const stepResponse = await authedPost(headContext, `/api/v1/cards/${objective.id}/checklist`, {

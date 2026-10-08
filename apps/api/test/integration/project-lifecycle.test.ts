@@ -160,6 +160,46 @@ describe('project lifecycle', () => {
     )
   })
 
+  it('uses completed milestones when no tasks exist, updates list/detail, and lets actual tasks take precedence', async () => {
+    const project = await createProject()
+    const added = await request(`/projects/${project.id}/milestones`, 'POST', {
+      title: 'Discovery',
+    })
+    const first = ((await added.json()) as ProjectDTO).milestones[0]!
+    const next = await request(`/projects/${project.id}/milestones`, 'POST', { title: 'Approval' })
+    const second = ((await next.json()) as ProjectDTO).milestones.find(
+      (item) => item.id !== first.id,
+    )!
+    const updated = await request(`/projects/${project.id}/milestones/${first.id}`, 'PATCH', {
+      done: true,
+    })
+    expect(((await updated.json()) as ProjectDTO).progress).toBe(0.5)
+    const listed = (await (await request('/projects')).json()) as ProjectDTO[]
+    expect(listed.find((item) => item.id === project.id)?.progress).toBe(0.5)
+    const card = await createCard(project.id)
+    expect(((await (await request(`/projects/${project.id}`)).json()) as ProjectDTO).progress).toBe(
+      0,
+    )
+    await request(`/cards/${card.id}`, 'DELETE')
+    expect(((await (await request(`/projects/${project.id}`)).json()) as ProjectDTO).progress).toBe(
+      0.5,
+    )
+    const removed = await request(`/projects/${project.id}/milestones/${first.id}`, 'DELETE')
+    expect(((await removed.json()) as ProjectDTO).progress).toBe(0)
+    const completed = await request(`/projects/${project.id}/milestones/${second.id}`, 'PATCH', {
+      done: true,
+    })
+    expect(((await completed.json()) as ProjectDTO).progress).toBe(1)
+  })
+
+  it('uses the explicit done status for an otherwise empty project', async () => {
+    const project = await createProject()
+    expect(project.progress).toBe(0)
+    const done = await request(`/projects/${project.id}`, 'PATCH', { status: 'done' })
+    expect(done.status).toBe(200)
+    expect(((await done.json()) as ProjectDTO).progress).toBe(1)
+  })
+
   it('deletes owner/head projects and live child tasks atomically, retains audit, and only undoes its own cascade', async () => {
     const project = await createProject()
     const [live, previouslyDeleted] = await Promise.all([

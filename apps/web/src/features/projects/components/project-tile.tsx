@@ -129,6 +129,7 @@ export function ProjectTile({
   const objectiveText = project.description?.text.trim() || null
   const taskTotal = project.objectiveTotal + project.subjectiveTotal
   const taskDone = project.objectiveDone + project.subjectiveDone
+  const milestoneDone = project.milestones.filter((item) => Boolean(item.doneAt)).length
 
   return (
     <HoverLift className="h-full">
@@ -180,10 +181,15 @@ export function ProjectTile({
             <span
               className={cn(
                 'shrink-0 text-caption tabular-nums text-muted-foreground',
-                taskTotal === 0 && 'invisible',
+                taskTotal === 0 && project.milestones.length === 0 && 'invisible',
               )}
             >
-              {t('projects.tile.tasks', { done: taskDone, total: taskTotal })}
+              {taskTotal > 0
+                ? t('projects.tile.tasks', { done: taskDone, total: taskTotal })
+                : t('projectLifecycle.milestonesProgress', {
+                    done: milestoneDone,
+                    total: project.milestones.length,
+                  })}
             </span>
           </div>
         </RouterLink>

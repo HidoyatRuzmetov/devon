@@ -4394,7 +4394,8 @@
     "delete": "Loyihani oʻchirish",
     "deleted": "Loyiha va uning vazifalari oʻchirildi. Hozir bekor qilishingiz mumkin.",
     "deleteHint": "Loyihaning vazifalari ham jamoa ish joyidan olib tashlanadi. Tarix superadminda saqlanadi.",
-    "progressHint": "Natijaga bajarilgan vazifalar va hali tugamagan vazifalarning bajarilgan bandlari kiradi."
+    "progressHint": "Natija vazifalar va ularning bajarilgan bandlaridan hisoblanadi. Vazifa bo‘lmasa, bajarilgan bosqichlar hisobga olinadi.",
+    "milestonesProgress": "{done}/{total} bosqich"
   },
   "projects": {
     "eyebrow": "LOYIHALAR",
