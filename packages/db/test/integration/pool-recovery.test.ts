@@ -1,8 +1,10 @@
+import { once } from 'node:events'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { Client } from 'pg'
 import { sql } from 'drizzle-orm'
 import { closePool, configurePool, withContext, type RequestContext } from '../../src/context.js'
 import { seedDepartments } from '../checks/rls.js'
+import { createCheckPool } from '../checks/pool.js'
 import { startMigratedDatabase, type DatabaseFixture } from '../harness.js'
 
 let db: DatabaseFixture
@@ -34,6 +36,35 @@ afterAll(async () => {
 })
 
 describe('database pool background errors', () => {
+  it('closes migration check sockets before the database can be stopped', async () => {
+    const applicationName = 'migration-check-close-regression'
+    const checked = createCheckPool({
+      connectionString: db.appUrl,
+      application_name: applicationName,
+      max: 20,
+    })
+    try {
+      await Promise.all(Array.from({ length: 20 }, () => checked.pool.query('select 1')))
+    } finally {
+      await checked.close()
+    }
+    const remaining = await admin.query<{ count: number }>(
+      'select count(*)::int as count from pg_stat_activity where application_name = $1',
+      [applicationName],
+    )
+    expect(remaining.rows[0]!.count).toBe(0)
+  })
+
+  it('fails a migration check cleanly if its idle backend is terminated', async () => {
+    const checked = createCheckPool({ connectionString: db.appUrl })
+    const { rows } = await checked.pool.query<{ pid: number }>('select pg_backend_pid() as pid')
+    const backgroundError = once(checked.pool, 'error')
+    await admin.query('select pg_terminate_backend($1)', [rows[0]!.pid])
+    const [error] = await backgroundError
+    expect(error.code).toBe('57P01')
+    await expect(checked.close()).rejects.toThrow('check pool background error (57P01)')
+  })
+
   it('removes an idle terminated backend without crashing, then reconnects with tenant context', async () => {
     const diagnostic = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {

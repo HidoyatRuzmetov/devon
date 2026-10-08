@@ -1,7 +1,8 @@
 // Backs `test/integration/audit.immutability.test.ts` and `migrate:verify` (design §2.3, item AC-9).
-import { Client, Pool } from 'pg'
+import { Client } from 'pg'
 import { verifyChain } from '../../src/audit.js'
 import { grantsFor } from './introspect.js'
+import { createCheckPool } from './pool.js'
 import type { CheckResult } from './types.js'
 
 export async function runAuditImmutabilityChecks(
@@ -65,7 +66,8 @@ export async function runAuditImmutabilityChecks(
     // on one connection, which never actually contends on the lock.
     const CONCURRENT_ROWS = 500
     const before = await app.query<{ n: string }>('select count(*)::bigint as n from audit.events')
-    const concurrentPool = new Pool({ connectionString: appConnectionString, max: 20 })
+    const concurrent = createCheckPool({ connectionString: appConnectionString, max: 20 })
+    const concurrentPool = concurrent.pool
     try {
       await Promise.all(
         Array.from({ length: CONCURRENT_ROWS }, (_, i) =>
@@ -76,7 +78,7 @@ export async function runAuditImmutabilityChecks(
         ),
       )
     } finally {
-      await concurrentPool.end()
+      await concurrent.close()
     }
     const after = await app.query<{ n: string }>('select count(*)::bigint as n from audit.events')
     const inserted = Number(after.rows[0]!.n) - Number(before.rows[0]!.n)

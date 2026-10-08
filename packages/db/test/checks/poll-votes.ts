@@ -6,7 +6,8 @@
 // dependency on it), so this reimplements the same delete-then-insert-under-advisory-lock statement
 // shape rather than the higher-level repo function, to prove the database-level guarantee those two
 // migrations/that function rely on actually holds under load, independent of the caller.
-import { Client, Pool } from 'pg'
+import { Client, type Pool } from 'pg'
+import { createCheckPool } from './pool.js'
 import type { CheckResult } from './types.js'
 
 export type SeededPoll = {
@@ -130,7 +131,8 @@ export async function runPollVoteRaceChecks(
   superuserConnectionString: string,
 ): Promise<CheckResult[]> {
   const results: CheckResult[] = []
-  const pool = new Pool({ connectionString: appConnectionString, max: 25 })
+  const checked = createCheckPool({ connectionString: appConnectionString, max: 25 })
+  const pool = checked.pool
   try {
     // Check 1: the SAME voter firing N concurrent "replace my vote" calls (a double-click, two open
     // tabs) must never leave more than one row for that voter on this poll -- the advisory lock
@@ -201,6 +203,6 @@ export async function runPollVoteRaceChecks(
 
     return results
   } finally {
-    await pool.end()
+    await checked.close()
   }
 }
