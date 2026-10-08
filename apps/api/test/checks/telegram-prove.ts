@@ -93,10 +93,18 @@ async function main(): Promise<void> {
     const { user } = (await setupRes.json()) as { user: { id: string } }
 
     const departmentId = randomUUID()
+    const otherUserId = randomUUID()
+    const foreignDepartmentId = randomUUID()
+    const foreignGroupId = randomUUID()
     const superuser = new Client({ connectionString: db.superuserUrl })
     await superuser.connect()
     try {
       await superuser.query(`update app.users set role = 'member' where id = $1`, [user.id])
+      await superuser.query(
+        `insert into app.users (id, login, password_hash, given_name, family_name)
+         select $1, 'telegram.other', password_hash, 'Other', 'User' from app.users where id = $2`,
+        [otherUserId, user.id],
+      )
       await superuser.query(
         `insert into app.departments (id, name, slug) values ($1, 'Axborot texnologiyalari boshqarmasi', 'axborot-texnologiyalari')`,
         [departmentId],
@@ -104,6 +112,18 @@ async function main(): Promise<void> {
       await superuser.query(
         `insert into app.memberships (id, department_id, user_id, role) values ($1, $2, $3, 'head')`,
         [randomUUID(), departmentId, user.id],
+      )
+      await superuser.query(
+        `insert into app.memberships (id, department_id, user_id, role) values ($1, $2, $3, 'member')`,
+        [randomUUID(), departmentId, otherUserId],
+      )
+      await superuser.query(
+        `insert into app.departments (id, name, slug) values ($1, 'Other department', $2)`,
+        [foreignDepartmentId, `foreign-${foreignDepartmentId}`],
+      )
+      await superuser.query(
+        `insert into app.telegram_groups (id, department_id, chat_id, title, kinds) values ($1, $2, -1008888888888, 'Other department group', '{events}')`,
+        [foreignGroupId, foreignDepartmentId],
       )
     } finally {
       await superuser.end()
@@ -164,6 +184,32 @@ async function main(): Promise<void> {
     )
     const unknown = await consumeLinkCode('NOSUCHCD', PERSONAL_CHAT_ID, 'uz-Latn')
     assertEqual(unknown.ok ? 'ok' : unknown.reason, 'not_found', 'unknown code')
+
+    step(
+      'an already-linked chat refuses another account without consuming its code or blocking retries',
+    )
+    const otherCode = await issueLinkCode(otherUserId)
+    const conflict = await consumeLinkCode(otherCode.code, PERSONAL_CHAT_ID, 'uz-Latn')
+    assertEqual(
+      conflict.ok ? 'ok' : conflict.reason,
+      'chat_in_use',
+      'another account cannot take over this chat',
+    )
+    assertEqual(
+      await resolveTelegramChatId(user.id),
+      PERSONAL_CHAT_ID,
+      'original account link is preserved',
+    )
+    const otherChat = await consumeLinkCode(
+      otherCode.code,
+      String(Number(PERSONAL_CHAT_ID) + 2),
+      'en',
+    )
+    assertEqual(
+      otherChat.ok ? otherChat.userId : otherChat.reason,
+      otherUserId,
+      'refused attempt rolls back code consumption',
+    )
 
     step(
       'GET /telegram/status after linking: linkedAt is a real timestamp (linked_at -> Date -> ISO)',
@@ -255,13 +301,17 @@ async function main(): Promise<void> {
     )
     assertEqual(connectExpired.ok ? 'ok' : connectExpired.reason, 'expired', 'expired connect code')
 
-    step('GET /telegram/departments/:id/groups: the connected group, no kinds, a real connectedAt')
+    step('GET /telegram/departments/:id/groups: default notifications and a real connectedAt')
     const groups = await listGroups()
     assertEqual(groups.length, 1, 'one connected group')
     const group = groups[0]!
     assertEqual(group.chatId, GROUP_CHAT_ID, 'group chat id')
     assertEqual(group.title, 'Boshqarma guruhi', 'group title')
-    assertEqual(group.kinds.length, 0, 'fresh group has no kinds')
+    assertEqual(
+      JSON.stringify([...group.kinds].sort()),
+      JSON.stringify(['announcements', 'events', 'polls']),
+      'fresh group enables useful default notifications',
+    )
     assertTrue(isIsoTimestamp(group.connectedAt), 'connectedAt is an ISO timestamp')
 
     step('PATCH group kinds: two kinds, one kind, none -- each bound as a single text[] parameter')
@@ -291,6 +341,34 @@ async function main(): Promise<void> {
       forEvents.some((g) => g.chatId === GROUP_CHAT_ID && g.departmentId === departmentId),
       'listGroupsForKind(events) includes the group',
     )
+    const lifecycle = new Client({ connectionString: db.superuserUrl })
+    await lifecycle.connect()
+    try {
+      await lifecycle.query(`update app.departments set status = 'paused_by_admin' where id = $1`, [
+        departmentId,
+      ])
+      assertTrue(
+        !(await listGroupsForKind('events')).some((g) => g.departmentId === departmentId),
+        'paused departments do not broadcast',
+      )
+      await lifecycle.query(
+        `update app.departments set status = 'active', deleted_at = now() where id = $1`,
+        [departmentId],
+      )
+      assertTrue(
+        !(await listGroupsForKind('events')).some((g) => g.departmentId === departmentId),
+        'deleted departments do not broadcast',
+      )
+      await lifecycle.query(`update app.departments set deleted_at = null where id = $1`, [
+        departmentId,
+      ])
+      assertTrue(
+        (await listGroupsForKind('events')).some((g) => g.departmentId === departmentId),
+        'resumed active departments broadcast again',
+      )
+    } finally {
+      await lifecycle.end()
+    }
     await setKinds(['deadlines'])
     await setKinds([])
     const forEventsAfter = await listGroupsForKind('events')
@@ -298,6 +376,74 @@ async function main(): Promise<void> {
       !forEventsAfter.some((g) => g.chatId === GROUP_CHAT_ID),
       'listGroupsForKind(events) no longer includes the group',
     )
+
+    step('group mutations cannot change another department’s global group row')
+    const foreignPath = `${server.baseUrl}/api/v1/telegram/departments/${departmentId}/groups/${foreignGroupId}`
+    await fetch(foreignPath, { method: 'PATCH', headers, body: JSON.stringify({ kinds: [] }) })
+    await fetch(foreignPath, { method: 'DELETE', headers: csrfHeaders })
+    const isolated = new Client({ connectionString: db.superuserUrl })
+    await isolated.connect()
+    try {
+      const stored = await isolated.query<{ kinds: string[]; disconnected_at: Date | null }>(
+        'select kinds, disconnected_at from app.telegram_groups where id = $1',
+        [foreignGroupId],
+      )
+      assertEqual(
+        JSON.stringify(stored.rows[0]!.kinds),
+        JSON.stringify(['events']),
+        'foreign group kinds are unchanged',
+      )
+      assertEqual(stored.rows[0]!.disconnected_at, null, 'foreign group remains connected')
+    } finally {
+      await isolated.end()
+    }
+
+    step('member connection policy is enforced in both status and connect-code endpoint')
+    const memberLogin = await fetch(`${server.baseUrl}/api/v1/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ login: 'telegram.other', password: PASSWORD }),
+    })
+    assertEqual(memberLogin.status, 204, 'member login')
+    const memberCookies = parseCookies(memberLogin.headers.getSetCookie())
+    const memberHeaders = {
+      cookie: cookieHeader(memberCookies),
+      'x-csrf-token': memberCookies['devon_csrf']!,
+    }
+    const memberStatus = async () => {
+      const res = await fetch(`${server.baseUrl}/api/v1/telegram/status`, {
+        headers: memberHeaders,
+      })
+      assertEqual(res.status, 200, 'member Telegram status')
+      return (await res.json()) as { canConnectGroup: boolean }
+    }
+    assertEqual((await memberStatus()).canConnectGroup, true, 'everyone policy permits members')
+    const allowed = await fetch(
+      `${server.baseUrl}/api/v1/telegram/departments/${departmentId}/connect-code`,
+      { method: 'POST', headers: memberHeaders },
+    )
+    assertEqual(allowed.status, 200, 'permitted member obtains a connection code')
+    const settings = new Client({ connectionString: db.superuserUrl })
+    await settings.connect()
+    try {
+      await settings.query(
+        `update app.departments set settings = jsonb_set(settings, '{whoCanConnectTelegramGroup}', '"head"') where id = $1`,
+        [departmentId],
+      )
+    } finally {
+      await settings.end()
+    }
+    assertEqual((await memberStatus()).canConnectGroup, false, 'head policy hides member action')
+    const denied = await fetch(
+      `${server.baseUrl}/api/v1/telegram/departments/${departmentId}/connect-code`,
+      { method: 'POST', headers: memberHeaders },
+    )
+    assertEqual(denied.status, 403, 'head-only policy refuses a member')
+    const headAllowed = await fetch(
+      `${server.baseUrl}/api/v1/telegram/departments/${departmentId}/connect-code`,
+      { method: 'POST', headers: csrfHeaders },
+    )
+    assertEqual(headAllowed.status, 200, 'head remains authorized under head-only policy')
 
     console.log('\ntelegram:prove PASSED')
   } finally {

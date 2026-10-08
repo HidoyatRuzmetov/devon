@@ -95,7 +95,8 @@
         "copy": "Copy link"
       },
       "save": "Save",
-      "saved": "Preferences saved"
+      "saved": "Preferences saved",
+      "alwaysOn": "Always on"
     }
   }
 }

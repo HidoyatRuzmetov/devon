@@ -113,9 +113,12 @@ export type Reason = (typeof REASONS)[number]
 
 export const CHANNELS = ['inapp', 'telegram', 'email'] as const
 export type Channel = (typeof CHANNELS)[number]
+// Email rows may exist in old preferences, but this installation has no email delivery adapter.
+export const AVAILABLE_CHANNELS = ['inapp', 'telegram'] as const
 
 export const DIGEST_MODES = ['instant', 'daily', 'weekly', 'off'] as const
 export type DigestMode = (typeof DIGEST_MODES)[number]
+export const PERSONAL_DIGEST_MODES = ['daily', 'weekly', 'off'] as const
 
 export const GROUP_KINDS = [
   'events',

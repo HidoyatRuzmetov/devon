@@ -39,7 +39,7 @@ export const planSprintInputSchema = z.object({
   now: isoDateTimeSchema,
   periodEndsAt: isoDateTimeSchema,
   /** Working minutes actually left in the period. */
-  capacityMin: z.number().int().min(0).max(100_000),
+  capacityMin: z.number().int().min(0).max(100_000).nullable(),
   goal: z.string().max(500).nullable().default(null),
   items: z.array(planItemSchema).min(1).max(100),
 })
@@ -69,14 +69,14 @@ function systemPrompt(input: PlanSprintInput): string {
   const totalEstimate = input.items.reduce((sum, item) => sum + (item.estimateMin ?? 0), 0)
   return composePrompt({
     role: 'You plan one working period for a ministry department. You are given the open items, their deadlines and estimates, and how much working time is left. You order them, you say plainly which will not fit, and you give one short reason per decision. You never invent an item and you never move a deadline.',
-    inputs: `A JSON object: scope (${input.scope}), periodKind (${input.periodKind}), now, periodEndsAt, capacityMin (${input.capacityMin} working minutes left), goal, items[] each with id, title, estimateMin, dueAt, priority, assigneeName, blockedByIds. The estimates given total ${totalEstimate} minutes.`,
+    inputs: `A JSON object: scope (${input.scope}), periodKind (${input.periodKind}), now, periodEndsAt, capacityMin (${input.capacityMin ?? 'unknown'} working minutes left), goal, items[] each with id, title, estimateMin, dueAt, priority, assigneeName, blockedByIds. The known estimates total ${totalEstimate} minutes; a null estimate is unknown.`,
     instructions: [
       'Order EVERY item, by id, into `orderedIds`. Never drop one, never merge two, never rename, never invent. The set of ids you return must equal the set of ids you were given, exactly.',
       'Respect blockedByIds: a blocker always comes before the item it blocks.',
       'Everything overdue, then everything due before periodEndsAt, comes before anything with no deadline.',
       'Within the same urgency, a short item may come first when finishing it unblocks momentum — but never let a short item push a due item past its deadline.',
-      'Sum estimateMin down your order. Every item past capacityMin goes into `wontFitIds` (it still stays in orderedIds, just flagged), and `overCommittedByMin` is how many minutes over capacity the whole list runs. Zero if it all fits.',
-      'focusId is the single item to start right now.',
+      'Only assess capacity when capacityMin and EVERY estimateMin are known. Sum estimates down your order: every item beyond capacityMin goes into wontFitIds, and overCommittedByMin is max(0,total-capacityMin). When capacity or any estimate is null, return wontFitIds [] and overCommittedByMin 0; explicitly say capacity cannot yet be assessed. Never treat a missing estimate as zero or a missing capacity as zero.',
+      'focusId is the first item in orderedIds, which is the single item to start right now.',
       'Give exactly one `reason` per item, at most 90 characters, naming the concrete cause ("ertaga muddati tugaydi", "Nodiraning ishini bloklayapti"). Never generic filler like "muhim vazifa".',
       'summary: at most two sentences — what this period is really about, and the one risk.',
     ],
@@ -147,6 +147,13 @@ const SUMMARY_FITS: Record<Locale, string> = {
   en: 'Everything planned fits inside this period.',
 }
 
+const CAPACITY_UNKNOWN: Record<Locale, string> = {
+  'uz-Latn': 'Ish hajmi yoki mavjud vaqt koʻrsatilmagan — hammasi sigʻishini baholab boʻlmaydi.',
+  'uz-Cyrl': 'Иш ҳажми ёки мавжуд вақт кўрсатилмаган — ҳаммаси сиғишини баҳолаб бўлмайди.',
+  ru: 'Объём работы или доступное время не указаны — оценить, всё ли поместится, нельзя.',
+  en: 'Estimates or available working time are missing — capacity cannot yet be assessed.',
+}
+
 const SUMMARY_OVER: Record<Locale, (over: number, count: number) => string> = {
   'uz-Latn': (over, count) =>
     `Bu davrga ${count} ta vazifa sigʻmaydi — ${over} daqiqa ortiqcha. Ularni keyingi davrga koʻchiring.`,
@@ -208,14 +215,16 @@ function simulate(input: PlanSprintInput): PlanSprintOutput {
     return { id, reason: REASON[key]![input.locale] }
   })
 
+  const canAssessCapacity =
+    input.capacityMin !== null && input.items.every((item) => item.estimateMin !== null)
   let running = 0
   const wontFitIds: string[] = []
   for (const id of placed) {
-    const estimate = byId.get(id)?.estimateMin ?? 60
-    if (running + estimate > input.capacityMin) wontFitIds.push(id)
+    const estimate = byId.get(id)?.estimateMin ?? 0
+    if (canAssessCapacity && running + estimate > input.capacityMin!) wontFitIds.push(id)
     running += estimate
   }
-  const overCommittedByMin = Math.max(0, running - input.capacityMin)
+  const overCommittedByMin = canAssessCapacity ? Math.max(0, running - input.capacityMin!) : 0
 
   return {
     orderedIds: placed,
@@ -223,8 +232,9 @@ function simulate(input: PlanSprintInput): PlanSprintOutput {
     reasons,
     wontFitIds,
     overCommittedByMin,
-    summary:
-      overCommittedByMin > 0
+    summary: !canAssessCapacity
+      ? CAPACITY_UNKNOWN[input.locale]
+      : overCommittedByMin > 0
         ? SUMMARY_OVER[input.locale](overCommittedByMin, wontFitIds.length)
         : SUMMARY_FITS[input.locale],
   }
@@ -278,7 +288,11 @@ function validateOutput(
 
   // Repairable: stray reasons and stray wontFit ids are dropped; a missing reason is filled from the
   // item's own deadline rather than failing an otherwise faithful plan.
-  const reasons = output.reasons.filter((entry) => expected.has(entry.id))
+  const reasons = [
+    ...new Map(
+      output.reasons.filter((entry) => expected.has(entry.id)).map((entry) => [entry.id, entry]),
+    ).values(),
+  ]
   const covered = new Set(reasons.map((entry) => entry.id))
   const simulated = simulate(input)
   const simulatedReason = new Map(simulated.reasons.map((entry) => [entry.id, entry.reason]))
@@ -286,12 +300,24 @@ function validateOutput(
     if (!covered.has(id)) reasons.push({ id, reason: simulatedReason.get(id) ?? '—' })
   }
 
+  // Arithmetic is measured by the server, not delegated to prose generation.
+  const canAssessCapacity =
+    input.capacityMin !== null && input.items.every((item) => item.estimateMin !== null)
+  let running = 0
+  const wontFitIds: string[] = []
+  for (const id of output.orderedIds) {
+    running += input.items.find((item) => item.id === id)?.estimateMin ?? 0
+    if (canAssessCapacity && running > input.capacityMin!) wontFitIds.push(id)
+  }
   return {
     ok: true,
     output: {
       ...output,
+      focusId: output.orderedIds[0] ?? null,
       reasons,
-      wontFitIds: output.wontFitIds.filter((id) => expected.has(id)),
+      wontFitIds,
+      overCommittedByMin: canAssessCapacity ? Math.max(0, running - input.capacityMin!) : 0,
+      summary: canAssessCapacity ? output.summary : CAPACITY_UNKNOWN[input.locale],
     },
   }
 }

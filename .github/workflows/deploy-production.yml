@@ -139,7 +139,7 @@ jobs:
             tools/backup \
             packages/db/migrations \
             | ssh -p "$port" "${PROD_USER}@${PROD_HOST}" \
-                'set -eu; umask 027; install -d -m 0750 /opt/devon; if [ -f /opt/devon/infra/docker-compose.prod.yml ]; then cp /opt/devon/infra/docker-compose.prod.yml /opt/devon/infra/.previous-docker-compose.prod.yml; fi; tar -xzf - -C /opt/devon'
+                'set -eu; umask 027; install -d -m 0750 /opt/devon; if [ -f /opt/devon/infra/docker-compose.prod.yml ]; then cp /opt/devon/infra/docker-compose.prod.yml /opt/devon/infra/.previous-docker-compose.prod.yml; fi; if [ -f /opt/devon/infra/Caddyfile ]; then cp /opt/devon/infra/Caddyfile /opt/devon/infra/.previous-Caddyfile; fi; tar -xzf - -C /opt/devon'
 
       - name: Authenticate the server to GHCR for this deployment
         env:

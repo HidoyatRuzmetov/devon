@@ -48,4 +48,15 @@ describe('Telegram personal linking', () => {
     expect(consumeLinkCode).toHaveBeenCalledWith('ABCDEFGH', '123', 'en')
     expect(reply).toHaveBeenCalledOnce()
   })
+  it('explains a chat ownership conflict so the update can be acknowledged rather than retried forever', async () => {
+    vi.mocked(consumeLinkCode).mockResolvedValueOnce({ ok: false, reason: 'chat_in_use' })
+    const reply = vi.fn()
+    await startHandler()({
+      chat: { id: 123, type: 'private' },
+      match: 'ABCDEFGH',
+      from: { language_code: 'en' },
+      reply,
+    } as unknown as Context)
+    expect(reply).toHaveBeenCalledWith(expect.stringContaining('linked to another account'))
+  })
 })

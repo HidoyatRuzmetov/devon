@@ -12,7 +12,7 @@
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
-import { useT, useLocale, formatDate, latinToCyrillic, type Locale } from '@devon/i18n'
+import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
 import {
   Avatar,
@@ -55,7 +55,6 @@ import {
 import {
   TranslateTargetPicker,
   defaultTranslateTarget,
-  isLocalTransliterationPair,
 } from '../../ai/components/translate-target.js'
 import { useSummaryQuery } from '../../analytics/use-analytics.js'
 import {
@@ -343,21 +342,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     const source = descDraft.trim()
     if (!source) return
     setTranslatePreview(null)
-    // D-2: uz-Latn to uz-Cyrl is a lookup table in `packages/i18n`, not a language model. Instant,
-    // free, and with no chance of a model quietly rewriting a card description while converting the
-    // script it is written in.
-    if (isLocalTransliterationPair(locale, translateTarget)) {
-      setTranslatePreview({
-        meta: null,
-        output: {
-          translatedText: latinToCyrillic(source),
-          detectedSourceLocale: locale,
-          alreadyInTarget: false,
-          uncertainTerms: [],
-        },
-      })
-      return
-    }
+    // The UI language is not the description's language; let the translator detect the source.
     translateAi.mutate(
       {
         // `locale` is the reader's language and only shapes how uncertainty is phrased;
@@ -1172,6 +1157,7 @@ function Checklist({
     subtaskAi.mutate(
       {
         locale,
+        cardId: card.id,
         cardTitle: card.title,
         cardDescription: card.description?.text ?? null,
         existingSubtasks: card.checklist.map((i) => i.text),

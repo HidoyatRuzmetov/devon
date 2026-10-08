@@ -140,7 +140,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { params: idParamsSchema, response: { 200: cardDependenciesSchema } },
+      schema: {
+        params: idParamsSchema,
+        response: { 200: cardDependenciesSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)!
@@ -205,7 +208,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { params: dependencyParamsSchema, response: { 204: z.undefined() } },
+      schema: {
+        params: dependencyParamsSchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -349,8 +355,13 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.get(
     '/cards/:id/reminders',
     {
-      config: { permission: { action: 'read', subject: (r) => ownViewerSubject(r) } },
-      schema: { params: idParamsSchema, response: { 200: cardReminderListSchema } },
+      config: {
+        permission: { action: 'read', subject: (r) => ownViewerSubject(r) },
+      },
+      schema: {
+        params: idParamsSchema,
+        response: { 200: cardReminderListSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
@@ -373,7 +384,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.post(
     '/cards/:id/reminders',
     {
-      config: { permission: { action: 'update', subject: (r) => ownViewerSubject(r) } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownViewerSubject(r) },
+      },
       schema: {
         params: idParamsSchema,
         body: createReminderBodySchema,
@@ -400,8 +413,13 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.delete(
     '/cards/:id/reminders/:reminderId',
     {
-      config: { permission: { action: 'delete', subject: (r) => ownViewerSubject(r) } },
-      schema: { params: reminderParamsSchema, response: { 204: z.undefined() } },
+      config: {
+        permission: { action: 'delete', subject: (r) => ownViewerSubject(r) },
+      },
+      schema: {
+        params: reminderParamsSchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -431,7 +449,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: bulkCardPatchBodySchema, response: { 200: bulkCardResultSchema } },
+      schema: {
+        body: bulkCardPatchBodySchema,
+        response: { 200: bulkCardResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -462,7 +483,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: bulkUndoBodySchema, response: { 200: bulkCardResultSchema } },
+      schema: {
+        body: bulkUndoBodySchema,
+        response: { 200: bulkCardResultSchema },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -513,7 +537,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { querystring: templateListQuerySchema, response: { 200: workTemplateListSchema } },
+      schema: {
+        querystring: templateListQuerySchema,
+        response: { 200: workTemplateListSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
@@ -614,7 +641,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { params: templateIdParamsSchema, response: { 204: z.undefined() } },
+      schema: {
+        params: templateIdParamsSchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -710,7 +740,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.get(
     '/work/focus',
     {
-      config: { permission: { action: 'read', subject: (r) => ownViewerSubject(r) } },
+      config: {
+        permission: { action: 'read', subject: (r) => ownViewerSubject(r) },
+      },
       schema: { response: { 200: focusListSchema } },
     },
     async (req, reply) => {
@@ -728,7 +760,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.post(
     '/work/focus',
     {
-      config: { permission: { action: 'update', subject: (r) => ownViewerSubject(r) } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownViewerSubject(r) },
+      },
       schema: { body: addFocusBodySchema, response: { 204: z.undefined() } },
     },
     async (req, reply) => {
@@ -755,8 +789,13 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.delete(
     '/work/focus/:cardId',
     {
-      config: { permission: { action: 'delete', subject: (r) => ownViewerSubject(r) } },
-      schema: { params: z.object({ cardId: z.string().uuid() }), response: { 204: z.undefined() } },
+      config: {
+        permission: { action: 'delete', subject: (r) => ownViewerSubject(r) },
+      },
+      schema: {
+        params: z.object({ cardId: z.string().uuid() }),
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -776,19 +815,25 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
   app.post(
     '/work/focus/reorder',
     {
-      config: { permission: { action: 'update', subject: (r) => ownViewerSubject(r) } },
-      schema: { body: reorderFocusBodySchema, response: { 204: z.undefined() } },
+      config: {
+        permission: { action: 'update', subject: (r) => ownViewerSubject(r) },
+      },
+      schema: {
+        body: reorderFocusBodySchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)
       if (!departmentId) return sendProblem(reply, 'not_found')
-      await plus.reorderFocusPins(
+      const reordered = await plus.reorderFocusPins(
         contextFromRequest(req),
         departmentId,
         req.actor!.userId,
         req.body.cardIds,
       )
+      if (!reordered) return sendProblem(reply, 'conflict')
       return reply.code(204).send()
     },
   )
@@ -862,7 +907,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
         },
       },
-      schema: { querystring: workloadQuerySchema, response: { 200: workloadSchema } },
+      schema: {
+        querystring: workloadQuerySchema,
+        response: { 200: workloadSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)!
@@ -880,7 +928,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentChildSubject(requireDepartmentId(r)),
         },
       },
-      schema: { querystring: workloadQuerySchema, response: { 200: workloadSchema } },
+      schema: {
+        querystring: workloadQuerySchema,
+        response: { 200: workloadSchema },
+      },
     },
     async (req, reply) => {
       const departmentId = requireDepartmentId(req)
@@ -906,7 +957,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
           subject: (r) => departmentManagedSubject(requireDepartmentId(r)),
         },
       },
-      schema: { body: moveWorkloadBodySchema, response: { 204: z.undefined() } },
+      schema: {
+        body: moveWorkloadBodySchema,
+        response: { 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -928,7 +982,10 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
         ctx,
         departmentId,
         req.body.cardId,
-        { assigneeUserId: req.body.toUserId, dueAt: new Date(dueAt).toISOString() },
+        {
+          assigneeUserId: req.body.toUserId,
+          dueAt: new Date(dueAt).toISOString(),
+        },
         undefined,
         req.actor!.userId,
       )
@@ -951,7 +1008,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
         },
       },
       schema: {
-        querystring: z.object({ includeArchived: z.coerce.boolean().optional() }),
+        querystring: z.object({
+          includeArchived: z.coerce.boolean().optional(),
+        }),
         response: { 200: goalListSchema },
       },
     },

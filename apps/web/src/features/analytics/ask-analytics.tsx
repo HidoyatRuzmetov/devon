@@ -1,7 +1,7 @@
 // "Ask analytics" (AI-AUDIT F8). A plain-language question becomes filter-grammar text
 // (`@devon/contracts`'s `parseFilterQuery` syntax -- exactly what a person could type into the filter
-// bar by hand), previewed and only applied on Accept. This file never runs a query itself: AI output
-// is data, never trusted as already-safe (TECH-SPEC §8).
+// bar by hand), previewed and only applied on Accept. The answer is fetched from the matching
+// server aggregate; AI output is filter data, never trusted numerical evidence (TECH-SPEC §8).
 //
 // Two v1.1 changes, both from the audit's §0.3 "the features are input-starved":
 //
@@ -14,6 +14,7 @@
 //     still shown, underneath, because a head who cannot see how a number was reached cannot defend
 //     it -- but it is no longer the answer.
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale } from '@devon/i18n'
 import { Input, SparkleButton } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
@@ -22,6 +23,8 @@ import { AnalyticsAnswerPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type NlAnalyticsOutput } from '../ai/outputs.js'
 import { ApiError } from '../../lib/api-client.js'
 import type { AnalyticsSummary } from './types.js'
+import { fetchSummary } from './api.js'
+import { useMeQuery } from '../../lib/session.js'
 
 function errorKey(err: unknown): string {
   if (err instanceof ApiError) {
@@ -32,8 +35,8 @@ function errorKey(err: unknown): string {
 }
 
 /**
- * The numbers behind the answer, read off the summary this screen has already fetched -- never a
- * second request, and never a number the model produced.
+ * The numbers behind the answer, read from the aggregate fetched for the model's proposed filter,
+ * never from a number the model produced.
  *
  * This is the honest half of "answer with the numbers": the model decides *what was asked*, and the
  * department's own aggregates decide *what the answer is*. A model that invents "7 overdue" is one a
@@ -47,7 +50,7 @@ function errorKey(err: unknown): string {
 function answerFrom(
   summary: AnalyticsSummary,
   output: NlAnalyticsOutput,
-): { rows: { label: string; value: number }[]; total: number } | null {
+): { rows: { label: string; value: number }[]; total?: number } | null {
   const sum = (rows: { value: number }[]): number => rows.reduce((n, row) => n + row.value, 0)
   const nonEmpty = (rows: { label: string; value: number }[]) =>
     rows.length > 0 ? { rows, total: sum(rows) } : null
@@ -96,26 +99,26 @@ function answerFrom(
         summary.loadPerUnit.map((unit) => ({ label: unit.unitName ?? '', value: unit.openCount })),
       )
     case 'projectProgress':
-      return nonEmpty(
-        summary.projectProgress.map((project) => ({
+      return {
+        rows: summary.projectProgress.map((project) => ({
           label: project.title,
           value: Math.round(project.progress * 100),
         })),
-      )
+      }
     case 'eventsParticipation':
-      return nonEmpty(
-        summary.eventsParticipation.map((event) => ({
+      return {
+        rows: summary.eventsParticipation.map((event) => ({
           label: event.title,
           value: Math.round(event.rsvpRate * 100),
         })),
-      )
+      }
     case 'pollTurnout':
-      return nonEmpty(
-        summary.pollTurnout.map((poll) => ({
+      return {
+        rows: summary.pollTurnout.map((poll) => ({
           label: poll.question,
           value: Math.round(poll.turnoutRate * 100),
         })),
-      )
+      }
     default:
       // No metric: the question mapped to a filter but not to a number this screen holds. The
       // restatement and the filter are still shown -- the preview just does not claim a total.
@@ -134,6 +137,7 @@ export function AskAnalytics({
   const locale = useLocale()
   const [query, setQuery] = React.useState('')
   const runMutation = useRunAiFeatureMutation('nl_analytics')
+  const { data: me } = useMeQuery()
   const knownUnits = React.useMemo(
     () => summary.loadPerUnit.map((u) => u.unitName).filter((n): n is string => Boolean(n)),
     [summary.loadPerUnit],
@@ -170,7 +174,30 @@ export function AskAnalytics({
   const output = runMutation.data
     ? parseFeatureOutput<NlAnalyticsOutput>('nl_analytics', runMutation.data.data)
     : null
-  const answer = output ? answerFrom(summary, output) : null
+  const answerQuery = useQuery({
+    queryKey: [
+      'ai',
+      'analytics-answer',
+      me?.user.id,
+      me?.activeDepartmentId,
+      me?.actingForUserId,
+      summary.since,
+      summary.until,
+      output?.filterText,
+    ],
+    queryFn: () =>
+      fetchSummary({
+        filter: output?.filterText ?? '',
+        since: summary.since.slice(0, 10),
+        until: summary.until.slice(0, 10),
+      }),
+    enabled: !!output && !!output.metric && output.unmappedTerms.length === 0,
+    staleTime: 0,
+  })
+  const answer =
+    output && answerQuery.data && !answerQuery.isFetching && output.unmappedTerms.length === 0
+      ? answerFrom(answerQuery.data, output)
+      : null
 
   return (
     <div className="flex flex-col gap-3">
@@ -227,7 +254,12 @@ export function AskAnalytics({
           {output ? (
             <AnalyticsAnswerPreview
               output={output}
-              {...(answer ? { rows: answer.rows, total: answer.total } : {})}
+              {...(answer
+                ? {
+                    rows: answer.rows,
+                    ...(answer.total !== undefined ? { total: answer.total } : {}),
+                  }
+                : {})}
             />
           ) : null}
         </AiResultPanel>

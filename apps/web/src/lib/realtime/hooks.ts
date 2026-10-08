@@ -172,7 +172,7 @@ const INVALIDATIONS: ReadonlyArray<{
   keys: readonly (readonly string[])[]
 }> = [
   {
-    match: /^work\.(card|checklist)\./,
+    match: /^work\.(card|checklist|focus)\./,
     keys: [['work'], ['projects']],
   },
   { match: /^projects\./, keys: [['projects'], ['work', 'board']] },
@@ -184,11 +184,21 @@ const INVALIDATIONS: ReadonlyArray<{
   { match: /^inbox\.notification\./, keys: [['inbox', 'notifications']] },
 ]
 
-function invalidateFor(queryClient: QueryClient, type: string, cardId?: unknown): void {
+function invalidateFor(queryClient: QueryClient, type: string): void {
   // The last checklist mutation refetches committed state. A live echo during an optimistic
   // toggle must not overwrite the newer local state with an intermediate server response.
-  if (type.startsWith('work.') && typeof cardId === 'string' &&
-      queryClient.isMutating({ mutationKey: ['work', 'checklist', cardId] }) > 0) return
+  if (
+    (type.startsWith('work.') || type.startsWith('projects.')) &&
+    queryClient.isMutating({ mutationKey: ['work', 'checklist'] }) > 0
+  )
+    return
+  // The final local write refreshes all work/project surfaces. Fetching an earlier live echo while
+  // a drag or pin is pending replaced the optimistic layout and made it snap back repeatedly.
+  if (
+    (type.startsWith('work.') || type.startsWith('projects.')) &&
+    queryClient.isMutating({ mutationKey: ['work', 'card-write'] }) > 0
+  )
+    return
   for (const rule of INVALIDATIONS) {
     if (!rule.match.test(type)) continue
     for (const key of rule.keys) void queryClient.invalidateQueries({ queryKey: [...key] })
@@ -214,10 +224,10 @@ export function useRealtimeBridge(): void {
   const channels = React.useMemo(() => realtimeChannels(), [status])
 
   useChannel(signedIn ? (channels?.department ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type, message.payload['cardId'])
+    invalidateFor(queryClient, message.type)
   })
   useChannel(signedIn ? (channels?.personal ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type, message.payload['cardId'])
+    invalidateFor(queryClient, message.type)
   })
 
   // Kick the connection off on the first render of a signed-in shell. `subscribeChannel` connects

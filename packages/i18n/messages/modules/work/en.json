@@ -139,7 +139,8 @@
       "saveFailed": "Could not save it. The previous value is back.",
       "editChecklistItem": "Edit checklist item",
       "saveChecklistItem": "Save item",
-      "cancelChecklistEdit": "Cancel editing"
+      "cancelChecklistEdit": "Cancel editing",
+      "assigneeUnavailable": "Former assignee is no longer in this department"
     },
     "priority": {
       "none": "No priority",

@@ -28,6 +28,7 @@ export const draftReplyInputSchema = z.object({
   /** head | member — a reply from the boshqarma boshligʻi carries different weight and is phrased
    * differently from a reply between colleagues. */
   viewerRole: z.enum(['head', 'member']),
+  commentsTruncated: z.boolean().default(false),
   /** Chronological. The last one is what is being replied to. */
   comments: z
     .array(
@@ -62,11 +63,11 @@ export type DraftReplyOutput = z.infer<typeof draftReplyOutputSchema>
 
 const FEW_SHOT = `comments: k3 Dilnoza "Anvar, vazirlik shaklini kim toʻldiradi?" | k4 Nodira "Men PDF-ni ertaga yuboraman."
 viewerName "Anvar Aliyev", viewerRole "member", tone "neutral", intent "men toʻldiraman", locale uz-Latn
-out: {"draft":"Dilnoza, vazirlik shaklini men toʻldiraman. Nodiraning PDF-i kelgach, ertaga yuboraman.","tone":"neutral","answers":["k3"],"stillNeeded":[]}
+out: {"draft":"Dilnoza, vazirlik shaklini men toʻldiraman.","tone":"neutral","answers":["k3"],"stillNeeded":[]}
 
 comments: k9 Boshliq "Hisobot qachon tayyor boʻladi?"
 viewerName "Nodira Karimova", viewerRole "member", tone "formal", intent "", locale uz-Latn
-out: {"draft":"Hurmatli boshqarma boshligʻi, hisobotning tayyor boʻlish muddatini aniqlab, bugun kun oxirigacha maʼlum qilaman.","tone":"formal","answers":["k9"],"stillNeeded":["Hisobotning aniq muddatini yozing"]}`
+out: {"draft":"Hurmatli boshqarma boshligʻi, hisobotning aniq tayyor boʻlish muddatini hozircha tasdiqlay olmayman.","tone":"formal","answers":["k9"],"stillNeeded":["Hisobotning aniq muddatini yozing"]}`
 
 function systemPrompt(input: DraftReplyInput): string {
   const authors = [...new Set(input.comments.map((comment) => comment.author))]
@@ -88,6 +89,9 @@ People in this thread: ${authors.join(', ')}.`,
       'answers: the ids of the comments this reply responds to, at most three.',
       'stillNeeded: short notes to the writer — not part of the message — naming what they must fill in before sending. Empty when the draft is complete.',
       'At most four sentences. A reply nobody reads to the end is a reply that did not work.',
+      input.commentsTruncated
+        ? 'Only recent comments were supplied. Do not claim knowledge of earlier agreements; put any missing agreement needed for the reply in stillNeeded.'
+        : 'Answer the latest relevant request directed to this viewer; another author’s promise is not the viewer’s commitment.',
     ],
     constraints: [
       languageConstraint(input.locale),
@@ -116,7 +120,7 @@ const PHRASES: Record<Locale, Phrases> = {
     ack: (author, subject) => `${author}, "${subject}" boʻyicha savolingizni koʻrdim.`,
     withIntent: (author, intent) => `${author}, ${intent}.`,
     formalOpen: 'Hurmatli hamkasb,',
-    willFollow: 'Aniq maʼlumotni bugun kun oxirigacha yozaman.',
+    willFollow: 'Aniq maʼlumot hozircha tasdiqlanmagan.',
     needDate: 'Aniq muddatni yozing',
     needDetail: 'Javobingizning asosiy mazmunini qoʻshing',
   },
@@ -124,7 +128,7 @@ const PHRASES: Record<Locale, Phrases> = {
     ack: (author, subject) => `${author}, "${subject}" бўйича саволингизни кўрдим.`,
     withIntent: (author, intent) => `${author}, ${intent}.`,
     formalOpen: 'Ҳурматли ҳамкасб,',
-    willFollow: 'Аниқ маълумотни бугун кун охиригача ёзаман.',
+    willFollow: 'Аниқ маълумот ҳозирча тасдиқланмаган.',
     needDate: 'Аниқ муддатни ёзинг',
     needDetail: 'Жавобингизнинг асосий мазмунини қўшинг',
   },
@@ -132,7 +136,7 @@ const PHRASES: Record<Locale, Phrases> = {
     ack: (author, subject) => `${author}, видел(а) ваш вопрос по «${subject}».`,
     withIntent: (author, intent) => `${author}, ${intent}.`,
     formalOpen: 'Уважаемый коллега,',
-    willFollow: 'Точную информацию сообщу до конца дня.',
+    willFollow: 'Точная информация пока не подтверждена.',
     needDate: 'Укажите точный срок',
     needDetail: 'Добавьте суть вашего ответа',
   },
@@ -140,7 +144,7 @@ const PHRASES: Record<Locale, Phrases> = {
     ack: (author, subject) => `${author}, I have seen your question about "${subject}".`,
     withIntent: (author, intent) => `${author}, ${intent}.`,
     formalOpen: 'Dear colleague,',
-    willFollow: 'I will confirm the details by the end of the day.',
+    willFollow: 'The exact information is not confirmed yet.',
     needDate: 'State the actual deadline',
     needDetail: 'Add the substance of your answer',
   },

@@ -10,6 +10,11 @@ Ops-tooling package (`agentic/ledger/hardening/2026-09-08T06-45-00-05-00/ops-too
 This is the production path -- for the local developer inner loop, use `pnpm setup && pnpm start`
 (`infra/README.md`), not anything on this page.
 
+The current hosted installation uses the tested GitHub-to-production path in
+[GITHUB-DEPLOY.md](GITHUB-DEPLOY.md). Successful CI for the exact current `main` commit builds
+immutable images, takes a backup, applies migrations and deploys with readiness checks and image
+rollback. The build and rollout commands below describe the manual installation path.
+
 **Newer, more complete pages supersede parts of this one**, which predates them:
 `docs/ops/INSTALL.md` (zero-to-running on a fresh ministry host, with every environment variable
 explained and the `/setup` ceremony), `docs/ops/UPDATE.md` + `scripts/update.sh` (the release
@@ -134,8 +139,9 @@ multi-replica `api`).
 
 ## 6. Rollback (documented, H18.1)
 
-There is no automatic rollback -- this is a single-server Compose deployment, not a orchestrator with
-a deployment history. To roll back a release:
+The GitHub release script automatically restores the previous API/web images, Compose manifest and
+proxy configuration when application rollout or readiness fails. Additive migrations remain in place.
+If deploying manually without that script, use the following recovery procedure:
 
 1. `docker compose -f infra/docker-compose.prod.yml stop api worker web`
 2. Re-tag/rebuild the previous known-good commit's images (or `docker tag` a previously pushed image

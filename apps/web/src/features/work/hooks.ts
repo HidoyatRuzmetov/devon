@@ -8,6 +8,7 @@
 import * as React from 'react'
 import {
   useMutation,
+  useIsMutating,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -20,6 +21,13 @@ import { useMeQuery } from '../../lib/session.js'
 import { useIsLive } from '../../lib/realtime/index.js'
 import * as api from './api.js'
 import type { Board, Card, CardDetail, CardStatus, Label, SavedView } from './api.js'
+import {
+  focusFirst,
+  sortBoardCards,
+  moveCardOnBoard,
+  previousBoardPosition,
+  type BoardMove,
+} from './lib/board-state.js'
 
 /** Every mutation needs the session's CSRF token (`Me.csrfToken`, ADR-003) -- reading it here means
  * no component reaches into `useMeQuery()` just to pass a token through. Mutating with no session
@@ -50,7 +58,25 @@ const ARCHIVE_KEY = (userId: string) => ['work', 'archive', userId] as const
 const BOARD_POLL_MS = 4000
 
 function useLiveRefetchInterval(): number | false {
-  return useIsLive() ? false : BOARD_POLL_MS
+  const busy =
+    useIsMutating({ mutationKey: ['work', 'card-write'] }) +
+      useIsMutating({ mutationKey: ['work', 'checklist'] }) >
+    0
+  return useIsLive() || busy ? false : BOARD_POLL_MS
+}
+
+/** Realtime echoes can concern any card. Refresh the whole deferred surface only when the final
+ * card/focus/checklist write settles, so one kind of edit cannot overwrite another's optimistic UI. */
+export function finishWorkWrite(qc: QueryClient) {
+  if (
+    qc.isMutating({ mutationKey: ['work', 'card-write'] }) +
+      qc.isMutating({ mutationKey: ['work', 'checklist'] }) ===
+    1
+  )
+    return Promise.all([
+      qc.invalidateQueries({ queryKey: ['work'] }),
+      qc.invalidateQueries({ queryKey: ['projects'] }),
+    ])
 }
 
 export function useBoardQuery(): UseQueryResult<Board, Error> {
@@ -109,7 +135,7 @@ function mapCard(card: Card, patch: Partial<Card>): Card {
  * cached `/cards` list (table/timeline/calendar/mine all key off the same `CARDS_KEY` prefix with
  * different query params), and the card-detail cache if it happens to be open. Returns a snapshot
  * `rollback()` that restores exactly what was there before, for `onError`. */
-function patchCardInCaches(
+export function patchCardInCaches(
   qc: QueryClient,
   id: string,
   patch: Partial<Card>,
@@ -118,16 +144,44 @@ function patchCardInCaches(
   const prevCards = qc.getQueriesData<Card[]>({ queryKey: CARDS_KEY })
   const prevDetail = qc.getQueryData<CardDetail>(CARD_KEY(id))
 
-  if (prevBoard) {
-    qc.setQueryData<Board>(BOARD_KEY, {
-      ...prevBoard,
-      columns: prevBoard.columns.map((col) => ({
-        ...col,
-        cards: col.cards.map((c) => (c.id === id ? mapCard(c, patch) : c)),
-      })),
-      unassigned: prevBoard.unassigned.map((c) => (c.id === id ? mapCard(c, patch) : c)),
-    })
+  const updateList = (cards: Card[], changes: Partial<Card>): Card[] => {
+    if (!cards.some((card) => card.id === id)) return cards
+    const updated = cards.map((card) => (card.id === id ? mapCard(card, changes) : card))
+    return changes.focusPinned !== undefined || changes.focusPosition !== undefined
+      ? sortBoardCards(updated)
+      : focusFirst(updated)
   }
+  const applyBoard = (board: Board, changes: Partial<Card>): Board => {
+    const current = [...board.unassigned, ...board.columns.flatMap((col) => col.cards)].find(
+      (card) => card.id === id,
+    )
+    const moved =
+      changes.assigneeUserId !== undefined &&
+      current &&
+      changes.assigneeUserId !== current.assigneeUserId
+        ? moveCardOnBoard(board, {
+            id,
+            toUserId: changes.assigneeUserId,
+            targetCardId: null,
+            edge: 'after',
+          })
+        : board
+    const updateActiveList = (cards: Card[]) => {
+      const updated = updateList(cards, changes)
+      return changes.status !== undefined && changes.status !== 'active'
+        ? updated.filter((card) => card.id !== id)
+        : updated
+    }
+    return {
+      ...moved,
+      columns: moved.columns.map((col) => {
+        const cards = updateActiveList(col.cards)
+        return cards === col.cards ? col : { ...col, cards }
+      }),
+      unassigned: updateActiveList(moved.unassigned),
+    }
+  }
+  if (prevBoard) qc.setQueryData<Board>(BOARD_KEY, applyBoard(prevBoard, patch))
   qc.setQueriesData<Card[]>({ queryKey: CARDS_KEY }, (list) =>
     list ? list.map((c) => (c.id === id ? mapCard(c, patch) : c)) : list,
   )
@@ -137,9 +191,57 @@ function patchCardInCaches(
 
   return {
     rollback: () => {
-      if (prevBoard) qc.setQueryData(BOARD_KEY, prevBoard)
-      for (const [key, data] of prevCards) qc.setQueryData(key, data)
-      if (prevDetail) qc.setQueryData(CARD_KEY(id), prevDetail)
+      const restoreFields = (card: Card | undefined): Partial<Card> =>
+        card
+          ? Object.fromEntries(Object.keys(patch).map((key) => [key, card[key as keyof Card]]))
+          : {}
+      const previousCard = [
+        ...(prevBoard?.unassigned ?? []),
+        ...(prevBoard?.columns.flatMap((col) => col.cards) ?? []),
+      ].find((card) => card.id === id)
+      if (previousCard)
+        qc.setQueryData<Board>(BOARD_KEY, (board) => {
+          if (!board) return board
+          const exists = [...board.unassigned, ...board.columns.flatMap((col) => col.cards)].some(
+            (card) => card.id === id,
+          )
+          let current = board
+          if (!exists && patch.status !== undefined) {
+            const previousPosition = previousBoardPosition(prevBoard, id)
+            const sourceUserId = previousPosition?.toUserId ?? null
+            current = {
+              ...board,
+              columns: board.columns.map((col) =>
+                col.member.userId === sourceUserId
+                  ? { ...col, cards: [...col.cards, previousCard] }
+                  : col,
+              ),
+              unassigned:
+                sourceUserId === null ? [...board.unassigned, previousCard] : board.unassigned,
+            }
+          }
+          const restored = applyBoard(current, restoreFields(previousCard))
+          if (patch.status !== undefined || patch.assigneeUserId !== undefined) {
+            const position = previousBoardPosition(prevBoard, id)
+            const positioned = position ? moveCardOnBoard(restored, position) : restored
+            return applyBoard(positioned, {
+              assigneeUserId: previousCard.assigneeUserId,
+              assigneeUnavailable: previousCard.assigneeUnavailable ?? false,
+            })
+          }
+          return restored
+        })
+      for (const [key, data] of prevCards) {
+        const previous = data?.find((card) => card.id === id)
+        if (previous)
+          qc.setQueryData<Card[]>(key, (current) =>
+            current ? updateList(current, restoreFields(previous)) : current,
+          )
+      }
+      if (prevDetail)
+        qc.setQueryData<CardDetail>(CARD_KEY(id), (current) =>
+          current ? { ...current, ...restoreFields(prevDetail) } : current,
+        )
     },
   }
 }
@@ -157,12 +259,10 @@ export function useCreateCardMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'card-write', 'create'],
     mutationFn: (input: api.CreateCardInput) => api.createCard(input, csrf),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['projects'] })
-      void qc.invalidateQueries({ queryKey: BOARD_KEY })
-      void qc.invalidateQueries({ queryKey: CARDS_KEY })
-    },
+    onMutate: () => qc.cancelQueries({ queryKey: ['work'] }),
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -171,9 +271,17 @@ export function usePatchCardMutation() {
   const csrf = useCsrfToken()
   const t = useT()
   return useMutation({
+    mutationKey: ['work', 'card-write', 'patch'],
     mutationFn: ({ id, patch }: { id: string; patch: api.PatchCardInput }) =>
       api.patchCard(id, patch, csrf),
-    onMutate: ({ id, patch }) => patchCardInCaches(qc, id, patch as Partial<Card>),
+    onMutate: async ({ id, patch }) => {
+      await Promise.all([
+        qc.cancelQueries({ queryKey: BOARD_KEY }),
+        qc.cancelQueries({ queryKey: CARDS_KEY }),
+        qc.cancelQueries({ queryKey: CARD_KEY(id) }),
+      ])
+      return patchCardInCaches(qc, id, patch as Partial<Card>)
+    },
     onError: (err, _vars, context) => {
       context?.rollback()
       // v1.1 SPEC §5: a card the boshqarma still needs answers for cannot be finished -- and a
@@ -188,7 +296,7 @@ export function usePatchCardMutation() {
       // happened -- DESIGN.md §4 wants both, never a gesture on its own.
       toast.error(t('work.card.saveFailed'))
     },
-    onSettled: (_data, _err, { id }) => invalidateCard(qc, id),
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -201,21 +309,53 @@ export function useMoveCardMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
-    mutationFn: ({
-      id,
-      toUserId,
-      orderKey,
-    }: {
-      id: string
-      toUserId: string | null
-      orderKey: string
-    }) => api.patchCard(id, { assigneeUserId: toUserId, orderKey }, csrf),
-    onMutate: ({ id, toUserId, orderKey }) =>
-      patchCardInCaches(qc, id, { assigneeUserId: toUserId, orderKey }),
-    onError: (_err, _vars, context) => context?.rollback(),
-    onSettled: (_data, _err, { id }) => invalidateCard(qc, id),
+    mutationKey: ['work', 'card-write', 'move'],
+    // A second drag of the same card must reach the server after its first drag. All moves share
+    // this short queue while their optimistic positions remain visible immediately.
+    scope: { id: 'work-board-moves' },
+    mutationFn: ({ id, ...input }: BoardMove) => api.moveCard(id, input, csrf),
+    onMutate: async (move) => {
+      await Promise.all([
+        qc.cancelQueries({ queryKey: BOARD_KEY }),
+        qc.cancelQueries({ queryKey: CARDS_KEY }),
+        qc.cancelQueries({ queryKey: CARD_KEY(move.id) }),
+      ])
+      const token = Symbol(move.id)
+      const latest = latestMoves.get(qc) ?? new Map<string, symbol>()
+      latestMoves.set(qc, latest)
+      latest.set(move.id, token)
+      const previousBoard = qc.getQueryData<Board>(BOARD_KEY)
+      const previous = previousBoardPosition(previousBoard, move.id)
+      const previousCard = [
+        ...(previousBoard?.unassigned ?? []),
+        ...(previousBoard?.columns.flatMap((col) => col.cards) ?? []),
+      ].find((card) => card.id === move.id)
+      const previousAssignee =
+        previousCard?.assigneeUserId ??
+        qc.getQueryData<CardDetail>(CARD_KEY(move.id))?.assigneeUserId
+      const previousUnavailable = previousCard?.assigneeUnavailable ?? false
+      qc.setQueryData<Board>(BOARD_KEY, (board) => (board ? moveCardOnBoard(board, move) : board))
+      patchCardInCaches(qc, move.id, { assigneeUserId: move.toUserId, assigneeUnavailable: false })
+      return { previous, previousAssignee, previousUnavailable, token }
+    },
+    onError: (_err, { id }, context) => {
+      if (latestMoves.get(qc)?.get(id) !== context?.token) return
+      if (context?.previous) {
+        qc.setQueryData<Board>(BOARD_KEY, (board) =>
+          board ? moveCardOnBoard(board, context.previous!) : board,
+        )
+        patchCardInCaches(qc, id, {
+          assigneeUserId: context.previousAssignee ?? context.previous.toUserId,
+          assigneeUnavailable: context.previousUnavailable,
+        })
+      } else if (context?.previousAssignee !== undefined)
+        patchCardInCaches(qc, id, { assigneeUserId: context.previousAssignee })
+    },
+    onSettled: () => finishWorkWrite(qc),
   })
 }
+
+const latestMoves = new WeakMap<QueryClient, Map<string, symbol>>()
 
 /** A card belonging to a project keeps `status: 'done'` (progress math on the project page counts
  * `status = 'done'` rows -- `apps/api/src/modules/projects/repo.ts`'s `getProgress`); a standalone
@@ -264,9 +404,12 @@ export function useAddChecklistItemMutation(cardId: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'checklist', cardId],
+    scope: { id: `checklist-${cardId}` },
     mutationFn: (input: Parameters<typeof api.addChecklistItem>[1]) =>
       api.addChecklistItem(cardId, input, csrf),
-    onSuccess: () => invalidateCard(qc, cardId),
+    onMutate: () => qc.cancelQueries({ queryKey: ['work'] }),
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -286,7 +429,7 @@ export function usePatchChecklistItemMutation(cardId: string) {
       patch: Parameters<typeof api.patchChecklistItem>[2]
     }) => api.patchChecklistItem(cardId, itemId, patch, csrf),
     onMutate: async ({ itemId, patch }) => {
-      await qc.cancelQueries({ queryKey: CARD_KEY(cardId) })
+      await qc.cancelQueries({ queryKey: ['work'] })
       const prev = qc.getQueryData<CardDetail>(CARD_KEY(cardId))
       if (prev) {
         qc.setQueryData<CardDetail>(CARD_KEY(cardId), {
@@ -322,9 +465,7 @@ export function usePatchChecklistItemMutation(cardId: string) {
         )
       toast.error(t('toast.saveError'))
     },
-    onSettled: () => {
-      if (qc.isMutating({ mutationKey }) === 1) invalidateCard(qc, cardId)
-    },
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -332,8 +473,11 @@ export function useDeleteChecklistItemMutation(cardId: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'checklist', cardId],
+    scope: { id: `checklist-${cardId}` },
     mutationFn: (itemId: string) => api.deleteChecklistItem(cardId, itemId, csrf),
-    onSuccess: () => invalidateCard(qc, cardId),
+    onMutate: () => qc.cancelQueries({ queryKey: ['work'] }),
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -377,7 +521,9 @@ export function useDeleteSavedViewMutation() {
 
 export function useUnfurlMutation() {
   const csrf = useCsrfToken()
-  return useMutation({ mutationFn: (url: string) => api.unfurlLink(url, csrf) })
+  return useMutation({
+    mutationFn: (url: string) => api.unfurlLink(url, csrf),
+  })
 }
 
 /** Every member of the current department, from the board's own roster -- the one source every

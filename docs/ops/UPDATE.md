@@ -1,5 +1,9 @@
 # Updating a running Devon (WorkPortal) deployment
 
+For the current hosted installation, follow [GITHUB-DEPLOY.md](GITHUB-DEPLOY.md): passing CI for
+the exact current `main` commit triggers a backed-up, scanned immutable-image release with automatic
+image/configuration rollback. This page describes the separate manual tagged-release channel.
+
 **Qisqacha (uz-Latn).** Yangilanish tartibi qat'iy va o'zgartirilmaydi: **avval zaxira nusxa** (va u
 haqiqatan tiklanishini tekshirish), keyin yangi versiyani olish, so'ng **migratsiyalarni ilovadan
 oldin** qo'llash, keyin konteynerlarni yangilash va `/readyz` javobini kutish. Migratsiyalar har doim
@@ -23,9 +27,9 @@ procedure if anything fails. Read the rest to know what it is doing and when to 
 |---|---|
 | **What you upgrade to** | A **git tag** (`v1.2.0`), never a branch. A branch moves; a tag is a specific tested tree, and it is what `agentic/scripts/gate.mjs --profile release` ran against |
 | **How the code arrives** | `git fetch --tags && git checkout --detach <tag>` on the host, then either a local `docker compose build` or a `pull` of pre-built images when `DEVON_API_IMAGE`/`DEVON_WEB_IMAGE`/`DEVON_WORKER_IMAGE` are set in `.env` |
-| **How often** | Whenever a release is cut. There is no auto-update and there will not be one: an unattended upgrade of a system that holds a department's whole week is a worse failure mode than being a version behind |
-| **Who** | The `devon` service account, from the host. Never from CI directly into production |
-| **Downtime** | None for a normal release. Caddy keeps serving; only `api`, `worker` and `web` are recreated |
+| **How often** | For this manual channel, whenever the operator chooses a tested release tag. The hosted GitHub channel releases tested current-main commits automatically. |
+| **Who** | The `devon` service account from the host for this manual channel; the deployment-only account for the GitHub channel. |
+| **Downtime** | Application containers restart during rollout. The GitHub channel also recreates Caddy to load proxy configuration changes, causing a brief proxy interruption. |
 
 To see what is between your version and the next one — and specifically whether it carries
 migrations or changed ops procedures:
@@ -132,8 +136,8 @@ Then, by hand, before you call the release done:
 sudo -u devon bash scripts/update.sh --rollback   # prints the exact commands for this host
 ```
 
-There is no automatic rollback: this is a single-host Compose deployment, not an orchestrator with a
-deployment history.
+This manual update command prints a recovery procedure. The hosted GitHub release script has
+automatic image/configuration rollback after failed rollout/readiness; see `GITHUB-DEPLOY.md`.
 
 1. `git checkout <previous tag>`
 2. Rebuild (or re-tag the previous image) and `docker compose ... up -d`.

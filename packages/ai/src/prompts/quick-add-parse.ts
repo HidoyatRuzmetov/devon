@@ -89,7 +89,7 @@ function systemPrompt(input: QuickAddInput): string {
       "Write `title` as the task itself, in the sentence's own language, with the person's name, the date words and the urgency words removed. Keep it a noun phrase or an imperative.",
       "Resolve a person against `members`: match on full name, given name, handle, an Uzbek case suffix of the given name (-ga, -ni, -dan, -ning, -da, -gacha), or a Russian dative/accusative form (Анвару, Нодиру). Return that member's `userId`. If two members match equally well, return null and put both full names in `ambiguous`.",
       'If the text names nobody and `defaultAssigneeUserId` is not null, use it and set confidence.assignee to "medium".',
-      `Resolve a date against today (${input.today}): bugun/сегодня/today = today; ertaga/завтра/tomorrow = +1; indinga = +2; a weekday name in any of the four locales means its NEXT occurrence, and "jumagacha"/"к пятнице"/"by Friday" is that same date; "keyingi hafta"/"на следующей неделе" = the Monday after next; an explicit DD.MM, DD/MM or YYYY-MM-DD is taken literally. If no date is expressed, return null. Never guess a date.`,
+      `Resolve a date against today (${input.today}): bugun/сегодня/today = today; ertaga/завтра/tomorrow = +1; indinga = +2; a weekday name in any of the four locales means its NEXT occurrence, and "jumagacha"/"к пятнице"/"by Friday" is that same date; "keyingi hafta"/"на следующей неделе" = the coming Monday after today; an explicit DD.MM, DD/MM, DD.MM.YYYY or YYYY-MM-DD is taken literally and takes precedence over relative wording. If no date is expressed, return null. Never guess a date.`,
       'Priority: shoshilinch / zudlik bilan / срочно / urgent / ASAP -> "urgent"; muhim / важно / important -> "high"; otherwise "none".',
       "labelIds: only ids from the label list above, and only when the label's name appears in the text (ignoring case and Uzbek case suffixes). Never a new label.",
       'projectId: only an id from the project list above, and only when the project is actually named.',
@@ -139,6 +139,14 @@ function nextWeekday(todayIso: string, weekday: number): string {
 }
 
 function resolveDate(text: string, today: string): { date: string | null; phrase: string | null } {
+  const explicit = /\b(\d{4}-\d{2}-\d{2})\b/.exec(text)
+  if (explicit?.[1]) return { date: explicit[1], phrase: explicit[1] }
+  const dotted = /\b(\d{1,2})[./](\d{1,2})(?:[./](\d{4}))?\b/.exec(text)
+  if (dotted?.[1] && dotted[2])
+    return {
+      date: `${dotted[3] ?? today.slice(0, 4)}-${dotted[2].padStart(2, '0')}-${dotted[1].padStart(2, '0')}`,
+      phrase: dotted[0],
+    }
   const lower = text.toLowerCase()
   // No `\b` anchors: Uzbek attaches case suffixes directly to the word ("ertagacha"), and `\b` does
   // not behave usefully against Cyrillic in JavaScript's non-Unicode regex mode anyway.
@@ -154,15 +162,6 @@ function resolveDate(text: string, today: string): { date: string | null; phrase
   for (const [pattern, weekday] of WEEKDAYS) {
     const match = pattern.exec(lower)
     if (match) return { date: nextWeekday(today, weekday), phrase: match[0] }
-  }
-  const explicit = /\b(\d{4}-\d{2}-\d{2})\b/.exec(text)
-  if (explicit?.[1]) return { date: explicit[1], phrase: explicit[1] }
-  const dotted = /\b(\d{1,2})[./](\d{1,2})\b/.exec(text)
-  if (dotted?.[1] && dotted[2]) {
-    const year = today.slice(0, 4)
-    const day = dotted[1].padStart(2, '0')
-    const month = dotted[2].padStart(2, '0')
-    return { date: `${year}-${month}-${day}`, phrase: dotted[0] }
   }
   return { date: null, phrase: null }
 }
@@ -308,7 +307,9 @@ function validateOutput(
     // A date before today is only ever right when the person typed one; the model reaching for a
     // past Friday is the classic weekday-resolution error, and a silently wrong deadline is worse
     // than no deadline.
-    const typedExplicitly = new RegExp(repaired.dueDate.replace(/-/g, '[-./]?')).test(input.text)
+    const typedExplicitly =
+      /\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}(?:[./]\d{4})?)\b/.test(input.text) &&
+      resolveDate(input.text, input.today).date === repaired.dueDate
     if (!typedExplicitly) {
       return {
         ok: true,

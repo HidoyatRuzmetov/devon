@@ -70,7 +70,10 @@ human-friendly name.
 3. Only non-secret operational manifests are copied to `/opt/devon`.
 4. The server takes an encrypted backup if a database already exists.
 5. Migrations run before the new application containers.
-6. `/readyz` gates success. A failed rollout restores the previous images and Compose manifest.
+6. Caddy is recreated to load the installed proxy file, even when its image/Compose settings did not
+   change. Certificate volumes remain persistent; expect a brief proxy interruption during this step.
+7. `/readyz` gates success. A failed rollout restores previous application images, the Compose
+   manifest and proxy file, then recreates Caddy to load the restored configuration.
 
 Production never starts the separate `worker` Compose service on the 8 GB ECS because the API entry
 point already runs the durable background loops. This avoids running the same HTTP server and loops

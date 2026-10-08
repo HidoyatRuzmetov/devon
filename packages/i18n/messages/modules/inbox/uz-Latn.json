@@ -95,7 +95,8 @@
         "copy": "Havolani nusxalash"
       },
       "save": "Saqlash",
-      "saved": "Saqlandi"
+      "saved": "Saqlandi",
+      "alwaysOn": "Doim yoqilgan"
     }
   }
 }

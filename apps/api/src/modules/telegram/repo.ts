@@ -96,7 +96,7 @@ export async function issueLinkCode(userId: string, ttlMinutes = 15): Promise<Li
 
 export type ConsumeLinkCodeResult =
   | { ok: true; userId: string }
-  | { ok: false; reason: 'not_found' | 'expired' | 'already_used' }
+  | { ok: false; reason: 'not_found' | 'expired' | 'already_used' | 'chat_in_use' }
 
 /** Race-safe consumption, same shape as `apps/api/src/db/repo.ts`'s `consumeSetupToken` (AC-12's
  * pattern reused here): the `update ... where consumed_at is null and expires_at > now() returning`
@@ -107,7 +107,7 @@ export async function consumeLinkCode(
   chatId: string,
   locale: string,
 ): Promise<ConsumeLinkCodeResult> {
-  return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
+  return withContext<ConsumeLinkCodeResult>(toRequestContext(systemAuditCtx(null)), async (tx) => {
     const rows = await tx.raw<{
       id: string
       user_id: string
@@ -153,6 +153,19 @@ export async function consumeLinkCode(
       subjectId: row.user_id,
     })
     return { ok: true, userId: row.user_id }
+  }).catch((error: unknown): ConsumeLinkCodeResult => {
+    // This specific uniqueness conflict is a permanent domain refusal, not a delivery outage.
+    // Catch outside the transaction so consuming the code is rolled back as well. Other database
+    // failures still throw and retain the Telegram update for retry.
+    const cause = error instanceof Error && error.cause ? error.cause : error
+    if (
+      typeof cause === 'object' &&
+      cause !== null &&
+      (cause as { code?: string }).code === '23505' &&
+      (cause as { constraint?: string }).constraint === 'telegram_links_chat_id_key'
+    )
+      return { ok: false, reason: 'chat_in_use' }
+    throw error
   })
 }
 
@@ -402,7 +415,8 @@ export async function setGroupKinds(
     // `work/repo.ts`'s `createCard`. `sql.param()` binds the whole array as ONE driver parameter,
     // which node-postgres serialises into a real Postgres array literal.
     await tx.raw(
-      sql`update app.telegram_groups set kinds = ${sql.param(kinds)}::text[] where id = ${groupId}`,
+      sql`update app.telegram_groups set kinds = ${sql.param(kinds)}::text[]
+        where id = ${groupId} and department_id = ${departmentId} and disconnected_at is null`,
     )
     tx.audit({
       action: 'telegram.group_kinds_updated',
@@ -419,7 +433,8 @@ export async function disconnectGroup(
   departmentId: string,
 ): Promise<void> {
   await withContext(toRequestContext(ctx, { departmentId, actorRole: 'head' }), async (tx) => {
-    await tx.raw(sql`update app.telegram_groups set disconnected_at = now() where id = ${groupId}`)
+    await tx.raw(sql`update app.telegram_groups set disconnected_at = now()
+      where id = ${groupId} and department_id = ${departmentId} and disconnected_at is null`)
     tx.audit({
       action: 'telegram.group_disconnected',
       subjectType: 'telegram_group',
@@ -449,25 +464,31 @@ export async function disconnectGroupByChatId(chatId: string): Promise<void> {
 export async function listGroupsForKind(
   kind: GroupKind,
 ): Promise<{ chatId: string; departmentId: string; locale: string }[]> {
-  return withContext(toRequestContext(systemAuditCtx(null)), async (tx) => {
-    // v1.1: the department's default locale comes back with the group, joined here rather than
-    // looked up per group inside the digest cron's own loop (TECH-SPEC §16, no query in a loop) --
-    // the weekly group digest used to be sent as one hard-coded bilingual string
-    // ("Haftalik xulosa / Weekly summary: ..."), which is not a translation in any of the four
-    // locales this product ships.
-    const rows = await tx.raw<{
-      chat_id: string
-      department_id: string
-      locale_default: string
-    }>(sql`
+  // The scheduled broadcaster has no active department. Its global system read must explicitly
+  // cross department RLS, otherwise the locale join silently hides every subscribed group.
+  return withContext(
+    toRequestContext(systemAuditCtx(null), { actorRole: 'super_admin' }),
+    async (tx) => {
+      // v1.1: the department's default locale comes back with the group, joined here rather than
+      // looked up per group inside the digest cron's own loop (TECH-SPEC §16, no query in a loop) --
+      // the weekly group digest used to be sent as one hard-coded bilingual string
+      // ("Haftalik xulosa / Weekly summary: ..."), which is not a translation in any of the four
+      // locales this product ships.
+      const rows = await tx.raw<{
+        chat_id: string
+        department_id: string
+        locale_default: string
+      }>(sql`
       select g.chat_id, g.department_id, d.locale_default
       from app.telegram_groups g join app.departments d on d.id = g.department_id
-      where g.disconnected_at is null and ${kind} = any(g.kinds)
+      where g.disconnected_at is null and d.deleted_at is null and d.status = 'active'
+        and ${kind} = any(g.kinds)
     `)
-    return rows.map((r) => ({
-      chatId: r.chat_id,
-      departmentId: r.department_id,
-      locale: r.locale_default,
-    }))
-  })
+      return rows.map((r) => ({
+        chatId: r.chat_id,
+        departmentId: r.department_id,
+        locale: r.locale_default,
+      }))
+    },
+  )
 }

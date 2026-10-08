@@ -14,7 +14,8 @@ import {
   type UseQueryResult,
 } from '@tanstack/react-query'
 import * as api from './api-plus.js'
-import { useCsrfToken } from './hooks.js'
+import { finishWorkWrite, patchCardInCaches, useCsrfToken } from './hooks.js'
+import type { Board, CardDetail } from './api.js'
 
 // Key prefixes. `['work', ...]` throughout, so `hooks.ts`'s own invalidations and these never
 // collide but can still be cleared together when a department switch invalidates everything.
@@ -186,7 +187,10 @@ export function useBulkUndoMutation() {
 export function useWorkTemplatesQuery(
   kind?: 'card' | 'project',
 ): UseQueryResult<api.WorkTemplate[], Error> {
-  return useQuery({ queryKey: TEMPLATES_KEY(kind), queryFn: () => api.fetchWorkTemplates(kind) })
+  return useQuery({
+    queryKey: TEMPLATES_KEY(kind),
+    queryFn: () => api.fetchWorkTemplates(kind),
+  })
 }
 
 function invalidateTemplates(qc: QueryClient): void {
@@ -256,11 +260,50 @@ export function useAddFocusMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'card-write', 'focus'],
+    scope: { id: 'work-focus' },
     mutationFn: (cardId: string) => api.addFocusPin(cardId, csrf),
-    onSuccess: (_data, cardId) => {
-      void qc.invalidateQueries({ queryKey: FOCUS_KEY })
-      invalidateCardSurfaces(qc, cardId)
+    onMutate: async (cardId) => {
+      await qc.cancelQueries({ queryKey: ['work'] })
+      const previous = qc.getQueryData<api.FocusList>(FOCUS_KEY)
+      const already = previous?.items.some((pin) => pin.cardId === cardId) ?? false
+      const card =
+        qc.getQueryData<CardDetail>(CARD_KEY(cardId)) ??
+        [
+          ...(qc.getQueryData<Board>(BOARD_KEY)?.columns.flatMap((col) => col.cards) ?? []),
+          ...(qc.getQueryData<Board>(BOARD_KEY)?.unassigned ?? []),
+        ].find((item) => item.id === cardId)
+      if (previous && card && !already && previous.items.length < previous.max) {
+        qc.setQueryData<api.FocusList>(FOCUS_KEY, {
+          ...previous,
+          items: [
+            { cardId, position: 0, card },
+            ...previous.items.map((pin) => ({
+              ...pin,
+              position: pin.position + 1,
+            })),
+          ],
+        })
+      }
+      const context = patchCardInCaches(qc, cardId, {
+        focusPinned: true,
+        focusPosition: -1,
+      })
+      return { ...context, already }
     },
+    onError: (_err, cardId, context) => {
+      context?.rollback()
+      if (!context?.already)
+        qc.setQueryData<api.FocusList>(FOCUS_KEY, (current) =>
+          current
+            ? {
+                ...current,
+                items: current.items.filter((pin) => pin.cardId !== cardId),
+              }
+            : current,
+        )
+    },
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -268,11 +311,45 @@ export function useRemoveFocusMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'card-write', 'focus'],
+    scope: { id: 'work-focus' },
     mutationFn: (cardId: string) => api.removeFocusPin(cardId, csrf),
-    onSuccess: (_data, cardId) => {
-      void qc.invalidateQueries({ queryKey: FOCUS_KEY })
-      invalidateCardSurfaces(qc, cardId)
+    onMutate: async (cardId) => {
+      await qc.cancelQueries({ queryKey: ['work'] })
+      const previous = qc
+        .getQueryData<api.FocusList>(FOCUS_KEY)
+        ?.items.find((pin) => pin.cardId === cardId)
+      qc.setQueryData<api.FocusList>(FOCUS_KEY, (current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.filter((pin) => pin.cardId !== cardId),
+            }
+          : current,
+      )
+      return {
+        ...patchCardInCaches(qc, cardId, {
+          focusPinned: false,
+          focusPosition: null,
+        }),
+        previous,
+      }
     },
+    onError: (_err, _cardId, context) => {
+      context?.rollback()
+      if (context?.previous)
+        qc.setQueryData<api.FocusList>(FOCUS_KEY, (current) =>
+          current
+            ? {
+                ...current,
+                items: [...current.items, context.previous!].sort(
+                  (a, b) => a.position - b.position,
+                ),
+              }
+            : current,
+        )
+    },
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
@@ -282,8 +359,11 @@ export function useReorderFocusMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['work', 'card-write', 'focus'],
+    scope: { id: 'work-focus' },
     mutationFn: (cardIds: string[]) => api.reorderFocusList(cardIds, csrf),
-    onMutate: (cardIds) => {
+    onMutate: async (cardIds) => {
+      await qc.cancelQueries({ queryKey: ['work'] })
       const previous = qc.getQueryData<api.FocusList>(FOCUS_KEY)
       if (previous) {
         const byId = new Map(previous.items.map((pin) => [pin.cardId, pin]))
@@ -293,21 +373,32 @@ export function useReorderFocusMutation() {
             return pin ? { ...pin, position: index } : null
           })
           .filter((pin): pin is api.FocusPin => pin !== null)
-        qc.setQueryData<api.FocusList>(FOCUS_KEY, { ...previous, items: reordered })
+        qc.setQueryData<api.FocusList>(FOCUS_KEY, {
+          ...previous,
+          items: reordered,
+        })
+        for (const pin of reordered)
+          patchCardInCaches(qc, pin.cardId, { focusPosition: pin.position })
       }
       return { previous }
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(FOCUS_KEY, context.previous)
+      for (const pin of context?.previous?.items ?? [])
+        patchCardInCaches(qc, pin.cardId, { focusPosition: pin.position })
     },
-    onSettled: () => void qc.invalidateQueries({ queryKey: FOCUS_KEY }),
+    onSettled: () => finishWorkWrite(qc),
   })
 }
 
 // --- A4 capacity and workload -------------------------------------------------------------------------------
 
 export function useCapacityQuery(enabled = true): UseQueryResult<api.CapacityRow[], Error> {
-  return useQuery({ queryKey: CAPACITY_KEY, queryFn: api.fetchCapacity, enabled })
+  return useQuery({
+    queryKey: CAPACITY_KEY,
+    queryFn: api.fetchCapacity,
+    enabled,
+  })
 }
 
 export function usePutCapacityMutation() {

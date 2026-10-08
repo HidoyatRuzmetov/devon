@@ -4,6 +4,7 @@
 // (`index.ts` picks exactly one of the two per process, per grammY's own constraint against running
 // both against the same bot at once).
 import type { Bot, Context } from 'grammy'
+import { z } from 'zod'
 import {
   archiveNotifications,
   emitActionRequested,
@@ -25,6 +26,9 @@ import {
 } from './repo.js'
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
 import { miniappMenuKeyboard } from './miniapp-buttons.js'
+import { muteBodySchema } from './schemas.js'
+
+const callbackId = z.string().uuid()
 
 function localeFromTelegram(ctx: Context): BotLocale {
   const code = ctx.from?.language_code
@@ -106,11 +110,13 @@ export function registerBotHandlers(bot: Bot): void {
     const result = await consumeLinkCode(code, chatId, locale)
     if (!result.ok) {
       const key =
-        result.reason === 'expired'
-          ? 'link.expired'
-          : result.reason === 'already_used'
-            ? 'link.already_used'
-            : 'link.not_found'
+        result.reason === 'chat_in_use'
+          ? 'link.chat_in_use'
+          : result.reason === 'expired'
+            ? 'link.expired'
+            : result.reason === 'already_used'
+              ? 'link.already_used'
+              : 'link.not_found'
       await ctx.reply(tb(locale, key))
       return
     }
@@ -191,11 +197,13 @@ export function registerBotHandlers(bot: Bot): void {
     const linked = await requireLinkedUser(ctx)
     if (!linked) return
     const arg = ctx.match?.toString().trim()
-    const minutes = arg ? Number.parseInt(arg, 10) : Number.NaN
-    if (arg === undefined || arg === '' || Number.isNaN(minutes) || minutes < 0) {
+    const parsed =
+      arg && /^\d+$/.test(arg) ? muteBodySchema.safeParse({ minutes: Number(arg) }) : null
+    if (!parsed?.success) {
       await ctx.reply(tb(linked.locale, 'mute.usage'))
       return
     }
+    const { minutes } = parsed.data
     if (minutes === 0) {
       await setMutedUntil(linked.userId, null)
       await ctx.reply(tb(linked.locale, 'mute.off'))
@@ -247,17 +255,22 @@ export function registerBotHandlers(bot: Bot): void {
     const auditCtx = systemAuditCtx(userId)
 
     const [action, a, b] = data.split(':')
-    if (action === 'done' && a) {
+    if (action === 'done' && a && callbackId.safeParse(a).success) {
       await archiveNotifications(auditCtx, userId, [a])
       await ctx.answerCallbackQuery({ text: tb(locale, 'action.acknowledged') })
       return
     }
-    if (action === 'snooze' && a) {
+    if (action === 'snooze' && a && callbackId.safeParse(a).success) {
       await snoozeNotification(auditCtx, userId, a, new Date(Date.now() + 24 * 60 * 60_000))
       await ctx.answerCallbackQuery({ text: tb(locale, 'action.snoozed') })
       return
     }
-    if (action === 'rsvp' && a && b) {
+    if (
+      action === 'rsvp' &&
+      (a === 'yes' || a === 'no' || a === 'maybe') &&
+      b &&
+      callbackId.safeParse(b).success
+    ) {
       const choice = a as 'yes' | 'no' | 'maybe'
       const notification = await getNotificationById(userId, b)
       if (notification) {
@@ -296,7 +309,7 @@ export function registerBotHandlers(bot: Bot): void {
     ) {
       const chatId = chatIdOf(ctx)
       if (chatId && (await resolveGroupByChatId(chatId))) {
-        await disconnectGroupByChatId(chatId).catch(() => {})
+        await disconnectGroupByChatId(chatId)
       }
     }
   })

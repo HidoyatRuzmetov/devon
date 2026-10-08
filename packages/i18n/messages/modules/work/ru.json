@@ -139,7 +139,8 @@
       "saveFailed": "Не удалось сохранить. Прежнее значение возвращено.",
       "editChecklistItem": "Изменить пункт",
       "saveChecklistItem": "Сохранить пункт",
-      "cancelChecklistEdit": "Отменить изменения"
+      "cancelChecklistEdit": "Отменить изменения",
+      "assigneeUnavailable": "Прежний исполнитель больше не в отделе"
     },
     "priority": {
       "none": "Без приоритета",

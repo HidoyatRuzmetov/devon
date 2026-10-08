@@ -73,7 +73,7 @@ out: {"filterText":"unit:\\"Data boʻlimi\\" status:active due:<2026-09-12 due:>
  "restatement":"Data boʻlimida shu oy muddati oʻtgan ochiq vazifalar soni"}
 
 in : "Кто больше всех просрочил?"  (locale ru)
-out: {"filterText":"status:active due:<2026-09-12","metric":"loadPerPerson","groupBy":"person",
+out: {"filterText":"status:active due:<2026-09-12","metric":"openVsOverdue","groupBy":"person",
  "chartType":"bar","unmappedTerms":[],"confidence":"high","restatement":"Кто имеет больше всего просроченных задач"}
 
 in : "Nodira qanchalik samarali ishlayapti?"  (locale uz-Latn)
@@ -90,9 +90,9 @@ Projects that exist: ${input.knownProjects.join(' | ') || '(none)'}
 People that exist: ${input.knownMembers.map((m) => `${m.name} (@${m.handle})`).join(' | ') || '(none)'}
 Metrics available: ${ANALYTICS_METRICS.join(', ')}`,
     instructions: [
-      'filterText uses exactly this grammar and nothing else: assignee:@handle, giver:@handle, status:active|done|archived, due:<=WORD / due:>=WORD / due:WORD (WORD is today, a weekday name in any of the four locales, or YYYY-MM-DD), project:"Name", label:name, unit:"Name", plus bare words for free text. Quote any value containing a space.',
+      'filterText uses exactly this grammar and nothing else: assignee:@handle, giver:@handle, status:active|done|archived, due:<=WORD / due:>=WORD / due:WORD (WORD is today, a weekday name in any of the four locales, or YYYY-MM-DD), project:"Name", label:name, unit:"Name", plus bare words for free text. Quote any value containing a space: assignee:"@Nodira Karimova". A full name in knownMembers.handle is a permitted exact person selector.',
       'Only use unit, project and label names from the lists above, spelled exactly as they are spelled there, and only handles from the people list. Never invent one.',
-      `Resolve relative periods against today (${input.today}): "bu oy"/"в этом месяце"/"this month" become two due: clauses bounding the month; "oʻtgan hafta"/"на прошлой неделе"/"last week" bound that week; "bugun"/"сегодня" is due:${input.today}.`,
+      `Resolve deadline questions against today (${input.today}) with due clauses. A period of completed work is a COMPLETION period, not a deadline filter: the current report covers dateRange; if another completion period is requested, list it in unmappedTerms instead of silently substituting due dates.`,
       'metric: the one number from the list above that actually answers the question, or null when the question is a plain list of items rather than a measurement.',
       'groupBy: person, unit, project, label, status or none — what the answer should be broken down by.',
       'chartType: bar for comparisons and counts, line for a trend over time, pie for a share of a whole, table for a raw list, burnup for progress towards completion.',
@@ -194,7 +194,7 @@ function simulate(input: NlAnalyticsInput): NlAnalyticsOutput {
       (q.includes(m.handle.toLowerCase()) ||
         q.includes((m.name.split(' ')[0] ?? '').toLowerCase())),
   )
-  if (member) clauses.push(`assignee:@${member.handle}`)
+  if (member) clauses.push(`assignee:${quote(`@${member.handle}`)}`)
 
   const overdue = /(muddat.*(oʻt|ўт|ot)|kechik|кечик|просроч|overdue|late)/i.test(input.query)
   const done = /(bajaril|ёпил|yopil|выполн|заверш|done|completed|closed)/i.test(input.query)
@@ -212,7 +212,7 @@ function simulate(input: NlAnalyticsInput): NlAnalyticsOutput {
     restatement = r['done']!
   }
   if (whoMost) {
-    metric = 'loadPerPerson'
+    metric = overdue ? 'openVsOverdue' : 'loadPerPerson'
     groupBy = 'person'
     restatement = r['perPerson']!
   } else if (unit && !overdue && !done) {
@@ -237,12 +237,19 @@ function simulate(input: NlAnalyticsInput): NlAnalyticsOutput {
     restatement = r['events']!
   }
 
-  if (/(bu oy|шу ой|в этом месяце|this month)/i.test(input.query)) {
+  if (!done && /(bu oy|шу ой|в этом месяце|this month)/i.test(input.query)) {
     const { start, end } = monthBounds(input.today)
     clauses.push(`due:>=${start}`, `due:<=${end}`)
   }
 
   const unmappedTerms = [...new Set(input.query.match(VAGUE_TERMS) ?? [])].slice(0, 5)
+  if (
+    done &&
+    /(bu oy|шу ой|в этом месяце|this month|last week|oʻtgan hafta|на прошлой неделе)/i.test(
+      input.query,
+    )
+  )
+    unmappedTerms.push(input.query.slice(0, 80))
 
   return {
     filterText: clauses.join(' '),

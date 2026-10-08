@@ -3,6 +3,9 @@
 // (MODULE-GUIDE.md "API modules").
 import { z } from 'zod'
 import { MAX_ESTIMATE_MINUTES, recurrenceRuleSchema } from '@devon/contracts'
+import { validOrderKey } from './ordering.js'
+
+const orderKeySchema = z.string().max(100).refine(validOrderKey, 'invalid order key')
 
 export const cardKindSchema = z.enum(['task', 'project_task'])
 export const cardStatusSchema = z.enum(['active', 'done', 'archived'])
@@ -89,6 +92,9 @@ export const cardSchema = z.object({
   /** A9: true when the viewer has this card in their own focus list ("Diqqat markazi"). Viewer-
    * specific by design -- a focus list is personal, and nobody else's pin ever shows here. */
   focusPinned: z.boolean().optional(),
+  focusPosition: z.number().int().nullable().optional(),
+  /** Board-only review state; original assignee id stays intact for history and ownership. */
+  assigneeUnavailable: z.boolean().optional(),
 })
 export type CardDTO = z.infer<typeof cardSchema>
 
@@ -159,7 +165,7 @@ export const createCardBodySchema = z.object({
   links: z.array(linkSchema).optional(),
   projectId: z.string().uuid().nullable().optional(),
   projectScope: cardProjectScopeSchema.optional(),
-  orderKey: z.string().optional(),
+  orderKey: orderKeySchema.optional(),
   /** A3: quick-add and the composer both accept an estimate up front -- a card estimated when it is
    * created is the only kind that reliably gets estimated at all. */
   estimateMin: z.number().int().min(1).max(MAX_ESTIMATE_MINUTES).nullable().optional(),
@@ -180,7 +186,7 @@ export const patchCardBodySchema = z
     labels: z.array(z.string().uuid()),
     links: z.array(linkSchema),
     watchers: z.array(z.string().uuid()),
-    orderKey: z.string(),
+    orderKey: orderKeySchema,
     version: z.number().int(),
     /** A3 / A7: `null` clears the estimate, `null` stops the series (already-created instances
      * stay -- stopping a repeat never retroactively removes work somebody has started). */
@@ -196,6 +202,12 @@ export const cardListQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
   mine: z.coerce.boolean().optional(),
+})
+
+export const moveCardBodySchema = z.object({
+  toUserId: z.string().uuid().nullable(),
+  targetCardId: z.string().uuid().nullable(),
+  edge: z.enum(['before', 'after']),
 })
 
 export const createChecklistItemBodySchema = z.object({
@@ -279,3 +291,5 @@ export const cardChecklistParamsSchema = z.object({
   id: z.string().uuid(),
   itemId: z.string().uuid(),
 })
+
+export type BoardDTO = z.infer<typeof boardSchema>

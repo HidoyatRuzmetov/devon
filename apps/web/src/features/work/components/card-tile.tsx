@@ -88,10 +88,19 @@ const PRIORITY_ICON = { ChevronsUp, ChevronUp, Minus, ChevronDown } as const
 
 export const CARD_DRAG_TYPE = 'devon-work-card'
 
-type DragPayload = { type: typeof CARD_DRAG_TYPE; cardId: string; fromUserId: string | null }
+type DragPayload = {
+  type: typeof CARD_DRAG_TYPE
+  cardId: string
+  fromUserId: string | null
+}
 
 export type CardDropSpec =
-  | { kind: 'onCard'; targetCardId: string; edge: Edge; toUserId: string | null }
+  | {
+      kind: 'onCard'
+      targetCardId: string
+      edge: Edge
+      toUserId: string | null
+    }
   | { kind: 'appendToColumn'; toUserId: string | null }
 
 export interface CardTileProps {
@@ -196,6 +205,8 @@ export function CardTile({
     startY: number
     active: boolean
   }>({ timer: null, startX: 0, startY: 0, active: false })
+  const onDroppedRef = React.useRef(onDropped)
+  onDroppedRef.current = onDropped
 
   // v1.1 SPEC §2.2 (D6a): a member may read the whole department's board and move only the cards
   // they gave, were given or created (the head moves anything). Without this, dragging a colleague's
@@ -225,7 +236,10 @@ export function CardTile({
           const rect = el.getBoundingClientRect()
           setCustomNativeDragPreview({
             nativeSetDragImage,
-            getOffset: preserveOffsetOnSource({ element: el, input: location.current.input }),
+            getOffset: preserveOffsetOnSource({
+              element: el,
+              input: location.current.input,
+            }),
             render: ({ container }) => {
               container.style.width = `${rect.width}px`
               const root = createRoot(container)
@@ -255,7 +269,7 @@ export function CardTile({
           setClosestEdge(null)
           if (!isDragPayload(source.data)) return
           const edge = extractClosestEdge(self.data) ?? 'top'
-          onDropped(source.data.cardId, {
+          onDroppedRef.current(source.data.cardId, {
             kind: 'onCard',
             targetCardId: card.id,
             edge,
@@ -264,10 +278,9 @@ export function CardTile({
         },
       }),
     )
-    // `card.id`/`columnUserId` capture what the closures above need; `onDropped` is expected stable
-    // (defined once per board render via `React.useCallback` in `BoardScreen`).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [card.id, columnUserId, canMove])
+    // The drop handler reads the current board through a ref. Retaining the callback from mount
+    // used ranks/neighbours from before earlier drags and could undo those earlier positions.
+  }, [card.id, card.title, columnUserId, canMove])
 
   // Touch-only pointer path (item 9): native HTML5 drag (`draggable()` above) never starts from a
   // touchscreen, so a coarse pointer gets its own long-press-to-lift gesture instead, reusing the
@@ -326,7 +339,11 @@ export function CardTile({
     }
     e.preventDefault()
     const { columnKey } = findColumnAndCard(e.clientX, e.clientY)
-    touchDrag.move({ pointerX: e.clientX, pointerY: e.clientY, overColumnKey: columnKey })
+    touchDrag.move({
+      pointerX: e.clientX,
+      pointerY: e.clientY,
+      overColumnKey: columnKey,
+    })
   }
 
   function onTouchPointerUp(e: React.PointerEvent<HTMLDivElement>) {
@@ -352,6 +369,13 @@ export function CardTile({
     touchLift.current = { timer: null, startX: 0, startY: 0, active: false }
   }
 
+  function cancelTouchDrag(): void {
+    if (touchLift.current.timer !== null) window.clearTimeout(touchLift.current.timer)
+    if (touchLift.current.active) touchDrag.end()
+    touchLift.current = { timer: null, startX: 0, startY: 0, active: false }
+    setIsDragging(false)
+  }
+
   const activeLabels = labels.filter((l) => card.labels.includes(l.id))
   const priorityKey = PRIORITY_LABEL_KEY[card.priority]
   const showPriority = card.priority !== 'none'
@@ -370,7 +394,7 @@ export function CardTile({
       onPointerDown={onTouchPointerDown}
       onPointerMove={onTouchPointerMove}
       onPointerUp={onTouchPointerUp}
-      onPointerCancel={onTouchPointerUp}
+      onPointerCancel={cancelTouchDrag}
       className={cn(
         `group relative flex touch-pan-y flex-col gap-2 rounded-md border bg-card p-3 text-left shadow-1
         transition-colors duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
@@ -452,6 +476,11 @@ export function CardTile({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-1.5">
+        {card.assigneeUnavailable ? (
+          <Chip tone="attention" leading={<MoveRight className="size-3" />}>
+            {t('work.card.assigneeUnavailable')}
+          </Chip>
+        ) : null}
         {showPriority ? (
           <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
             {PriorityIcon ? <PriorityIcon className="size-3" aria-hidden="true" /> : null}
@@ -474,7 +503,9 @@ export function CardTile({
           <Chip
             tone="destructive"
             leading={<Lock className="size-3" />}
-            title={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
+            title={t('work.chip.blockedBy', {
+              count: card.blockedByOpenCount ?? 0,
+            })}
           >
             {t('work.chip.blocked')}
           </Chip>
@@ -557,12 +588,16 @@ export function CardTile({
               {assignee ? (
                 <span
                   className="relative z-10 rounded-full ring-2 ring-card"
-                  title={t('work.card.assignedTo', { name: fullName(assignee) })}
+                  title={t('work.card.assignedTo', {
+                    name: fullName(assignee),
+                  })}
                 >
                   <Avatar
                     size="sm"
                     src={null}
-                    alt={t('work.card.assignedTo', { name: fullName(assignee) })}
+                    alt={t('work.card.assignedTo', {
+                      name: fullName(assignee),
+                    })}
                     initials={initialsFromName(assignee.givenName, assignee.familyName)}
                     hueSeed={assignee.userId}
                   />

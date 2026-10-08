@@ -139,7 +139,8 @@
       "saveFailed": "Сақлаб бўлмади. Олдинги қиймат қайтди.",
       "editChecklistItem": "Бандни таҳрирлаш",
       "saveChecklistItem": "Бандни сақлаш",
-      "cancelChecklistEdit": "Таҳрирни бекор қилиш"
+      "cancelChecklistEdit": "Таҳрирни бекор қилиш",
+      "assigneeUnavailable": "Аввалги ижрочи бошқармада фаол эмас"
     },
     "priority": {
       "none": "Белгиланмаган",

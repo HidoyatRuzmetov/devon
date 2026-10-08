@@ -32,7 +32,7 @@ export const draftEventInputSchema = z.object({
   idea: z.string().min(1).max(500),
   category: eventCategorySchema.nullable().default(null),
   today: isoDateSchema,
-  departmentSize: z.number().int().min(1).max(500).default(12),
+  departmentSize: z.number().int().min(1).max(100_000).default(12),
   /** So it does not propose last month's picnic again. */
   recentEventTitles: z.array(z.string().min(1).max(300)).max(10).default([]),
 })
@@ -46,7 +46,7 @@ export const draftEventOutputSchema = z.object({
     .array(
       z.object({
         date: isoDateSchema,
-        startTime: z.string().regex(/^\d{2}:\d{2}$/),
+        startTime: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/),
         durationMin: z.number().int().min(30).max(1440),
         label: z.string().min(1).max(80),
       }),
@@ -333,7 +333,7 @@ function simulate(input: DraftEventInput): DraftEventOutput {
     carpool: outdoor
       ? { needed: true, note: p.carpoolNeeded(place) }
       : { needed: false, note: p.carpoolNotNeeded },
-    estimatedAttendees: Math.max(1, Math.round(input.departmentSize * 0.75)),
+    estimatedAttendees: Math.max(1, Math.min(500, Math.round(input.departmentSize * 0.75))),
   }
 }
 
@@ -395,7 +395,7 @@ export const draftEventSpec: FeatureSpec<DraftEventInput, DraftEventOutput> = {
           required: ['date', 'startTime', 'durationMin', 'label'],
           properties: {
             date: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
-            startTime: { type: 'string', pattern: '^\\d{2}:\\d{2}$' },
+            startTime: { type: 'string', pattern: '^(?:[01]\\d|2[0-3]):[0-5]\\d$' },
             durationMin: { type: 'integer', minimum: 30, maximum: 1440 },
             label: { type: 'string', maxLength: 80 },
           },

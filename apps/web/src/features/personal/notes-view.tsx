@@ -17,15 +17,10 @@ import {
   cn,
   toastWithUndo,
 } from '@devon/ui'
-import { latinToCyrillic } from '@devon/i18n'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { TranslatePreview } from '../ai/components/previews.js'
-import {
-  TranslateTargetPicker,
-  defaultTranslateTarget,
-  isLocalTransliterationPair,
-} from '../ai/components/translate-target.js'
+import { TranslateTargetPicker, defaultTranslateTarget } from '../ai/components/translate-target.js'
 import { parseFeatureOutput, type TranslateOutput } from '../ai/outputs.js'
 import type { RunMeta } from '../ai/types.js'
 import { aiErrorMessageKey } from './lib/ai-helpers.js'
@@ -94,22 +89,6 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
 
   function runTranslate() {
     if (!text.trim()) return
-    // D-2: uz-Latn → uz-Cyrl is a lookup table, not a language model. Instant, free, and with no
-    // chance of the model "improving" someone's note while converting the script.
-    if (isLocalTransliterationPair(locale, targetLocale)) {
-      setTranslateAi({
-        status: 'ready',
-        meta: null,
-        targetLocale,
-        output: {
-          translatedText: latinToCyrillic(text),
-          detectedSourceLocale: locale,
-          alreadyInTarget: false,
-          uncertainTerms: [],
-        },
-      })
-      return
-    }
     setTranslateAi({ status: 'pending' })
     translate.mutate(
       {
@@ -118,7 +97,7 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
         // whole of AI-AUDIT §0.1.
         locale,
         targetLocale,
-        sourceLocale: locale,
+        sourceLocale: null,
         text,
         glossary: [],
         preserve: [],

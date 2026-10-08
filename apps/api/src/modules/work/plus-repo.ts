@@ -111,7 +111,11 @@ export async function listDependencyEdges(
   departmentId: string,
 ): Promise<Array<{ id: string; cardId: string; blockedByCardId: string }>> {
   return withContext(ctx, async (tx) => {
-    const rows = await tx.raw<{ id: string; card_id: string; blocked_by_card_id: string }>(
+    const rows = await tx.raw<{
+      id: string
+      card_id: string
+      blocked_by_card_id: string
+    }>(
       sql`select d.id, d.card_id, d.blocked_by_card_id from app.card_dependencies d
           join app.cards c on c.id = d.card_id and c.deleted_at is null
           join app.cards blocker on blocker.id = d.blocked_by_card_id and blocker.deleted_at is null
@@ -160,7 +164,10 @@ export async function addDependency(
       return { ok: false, reason: 'duplicate' as const }
     }
     const cycles = wouldCreateDependencyCycle(
-      edges.map((e) => ({ cardId: e.card_id, blockedByCardId: e.blocked_by_card_id })),
+      edges.map((e) => ({
+        cardId: e.card_id,
+        blockedByCardId: e.blocked_by_card_id,
+      })),
       cardId,
       blockedByCardId,
     )
@@ -239,7 +246,11 @@ export async function getTimeLog(
   ctx: RequestContext,
   departmentId: string,
   cardId: string,
-): Promise<{ entries: TimeLogEntry[]; loggedMin: number; estimateMin: number | null } | null> {
+): Promise<{
+  entries: TimeLogEntry[]
+  loggedMin: number
+  estimateMin: number | null
+} | null> {
   return withContext(ctx, async (tx) => {
     const cards = await tx.raw<{ estimate_min: number | null }>(
       sql`select estimate_min from app.cards
@@ -283,7 +294,11 @@ export async function addTimeLog(
   departmentId: string,
   cardId: string,
   userId: string,
-  input: { minutes: number; spentOn?: string | undefined; note?: string | undefined },
+  input: {
+    minutes: number
+    spentOn?: string | undefined
+    note?: string | undefined
+  },
 ): Promise<string | null> {
   return withContext(ctx, async (tx) => {
     if (!(await cardVisible(tx, departmentId, cardId))) return null
@@ -664,7 +679,7 @@ export async function getFocusList(
           from app.focus_pins f
           join app.cards c on c.id = f.card_id and c.deleted_at is null
           where f.department_id = ${departmentId} and f.user_id = ${userId}
-          order by f.position asc, c.due_at asc nulls last`,
+          order by f.position asc, f.created_at asc, f.id asc`,
     )
     return rows.map((r) => ({
       cardId: r.id,
@@ -683,8 +698,15 @@ export async function addFocusPin(
   cardId: string,
 ): Promise<AddFocusResult> {
   return withContext(ctx, async (tx) => {
+    await tx.raw(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`work-focus:${departmentId}:${userId}`}, 0))`,
+    )
     if (!(await cardVisible(tx, departmentId, cardId)))
       return { ok: false as const, reason: 'not_found' as const }
+    // A deleted card must not occupy an invisible slot forever.
+    await tx.raw(sql`delete from app.focus_pins f using app.cards c
+      where f.card_id = c.id and f.department_id = ${departmentId} and f.user_id = ${userId}
+        and c.deleted_at is not null`)
     const existing = await tx.raw<{ cnt: number; already: number }>(
       sql`select count(*) as cnt, count(*) filter (where card_id = ${cardId}) as already
           from app.focus_pins where department_id = ${departmentId} and user_id = ${userId}`,
@@ -693,11 +715,25 @@ export async function addFocusPin(
     const already = Number(existing[0]?.already ?? 0)
     if (already > 0) return { ok: true as const }
     if (count >= FOCUS_MAX) return { ok: false as const, reason: 'full' as const }
+    await tx.raw(sql`update app.focus_pins set position = position + 1
+      where department_id = ${departmentId} and user_id = ${userId}`)
     await tx.raw(
       sql`insert into app.focus_pins (id, department_id, user_id, card_id, position)
-          values (${randomUUID()}, ${departmentId}, ${userId}, ${cardId}, ${count})
+          values (${randomUUID()}, ${departmentId}, ${userId}, ${cardId}, 0)
           on conflict (user_id, card_id) do nothing`,
     )
+    tx.audit({
+      action: 'work.focus_added',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+      after: { userId },
+    })
+    tx.emit({
+      type: 'work.focus.updated',
+      departmentId,
+      payload: { userId, actorUserId: userId },
+    })
     return { ok: true as const }
   })
 }
@@ -709,11 +745,28 @@ export async function removeFocusPin(
   cardId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    await tx.raw(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`work-focus:${departmentId}:${userId}`}, 0))`,
+    )
     const rows = await tx.raw<{ id: string }>(
       sql`delete from app.focus_pins
           where department_id = ${departmentId} and user_id = ${userId} and card_id = ${cardId}
           returning id`,
     )
+    if (rows.length) {
+      tx.audit({
+        action: 'work.focus_removed',
+        subjectType: 'card',
+        subjectId: cardId,
+        departmentId,
+        before: { userId },
+      })
+      tx.emit({
+        type: 'work.focus.updated',
+        departmentId,
+        payload: { userId, actorUserId: userId },
+      })
+    }
     return rows.length > 0
   })
 }
@@ -723,9 +776,23 @@ export async function reorderFocusPins(
   departmentId: string,
   userId: string,
   cardIds: readonly string[],
-): Promise<void> {
-  if (cardIds.length === 0) return
-  await withContext(ctx, async (tx) => {
+): Promise<boolean> {
+  return withContext(ctx, async (tx) => {
+    await tx.raw(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`work-focus:${departmentId}:${userId}`}, 0))`,
+    )
+    const current = await tx.raw<{
+      card_id: string
+    }>(sql`select f.card_id from app.focus_pins f
+      join app.cards c on c.id = f.card_id and c.deleted_at is null
+      where f.department_id = ${departmentId} and f.user_id = ${userId}`)
+    if (
+      new Set(cardIds).size !== cardIds.length ||
+      current.length !== cardIds.length ||
+      current.some((row) => !cardIds.includes(row.card_id))
+    )
+      return false
+    if (cardIds.length === 0) return true
     // One statement for the whole list: a `values` list joined back to the table, never one UPDATE
     // per card (I-14).
     const values = cardIds.map((id, index) => sql`(${id}::uuid, ${index}::int)`)
@@ -735,6 +802,19 @@ export async function reorderFocusPins(
           where f.card_id = v.card_id
             and f.department_id = ${departmentId} and f.user_id = ${userId}`,
     )
+    tx.audit({
+      action: 'work.focus_reordered',
+      subjectType: 'user',
+      subjectId: userId,
+      departmentId,
+      after: { cardIds },
+    })
+    tx.emit({
+      type: 'work.focus.updated',
+      departmentId,
+      payload: { userId, actorUserId: userId },
+    })
+    return true
   })
 }
 
@@ -742,7 +822,11 @@ export async function reorderFocusPins(
 // A4 -- capacity and the workload grid
 // ---------------------------------------------------------------------------------------------
 
-export type CapacityRow = { userId: string; weeklyHours: number; isDefault: boolean }
+export type CapacityRow = {
+  userId: string
+  weeklyHours: number
+  isDefault: boolean
+}
 
 export async function listCapacity(
   ctx: RequestContext,
@@ -840,7 +924,11 @@ export async function getWorkloadBuckets(
             and c.due_at >= ${fromIso} and c.due_at < ${toIso}
           group by 1, 2`,
     )
-    const unscheduled = await tx.raw<{ no_due: string; no_estimate: string; open_total: string }>(
+    const unscheduled = await tx.raw<{
+      no_due: string
+      no_estimate: string
+      open_total: string
+    }>(
       sql`select count(*) filter (where due_at is null) as no_due,
                  count(*) filter (where estimate_min is null) as no_estimate,
                  count(*) as open_total
@@ -1127,7 +1215,11 @@ export async function createGoal(
       subjectType: 'goal',
       subjectId: id,
       departmentId,
-      after: { title: input.title, metric: input.metric, targetValue: input.targetValue },
+      after: {
+        title: input.title,
+        metric: input.metric,
+        targetValue: input.targetValue,
+      },
     })
     return id
   })
@@ -1197,7 +1289,12 @@ export async function deleteGoal(
           returning id`,
     )
     if (rows.length === 0) return false
-    tx.audit({ action: 'work.goal_removed', subjectType: 'goal', subjectId: id, departmentId })
+    tx.audit({
+      action: 'work.goal_removed',
+      subjectType: 'goal',
+      subjectId: id,
+      departmentId,
+    })
     return true
   })
 }
@@ -1217,7 +1314,10 @@ export function computeGoalValue(
   window: { startsOn: string | null; dueOn: string | null },
   cards: readonly CardDTO[],
   toFilterable: (card: CardDTO) => FilterableCard,
-  filterContext: { meUserId: string | null; resolveUserIds: (token: string) => string[] },
+  filterContext: {
+    meUserId: string | null
+    resolveUserIds: (token: string) => string[]
+  },
 ): { currentValue: number; progress: number; matchedCards: number } {
   const query = filter.trim() ? parseFilterQuery(filter) : null
   const from = window.startsOn ? new Date(`${window.startsOn}T00:00:00.000Z`).getTime() : null

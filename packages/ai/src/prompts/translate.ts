@@ -17,6 +17,7 @@ import {
 import { localeSchema } from '../schemas.js'
 import { standardUserContent, type FeatureSpec, type ValidateOutcome } from '../feature-spec.js'
 import type { Locale } from '../types.js'
+import { normalizeUzLatn } from '../uz.js'
 
 export const translateInputSchema = z.object({
   /** Kept so every feature input satisfies `FeatureSpec<TIn extends { locale }>`: here it is the
@@ -74,7 +75,7 @@ export function glossaryFor(
 
 const FEW_SHOT = `in : target "ru", source "uz-Latn", glossary [vazifa→задача, muddat→срок, boʻlim→отдел], preserve ["Nodira","EGDI"],
      text "Nodira, EGDI vazifasining muddati juma kuni tugaydi."
-out: {"translatedText":"Нодира, срок задачи EGDI истекает в пятницу.","detectedSourceLocale":"uz-Latn","alreadyInTarget":false,"uncertainTerms":[]}
+out: {"translatedText":"Nodira, срок задачи EGDI истекает в пятницу.","detectedSourceLocale":"uz-Latn","alreadyInTarget":false,"uncertainTerms":[]}
 
 in : target "uz-Latn", source null, text "Yigʻilish ertaga boshlanadi."
 out: {"translatedText":"Yigʻilish ertaga boshlanadi.","detectedSourceLocale":"uz-Latn","alreadyInTarget":true,"uncertainTerms":[]}`
@@ -194,7 +195,33 @@ function validateOutput(
     // text, not the flag, so the UI's "no translation needed" state is never shown over a rewrite.
     return { ok: true, output: { ...output, alreadyInTarget: false } }
   }
-  return { ok: true, output }
+  let translatedText = output.translatedText
+  if (input.targetLocale === 'uz-Latn' && !output.alreadyInTarget) {
+    const protectedStrings = input.preserve
+      .filter((value) => translatedText.includes(value))
+      .sort((a, b) => b.length - a.length)
+    if (protectedStrings.length) {
+      const pattern = new RegExp(
+        `(${protectedStrings.map((v) => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+        'g',
+      )
+      translatedText = translatedText
+        .split(pattern)
+        .map((part) => (protectedStrings.includes(part) ? part : normalizeUzLatn(part)))
+        .join('')
+    } else translatedText = normalizeUzLatn(translatedText)
+  }
+  return {
+    ok: true,
+    output: {
+      ...output,
+      translatedText,
+      uncertainTerms:
+        input.locale === 'uz-Latn'
+          ? output.uncertainTerms.map(normalizeUzLatn)
+          : output.uncertainTerms,
+    },
+  }
 }
 
 export const translateSpec: FeatureSpec<TranslateInput, TranslateOutput> = {

@@ -491,6 +491,14 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   },
 
   // --- work ---------------------------------------------------------------------------------------
+  'work.card.reordered': {
+    notify: false,
+    why: 'Reordering cards refreshes board positions in realtime; it is an arrangement change rather than a new assignment.',
+  },
+  'work.focus.updated': {
+    notify: false,
+    why: 'Personal focus is private to its owner and refreshes that person’s board without adding an inbox notification.',
+  },
   'work.checklist.updated': {
     notify: false,
     why: 'Checklist edits refresh live task views without producing an inbox notification per checkbox.',
@@ -1025,7 +1033,7 @@ export const REASON_LABEL: Readonly<Record<Reason, LocalizedText>> = Object.free
   rsvp: plain('ishtirok', 'иштирок', 'участие', 'RSVP'),
   poll: plain('soʻrovnoma', 'сўровнома', 'опросы', 'polls'),
   decision: plain('qaror', 'қарор', 'решения', 'decisions'),
-  digest: plain('xulosa', 'хулоса', 'сводка', 'digest'),
+  digest: plain('maʼlumot yangilandi', 'маълумот янгиланди', 'анкеты обновлены', 'profile updates'),
   system: plain('tizim', 'тизим', 'система', 'system'),
   field_request: plain('maʼlumot', 'маълумот', 'анкета', 'profile'),
 })
@@ -1051,18 +1059,29 @@ function inFourLocales(build: (locale: keyof LocalizedText) => string): Localize
 }
 
 /** The daily personal digest (08:30 Asia/Tashkent). */
-export function personalDigestText(counts: Counts): {
+export function personalDigestText(
+  counts: Counts,
+  frequency: 'daily' | 'weekly' = 'daily',
+): {
   title: LocalizedText
   body: LocalizedText
 } {
   const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0)
   return {
-    title: plain(
-      `Kunlik xulosa — ${total} ta yangilik`,
-      `Кунлик хулоса — ${total} та янгилик`,
-      `Сводка за день — ${total}`,
-      `Daily summary — ${total}`,
-    ),
+    title:
+      frequency === 'weekly'
+        ? plain(
+            `Haftalik xulosa — ${total} ta yangilik`,
+            `Ҳафталик хулоса — ${total} та янгилик`,
+            `Сводка за неделю — ${total}`,
+            `Weekly summary — ${total}`,
+          )
+        : plain(
+            `Kunlik xulosa — ${total} ta yangilik`,
+            `Кунлик хулоса — ${total} та янгилик`,
+            `Сводка за день — ${total}`,
+            `Daily summary — ${total}`,
+          ),
     body: inFourLocales((locale) => summarizeCounts(counts, locale)),
   }
 }

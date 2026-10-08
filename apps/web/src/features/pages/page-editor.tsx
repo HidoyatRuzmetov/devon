@@ -8,14 +8,10 @@ import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
-import { useT, useLocale, latinToCyrillic, type Locale } from '@devon/i18n'
+import { useT, useLocale, type Locale } from '@devon/i18n'
 import { IconButton, Input, SparkleButton, cn, toast } from '@devon/ui'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
-import {
-  TranslateTargetPicker,
-  defaultTranslateTarget,
-  isLocalTransliterationPair,
-} from '../ai/components/translate-target.js'
+import { TranslateTargetPicker, defaultTranslateTarget } from '../ai/components/translate-target.js'
 import {
   Bold,
   Code2,
@@ -205,13 +201,7 @@ export function PageEditor({
     const text = editor.state.doc.textBetween(from, to, ' ')
     setTranslateRange({ from, to })
     setTranslateOpen(true)
-    if (isLocalTransliterationPair(locale, translateTarget)) {
-      // No model call: the script conversion is a lookup table, and the person gets the answer
-      // before the panel has finished opening.
-      setEditedTranslation(latinToCyrillic(text))
-      translateMutation.reset()
-      return
-    }
+    setEditedTranslation('')
     translateMutation.mutate({
       locale,
       targetLocale: translateTarget,

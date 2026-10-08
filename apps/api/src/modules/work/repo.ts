@@ -6,8 +6,9 @@
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
-import { recurrenceRuleSchema, type RecurrenceRule } from '@devon/contracts'
+import { can, recurrenceRuleSchema, type Actor, type RecurrenceRule } from '@devon/contracts'
 import type { CardDTO, MemberSummary, SavedViewLayout } from './schemas.js'
+import { columnOrder, lockCardOrder, rankForPosition } from './ordering.js'
 
 // --- row shapes returned by hand-written SQL (snake_case, as Postgres sends them) ------------------
 
@@ -45,6 +46,7 @@ type CardRow = {
   recurrence: unknown
   recurrence_series_id: string | null
   focus_pinned: boolean
+  focus_position: number | null
 }
 
 function computeRisk(row: Pick<CardRow, 'status' | 'due_at'>): 'none' | 'at_risk' | 'overdue' {
@@ -94,6 +96,7 @@ function toCardDTO(row: CardRow): CardDTO {
     recurrence: parseRecurrence(row.recurrence),
     recurrenceSeriesId: row.recurrence_series_id,
     focusPinned: row.focus_pinned === true,
+    focusPosition: row.focus_position === null ? null : Number(row.focus_position),
   }
 }
 
@@ -124,7 +127,7 @@ function cardSelect(viewerUserId: string | null): SQL {
     coalesce(tl.logged, 0) as logged_min,
     coalesce(db.open_blockers, 0) as blocked_by_open,
     coalesce(bl.blocking, 0) as blocks_count,
-    coalesce(fp.pinned, false) as focus_pinned
+    coalesce(fp.pinned, false) as focus_pinned, fp.position as focus_position
   from app.cards c
   left join lateral (
     select count(*) as total, count(*) filter (where done_at is not null) as done
@@ -149,7 +152,7 @@ function cardSelect(viewerUserId: string | null): SQL {
     select count(*) as blocking from app.card_dependencies where blocked_by_card_id = c.id
   ) bl on true
   left join lateral (
-    select true as pinned from app.focus_pins
+    select true as pinned, position from app.focus_pins
     where card_id = c.id and user_id = ${viewerUserId}
     limit 1
   ) fp on true
@@ -183,7 +186,7 @@ export async function getMembers(
             on ur.user_id = u.id and ur.department_id = m.department_id and ur.deleted_at is null
           left join app.units un on un.id = ur.unit_id and un.deleted_at is null
           where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
-            and u.deleted_at is null
+            and u.deleted_at is null and u.status != 'deleted'
           order by (m.role = 'head') desc, u.given_name asc, u.family_name asc`,
     )
     return rows.map((r) => ({
@@ -240,7 +243,7 @@ export async function listCards(
     const rows = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)}
           where c.department_id = ${departmentId} and c.deleted_at is null ${statusFilter} ${projectFilter}
-          order by c.due_at asc nulls last, c.order_key asc
+          order by fp.position asc nulls last, c.order_key collate "C" asc, c.created_at asc, c.id asc
           limit 5000`,
     )
     return rows.map(toCardDTO)
@@ -329,10 +332,11 @@ export async function filterDepartmentMemberIds(
   if (wanted.length === 0) return new Set()
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{ user_id: string }>(sql`
-      select user_id from app.memberships
-      where department_id = ${departmentId}
-        and status = 'active'
-        and user_id = any(${sql.param(wanted)}::uuid[])
+      select m.user_id from app.memberships m join app.users u on u.id = m.user_id
+      where m.department_id = ${departmentId}
+        and m.status = 'active' and m.deleted_at is null
+        and u.status = 'active' and u.deleted_at is null
+        and m.user_id = any(${sql.param(wanted)}::uuid[])
     `)
     return new Set(rows.map((r) => r.user_id))
   })
@@ -471,15 +475,26 @@ type CreateCardInput = {
 
 export async function createCard(ctx: RequestContext, input: CreateCardInput): Promise<CardDTO> {
   return withContext(ctx, async (tx) => {
+    await lockCardOrder(tx, input.departmentId)
     // Serialize against project deletion: a card cannot be attached to a foreign/tombstoned
     // project, nor appear after its project's child-deletion sweep has already completed.
     if (input.projectId) {
-      const projects = await tx.raw<{ id: string }>(sql`select id from app.projects
+      const projects = await tx.raw<{
+        id: string
+      }>(sql`select id from app.projects
         where id = ${input.projectId} and department_id = ${input.departmentId} and deleted_at is null for share`)
       if (!projects[0])
-        throw Object.assign(new Error('Project is unavailable'), { statusCode: 422 })
+        throw Object.assign(new Error('Project is unavailable'), {
+          statusCode: 422,
+        })
     }
     const id = randomUUID()
+    const siblings =
+      input.orderKey === undefined
+        ? await columnOrder(tx, input.departmentId, input.assigneeUserId ?? null)
+        : []
+    const orderKey =
+      input.orderKey ?? (await rankForPosition(tx, input.departmentId, siblings, siblings.length))
     const description = input.description
       ? { format: 'markdown' as const, text: input.description }
       : null
@@ -503,7 +518,7 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
             ${input.projectId ?? null}, ${input.projectScope ?? (input.projectId ? 'objective' : 'none')}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
             ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,
-            ${input.orderKey ?? 'a0'}, ${input.createdByUserId},
+            ${orderKey}, ${input.createdByUserId},
             ${input.estimateMin ?? null},
             ${input.recurrence ? JSON.stringify(input.recurrence) : null}::jsonb,
             ${input.recurrenceSeriesId ?? (input.recurrence ? id : null)},
@@ -556,6 +571,102 @@ type PatchCardInput = {
   recurrence?: RecurrenceRule | null | undefined
 }
 
+export type MoveCardInput = {
+  toUserId: string | null
+  targetCardId: string | null
+  edge: 'before' | 'after'
+}
+
+export async function moveCard(
+  ctx: RequestContext,
+  departmentId: string,
+  cardId: string,
+  input: MoveCardInput,
+  actor: Actor,
+): Promise<
+  | { ok: true; card: CardDTO }
+  | {
+      ok: false
+      reason: 'not_found' | 'conflict' | 'forbidden' | 'invalid_assignee'
+    }
+> {
+  return withContext(ctx, async (tx) => {
+    await lockCardOrder(tx, departmentId)
+    const beforeRows = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)}
+      where c.id = ${cardId} and c.department_id = ${departmentId} and c.deleted_at is null
+      and c.status = 'active' for update of c`)
+    const before = beforeRows[0]
+    if (!before) return { ok: false, reason: 'not_found' }
+    const ownerUserIds = [
+      before.created_by_user_id,
+      before.assignee_user_id,
+      before.giver_user_id,
+    ].filter((id): id is string => id !== null)
+    if (!can(actor, 'update', { kind: 'owned', departmentId, ownerUserIds }).allowed)
+      return { ok: false, reason: 'forbidden' }
+    if (input.toUserId) {
+      const members = await tx.raw<{
+        id: string
+      }>(sql`select m.user_id as id from app.memberships m join app.users u on u.id = m.user_id
+        where m.department_id = ${departmentId} and m.user_id = ${input.toUserId}
+          and m.status = 'active' and m.deleted_at is null
+          and u.status = 'active' and u.deleted_at is null for share of m, u`)
+      if (!members[0]) return { ok: false, reason: 'invalid_assignee' }
+    }
+    const siblings = await columnOrder(tx, departmentId, input.toUserId, cardId)
+    let index = siblings.length
+    if (input.targetCardId) {
+      const targetIndex = siblings.findIndex((row) => row.id === input.targetCardId)
+      if (targetIndex === -1) return { ok: false, reason: 'conflict' }
+      index = targetIndex + (input.edge === 'after' ? 1 : 0)
+    }
+    const orderKey = await rankForPosition(tx, departmentId, siblings, index)
+    await tx.raw(sql`update app.cards set assignee_user_id = ${input.toUserId}, order_key = ${orderKey},
+      updated_at = now(), version = version + 1 where id = ${cardId} and department_id = ${departmentId}`)
+    tx.audit({
+      action: 'work.card_moved',
+      subjectType: 'card',
+      subjectId: cardId,
+      departmentId,
+      before: {
+        assigneeUserId: before.assignee_user_id,
+        orderKey: before.order_key,
+      },
+      after: {
+        assigneeUserId: input.toUserId,
+        orderKey,
+        targetCardId: input.targetCardId,
+        edge: input.edge,
+      },
+    })
+    if (before.assignee_user_id !== input.toUserId) {
+      await tx.raw(sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
+        values (${randomUUID()}, ${departmentId}, ${cardId}, ${actor.userId}, 'assigned',
+          ${JSON.stringify({ from: before.assignee_user_id, to: input.toUserId })}::jsonb)`)
+      if (input.toUserId)
+        tx.emit({
+          type: 'work.card.assigned',
+          departmentId,
+          payload: {
+            cardId,
+            actorUserId: actor.userId,
+            assigneeUserId: input.toUserId,
+            previousAssigneeUserId: before.assignee_user_id,
+          },
+        })
+    }
+    // Moves need live delivery even when no assignment changes. This carries only identifiers and
+    // deliberately creates no inbox notification for changing a card's position.
+    tx.emit({
+      type: 'work.card.reordered',
+      departmentId,
+      payload: { cardId, actorUserId: actor.userId },
+    })
+    const after = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${cardId}`)
+    return { ok: true, card: toCardDTO(after[0]!) }
+  })
+}
+
 export type PatchCardResult =
   | { ok: true; card: CardDTO }
   | { ok: false; reason: 'not_found' | 'conflict' }
@@ -569,6 +680,12 @@ export async function patchCard(
   actorUserId: string,
 ): Promise<PatchCardResult> {
   return withContext(ctx, async (tx) => {
+    if (
+      patch.assigneeUserId !== undefined ||
+      patch.orderKey !== undefined ||
+      patch.status !== undefined
+    )
+      await lockCardOrder(tx, departmentId)
     const before = await tx.raw<CardRow>(
       sql`${cardSelect(ctx.userId)} where c.department_id = ${departmentId} and c.id = ${cardId} and c.deleted_at is null`,
     )
@@ -576,6 +693,17 @@ export async function patchCard(
     if (!beforeRow) return { ok: false, reason: 'not_found' }
     if (expectedVersion !== undefined && beforeRow.version !== expectedVersion) {
       return { ok: false, reason: 'conflict' }
+    }
+    if (
+      patch.assigneeUserId !== undefined &&
+      patch.assigneeUserId !== beforeRow.assignee_user_id &&
+      patch.orderKey === undefined
+    ) {
+      const siblings = await columnOrder(tx, departmentId, patch.assigneeUserId, cardId)
+      patch = {
+        ...patch,
+        orderKey: await rankForPosition(tx, departmentId, siblings, siblings.length),
+      }
     }
 
     const sets: SQL[] = [sql`updated_at = now()`, sql`version = version + 1`]
@@ -721,6 +849,12 @@ export async function patchCard(
         departmentId,
       })
     }
+    if (patch.orderKey !== undefined)
+      tx.emit({
+        type: 'work.card.reordered',
+        departmentId,
+        payload: { cardId, actorUserId },
+      })
 
     const after = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${cardId}`)
     return { ok: true, card: toCardDTO(after[0]!) }
@@ -742,7 +876,9 @@ export async function addChecklistItem(
   return withContext(ctx, async (tx) => {
     if (!(await cardIsVisible(tx, departmentId, cardId, true))) return null
     if (input.parentItemId) {
-      const parent = await tx.raw<{ id: string }>(sql`select id from app.card_checklist_items
+      const parent = await tx.raw<{
+        id: string
+      }>(sql`select id from app.card_checklist_items
         where id = ${input.parentItemId} and card_id = ${cardId}
           and department_id = ${departmentId} and deleted_at is null for update`)
       if (!parent.length) return null
@@ -1025,7 +1161,11 @@ export async function deleteCard(
       before: rows[0].snapshot,
       after: { deletedByUserId: actorUserId },
     })
-    tx.emit({ type: 'work.card.deleted', departmentId, payload: { cardId, actorUserId } })
+    tx.emit({
+      type: 'work.card.deleted',
+      departmentId,
+      payload: { cardId, actorUserId },
+    })
     return true
   })
 }
@@ -1051,7 +1191,11 @@ export async function undoDeleteCard(
       subjectId: cardId,
       departmentId,
     })
-    tx.emit({ type: 'work.card.restored', departmentId, payload: { cardId, actorUserId } })
+    tx.emit({
+      type: 'work.card.restored',
+      departmentId,
+      payload: { cardId, actorUserId },
+    })
     return true
   })
 }

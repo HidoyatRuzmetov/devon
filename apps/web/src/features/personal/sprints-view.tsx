@@ -254,10 +254,11 @@ export function SprintsView() {
       {
         locale,
         scope: 'personal',
+        periodId: sprint.id,
         periodKind: sprint.kind,
         now: now.toISOString(),
         periodEndsAt: endsAt.toISOString(),
-        capacityMin,
+        capacityMin: sprint.kind === '3h' ? capacityMin : null,
         goal: sprint.goal,
         items: bucket.map((tk) => ({
           id: tk.id,
@@ -361,6 +362,7 @@ export function SprintsView() {
       {
         locale,
         scope: 'person',
+        privateWorkspace: true,
         window: 'week',
         subjectName: t('personal.ai.catchUp.subjectSelf'),
         viewerName: t('personal.ai.catchUp.subjectSelf'),

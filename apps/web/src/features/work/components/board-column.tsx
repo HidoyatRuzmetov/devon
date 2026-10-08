@@ -131,8 +131,11 @@ export function BoardColumn({
       getData: () => ({ type: CARD_DRAG_TYPE, toUserId: userId }),
       onDragEnter: () => setIsDropTarget(true),
       onDragLeave: () => setIsDropTarget(false),
-      onDrop: ({ source }) => {
+      onDrop: ({ source, location }) => {
         setIsDropTarget(false)
+        // Drop callbacks bubble through every registered target. A card has already handled its
+        // own before/after insertion; the parent must not send a second append-to-end request.
+        if (location.current.dropTargets[0]?.element !== el) return
         const cardId = source.data['cardId']
         if (typeof cardId === 'string')
           onDropped(cardId, { kind: 'appendToColumn', toUserId: userId })

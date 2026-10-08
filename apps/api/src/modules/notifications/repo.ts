@@ -9,7 +9,13 @@ import { randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { AuditCtx } from '../../types.js'
-import type { Channel, DigestMode, LocalizedText, Reason } from './schemas.js'
+import {
+  REASONS,
+  type Channel,
+  type DigestMode,
+  type LocalizedText,
+  type Reason,
+} from './schemas.js'
 import {
   DEPARTMENT_QUIET_DEFAULT,
   type PersonalQuietOverride,
@@ -324,17 +330,6 @@ export async function snoozeNotification(
 
 // --- Preferences -------------------------------------------------------------------------------------
 
-const REASONS: Reason[] = [
-  'assigned',
-  'mentioned',
-  'due',
-  'updated',
-  'rsvp',
-  'poll',
-  'decision',
-  'digest',
-  'system',
-]
 const CHANNELS: Channel[] = ['inapp', 'telegram', 'email']
 
 /** Default (`enabled`, `digestMode`) for a (reason, channel) pair that has no stored row yet -- inapp
@@ -368,8 +363,17 @@ export async function getPrefs(userId: string): Promise<PrefRow[]> {
     for (const reason of REASONS) {
       for (const channel of CHANNELS) {
         const stored = byKey.get(`${reason}:${channel}`)
-        if (stored)
-          out.push({ reason, channel, enabled: stored.enabled, digestMode: stored.digest_mode })
+        if (channel === 'inapp') out.push({ reason, channel, enabled: true, digestMode: 'instant' })
+        else if (stored)
+          out.push({
+            reason,
+            channel,
+            enabled: stored.enabled,
+            digestMode:
+              channel === 'telegram' && reason === 'digest' && stored.digest_mode === 'instant'
+                ? 'daily'
+                : stored.digest_mode,
+          })
         else out.push({ reason, channel, ...defaultPref(reason, channel) })
       }
     }
@@ -575,6 +579,7 @@ export async function unreadCountsByReason(userId: string): Promise<ReasonCounts
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
       where app.notification_is_visible(id) and read_at is null and archived_at is null and (snoozed_until is null or snoozed_until <= now())
+        and subject_type <> 'digest'
       group by reason
     `)
     const out: ReasonCounts = {}
@@ -583,11 +588,17 @@ export async function unreadCountsByReason(userId: string): Promise<ReasonCounts
   })
 }
 
-export async function countsByReasonSince(userId: string, since: Date): Promise<ReasonCounts> {
+export async function countsByReasonSince(
+  userId: string,
+  since: Date,
+  departmentId?: string,
+): Promise<ReasonCounts> {
   return withContext(toRequestContext(systemAuditCtx(userId), { userId }), async (tx) => {
     const rows = await tx.raw<{ reason: Reason; n: string }>(sql`
       select reason, count(*)::text as n from app.notifications
       where app.notification_is_visible(id) and created_at >= ${since}
+        and subject_type <> 'digest'
+        ${departmentId ? sql`and department_id = ${departmentId}` : sql``}
       group by reason
     `)
     const out: ReasonCounts = {}

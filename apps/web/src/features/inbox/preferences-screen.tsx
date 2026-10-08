@@ -12,7 +12,13 @@ import { useDepartment } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { isQuietHoursTooLoud, CHANNELS, DIGEST_MODES, REASONS, type PrefRow } from './api.js'
+import {
+  isQuietHoursTooLoud,
+  AVAILABLE_CHANNELS,
+  PERSONAL_DIGEST_MODES,
+  REASONS,
+  type PrefRow,
+} from './api.js'
 import {
   usePrefsQuery,
   usePutPrefsMutation,
@@ -36,15 +42,24 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
   )
 
   function toggle(row: PrefRow) {
-    putPrefs.mutate([{ ...row, enabled: !row.enabled }])
+    const digestMode =
+      row.reason === 'digest'
+        ? row.digestMode === 'off' || row.digestMode === 'instant'
+          ? 'daily'
+          : row.digestMode
+        : 'instant'
+    putPrefs.mutate([{ ...row, enabled: !row.enabled, digestMode }], {
+      onError: () => toast(t('toast.saveError')),
+    })
   }
 
   function setDigestMode(row: PrefRow, digestMode: PrefRow['digestMode']) {
-    putPrefs.mutate([{ ...row, digestMode }])
+    putPrefs.mutate([{ ...row, digestMode, enabled: digestMode !== 'off' }], {
+      onError: () => toast(t('toast.saveError')),
+    })
   }
 
   const digestRowTelegram = byKey.get('digest:telegram')
-  const digestRowEmail = byKey.get('digest:email')
 
   return (
     <>
@@ -56,7 +71,7 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
                 <th className="px-5 py-3 text-left font-medium">
                   {t('inbox.preferences.reasonColumn')}
                 </th>
-                {CHANNELS.map((channel) => (
+                {AVAILABLE_CHANNELS.map((channel) => (
                   <th key={channel} className="px-4 py-3 text-center font-medium">
                     {t(`inbox.channel.${channel}`)}
                   </th>
@@ -67,27 +82,36 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
               {REASONS.map((reason) => (
                 <tr key={reason} className="border-b border-border last:border-b-0">
                   <td className="px-5 py-3">
-                    <Chip tone={REASON_TONE[reason]}>
-                      <ReasonIcon reason={reason} className="size-3" />
+                    <Chip
+                      tone={REASON_TONE[reason]}
+                      leading={<ReasonIcon reason={reason} className="size-3" />}
+                    >
                       {t(`inbox.reason.${reason}`)}
                     </Chip>
                   </td>
-                  {CHANNELS.map((channel) => {
+                  {AVAILABLE_CHANNELS.map((channel) => {
                     const row = byKey.get(`${reason}:${channel}`)
                     if (!row) {
                       return <td key={channel} />
                     }
                     return (
                       <td key={channel} className="px-4 py-3 text-center">
-                        <Switch
-                          checked={row.enabled}
-                          onCheckedChange={() => toggle(row)}
-                          aria-label={t('inbox.preferences.toggleAria', {
-                            reason: t(`inbox.reason.${reason}`),
-                            channel: t(`inbox.channel.${channel}`),
-                          })}
-                          className="mx-auto"
-                        />
+                        {channel === 'inapp' ? (
+                          <span className="text-small text-muted-foreground">
+                            {t('inbox.preferences.alwaysOn')}
+                          </span>
+                        ) : (
+                          <Switch
+                            checked={row.enabled}
+                            disabled={putPrefs.isPending}
+                            onCheckedChange={() => toggle(row)}
+                            aria-label={t('inbox.preferences.toggleAria', {
+                              reason: t(`inbox.reason.${reason}`),
+                              channel: t(`inbox.channel.${channel}`),
+                            })}
+                            className="mx-auto"
+                          />
+                        )}
                       </td>
                     )
                   })}
@@ -98,7 +122,7 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
         </div>
       </SectionCard>
 
-      {digestRowTelegram || digestRowEmail ? (
+      {digestRowTelegram ? (
         <SectionCard title={t('inbox.preferences.digestFrequency')}>
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-6">
             {digestRowTelegram ? (
@@ -107,31 +131,20 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
                   {t('inbox.channel.telegram')}
                 </span>
                 <select
-                  value={digestRowTelegram.digestMode}
+                  value={
+                    !digestRowTelegram.enabled
+                      ? 'off'
+                      : digestRowTelegram.digestMode === 'instant'
+                        ? 'daily'
+                        : digestRowTelegram.digestMode
+                  }
+                  disabled={putPrefs.isPending}
                   onChange={(e) =>
                     setDigestMode(digestRowTelegram, e.target.value as PrefRow['digestMode'])
                   }
                   className="h-10 rounded-sm border border-border bg-card px-2 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
-                  {DIGEST_MODES.map((mode) => (
-                    <option key={mode} value={mode}>
-                      {t(`inbox.preferences.digestMode.${mode}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
-            {digestRowEmail ? (
-              <label className="flex flex-1 flex-col gap-1">
-                <span className="text-small text-muted-foreground">{t('inbox.channel.email')}</span>
-                <select
-                  value={digestRowEmail.digestMode}
-                  onChange={(e) =>
-                    setDigestMode(digestRowEmail, e.target.value as PrefRow['digestMode'])
-                  }
-                  className="h-10 rounded-sm border border-border bg-card px-2 text-body text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                >
-                  {DIGEST_MODES.map((mode) => (
+                  {PERSONAL_DIGEST_MODES.map((mode) => (
                     <option key={mode} value={mode}>
                       {t(`inbox.preferences.digestMode.${mode}`)}
                     </option>
@@ -198,9 +211,13 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
 
   async function handleUseDefault() {
     setTooLoud(false)
-    await putQuietHours.mutateAsync({ startMinute: null, endMinute: null, includeWeekends: null })
-    setTouched(false)
-    toast(t('inbox.preferences.saved'))
+    try {
+      await putQuietHours.mutateAsync({ startMinute: null, endMinute: null, includeWeekends: null })
+      setTouched(false)
+      toast(t('inbox.preferences.saved'))
+    } catch {
+      toast(t('toast.saveError'))
+    }
   }
 
   return (
@@ -215,7 +232,12 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
       actions={
         <>
           {usingOverride ? (
-            <Button size="sm" variant="ghost" onClick={handleUseDefault}>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleUseDefault}
+              disabled={putQuietHours.isPending}
+            >
               {t('inbox.preferences.quietHours.useDefault')}
             </Button>
           ) : null}
@@ -284,10 +306,18 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
 function CalendarFeedCard() {
   const t = useT()
   const [url, setUrl] = React.useState<string | null>(null)
+  const [pending, setPending] = React.useState(false)
 
   async function handleReveal() {
-    const result = await fetchIcsUrl()
-    setUrl(new URL(result.url, window.location.origin).toString())
+    setPending(true)
+    try {
+      const result = await fetchIcsUrl()
+      setUrl(new URL(result.url, window.location.origin).toString())
+    } catch {
+      toast(t('toast.saveError'))
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleCopy() {
@@ -315,7 +345,7 @@ function CalendarFeedCard() {
           </Button>
         </div>
       ) : (
-        <Button size="sm" variant="secondary" onClick={handleReveal}>
+        <Button size="sm" variant="secondary" onClick={handleReveal} loading={pending}>
           {t('inbox.preferences.calendar.reveal')}
         </Button>
       )}

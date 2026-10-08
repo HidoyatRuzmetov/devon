@@ -37,7 +37,6 @@ import { useSearchParams } from '../../../lib/router.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import type { Card } from '../api.js'
-import { keyBetween } from '../lib/fractional.js'
 import { useAnnounce, DndAnnouncerProvider } from './dnd-announcer.js'
 import { useBoardQuery, useMoveCardMutation } from '../hooks.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
@@ -122,7 +121,6 @@ function BoardScreenInner() {
     'comfortable',
     isBoardDensity,
   )
-  const isHead = department?.role === 'head'
   // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
   // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
@@ -202,32 +200,6 @@ function BoardScreenInner() {
   const handleDropped = React.useCallback(
     (draggedCardId: string, spec: CardDropSpec) => {
       if (!board) return
-      const destCards = (
-        spec.toUserId === null
-          ? board.unassigned
-          : (board.columns.find((c) => c.member.userId === spec.toUserId)?.cards ?? [])
-      ).filter((c) => c.id !== draggedCardId)
-
-      let orderKey: string
-      if (spec.kind === 'appendToColumn') {
-        orderKey = keyBetween(destCards.at(-1)?.orderKey ?? null, null)
-      } else {
-        const idx = destCards.findIndex((c) => c.id === spec.targetCardId)
-        if (idx === -1) {
-          orderKey = keyBetween(destCards.at(-1)?.orderKey ?? null, null)
-        } else if (spec.edge === 'top') {
-          orderKey = keyBetween(
-            idx > 0 ? (destCards[idx - 1]?.orderKey ?? null) : null,
-            destCards[idx]!.orderKey,
-          )
-        } else {
-          orderKey = keyBetween(
-            destCards[idx]!.orderKey,
-            idx + 1 < destCards.length ? (destCards[idx + 1]?.orderKey ?? null) : null,
-          )
-        }
-      }
-
       const targetMember = spec.toUserId
         ? board.members.find((m) => m.userId === spec.toUserId)
         : null
@@ -235,7 +207,12 @@ function BoardScreenInner() {
         (c) => c.id === draggedCardId,
       )
       moveCard.mutate(
-        { id: draggedCardId, toUserId: spec.toUserId, orderKey },
+        {
+          id: draggedCardId,
+          toUserId: spec.toUserId,
+          targetCardId: spec.kind === 'onCard' ? spec.targetCardId : null,
+          edge: spec.kind === 'onCard' && spec.edge === 'top' ? 'before' : 'after',
+        },
         {
           // The mutation already rolls the optimistic move back on failure. Rolling back silently is
           // the problem: the card slides to its new column, then simply is not there any more, which
@@ -317,7 +294,10 @@ function BoardScreenInner() {
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void boardQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => void boardQuery.refetch(),
+        }}
       />
     )
   }
@@ -339,31 +319,28 @@ function BoardScreenInner() {
       ? board.columns
       : [board.columns[ownColumnIndex]!]
 
-  // SPEC §3.3: a head's columns lead with trouble -- most overdue first, then heaviest open load,
-  // then name so the order is stable between polls. Everyone else keeps the roster order (head
-  // first, then alphabetical), which is how people look each other up.
-  const orderedColumns =
-    isHead && scope === 'all'
-      ? [...visibleColumns].sort((a, b) => {
-          const overdue = (col: typeof a) => col.cards.filter((c) => c.risk === 'overdue').length
-          const open = (col: typeof a) => col.cards.filter((c) => c.status === 'active').length
-          return (
-            overdue(b) - overdue(a) ||
-            open(b) - open(a) ||
-            fullName(a.member).localeCompare(fullName(b.member))
-          )
-        })
-      : visibleColumns
+  // The roster is stable while people move/finish work. Sorting columns by live load made a drop
+  // move several other people's columns under the pointer; risk counts still show who needs help.
+  const orderedColumns = visibleColumns
 
   // SPEC §3.3: grouped by boʻlim, "Boʻlimsiz" last. A department with no units at all collapses to
   // one unnamed group, which renders exactly like the flat board did -- no empty heading.
-  type Group = { unitId: string | null; unitName: string | null; columns: typeof orderedColumns }
+  type Group = {
+    unitId: string | null
+    unitName: string | null
+    columns: typeof orderedColumns
+  }
   const groups: Group[] = []
   for (const col of orderedColumns) {
     const unitId = col.member.unitId ?? null
     const existing = groups.find((g) => g.unitId === unitId)
     if (existing) existing.columns.push(col)
-    else groups.push({ unitId, unitName: col.member.unitName ?? null, columns: [col] })
+    else
+      groups.push({
+        unitId,
+        unitName: col.member.unitName ?? null,
+        columns: [col],
+      })
   }
   groups.sort((a, b) => {
     if (a.unitId === null) return 1
@@ -423,7 +400,11 @@ function BoardScreenInner() {
                 value={isFiltering ? 'all' : scope}
                 onValueChange={setScope}
                 options={[
-                  { value: 'all', label: t('work.board.scopeAll'), count: board.members.length },
+                  {
+                    value: 'all',
+                    label: t('work.board.scopeAll'),
+                    count: board.members.length,
+                  },
                   { value: 'mine', label: t('work.board.scopeMine') },
                 ]}
               />

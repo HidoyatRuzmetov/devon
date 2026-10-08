@@ -1101,9 +1101,19 @@ export const EVAL_CASES: EvalCase[] = [
         input: { ...base, locale: 'ru', query: 'Кто больше всех просрочил?' },
         check: (out: unknown) => {
           const o = out as Ask
-          if (o.metric !== 'loadPerPerson')
-            return `expected metric loadPerPerson, got ${String(o.metric)}`
-          return o.groupBy === 'person' ? null : `expected groupBy person, got ${o.groupBy}`
+          if (o.metric !== 'openVsOverdue')
+            return `expected overdue metric openVsOverdue, got ${String(o.metric)}`
+          if (o.groupBy !== 'person') return `expected groupBy person, got ${o.groupBy}`
+          const clauses = tokens(o.filterText)
+          const statuses = clauses.filter(([key]) => key === 'status').map(([, value]) => value)
+          if (statuses.length !== 1 || statuses[0] !== 'active')
+            return `expected exactly status:active, got ${JSON.stringify(statuses)}`
+          const dates = clauses.filter(([key]) => key === 'due').map(([, value]) => value)
+          if (dates.length !== 1 || dates[0] !== `<${TODAY}`)
+            return `expected exactly due:<${TODAY}, got ${JSON.stringify(dates)}`
+          return o.unmappedTerms.length === 0
+            ? null
+            : `who-overdue is fully supported, got unmapped terms ${JSON.stringify(o.unmappedTerms)}`
         },
       },
       {

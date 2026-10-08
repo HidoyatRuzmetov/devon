@@ -41,7 +41,7 @@ export const suggestAssigneeInputSchema = z.object({
         /** Labels this person has worked on recently — the experience signal, and the only one. */
         recentLabels: z.array(z.string().min(1).max(80)).max(20).default([]),
         /** Whether this person is away (leave, trip). A suggestion that ignores it is noise. */
-        away: z.boolean().default(false),
+        away: z.boolean().nullable().default(null),
       }),
     )
     .min(1)
@@ -87,6 +87,7 @@ function systemPrompt(input: SuggestAssigneeInput): string {
       'Return at most three suggestions, ranked. Rank 1 is your first choice.',
       "Base the ranking on exactly two things, in this order: (a) recent experience — does this person's recentLabels overlap the card's labels or project; (b) available capacity — a lower openCount than the unit median.",
       'Never rank somebody who is away above somebody who is not.',
+      'away=null means absence is unknown because no leave or working-hours record was supplied. Never assert physical presence or guaranteed free time from that. Open-card counts show workload, not free working minutes.',
       'reason: one short sentence, naming the workload or experience fact you used, in the reader\'s language. "Yaqinda EGDI yorligʻi bilan ishlagan". "Hozir eng kam yuk — 2 ta ochiq vazifa".',
       'loadWarning: when openCount is at least 1.5 times the median, state the number plainly ("Anvarda 9 ta ochiq vazifa bor"). Empty string otherwise. This is a warning to the head, not an argument against the person.',
       'confidence: high only when experience AND capacity both point the same way. Capacity alone is medium. Neither is low.',

@@ -36,6 +36,7 @@ import {
   cardDetailSchema,
   cardListQuerySchema,
   cardListSchema,
+  cardSchema,
   createCardBodySchema,
   createChecklistItemBodySchema,
   createCommentBodySchema,
@@ -44,6 +45,7 @@ import {
   idParamsSchema,
   labelListSchema,
   patchCardBodySchema,
+  moveCardBodySchema,
   patchChecklistItemBodySchema,
   savedViewListSchema,
   unfurlBodySchema,
@@ -124,9 +126,10 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       const active = cards.filter((c) => c.status !== 'done')
       const byAssignee = new Map<string, CardDTO[]>()
       const unassigned: CardDTO[] = []
+      const activeMemberIds = new Set(members.map((member) => member.userId))
       for (const card of active) {
-        if (!card.assigneeUserId) {
-          unassigned.push(card)
+        if (!card.assigneeUserId || !activeMemberIds.has(card.assigneeUserId)) {
+          unassigned.push({ ...card, assigneeUnavailable: card.assigneeUserId !== null })
           continue
         }
         const list = byAssignee.get(card.assigneeUserId) ?? []
@@ -335,6 +338,13 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
       const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
       if (!ownership.ok) return
+      const named = [patch.assigneeUserId, patch.giverUserId].filter(
+        (id): id is string => typeof id === 'string',
+      )
+      if (named.length) {
+        const members = await repo.filterDepartmentMemberIds(ctx, departmentId, named)
+        if (named.some((id) => !members.has(id))) return sendProblem(reply, 'validation_failed')
+      }
       // v1.1 SPEC §5: "required fields block moving to done with an inline message". The refusal is
       // here, on the server, because a card that leaves the board without its required answers is
       // exactly the hole a client-side check leaves open. Only on the transition *into* done or
@@ -374,6 +384,43 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
         comments,
         activity,
       })
+    },
+  )
+
+  app.post(
+    '/cards/:id/move',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: {
+        params: idParamsSchema,
+        body: moveCardBodySchema,
+        response: { 200: cardSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const departmentId = requireDepartmentId(req)!
+      if (!(await requireCardOwnership(req, reply, departmentId, req.params.id)).ok) return
+      const result = await repo.moveCard(
+        contextFromRequest(req),
+        departmentId,
+        req.params.id,
+        req.body,
+        req.actor!,
+      )
+      if (!result.ok)
+        return sendProblem(
+          reply,
+          result.reason === 'invalid_assignee' ? 'validation_failed' : result.reason,
+        )
+      return reply.send(
+        withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
+      )
     },
   )
 

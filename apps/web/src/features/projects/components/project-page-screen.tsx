@@ -34,6 +34,8 @@ import { useActor } from '../../../lib/can.js'
 import { EditProjectDialog } from './edit-project-dialog.js'
 import { MilestoneActions } from './milestone-actions.js'
 import { taskProgress } from '../progress.js'
+import { projectPlanRanks } from '../plan-order.js'
+import { useAddFocusMutation, useFocusListQuery } from '../../work/hooks-plus.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
 import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { CatchUpPreview, PlanPreview } from '../../ai/components/previews.js'
@@ -127,6 +129,8 @@ export default function ProjectPageScreen() {
 
   const aiSettings = useAiSettingsQuery()
   const planAi = useRunAiFeatureMutation('plan_sprint')
+  const addFocus = useAddFocusMutation()
+  const focusList = useFocusListQuery()
   const planEnabled =
     aiSettings.data !== undefined &&
     aiSettings.data.flags['plan_sprint'] === true &&
@@ -217,18 +221,22 @@ export default function ProjectPageScreen() {
       {
         locale,
         scope: 'project',
+        projectId: project.id,
         periodKind: 'custom',
         now: now.toISOString(),
         periodEndsAt: horizon.toISOString(),
-        capacityMin: 0,
+        capacityMin: null,
         goal: project.title,
         items: openObjective.map((c) => ({
           id: c.id,
           title: c.title,
-          estimateMin: null,
-          dueDate: c.dueAt ? c.dueAt.slice(0, 10) : null,
+          estimateMin: c.estimateMin,
+          dueAt: c.dueAt,
           priority: c.priority,
-          blocked: false,
+          assigneeName: members.find((m) => m.userId === c.assigneeUserId)
+            ? fullName(members.find((m) => m.userId === c.assigneeUserId)!)
+            : null,
+          blockedByIds: [],
         })),
       },
       {
@@ -245,29 +253,39 @@ export default function ProjectPageScreen() {
    * `priority: 'urgent'` on the focus card. Everything else the person read was discarded.
    *
    * The ordering is the answer, so the ordering is what lands: the plan's own sequence becomes the
-   * cards' `orderKey` order on the board, the focus card is marked urgent, and anything the model
+   * cards' `orderKey` order on the board, the focus card is pinned to the user's focus list, and anything the model
    * said will not fit in the horizon is left alone (moving a due date the person did not ask about
    * is not this feature's business).
    */
   async function acceptPlan() {
     if (!plan) return
+    if (openObjective.some((c) => c.canEdit === false)) return
     const byId = new Map(openObjective.map((c) => [c.id, c] as const))
     const ordered = plan.output.orderedIds.filter((id) => byId.has(id))
 
     // One patch per card, all independent, so `Promise.all` rather than an awaited loop
     // (TECH-SPEC §16: no query in a loop).
-    await Promise.all(
-      ordered.map((id, index) => {
-        const card = byId.get(id)!
-        const patch: { orderKey: string; priority?: 'urgent' } = {
-          // A fixed-width index keeps the string order and the numeric order identical, which is
-          // what `order_key`'s lexicographic sort needs.
-          orderKey: `p${String(index).padStart(4, '0')}`,
-        }
-        if (id === plan.output.focusId && card.priority !== 'urgent') patch.priority = 'urgent'
-        return patchCard.mutateAsync({ id, patch })
-      }),
-    )
+    try {
+      await Promise.all(
+        projectPlanRanks(openObjective, ordered).map(({ id, orderKey }) =>
+          patchCard.mutateAsync({ id, patch: { orderKey } }),
+        ),
+      )
+    } catch {
+      return
+    }
+    const focusId = plan.output.focusId
+    if (
+      focusId &&
+      byId.has(focusId) &&
+      !focusList.data?.items.some((pin) => pin.cardId === focusId)
+    ) {
+      try {
+        await addFocus.mutateAsync(focusId)
+      } catch {
+        toast.error(t('work.focus.failed'))
+      }
+    }
     toast(t('projects.ai.planApplied'))
     setPlan(null)
     planAi.reset()
@@ -291,6 +309,7 @@ export default function ProjectPageScreen() {
         locale,
         scope: 'project',
         window: 'week',
+        projectId: project.id,
         subjectName: project.title,
         viewerName: t('projects.ai.viewerYou'),
         period: {
@@ -601,6 +620,7 @@ export default function ProjectPageScreen() {
                 acceptLabel={t('projects.ai.applyPlan')}
                 editLabel={t('work.ai.edit')}
                 {...(plan ? { meta: plan.meta } : {})}
+                readOnly={openObjective.some((c) => c.canEdit === false)}
                 onAccept={() => void acceptPlan()}
                 // Edit opens the focus card so the person can adjust it before the plan lands --
                 // v1.0's Edit discarded the answer, which is what Discard already did.

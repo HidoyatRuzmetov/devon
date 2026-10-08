@@ -22,7 +22,14 @@ export function comparisonScope(question: string): ComparisonScope | null {
       text,
     )
   if (excludesGroups) return 'individual'
-  if (individuals && groups) return 'all'
+  if (individuals && groups) {
+    // People also call standalone work an "individual project". That phrase does not request
+    // group comparisons; an explicit group or a second project category does.
+    const separateGroups = /group|team|guruh|jamoa|гуруҳ|жамоа|групп|команд/.test(text)
+    const secondCategory =
+      /(?:and|va|и)\s+(?:group\s+)?(?:projects|loyihalar|лойиҳалар|проект)/.test(text)
+    return separateGroups || secondCategory ? 'all' : 'individual'
+  }
   if (individuals) return 'individual'
   if (groups) return 'projects'
   return /duplicat|repetitiv|overlap|takror|bir\s+xil|такрор|бир\s+хил|дублир|повтор|одинаков|same\s+(work|thing)/.test(

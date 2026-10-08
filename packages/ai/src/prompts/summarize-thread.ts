@@ -26,6 +26,7 @@ export const summarizeThreadInputSchema = z.object({
     title: z.string().min(1).max(500),
   }),
   viewerName: z.string().min(1).max(200),
+  commentsTruncated: z.boolean().default(false),
   comments: z
     .array(
       z.object({
@@ -86,6 +87,9 @@ The only author names that exist in this thread: ${authors.join(', ')}.`,
       `forViewer: one sentence naming what ${input.viewerName} is expected to do next, or an empty string if nothing is.`,
       'Order every array by the createdAt of the comment it cites.',
       'Never summarise mood or tone. Never editorialise. Never say who was right.',
+      input.commentsTruncated
+        ? 'Only the recent part of this thread was supplied. Limit claims to these comments; start forViewer with a short notice that this is a summary of recent comments, and do not claim that earlier questions remain unanswered.'
+        : 'Read all supplied comments before deciding that a question remains open.',
     ],
     constraints: [
       languageConstraint(input.locale),

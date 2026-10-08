@@ -2553,7 +2553,7 @@
     "items": {
       "start": {
         "q": "Men xodimman. Nimadan boshlayman?",
-        "a": "Bosh sahifadan boshlang va bugun bajaradigan bitta vazifani tanlang. Ishlar boʻlimida Mening vazifalarim orqali sizga biriktirilgan ishlarni koʻring. Kartochkani ochib, talab va muddatni tekshiring. Yordam kerak boʻlsa, izoh yozing. Natija tayyor boʻlganda bajarilgan deb belgilang.\nShaxsiy maydon faqat sizga koʻrinadi: unda oʻz rejalaringiz va qaydlaringizni saqlang."
+        "a": "Bosh sahifadan boshlang va bugun bajaradigan bitta vazifani tanlang. Ishlar boʻlimida Mening vazifalarim orqali sizga biriktirilgan ishlarni koʻring. Kartochkani ochib, talab va muddatni tekshiring. Yordam kerak boʻlsa, izoh yozing. Natija tayyor boʻlganda bajarilgan deb belgilang.\nShaxsiy maydon faqat sizga koʻrinadi: unda oʻz rejalaringiz va qaydlaringizni saqlang.\nMuhim kartochkada Diqqatga qoʻshish amalini tanlang: u sizning doskangiz va Bosh sahifadagi diqqat roʻyxatining yuqorisiga chiqadi. Diqqat shaxsiy: hamkasblarning tartibi oʻzgarmaydi."
       },
       "head": {
         "q": "Men boshliqman. Ishlarni qanday boshqaraman?",
@@ -2569,7 +2569,7 @@
       },
       "projects": {
         "q": "Kartochka va guruh loyihasidan qachon foydalanaman? Ularni qanday oʻzgartiraman?",
-        "a": "Bitta ish uchun kartochka, umumiy natija uchun guruh loyihasi yarating. Hamkasblarni jalb qilish uchun kartochkadagi guruh loyihasiga oʻtkazish amalini tanlang. Loyihada ruxsatingiz boʻlsa maʼlumotlar va aʼzolarni tahrirlang. Faqat kerakli bosqichlarni qoʻshing; bosqich yonidagi Tahrirlash orqali nomi yoki muddatini oʻzgartirish, uni oʻchirish mumkin. Nazorat roʻyxatida band matnini bosib bajarilgan deb belgilang, qalam bilan tahrirlang, savatcha bilan oʻchiring."
+        "a": "Bitta ish uchun kartochka, umumiy natija uchun guruh loyihasi yarating. Hamkasblarni jalb qilish uchun kartochkadagi guruh loyihasiga oʻtkazish amalini tanlang. Loyihada ruxsatingiz boʻlsa maʼlumotlar va aʼzolarni tahrirlang. Faqat kerakli bosqichlarni qoʻshing; bosqich yonidagi Tahrirlash orqali nomi yoki muddatini oʻzgartirish, uni oʻchirish mumkin. Nazorat roʻyxatida band matnini bosib bajarilgan deb belgilang, qalam bilan tahrirlang, savatcha bilan oʻchiring.\nUstundagi kartochkalarni sudrab tartiblang; muddatlar oʻzgarmaydi. Kartochkani boshqa xodimga faqat uni boshqarish huquqingiz boʻlsa oʻtkaza olasiz."
       },
       "delete": {
         "q": "Bajarish, arxivlash va oʻchirishning farqi nima?",
@@ -2585,7 +2585,7 @@
       },
       "telegram": {
         "q": "Telegramni qanday ulayman va xabarnomalarni boshqaraman?",
-        "a": "Xabarnoma sozlamalarini oching va koʻrsatilgan havola orqali Telegram hisobingizni ulang; ulashni yakunlash uchun botni ishga tushiring. Qaysi xabarlarni olishni va tinch vaqtni tanlang. Boshliq Telegram sozlamalaridan guruhni ulashi mumkin.\nUlash havolasi yoʻq yoki xabar kelmayotgan boʻlsa, superadmindan bot sozlamalarini tekshirishni soʻrang. Serverda token borligi shaxsiy hisobingiz ulanganini anglatmaydi."
+        "a": "Xabarnoma sozlamalarini oching va koʻrsatilgan havola orqali Telegram hisobingizni ulang; ulashni yakunlash uchun botni ishga tushiring. Qaysi xabarlarni olishni va tinch vaqtni tanlang. Boshliq Telegram sozlamalaridan guruhni ulashi mumkin.\nUlash havolasi yoʻq yoki xabar kelmayotgan boʻlsa, superadmindan bot sozlamalarini tekshirishni soʻrang. Serverda token borligi shaxsiy hisobingiz ulanganini anglatmaydi.\nSaytdagi xabarnomalar qutisi xabarlarni doim saqlaydi. Telegram xabarlarni darhol yuborishi mumkin; umumiy hisobot uchun har kuni, har hafta yoki oʻchirilgan rejimini tanlang. Email orqali yuborish mavjud emas."
       },
       "ai": {
         "q": "AIʼdan qanday foydalanaman? Ishlamasa nima qilaman?",
@@ -2741,7 +2741,8 @@
       "saveFailed": "Saqlab boʻlmadi. Oldingi qiymat qaytdi.",
       "editChecklistItem": "Bandni tahrirlash",
       "saveChecklistItem": "Bandni saqlash",
-      "cancelChecklistEdit": "Tahrirni bekor qilish"
+      "cancelChecklistEdit": "Tahrirni bekor qilish",
+      "assigneeUnavailable": "Avvalgi ijrochi boshqarmada faol emas"
     },
     "priority": {
       "none": "Belgilanmagan",
@@ -3271,7 +3272,8 @@
         "copy": "Havolani nusxalash"
       },
       "save": "Saqlash",
-      "saved": "Saqlandi"
+      "saved": "Saqlandi",
+      "alwaysOn": "Doim yoqilgan"
     }
   },
   "integrationSetup": {

@@ -45,7 +45,7 @@ export const deadlineRiskCardSchema = z.object({
   blockedByTitles: z.array(z.string().min(1).max(500)).max(10).default([]),
   /** How many of this assignee's last ten closed cards slipped. Raises urgency; never becomes a
    * statement about the person. */
-  similarSlippedCount: z.number().int().min(0).max(10).default(0),
+  similarSlippedCount: z.number().int().min(0).max(10).nullable().default(null),
 })
 
 export const deadlineRiskInputSchema = z.object({
@@ -92,6 +92,7 @@ function systemPrompt(input: DeadlineRiskInput): string {
       'actionLabel is the button the person will press, phrased as an imperative with the concrete value in it ("Muddatni 15-sentabrga koʻchirish").',
       'When riskLevel is "none", actionKind must be "none" and the explanation simply says the item is on track.',
       'Never blame a person. Describe the state of the work, never the character or diligence of whoever it is assigned to.',
+      'similarSlippedCount=null means no historical slip data was supplied. Do not infer that there were no past slips or change urgency based on missing history.',
     ],
     constraints: [
       languageConstraint(input.locale),

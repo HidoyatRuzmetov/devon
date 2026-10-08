@@ -45,6 +45,11 @@ restore_manifest_on_failure() {
       echo "[deploy] ERROR: could not restore previous Compose manifest; operator repair required" >&2
     fi
   fi
+  if [ "$code" -ne 0 ] && [ -f "$ROOT/infra/.previous-Caddyfile" ]; then
+    if ! cp -- "$ROOT/infra/.previous-Caddyfile" "$ROOT/infra/Caddyfile"; then
+      echo "[deploy] ERROR: could not restore previous proxy configuration" >&2
+    fi
+  fi
   exit "$code"
 }
 trap restore_manifest_on_failure EXIT
@@ -137,10 +142,16 @@ rollback_images() {
   echo "[deploy] rolling back images to ${PREVIOUS_RELEASE_SHA:-previous release}" >&2
   export DEVON_API_IMAGE="$PREVIOUS_API_IMAGE"
   export DEVON_WEB_IMAGE="$PREVIOUS_WEB_IMAGE"
+  if [ -f "$ROOT/infra/.previous-Caddyfile" ]; then
+    cp -- "$ROOT/infra/.previous-Caddyfile" "$ROOT/infra/Caddyfile"
+  fi
   if [ -f "$ROOT/infra/.previous-docker-compose.prod.yml" ]; then
     COMPOSE=(docker compose --env-file "$ROOT/.env" -f "$ROOT/infra/.previous-docker-compose.prod.yml" --profile clamav --profile centrifugo)
   fi
   "${COMPOSE[@]}" up -d --no-build --wait --wait-timeout 600 api web caddy
+  # A file bind mount can retain an old inode after extraction/replacement. Recreate only the
+  # proxy so it certainly loads the restored file, preserving its certificate volumes.
+  "${COMPOSE[@]}" up -d --no-build --no-deps --force-recreate --wait --wait-timeout 600 caddy
   wait_ready
 }
 
@@ -165,6 +176,14 @@ echo "[deploy] rolling out API, web, and reverse proxy"
 # The API process already runs the durable background workers. The separate worker service is not
 # started on this 8 GB single-server deployment, avoiding a duplicate HTTP process and worker loops.
 if ! "${COMPOSE[@]}" up -d --no-build --wait --wait-timeout 600 api web caddy; then
+  rollback_images || true
+  exit 1
+fi
+
+# Compose does not restart a service when only a bind-mounted configuration file changes.
+# Without this, a successful release could keep the old /realtime route indefinitely.
+if ! "${COMPOSE[@]}" up -d --no-build --no-deps --force-recreate --wait --wait-timeout 600 caddy; then
+  echo "[deploy] reverse proxy configuration rollout failed" >&2
   rollback_images || true
   exit 1
 fi

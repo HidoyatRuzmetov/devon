@@ -65,11 +65,14 @@ async function skipIfMaintenance(log: FastifyBaseLogger, jobName: string): Promi
 async function runReminderDue(log: FastifyBaseLogger): Promise<void> {
   if (await skipIfMaintenance(log, QUEUE_REMINDER_DUE)) return
   const departmentIds = await listAllDepartmentIds()
+  const visitedUsers = new Set<string>()
   for (let d = 0; d < departmentIds.length; d += 1) {
     // nosemgrep: query-in-loop -- see this file's header comment above.
     const memberIds = await listActiveMemberUserIds(departmentIds[d]!)
     for (let m = 0; m < memberIds.length; m += 1) {
       const userId = memberIds[m]!
+      if (visitedUsers.has(userId)) continue
+      visitedUsers.add(userId)
       // nosemgrep: query-in-loop -- see this file's header comment above.
       const pending = await listDueNotificationsNeedingTelegram(userId)
       for (let p = 0; p < pending.length; p += 1) {
@@ -82,31 +85,39 @@ async function runReminderDue(log: FastifyBaseLogger): Promise<void> {
 
 async function runDigestPersonal(log: FastifyBaseLogger): Promise<void> {
   if (await skipIfMaintenance(log, QUEUE_DIGEST_PERSONAL)) return
+  const friday =
+    new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short' }).format(new Date()) ===
+    'Fri'
   const departmentIds = await listAllDepartmentIds()
+  const visitedUsers = new Set<string>()
   for (let d = 0; d < departmentIds.length; d += 1) {
     const departmentId = departmentIds[d]!
     // nosemgrep: query-in-loop -- see this file's header comment above.
     const memberIds = await listActiveMemberUserIds(departmentId)
     for (let m = 0; m < memberIds.length; m += 1) {
       const userId = memberIds[m]!
+      if (visitedUsers.has(userId)) continue
+      visitedUsers.add(userId)
       // nosemgrep: query-in-loop -- see this file's header comment above.
       const prefs = await getPrefs(userId)
       const digestPref = prefs.find((p) => p.reason === 'digest' && p.channel === 'telegram')
-      if (!digestPref?.enabled || digestPref.digestMode !== 'daily') continue
+      const frequency = digestPref?.digestMode
+      if (!digestPref?.enabled || (frequency !== 'daily' && !(frequency === 'weekly' && friday)))
+        continue
       // nosemgrep: query-in-loop -- see this file's header comment above.
       const counts = await unreadCountsByReason(userId)
       const total = Object.values(counts).reduce((a, b) => a + (b ?? 0), 0)
       if (total === 0) continue
       // SPEC §11: the copy comes from the registry's own builders, so the digest is written in the
       // same four locales, with the same conventions, as every event-driven notification.
-      const digest = personalDigestText(counts)
+      const digest = personalDigestText(counts, frequency)
       // nosemgrep: query-in-loop -- see this file's header comment above.
       await notifyUser(log, {
         userId,
-        type: 'notifications.digest.daily',
+        type: `notifications.digest.${frequency}`,
         reason: 'digest',
         subjectType: 'digest',
-        subjectId: `daily-${new Date().toISOString().slice(0, 10)}`,
+        subjectId: `${frequency}-${new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}`,
         departmentId,
         title: digest.title,
         body: digest.body,
@@ -131,7 +142,7 @@ async function runDigestDepartment(log: FastifyBaseLogger): Promise<void> {
     const totals: ReasonCounts = {}
     for (let m = 0; m < memberIds.length; m += 1) {
       // nosemgrep: query-in-loop -- see this file's header comment above.
-      const counts = await countsByReasonSince(memberIds[m]!, since)
+      const counts = await countsByReasonSince(memberIds[m]!, since, group.departmentId)
       for (const [reason, n] of Object.entries(counts)) {
         totals[reason as keyof ReasonCounts] =
           (totals[reason as keyof ReasonCounts] ?? 0) + (n ?? 0)

@@ -139,7 +139,8 @@
       "saveFailed": "Saqlab boʻlmadi. Oldingi qiymat qaytdi.",
       "editChecklistItem": "Bandni tahrirlash",
       "saveChecklistItem": "Bandni saqlash",
-      "cancelChecklistEdit": "Tahrirni bekor qilish"
+      "cancelChecklistEdit": "Tahrirni bekor qilish",
+      "assigneeUnavailable": "Avvalgi ijrochi boshqarmada faol emas"
     },
     "priority": {
       "none": "Belgilanmagan",

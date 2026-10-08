@@ -89,6 +89,8 @@ export const cardSchema = z.object({
   /** A9: true when *this viewer* has the card in their own focus list. Viewer-specific by design --
    * a focus list is personal and nobody else's pin ever shows here. */
   focusPinned: z.boolean().optional(),
+  focusPosition: z.number().int().nullable().optional(),
+  assigneeUnavailable: z.boolean().optional(),
 })
 export type Card = z.infer<typeof cardSchema>
 
@@ -144,7 +146,11 @@ export const boardColumnSchema = z.object({
 })
 export type BoardColumn = z.infer<typeof boardColumnSchema>
 
-export const labelSchema = z.object({ id: z.string(), name: z.string(), colour: z.string() })
+export const labelSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  colour: z.string(),
+})
 export type Label = z.infer<typeof labelSchema>
 
 export const boardSchema = z.object({
@@ -276,6 +282,23 @@ export function patchCard(
   )
 }
 
+export function moveCard(
+  id: string,
+  input: {
+    toUserId: string | null
+    targetCardId: string | null
+    edge: 'before' | 'after'
+  },
+  csrfToken: string,
+): Promise<Card> {
+  return apiClient.post(
+    `/api/v1/cards/${encodeURIComponent(id)}/move`,
+    input,
+    cardSchema,
+    csrfToken,
+  )
+}
+
 export async function deleteCard(id: string, csrfToken: string): Promise<void> {
   await apiClient.delete(`/api/v1/cards/${encodeURIComponent(id)}`, csrfToken)
 }
@@ -381,7 +404,12 @@ export function fetchSavedViews(): Promise<SavedView[]> {
 }
 
 export function createSavedView(
-  input: { name: string; filter: string; layout: SavedViewLayout; shared?: boolean },
+  input: {
+    name: string
+    filter: string
+    layout: SavedViewLayout
+    shared?: boolean
+  },
   csrfToken: string,
 ): Promise<SavedView> {
   return apiClient.post('/api/v1/views', input, savedViewSchema, csrfToken)

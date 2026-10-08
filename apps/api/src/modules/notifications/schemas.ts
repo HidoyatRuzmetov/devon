@@ -96,7 +96,34 @@ export const putPrefsSchema = z
       .array(
         prefRowSchema
           .omit({ digestMode: true })
-          .extend({ digestMode: digestModeSchema.optional() }),
+          .extend({ digestMode: digestModeSchema.optional() })
+          .superRefine((pref, ctx) => {
+            // Email has no delivery adapter. Keep historical rows for a future adapter, but do
+            // not accept a setting that cannot take effect. The in-app inbox is always available.
+            if (pref.channel === 'email')
+              ctx.addIssue({ code: 'custom', path: ['channel'], message: 'Channel unavailable' })
+            if (
+              pref.channel === 'inapp' &&
+              (!pref.enabled || (pref.digestMode && pref.digestMode !== 'instant'))
+            )
+              ctx.addIssue({
+                code: 'custom',
+                path: ['enabled'],
+                message: 'Inbox is always enabled',
+              })
+            if (
+              pref.channel === 'telegram' &&
+              pref.digestMode &&
+              (pref.reason === 'digest'
+                ? !['daily', 'weekly', 'off'].includes(pref.digestMode)
+                : pref.digestMode !== 'instant')
+            )
+              ctx.addIssue({
+                code: 'custom',
+                path: ['digestMode'],
+                message: 'Unsupported delivery frequency',
+              })
+          }),
       )
       .min(1)
       .max(64),

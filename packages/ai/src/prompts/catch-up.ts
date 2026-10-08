@@ -50,6 +50,7 @@ const activitySchema = z.object({
 export const catchUpInputSchema = z.object({
   locale: localeSchema,
   scope: z.enum(['person', 'department', 'project']),
+  privateWorkspace: z.boolean().default(false),
   window: z.enum(['since_last_visit', 'week']),
   /** The person, the department or the project this is about. */
   subjectName: z.string().min(1).max(300),
@@ -137,12 +138,12 @@ export const catchUpOutputSchema = z.object({
 export type CatchUpOutput = z.infer<typeof catchUpOutputSchema>
 
 const FEW_SHOT = `in : scope "department", window "week", subjectName "Raqamli xizmatlar boshqarmasi", locale uz-Latn,
-     counts {done 14, doneLastPeriod 11, created 9, overdue 3},
+     counts {done 14, doneLastPeriod 11, created 9, overdue 3}, done [{c3,"Choraklik hisobot",null,null,0,1}],
      overdue [{c9,"EGDI paketi","Nodira",2026-09-05,5,9}],
      loadPerPerson [{"Anvar",9,2},{"Nodira",4,1},{"Dilnoza",3,0}],
      dueThisWeek [{c21,"Sayt matni","Anvar",2026-09-16}]
 out: {"headline":"Oʻtgan hafta 14 ta vazifa yopildi — oldingi haftaga nisbatan uchtaga koʻp.",
- "wins":{"text":"Nodira choraklik hisobotni muddatida topshirdi.","citedIds":["c3","c7"]},
+ "wins":{"text":"Davrda 14 ta vazifa yopildi, jumladan choraklik hisobot.","citedIds":["c3"]},
  "risks":[{"cardId":"c9","severity":"high","text":"EGDI paketi 5 kun kechikdi va 9 kundan beri oʻzgarmagan."}],
  "overloaded":[{"name":"Anvar","openCount":9,"text":"Anvarda 9 ta ochiq vazifa bor — boʻlim oʻrtachasidan ikki baravar koʻp."}],
  "lookingAhead":{"text":"Shu hafta bitta muddat tugaydi: sayt matni, 16-sentabr.","citedIds":["c21"]},
@@ -183,6 +184,9 @@ function systemPrompt(input: CatchUpInput): string {
       'moreCount: how many relevant things you had to leave out of items. needsActionCount: how many of items require the reader to do something today.',
       'Every block with nothing real to say gets an empty text and an empty citedIds. Never pad. If every list is empty, say plainly that nothing happened and leave everything else empty.',
       'Never compute a percentage that is not derivable from counts.',
+      input.privateWorkspace
+        ? 'This is the viewer’s PRIVATE workspace. assignedToMe contains newly created personal tasks, not assignments from colleagues. Describe them as new tasks, never claim somebody else assigned them, and never mention coworkers or department activity.'
+        : 'Use only this supplied scope. A project recap describes the project; never say all of its tasks are assigned to the viewer.',
     ],
     constraints: [
       languageConstraint(input.locale),
@@ -224,7 +228,7 @@ const PHRASES: Record<Locale, Phrases> = {
     headlinePerson: (o, a, m) =>
       `Sizni kutmoqda: ${o} ta kechikkan vazifa, ${a} ta yangi topshiriq, ${m} ta murojaat.`,
     nothing: 'Bu davrda hech qanday oʻzgarish boʻlmadi.',
-    win: (count) => `${count} ta vazifa muddatida yopildi.`,
+    win: (count) => `${count} ta vazifa yopildi.`,
     risk: (title, days, stale) =>
       `${title} ${days} kun kechikdi va ${stale} kundan beri oʻzgarmagan.`,
     overload: (name, open) => `${name}da ${open} ta ochiq vazifa bor — boʻlimdagi eng katta yuk.`,
@@ -245,7 +249,7 @@ const PHRASES: Record<Locale, Phrases> = {
     headlinePerson: (o, a, m) =>
       `Сизни кутмоқда: ${o} та кечиккан вазифа, ${a} та янги топшириқ, ${m} та мурожаат.`,
     nothing: 'Бу даврда ҳеч қандай ўзгариш бўлмади.',
-    win: (count) => `${count} та вазифа муддатида ёпилди.`,
+    win: (count) => `${count} та вазифа ёпилди.`,
     risk: (title, days, stale) =>
       `${title} ${days} кун кечикди ва ${stale} кундан бери ўзгармаган.`,
     overload: (name, open) => `${name}да ${open} та очиқ вазифа бор — бўлимдаги энг катта юк.`,
@@ -266,7 +270,7 @@ const PHRASES: Record<Locale, Phrases> = {
     headlinePerson: (o, a, m) =>
       `Вас ждут: ${o} просроченных задач, ${a} новых поручений, ${m} обращений.`,
     nothing: 'За этот период ничего не изменилось.',
-    win: (count) => `${count} задач(и) закрыты в срок.`,
+    win: (count) => `${count} задач(и) закрыты.`,
     risk: (title, days, stale) => `«${title}» просрочена на ${days} дн. и не менялась ${stale} дн.`,
     overload: (name, open) => `У ${name} ${open} открытых задач — самая большая нагрузка в отделе.`,
     ahead: (count) => `В ближайшие дни ${count} срок(ов) и мероприятий.`,
@@ -286,7 +290,7 @@ const PHRASES: Record<Locale, Phrases> = {
     headlinePerson: (o, a, m) =>
       `Waiting for you: ${o} overdue, ${a} new assignments, ${m} mentions.`,
     nothing: 'Nothing changed in this period.',
-    win: (count) => `${count} item(s) were closed on time.`,
+    win: (count) => `${count} item(s) were closed.`,
     risk: (title, days, stale) =>
       `"${title}" is ${days} days late and unchanged for ${stale} days.`,
     overload: (name, open) => `${name} carries ${open} open items — the heaviest load in the unit.`,
@@ -373,7 +377,9 @@ function simulate(input: CatchUpInput): CatchUpOutput {
       items.push({
         kind: 'assigned',
         refId: item.id,
-        text: p.itemAssigned(item.title, item.assigneeName ?? input.subjectName),
+        text: input.privateWorkspace
+          ? item.title
+          : p.itemAssigned(item.title, item.assigneeName ?? input.subjectName),
         needsAction: true,
       })
     }
@@ -407,11 +413,13 @@ function simulate(input: CatchUpInput): CatchUpOutput {
   return {
     headline: isDepartment
       ? p.headlineDept(input.counts.done, input.counts.done - input.counts.doneLastPeriod)
-      : p.headlinePerson(input.overdue.length, input.assignedToMe.length, input.mentions.length),
+      : input.privateWorkspace
+        ? p.headlineDept(input.counts.done, input.counts.done - input.counts.doneLastPeriod)
+        : p.headlinePerson(input.overdue.length, input.assignedToMe.length, input.mentions.length),
     wins:
       input.done.length > 0
         ? {
-            text: p.win(input.done.length),
+            text: p.win(input.counts.done),
             citedIds: input.done.slice(0, 6).map((item) => item.id),
           }
         : { text: '', citedIds: [] },

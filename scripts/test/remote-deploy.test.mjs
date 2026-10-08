@@ -26,8 +26,10 @@ function deploy(scenario, { previousManifest = true, dotenv } = {}) {
   )
   writeFileSync(join(dir, '.deployed-images.env'), previous)
   writeFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'candidate manifest')
+  writeFileSync(join(dir, 'infra/Caddyfile'), 'candidate proxy')
   if (previousManifest) {
     writeFileSync(join(dir, 'infra/.previous-docker-compose.prod.yml'), 'previous manifest')
+    writeFileSync(join(dir, 'infra/.previous-Caddyfile'), 'previous proxy')
   }
   writeFileSync(
     join(dir, 'deploy.sh'),
@@ -64,6 +66,9 @@ case "$name" in
       [ "$SCENARIO" != migration-failed ]
     elif [[ "$*" == *' api web caddy' ]]; then
       [ "$SCENARIO" != rollout-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ]
+    elif [[ "$*" == *'--force-recreate'* ]]; then
+      cat "$TEST_ROOT/infra/Caddyfile" > "$TEST_ROOT/proxy-loaded"
+      [ "$SCENARIO" != proxy-failed ] || [ "\${DEVON_API_IMAGE:-}" = old-api ]
     fi ;;
 esac
 `
@@ -82,6 +87,10 @@ esac
       calls: readFileSync(join(dir, 'calls'), 'utf8'),
       state: readFileSync(join(dir, '.deployed-images.env'), 'utf8'),
       manifest: readFileSync(join(dir, 'infra/docker-compose.prod.yml'), 'utf8'),
+      proxy: readFileSync(join(dir, 'infra/Caddyfile'), 'utf8'),
+      proxyLoaded: existsSync(join(dir, 'proxy-loaded'))
+        ? readFileSync(join(dir, 'proxy-loaded'), 'utf8')
+        : null,
       migrationUrl: existsSync(join(dir, 'migration-url'))
         ? readFileSync(join(dir, 'migration-url'), 'utf8')
         : null,
@@ -103,6 +112,8 @@ test('successful backup permits migration, readiness and atomic release recordin
   assert.match(result.state, /DEVON_API_IMAGE=new-api/)
   assert.match(result.state, new RegExp(sha))
   assert.equal(result.manifest, 'candidate manifest')
+  assert.equal(result.proxyLoaded, 'candidate proxy')
+  assert.ok(result.calls.indexOf('--force-recreate') > result.calls.indexOf(' api web caddy'))
 })
 
 for (const scenario of ['backup-failed', 'backup-start-failed', 'stopped', 'orphan-volume']) {
@@ -131,13 +142,15 @@ test('migration failure leaves previous application and release state untouched'
   assert.equal(result.manifest, 'previous manifest')
 })
 
-for (const scenario of ['rollout-failed', 'readiness-failed']) {
+for (const scenario of ['rollout-failed', 'readiness-failed', 'proxy-failed']) {
   test(`${scenario} restores previous images and compose without marking new release successful`, () => {
     const result = deploy(scenario)
     assert.notEqual(result.status, 0)
     assert.match(result.calls, /previous-docker-compose.prod.yml.*api web caddy image=old-api/)
     assert.equal(result.state, previous)
     assert.equal(result.manifest, 'previous manifest')
+    assert.equal(result.proxy, 'previous proxy')
+    assert.equal(result.proxyLoaded, 'previous proxy')
   })
 }
 

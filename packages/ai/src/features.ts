@@ -233,7 +233,11 @@ ${CALL_ONCE_RULE}`,
   if (!result.ok) return result
   // Orthography is the last thing that happens, after validation and after any repair: every string
   // a caller receives has been through it, and no id ever has (see `uz.ts`'s `ID_BEARING_KEY`).
-  return input.locale === 'uz-Latn' ? { ...result, data: normalizeUzLatnDeep(result.data) } : result
+  // Translation has a separate target language and byte-preserved names/codes. Its validator
+  // normalizes only target-language prose; the reader's UI language must never rewrite it.
+  return input.locale === 'uz-Latn' && options.feature !== 'translate'
+    ? { ...result, data: normalizeUzLatnDeep(result.data) }
+    : result
 }
 
 function lastUserContent(messages: readonly ChatMessage[]): string | null {

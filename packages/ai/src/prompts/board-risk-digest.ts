@@ -36,7 +36,7 @@ export const boardRiskDigestInputSchema = z.object({
         blocked: z.boolean().default(false),
       }),
     )
-    .min(1)
+    .min(0)
     .max(40),
   /** Open items per person, so the digest can say *why* a card is stuck rather than only that it is. */
   loadPerPerson: z
@@ -95,6 +95,7 @@ function systemPrompt(input: BoardRiskDigestInput): string {
       'headline: one sentence naming how many items are at risk and, when it is true, the single fact behind it ("ikkitasi Anvarda").',
       'pressurePoints: at most two people, from loadPerPerson only, whose open count explains the pattern. Phrase it as workload. Never as performance, diligence or ability.',
       'Items you do not rank are simply absent — never pad the list to reach topN.',
+      'An empty cards list means there are currently no at-risk items: return entries [] and pressurePoints [], and say that plainly in the headline.',
     ],
     constraints: [
       languageConstraint(input.locale),

@@ -1,8 +1,8 @@
 // Fan-out from "a notification row now exists" to "the channels its owner asked for" (TECH-SPEC §7:
 // inapp / telegram / email, per-type preferences, quiet hours). `inapp` needs no delivery step at all
 // (the row itself *is* the inapp delivery -- the inbox reads `app.notifications` directly); this file
-// is only about the Telegram leg today (email is a preference option with no transport wired up yet --
-// TECH-SPEC does not ask for SMTP in this module, so `email` always records `skipped`).
+// implements Telegram delivery. Email has no adapter and cannot be configured in the preferences
+// API/UI; historical email preference rows remain stored for compatibility.
 import type { FastifyBaseLogger } from 'fastify'
 import {
   getDepartmentQuietDefault,
@@ -53,7 +53,14 @@ export async function deliverNotification(
     const telegramPref = prefs.find(
       (p) => p.reason === notification.reason && p.channel === 'telegram',
     )
-    if (!telegramPref?.enabled || telegramPref.digestMode !== 'instant') return
+    const scheduledDigest =
+      notification.reason === 'digest' &&
+      ((notification.type === 'notifications.digest.daily' &&
+        telegramPref?.digestMode === 'daily') ||
+        (notification.type === 'notifications.digest.weekly' &&
+          telegramPref?.digestMode === 'weekly'))
+    if (!telegramPref?.enabled || (!scheduledDigest && telegramPref.digestMode !== 'instant'))
+      return
 
     const chatId = await resolveTelegramChatId(userId)
     if (!chatId) return // not linked -- nothing to deliver, and nothing to record (no delivery was attempted)

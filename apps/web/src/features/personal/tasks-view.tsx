@@ -273,6 +273,7 @@ export function TasksView() {
       {
         locale,
         cardTitle: node.title,
+        taskId: node.id,
         cardDescription: node.notes ?? null,
         existingSubtasks: node.children.map((c) => c.title),
         labels: [],

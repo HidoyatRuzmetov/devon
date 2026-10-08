@@ -2553,7 +2553,7 @@
     "items": {
       "start": {
         "q": "I am an employee. Where should I start?",
-        "a": "Start with Home and choose one card for today. In Work, use Mine to see what is assigned to you. Open a card to read the request, check its deadline and add a comment when you need help. Mark it done when the result is ready.\nYour Personal workspace is private: use it for your own plans and notes."
+        "a": "Start with Home and choose one card for today. In Work, use Mine to see what is assigned to you. Open a card to read the request, check its deadline and add a comment when you need help. Mark it done when the result is ready.\nYour Personal workspace is private: use it for your own plans and notes.\nUse Add to focus on a card to bring it to the top of your board and Home focus list. Focus is personal; colleagues keep their own order."
       },
       "head": {
         "q": "I am a department head. How do I keep work moving?",
@@ -2569,7 +2569,7 @@
       },
       "projects": {
         "q": "When should I use a card or a group project, and how do I change it?",
-        "a": "Use a card for one piece of work, or a group project for a shared outcome. To bring in colleagues, open your card and choose the group-project action. In a project, edit its details and members when you have permission. Add only the milestones you need; Edit beside a milestone lets you change its name or date, or delete it. In a checklist, click the item text to mark it done, the pencil to edit it, or the bin to delete it."
+        "a": "Use a card for one piece of work, or a group project for a shared outcome. To bring in colleagues, open your card and choose the group-project action. In a project, edit its details and members when you have permission. Add only the milestones you need; Edit beside a milestone lets you change its name or date, or delete it. In a checklist, click the item text to mark it done, the pencil to edit it, or the bin to delete it.\nDrag cards within a column to put them in your preferred order; deadlines stay unchanged. Move a card to another person only when you can manage it."
       },
       "delete": {
         "q": "What is the difference between finishing, archiving and deleting?",
@@ -2585,7 +2585,7 @@
       },
       "telegram": {
         "q": "How do I connect Telegram and control notifications?",
-        "a": "Open notification settings and connect your Telegram account using the link shown there; start the bot to finish linking. Choose which notifications you want and set quiet hours. A department head can connect a group from Telegram settings.\nIf no connection link is available or delivery fails, ask the superadmin to check the bot configuration. A token on the server alone does not connect your personal account."
+        "a": "Open notification settings and connect your Telegram account using the link shown there; start the bot to finish linking. Choose which notifications you want and set quiet hours. A department head can connect a group from Telegram settings.\nIf no connection link is available or delivery fails, ask the superadmin to check the bot configuration. A token on the server alone does not connect your personal account.\nThe website inbox always keeps your notifications. Telegram can deliver them immediately; choose daily, weekly or off for your digest. Email delivery is not available."
       },
       "ai": {
         "q": "How do I use AI, and what should I do if it fails?",
@@ -2741,7 +2741,8 @@
       "saveFailed": "Could not save it. The previous value is back.",
       "editChecklistItem": "Edit checklist item",
       "saveChecklistItem": "Save item",
-      "cancelChecklistEdit": "Cancel editing"
+      "cancelChecklistEdit": "Cancel editing",
+      "assigneeUnavailable": "Former assignee is no longer in this department"
     },
     "priority": {
       "none": "No priority",
@@ -3271,7 +3272,8 @@
         "copy": "Copy link"
       },
       "save": "Save",
-      "saved": "Preferences saved"
+      "saved": "Preferences saved",
+      "alwaysOn": "Always on"
     }
   },
   "integrationSetup": {

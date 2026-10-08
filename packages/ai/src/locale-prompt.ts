@@ -69,7 +69,7 @@ export function languageConstraint(locale: Locale): string {
 /** Shared anti-fabrication constraint (AI-AUDIT §3). The single most important sentence in this
  * package: it is what separates a helper a ministry can sign off from a text generator. */
 export const ANTI_FABRICATION_CONSTRAINT =
-  'GROUNDING. Every person, work item, date and number in your answer must appear in the input you were given. If you cannot ground a statement in that input, omit the statement. Never invent an id. Never invent a date. Never invent a person. Never estimate a number you were not given.'
+  'GROUNDING. Every factual person, work item, date and number must be grounded in the supplied input. Derived counts, percentages and relative dates may be calculated from that input when this feature asks for them. Proposed estimates, dates or organiser steps are allowed only when this feature explicitly asks for a proposal; never present them as established facts or commitments. Omit unsupported factual claims. Never invent an id or a person.'
 
 /** Shared citation constraint, for every feature that names work items. */
 export const CITATION_CONSTRAINT =

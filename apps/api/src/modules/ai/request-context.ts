@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
 import { quickAddInputSchema } from '@devon/ai'
 import { AiInputValidationError } from './errors.js'
+import { prepareLiveContext } from './live-context.js'
+import { prepareCatchUpContext } from './catch-up-context.js'
 
 /** Read current, permitted records at request time; never ask a head to prepare an AI snapshot.
  * Other helpers already supply bounded task/thread/selection payloads, which remain isolated. */
@@ -69,5 +71,6 @@ export async function prepareFeatureInput(
     )
     return { ...input, existing }
   }
-  return input
+  if (feature === 'catch_up') return prepareCatchUpContext(ctx, departmentId, input)
+  return prepareLiveContext(ctx, departmentId, feature, input)
 }

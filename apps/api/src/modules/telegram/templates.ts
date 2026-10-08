@@ -30,6 +30,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
       'Xush kelibsiz, {name}. Telegram hisobingiz ulandi — eslatmalar endi shu yerga keladi.',
     'link.expired': 'Ulash kodi eskirgan. Ilovadan yangi kod oling.',
     'link.already_used': 'Bu kod allaqachon ishlatilgan. Ilovadan yangi kod oling.',
+    'link.chat_in_use':
+      'Bu Telegram boshqa hisobga ulangan. Avval oʻsha hisobning Sozlamalar → Telegram boʻlimida ulanishni uzing, keyin qayta urinib koʻring.',
     'link.not_found': 'Bunday kod topilmadi. Kodni tekshirib, qaytadan urinib koʻring.',
     'unlinked.confirm': 'Telegram uzildi. Endi bu yerga eslatma kelmaydi.',
     'today.header': 'Bugungi eslatmalar:',
@@ -85,6 +87,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
       'Хуш келибсиз, {name}. Telegram ҳисобингиз уланди — эслатмалар энди шу ерга келади.',
     'link.expired': 'Улаш коди эскирган. Иловадан янги код олинг.',
     'link.already_used': 'Бу код аллақачон ишлатилган. Иловадан янги код олинг.',
+    'link.chat_in_use':
+      'Бу Telegram бошқа ҳисобга уланган. Аввал ўша ҳисобнинг Созламалар → Telegram бўлимида уланишни узинг, кейин қайта уриниб кўринг.',
     'link.not_found': 'Бундай код топилмади. Кодни текшириб, қайтадан уриниб кўринг.',
     'unlinked.confirm': 'Telegram узилди. Энди бу ерга эслатма келмайди.',
     'today.header': 'Бугунги эслатмалар:',
@@ -139,6 +143,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
       'Добро пожаловать, {name}! Ваш Telegram привязан. Теперь напоминания будут приходить сюда.',
     'link.expired': 'Код привязки устарел. Получите новый код в приложении.',
     'link.already_used': 'Этот код уже использован. Получите новый код в приложении.',
+    'link.chat_in_use':
+      'Этот Telegram подключён к другому аккаунту. Сначала отключите его в разделе Настройки → Telegram того аккаунта, затем повторите попытку.',
     'link.not_found': 'Такой код не найден. Проверьте код и попробуйте снова.',
     'unlinked.confirm': 'Привязка Telegram отменена. Уведомления сюда больше не будут приходить.',
     'today.header': 'Напоминания на сегодня:',
@@ -193,6 +199,8 @@ const STRINGS: Record<BotLocale, Record<string, string>> = {
     'link.success': 'Welcome, {name}! Your Telegram is linked. Reminders will now arrive here.',
     'link.expired': 'That linking code has expired. Get a new one from the app.',
     'link.already_used': 'That code has already been used. Get a new one from the app.',
+    'link.chat_in_use':
+      'This Telegram is linked to another account. Open Settings → Telegram in the linked account and disconnect it first, then try again.',
     'link.not_found': 'That code was not found. Check it and try again.',
     'unlinked.confirm': 'Telegram is now unlinked. Notifications will no longer arrive here.',
     'today.header': "Today's reminders:",
