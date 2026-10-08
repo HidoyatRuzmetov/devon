@@ -114,12 +114,14 @@
     },
     "settings": {
       "eyebrow": "Hisob",
-      "title": "Hisob sozlamalari",
-      "subtitle": "Profil, qurilmalar, ikki bosqichli tekshiruv va parol — hammasi shu yerda.",
+      "title": "Profil sozlamalari",
+      "subtitle": "Profil, til, koʻrinish, Telegram, bildirishnomalar va xavfsizlik shu yerda.",
       "subnavAria": "Sozlamalar boʻlimlari",
       "profile": "Profil",
       "security": "Xavfsizlik",
-      "dangerZone": "Xavfli amallar"
+      "dangerZone": "Xavfli amallar",
+      "appearance": "Til va koʻrinish",
+      "theme": "Koʻrinish"
     },
     "photo": {
       "title": "Profil surati",

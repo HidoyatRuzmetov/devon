@@ -44,7 +44,7 @@
       },
       "telegram": {
         "q": "How do I connect Telegram and control notifications?",
-        "a": "Open notification settings and connect your Telegram account using the link shown there; start the bot to finish linking. Choose which notifications you want and set quiet hours. A department head can connect a group from Telegram settings.\nIf no connection link is available or delivery fails, ask the superadmin to check the bot configuration. A token on the server alone does not connect your personal account.\nThe website inbox always keeps your notifications. Telegram can deliver them immediately; choose daily, weekly or off for your digest. Email delivery is not available."
+        "a": "Open Profile settings → Telegram. Get a connection code, then open the bot and send /start followed by that code. Codes expire, so get a new one if necessary. Choose alerts, summaries and quiet hours under Profile settings → Notification preferences. Department groups use a separate connection code; a personal connection does not connect a group."
       },
       "ai": {
         "q": "How do I use AI, and what should I do if it fails?",

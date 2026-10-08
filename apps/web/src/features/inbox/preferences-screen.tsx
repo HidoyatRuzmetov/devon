@@ -1,4 +1,4 @@
-// `/inbox/preferences` (this module's task: "preferences per type and channel ... quiet hours").
+// `/account/notifications` ("preferences per type and channel ... quiet hours").
 // Every toggle in the matrix saves itself the moment it changes (no separate Save button for a grid
 // of checkboxes -- CLAUDE.md "undo over confirm" generalises to "no confirm step for a reversible
 // flip"); quiet hours is the one sub-form with a real Save, because a half-typed time range is not
@@ -11,6 +11,7 @@ import { useMeQuery } from '../../lib/session.js'
 import { useDepartment } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
+import { SettingsNavigation } from '../accounts/settings-navigation.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import {
   isQuietHoursTooLoud,
@@ -407,16 +408,16 @@ export default function PreferencesScreen() {
   return (
     <div className="mx-auto flex max-w-200 flex-col gap-6">
       <PageHeader
-        eyebrow={t('inbox.eyebrow')}
+        eyebrow={t('accounts.settings.title')}
         title={t('inbox.preferences.title')}
         description={t('inbox.preferences.body')}
         actions={
-          <Button variant="secondary" onClick={() => navigate('/inbox/telegram')}>
+          <Button variant="secondary" onClick={() => navigate('/account/telegram')}>
             {t('telegram.title')}
           </Button>
         }
       />
-
+      <SettingsNavigation />
       <PrefsMatrixBody query={prefsQuery} />
 
       <QuietHoursCard departmentId={departmentId} />

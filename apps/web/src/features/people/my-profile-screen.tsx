@@ -55,7 +55,7 @@ export default function MyProfileScreen(): React.JSX.Element {
           href="/account#section-profile"
           className="mb-4 inline-flex text-small text-primary underline"
         >
-          {t('profileEdit.edit')}
+          {t('accounts.settings.title')}
         </RouterLink>
         <PersonPage userId="me" />
       </div>

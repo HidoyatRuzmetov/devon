@@ -44,7 +44,7 @@
       },
       "telegram": {
         "q": "Telegramni qanday ulayman va xabarnomalarni boshqaraman?",
-        "a": "Xabarnoma sozlamalarini oching va koʻrsatilgan havola orqali Telegram hisobingizni ulang; ulashni yakunlash uchun botni ishga tushiring. Qaysi xabarlarni olishni va tinch vaqtni tanlang. Boshliq Telegram sozlamalaridan guruhni ulashi mumkin.\nUlash havolasi yoʻq yoki xabar kelmayotgan boʻlsa, superadmindan bot sozlamalarini tekshirishni soʻrang. Serverda token borligi shaxsiy hisobingiz ulanganini anglatmaydi.\nSaytdagi xabarnomalar qutisi xabarlarni doim saqlaydi. Telegram xabarlarni darhol yuborishi mumkin; umumiy hisobot uchun har kuni, har hafta yoki oʻchirilgan rejimini tanlang. Email orqali yuborish mavjud emas."
+        "a": "Profil sozlamalari → Telegram boʻlimini oching. Ulanish kodini oling, botni ochib /start va kodni yuboring. Kod muddati tugasa, yangisini oling. Xabarlar, xulosalar va sokin vaqt Profil sozlamalari → Bildirishnoma sozlamalarida tanlanadi. Boshqarma guruhi alohida kod bilan ulanadi; shaxsiy ulanish guruhni ulamaydi."
       },
       "ai": {
         "q": "AIʼdan qanday foydalanaman? Ishlamasa nima qilaman?",

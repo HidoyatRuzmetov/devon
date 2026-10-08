@@ -662,11 +662,11 @@ export default function InboxScreen() {
               <CalendarDays className="size-4" aria-hidden="true" />
               {t('inbox.calendarLink')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/inbox/preferences')}>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/account/notifications')}>
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               {t('inbox.preferences.title')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => navigate('/inbox/telegram')}>
+            <Button variant="secondary" size="sm" onClick={() => navigate('/account/telegram')}>
               {t('telegram.title')}
             </Button>
           </>

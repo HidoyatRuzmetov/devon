@@ -1,6 +1,5 @@
-// Inbox + Telegram feature manifest (MODULE-GUIDE.md "Web features"). Three exact-path routes: the
-// inbox itself (sidebar entry, reached from anywhere via the shell's search/command overlay too),
-// and two settings screens reached from links on the inbox screen and from the command palette.
+// Inbox and its delivery settings. Settings live under /account; the old inbox paths redirect
+// existing bookmarks and notification links to the canonical profile-settings pages.
 import * as React from 'react'
 import { Inbox, Send, SlidersHorizontal } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
@@ -10,6 +9,7 @@ import { prefetchNotifications, useNotificationsQuery } from './hooks.js'
 const InboxScreen = React.lazy(() => import('./inbox-screen.js'))
 const PreferencesScreen = React.lazy(() => import('./preferences-screen.js'))
 const TelegramScreen = React.lazy(() => import('./telegram-screen.js'))
+const LegacySettingsScreen = React.lazy(() => import('./legacy-settings-screen.js'))
 
 const manifest: FeatureManifest = {
   name: 'inbox',
@@ -17,10 +17,16 @@ const manifest: FeatureManifest = {
     { path: '/inbox', component: InboxScreen, titleKey: 'inbox.title' },
     {
       path: '/inbox/preferences',
+      component: LegacySettingsScreen,
+      titleKey: 'inbox.preferences.title',
+    },
+    { path: '/inbox/telegram', component: LegacySettingsScreen, titleKey: 'telegram.title' },
+    {
+      path: '/account/notifications',
       component: PreferencesScreen,
       titleKey: 'inbox.preferences.title',
     },
-    { path: '/inbox/telegram', component: TelegramScreen, titleKey: 'telegram.title' },
+    { path: '/account/telegram', component: TelegramScreen, titleKey: 'telegram.title' },
   ],
   // H5.2 "prefetch on hover/focus": warms the inbox tab's default query before the click.
   sidebar: [
@@ -44,10 +50,10 @@ const manifest: FeatureManifest = {
     {
       id: 'inbox.preferences',
       labelKey: 'inbox.preferences.title',
-      path: '/inbox/preferences',
+      path: '/account/notifications',
       icon: SlidersHorizontal,
     },
-    { id: 'inbox.telegram', labelKey: 'telegram.title', path: '/inbox/telegram', icon: Send },
+    { id: 'inbox.telegram', labelKey: 'telegram.title', path: '/account/telegram', icon: Send },
   ],
 }
 

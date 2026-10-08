@@ -12,6 +12,7 @@ import {
 test('@flow notification preferences expose working channels and save consistently for head and member', async ({
   browser,
 }, info) => {
+  test.setTimeout(90_000)
   const admin = await newFlowContext(browser)
   await loginAsSuperAdmin(admin)
   const head = await newFlowContext(browser)
@@ -35,7 +36,39 @@ test('@flow notification preferences expose working channels and save consistent
   for (let i = 0; i < users.length; i += 1) {
     const [role, context] = users[i]!
     const page = await context.newPage()
+    await page.goto('/account')
+    await expect(
+      page.getByRole('heading', { name: 'Profil sozlamalari', exact: true }),
+    ).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Telegram', exact: true })).toBeVisible()
+    const theme = page.getByRole('combobox', { name: 'Koʻrinish', exact: true })
+    await theme.selectOption('dark')
+    await page.reload()
+    await expect(theme).toHaveValue('dark')
+    await theme.selectOption('light')
+    const language = page.getByRole('combobox', { name: 'Til', exact: true })
+    await language.selectOption('en')
+    await expect(page.getByRole('heading', { name: 'Profile settings', exact: true })).toBeVisible()
+    await page.getByRole('combobox', { name: 'Language', exact: true }).selectOption('uz-Latn')
+    await expect(
+      page.getByRole('heading', { name: 'Profil sozlamalari', exact: true }),
+    ).toBeVisible()
+    await page.setViewportSize({ width: 390, height: 844 })
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+    ).toBe(true)
+    await page.screenshot({ path: info.outputPath(`${role}-profile-settings.png`), fullPage: true })
+    await page.getByRole('link', { name: 'Telegram', exact: true }).click()
+    await expect(page).toHaveURL(/\/account\/telegram$/)
+    await expect(page.getByRole('heading', { name: 'Telegram', exact: true })).toBeVisible()
+    await page.getByRole('link', { name: 'Bildirishnoma sozlamalari', exact: true }).click()
+    await expect(page).toHaveURL(/\/account\/notifications$/)
+    await expect(page.getByRole('link', { name: 'Profil sozlamalari', exact: true })).toBeVisible()
+    // Old inbox bookmarks stay usable and resolve to the same settings surface.
+    await page.goto('/inbox/telegram')
+    await expect(page).toHaveURL(/\/account\/telegram$/)
     await page.goto('/inbox/preferences')
+    await expect(page).toHaveURL(/\/account\/notifications$/)
     await expect(page.getByRole('heading', { name: 'Bildirishnoma sozlamalari' })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'E-pochta' })).toHaveCount(0)
     await expect(page.getByText('Doim yoqilgan', { exact: true })).toHaveCount(10)

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   ClipboardList,
+  Palette,
   Image as ImageIcon,
   KeyRound,
   Monitor,
@@ -55,6 +56,8 @@ import { MyFieldsSection } from '../fields/components/my-fields-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
 import { ProfileSection } from './profile-section.js'
+import { AppearanceSection } from './appearance-section.js'
+import { SettingsNavigation } from './settings-navigation.js'
 
 /** Every user eventually opens this list (item handoff), and a real department can rack up dozens
  * of stale sessions -- five is enough to answer "is this me right now?" without turning the account
@@ -657,6 +660,7 @@ const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNav
     items: [
       { id: 'section-profile', labelKey: 'profileEdit.heading', icon: ClipboardList },
       { id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon },
+      { id: 'section-appearance', labelKey: 'accounts.settings.appearance', icon: Palette },
       // v1.1 SPEC §5: the boshqarma's own columns about this person. `id: 'fields'` is deliberate --
       // it is the anchor `/account#fields` that a fill request's inbox row and its Telegram
       // "Toʻldirish" button both open.
@@ -743,12 +747,14 @@ export default function AccountSettingsScreen() {
         title={t('accounts.settings.title')}
         description={t('accounts.settings.subtitle')}
       />
+      <SettingsNavigation />
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
         <SettingsSubNav className="sticky top-4 hidden shrink-0 basis-48 lg:block" />
         <SettingsSubNav className="lg:hidden" flat />
         <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
           <ProfileSection />
           <PhotoSection />
+          <AppearanceSection />
           <MyFieldsSection />
           <SessionsSection />
           <TwoFactorSection />

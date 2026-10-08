@@ -18,7 +18,7 @@ const NEXT_STEPS = {
   delete: { href: '/work/archive', label: 'work.view.archive' },
   files: { href: '/work', label: 'work.title' },
   profile: { href: '/account', label: 'accounts.settings.title' },
-  telegram: { href: '/inbox/telegram', label: 'telegram.title' },
+  telegram: { href: '/account/telegram', label: 'telegram.title' },
   ai: { href: '/ai', label: 'ai.title' },
 } as const
 

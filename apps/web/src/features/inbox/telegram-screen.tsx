@@ -1,7 +1,6 @@
-// `/inbox/telegram` (this module's task: "linking via /start <code> + QR in Settings" + "department
-// group connection"). Personal linking is every signed-in user's own card; the group-connection card
-// only renders for the head of the active department (the same `department`-subject write the API
-// itself requires, `apps/api/src/modules/telegram/index.ts`) -- a member sees just their own link.
+// `/account/telegram` (this module's task: "linking via /start <code> + QR in Settings" + "department
+// group connection"). Personal linking is every signed-in user's own card. Group connection follows
+// the active department's head-only/everyone policy; group edit/disconnect remains head-only.
 import * as React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDateTime, formatTime } from '@devon/i18n'
@@ -20,6 +19,7 @@ import { useForcedState } from '../../lib/forced-state.js'
 import { useDepartment, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
+import { SettingsNavigation } from '../accounts/settings-navigation.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { fetchTelegramSetup, GROUP_KINDS, type GroupKind, type TelegramGroupDto } from './api.js'
 import {
@@ -462,7 +462,11 @@ function SetupGuide({ departmentId }: { departmentId: string | null }) {
           })}
         </p>
       ) : null}
-      <Button variant="secondary" className="mt-4" onClick={() => navigate('/inbox/preferences')}>
+      <Button
+        variant="secondary"
+        className="mt-4"
+        onClick={() => navigate('/account/notifications')}
+      >
         {t('inbox.preferences.title')}
       </Button>
     </SectionCard>
@@ -510,7 +514,8 @@ export default function TelegramScreen() {
 
   return (
     <div className="mx-auto flex max-w-160 flex-col gap-6">
-      <PageHeader eyebrow={t('inbox.eyebrow')} title={t('telegram.title')} />
+      <PageHeader eyebrow={t('accounts.settings.title')} title={t('telegram.title')} />
+      <SettingsNavigation />
 
       <SetupGuide departmentId={isHead ? departmentId : null} />
 
