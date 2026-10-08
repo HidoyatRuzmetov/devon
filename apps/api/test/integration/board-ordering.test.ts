@@ -91,6 +91,17 @@ async function move(
 }
 
 describe('authoritative board ordering and personal focus', () => {
+  it('serializes moved card text as JSON, including HTML-like titles', async () => {
+    const title = '<img src=x onerror=alert(1)>'
+    const created = await request('/cards', 'POST', { title, assigneeUserId: headId })
+    expect(created.status).toBe(201)
+    const item = (await created.json()) as CardDTO
+    const response = await move(item.id, headId, null)
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toContain('application/json')
+    expect(((await response.json()) as CardDTO).title).toBe(title)
+  })
+
   it('appends unique ranks and preserves a manual move across due dates and an unrelated column', async () => {
     const first = await card(headId, '2030-01-01T00:00:00Z')
     const second = await card(headId, '2027-01-01T00:00:00Z')

@@ -418,9 +418,7 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
           reply,
           result.reason === 'invalid_assignee' ? 'validation_failed' : result.reason,
         )
-      return reply.send(
-        withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!,
-      )
+      return withCanEdit([result.card], req.actor!.userId, isHeadOf(req.actor, departmentId))[0]!
     },
   )
 
