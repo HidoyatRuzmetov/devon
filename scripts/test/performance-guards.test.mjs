@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:net'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import test from 'node:test'
 import {
   assertPerformancePortAvailable,
@@ -13,7 +15,7 @@ import { completedScenario, k6Target, summarizeK6Receipt } from '../../tools/per
 import { runChecks } from '../../tools/perf/check.mjs'
 import { findPerformanceChromium } from '../../tools/perf/lighthouse/browser-path.mjs'
 import { assessBuiltRoute } from '../../tools/perf/lighthouse/budgets.mjs'
-import { inspectProductionRuntime } from '../../tools/perf/web-build.mjs'
+import { inspectProductionRuntime, productionBuildInputs } from '../../tools/perf/web-build.mjs'
 
 test('performance forces one owned namespace and excludes inherited integrations and cloud settings', () => {
   const exampleCredential = 'Example-only credential'
@@ -61,13 +63,132 @@ test('performance forces one owned namespace and excludes inherited integrations
 
 test('release CI explicitly selects production performance without altering ordinary browser selection', () => {
   const root = new URL('../../', import.meta.url)
-  const workflow = readFileSync(new URL('.github/workflows/ci.yml', root), 'utf8')
-  assert.match(
-    workflow,
-    /name: Run the release gate profile\s+env:\s+FLOW_PRODUCTION_BUILD: '1'\s+run: node agentic\/scripts\/gate\.mjs --profile release/,
+  const workflow = readFileSync(new URL('.github/workflows/ci.yml', root), 'utf8').replaceAll(
+    '\r\n',
+    '\n',
   )
-  const ordinary = readFileSync(new URL('apps/web/test/e2e/playwright.config.ts', root), 'utf8')
-  assert.ok(!ordinary.includes('FLOW_PRODUCTION_BUILD'))
+  const jobs = [
+    ...workflow.matchAll(
+      /^      - name: Verify compiled production browser journeys\n([\s\S]*?)^      - name: Run the (integration|release) gate profile\n([\s\S]*?)(?=^      - name:)/gm,
+    ),
+  ]
+  assert.deepEqual(jobs.map((job) => job[2]).sort(), ['integration', 'release'])
+  for (const [, compiled, profile, ordinary] of jobs) {
+    assert.match(compiled, /^\s+FLOW_PRODUCTION_BUILD: '1'$/m)
+    assert.match(compiled, /^\s+DEVON_E2E: '0'$/m)
+    const build = compiled.indexOf('await buildPerformanceWeb(process.cwd(), process.env)')
+    const app = compiled.indexOf('--grep-invert @a11y')
+    const a11y = compiled.indexOf('--grep @a11y')
+    assert.ok(build >= 0 && app > build && a11y > app, 'fresh receipt precedes both browser gates')
+    assert.equal(
+      compiled.match(
+        /pnpm --filter @devon\/web exec playwright test --config test\/e2e\/playwright\.config\.ts/g,
+      )?.length,
+      2,
+    )
+    assert.equal(compiled.match(/--workers=1 --retries=0/g)?.length, 2)
+    assert.match(ordinary, new RegExp(`run: node agentic/scripts/gate\\.mjs --profile ${profile}`))
+    assert.ok(!ordinary.includes('FLOW_PRODUCTION_BUILD'), 'the ordinary gate retains dev fixtures')
+  }
+  // Execute the actual configuration and receipt verifier in an owned fixture. Neither browser
+  // nor API services start; the copied source has the same relative layout and dependency lookup.
+  const scratch = resolve(fileURLToPath(new URL('apps/web/test/e2e/.tmp/', root)))
+  mkdirSync(scratch, { recursive: true })
+  const fixture = mkdtempSync(join(scratch, 'flow-config-'))
+  try {
+    for (const source of [
+      'apps/web/test/e2e/playwright.config.ts',
+      'apps/web/test/e2e/flow-env.ts',
+      'apps/web/test/e2e/flow-safety.ts',
+      'apps/web/test/e2e/flow-production.ts',
+      'tools/perf/web-build.mjs',
+      'tools/security/source-stage.mjs',
+    ]) {
+      const target = join(fixture, source)
+      mkdirSync(dirname(target), { recursive: true })
+      copyFileSync(new URL(source, root), target)
+    }
+    writeFileSync(join(fixture, 'package.json'), '{"type":"module"}')
+    const input = join(fixture, 'apps/web/src/entry.ts')
+    mkdirSync(dirname(input), { recursive: true })
+    writeFileSync(input, 'export const fixture = 1')
+    assert.equal(spawnSync('git', ['init', '--quiet'], { cwd: fixture }).status, 0)
+    const env = {
+      ...process.env,
+      NODE_OPTIONS: '',
+      FLOW_DB_NAME: 'devon_flow_e2e_config_guard',
+      FLOW_DB_HOST: '127.0.0.1',
+      FLOW_DB_PORT: '55432',
+      FLOW_DB_CONTAINER: 'devon-postgres',
+      FLOW_API_PORT: '48921',
+      FLOW_WEB_PORT: '48922',
+      DEVON_E2E: '1',
+    }
+    delete env.FLOW_PRODUCTION_BUILD
+    function load(flag) {
+      return spawnSync(
+        process.execPath,
+        [
+          '--import',
+          'tsx',
+          '--input-type=module',
+          '-e',
+          `const config = (await import(${JSON.stringify(pathToFileURL(join(fixture, 'apps/web/test/e2e/playwright.config.ts')).href)})).default; process.stdout.write(JSON.stringify({ command: config.webServer.command, forcedState: config.webServer.env.DEVON_E2E, reuseExistingServer: config.webServer.reuseExistingServer, testMatch: config.testMatch, testIgnore: config.testIgnore }));`,
+        ],
+        {
+          cwd: fileURLToPath(new URL('apps/api/', root)),
+          env: flag === undefined ? env : { ...env, FLOW_PRODUCTION_BUILD: flag },
+          encoding: 'utf8',
+          timeout: 30_000,
+          maxBuffer: 1024 * 1024,
+        },
+      )
+    }
+    for (const flag of [undefined, '0', 'true']) {
+      const ordinary = load(flag)
+      assert.equal(ordinary.status, 0, ordinary.stderr || ordinary.error?.message)
+      const config = JSON.parse(ordinary.stdout)
+      assert.equal(config.command, 'pnpm --filter @devon/web dev --mode test')
+      assert.equal(config.forcedState, '1')
+      assert.equal(config.reuseExistingServer, false)
+      assert.deepEqual(config.testMatch, ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'])
+      assert.deepEqual(config.testIgnore, [])
+    }
+    const missing = load('1')
+    assert.notEqual(missing.status, 0, 'explicit production requires a build receipt')
+    assert.match(missing.stderr, /production-build\.json/)
+    const hash = productionBuildInputs(fixture).sha256
+    const receipt = join(fixture, 'tools/perf/lighthouse/out/production-build.json')
+    mkdirSync(dirname(receipt), { recursive: true })
+    writeFileSync(
+      receipt,
+      JSON.stringify({
+        stable: true,
+        inputsBefore: hash,
+        inputsAfter: hash,
+        forcedStateBuildFlag: false,
+      }),
+    )
+    const built = load('1')
+    assert.equal(built.status, 0, built.stderr || built.error?.message)
+    const config = JSON.parse(built.stdout)
+    assert.equal(config.command, 'pnpm --filter @devon/web preview --mode test')
+    assert.equal(config.forcedState, '0')
+    assert.equal(config.reuseExistingServer, false)
+    assert.deepEqual(config.testMatch, ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'])
+    assert.deepEqual(config.testIgnore, [
+      '**/avatar-readability.flow.spec.ts',
+      '**/badge-contrast.flow.spec.ts',
+      '**/dialog-scroll.flow.spec.ts',
+    ])
+    writeFileSync(input, 'export const fixture = 2')
+    const stale = load('1')
+    assert.notEqual(stale.status, 0)
+    assert.match(stale.stderr, /stable current production input receipt/)
+  } finally {
+    assert.equal(dirname(fixture), scratch)
+    rmSync(fixture, { recursive: true, force: true })
+  }
   const untouched = { FLOW_PRODUCTION_BUILD: '0', DEVON_E2E: '1' }
   performanceEnvironment(untouched)
   assert.deepEqual(untouched, { FLOW_PRODUCTION_BUILD: '0', DEVON_E2E: '1' })

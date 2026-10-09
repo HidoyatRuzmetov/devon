@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested-work",
+  "date": "2026-10-09",
+  "method": "Each listed native PNG explicitly opened through view_image, original detail. Screenshot metadata is not inspection proof.",
+  "currentSourceSha256": [
+    {
+      "Algorithm": "SHA256",
+      "Hash": "E11A11A8FA3BF5BEE96B7323C3F441F39DAA427E2E919E51084C0D221E5D01E4",
+      "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\apps\\web\\src\\features\\work\\components\\card-tile.tsx"
+    },
+    {
+      "Algorithm": "SHA256",
+      "Hash": "B32DFCEBEC3CD290543953B3E234E72D4B4903F48A900752BC7EAAD923DD561A",
+      "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\ui\\src\\styles\\tokens.css"
+    },
+    {
+      "Algorithm": "SHA256",
+      "Hash": "FE4639B023E9C1DC28AE7A5B9FF0C94F5F4C5E840747914797EF82420F48F175",
+      "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\db\\migrations\\2009_work_template_privacy.sql"
+    }
+  ],
+  "inspected": [
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-chromium\\refused-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-firefox\\refused-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-webkit\\refused-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-chromium\\reopened-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-firefox\\reopened-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-webkit\\reopened-cycle-choice.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-recovered-search.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Literal search retained and matching later-page candidate readable."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-refusal.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-recovered-search.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Literal search retained and matching later-page candidate readable."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-refusal.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-recovered-search.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Literal search retained and matching later-page candidate readable."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-refusal.png",
+      "pixelInspected": true,
+      "run": "work-controls-affected-complete",
+      "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-390-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-1440-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-390-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-1440-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-390-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+      "pixelInspected": true,
+      "run": "work-card-native-final",
+      "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+    }
+  ],
+  "before": {
+    "run": "work-card-native-runtime",
+    "runtimeReceipts": "Current54% token/white foreground with static wrapper opacity0.8; actual axe3.33. All3 cases failed.",
+    "inspectedScreenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-card-native-runtime\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+    "pixelInspected": true
+  },
+  "boundary": "Dependency proofs precede final card opacity repair. Normal card proofs use English/light, normal text1440x900 and390x600 only. Historical all-locale/text200 comparison sheets remain separate."
+}

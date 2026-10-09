@@ -6,7 +6,7 @@ import test from 'node:test'
 import { productionBuildInputs } from '../../tools/perf/web-build.mjs'
 
 test('production receipt hashes actual entry/shared public and alternative app HTML/public inputs', () => {
-  const scratch = resolve(import.meta.dirname, '../../apps/web/test/.tmp')
+  const scratch = resolve(import.meta.dirname, '../../apps/web/test/e2e/.tmp')
   mkdirSync(scratch, { recursive: true })
   const fixture = mkdtempSync(join(scratch, 'build-inputs-'))
   try {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { flowWebCommand, type ProductionBuildReceipt } from '../e2e/flow-production.js'
+import {
+  FLOW_DEV_ONLY_FIXTURE_FILES,
+  flowTestIgnore,
+  flowWebCommand,
+  type ProductionBuildReceipt,
+} from '../e2e/flow-production.js'
 
 const sourceHash = 'a'.repeat(64)
 const receipt: ProductionBuildReceipt = {
@@ -10,6 +15,19 @@ const receipt: ProductionBuildReceipt = {
 }
 
 describe('supported built browser runner boundary', () => {
+  it('retains all dev cases and excludes only the exact Vite-only fixture files in preview', () => {
+    expect(flowTestIgnore(false)).toEqual([])
+    expect(FLOW_DEV_ONLY_FIXTURE_FILES).toEqual([
+      'avatar-readability.flow.spec.ts',
+      'badge-contrast.flow.spec.ts',
+      'dialog-scroll.flow.spec.ts',
+    ])
+    expect(flowTestIgnore(true)).toEqual([
+      '**/avatar-readability.flow.spec.ts',
+      '**/badge-contrast.flow.spec.ts',
+      '**/dialog-scroll.flow.spec.ts',
+    ])
+  })
   it('preserves ordinary dev behavior without requiring a build receipt', () => {
     expect(flowWebCommand(false)).toBe('pnpm --filter @devon/web dev --mode test')
   })

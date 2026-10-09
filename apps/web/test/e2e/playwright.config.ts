@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { FLOW_API_PORT, FLOW_WEB_BASE_URL, FLOW_WEB_PORT } from './flow-env.js'
-import { flowWebCommand, type ProductionBuildReceipt } from './flow-production.js'
+import { flowTestIgnore, flowWebCommand, type ProductionBuildReceipt } from './flow-production.js'
 
 // `pnpm --filter @devon/web test:e2e -- --grep @smoke` is `agentic/gates.json`'s `e2e-smoke` command
 // (used as every item's `item`-profile gate, per this item's handoff to EPIC-000.9). The full
@@ -51,6 +51,8 @@ export default defineConfig({
   // contracts. Keep the ordinary CI flows and smoke tests on this fresh, unseeded stack; their
   // explicit QA configs still select and run every dedicated case independently.
   testMatch: ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'],
+  // Vite-only TSX component fixtures run in the full default dev gate, never through preview.
+  testIgnore: flowTestIgnore(production),
   timeout: 45_000,
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),

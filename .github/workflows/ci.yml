@@ -77,6 +77,15 @@ jobs:
           semgrep --version
           trivy --version
 
+      - name: Verify compiled production browser journeys
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
+
       - name: Run the integration gate profile
         run: node agentic/scripts/gate.mjs --profile integration
 
@@ -159,9 +168,16 @@ jobs:
       - name: Install pinned performance tools
         run: bash scripts/install-perf-tools.sh
 
-      - name: Run the release gate profile
+      - name: Verify compiled production browser journeys
         env:
           FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
+
+      - name: Run the release gate profile
         run: node agentic/scripts/gate.mjs --profile release
 
       - name: Upload gate report

@@ -5,6 +5,18 @@ export type ProductionBuildReceipt = {
   forcedStateBuildFlag: boolean
 }
 
+/** These component fixtures inject TSX through Vite's development-only /@fs endpoint. The full
+ * default dev gate runs all four cases; built verification retains every ordinary app flow. */
+export const FLOW_DEV_ONLY_FIXTURE_FILES = [
+  'avatar-readability.flow.spec.ts',
+  'badge-contrast.flow.spec.ts',
+  'dialog-scroll.flow.spec.ts',
+] as const
+
+export function flowTestIgnore(production: boolean): string[] {
+  return production ? FLOW_DEV_ONLY_FIXTURE_FILES.map((file) => `**/${file}`) : []
+}
+
 /** The ordinary CI runner stays on dev. Explicit built-browser verification refuses stale or
  * forced-state artifacts before starting either owned test service. */
 export function flowWebCommand(

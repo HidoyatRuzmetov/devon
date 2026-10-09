@@ -18,12 +18,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "en",
@@ -35,12 +30,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -52,12 +42,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -69,12 +54,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -86,12 +66,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -103,12 +78,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -120,12 +90,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -137,12 +102,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         }
       ],
       "pixelInspected": true,
@@ -161,12 +121,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -178,12 +133,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -195,12 +145,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -212,12 +157,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -229,12 +169,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -246,12 +181,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -263,12 +193,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -280,12 +205,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -304,12 +224,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -321,12 +236,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -338,12 +248,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -355,12 +260,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -372,12 +272,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -389,12 +284,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -406,12 +296,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -423,12 +308,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -447,12 +327,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -464,12 +339,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -481,12 +351,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -498,12 +363,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -515,12 +375,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -532,12 +387,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -549,12 +399,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -566,12 +411,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -590,12 +430,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "en",
@@ -607,12 +442,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -624,12 +454,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -641,12 +466,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -658,12 +478,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -675,12 +490,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -692,12 +502,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -709,12 +514,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         }
       ],
       "pixelInspected": true,
@@ -733,12 +533,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "en",
@@ -750,12 +545,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -767,12 +557,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -784,12 +569,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -801,12 +581,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -818,12 +593,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -835,12 +605,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -852,12 +617,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         }
       ],
       "pixelInspected": true,
@@ -876,12 +636,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -893,12 +648,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -910,12 +660,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -927,12 +672,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -944,12 +684,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -961,12 +696,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -978,12 +708,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -995,12 +720,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -1019,12 +739,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -1036,12 +751,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -1053,12 +763,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -1070,12 +775,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -1087,12 +787,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -1104,12 +799,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -1121,12 +811,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -1138,12 +823,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -1162,12 +842,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -1179,12 +854,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -1196,12 +866,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -1213,12 +878,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1230,12 +890,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1247,12 +902,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1264,12 +914,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1281,12 +926,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -1305,12 +945,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "en",
@@ -1322,12 +957,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -1339,12 +969,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -1356,12 +981,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1373,12 +993,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1390,12 +1005,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1407,12 +1017,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1424,12 +1029,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "chromium",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         }
       ],
       "pixelInspected": true,
@@ -1448,12 +1048,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "en",
@@ -1465,12 +1060,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -1482,12 +1072,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -1499,12 +1084,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -1516,12 +1096,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -1533,12 +1108,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -1550,12 +1120,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -1567,12 +1132,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         }
       ],
       "pixelInspected": true,
@@ -1591,12 +1151,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -1608,12 +1163,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -1625,12 +1175,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -1642,12 +1187,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1659,12 +1199,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1676,12 +1211,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1693,12 +1223,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1710,12 +1235,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -1734,12 +1254,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -1751,12 +1266,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -1768,12 +1278,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -1785,12 +1290,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -1802,12 +1302,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -1819,12 +1314,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -1836,12 +1326,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -1853,12 +1338,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -1877,12 +1357,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -1894,12 +1369,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -1911,12 +1381,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -1928,12 +1393,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1945,12 +1405,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -1962,12 +1417,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1979,12 +1429,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -1996,12 +1441,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -2020,12 +1460,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "en",
@@ -2037,12 +1472,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -2054,12 +1484,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -2071,12 +1496,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2088,12 +1508,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2105,12 +1520,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2122,12 +1532,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2139,12 +1544,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         }
       ],
       "pixelInspected": true,
@@ -2163,12 +1563,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "en",
@@ -2180,12 +1575,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -2197,12 +1587,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -2214,12 +1599,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -2231,12 +1611,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -2248,12 +1623,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -2265,12 +1635,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -2282,12 +1647,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         }
       ],
       "pixelInspected": true,
@@ -2306,12 +1666,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -2323,12 +1678,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -2340,12 +1690,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -2357,12 +1702,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2374,12 +1714,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2391,12 +1726,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2408,12 +1738,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2425,12 +1750,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -2449,12 +1769,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -2466,12 +1781,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -2483,12 +1793,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -2500,12 +1805,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -2517,12 +1817,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -2534,12 +1829,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -2551,12 +1841,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -2568,12 +1853,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -2592,12 +1872,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -2609,12 +1884,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -2626,12 +1896,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -2643,12 +1908,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2660,12 +1920,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2677,12 +1932,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2694,12 +1944,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2711,12 +1956,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -2735,12 +1975,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "en",
@@ -2752,12 +1987,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -2769,12 +1999,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -2786,12 +2011,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2803,12 +2023,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -2820,12 +2035,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2837,12 +2047,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -2854,12 +2059,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "firefox",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         }
       ],
       "pixelInspected": true,
@@ -2878,12 +2078,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "en",
@@ -2895,12 +2090,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -2912,12 +2102,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "ru",
@@ -2929,12 +2114,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -2946,12 +2126,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Latn",
@@ -2963,12 +2138,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -2980,12 +2150,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -2997,12 +2162,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            440,
-            0,
-            1000,
-            900
-          ]
+          "comparisonCrop": [440, 0, 1000, 900]
         }
       ],
       "pixelInspected": true,
@@ -3021,12 +2181,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -3038,12 +2193,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -3055,12 +2205,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -3072,12 +2217,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3089,12 +2229,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3106,12 +2241,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3123,12 +2253,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3140,12 +2265,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -3164,12 +2284,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -3181,12 +2296,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -3198,12 +2308,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -3215,12 +2320,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -3232,12 +2332,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -3249,12 +2344,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -3266,12 +2356,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -3283,12 +2368,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -3307,12 +2387,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -3324,12 +2399,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -3341,12 +2411,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -3358,12 +2423,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3375,12 +2435,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3392,12 +2447,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3409,12 +2459,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3426,12 +2471,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -3450,12 +2490,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "en",
@@ -3467,12 +2502,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -3484,12 +2514,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "ru",
@@ -3501,12 +2526,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3518,12 +2538,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3535,12 +2550,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3552,12 +2562,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3569,12 +2574,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            104,
-            0,
-            664,
-            600
-          ]
+          "comparisonCrop": [104, 0, 664, 600]
         }
       ],
       "pixelInspected": true,
@@ -3593,12 +2593,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "en",
@@ -3610,12 +2605,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -3627,12 +2617,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "ru",
@@ -3644,12 +2629,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -3661,12 +2641,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Latn",
@@ -3678,12 +2653,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -3695,12 +2665,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         },
         {
           "locale": "uz-Cyrl",
@@ -3712,12 +2677,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-1440-900-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            264,
-            0,
-            1440,
-            900
-          ]
+          "comparisonCrop": [264, 0, 1440, 900]
         }
       ],
       "pixelInspected": true,
@@ -3736,12 +2696,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "en",
@@ -3753,12 +2708,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -3770,12 +2720,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "ru",
@@ -3787,12 +2732,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3804,12 +2744,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Latn",
@@ -3821,12 +2756,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3838,12 +2768,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -3855,12 +2780,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-320-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            320,
-            600
-          ]
+          "comparisonCrop": [0, 0, 320, 600]
         }
       ],
       "pixelInspected": true,
@@ -3879,12 +2799,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "en",
@@ -3896,12 +2811,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -3913,12 +2823,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "ru",
@@ -3930,12 +2835,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -3947,12 +2847,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Latn",
@@ -3964,12 +2859,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -3981,12 +2871,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         },
         {
           "locale": "uz-Cyrl",
@@ -3998,12 +2883,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-360-225-text100.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            360,
-            225
-          ]
+          "comparisonCrop": [0, 0, 360, 225]
         }
       ],
       "pixelInspected": true,
@@ -4022,12 +2902,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "en",
@@ -4039,12 +2914,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -4056,12 +2926,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "ru",
@@ -4073,12 +2938,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -4090,12 +2950,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Latn",
@@ -4107,12 +2962,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -4124,12 +2974,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -4141,12 +2986,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-390-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            390,
-            600
-          ]
+          "comparisonCrop": [0, 0, 390, 600]
         }
       ],
       "pixelInspected": true,
@@ -4165,12 +3005,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "en",
@@ -4182,12 +3017,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -4199,12 +3029,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "ru",
@@ -4216,12 +3041,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -4233,12 +3053,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Latn",
@@ -4250,12 +3065,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -4267,12 +3077,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         },
         {
           "locale": "uz-Cyrl",
@@ -4284,12 +3089,7 @@
           "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-768-600-text200.png",
           "pixelInspected": false,
           "engine": "webkit",
-          "comparisonCrop": [
-            0,
-            0,
-            768,
-            600
-          ]
+          "comparisonCrop": [0, 0, 768, 600]
         }
       ],
       "pixelInspected": true,
@@ -4319,7 +3119,6 @@
     }
   ],
   "pending": [
-    "Current nested controls reflow matrix pixels",
     "Current narrow gallery footer native pixels",
     "Shared shell opaque fill replay is root-owned"
   ],
@@ -4681,5 +3480,145 @@
       "Later-page dependency refusal/recovered draft after pixels",
       "Narrow gallery footer pixels"
     ]
+  },
+  "nativeAfterReviews": {
+    "schemaVersion": 1,
+    "owner": "knowledge_nested-work",
+    "date": "2026-10-09",
+    "method": "Each listed native PNG explicitly opened through view_image, original detail. Screenshot metadata is not inspection proof.",
+    "currentSourceSha256": [
+      {
+        "Algorithm": "SHA256",
+        "Hash": "E11A11A8FA3BF5BEE96B7323C3F441F39DAA427E2E919E51084C0D221E5D01E4",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\apps\\web\\src\\features\\work\\components\\card-tile.tsx"
+      },
+      {
+        "Algorithm": "SHA256",
+        "Hash": "B32DFCEBEC3CD290543953B3E234E72D4B4903F48A900752BC7EAAD923DD561A",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\ui\\src\\styles\\tokens.css"
+      },
+      {
+        "Algorithm": "SHA256",
+        "Hash": "FE4639B023E9C1DC28AE7A5B9FF0C94F5F4C5E840747914797EF82420F48F175",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\db\\migrations\\2009_work_template_privacy.sql"
+      }
+    ],
+    "inspected": [
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-chromium\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-firefox\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-webkit\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-chromium\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-firefox\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-webkit\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      }
+    ],
+    "before": {
+      "run": "work-card-native-runtime",
+      "runtimeReceipts": "Current54% token/white foreground with static wrapper opacity0.8; actual axe3.33. All3 cases failed.",
+      "inspectedScreenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-card-native-runtime\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+      "pixelInspected": true
+    },
+    "boundary": "Dependency proofs precede final card opacity repair. Normal card proofs use English/light, normal text1440x900 and390x600 only. Historical all-locale/text200 comparison sheets remain separate."
   }
 }

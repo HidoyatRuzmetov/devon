@@ -40,6 +40,12 @@
       "cases": 20,
       "scope": "Supported seed/idempotence plus actual subsequent FLOW_SEED_DEMO=1 boots; policy unchanged."
     },
+    "migrationReplay": {
+      "before": "2009 second application fails existing insert policy;882/883 checks passed",
+      "after": "Local-services fresh supported migration883/883 plus pool/reset5 and seed20 passed",
+      "source": "packages/db/migrations/2009_work_template_privacy.sql",
+      "scope": "DROP POLICY IF EXISTS for three operation-specific policies; privacy predicates unchanged."
+    },
     "editorUnits": {
       "status": "passed",
       "cases": 3,
@@ -57,7 +63,13 @@
       "cases": 21
     },
     "currentFunctionalAllEngines": {
-      "status": "pending"
+      "status": "60 bounded passing instances",
+      "runs": [
+        "work-controls-functional-complete",
+        "work-controls-affected-complete",
+        "work-controls-normal-after"
+      ],
+      "cases": 60
     },
     "currentNestedGeometry": {
       "status": "passed bounded element geometry",
@@ -67,10 +79,13 @@
       "pixelReview": "docs/qa/2026-10/work-controls-pixels.json"
     },
     "currentRecurrenceText": {
-      "status": "pending"
+      "status": "after replay removed from release scope by latest human steering; not passed"
     },
     "currentCardStacking": {
-      "status": "pending"
+      "status": "passed bounded3 normal use",
+      "run": "work-card-native-final",
+      "cases": 3,
+      "scopedAxe": 6
     },
     "currentTypesLintFormat": {
       "apiTypes": "passed",
@@ -83,7 +98,7 @@
     "functional-mixed-before": {
       "run": "work-controls-functional-complete",
       "status": "50 passed / 4 failed",
-      "scope": "Three Cyrillic/Latin search fixture mismatches are excluded from product defect counts. One actual WebKit checkbox pointer retargeting failure remains unresolved intermittent evidence. This run is not a fully passing gate."
+      "scope": "Three Cyrillic/Latin search fixture mismatches are excluded from product defect counts. One actual WebKit checkbox pointer retargeting failure was subsequently isolated as sticky-header/PressScale stacking. This historical mixed run is not a fully passing gate."
     },
     "dependency-warm-before": {
       "run": "work-reopen-before",
@@ -106,17 +121,18 @@
         "work-bulk-scroll-before-second",
         "work-bulk-stacking-after"
       ],
-      "status": "measured stacking cause repaired; full affected replay pending",
-      "scope": "Actual rich WebKit failing probe: down and up point989/372, board scroll4200/101 and HTML99 unchanged. Checkbox down977/360; release hits sticky header960/360/288/52 after PressScale matrix0.991188 creates a stacking context. Toast is at636 and is unrelated. Permanent card isolation plus actual ResizeObserver header scroll margin repairs stable paint order; exact failing full bulk workflow passed1/1 afterward. Earlier horizontal jump remains distinct evidence; full adjacent replay tracked separately."
+      "status": "measured stacking cause repaired; affected bulk9 passed across all3 engines",
+      "scope": "Actual rich WebKit failing probe: down and up point989/372, board scroll4200/101 and HTML99 unchanged. Checkbox down977/360; release hits sticky header960/360/288/52 after PressScale matrix0.991188 creates a stacking context. Toast is at636 and is unrelated. Permanent card isolation repairs stable paint order; BoardColumn supplies measured header spacing. Exact full bulk workflow passed1/1 afterward and all9 affected bulk instances passed across3 engines. Earlier horizontal jump remains distinct historical evidence; no native-focus cause is inferred."
+    },
+    "card-contrast-before": {
+      "run": "work-card-native-runtime",
+      "status": "3 failed across all3 engines on actual normal-use delegated-avatar contrast",
+      "scope": "Runtime receipts show the current54% unit4 token and white foreground, with only the immediate delegated-avatar wrapper at static opacity0.8. Axe measured3.33. Removing that wrapper opacity preserves the Avatar palette and smaller/overlapped delegation hierarchy. No stale-server or Motion readiness inference."
     },
     "current-mixed-before": {
       "run": "work-controls-current-complete",
       "status": "68 passed / 7 failed",
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
       "scope": "Actual first100 dependency candidate omission: three CRUD failures plus four graph/candidate recovery failures after new blockers fell beyond the first page. The24 visual cases are a separate passing subset."
     },
     "recurrence-text-before": {
@@ -124,11 +140,7 @@
       "status": "one expected failing-before Chromium assertion",
       "locale": "uz-Cyrl",
       "theme": "light",
-      "viewport": [
-        320,
-        600,
-        2
-      ],
+      "viewport": [320, 600, 2],
       "textRangeRight": 319.03125,
       "scope": "Actual explanation clips outside the narrower recurrence panel. A preceding viewport-only assertion passed vacuously and is excluded; native PNG explicitly inspected."
     },
@@ -138,15 +150,8 @@
       "status": "passed",
       "workCases": 15,
       "unrelatedSidebarCases": 3,
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
-      "roles": [
-        "department-head",
-        "ordinary-member"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
+      "roles": ["department-head", "ordinary-member"],
       "locale": "en",
       "scope": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch."
     },
@@ -159,47 +164,15 @@
       "scopedAxe": 120,
       "violations": 0,
       "pageerrors": 0,
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
-      "locales": [
-        "en",
-        "ru",
-        "uz-Latn",
-        "uz-Cyrl"
-      ],
-      "themes": [
-        "light",
-        "dark"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+      "themes": ["light", "dark"],
       "environments": [
-        [
-          1440,
-          900,
-          1
-        ],
-        [
-          768,
-          600,
-          2
-        ],
-        [
-          390,
-          600,
-          2
-        ],
-        [
-          320,
-          600,
-          2
-        ],
-        [
-          360,
-          225,
-          1
-        ]
+        [1440, 900, 1],
+        [768, 600, 2],
+        [390, 600, 2],
+        [320, 600, 2],
+        [360, 225, 1]
       ],
       "pixels": "docs/qa/2026-10/work-controls-pixels.json",
       "sourceBoundary": "Predates later root-owned opaque TopBar/BottomTabBar fill. Comparison-level inspection; narrow tall-gallery footer not visible in initial viewport captures."
@@ -233,68 +206,110 @@
       "run": "work-controls-affected-complete",
       "status": "21 bounded dependency instances passed; mixed30 run29 passed/1 bulk failed",
       "cases": 21,
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
       "scope": "Seven dependency journeys per engine: CRUD/cancel/remove refusal/loop/blocked status, graph and candidate503 recovery, initial dependency and reminder read refusal, complete cursor list with later-page503/search retention, graph warm reopen after separate real write, opposing real browser writes with refreshed refusal. Independent persistence/reload where applicable; the single bulk pointer failure is separate."
+    },
+    "current-functional": {
+      "runs": [
+        "work-controls-functional-complete",
+        "work-controls-affected-complete",
+        "work-controls-normal-after"
+      ],
+      "status": "60 distinct bounded passing journey/engine instances across three runs",
+      "cases": 60,
+      "engines": ["chromium", "firefox", "webkit"],
+      "locale": "en",
+      "tests": [
+        "apps/web/test/e2e/platform-work-plus.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-transitions.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-bulk.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-controls-extra.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-picker.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-graph-freshness.qa.spec.ts",
+        "apps/web/test/e2e/platform-work-dependency-race.qa.spec.ts"
+      ],
+      "scope": "Thirty unaffected instances from the mixed54 run plus30 freshly affected dependency/bulk instances. Twelve historical dependency instances are replaced, not counted twice. The mixed54 run itself finished50 passed/4 failed: three picker fixture failures used Cyrillic е against Latin é, and one WebKit bulk pointer retargeting failure was subsequently causally isolated and repaired. Controlled503/held/empty-Undo faults stay explicit; actual worker generation/delivery is not inferred."
+    },
+    "card-stacking-current": {
+      "run": "work-card-native-final",
+      "status": "3 bounded normal-use cases passed",
+      "cases": 3,
+      "engines": ["chromium", "firefox", "webkit"],
+      "locales": ["en"],
+      "themes": ["light"],
+      "environments": [
+        [1440, 900, 1],
+        [390, 600, 1]
+      ],
+      "scope": "Actual pointer select/clear and title open, native backward Tab/Space after programmatic Title entry, emulated touch checkbox/title at390, safe measured sticky geometry/hit target and6 scoped axe checks at normal text. Existing global72px focus margin takes precedence over measured column spacing in these normal environments; no stronger margin is claimed. Current Avatar tokens are readable; a static delegated-avatar wrapper opacity80 caused actual3.33 contrast and was removed. No native long-press drag or physical device claim. Head grouping labels preserved; source geometry postdates prior head board captures. Latest user steering removed tiny/enlarged-text release expansion; aborted57 remains separate.",
+      "pixels": "docs/qa/2026-10/work-controls-native-pixels.json"
     },
     "current-nested-visual": {
       "run": "work-controls-current-complete",
       "status": "passed",
       "cases": 24,
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
-      "locales": [
-        "en",
-        "ru",
-        "uz-Latn",
-        "uz-Cyrl"
-      ],
-      "themes": [
-        "light",
-        "dark"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+      "themes": ["light", "dark"],
       "environments": [
-        [
-          1440,
-          900,
-          1
-        ],
-        [
-          768,
-          600,
-          2
-        ],
-        [
-          390,
-          600,
-          2
-        ],
-        [
-          320,
-          600,
-          2
-        ],
-        [
-          360,
-          225,
-          1
-        ]
+        [1440, 900, 1],
+        [768, 600, 2],
+        [390, 600, 2],
+        [320, 600, 2],
+        [360, 225, 1]
       ],
       "scopedAxe": 360,
       "axeViolations": 0,
       "pageerrors": 0,
       "nativeCaptures": 552,
-      "scope": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "scope": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction after replay was removed from release scope by latest human steering; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
       "pixels": "docs/qa/2026-10/work-controls-pixels.json"
     }
   },
   "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-tile.tsx",
+        "component": "CardTile",
+        "kind": "Checkbox",
+        "labelIncludes": "work.bulk.selectCard"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual pointer select/clear and title open, native backward Tab/Space after programmatic Title entry, emulated touch checkbox/title at390, safe measured sticky geometry/hit target and6 scoped axe checks at normal text. Existing global72px focus margin takes precedence over measured column spacing in these normal environments; no stronger margin is claimed. Current Avatar tokens are readable; a static delegated-avatar wrapper opacity80 caused actual3.33 contrast and was removed. No native long-press drag or physical device claim. Head grouping labels preserved; source geometry postdates prior head board captures. Latest user steering removed tiny/enlarged-text release expansion; aborted57 remains separate.",
+      "states": {
+        "hover": {
+          "status": "tested",
+          "evidenceId": "current-functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "current-functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "current-functional",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-390-text100.png",
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-1440-text100.png",
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-390-text100.png",
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-1440-text100.png",
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-390-text100.png",
+            "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png"
+          ]
+        }
+      }
+    },
     {
       "match": {
         "source": "apps/web/src/features/work/components/card-template-editor.tsx",
@@ -306,13 +321,13 @@
       "states": {
         "populated": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -329,13 +344,13 @@
       "states": {
         "populated": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -352,13 +367,13 @@
       "states": {
         "selected": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -376,13 +391,13 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -400,13 +415,13 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -423,7 +438,7 @@
       "states": {
         "error": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -442,17 +457,13 @@
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         },
         "populated": {
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         }
       }
     },
@@ -469,17 +480,13 @@
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         },
         "populated": {
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         }
       }
     },
@@ -496,17 +503,13 @@
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         },
         "selected": {
           "status": "tested",
           "evidenceId": "curation-visual",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/work-controls-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/work-controls-pixels.json"]
         }
       }
     },
@@ -522,7 +525,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -540,7 +543,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -557,19 +560,19 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "error": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -586,13 +589,13 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "focus": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -737,13 +740,13 @@
       "states": {
         "error": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "active": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -760,7 +763,7 @@
       "states": {
         "populated": {
           "status": "tested",
-          "evidenceId": "curation",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -777,25 +780,25 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "validation": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "error": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -812,19 +815,19 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "error": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -842,7 +845,7 @@
       "states": {
         "populated": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -859,7 +862,7 @@
       "states": {
         "disabled": {
           "status": "tested",
-          "evidenceId": "transitions",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -876,13 +879,13 @@
       "states": {
         "selected": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -899,13 +902,13 @@
       "states": {
         "selected": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "active": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -923,19 +926,19 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -953,19 +956,19 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "disabled": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -983,7 +986,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "recovery",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1001,7 +1004,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1019,7 +1022,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1037,7 +1040,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1055,7 +1058,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1073,7 +1076,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1091,7 +1094,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1109,7 +1112,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1127,7 +1130,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1145,7 +1148,7 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1162,13 +1165,30 @@
       "states": {
         "active": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         },
         "success": {
           "status": "tested",
-          "evidenceId": "bulk",
+          "evidenceId": "current-functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "DatePicker"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Due trigger is disabled during the actual held bulk response; later selection remains after response.",
+      "states": {
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "current-functional",
           "pixelReviewed": false,
           "pixelReviewedArtifacts": []
         }
@@ -1210,7 +1230,7 @@
         "kind": "IconButton"
       },
       "expectedMatches": 1,
-      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction after replay was removed from release scope by latest human steering; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
       "states": {
         "default": {
           "status": "tested",
@@ -1233,7 +1253,7 @@
         "kind": "IconButton"
       },
       "expectedMatches": 1,
-      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction after replay was removed from release scope by latest human steering; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
       "states": {
         "default": {
           "status": "tested",
@@ -1257,7 +1277,7 @@
         "childSummaryIncludes": "work.recurrence.stop"
       },
       "expectedMatches": 1,
-      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction after replay was removed from release scope by latest human steering; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
       "states": {
         "default": {
           "status": "tested",
@@ -1281,7 +1301,7 @@
         "labelIncludes": "work.bulk.toolbarLabel"
       },
       "expectedMatches": 1,
-      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction after replay was removed from release scope by latest human steering; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
       "states": {
         "populated": {
           "status": "tested",
@@ -1307,16 +1327,12 @@
     }
   ],
   "pending": [
-    "Current full functional all-engine replay",
-    "Current nested reflow/pixel matrix",
-    "Bulk pending DatePicker probe",
     "Recurrence worker generation/count/until and reminder sent/delivery",
     "Template current scope switching/concurrent role revocation browser",
     "Gallery empty/loading/read-error recovery",
     "Offline/reconnect and actual mid-Undo revoked role",
     "Native browser zoom/touch/physical devices",
-    "Current release gates owned by parent",
-    "Measured sticky-header/card stacking repair full affected pointer/native/touch replay"
+    "Current release gates owned by parent"
   ],
   "releaseScopeRemoved": [
     {

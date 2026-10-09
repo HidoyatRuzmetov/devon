@@ -23,11 +23,7 @@
       "retries": 0,
       "skipped": 0,
       "durationMinutes": 13.2,
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ]
+      "browsers": ["chromium", "firefox", "webkit"]
     },
     "visual": {
       "run": "knowledge-visual-post-caret-final",
@@ -36,9 +32,7 @@
       "retries": 0,
       "skipped": 0,
       "durationMinutes": 6.4,
-      "browsers": [
-        "chromium"
-      ],
+      "browsers": ["chromium"],
       "generatedCaptures": 280,
       "axeMainChecks": 24,
       "startTime": "2026-10-08T17:09:31.274Z"
@@ -87,11 +81,7 @@
       "retries": 0,
       "skipped": 0,
       "durationMinutes": 1.6,
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "browsers": ["chromium", "firefox", "webkit"],
       "startTime": "2026-10-08T17:17:13.698Z"
     },
     "uniqueFunctionalWorkflows": 22,
@@ -104,15 +94,8 @@
   "evidence": {
     "templates": {
       "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
-      "roles": [
-        "head",
-        "member permission refusal"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head", "member permission refusal"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "locale": "en",
       "theme": "default light",
       "viewports": [
@@ -134,14 +117,8 @@
     },
     "editor": {
       "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
-      "roles": [
-        "head"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "locale": "en",
       "states": "10 actual toolbar commands with saved blocks reads/reload; task-list checkbox persists; all8 slash choices read/reload; filtered range pointer insert; short320x480 keyboardEnter; wraparoundArrowUp/Down aria-selected; Escape/Tab/outside dismissal; empty Enter remains normal editing; real mention insert/read/reload; zero pageerrors. All10 single-format toggle-offs persist/read/reload with actual text caret; bold/italic stored-mark toggles update pressed state without a document save; checklist checked and unchecked persist/read/reload; mention ArrowDown/Enter and touch selection persist; Escape/Tab clear aria relations; slash remains absent in inline and typed code. Toolbar and slash H1/H2 each persist attrs.level1/2 and typed text, independent read/reload and rendered h1/h2 agree.",
       "pending": [
@@ -153,32 +130,16 @@
     },
     "faq": {
       "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
-      "roles": [
-        "member",
-        "head",
-        "super_admin navigation boundary"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member", "head", "super_admin navigation boundary"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "locale": "en",
       "states": "Pages Quick help discovery; all10 native details pointer open/close and keyboardEnter/focus/open/close; answer-content search/noresults/clear; all10 answer destinations followed and loaded with back navigation (admin as super_admin), plus Pages footer; main axe.",
-      "pending": [
-        "Every locale's search normalization in browser"
-      ]
+      "pending": ["Every locale's search normalization in browser"]
     },
     "excludedAi": {
       "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
-      "roles": [
-        "head"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "locale": "en",
       "externalCalls": 0,
       "states": "No-selection guard, four target choices, local503refusal/retry/discard unchanged doc, ordinary subsequent edit/reload.",
@@ -189,29 +150,11 @@
     },
     "visual": {
       "test": "apps/web/test/e2e/knowledge-visual.qa.spec.ts",
-      "roles": [
-        "head"
-      ],
-      "browsers": [
-        "chromium"
-      ],
-      "locales": [
-        "en",
-        "ru",
-        "uz-Latn",
-        "uz-Cyrl"
-      ],
-      "themes": [
-        "light",
-        "dark"
-      ],
-      "surfaces": [
-        "templates",
-        "template-card",
-        "editor",
-        "faq",
-        "slash-popup"
-      ],
+      "roles": ["head"],
+      "browsers": ["chromium"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+      "themes": ["light", "dark"],
+      "surfaces": ["templates", "template-card", "editor", "faq", "slash-popup"],
       "pixelManifest": "docs/qa/2026-10/knowledge-nested-pixels.json",
       "comparisonSheetsReviewed": 35,
       "nativeOriginalsReviewed": 24,

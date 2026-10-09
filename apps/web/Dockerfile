@@ -39,6 +39,11 @@ COPY apps/web apps/web
 RUN pnpm --filter @devon/web build
 
 FROM ${NGINX_IMAGE} AS runtime
+# The pinned upstream image contains tiff 4.7.1-r0 (CVE-2026-4775). Upgrade only this
+# runtime library to Alpine's fixed release, then restore the original non-root user.
+USER root
+RUN apk add --no-cache tiff=4.7.2-r0
+USER 101
 # `nginx-unprivileged` already runs its worker AND master process as the `nginx` user (uid 101) on an
 # unprivileged port -- a real non-root container, not just non-root worker processes behind a root
 # master (H17.1/H18.1). Caddy's `infra/Caddyfile` proxies to `web:8080` (not `:80`) to match.

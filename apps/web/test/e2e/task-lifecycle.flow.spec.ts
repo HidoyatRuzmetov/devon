@@ -31,6 +31,9 @@ for (const role of ['head', 'member'] as const) {
       })
       const context = role === 'head' ? head : member
       expect((await authedPatch(context, '/api/v1/me', { locale: 'en' })).ok()).toBeTruthy()
+      const meResponse = await context.request.get('/api/v1/me')
+      expect(meResponse.ok()).toBeTruthy()
+      const me = (await meResponse.json()) as { user: { id: string } }
       const page = await context.newPage()
       await page.goto('/')
       await expect(
@@ -39,9 +42,8 @@ for (const role of ['head', 'member'] as const) {
       await page.getByRole('button', { name: 'New card', exact: true }).click()
       const title = `Review: punctuation remains ${Date.now()}`
       await page.getByRole('textbox', { name: 'Title', exact: true }).fill(title)
-      await page
-        .getByLabel('Assignee', { exact: true })
-        .selectOption({ label: role === 'head' ? 'Test Head' : 'Test Member' })
+      // The visible head option includes its role; use the authenticated actor's stable ID.
+      await page.getByLabel('Assignee', { exact: true }).selectOption(me.user.id)
       await page.getByLabel('Due', { exact: true }).fill('2030-10-10')
       const createdResponse = page.waitForResponse(
         (response) =>

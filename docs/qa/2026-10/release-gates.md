@@ -1,8 +1,40 @@
 # Local release gates — 2026-10-09
 
-The candidate is still in progress. These are executed local gate results, not a claim that every platform control/state is covered or that a commit has been released. Product owners are still finishing the nested-control inventory and current source. No production deployment or push was performed by the gate worker.
+These are executed local results for the candidate pushed by the release owner as `b4ed999` (PR #4), plus the narrowly verified web-image security correction. The gate worker did not push or deploy. The performance budgets still fail, and the bounded checks do not establish complete control/state coverage.
 
-## Executed results
+## Final candidate results
+
+The current production web input SHA256 is `f87cfe16a5a97ce2b951d5c5794772e2fd08f8f4adecbe49696e27663248e932`. Its 136-file immutable output has SHA256 `88ac678f57817f9e9794e3afb59a2d1607ef73dada869a177a1d961aa9d56584`. A final independent input comparison found no changed frontend input. The runtime-only Dockerfile repair does not change this frontend input set or served files.
+
+| Gate / proof | Executed result | Exact final report under `artifacts/qa/2026-10/release-gates/` |
+| --- | --- | --- |
+| All workspace unit scripts, including actual PostgreSQL API integration/concurrency suites | 2,648 passed, zero failed: config 10, contracts 839, DB 54, i18n 86, AI 177, UI 205, API 950, miniapp 35, web 292 | `final-unit.log`, `final-source-gates-typecheck.json` |
+| Full supported types | PASS on frozen product source | `final-final-frozen-typecheck.log`, `final-source-gates-final-frozen.json` |
+| Full supported lint after generated snapshot relocation | PASS, zero errors; stable code/test input SHA `add12971c81e2eb0d761386aa462eace5a3b6907d866db1a693cdc13805ef645` | `final-final-lint-clean-lint.log`, `final-source-gates-final-lint-clean.json` |
+| All migrations, fresh database and second application | 883/883 passed; two pool/reset integration files, 5/5 tests passed | `final-corrective-final-migrate.log`, `final-migration-manifest.json` (46 SQL files, including 2005–2009) |
+| Real demo seed/idempotence/reset | 20/20 passed | `final-browser-seed-final-seed.log` |
+| All workspace builds | PASS; subsequent current production frontend build independently verifies production React/client/JSX/compiler and stable inputs | `final-build.log`, `production-tls-b3d9b7273acd.json` |
+| Current bundle | PASS: largest gzip chunk 299.1 kB against unchanged 350 kB budget | `final-final-frozen-bundle.log` |
+| Localization / secret-fixture gates | Both PASS; no excluded failing gate | `final-source-gates-final-static-deps.json` |
+| Dependency audit | PASS at unchanged HIGH threshold; 8 moderate advisories remain | `final-final-static-deps-deps.log` |
+| Offline AI evaluations | 88/88 passed, 20,970 tokens and 407 soʻm against existing 4,000 ceiling; deterministic provider only | `final-ai-evals.log` |
+| Current source and all three built images | Supported scan PASS, no skips. Native Trivy 0.74.0: zero source HIGH/CRITICAL/secret findings and zero fixable HIGH/CRITICAL image findings. Semgrep 1.176.1: zero findings, one retained `PartialParsing` warning | `final-security-fixed-all-images.log`, `artifacts/security/source-manifest.json` |
+| Web image vulnerability repair | Before: HIGH TIFF `CVE-2026-4775`, installed `4.7.1-r0`, fixed `4.7.2-r0`. After: zero configured image findings, actual fixed package present | `final-web-image-vulnerability-{before,after}.json`, `final-web-image-security-repair-build.log` |
+| Actual fixed web image runtime | PASS: Linux UID 101, real HTML and immutable asset response, SPA fallback, source-map 404, network disabled; only owned container removed | `final-web-image-smoke.json` |
+| Supported compiled production API start | Before: wrong emitted path exited `MODULE_NOT_FOUND`. After: real production-mode boot, `/healthz` 200 and setup 201; Windows Node 24, not Linux API-image boot | `api-supported-start-before.log`, `api-start-contract-after.log`, `production-tls-b3d9b7273acd.json` |
+| Compiled adjacent browser proof | 36/36 passed across Chromium, Firefox and WebKit: permissions/chart pin lifecycle, entity search and refused lens exit, intent prefetch/recovery, held public/session reads | `compiled-bundle-thirty-six-results.json` (earlier hash `5e150…`, explicitly not the final opacity/comment edit) |
+| Final supported browser / accessibility checks | Release owner is receiving separate Event-agent receipts. The first compiled base run had 20/25 passing: four development-only `/@fs` TSX fixtures cannot run in preview, and one stale exact-label head fixture failed; neither was suppressed. Final supported development base and compiled accessibility replay pending in this ledger | `browser-production-final/` and Event-owned final reports |
+| Genuine production API, HTTPS/H2 six-route budget assessment | FAIL: all six LCP/score budgets miss the unchanged limits; every owned-origin request actually uses H2 and each CLS is below 0.1 | `production-tls-b3d9b7273acd.json`, `final-immutable-production-tls.log` |
+
+The all-workspace unit run serialized workspaces. Its forwarded `-- --run --maxWorkers=1` flags were literal script arguments, so it did **not** establish a one-Vitest-worker run; the corrected metadata records that limitation. Only subsequent runtime TIFF packaging, migration idempotence guards, scoped Avatar opacity and comment-only rule explanations followed that unit batch; their actual focused/migration/image proofs are recorded separately. No unit exclusion was introduced.
+
+The final lint refusal before cleanup contained 6,969 errors from minified immutable output retained inside application test scratch. The exact owned 136-file snapshot was moved byte-identically into `release-gates/production-snapshots/tls-b3d9b7273acd/web-dist`; no lint rule was weakened. Knowledge also removed its exact completed embedded Git fixtures after relocating future fixtures to verified ignored scratch. The fail-closed source/build guards and failed reports remain intact. A typecheck-added `dist/tsconfig.tsbuildinfo` was retained outside the served directory by the browser owner; all original 136 built files were unchanged.
+
+All final image tags are `qa-final-20261009`. API and worker runtime version probes report Node 22.23.3; the web probe reports nginx 1.30.5. API immutable ID is `637a5d1712c72a7da80ce852ab3e67222eefafb0f76358733d11c4f4b0365b98`, worker is `985ba2af1ffc62b21fb051ddcc314821683ccca8c298218b032f6c719c815dc2`, and the fixed web image is `4110098f771039911bc898b51eb9965e6df3a648f724be898bc9d7add3a6a1c3`. The image scanner retains its existing `--ignore-unfixed` policy; this is not a claim of zero vulnerabilities of every severity.
+
+The genuine local production API selects `CLAMAV_MODE=clamd`, but the digest-pinned ClamAV image is absent from the local cache. No local scanner/ready/upload-health pass is claimed and no broad provisioning was attempted. The release owner checks production service health separately. Local external application AI, Telegram, SMTP, push and Sentinel calls remained disabled. The earlier live-provider setup and production checks are separate from deterministic local evaluations.
+
+## Earlier executed results
 
 Reports and raw test diagnostics are retained under `artifacts/qa/2026-10/release-gates/`. Earlier failures are separate files; a later result does not overwrite its baseline.
 

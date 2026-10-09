@@ -4,6 +4,8 @@ import { resolve } from 'node:path'
 const root = resolve(import.meta.dirname, '../..')
 const output = resolve(root, 'docs/qa/2026-10')
 const pixelsFile = 'docs/qa/2026-10/work-controls-pixels.json'
+const nativePixelsFile = 'docs/qa/2026-10/work-controls-native-pixels.json'
+const nativePixels = JSON.parse(readFileSync(resolve(root, nativePixelsFile), 'utf8'))
 const evidence = {
   'functional-mixed-before': {
     run: 'work-controls-functional-complete',
@@ -38,6 +40,12 @@ const evidence = {
     status: 'measured stacking cause repaired; affected bulk9 passed across all3 engines',
     scope:
       'Actual rich WebKit failing probe: down and up point989/372, board scroll4200/101 and HTML99 unchanged. Checkbox down977/360; release hits sticky header960/360/288/52 after PressScale matrix0.991188 creates a stacking context. Toast is at636 and is unrelated. Permanent card isolation repairs stable paint order; BoardColumn supplies measured header spacing. Exact full bulk workflow passed1/1 afterward and all9 affected bulk instances passed across3 engines. Earlier horizontal jump remains distinct historical evidence; no native-focus cause is inferred.',
+  },
+  'card-contrast-before': {
+    run: 'work-card-native-runtime',
+    status: '3 failed across all3 engines on actual normal-use delegated-avatar contrast',
+    scope:
+      'Runtime receipts show the current54% unit4 token and white foreground, with only the immediate delegated-avatar wrapper at static opacity0.8. Axe measured3.33. Removing that wrapper opacity preserves the Avatar palette and smaller/overlapped delegation hierarchy. No stale-server or Motion readiness inference.',
   },
   'current-mixed-before': {
     run: 'work-controls-current-complete',
@@ -208,6 +216,7 @@ if (currentCardComplete)
     ],
     scope:
       'Actual pointer select/clear and title open, native backward Tab/Space after programmatic Title entry, emulated touch checkbox/title at390, safe measured sticky geometry/hit target and6 scoped axe checks at normal text. Existing global72px focus margin takes precedence over measured column spacing in these normal environments; no stronger margin is claimed. Current Avatar tokens are readable; a static delegated-avatar wrapper opacity80 caused actual3.33 contrast and was removed. No native long-press drag or physical device claim. Head grouping labels preserved; source geometry postdates prior head board captures. Latest user steering removed tiny/enlarged-text release expansion; aborted57 remains separate.',
+    pixels: nativePixelsFile,
   }
 if (currentVisualComplete) {
   evidence['current-nested-visual'] = {
@@ -262,8 +271,13 @@ if (currentCardComplete)
         {
           status: 'tested',
           evidenceId: 'card-stacking-current',
-          pixelReviewed: false,
-          pixelReviewedArtifacts: [],
+          pixelReviewed: state === 'focus',
+          pixelReviewedArtifacts:
+            state === 'focus'
+              ? nativePixels.inspected
+                  .filter((item) => item.run === cardRun && item.pixelInspected)
+                  .map((item) => item.screenshot)
+              : [],
         },
       ]),
     ),
@@ -596,6 +610,7 @@ const pixels = {
 const reviewedPixels = resolve(output, 'work-controls-reviewed-pixels.json')
 if (existsSync(reviewedPixels))
   pixels.currentReviews = JSON.parse(readFileSync(reviewedPixels, 'utf8'))
+pixels.nativeAfterReviews = nativePixels
 writeFileSync(resolve(output, 'work-controls-pixels.json'), JSON.stringify(pixels, null, 2) + '\n')
 const overlay = {
   schemaVersion: 1,
@@ -642,6 +657,13 @@ const overlay = {
       cases: 20,
       scope:
         'Supported seed/idempotence plus actual subsequent FLOW_SEED_DEMO=1 boots; policy unchanged.',
+    },
+    migrationReplay: {
+      before: '2009 second application fails existing insert policy;882/883 checks passed',
+      after: 'Local-services fresh supported migration883/883 plus pool/reset5 and seed20 passed',
+      source: 'packages/db/migrations/2009_work_template_privacy.sql',
+      scope:
+        'DROP POLICY IF EXISTS for three operation-specific policies; privacy predicates unchanged.',
     },
     editorUnits: {
       status: 'passed',

@@ -1,6 +1,6 @@
 {
-  "exactRecordsApplied": 353,
-  "stateBindingsApplied": 711,
+  "exactRecordsApplied": 355,
+  "stateBindingsApplied": 716,
   "issues": [],
   "owners": [
     "event_regressions",

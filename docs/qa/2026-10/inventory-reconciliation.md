@@ -1,6 +1,6 @@
 # Current source and bounded evidence reconciliation
 
-On2026-10-09 the TypeScript census discovered48 routes,412 source files and2,050 JSX/composed surfaces. The current14 authored overlays reconcile353 exact records and711 state bindings with **zero selector/cardinality/evidence issues**. They provide some bounded evidence on334 source surfaces and701 distinct named states. Other source states remain explicitly pending; these counts do not certify the entire platform, every role or every environment combination.
+On2026-10-09 the TypeScript census discovered48 routes,412 source files and2,050 JSX/composed surfaces. The current14 authored overlays reconcile355 exact records and716 state bindings with **zero selector/cardinality/evidence issues**. They provide some bounded evidence on334 source surfaces and704 distinct named states. Other source states remain explicitly pending; these counts do not certify the entire platform, every role or every environment combination.
 
 `inventory.json`, `traceability.csv` and `evidence-reconciliation.json` retain the exact source, component, state, author, report and scope. Workflow-only descriptions remain separate rather than automatically granting coverage to nested controls. The merger removes withdrawn author bindings and refuses ambiguous source matches. The12 inventory/applicability guard regressions pass.
 

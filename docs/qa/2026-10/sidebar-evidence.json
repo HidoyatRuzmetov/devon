@@ -52,11 +52,7 @@
       "run": "work-privacy-draft-after",
       "status": "passed",
       "cases": 3,
-      "engines": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "engines": ["chromium", "firefox", "webkit"],
       "scope": "native SidebarItem Pages focus and activation after explicit tabIndex0; does not repeat the full locale/viewport matrix"
     },
     "units": {
@@ -80,24 +76,10 @@
     "sidebar-matrix": {
       "test": "apps/web/test/e2e/platform-sidebar.qa.spec.ts",
       "scope": {
-        "roles": [
-          "department-head"
-        ],
-        "locales": [
-          "en",
-          "ru",
-          "uz-Latn",
-          "uz-Cyrl"
-        ],
-        "themes": [
-          "light",
-          "dark"
-        ],
-        "browsers": [
-          "chromium",
-          "firefox",
-          "webkit"
-        ],
+        "roles": ["department-head"],
+        "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+        "themes": ["light", "dark"],
+        "browsers": ["chromium", "firefox", "webkit"],
         "environments": [
           {
             "width": 1440,
@@ -137,22 +119,11 @@
     "sidebar-short-menu": {
       "test": "apps/web/test/e2e/platform-sidebar.qa.spec.ts",
       "run": "sidebar-focused-curation-after",
-      "roles": [
-        "department-head"
-      ],
-      "locales": [
-        "en",
-        "ru",
-        "uz-Latn",
-        "uz-Cyrl"
-      ],
+      "roles": ["department-head"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
       "theme": "light",
       "viewport": "360x225 text100",
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "browsers": ["chromium", "firefox", "webkit"],
       "states": "Home/Profile, End/Signout focused inviewport, Escapeopener, Shortcutsopen/close, zero console/pageerrors.",
       "pixels": "docs/qa/2026-10/sidebar-pixels.json"
     },
@@ -178,9 +149,7 @@
           "status": "tested",
           "evidenceId": "sidebar-matrix",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/sidebar-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/sidebar-pixels.json"]
         },
         "focus": {
           "status": "tested",
@@ -209,9 +178,7 @@
           "status": "tested",
           "evidenceId": "sidebar-matrix",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/sidebar-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/sidebar-pixels.json"]
         },
         "focus": {
           "status": "tested",
@@ -229,9 +196,7 @@
           "status": "tested",
           "evidenceId": "sidebar-matrix",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/sidebar-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/sidebar-pixels.json"]
         }
       }
     },
@@ -266,9 +231,7 @@
           "status": "tested",
           "evidenceId": "sidebar-matrix",
           "pixelReviewed": true,
-          "pixelReviewedArtifacts": [
-            "docs/qa/2026-10/sidebar-pixels.json"
-          ]
+          "pixelReviewedArtifacts": ["docs/qa/2026-10/sidebar-pixels.json"]
         },
         "focus": {
           "status": "tested",
@@ -290,9 +253,7 @@
       "source": "packages/ui/src/shell/sidebar-user-block.tsx",
       "component": "SidebarUserBlock",
       "kind": "button",
-      "controls": [
-        "Account menu trigger"
-      ],
+      "controls": ["Account menu trigger"],
       "states": {
         "default": "tested",
         "focus": "tested",
@@ -304,9 +265,7 @@
       "source": "apps/web/src/features/pages/faq-screen.tsx",
       "component": "FaqScreen",
       "kind": "heading",
-      "controls": [
-        "help.groups.account Russian heading at320text200"
-      ],
+      "controls": ["help.groups.account Russian heading at320text200"],
       "states": {
         "default": "tested"
       },
@@ -325,9 +284,5 @@
     "Reducedmotion/systemtheme transitions",
     "All4dark focusedEnd supplemental pixels"
   ],
-  "excluded": [
-    "Production actions",
-    "ExternalAI/TG/mail",
-    "Release/video by thisagent"
-  ]
+  "excluded": ["Production actions", "ExternalAI/TG/mail", "Release/video by thisagent"]
 }
