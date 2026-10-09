@@ -98,6 +98,7 @@ test('release CI explicitly selects production performance without altering ordi
   try {
     for (const source of [
       'apps/web/test/e2e/playwright.config.ts',
+      'apps/web/test/e2e/platform-qa.config.ts',
       'apps/web/test/e2e/flow-env.ts',
       'apps/web/test/e2e/flow-safety.ts',
       'apps/web/test/e2e/flow-production.ts',
@@ -125,7 +126,7 @@ test('release CI explicitly selects production performance without altering ordi
       DEVON_E2E: '1',
     }
     delete env.FLOW_PRODUCTION_BUILD
-    function load(flag) {
+    function load(flag, configName = 'playwright.config.ts') {
       return spawnSync(
         process.execPath,
         [
@@ -133,7 +134,7 @@ test('release CI explicitly selects production performance without altering ordi
           'tsx',
           '--input-type=module',
           '-e',
-          `const config = (await import(${JSON.stringify(pathToFileURL(join(fixture, 'apps/web/test/e2e/playwright.config.ts')).href)})).default; process.stdout.write(JSON.stringify({ command: config.webServer.command, forcedState: config.webServer.env.DEVON_E2E, reuseExistingServer: config.webServer.reuseExistingServer, testMatch: config.testMatch, testIgnore: config.testIgnore }));`,
+          `const config = (await import(${JSON.stringify(pathToFileURL(join(fixture, 'apps/web/test/e2e', configName)).href)})).default; process.stdout.write(JSON.stringify({ command: config.webServer.command, forcedState: config.webServer.env.DEVON_E2E, reuseExistingServer: config.webServer.reuseExistingServer, testMatch: config.testMatch, testIgnore: config.testIgnore }));`,
         ],
         {
           cwd: fileURLToPath(new URL('apps/api/', root)),
@@ -154,6 +155,10 @@ test('release CI explicitly selects production performance without altering ordi
       assert.deepEqual(config.testMatch, ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'])
       assert.deepEqual(config.testIgnore, [])
     }
+    const qaOrdinary = load(undefined, 'platform-qa.config.ts')
+    assert.equal(qaOrdinary.status, 0, qaOrdinary.stderr || qaOrdinary.error?.message)
+    assert.equal(JSON.parse(qaOrdinary.stdout).forcedState, '1')
+    assert.equal(JSON.parse(qaOrdinary.stdout).command, 'pnpm --filter @devon/web dev --mode test')
     const missing = load('1')
     assert.notEqual(missing.status, 0, 'explicit production requires a build receipt')
     assert.match(missing.stderr, /production-build\.json/)
@@ -181,6 +186,10 @@ test('release CI explicitly selects production performance without altering ordi
       '**/badge-contrast.flow.spec.ts',
       '**/dialog-scroll.flow.spec.ts',
     ])
+    const qaBuilt = load('1', 'platform-qa.config.ts')
+    assert.equal(qaBuilt.status, 0, qaBuilt.stderr || qaBuilt.error?.message)
+    assert.equal(JSON.parse(qaBuilt.stdout).forcedState, '0')
+    assert.equal(JSON.parse(qaBuilt.stdout).command, 'pnpm --filter @devon/web preview --mode test')
     writeFileSync(input, 'export const fixture = 2')
     const stale = load('1')
     assert.notEqual(stale.status, 0)

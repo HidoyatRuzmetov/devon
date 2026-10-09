@@ -20,7 +20,10 @@ export default defineConfig({
   ...base,
   // Geometry checks intentionally inspect the designed recovery blocks. This flag only enables
   // the existing test-mode URL selector; ordinary API faults still require actual fault evidence.
-  webServer: { ...webServer, env: { ...webServer.env, DEVON_E2E: '1' } },
+  webServer: {
+    ...webServer,
+    env: { ...webServer.env, DEVON_E2E: process.env['FLOW_PRODUCTION_BUILD'] === '1' ? '0' : '1' },
+  },
   testMatch: /platform-.*\.qa\.spec\.ts/,
   fullyParallel: false,
   workers: 1,

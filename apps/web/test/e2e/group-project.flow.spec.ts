@@ -179,16 +179,32 @@ test('@flow group project: objective + subjective tasks complete and progress re
     .click()
   await milestoneDialog.getByRole('button', { name: 'Bosqichni oʻchirish', exact: true }).click()
   await expect(headPage.getByText('Updated checkpoint', { exact: true })).toHaveCount(0)
-  await headPage.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
-  await expect(headPage.getByText('Updated checkpoint', { exact: true })).toBeVisible()
+  const milestoneDeletionToast = headPage.locator('[data-sonner-toast]').filter({
+    has: headPage.getByText('Bosqich oʻchirildi.', { exact: true }),
+  })
+  await expect(
+    milestoneDeletionToast.getByRole('button', { name: 'Bekor qilish', exact: true }),
+  ).toBeVisible()
 
   // Project deletion hides its tasks, and undo remains usable after navigation unmounts the page.
+  // Retain the real milestone receipt so both distinct Undo actions overlap, as they can in CI.
   await headPage.getByRole('button', { name: 'Loyihani oʻchirish', exact: true }).click()
   await expect(headPage).toHaveURL(/\/projects$/)
-  await headPage.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
+  const projectDeletionToast = headPage.locator('[data-sonner-toast]').filter({
+    has: headPage.getByText(
+      'Loyiha va uning vazifalari oʻchirildi. Hozir bekor qilishingiz mumkin.',
+      { exact: true },
+    ),
+  })
+  await expect(
+    milestoneDeletionToast.getByRole('button', { name: 'Bekor qilish', exact: true }),
+  ).toBeVisible()
+  await projectDeletionToast.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
   await expect(headPage).toHaveURL(new RegExp(`/projects/view\\?id=${project.id}`))
   await expect(headPage.getByText('100', { exact: true })).toBeVisible()
   await expect(headPage.getByText('Flow objective task', { exact: true })).toBeVisible()
+  await milestoneDeletionToast.getByRole('button', { name: 'Bekor qilish', exact: true }).click()
+  await expect(headPage.getByText('Updated checkpoint', { exact: true })).toBeVisible()
 
   await headContext.close()
 })
