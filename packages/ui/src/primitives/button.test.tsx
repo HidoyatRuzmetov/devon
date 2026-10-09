@@ -28,6 +28,19 @@ describe('Button', () => {
     expect(button).toHaveTextContent('Yuklanmoqda')
   })
 
+  it('prevents another activation while loading even when the caller passes disabled=false', async () => {
+    const onClick = vi.fn()
+    render(
+      <Button loading disabled={false} onClick={onClick}>
+        Saqlash
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Saqlash' })
+    expect(button).toBeDisabled()
+    await userEvent.click(button)
+    expect(onClick).not.toHaveBeenCalled()
+  })
+
   it('renders the child element in place of a <button> when asChild is set', () => {
     render(
       <Button asChild>

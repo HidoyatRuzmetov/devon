@@ -1,0 +1,1602 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-09",
+  "provenance": "Root actually opened all24 state sheets and all6 demo sheets (192 captures); local_services actually opened all24 onboarding sheets (96 captures). See onboarding-pixel-review.md. Generation and hashing are not inspection.",
+  "boundary": "Chromium/Firefox/WebKit; light/dark; en/ru/uz-Latn/uz-Cyrl. Organic no-membership member/admin at1440x900 normal and320x480 doubled text; forced error/forbidden/offline cards and mobile demo at320x480 doubled text. Desktop onboarding crops exclude the sidebar. Forced states establish designed geometry, not actual API fault or authorization behavior. Full-page fixed-nav stamps alone do not establish persistent occlusion.",
+  "report": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/summary.json",
+  "passed": 24,
+  "failed": 0,
+  "skipped": 0,
+  "retries": 0,
+  "sheets": [
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+      "sha256": "43d92c21432d12e4f2aa67081f8a53ed4eff052f3add765da909909b2eccf25a",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-error-focus.png",
+          "sha256": "a6db6f5877041e78f8837af62562fc76360669af02fef481c9519a61970fd2ac"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-error-full.png",
+          "sha256": "09a173471e329e49bef8dc51a6677f00088e17356030ddc0d0c42d416549d513"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-forbidden-focus.png",
+          "sha256": "46575f372317e6e827cbcbf5673b4ead2a32052e002bb40e78f0fc8e11298157"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-forbidden-full.png",
+          "sha256": "7c13c30e8370b1f6a1fcb08b9a989d853e1d5c66b2e0c6a8e19e76dd4a1af09e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-offline-focus.png",
+          "sha256": "deadbb236cf7e59a8e16d76e592e1f842fe74a2579390d2be475f56621f490dc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/en-offline-full.png",
+          "sha256": "db62f8bf5a2c4c5dc46d224923c736ff8573968a50469c5d4e51f55cfd123488"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-en.png",
+      "sha256": "06c451c341cae511e88db7a755347dc1f7dd90f1d19fd1e49387de6607c400ce",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-en-1440-text1.png",
+          "sha256": "43656e874040906f52844308bf2c6e82d95a88a7b3a72b07bb83a57f0357efc1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-en-320-text2.png",
+          "sha256": "16d29e9a9dc7ea85351f22dde8664c4519c861faeae36a903d0271946b1e2f97"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-en-1440-text1.png",
+          "sha256": "82361666eace25a4451388114dc0cca6a7dbe0f1629fe3d5310f228a9ea6979c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-en-320-text2.png",
+          "sha256": "3f33771d8bd12fae7d9a15a43b611f33c898db40872da52d51fdb576a9df934a"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+      "sha256": "c58359bf6bc80862070263562d7b140c32c2d6f7dc58125ca29df7cc0ffb5df4",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-error-focus.png",
+          "sha256": "770d1d8f82a3c5341379da9d033ebc0a31f04d365a6ff568d58e8f6f1259a463"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-error-full.png",
+          "sha256": "1fff50237bbfde0ff0bca09041eed8f49bb2cb376c2f532e114e48bf0c9f741f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-forbidden-focus.png",
+          "sha256": "b0255a42e3a10be53326ee8a3896e9917b2a20f0a5ef5b7a47ea8070ae0d3072"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-forbidden-full.png",
+          "sha256": "7221d1c1a8d28884770b89394348f4f5ce021b458748f128705aa15b704d5c6b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-offline-focus.png",
+          "sha256": "d4eb8929d978791cdf949d717ee03fd2cb1450c1cc75f26d3ee806d7d5f6d1fa"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/ru-offline-full.png",
+          "sha256": "1947bd6bc1085f49fdd83a998ee936d19b7552c5f2c427629d0c398544c73d33"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-ru.png",
+      "sha256": "3ce4c33bb2174af222f2f0c44f710ce7ce22ba302bc4e91f95060ceb94cee456",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-ru-1440-text1.png",
+          "sha256": "53821e66c93a746ff89ff0cd527e8719541ace78a92d25cf4bec89ff5cec7064"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-ru-320-text2.png",
+          "sha256": "d3c01111a583e25a9f241371f5f3a9ee26ddc74e17849fe4e212c7f686b51abb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-ru-1440-text1.png",
+          "sha256": "d7f76ce6e3bb137375eebd55bc81459bbb17a99eac9a2fd1d7970e1bfd854574"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-ru-320-text2.png",
+          "sha256": "8770e93a92bd6ee643c640a601971ba0bec98e3151ad0200025140fd9960ea67"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+      "sha256": "2511811bf9c659122044a3b640fee3f3d20b6bfc77a92b1dc10a4fd60793fbb0",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-error-focus.png",
+          "sha256": "5251a873c40600839cfc976a4e41f068ad03c9bc6fd67e461397f6f352ba6ca8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-error-full.png",
+          "sha256": "1c55fdb1b7251f70e7654cdf65b893b453defe2a61f4146f02e4d0df1c119aa1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-forbidden-focus.png",
+          "sha256": "1579cc886f52c3721299678a918e1e6df19675c687b7e06eddea5906489bd67e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-forbidden-full.png",
+          "sha256": "e380d2fe117f3ed5ba797dac38b81b70df84636b668e602ac7e715ed50a8012c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-offline-focus.png",
+          "sha256": "6f114a32a3a603f953b7d9ae24d59020ca96bcd5f2977c886545d3bdb2b5bd62"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Latn-offline-full.png",
+          "sha256": "0d447be08689027986b0ad13bb832fc8c71820bc0fe83047193f54365a867c37"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-uz-Latn.png",
+      "sha256": "415771e0aebb8d33c45ae8c2e7f8c0c1309a2584fa01b67a3f322676f5536b01",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-uz-Latn-1440-text1.png",
+          "sha256": "ec26d8db17aece004f6c01e55850f2d5569e7c694e21b6a7440424224990529c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-uz-Latn-320-text2.png",
+          "sha256": "dd72251cd6eeb69d59ab147a9868d7ab5c77fdf9eeef7aabc2bcee8867d08881"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "c07be4c7230b877628a7a2c9c432dfaacc860628272ceb4f83c52ca82e99839f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-uz-Latn-320-text2.png",
+          "sha256": "9b18cbc91d341ebe7b34d398edfa8961dc099e3dcd5612f0391807f0ad0a38b2"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+      "sha256": "80a0b714606e487db180468b1f1866b8fcc8916154d5af495cd59f1a2aff73ce",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-error-focus.png",
+          "sha256": "57c46f9f987f6f77de4ce99add7ed2222f90338a87ad53cae1460043c7effb1d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-error-full.png",
+          "sha256": "88f48d42a222dde322a3478cfb384dbd2ee58717ec349ea9487432863b50d8bc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-forbidden-focus.png",
+          "sha256": "ffedcc5615a914a2e571c1112a5756141f5a64ff057f7bc9de9364c8762243d3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-forbidden-full.png",
+          "sha256": "9b53605fabedb4abaf6e960d156db4aa13853357e0cb7ff2c77dd974d0a3c5af"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-offline-focus.png",
+          "sha256": "21cde4749a143bd4325835a52fe8186e49356db901a1c4d55ac8d365b7b9f865"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-chromium/uz-Cyrl-offline-full.png",
+          "sha256": "815c25d98befcc299322f1ce219f024571e095384a3251ee58f175bc71e047bd"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-uz-Cyrl.png",
+      "sha256": "ebe04c3b061e4ad8f04eafb523b76142c797f4584703e27b0c9fdf6e9ecc5f0a",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-uz-Cyrl-1440-text1.png",
+          "sha256": "3b93a6522024a6e71b791229e68868acfc28fff9fc144e1eaa083087632e6d62"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-chromium/member-uz-Cyrl-320-text2.png",
+          "sha256": "1f646e8505badcaf4c738fe441413f55c61dbb3789c74a1a2254b811614ca551"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "56741af68ab778499c59eeddc43ae3544cc3eb24aeb77f7cadaa1db4a919e904"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-chromium/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "04ec0c8c123367a4cadd11351910274312db32958b7fab8c5c31c71a78be523f"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-light.png",
+      "sha256": "85de1d8d31d1d88e6309ff4883aa230204d1c40b418c75c763716a6c2521489f",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/en-closed.png",
+          "sha256": "e5661907d2380681f8c59df48fca5d89c692e0489729771c2734faeb023c39ee"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/en-open.png",
+          "sha256": "51f6508a8aae873171f9b2719bc485cee8ef307add3b392e326781a730285b9e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/ru-closed.png",
+          "sha256": "dae0e07e85ddf204a0c198f7e0b891301630e70c4457397347b8bd8a4ac9124a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/ru-open.png",
+          "sha256": "eba2f1bb1c55d217caf03666008e926437f0362e1c976ed91a6f6208ebeb1f3a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/uz-Latn-closed.png",
+          "sha256": "95bd44ee36a00b82b079827c9b0994d176a3faae1236405253e4e88556e20a00"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/uz-Latn-open.png",
+          "sha256": "b11d88bd5f9f7c79f04c43d4d81146e3fd94346614fe31c449038ea48b1e2f95"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/uz-Cyrl-closed.png",
+          "sha256": "219df6cb231c3613e734e8f3c01c90badfdb63104831f748312a6816ada57b3e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-chromium/uz-Cyrl-open.png",
+          "sha256": "32141775bb6ec7a98ce8ec1deb929ed769a91342e5ab24ad9895471b49b494cd"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+      "sha256": "9e424f0700eea6bad7b61b9b38b700c8d52d1cd5607cdcabca3d5a44debd04a3",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-error-focus.png",
+          "sha256": "b1fa7de3f5faf1d17f06d2e6e31b96694247523f4f856e7f295f717eb966e94c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-error-full.png",
+          "sha256": "8f9ecc202e4b93b1fa96eb5a714d833787189bceead1819a62b972b77165804b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-forbidden-focus.png",
+          "sha256": "6cb3b2f61b3354000b6a64f5febef0d3168ba361a0b662b63993c8dd6f1b0e16"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-forbidden-full.png",
+          "sha256": "af5e00a838b539552c69961dbdce8efd91b2c9cc32ae9fb8e5ca1738657f4e29"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-offline-focus.png",
+          "sha256": "53a93f1dbd79fcb7d03c79ac0e551f934dfcd5183d506835b5dd69c22f9cc176"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/en-offline-full.png",
+          "sha256": "aa97a0a511cfa8abe6ed364038b18d6215fe7997afee5b24a04d1be900b07ca3"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-en.png",
+      "sha256": "d1ebf87559dfd2ba916b6ae8edf64a024e274745aba7ba3cfe1902dbb0595abf",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-en-1440-text1.png",
+          "sha256": "d981ec38db6dc4d63651f5a4a0d71bb41408c1bb83293c69fcc46d2ef8ffa94e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-en-320-text2.png",
+          "sha256": "c9064e915eca6db075511259041fddda46d41969e235b100c1be7ae3a6edcf23"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-en-1440-text1.png",
+          "sha256": "9ff9f5434b8f1366b6c781ed910ef6f38282a1567db83eb744a21edf053c1b01"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-en-320-text2.png",
+          "sha256": "a73180abf29e792819de7a80763316acdf9131e64b1f5dbdd2a26498d752dbbb"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+      "sha256": "b8b9d7a0977fe8586362803658995d8fab2e370eef7e51c6dc7b1c1f2df5ac95",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-error-focus.png",
+          "sha256": "49fd61d7ee0240bbcd72df45e292ed5a563d120b4c5c72430c765231d261df47"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-error-full.png",
+          "sha256": "c7e247192f79f2b5f7b0701bd6b5d10d5c2bfbb009d983e1ed220330a4548601"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-forbidden-focus.png",
+          "sha256": "2e3d756debc3484ec111bce7426f4f6079ccbaaeab0b3ef59bb4f611a524ba26"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-forbidden-full.png",
+          "sha256": "7b5a90fb8175aa80094e818a2db4cbf5415ee04f8e519bbbfeda3151942f3f3a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-offline-focus.png",
+          "sha256": "aff31817d3548658ca2868e016f0d2d369a7c052a897359dd14be6b532d03453"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/ru-offline-full.png",
+          "sha256": "148acd6a802547967c8f92db1a86dbe1960e0dc71b5fdbdd527a5f30a4055430"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-ru.png",
+      "sha256": "016ec9ec6110c23b2f2631103bb118943bb5ba60617a3d889e0bd3279093e0a2",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-ru-1440-text1.png",
+          "sha256": "1209ffc6c0ed2dfbc3882852d422a2790a517cdf68e84bb68b13ac531964ca5f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-ru-320-text2.png",
+          "sha256": "0a87afbe5f777f306328b4aa550f4781193fcecd6a364ba742bda614b6d01830"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-ru-1440-text1.png",
+          "sha256": "6fd2cd3275fdd46ea267deb5df8cc4e9908da842bb84164ec7fb6c886532cfd8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-ru-320-text2.png",
+          "sha256": "5ae8bd8ccb2b1a70ca6cef2c9f452771cd8430d60ed7e9a21ae1b8a744775f91"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+      "sha256": "c56576762380587cbc8afdd6f54b9df4497efb54b1d7ed4ce1f7c46df07c6ad9",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-error-focus.png",
+          "sha256": "ff499a60bcafe2f65621ebb0925f924f393f1338e84efb3653b6196d93d57f8c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-error-full.png",
+          "sha256": "c60335d71aaa9446b0355d7b32a94002fe51b290c70bd0035178a26991950459"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-forbidden-focus.png",
+          "sha256": "fcdc3bcaecd492c261e7da6f1bfc4f49929d429ddf2bcfe361624b80359275a9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-forbidden-full.png",
+          "sha256": "70110e42d989d61c147756d131aa24b7408f7ee21db330e9a090ca6a671ff90e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-offline-focus.png",
+          "sha256": "a4e7c5528427e301ba1c8142c5f5cc02170f4dc0c201427e3113ca8ab6f36d17"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Latn-offline-full.png",
+          "sha256": "c8960468a27899ba7d8423e33ce1f1dd091e4a2f8e7cb21c19f7e7ebd4087dcb"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-uz-Latn.png",
+      "sha256": "50aba5ea2bc7f49fb8346b97f5d97d02e3fee3ce2d7538230c1555b5349fa31f",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-uz-Latn-1440-text1.png",
+          "sha256": "94ddbd143ca9ad397bd95e5d30950b134355d6a8a2c83d6b6370560088daf538"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-uz-Latn-320-text2.png",
+          "sha256": "0de46e05a8f115104dac55353865c7ed7ca4fb35e1344e8ada7a9401a74b49f4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "61a049a8cba315262863261b471996189c24302dd951b4c56a0de8da5c8858b1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-uz-Latn-320-text2.png",
+          "sha256": "755e2de7795e804b282afaa18eaca882acedab732cf84e20265341d8d31cd76e"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+      "sha256": "2048e2b6614c96b8df068b14b8e97472b15997abe2e8a5bd6847ef6aed3287eb",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-error-focus.png",
+          "sha256": "bc7fcec20346fff27adf1d3c0670c43359e93b43ca3a581f7aa0edf288a4f693"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-error-full.png",
+          "sha256": "39ce17d3c6068d8c46bb0f2582a3fde709e9b76329b50ac4b9d5c41798548016"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-forbidden-focus.png",
+          "sha256": "30ec2fcd48d33e045c0e6a32fcc6fbf513480b66c7311235e6027b90da6a2762"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-forbidden-full.png",
+          "sha256": "b0caba9935ef9454f1b176dc8a451d2b60723bd4770c3ae354459332cec977a0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-offline-focus.png",
+          "sha256": "4cf43fc56cb09978547699bbd44b11578b01ff316a19ab08d11f2f29ebf90ae5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-chromium/uz-Cyrl-offline-full.png",
+          "sha256": "b86fa9cbdf67df559a9418ee0c095a084fc74f97d73e1a7955a92cd691a3693a"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-uz-Cyrl.png",
+      "sha256": "ece3c15c46c0da61fc10168789ae7958df4e0e25dd7e87934e8e1835f3b7b535",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-uz-Cyrl-1440-text1.png",
+          "sha256": "1a4a108a57cd2e279c0864bc91eea8d4badb713e4c61fd669a1516b7a8d59c2c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-chromium/member-uz-Cyrl-320-text2.png",
+          "sha256": "c489ae855138b13ca49a9cbf5c68065818c384554cd7ac684497541d1707e5ac"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "fe9dbd43272934a7110039b979f33203b5a50cbdf8a78b27742954a21ab11e74"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-chromium/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "36d5bc8939749fc6980cbeae5c47934abbbb684f5738cf763f282ecd1b8f4006"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-dark.png",
+      "sha256": "9c33645b9f73d041e8b59722892c820e5e3b64b3e62182116b85b9a6e45d0415",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/en-closed.png",
+          "sha256": "ebda923b21484877f97cbbf729421c83be29e448c8854bb793b5262a0e05bca0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/en-open.png",
+          "sha256": "e291e67f6f46c4baac6536015327ed6326abae0f135002bc63d4af575faa4122"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/ru-closed.png",
+          "sha256": "6890ed7604c7ea2942da94aeff3ba44d4b02753d4193b7cbcf84ad5c6e145cd9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/ru-open.png",
+          "sha256": "d350517ffa70c0ae66a7e2f2b43fa7caec69ed035451af3ecc22b67926b0eb64"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/uz-Latn-closed.png",
+          "sha256": "440a454e145b4d556332dcbe34a54332d5c2be6c91acfaf35e534d5627de27d0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/uz-Latn-open.png",
+          "sha256": "c3ebb3de05c43d448db343fc32ee9cce3dfd4d553704838fe8750f1b468d8658"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/uz-Cyrl-closed.png",
+          "sha256": "dfd4a765dfbfa5c479257a18b2f35cf67c8164cbaff8b484a39303da5473b04c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-chromium/uz-Cyrl-open.png",
+          "sha256": "7f6219a5f6eb7b1235ab77892e3607920da1167bb47ea4b123d3fd02dccfe6f4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+      "sha256": "7152aa16b16019d8cd45dececb1f771ad2f437645f9e58bde5e5478effe8115f",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-error-focus.png",
+          "sha256": "946abcecb308ec9512e7c51fb0d6f26f038f7f8a59f73f9b8e5e7166352e153d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-error-full.png",
+          "sha256": "79e0331adde3e02dcc7f4620b3d1eb98a371d023b84be6ab4bf24660abba7f04"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-forbidden-focus.png",
+          "sha256": "42d54e42f82ec4d0c3edd0e773d4362c11ea2c27cc564a73647eb5ea191180fc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-forbidden-full.png",
+          "sha256": "94497c57b1d1a5366d624472ee6d43b9bb03d5964ba3614c33c753ca798e3e23"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-offline-focus.png",
+          "sha256": "d2e265cf662a1e7c65ca411219b8ec141b2a6fcb579b60de2e0ecba9623fc225"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/en-offline-full.png",
+          "sha256": "d3c63db9017d7f614190f4bf3fa521e849c9301c6287796567f6b3a7342e7685"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-en.png",
+      "sha256": "8224a9f60c6c1fda25699e537b597baa2447fe534cf112320ee59f123c58a800",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-en-1440-text1.png",
+          "sha256": "63467bc83a3098ebb74162d6fa11ff899ab7f2a14555aabe0acc555f0c86e5b5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-en-320-text2.png",
+          "sha256": "2c81e86fa8ce8808dda529936c13c344e4b87c85d1b28f0641676d7c002f74f3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-en-1440-text1.png",
+          "sha256": "71bc91408d769baef78a40991114bbfca0f0bb5ab1aa6ab3fab2646c0f9f8769"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-en-320-text2.png",
+          "sha256": "c8622cd6b5aefc1f9dde9db286a6085f5033250e5f27f88e9e0a2e131bf7dfae"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+      "sha256": "36c6a6477b5722d4942a959ef460e1ea3f11d465ca72834a6ce6f2482cb3e858",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-error-focus.png",
+          "sha256": "d42ec3d7949b535079351b84490b53b913afce2a96cdb56f974f384d7d7f08a9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-error-full.png",
+          "sha256": "a93aff95795605749141acbafc66162c474d89f94d3429effbd790006b185e3b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-forbidden-focus.png",
+          "sha256": "e962d2cb0476e987623409047235aac3a2ea4ab5e14653f570595221a100d7e0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-forbidden-full.png",
+          "sha256": "ce567cac385b1eab881c1c6bf3d413e0b24027fa021717da08075eed3f051447"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-offline-focus.png",
+          "sha256": "5b78429e269bb4011371e7170d6418987f899145a2e76bed50baf8383a6bfcf7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/ru-offline-full.png",
+          "sha256": "f4b9e00dc9802f38554e0a38d60822884b4aa2bfff1fc1b1dc7b42c31fe93b46"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-ru.png",
+      "sha256": "cdbcc66895118fc3615bc04279443616a0b3e638e18ff7a27d1e1a5e9e8d73ab",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-ru-1440-text1.png",
+          "sha256": "4b753f0ef48b498be6cb84fcdc9a73fc0ec8c28a748169a8522d3a86ffa935f3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-ru-320-text2.png",
+          "sha256": "461a4fe1c7388012733e95de2d0d3b8b4e7564867234ca0ef0cdd2357cf086f9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-ru-1440-text1.png",
+          "sha256": "c91899c644a916e98f1c461b9bbfefb4ee11bfd16c0916d271f84abccb9a5717"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-ru-320-text2.png",
+          "sha256": "373546c815dbfc03988ab712edb8d97647805dbf6b37638b2d0a4f2dbdbb5f7c"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+      "sha256": "9b9c7821804ba2acf5edb84a2ade068c4a41b7bf063dfd3ce41618e3290e0687",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-error-focus.png",
+          "sha256": "77d258537642d1545ee49cf689f6d90e2ad5ab58f68241d78f8daae5ab17b4c6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-error-full.png",
+          "sha256": "4eabbb54d9881acaad22330742da1d68d9b1ef8661191a00000348489e42f178"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-forbidden-focus.png",
+          "sha256": "33257bedbf8e5739b9407cea548fb88fac5dcc4ef50aa618cf4c2d74a3b60d00"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-forbidden-full.png",
+          "sha256": "97d00aacb8f7b613bc0195d69980f742c44f12c093bf321af3d3d2e95bf3dcf4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-offline-focus.png",
+          "sha256": "e0cfd97a0e346695e5cfaeaae3dfc3154a5d62d87cadb9db28fcf287a2833506"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Latn-offline-full.png",
+          "sha256": "2420772b6db8626c697e2630a79d104896308dbf56dffa0189223b1f47f4f3b5"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-uz-Latn.png",
+      "sha256": "e8e4b8cdc44775619977e7d0de5c41e908c87c445ce822e53ae8df13bda5ede6",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-uz-Latn-1440-text1.png",
+          "sha256": "be4c4ef70b47b3a09027e5392b890073292a8fff1710166b9b25069d85ba066c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-uz-Latn-320-text2.png",
+          "sha256": "372f2e7e546a0ca9dcb566af8b7d067e227687e9ea005107c04124562b68422b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "dc12252d1fec54e4a75b353c246bee18d002574e40e41b8227998385decc3acf"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-uz-Latn-320-text2.png",
+          "sha256": "3aad818f09bfef44b7ed32b7eb9b0e0df8ace59d567adb73cc243f0d7f4a42e4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+      "sha256": "a644e79f3c32d40b6220c04f3498fb79863108e36f5c1cb88c5ba7b51b4eceb1",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-error-focus.png",
+          "sha256": "2314fbff073e471cee0d6692c68b6cd258de0352c93590b4e1cb0e50d2b0d40e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-error-full.png",
+          "sha256": "6106edb2a711ba2b2b7f5a9f94a18f00cad515446e51fdb443812c566e48adf5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-forbidden-focus.png",
+          "sha256": "923faf6e94ade0dd0c390e6bf20648cef469d1ad50e87cd9721e0c85c83b0354"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-forbidden-full.png",
+          "sha256": "f6f128cd74934518740e5ee930982f0bd3000e03e26fc185d6095be55272f6d8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-offline-focus.png",
+          "sha256": "ffd379e058e86562ff60a186a9644a5e5a8ddfdc4c8cf4194eda4ba795285ed8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-firefox/uz-Cyrl-offline-full.png",
+          "sha256": "49e5cb1a427e3796c3b7d64ca465272db05c9a894a3eb4c18b970299fe7adda0"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-uz-Cyrl.png",
+      "sha256": "ae59e1498f1ed6848858d5c9e13e068e2c31ff814c26dd15cec3507f6c664640",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-uz-Cyrl-1440-text1.png",
+          "sha256": "4b6fb6d1d0d3350cea814bc5492be66319c8b34dc7b14f39691a3bfbfee15ab2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-firefox/member-uz-Cyrl-320-text2.png",
+          "sha256": "aaf8a9cdea76072c9e954aade3b5903511d231ad83cb76543e00ed1dad442624"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "43ee859edd53df32ee6d356b88de1ea1d5df8d033b00d7db69c68660248ee14d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-firefox/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "284c507b4694072b352cbe756527444539e2ca1b8188ab5a26bbb58398cad1df"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-light.png",
+      "sha256": "fda688646b623f30c86bfe6958bdcd758eaf363875bbe880a23963ed8d125746",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/en-closed.png",
+          "sha256": "c0c39909cd99121cf531ba4349a26f896297972562bc117609933f395b8471de"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/en-open.png",
+          "sha256": "6c3388e4709cbc3a2edc9b0bcaa1aeacd79fe8bdb1ec3808149027140d49aa2f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/ru-closed.png",
+          "sha256": "a5120ec4e9dce5d38e9256f7aabdde7f7a8c1724ad06b6231e9b7fb6416fc8a2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/ru-open.png",
+          "sha256": "a806f00392b9755325fc4bc17a3f67903176a635f5d91befb5b88675da487768"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/uz-Latn-closed.png",
+          "sha256": "5065bc38949dc81fcfaae2f7e1769d3aa15cb102190cedff0b50338029cc9bd5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/uz-Latn-open.png",
+          "sha256": "eca97f57b002b18e573b7e8352e5138b04225ec9f3e53753e75232d1a80935db"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/uz-Cyrl-closed.png",
+          "sha256": "26453f01d0dbf38b59d9f31ae780bd7a60e70599b2e4c2574566801b2657642d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-firefox/uz-Cyrl-open.png",
+          "sha256": "3dba5dca5301709c1a3a6a0e6a0fc51e6b5fe8d6782e56b92ebdd840a4977637"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+      "sha256": "c5b04ae7748cdc82adf289be72c86e328cbb0142ce39facd7dee011a2517a2b4",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-error-focus.png",
+          "sha256": "390b97510f103cee07e2a1859c166b7f4df8a5e643e797d0ef1700804f4b7b5f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-error-full.png",
+          "sha256": "9582919e350712f2575f0d2f93f8c27fa86127b5b1a55441a385cb5998242ac4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-forbidden-focus.png",
+          "sha256": "06f67123d7eff1a8097d55095efdb91370f122766df5e3ba7ee261fd8e02b5a6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-forbidden-full.png",
+          "sha256": "61cf2d7572fabd7e6c9693bfe3c66b2c921d33472edeae2927542ac2f2c86991"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-offline-focus.png",
+          "sha256": "5c6964269f9c6f2e8992697ab928ab608e0a46992c8f4ea928ed70dbd21facf8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/en-offline-full.png",
+          "sha256": "afe3aeb3aadee79bd54be293b004ccb8ab748093b6a24bae274817fc873479b4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-en.png",
+      "sha256": "3577d6798d8b187da31008da15cb9a5ed9983f02726420a7741e994dd25e27a8",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-en-1440-text1.png",
+          "sha256": "1559f25c4342785ec34a03d94469243130cd4bb4d7b4d8dd37e514efa7479416"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-en-320-text2.png",
+          "sha256": "3e5502e998d02e93626d8735b610b3dff780ed5dcfe5d2dfa731316a4b8568b8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-en-1440-text1.png",
+          "sha256": "948a979a7fa6930efef2da8a10642c7db0fb43701005928f8e731dbfa4914b90"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-en-320-text2.png",
+          "sha256": "515aa4d5be327a804087b3f68a4a94916093478d515c660b9069e88ff2617ae6"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+      "sha256": "72afdb3230d50ca82d87b29d66884ebbefc3ad7d25a87aaf7d66b5faae143fb6",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-error-focus.png",
+          "sha256": "f8d58bdd64ab4735a4b6ee99dd747182a621e71b2e726a796e0853552082bfba"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-error-full.png",
+          "sha256": "447c91b06a93539731aab7e94b1345ec01d100400b9fa6a965c3de1a22a21205"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-forbidden-focus.png",
+          "sha256": "8d8a7702177a0c0287d8c3e119f8fa07b071becba9de8a43fc6d3d477f769143"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-forbidden-full.png",
+          "sha256": "cf073b22669d9569d832b0558ef6734bd816a9c8a2c5b9d436e3cd88dcff5708"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-offline-focus.png",
+          "sha256": "fa6e152b76cb3b24e1634b93e1173cbdf24a5ca9a853259bf35591c29b8c12c4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/ru-offline-full.png",
+          "sha256": "49c5dd35b3ff410a8cbfb5d734697fbd94bb69a419095151864cdcf2dfe6b97f"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-ru.png",
+      "sha256": "bbee632c84c215ecc80671a42c375be8fed03c94eff0800450bedfdb605205c0",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-ru-1440-text1.png",
+          "sha256": "4c80e7ccb9421e4b881aefb5dd42f85e5d040de1bb8b436c4b75037701fcfdd5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-ru-320-text2.png",
+          "sha256": "b1ad9578ee44dfc54996ffefa1ef484ed934d4b6a4a4869945a4f7527f15f0d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-ru-1440-text1.png",
+          "sha256": "2884911c1728c51ac9085c55f87dea4c18830235d4a70d3e347f48b041aa1ee1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-ru-320-text2.png",
+          "sha256": "1bd5c0c244014147b735dcc39413ebc3d8217755b3503144e291665ae5d47723"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+      "sha256": "6ec8199c901629b7f894458d16073d55948501cdd872891c5ef9c9ab453b0ff5",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-error-focus.png",
+          "sha256": "c4b810032ed33f474b5edd23aafa9e41a695a6124cadfd95cedfc806d60cf399"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-error-full.png",
+          "sha256": "f60a22a69d1815f7da1cb0872c235928bbee814b0f32277e926a935c4b92be47"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-forbidden-focus.png",
+          "sha256": "b73d1bef89d38c65fbd5bbb936aff706098b5116be349e11ebb7ba84f2c2fc95"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-forbidden-full.png",
+          "sha256": "23eb564fe5dcdf756c3129a6f6aaec30cff0352c5e97f13c244983e948c6a977"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-offline-focus.png",
+          "sha256": "a292bdf0d16c7111b6473e933ae1ac4fa06b685834e7a6f301b8db7235f4572d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Latn-offline-full.png",
+          "sha256": "89b15fabef20ae322835994734dff560cbff9c49a747801373ebf6c159327f13"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-uz-Latn.png",
+      "sha256": "7f1dc07c66c78fe163ca7937556bbbbcbdbacebf45d07dac99e112b574403242",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-uz-Latn-1440-text1.png",
+          "sha256": "7b0cf999d41b6ff75d4b5a94ca444f83ee0f2f415a12de0d370f9bbf403fca9b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-uz-Latn-320-text2.png",
+          "sha256": "a00ffc6fd5c14a380c41027bf744e291f0c850a31ec40b71b12979fc5eb1111b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "7e5aa11287f4a7a6feefe7d87a25959eb826f29eff1a56d7d5233365daa3fb2b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-uz-Latn-320-text2.png",
+          "sha256": "0af31e1b505677283765db94f9fc02dc145588a5636953724a328f986a716bf8"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+      "sha256": "51c5c753327b5a5211750e3437901a2434bb2de84d31dbcf3cacea5713654bff",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-error-focus.png",
+          "sha256": "d02a6198ace1efdb5a6d61fc70c1abdc0add4791117661c94fbccd94d62b1ac1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-error-full.png",
+          "sha256": "6545127fa6c2b3e242d80d8d5d9cadff379bf7c046b1c7b06014abd163d1f1c5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-forbidden-focus.png",
+          "sha256": "e14f8f6ff4fdf311e157e6ef10d56d0f12b0064cd0eb1c8267b0a41b0a7de90e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-forbidden-full.png",
+          "sha256": "32b6f1038ace5707a068b85a9419320aacf813e3f294f20be9ff1d4139441bf7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-offline-focus.png",
+          "sha256": "06204aff8dece61f72857db99ec4c830e86ca0eeeb15ed639e1ae4e483ab824d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-firefox/uz-Cyrl-offline-full.png",
+          "sha256": "769b85afe9eef329a396c83a2b4b604baf67d89a9899f26f93904f7dcceb75ec"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-uz-Cyrl.png",
+      "sha256": "ae4590c6210d3e6b21b4044a1cd0588b64ef8880f07bc84d937a0cb48c2e8f9e",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-uz-Cyrl-1440-text1.png",
+          "sha256": "b3eb2251534106c6a74bd0c08f90ec1e5373b7274bbb56a8f9c9320429cfdca6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-firefox/member-uz-Cyrl-320-text2.png",
+          "sha256": "e0bd280d93542d48e07bd9cebab62c79b778cff1f4f7c221a1deae516c70d86f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "3ba72c034985004873ac9bf4afde9f4dd77c12b067cc49ea312dec18f55c0a22"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-firefox/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "3bd861f253a7d8723b9d949fe6039409f2dac221bebd5b41a777c25007611ef4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-dark.png",
+      "sha256": "61e850f6e149eb5ffe89bd2227d059d85652ff61ddbc1c44002465ff66c661cb",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/en-closed.png",
+          "sha256": "e8ef7c716977b7a806a2cb96684ec342df98c5b413fc780118d0b714f51a3c0f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/en-open.png",
+          "sha256": "9e040b27bebec50e94477f3e63f0fa176ef04f031a8f5de4bbf419bba8abc0e3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/ru-closed.png",
+          "sha256": "382c5edb9ef35faa40cafaeab1b805bddc50e2218687ef63b2f412c59fff014e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/ru-open.png",
+          "sha256": "1ebcaa8a8078778b1772ecf787320d24dc13474fcf04c5a22093ec4b7033861c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/uz-Latn-closed.png",
+          "sha256": "9ab61ddbabc85ee6a4a6425ee6acdf035195548d8e1af586d53a23099e52f8df"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/uz-Latn-open.png",
+          "sha256": "60a39908e3e3e10dad5af7183d814804b142856ebc71a9ef79b62f87549ca728"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/uz-Cyrl-closed.png",
+          "sha256": "f52445a09433eab9537a0f1060cacaf40e7d92a7058b5c3196b09dbeac1d5cb8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-firefox/uz-Cyrl-open.png",
+          "sha256": "cf4c4a48ac30c565f4d27305b370b809027758d88ac9d1cdacc8471723f456ec"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+      "sha256": "c3852a0327ef3cd5c44455bed7669ed11d40a74637d48cb99c26f594cf14baea",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-error-focus.png",
+          "sha256": "c78ef37ec24d01f2823b176650caf0b8ebf807d319d4e5b11c96513aca29677f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-error-full.png",
+          "sha256": "21640326a33d63027c7324de92a0ca99ed5efcd1079a61b6e4616071cd36aea8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-forbidden-focus.png",
+          "sha256": "20dc600bf8c7c8a5b717122d0209b19e81434fc20851b19e7d3f9c4a6d4e2af9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-forbidden-full.png",
+          "sha256": "ec0e2e642e3a6ae639aed13154049da770b2ca28f5e9d076f2ca2045520d8563"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-offline-focus.png",
+          "sha256": "4469ff0ff7e9960dc7ae9a1e8976c00aff9dea59dd6f2d1aef4d8d6caa287698"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/en-offline-full.png",
+          "sha256": "0db9cb3b657420dc9a9c7aebafcc135e1ac0e633676a1af303aabd7b797182f4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-en.png",
+      "sha256": "1ca0f6844c6a3c995051400abd87fa15bfc9f2b0219be611b4b95f2540472cae",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-en-1440-text1.png",
+          "sha256": "893b893096dcdc8df50f1019d0ae3b872afa9e72c563992317cb7a4270fd6322"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-en-320-text2.png",
+          "sha256": "aa858a3253fce719a26dee04d5e17f1804a0c9e10e12f99c87cdea50ee6b9883"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-en-1440-text1.png",
+          "sha256": "095347ac770edad708f19e6781e2cf38fbcc2b5011fcb9f58dfaf46520e2e64c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-en-320-text2.png",
+          "sha256": "21ae521f18c40e602623c9761d9d9df797be638962f5413592ad9a285e5de4b4"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+      "sha256": "0d3ae6658243161a9bad331540e6d8d729e24d389648ee64ab00e8f34580a279",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-error-focus.png",
+          "sha256": "dd372957fdbf9fe5780a4ae805fd834c1c129b98afb6b3d21cdca9c7be474a5a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-error-full.png",
+          "sha256": "37c13d296cea8b2857056a9545d95962f95774a0f890aa8dbc5936949fc340e5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-forbidden-focus.png",
+          "sha256": "8e30ee828d1ee23a8b4bea25c4aef3e4900f94fa98741fcadbb42ba52b994df6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-forbidden-full.png",
+          "sha256": "5e2334555fd0d4ce48ad346f38f1a5ccb66b7cf59a74d57e6f2af63ca3fcf54e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-offline-focus.png",
+          "sha256": "6fcf9a921833b8e5fc4f6d1ce3f2890b1b15106253031d535e4ef7f0eb58099d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/ru-offline-full.png",
+          "sha256": "0c2a5b3ef7b21a69a98d79c69f4ad7379f70eecb8e1d7a4a2e54c381ed14446e"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-ru.png",
+      "sha256": "5a51009db141951b08ea3ce34d740c357e58ede900af98c994ea329f6521f830",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-ru-1440-text1.png",
+          "sha256": "1a0386ae29eaf8ecacb69d47c902198d0784adc003176ad4e68c40bbaaba93f5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-ru-320-text2.png",
+          "sha256": "25e24db70d8910c2a46b99c7fb77093a21f9d4ad6cad56b39684baaa576f466c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-ru-1440-text1.png",
+          "sha256": "8aa3bdaf33e0f0d526e8fee51860c98392844925c1b6981e49c804ac1f018203"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-ru-320-text2.png",
+          "sha256": "8303b3261f6ea6b79eb1d527a3278d4fb0fecb4b749858498a095acf6b056956"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+      "sha256": "70fd6609f7cc921028b34acb74026ac92bd964ed325617cdfc7d26adee91de04",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-error-focus.png",
+          "sha256": "d6f81abcc18c55dd995f1804f9d7c842190e67375252e73fa5e5a55b2105a7a7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-error-full.png",
+          "sha256": "7939841ba025c4ea0af35ad7d22ead65c0c63681adee1e8319d19866569bb6cb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-forbidden-focus.png",
+          "sha256": "a2fc176fbe85965a494625eb93839de6ce6a22df7e492ee80be9111c913ae1e9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-forbidden-full.png",
+          "sha256": "d234fc50b69d9194615b80df2eaaa49f8dc1a941ec3a130f073f0be6ae58398a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-offline-focus.png",
+          "sha256": "6ed358fa0f4ae93025c5fd1bc0f7746a0abbc8c0043db74436dddba43d543308"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Latn-offline-full.png",
+          "sha256": "3d464be2c0f7a7838ed9f903167344f1439a3d7db313412e92c67a51ad2eadac"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-uz-Latn.png",
+      "sha256": "a5c91212532f0efcdb228cab2b89d54a443fbd66e6297bb4c63aab3aef4e82a5",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-uz-Latn-1440-text1.png",
+          "sha256": "9e56ba9d23427ad1286e1f9c3777ab5dead1e77bb0f8c4aa81a0b76f14165cf9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-uz-Latn-320-text2.png",
+          "sha256": "6dd84ff3400affe3a37729f0c725744d3fc23f8fd2121d402f92e1fdbc89a4ce"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "49393f4a8764dc573416db2f8d339fb461660068f136c95609a6a1c3ab1017a7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-uz-Latn-320-text2.png",
+          "sha256": "64e53437beee44849d97a37f792cbf653acb7205a7728e4cd1a23de13404ff73"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+      "sha256": "2b1cc0fd084c4449318be236b7d2064be92aa42181679b498e3dd2bfead8b707",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-error-focus.png",
+          "sha256": "db951a474d201beea545d089c80801f5e656588acdc26fc34c1808d873901b86"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-error-full.png",
+          "sha256": "82115878c34f04ba54c341f26edcf75e27b1cc86e458a7a0af2526707c180a36"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-forbidden-focus.png",
+          "sha256": "59359602ea6d52afbeb52e46a051d3977f2c5c23c68761743d4e5a42369fef1d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-forbidden-full.png",
+          "sha256": "6bd1156d5802a95fb176a16bc14862cf148a94baac8e16bde00f9598966fc265"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-offline-focus.png",
+          "sha256": "dd9cbf24da04964e03642a91522725a04881e7128478b2a552115da5371aa655"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-85819-t-and-native-focus-in-light-webkit/uz-Cyrl-offline-full.png",
+          "sha256": "adc28e1b99961b708efb935080dcdabaacec02dd80b2f1c1323047674b2ec27e"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-uz-Cyrl.png",
+      "sha256": "4c2e41e31fc9223336bd8a2a42ade9378de18893e34ed27ed22753d1dbc07382",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-uz-Cyrl-1440-text1.png",
+          "sha256": "35360fb752e933412214f9f37b6a5a2579e553ace17bc84c138a0df8d4b90ae9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--576ca-ep-in-every-locale-in-light-webkit/member-uz-Cyrl-320-text2.png",
+          "sha256": "8dfdc9761c8bfab99812260084fd3637aef4e88d309d69f9c515f14c8ce5aa54"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "c36eee57a4e55799d66a1f61243287af2ededb45c8a600e24b0bee6711cbadb5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--34d86-ep-in-every-locale-in-light-webkit/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "0369fc48c41f13fdd930e07e9352bf39aeba77ac3201dd899e2716fdf6fbc4d8"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-light.png",
+      "sha256": "24280cdc158223cf9ae3c522947355e4c5280a8e203a201e66c35cbcd55ce663",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/en-closed.png",
+          "sha256": "491326b353400448c49f961c88becfc6c4df0d643cf15c37c24f134a44eb36ae"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/en-open.png",
+          "sha256": "8c5eaced30c73c022c774a5c54c9f6c592fe93a5768fce47e24eb312e60abb8c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/ru-closed.png",
+          "sha256": "2b9059a29de4968f6dfdcdd8fec82d207fc9c2343fbfef2caaf70c93ec8e3859"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/ru-open.png",
+          "sha256": "e79af599c4bb0ea843c62ac5ca5618cf944df307059fac2278c31ee79a306fd1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/uz-Latn-closed.png",
+          "sha256": "aa4fdd9cae8dcb12c57d849e5ef9232e83b7f4e328577bfb896c1243cbaa357e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/uz-Latn-open.png",
+          "sha256": "a9c9428837c873fdd636d144ef45f76a2054c3e7005aa08d8bf0693caca6d90d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/uz-Cyrl-closed.png",
+          "sha256": "934ab2190833e8573e1af9d4a1ebc4fcdcc839179c00bde4e3cb64656e9d35c7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--e0404--keyboard-recovery-in-light-webkit/uz-Cyrl-open.png",
+          "sha256": "f33f31e4059403ca784a6a57f2cbec2dc417fb3631bb5702feb91e0e5843c35d"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+      "sha256": "a113752be3d48f152dd1e16f6d65e27e53c74195d270e120de8ae9d67e47da5e",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-error-focus.png",
+          "sha256": "3fd7393ce3d95cf525e0430233192b88cf710cbfe3b49ac9000541ab93750506"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-error-full.png",
+          "sha256": "3617ffca0083fa6e309d928894419c12b8ce5ca4e5269b9042ec1dfbe8e89486"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-forbidden-focus.png",
+          "sha256": "1028dce893d5e573b2948b320346c8741f9eb46baf2118bb80d5484b1519d1ee"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-forbidden-full.png",
+          "sha256": "9c6fde29ff24453558f6cc179d023c82a9d11c556e17c9aac4935b7bf82ec8d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-offline-focus.png",
+          "sha256": "4339a2c2d41c8e6d170a95927c7f62fb8391f6806c81bdf025376eaacb482d9e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/en-offline-full.png",
+          "sha256": "fb6730990dab4999636436679d000f3db0809ce7e37f4b78abf39e735f5e9521"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-en.png",
+      "sha256": "0a6a14dee0c9ce868316475e70ddf447cd91ce888108c155ccc9a1106ab38bd3",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-en-1440-text1.png",
+          "sha256": "7aab277e0bf3f012bcd01dca720e302fdd91db22f75590caffdba5ae52f912b1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-en-320-text2.png",
+          "sha256": "12dfc07ab54c6923fe1af17db0a1437ba09d4be24550069c9232457bd395f8db"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-en-1440-text1.png",
+          "sha256": "0b69113e7111343caa1069e52c0b0ec55a5916656266f161ed3e5ec3daddebd2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-en-320-text2.png",
+          "sha256": "0b5905904b0d48835463e8cc080d72117d4785556a7237ee10b9962011bdf710"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+      "sha256": "38e531e21ab2aea0cceab14c5cf9514d127ecbb3908bf94da94fcfad48b391a5",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-error-focus.png",
+          "sha256": "83140fa6df53f7a9d0b5236a25d79e8dc8756807fd8d899797a73b9e36f5c649"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-error-full.png",
+          "sha256": "1713e0b0931aa6e1deb2df68dc32c561386a0024668b86ecdb6df2c4196bb60d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-forbidden-focus.png",
+          "sha256": "d3506812f7f7257b9c8d88435958343b7fe567cea0171e798b6b145f52e03cbd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-forbidden-full.png",
+          "sha256": "5c80f31fbd8d1b7839802a573c569c1b4279822d86d7eaffe42a07c9b8fa35b5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-offline-focus.png",
+          "sha256": "4771ff0818b85dc6369cf1c8193fe52385d5e002ceb410b7b8a07939c70e70c1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/ru-offline-full.png",
+          "sha256": "22fec16195825bf686e69c028efc1c812a3d617279adda168e85dcc9e6e1ac46"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-ru.png",
+      "sha256": "f1f6051f099f498c10697494784ce14c64fccb136737172736d724a6492b6977",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-ru-1440-text1.png",
+          "sha256": "1bffe0f235de3a09e06a7634790dd5f87776ac936b724faba032f22e2fecb9d2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-ru-320-text2.png",
+          "sha256": "12f7cf376c1b07632c112ea7b5d50014213e8fe102141c69a2570c7afaec279a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-ru-1440-text1.png",
+          "sha256": "8a7c1622adef4d48685d6155c56455f51ed3d2f82d50944659f791f9ffbd934f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-ru-320-text2.png",
+          "sha256": "2d256e4bf046ed9f6654a87ac97f016a62ba816835bd51fe4b5bc84b558e3776"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+      "sha256": "c2107dba5e61f01ffc9267dd2729612d1fd8792a4e101a6e10112d73d9e61c27",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-error-focus.png",
+          "sha256": "840d419371a17d19c829fb7edb056fd0b63a72766fe4e30241fc6a83bffdd359"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-error-full.png",
+          "sha256": "c537d30bb5f8fe98c0666c306bee256e8f34e462b300381c68a56aea47229aa5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-forbidden-focus.png",
+          "sha256": "4339de2369f7c3e9cb6545f7eb63f36d5cbb08c0e8e681507b583bb4b4df6769"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-forbidden-full.png",
+          "sha256": "69026e6285620b978a8ba74e47086dabb509172f166b165b5ab8a026fcd8df04"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-offline-focus.png",
+          "sha256": "5a7bf2f000b0dbe6b0d2a2d5af59e8b88a86bf4068dfd82b469ea104edf71f69"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Latn-offline-full.png",
+          "sha256": "6141a31a62162536c2d9c383c27fa703658b8f9d34170be110a757f484acacbd"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-uz-Latn.png",
+      "sha256": "bf80acb9eb018297bd1682c45178bf09b3d4bdc6ef862cb591314d3fa04b62d0",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-uz-Latn-1440-text1.png",
+          "sha256": "2d75a296991f800e28ce6f38c81cbfde686618100e410da1bf71be77bebc2382"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-uz-Latn-320-text2.png",
+          "sha256": "f54c075558d47c9889c3b38143b3f7e7bcdec10b4044b0f163b2cd15a719f9cc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-uz-Latn-1440-text1.png",
+          "sha256": "f4a6ef652ab5f5636fb08cdb7b2f7a990d7e95b43d369e86ef0668eb529abadb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-uz-Latn-320-text2.png",
+          "sha256": "87d5d7ba110f5ea1d43ed39ce8dca97f7ac40bf43be5a1c0957ddb3b6c1e2a76"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png",
+      "sha256": "6a80c2ccb389a9a90eff382ce3d2046f1d5cb96afba3cb6d2fe6dc0afeeffc2a",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-error-focus.png",
+          "sha256": "53c3de2fabd89c69c66b0559999ef44d53d801c3474ebeb4300cd34b3d5e9fec"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-error-full.png",
+          "sha256": "81467e1420a62e63d0e30cf0b85aa2dfac8cfd2208d4b72776784da4a0762d0b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-forbidden-focus.png",
+          "sha256": "17436038c22825a83ccaace42bd68d525cf4dbd32cb2933f4437b9cd05c46f44"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-forbidden-full.png",
+          "sha256": "0c5043bbcad62752220e3beca36c79de68a03401f0a406c27b6fa40f30b91ac8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-offline-focus.png",
+          "sha256": "86241fc872b93898d2b4400c42230bfbdbd4851d76f00f804d216fd8ec42325c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-state-card.qa--qa-db8c9-xt-and-native-focus-in-dark-webkit/uz-Cyrl-offline-full.png",
+          "sha256": "115cf3741c3e0397aebf100622c187d941ea9e2301cb7b9d58479226b0d8579d"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-uz-Cyrl.png",
+      "sha256": "e3f0879f4002554d1fade6e8969a5dcfd0a77599643f0602f588b5a2b49e16d1",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-uz-Cyrl-1440-text1.png",
+          "sha256": "d3f8bfae06fba6059d1e69f357541718e38c0ecfdc8e849d9ac051b5495dddad"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--81568-tep-in-every-locale-in-dark-webkit/member-uz-Cyrl-320-text2.png",
+          "sha256": "e377987a7cc8680abf21fa49d1dad6978cc394adf077f5d155f8f5cbe2970bee"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-uz-Cyrl-1440-text1.png",
+          "sha256": "a09e2410e33fc6632ebeefa322ce38775c8344374f4502cf8e0cc049c9b2d793"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-no-department.qa--fe60d-tep-in-every-locale-in-dark-webkit/super_admin-uz-Cyrl-320-text2.png",
+          "sha256": "1b4791804520e965db6e1bd8d3c73b2f91964d07a85086b28bf13c194720138d"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "local_services"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-dark.png",
+      "sha256": "c8afbd86d3807fc32348ff654c624de616c0546f29224c5cffe1cc6f42c9a34d",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/en-closed.png",
+          "sha256": "a54a25c1eddd06a9313301e1b15b97d715d2976bb6a08034ab6819b706795fa9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/en-open.png",
+          "sha256": "b596c20d6e22f7945c7ce9525c9d3a2bc4cbf2e92ecf4d2f933f4db20df9e341"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/ru-closed.png",
+          "sha256": "575fc0f493cb48a72f4c6b02b72967cab30f3df7fe9a1c27a762b0d272241f08"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/ru-open.png",
+          "sha256": "75d3d6e0888f21b92e42c45d20bc2738ee8d3f1cb9293e421655220a8e926ed2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/uz-Latn-closed.png",
+          "sha256": "09e326150180b876f666af2b8d82fc1d87524fb0e13d6644d5b76053a505689f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/uz-Latn-open.png",
+          "sha256": "39eaeb4db35abc8d369a8aee1fd3fee322fa6e5c3149069c95aefbf0f5885bd8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/uz-Cyrl-closed.png",
+          "sha256": "4b842fd4720f68a4c9b1ef4b9e2dbeeb60aa2641fe8b27e6cd3e3f07032edb38"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/platform-demo-chip.qa--qa--21047-d-keyboard-recovery-in-dark-webkit/uz-Cyrl-open.png",
+          "sha256": "c844aa63fb084ded9cd10cfdf535c15546e13392dd5b3ab4660310b81de1028d"
+        }
+      ],
+      "scale": "1:1 original pixels",
+      "reviewer": "root"
+    }
+  ],
+  "pending": [
+    "Physical device and physical OS magnification",
+    "Uncaptured widths/data/consumer routes",
+    "Full clean and populated inventory sweep"
+  ]
+}

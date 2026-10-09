@@ -67,8 +67,11 @@ export default function AnalyticsScreen() {
     })
   }, [])
 
-  const summaryQuery = useSummaryQuery(value)
-  const pinnedQuery = usePinnedChartsQuery()
+  const hasDepartment = Boolean(
+    meQuery.data?.activeDepartmentId ?? meQuery.data?.memberships[0]?.departmentId,
+  )
+  const summaryQuery = useSummaryQuery(value, hasDepartment)
+  const pinnedQuery = usePinnedChartsQuery(hasDepartment)
   const pinChart = usePinChartMutation()
   const unpinChart = useUnpinChartMutation()
 
@@ -111,6 +114,20 @@ export default function AnalyticsScreen() {
   if (meQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (!meQuery.data) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+  }
+  if (!hasDepartment) {
+    const admin = meQuery.data.user.role === 'super_admin'
+    return (
+      <StateView
+        kind="empty"
+        titleKey="analytics.context.title"
+        bodyKey={admin ? 'analytics.context.adminBody' : 'analytics.context.memberBody'}
+        action={{
+          labelKey: admin ? 'analytics.context.globalAction' : 'analytics.context.homeAction',
+          onAction: () => navigate(admin ? '/admin/analytics' : '/'),
+        }}
+      />
+    )
   }
 
   if (summaryQuery.isError) {

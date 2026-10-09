@@ -15,7 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import { Button, toast } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
-import { stopViewAs } from './api.js'
+import { refreshViewAsContext } from './view-as-cache.js'
 
 /** I-8b: `super_admin` never also holds a real department membership, so a super admin's
  * `activeDepartmentId` (`GET /me`) is non-null if and only if view-as is currently active -- no
@@ -34,12 +34,19 @@ export function ViewAsBanner() {
   const csrfToken = meQuery.data?.csrfToken ?? ''
 
   const stopViewing = useMutation({
-    mutationFn: () => stopViewAs(csrfToken),
-    onSuccess: () => {
+    mutationFn: () => import('./api.js').then(({ stopViewAs }) => stopViewAs(csrfToken)),
+    onMutate: () => ({ ownerUserId: meQuery.data?.user.id }),
+    onSuccess: async (_result, _variables, context) => {
+      const changed = await refreshViewAsContext(
+        queryClient,
+        () => meQuery.refetch(),
+        null,
+        context.ownerUserId,
+      )
+      if (!changed) return
       toast(t('admin.console.departments.viewAsStoppedToast'))
-      void meQuery.refetch()
-      void queryClient.invalidateQueries({ queryKey: ['admin'] })
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   return (

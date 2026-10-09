@@ -102,6 +102,11 @@ export async function createPage(
       departmentId,
       after: { id: row.id, kind: row.kind, title: row.title },
     })
+    tx.emit({
+      type: 'pages.page.created',
+      departmentId,
+      payload: { pageId: row.id, actorUserId: ctx.userId },
+    })
     return row
   })
 }
@@ -151,6 +156,11 @@ export async function patchPage(
       departmentId,
       after: { id: row.id, title: row.title, version: row.version },
     })
+    tx.emit({
+      type: 'pages.page.updated',
+      departmentId,
+      payload: { pageId: row.id, actorUserId: ctx.userId, version: row.version },
+    })
     return { ok: 'done', row }
   })
 }
@@ -168,6 +178,11 @@ export async function deletePage(
     `)
     if (rows.length === 0) return false
     tx.audit({ action: 'pages.page.deleted', subjectType: 'page', subjectId: id, departmentId })
+    tx.emit({
+      type: 'pages.page.deleted',
+      departmentId,
+      payload: { pageId: id, actorUserId: ctx.userId },
+    })
     return true
   })
 }
@@ -184,17 +199,38 @@ export async function restorePage(
   departmentId: string,
   id: string,
   ctx: AuditCtx,
-): Promise<boolean> {
+): Promise<'restored' | 'forbidden' | 'conflict'> {
   return withContext(toRequestContext(ctx, departmentId), async (tx) => {
+    const actor = await tx.raw(sql`select id from app.users
+      where id = ${ctx.userId} and status = 'active' and deleted_at is null for share`)
+    if (!actor.length) return 'forbidden'
+    const membership = await tx.raw<{ role: string }>(sql`
+      select role from app.memberships where user_id = ${ctx.userId}
+        and department_id = ${departmentId} and status = 'active' and deleted_at is null
+      for share
+    `)
+    if (!membership.length) return 'forbidden'
+    const target = await tx.raw<{ created_by_user_id: string }>(sql`
+      select created_by_user_id from app.pages
+      where id = ${id} and department_id = ${departmentId} for update
+    `)
+    if (!target.length) return 'conflict'
+    if (target[0]!.created_by_user_id !== ctx.userId && membership[0]!.role !== 'head')
+      return 'forbidden'
     const rows = await tx.raw<{ id: string }>(sql`
       update app.pages set deleted_at = null, updated_at = now(), version = version + 1
       where id = ${id} and department_id = ${departmentId}
         and deleted_at is not null and deleted_at > now() - interval '10 minutes'
       returning id
     `)
-    if (rows.length === 0) return false
+    if (rows.length === 0) return 'conflict'
     tx.audit({ action: 'pages.page.restored', subjectType: 'page', subjectId: id, departmentId })
-    return true
+    tx.emit({
+      type: 'pages.page.restored',
+      departmentId,
+      payload: { pageId: id, actorUserId: ctx.userId },
+    })
+    return 'restored'
   })
 }
 
@@ -233,8 +269,11 @@ export async function getVersion(
 ): Promise<PageVersionRow | null> {
   return withContext(toRequestContext(ctx, departmentId), async (tx) => {
     const rows = await tx.raw<PageVersionRow>(sql`
-      select id, title, blocks, author_user_id, created_at from app.page_versions
-      where id = ${versionId} and page_id = ${pageId} and department_id = ${departmentId}
+      select v.id, v.title, v.blocks, v.author_user_id, v.created_at
+      from app.page_versions v
+      join app.pages p on p.id = v.page_id and p.department_id = v.department_id
+      where v.id = ${versionId} and v.page_id = ${pageId}
+        and v.department_id = ${departmentId} and p.deleted_at is null
     `)
     return rows[0] ?? null
   })
@@ -278,6 +317,11 @@ export async function restoreVersion(
       subjectId: row.id,
       departmentId,
       after: { restoredFromVersionId: versionId },
+    })
+    tx.emit({
+      type: 'pages.page.version_restored',
+      departmentId,
+      payload: { pageId: row.id, actorUserId: ctx.userId, version: row.version },
     })
     return { ok: 'done', row }
   })
@@ -343,6 +387,11 @@ export async function createOnboardingTemplate(
       departmentId,
       after: { id: row.id, name: row.name, enabled: row.enabled },
     })
+    tx.emit({
+      type: 'pages.onboarding_template.created',
+      departmentId,
+      payload: { templateId: row.id, actorUserId: ctx.userId },
+    })
     return row
   })
 }
@@ -385,6 +434,11 @@ export async function patchOnboardingTemplate(
       departmentId,
       after: { id: row.id, enabled: row.enabled },
     })
+    tx.emit({
+      type: 'pages.onboarding_template.updated',
+      departmentId,
+      payload: { templateId: row.id, actorUserId: ctx.userId, version: row.version },
+    })
     return { ok: 'done', row }
   })
 }
@@ -406,6 +460,11 @@ export async function deleteOnboardingTemplate(
       subjectType: 'onboarding_template',
       subjectId: id,
       departmentId,
+    })
+    tx.emit({
+      type: 'pages.onboarding_template.deleted',
+      departmentId,
+      payload: { templateId: id, actorUserId: ctx.userId },
     })
     return true
   })

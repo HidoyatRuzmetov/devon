@@ -459,6 +459,7 @@ function Row({
   mode: ColourMode
   currentWeek: string
 }): React.JSX.Element {
+  const t = useT()
   const capacity = row.capacityHours || DEFAULT_WEEKLY_CAPACITY_HOURS
   // SEV2 #29: one name format, and it is the one every other casual list in the product uses.
   const name = fullName(row.member)
@@ -478,6 +479,9 @@ function Row({
         />
         <div className="min-w-0">
           <p className="truncate text-small font-medium text-foreground">{name}</p>
+          {row.member.role === 'head' ? (
+            <p className="text-caption text-muted-foreground">{t('headScope.departmentWide')}</p>
+          ) : null}
           <CapacityCell
             userId={row.member.userId}
             hours={capacity}

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // H24.1 baseline: LCP/INP/CLS on the six main routes at simulated 4G, via Lighthouse CI
-// (`npx @lhci/cli@<pinned>`, exact version below) driving Playwright's own downloaded Chromium
+// (installed @lhci/cli at the verified exact version below) driving Playwright's own Chromium
 // (CHROME_PATH / --chromePath), authenticated as demo.boshliq through tools/perf/lighthouse/auth.cjs
 // (a `--puppeteerScript`).
 //
@@ -8,9 +8,17 @@
 // Each route's Lighthouse JSON lands at tools/perf/lighthouse/out/<slug>/.lighthouseci/*.json --
 // paths are printed and written to out/report-paths.json for the baseline report to cite.
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, relative } from 'node:path'
+import { findPerformanceChromium } from './browser-path.mjs'
 
 const LHCI_VERSION = '0.15.1' // pinned exact version (repo convention: TECH-SPEC §16, "pin exact versions")
 
@@ -22,34 +30,41 @@ const flag = (name, def) => {
 }
 const BASE_URL = flag('base-url', 'http://127.0.0.1:5173')
 const OUT_TAG = flag('out-tag', 'dev') // 'dev' (Vite dev server) or 'prod' (production build via prod-server.mjs)
+const target = new URL(BASE_URL)
+if (
+  target.origin !== BASE_URL ||
+  target.protocol !== 'http:' ||
+  !['127.0.0.1', 'localhost'].includes(target.hostname)
+)
+  throw new Error('Lighthouse performance journeys require a literal local origin')
+if (!/^[a-z0-9-]+$/.test(OUT_TAG)) throw new Error('Invalid local performance output tag')
 const OUT_ROOT = join(here, 'out', OUT_TAG)
 mkdirSync(OUT_ROOT, { recursive: true })
+const RUN_ROOT = mkdtempSync(join(OUT_ROOT, 'run-'))
 
-function findPlaywrightChromium() {
-  const cache = flag('ms-playwright-dir', join(process.env.LOCALAPPDATA || '', 'ms-playwright'))
-  if (!existsSync(cache)) throw new Error(`Playwright browser cache not found at ${cache}. Run: npx playwright install chromium`)
-  const dirs = readdirSync(cache).filter((d) => /^chromium-\d+$/.test(d)).sort((a, b) => Number(b.split('-')[1]) - Number(a.split('-')[1]))
-  if (!dirs.length) throw new Error(`No chromium-* folder under ${cache}. Run: npx playwright install chromium`)
-  const exe = join(cache, dirs[0], 'chrome-win64', 'chrome.exe')
-  const exeUnix = join(cache, dirs[0], 'chrome-linux', 'chrome')
-  if (existsSync(exe)) return exe
-  if (existsSync(exeUnix)) return exeUnix
-  throw new Error(`chrome executable not found under ${join(cache, dirs[0])}`)
-}
-
-const CHROME_PATH = process.env.CHROME_PATH || findPlaywrightChromium()
+const CHROME_PATH =
+  process.env.CHROME_PATH || findPerformanceChromium(flag('ms-playwright-dir', ''))
 console.log(`[lhci] using Chromium: ${CHROME_PATH}`)
 console.log(`[lhci] @lhci/cli@${LHCI_VERSION}`)
+if (
+  execFileSync('lhci', ['--version'], {
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  }).trim() !== LHCI_VERSION
+)
+  throw new Error('Installed Lighthouse CLI does not match the pinned version')
 
 // `--routes /,/work` narrows this to a subset (tools/perf/check.mjs's "smoke" wiring passes just `/`
 // -- a full 6-route Lighthouse pass is a multi-minute baseline measurement, not a per-gate smoke
 // check); omit the flag for the original full baseline behaviour.
 const ROUTES = flag('routes', '/,/work,/work/table,/events,/inbox,/analytics').split(',')
 const reportPaths = {}
+let allCollected = true
 
 for (const route of ROUTES) {
+  if (!/^\/[A-Za-z0-9/_-]*$/.test(route)) throw new Error('Invalid local Lighthouse route')
   const slug = route === '/' ? 'root' : route.replace(/^\//, '').replace(/\//g, '-')
-  const outDir = join(OUT_ROOT, slug)
+  const outDir = join(RUN_ROOT, slug)
   mkdirSync(outDir, { recursive: true })
   const url = `${BASE_URL}${route}`
   console.log(`[lhci] collecting ${url} ...`)
@@ -76,37 +91,48 @@ for (const route of ROUTES) {
 
   try {
     execFileSync(
-      'npx',
+      'lhci',
       [
-        '--yes',
-        `@lhci/cli@${LHCI_VERSION}`,
         'collect',
         `--url=${url}`,
         '--numberOfRuns=1',
         `--chromePath=${CHROME_PATH}`,
-        '--puppeteerScript=../../../auth.cjs',
+        `--puppeteerScript=${relative(outDir, join(here, 'auth.cjs'))}`,
         ...settingsArgs,
       ],
       {
         cwd: outDir,
         stdio: 'inherit',
-        shell: true,
+        shell: process.platform === 'win32',
         env: { ...process.env },
         timeout: 120_000,
       },
     )
   } catch (e) {
     console.error(`[lhci] collect failed for ${route}: ${e.message}`)
+    allCollected = false
+    reportPaths[route] = []
+    continue
   }
 
   const lhciDir = join(outDir, '.lighthouseci')
   if (existsSync(lhciDir)) {
-    const jsonFiles = readdirSync(lhciDir).filter((f) => f.endsWith('.json') && !f.startsWith('links'))
-    reportPaths[route] = jsonFiles.map((f) => join(lhciDir, f))
+    const jsonFiles = readdirSync(lhciDir).filter(
+      (f) => f.endsWith('.json') && !f.startsWith('links'),
+    )
+    reportPaths[route] = jsonFiles
+      .map((f) => join(lhciDir, f))
+      .filter((file) => {
+        const report = JSON.parse(readFileSync(file, 'utf8'))
+        const finalUrl = new URL(report.finalDisplayedUrl ?? report.finalUrl)
+        return !report.runtimeError && finalUrl.origin === BASE_URL && finalUrl.pathname === route
+      })
   } else {
     reportPaths[route] = []
   }
+  if (reportPaths[route].length === 0) allCollected = false
 }
 
 writeFileSync(join(OUT_ROOT, 'report-paths.json'), JSON.stringify(reportPaths, null, 2))
 console.log('[lhci] done. Report paths written to out/report-paths.json')
+process.exitCode = allCollected ? 0 : 1

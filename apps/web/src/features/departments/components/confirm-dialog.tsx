@@ -20,6 +20,7 @@ export function ConfirmDialog({
   onConfirm,
   typedConfirmValue,
   typedConfirmLabel,
+  error,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -33,6 +34,7 @@ export function ConfirmDialog({
   /** When set, the confirm button stays disabled until the field below matches this exactly. */
   typedConfirmValue?: string
   typedConfirmLabel?: string
+  error?: string | undefined
 }) {
   const t = useT()
   const [typed, setTyped] = React.useState('')
@@ -48,6 +50,16 @@ export function ConfirmDialog({
       <DialogContent title={title}>
         <div className="flex flex-col gap-4">
           <div className="text-body text-muted-foreground">{body}</div>
+          {loading ? (
+            <p role="status" className="text-small text-muted-foreground">
+              {t('departments.common.pendingAction')}
+            </p>
+          ) : null}
+          {error ? (
+            <p role="alert" className="text-small text-destructive">
+              {error}
+            </p>
+          ) : null}
           {typeof typedConfirmValue === 'string' ? (
             <label className="flex flex-col gap-1.5">
               <span className="text-small text-foreground">
@@ -55,6 +67,7 @@ export function ConfirmDialog({
               </span>
               <Input
                 autoFocus
+                disabled={loading}
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={typedConfirmValue}
@@ -64,13 +77,17 @@ export function ConfirmDialog({
           ) : null}
           <div className="mt-2 flex justify-end gap-2">
             <DialogClose asChild>
-              <Button variant="secondary">{cancelLabel}</Button>
+              <Button variant="secondary">
+                {loading ? t('departments.common.close') : cancelLabel}
+              </Button>
             </DialogClose>
             <Button
               variant={destructive ? 'destructive' : 'primary'}
               disabled={locked || loading}
               loading={loading}
-              onClick={onConfirm}
+              onClick={() => {
+                if (!loading && !locked) onConfirm()
+              }}
             >
               {confirmLabel}
             </Button>

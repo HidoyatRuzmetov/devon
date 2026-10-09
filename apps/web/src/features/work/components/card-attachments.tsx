@@ -33,6 +33,8 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
   })
   const [stage, setStage] = React.useState<'uploading' | 'scanning' | null>(null)
   const [pendingId, setPendingId] = React.useState<string | null>(null)
+  const activeUpload = React.useRef<AbortController | null>(null)
+  React.useEffect(() => () => activeUpload.current?.abort(), [])
   const finalize = async (id: string) => {
     setStage('scanning')
     return apiClient.post(`${base}/${encodeURIComponent(id)}/finalize`, {}, attachmentSchema, csrf)
@@ -43,17 +45,22 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
       if (!file) return
       setPendingId(null)
       setStage('uploading')
+      const controller = new AbortController()
+      activeUpload.current = controller
       const signed = await apiClient.post(
         `${base}/upload-url`,
         { name: file.name, size: file.size },
         uploadSchema,
         csrf,
       )
+      controller.signal.throwIfAborted()
       await apiClient.uploadFile(signed.url, {
         method: signed.method,
         headers: signed.headers,
         body: file,
+        signal: controller.signal,
       })
+      controller.signal.throwIfAborted()
       setPendingId(signed.uploadId)
       return finalize(signed.uploadId)
     },
@@ -62,7 +69,10 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
       void qc.invalidateQueries({ queryKey: key })
       toast(t('attachments.saved'))
     },
-    onSettled: () => setStage(null),
+    onSettled: () => {
+      activeUpload.current = null
+      setStage(null)
+    },
   })
   const remove = useMutation({
     mutationFn: (id: string) => apiClient.delete(`${base}/${encodeURIComponent(id)}`, csrf),
@@ -82,6 +92,7 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
     },
   })
   const error = upload.error instanceof ApiError ? upload.error : null
+  const cancelled = upload.error instanceof Error && upload.error.name === 'AbortError'
   const retryScan = error?.status === 503 && pendingId
   return (
     <section className="flex flex-col gap-3" aria-label={t('attachments.title')}>
@@ -145,7 +156,17 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
           {t(`attachments.${stage}`)}
         </p>
       ) : null}
-      {upload.isError || remove.isError ? (
+      {stage === 'uploading' ? (
+        <Button size="sm" variant="secondary" onClick={() => activeUpload.current?.abort()}>
+          {t('attachments.cancel')}
+        </Button>
+      ) : null}
+      {cancelled ? (
+        <p role="status" className="text-small text-muted-foreground">
+          {t('attachments.cancelled')}
+        </p>
+      ) : null}
+      {(upload.isError && !cancelled) || remove.isError ? (
         <p role="alert" className="text-small text-destructive">
           {t(
             retryScan

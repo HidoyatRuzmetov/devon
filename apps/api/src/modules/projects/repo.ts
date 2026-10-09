@@ -7,8 +7,11 @@ import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { ProjectDTO } from './schemas.js'
+import { projectTemplatePayloadSchema } from '@devon/contracts'
+import { createCardInTx } from '../work/repo.js'
 
 export class InvalidProjectMembers extends Error {}
+export class InvalidProjectTemplate extends Error {}
 
 // Persist the selected colour once. A new project gets a varied label; edits never recolour it.
 const PROJECT_COLOURS = ['#6366f1', '#d97706', '#0891b2', '#9333ea', '#db2777', '#2563eb']
@@ -68,11 +71,85 @@ export async function createFromCard(
 
 async function checkedMembers(tx: Tx, departmentId: string, owner: string, members: string[]) {
   const ids = [...new Set([owner, ...members])]
-  const active = await tx.raw<{ user_id: string }>(sql`select user_id from app.memberships
-    where department_id = ${departmentId} and status = 'active' and deleted_at is null
-      and user_id = any(${sql.param(ids)}::uuid[])`)
+  const active = await tx.raw<{ user_id: string }>(sql`select m.user_id from app.memberships m
+    join app.users u on u.id = m.user_id
+    where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
+      and u.status = 'active' and u.deleted_at is null
+      and m.user_id = any(${sql.param(ids)}::uuid[])
+    order by m.user_id for share of m, u`)
   if (ids.some((id) => !active.some((m) => m.user_id === id))) throw new InvalidProjectMembers()
   return ids
+}
+
+/** All template-derived rows and their audit/outbox records commit together. */
+export async function createFromGallery(
+  ctx: RequestContext,
+  input: {
+    departmentId: string
+    templateId: string
+    title?: string | undefined
+    ownerUserId: string
+    members: string[]
+  },
+): Promise<ProjectDTO | null> {
+  return withContext(ctx, async (tx) => {
+    const consumed = await tx.raw<{ payload: unknown }>(
+      sql`select app.consume_project_template(${input.templateId}::uuid) as payload`,
+    )
+    if (consumed[0]?.payload == null) return null
+    const parsed = projectTemplatePayloadSchema.safeParse(consumed[0].payload)
+    if (!parsed.success) throw new InvalidProjectTemplate()
+    const payload = parsed.data
+    // Resolve every offset from one UTC calendar date, never local browser/DST-dependent time.
+    const start = new Date().toISOString().slice(0, 10)
+    const offset = (days: number) =>
+      new Date(Date.parse(`${start}T00:00:00.000Z`) + days * 86_400_000).toISOString().slice(0, 10)
+    const project = await createProjectInTx(tx, {
+      departmentId: input.departmentId,
+      title: input.title ?? payload.title,
+      description: payload.description ?? undefined,
+      colour: payload.colour,
+      ownerUserId: input.ownerUserId,
+      members: input.members,
+      status: 'planning',
+      startOn: undefined,
+      targetOn: undefined,
+      milestones: payload.milestones?.map((m) => ({ title: m.title, dueOn: offset(m.offsetDays) })),
+    })
+    // Each card's order depends on the preceding insertion in the same owner's column. A bounded
+    // sequential pass (schema max50) preserves that ordering; parallel creates read duplicate ranks.
+    for (let index = 0; index < (payload.cards?.length ?? 0); index++) {
+      const card = payload.cards![index]!
+      // nosemgrep: query-in-loop -- Each insertion derives its rank from the preceding card in this transaction; schema bounds the sequence to50 and parallel writes would duplicate ranks.
+      await createCardInTx(ctx, tx, {
+        departmentId: input.departmentId,
+        title: card.title,
+        description: undefined,
+        priority: 'none',
+        startAt: null,
+        labels: [],
+        links: [],
+        orderKey: undefined,
+        kind: 'project_task',
+        projectId: project.id,
+        projectScope: 'objective',
+        assigneeUserId: input.ownerUserId,
+        giverUserId: ctx.userId!,
+        createdByUserId: ctx.userId!,
+        source: 'template',
+        estimateMin: card.estimateMin ?? null,
+        dueAt: card.offsetDays === undefined ? null : `${offset(card.offsetDays)}T09:00:00.000Z`,
+      })
+    }
+    tx.audit({
+      action: 'work.template_used',
+      subjectType: 'work_template',
+      subjectId: input.templateId,
+      departmentId: input.departmentId,
+      after: { projectId: project.id, cards: payload.cards?.length ?? 0 },
+    })
+    return { ...project, objectiveTotal: payload.cards?.length ?? 0 }
+  })
 }
 
 type ProjectRow = {
@@ -245,27 +322,31 @@ export async function createProject(
   ctx: RequestContext,
   input: CreateProjectInput,
 ): Promise<ProjectDTO> {
-  return withContext(ctx, async (tx) => {
-    const id = randomUUID()
-    const members = await checkedMembers(tx, input.departmentId, input.ownerUserId, input.members)
-    const description = input.description
-      ? { format: 'markdown' as const, text: input.description }
-      : null
-    const milestones = (input.milestones ?? []).map((m) => ({
-      id: randomUUID(),
-      title: m.title,
-      dueOn: m.dueOn,
-      doneAt: null,
-    }))
-    // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
-    // array bound this way into a real Postgres array literal) -- interpolating the bare array
-    // instead lets drizzle's own `sql` tag apply its "expand into a parenthesized value list" rule
-    // (built for `where col in (${arr})`), which for an *insert value* produces a bare `record` --
-    // `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]` for a non-empty
-    // one ("cannot cast type record to uuid[]") -- the identical bug confirmed live in
-    // `work/repo.ts`'s `createCard` (quick-add crashed every card create with zero labels).
-    await tx.raw(
-      sql`insert into app.projects (
+  return withContext(ctx, (tx) => createProjectInTx(tx, input))
+}
+
+/** Keep single-project and template creation on the same validated transactional path. */
+async function createProjectInTx(tx: Tx, input: CreateProjectInput): Promise<ProjectDTO> {
+  const id = randomUUID()
+  const members = await checkedMembers(tx, input.departmentId, input.ownerUserId, input.members)
+  const description = input.description
+    ? { format: 'markdown' as const, text: input.description }
+    : null
+  const milestones = (input.milestones ?? []).map((m) => ({
+    id: randomUUID(),
+    title: m.title,
+    dueOn: m.dueOn,
+    doneAt: null,
+  }))
+  // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
+  // array bound this way into a real Postgres array literal) -- interpolating the bare array
+  // instead lets drizzle's own `sql` tag apply its "expand into a parenthesized value list" rule
+  // (built for `where col in (${arr})`), which for an *insert value* produces a bare `record` --
+  // `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]` for a non-empty
+  // one ("cannot cast type record to uuid[]") -- the identical bug confirmed live in
+  // `work/repo.ts`'s `createCard` (quick-add crashed every card create with zero labels).
+  await tx.raw(
+    sql`insert into app.projects (
             id, department_id, title, description, colour, owner_user_id, members, status,
             start_on, target_on, milestones
           ) values (
@@ -275,26 +356,25 @@ export async function createProject(
             ${input.status ?? 'planning'}, ${input.startOn ?? null}, ${input.targetOn ?? null},
             ${JSON.stringify(milestones)}::jsonb
           )`,
-    )
-    tx.audit({
-      action: 'projects.project_created',
-      subjectType: 'project',
-      subjectId: id,
-      departmentId: input.departmentId,
-      after: { title: input.title },
-    })
-    tx.emit({
-      type: 'projects.project.created',
-      payload: { projectId: id, actorUserId: input.ownerUserId },
-      departmentId: input.departmentId,
-    })
-    const rows = await tx.raw<ProjectRow>(
-      sql`select id, title, description, colour, cover_key, owner_user_id, members, status,
+  )
+  tx.audit({
+    action: 'projects.project_created',
+    subjectType: 'project',
+    subjectId: id,
+    departmentId: input.departmentId,
+    after: { title: input.title },
+  })
+  tx.emit({
+    type: 'projects.project.created',
+    payload: { projectId: id, actorUserId: input.ownerUserId },
+    departmentId: input.departmentId,
+  })
+  const rows = await tx.raw<ProjectRow>(
+    sql`select id, title, description, colour, cover_key, owner_user_id, members, status,
                  start_on, target_on, milestones, created_at, updated_at, version
           from app.projects where id = ${id}`,
-    )
-    return toProjectDTO(rows[0]!, EMPTY_PROGRESS)
-  })
+  )
+  return toProjectDTO(rows[0]!, EMPTY_PROGRESS)
 }
 
 type PatchProjectInput = {

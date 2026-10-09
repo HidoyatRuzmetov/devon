@@ -114,6 +114,22 @@ export async function getEventRow(tx: Tx, eventId: string): Promise<EventRow | n
   return rows[0] ? toEventRow(rows[0]) : null
 }
 
+/** A nested URL must identify this child's real parent, including after soft deletion. Department
+ * RLS alone cannot distinguish two events in the same department. Table names are module literals. */
+export async function eventChildBelongsTo(
+  tx: Tx,
+  eventId: string,
+  table: 'event_comments' | 'carpools' | 'event_items' | 'polls' | 'event_photos',
+  childId: string,
+): Promise<boolean> {
+  const rows = await tx.raw<{ id: string }>(sql`
+    select c.id from ${sql.identifier('app')}.${sql.identifier(table)} c
+    join app.events e on e.id = c.event_id
+    where c.id = ${childId}::uuid and e.id = ${eventId}::uuid and e.deleted_at is null
+  `)
+  return rows.length > 0
+}
+
 export async function listEventRows(
   tx: Tx,
   opts: { from?: Date | undefined; to?: Date | undefined } = {},
@@ -618,6 +634,7 @@ export async function releaseItem(tx: Tx, itemId: string, userId: string): Promi
 
 export type PollRow = {
   id: string
+  event_id: string | null
   department_id: string
   kind: string
   question: string
@@ -631,7 +648,7 @@ export type PollRow = {
 
 export async function listPolls(tx: Tx, eventId: string): Promise<PollRow[]> {
   return tx.raw<PollRow>(sql`
-    select p.id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
+    select p.id, p.event_id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
            p.created_by_user_id, u.given_name, u.family_name
     from app.polls p join app.users u on u.id = p.created_by_user_id
     where p.event_id = ${eventId}
@@ -641,7 +658,7 @@ export async function listPolls(tx: Tx, eventId: string): Promise<PollRow[]> {
 
 export async function getPoll(tx: Tx, pollId: string): Promise<PollRow | null> {
   const rows = await tx.raw<PollRow>(sql`
-    select p.id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
+    select p.id, p.event_id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
            p.created_by_user_id, u.given_name, u.family_name
     from app.polls p join app.users u on u.id = p.created_by_user_id
     where p.id = ${pollId}

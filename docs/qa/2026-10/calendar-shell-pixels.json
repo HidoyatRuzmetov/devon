@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "root",
+  "reviewBasis": "Actual view_image inspection of eighteen earlier originals, eighteen later calendar originals, six native focus originals and six unscaled sheets",
+  "policy": "Hashing or generating images cannot establish inspection. Earlier artifacts are not relabeled as later source captures.",
+  "originals": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-chromium/held-create-draft.png",
+      "sha256": "df79ad37e9a1039a832aa58fb01b1067a672b97725a39c939f271f11bb921624",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-firefox/held-create-draft.png",
+      "sha256": "4e7a0a593dddecb430291e50ac9bf6efa3250fa8d6dc7e472849921fdd16ceb2",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-webkit/held-create-draft.png",
+      "sha256": "19ea46d6307e354a827b4d116ced9addccfca9f6ea9cad895dd821811d723a53",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-chromium/clipboard-fallback.png",
+      "sha256": "013460fd39db692c56874fc55a30257300a5b783f42b24cd32555d637d4060a1",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-firefox/clipboard-fallback.png",
+      "sha256": "3896e17e7a628fde5177b85fff410edca50344cb1527d59bb8624b901da6c9fa",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-webkit/clipboard-fallback.png",
+      "sha256": "27d9a282a129b0e9bbbc55ebd8402c0ad386c90f6d10247a7908f7f9c6459362",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-chromium/subscription-cap.png",
+      "sha256": "e3192efe76edee44b3f439f9f84f1ddf89cfeb7144be3c980057d88e8e914a10",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-firefox/subscription-cap.png",
+      "sha256": "53e9dc260824020f6780616fbfda4a650e5a5573d34973737a9e6196a608c0a9",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-webkit/subscription-cap.png",
+      "sha256": "5c2ad79277eca8b4aa679ec55bc067fb1a51ae8a39961f392d61925c5ef3cf5e",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-chromium/cancelled-agenda.png",
+      "sha256": "7558622ee51b22404ec9eaef9ee840d1f324705022609a5d1b53656976aca15f",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-firefox/cancelled-agenda.png",
+      "sha256": "3a85b753419a9887d7c1d4c311067ae07768a43382d5b0c32d2373aeaf02a676",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-webkit/cancelled-agenda.png",
+      "sha256": "9dd470a629e2a230bc2268f4bf951717fa04bcd37faf4aa1db3d013767b3306e",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-after-data.png",
+      "sha256": "d7131c2f83cf2e6c0a7f4a70673e1101400461a12ca3b08917e55eb64e0f195a",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-before-data.png",
+      "sha256": "19f0c1d8a466904d0a7468b7012ca7a9c1021c7b4759179a73bcc3258c93bf37",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-after-data.png",
+      "sha256": "63cc5ffb39b616c24c89441e94ff0dc3269e17b3c753331d14dd0995a6b94cca",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-before-data.png",
+      "sha256": "89a4be4b1a74e4a6b1e5833b0ea4f8fedde363848a66644bcbddfac2459b4a86",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-after-data.png",
+      "sha256": "5461508e5e762015336775bfa22060e225afaf064bee755753bdab7ec2d7a041",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-before-data.png",
+      "sha256": "9a3f9b842a2bbb321ce5b8abb38052aab3bb40989a37f4afd07bf6d1ca7a512a",
+      "opened": true
+    }
+  ],
+  "laterCalendarOriginals": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-chromium/held-create-draft.png",
+      "sha256": "a7fcfa29446071da2243e60db0b2b0f21b2c67cc86a693578626276eb4d26b03",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-firefox/held-create-draft.png",
+      "sha256": "90583808c6c2eea83b2e4c9f1eb20c4ee23489b50fdba8ecee82d312b2f9d925",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-webkit/held-create-draft.png",
+      "sha256": "19ea46d6307e354a827b4d116ced9addccfca9f6ea9cad895dd821811d723a53",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-chromium/clipboard-fallback.png",
+      "sha256": "50b838a0a56b0c19d3774356d15850f12e9c10f21fe5bc6591dd81566315d385",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-firefox/clipboard-fallback.png",
+      "sha256": "9a3eec555235e4fd113cacae7c34c97740c1fd7cb09d03b994900dfceb68ce26",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-webkit/clipboard-fallback.png",
+      "sha256": "95965b6dfabeb87e07713b9c5117a87871ae1cb0c5e02312ca7b8ec4e05cb422",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-chromium/subscription-cap.png",
+      "sha256": "e3192efe76edee44b3f439f9f84f1ddf89cfeb7144be3c980057d88e8e914a10",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-firefox/subscription-cap.png",
+      "sha256": "53e9dc260824020f6780616fbfda4a650e5a5573d34973737a9e6196a608c0a9",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-webkit/subscription-cap.png",
+      "sha256": "5c2ad79277eca8b4aa679ec55bc067fb1a51ae8a39961f392d61925c5ef3cf5e",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--988cb-scribe-a-renewed-credential-chromium/late-clipboard-denied.png",
+      "sha256": "f4205568b62f8a6bba72fa8b30bb3374d67cfd1d774ef37989269c7be14aaefc",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--988cb-scribe-a-renewed-credential-firefox/late-clipboard-denied.png",
+      "sha256": "cacc20372f0cc38738f8ac58a1232590adb22963ca501eb1cb962b3bac5935f9",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--988cb-scribe-a-renewed-credential-webkit/late-clipboard-denied.png",
+      "sha256": "177a90d0b0c0a4e33da48c89963c20ef4df2bd198e2af0e51c2395d12e6b141e",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-chromium/cancelled-agenda.png",
+      "sha256": "a6ff5c5ae6e3556de0fd75d60214a9f71af8e927f9613cd04d86b0daa5c78320",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-firefox/cancelled-agenda.png",
+      "sha256": "327a4835e3b1f6f0441924f23ef3d99da8e0d2144401a044bcace599a981b944",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-webkit/cancelled-agenda.png",
+      "sha256": "9df03018263824cd1faf19083e11f6507f153caefed11d5493bc2cc7af29e6ad",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--f9e19-scribe-a-renewed-credential-chromium/late-clipboard-success.png",
+      "sha256": "e21d91e5d8f11e0e7bc1bcb0c24a3c3eae91c3eea367a72a9fa273eaa424a0a5",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--f9e19-scribe-a-renewed-credential-firefox/late-clipboard-success.png",
+      "sha256": "c2575e438ea86bef31b2ed5e80a662e6be720c8fc6214bc8f73d6db6a2937042",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/calendar-copy-current/platform-calendar-deep.qa--f9e19-scribe-a-renewed-credential-webkit/late-clipboard-success.png",
+      "sha256": "6d2000a7e32c05449d654083987d85fa18fd3d58fb61f8aadc86acf01c44cd38",
+      "opened": true
+    }
+  ],
+  "nativeKeyboardFocusOriginals": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-12323-vigation-at-390x600-text200-chromium/native-priority-focus.png",
+      "sha256": "bd29728beea7ab76b30869187d4cf2abaed47c595a6730f132b85357b4f960f0",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-12323-vigation-at-390x600-text200-firefox/native-priority-focus.png",
+      "sha256": "89ff0fb4bc265e54df355c85e2c1832bd30577e74921a95811aed4da21ab13d9",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-12323-vigation-at-390x600-text200-webkit/native-priority-focus.png",
+      "sha256": "505065a2724e63e9d4db873f553cbadd66151c9f3dba8c455401055c9a1e3414",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-9e199-vigation-at-360x225-text100-chromium/native-priority-focus.png",
+      "sha256": "a3bdc8651b0ca1229ee215dc1dd291672fbf578af22bd622a5210016a7901da4",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-9e199-vigation-at-360x225-text100-firefox/native-priority-focus.png",
+      "sha256": "33e466948f4b78a5315ee00f380718570b6a2a3715436001d7fcc102f729012a",
+      "opened": true
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-native-focus-current/platform-work-focus.qa--qa-9e199-vigation-at-360x225-text100-webkit/native-priority-focus.png",
+      "sha256": "11d7124b14c9d000dddfe13706212b9095e978b2a70b0e94de6672efeb0ad391",
+      "opened": true
+    }
+  ],
+  "sheets": [
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/chromium-light.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-chromium/en-scrolled-navigation.png",
+          "sha256": "b1bc630966cee7a470882652153d97b3fe95c602759005e756dc30b9b2a0a1e8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-chromium/ru-scrolled-navigation.png",
+          "sha256": "637330bcbbf4f302cea9be3f42c554f22b77fc41eb81d5d669028ec2fe0103b4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-chromium/uz-Latn-scrolled-navigation.png",
+          "sha256": "16bb87326550ad33db985ad1e306ae6c6e68983a7299f6a749058e19335300d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-chromium/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "831aeab9b98d1348aecf77ca879c4cb26972e3fdd20cf89c2c996baec4970632"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "01f1aab1b5437d3ffa11fb97e9c5dd30f90e1b0e6da49d078dbb8b97bc29ea6a",
+      "opened": true
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/chromium-dark.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-chromium/en-scrolled-navigation.png",
+          "sha256": "92f0b9d44c86dc0a9c9a0915b7f3528a118b8a85f283c33070376e4611dc0977"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-chromium/ru-scrolled-navigation.png",
+          "sha256": "7285003ddfad787833b1e8c7da2f91e402b2f91da4cc03d1890bef4607cc07f3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-chromium/uz-Latn-scrolled-navigation.png",
+          "sha256": "bf01f11b4bd927d8e6e9830da2e7106f62c04f26d156328ce93844c0c614c51a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-chromium/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "39188e7b04314faf913455a82fdfa1c5e4728a907b967d687935579e39369a68"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "649c2ca8119e27c1ab76234c9551c3a3dcaa95029504a63b962b509788d7fd26",
+      "opened": true
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/firefox-light.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-firefox/en-scrolled-navigation.png",
+          "sha256": "53aa23e0373b0c8b97ec0fc8f3768accff5c78e3caf0f2847f040ac8ed31e5d8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-firefox/ru-scrolled-navigation.png",
+          "sha256": "7f0e7450afb4987f680ad7b1e050edef58ab6b0deeee5a7878826bd6dbd74b3d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-firefox/uz-Latn-scrolled-navigation.png",
+          "sha256": "56f5091cf3f9bb3cc72f6b7aa97c233d30712ee926a76d9bb62c15cbc6d1920b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-firefox/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "d33804f24b2ae7a19d92b7f3c95b2d6d082b2b5afc3b7211caf7a1367c4a5b35"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "c316dd9f25dcc412337c85cfc9dfbe2e71188cffc37b7c3c8df30adc210e2d82",
+      "opened": true
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/firefox-dark.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-firefox/en-scrolled-navigation.png",
+          "sha256": "3a9476b9702dc5e3e22f027dc473069c426ef80e04a395494b8a1d6788893ca2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-firefox/ru-scrolled-navigation.png",
+          "sha256": "534adf1c3e31ddf427a5c8ff9111908a88100bde59c76e9dbed1d1f65dbfba60"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-firefox/uz-Latn-scrolled-navigation.png",
+          "sha256": "45fe36045e9a87cf2863fa6bbee94e2f82ebd668c39eb82f54083709ff16ddd8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-firefox/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "70a004ee5ba10c860a2804f49363e7c3e6cb77b2ef74b5d932522eb515ba8be0"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "07ba65e907939f7c575872c793d9cda935df62950de1d2072b10fb1142d93d87",
+      "opened": true
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/webkit-light.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-webkit/en-scrolled-navigation.png",
+          "sha256": "801124cc6953bc27c6534922eb848f1ef4f38528648648d721cf223b8fb38fb7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-webkit/ru-scrolled-navigation.png",
+          "sha256": "634bc75355ab269072a6cbfb926de357285ed38b490e9f0e8cf899e06dc0923c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-webkit/uz-Latn-scrolled-navigation.png",
+          "sha256": "3e220fd1cad43f7e3a75fa68311de7d5b5390a15bcf893caf309e9da6264f65c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--07952-d-enlarged-content-in-light-webkit/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "72a02053c77a7dd1d04421ceeebef5fbc3cbf3d6f24537121c1aba2237d93603"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "8c29e58ddfa048265431cd824e3327db60d8a472cade389ce400aadfbf6af795",
+      "opened": true
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/pixel-review/webkit-dark.png",
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-webkit/en-scrolled-navigation.png",
+          "sha256": "36249c910f328561114d20a4cc42f5bab0e8adceabefd72929c73965d7273a4b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-webkit/ru-scrolled-navigation.png",
+          "sha256": "68e99d144539d4c86c572f6b738c3b3ac224f1f1f727c2f4706895348461df87"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-webkit/uz-Latn-scrolled-navigation.png",
+          "sha256": "10e314598802088d39e349c33907bd4b609691c69c1b101a506724e8d81998c2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/platform-sticky-chrome.qa--c4152-ed-enlarged-content-in-dark-webkit/uz-Cyrl-scrolled-navigation.png",
+          "sha256": "fa2bfa4cd33aa2d8bfe7d11e3b99e65ae4bef4cfb985918013a136fe076d7948"
+        }
+      ],
+      "scale": 1,
+      "width": 1280,
+      "height": 636,
+      "sha256": "5bdb2a44e3e4b7623a402a57802f9669038ff8051465d9273d3c4aff81d5214e",
+      "opened": true
+    }
+  ],
+  "boundaries": [
+    "Originals: English/light, calendar1280x720 and Inbox390x844, all three engines; synthetic local data only.",
+    "Cap/later-draft images crop only the actual dialog. Clipboard credentials are masked.",
+    "Clipboard originals establish the focused URL row, not a readable toast: they predate its completed entrance.",
+    "Navigation: all four locales/two themes/all three engines at320x600 with actual doubled typography and wheel scrolling. The entire native viewport is retained.",
+    "Earlier originals predate the clipboard scope guard; later calendar originals establish that guard but predate the event-scope help merge. Neither is relabeled as current full-source acceptance.",
+    "Later Chromium/Firefox clipboard captures include readable feedback. The WebKit normal-denial viewport mask overlaps part of the toast; a separate readable feedback crop remains pending.",
+    "Native keyboard-focus originals: EN/light/all three engines at360x225/text100 and390x600/text200. Real Tab/Enter/Escape reaches Priority and retains an unobscured ring; a programmatic focus capture is a different modality.",
+    "No physical device, physical magnification, complete route/component or full-platform pixel pass is inferred."
+  ]
+}

@@ -56,6 +56,8 @@ export interface StaggerItemProps {
   tabIndex?: number
   role?: React.AriaRole
   'aria-label'?: string
+  /** TanStack Virtual uses the real row's index to measure content that wraps. */
+  'data-index'?: number
   /** Forwarded to the underlying motion element. Needed because `<Stagger presence>` mounts
    * framer-motion's `mode="popLayout"`, whose `PopChild` measures the leaving row by cloning the
    * presence child with a ref -- so a call site that wraps its row in its own memoised component
@@ -137,6 +139,7 @@ export function StaggerItem({
   const Comp = motion[as]
   return (
     <Comp
+      data-devon-entrance
       className={className}
       {...(ref ? { ref: ref as React.Ref<never> } : {})}
       variants={reduced ? ITEM_VARIANTS_REDUCED : ITEM_VARIANTS}

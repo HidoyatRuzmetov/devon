@@ -1,0 +1,1720 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested",
+  "date": "2026-10-08",
+  "provenance": "Actual isolated local app/API/PostgreSQL browser evidence; source signatures target parent census regeneration. Only explicitly listed states/roles/environments gain evidence.",
+  "policy": "Unlisted states remain pending. Source match is not a blanket component pass. Pixel review references the separate exact manifest and does not imply native-resolution review of all280 captures.",
+  "boundaries": {
+    "db": "devon_flow_e2e_knowledge_nested",
+    "apiPort": 48921,
+    "webPort": 48922,
+    "seedDemo": true,
+    "externalAI": "excluded",
+    "externalTelegram": "excluded",
+    "externalMail": "excluded",
+    "production": "not exercised",
+    "commitPushDeployVideo": "not performed by this agent"
+  },
+  "gates": {
+    "functionalFinal": {
+      "run": "knowledge-controls-post-caret-final",
+      "status": "passed",
+      "passed": 63,
+      "retries": 0,
+      "skipped": 0,
+      "durationMinutes": 13.2,
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ]
+    },
+    "visual": {
+      "run": "knowledge-visual-post-caret-final",
+      "status": "passed",
+      "passed": 8,
+      "retries": 0,
+      "skipped": 0,
+      "durationMinutes": 6.4,
+      "browsers": [
+        "chromium"
+      ],
+      "generatedCaptures": 280,
+      "axeMainChecks": 24,
+      "startTime": "2026-10-08T17:09:31.274Z"
+    },
+    "units": {
+      "status": "passed",
+      "passed": 9
+    },
+    "webTypecheck": {
+      "status": "passed"
+    },
+    "scopedESLint": {
+      "status": "passed"
+    },
+    "executedFunctionalCases": 75,
+    "previousFunctionalRuns": [
+      {
+        "run": "knowledge-controls-final",
+        "status": "passed",
+        "passed": 48,
+        "retries": 0,
+        "skipped": 0,
+        "durationMinutes": 8.4
+      },
+      {
+        "run": "knowledge-role-boundaries-final",
+        "status": "passed",
+        "passed": 3,
+        "retries": 0,
+        "skipped": 0,
+        "durationMinutes": 1
+      }
+    ],
+    "stateSupplement": {
+      "run": "knowledge-state-supplement-final",
+      "status": "passed",
+      "passed": 9,
+      "retries": 0,
+      "skipped": 0,
+      "durationMinutes": 5.2
+    },
+    "headingLevelBoundary": {
+      "run": "knowledge-heading-levels-final",
+      "status": "passed",
+      "passed": 3,
+      "retries": 0,
+      "skipped": 0,
+      "durationMinutes": 1.6,
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "startTime": "2026-10-08T17:17:13.698Z"
+    },
+    "uniqueFunctionalWorkflows": 22,
+    "distinctBrowserCases": 66,
+    "caseCountNote": "63 main +9 stronger-state repeated cases +3 newly added heading-level cases =75 executions across three runs;22 unique workflows/66 distinct engine cases. No single75-case suite run is claimed.",
+    "scopedPrettier": {
+      "status": "passed"
+    }
+  },
+  "evidence": {
+    "templates": {
+      "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
+      "roles": [
+        "head",
+        "member permission refusal"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewports": [
+        {
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "hasTouch": true
+        }
+      ],
+      "states": "create503/retained retry; actual different incoming items with dirty draft; role/item/name edit/cancel; toggle503/retry; peer409 preserved draft/cancel peer latest; delete confirmation/cancel/settledEscape/focus/refusal/retry; pending duplicate guards POST/PATCH/DELETE; same-name ID isolation; limits200/500/100; last-record empty/create; independent persisted reads/reloads. Each new-item role buddy/head/newcomer was selected then Enter-added; over200 name edit and over500 item edit truncated at the actual HTML boundary; ordered roles/values persisted and reloaded. Dirty-name peer UI/refetch preserves local name; explicit Save replaces peer name; toggle false/read/reload/true; Close button; all4 icon Tab/Enter/cancel and idle outside delete dismissal; held PATCH freezes every icon/select/new input/Add and pending DELETE hides Close and ignores outside click.",
+      "pending": [
+        "Immediate Escape in delete reopen animation",
+        "Every transition in every locale/theme and environment"
+      ]
+    },
+    "editor": {
+      "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "states": "10 actual toolbar commands with saved blocks reads/reload; task-list checkbox persists; all8 slash choices read/reload; filtered range pointer insert; short320x480 keyboardEnter; wraparoundArrowUp/Down aria-selected; Escape/Tab/outside dismissal; empty Enter remains normal editing; real mention insert/read/reload; zero pageerrors. All10 single-format toggle-offs persist/read/reload with actual text caret; bold/italic stored-mark toggles update pressed state without a document save; checklist checked and unchecked persist/read/reload; mention ArrowDown/Enter and touch selection persist; Escape/Tab clear aria relations; slash remains absent in inline and typed code. Toolbar and slash H1/H2 each persist attrs.level1/2 and typed text, independent read/reload and rendered h1/h2 agree.",
+      "pending": [
+        "Mixed selections and combined formatting beyond tested single-format cases",
+        "Every keyboard shortcut",
+        "Pasted HTML/media/link controls beyond available toolbar",
+        "Touch suggestion pan/pointercancel gestures"
+      ]
+    },
+    "faq": {
+      "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
+      "roles": [
+        "member",
+        "head",
+        "super_admin navigation boundary"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "states": "Pages Quick help discovery; all10 native details pointer open/close and keyboardEnter/focus/open/close; answer-content search/noresults/clear; all10 answer destinations followed and loaded with back navigation (admin as super_admin), plus Pages footer; main axe.",
+      "pending": [
+        "Every locale's search normalization in browser"
+      ]
+    },
+    "excludedAi": {
+      "test": "apps/web/test/e2e/knowledge-controls.qa.spec.ts",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "externalCalls": 0,
+      "states": "No-selection guard, four target choices, local503refusal/retry/discard unchanged doc, ordinary subsequent edit/reload.",
+      "excluded": [
+        "Successful real model output",
+        "Translation preview textarea Edit/Accept success"
+      ]
+    },
+    "visual": {
+      "test": "apps/web/test/e2e/knowledge-visual.qa.spec.ts",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "surfaces": [
+        "templates",
+        "template-card",
+        "editor",
+        "faq",
+        "slash-popup"
+      ],
+      "pixelManifest": "docs/qa/2026-10/knowledge-nested-pixels.json",
+      "comparisonSheetsReviewed": 35,
+      "nativeOriginalsReviewed": 24,
+      "pending": [
+        "Firefox/WebKit full visual matrix",
+        "Actual browser zoom",
+        "System-theme preference transitions",
+        "Physical-device/reduced-motion cases"
+      ],
+      "run": "knowledge-visual-post-caret-final",
+      "functionalNativeRegionsReviewed": 30,
+      "functionalComparisonSheetsReviewed": 10
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "pages.onboarding.editTemplate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All4 contextual labels have native hover assertions; Tab and Enter activation/cancel proven. Held PATCH explicitly disables all4 icons.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "pages.onboarding.deleteTemplate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All4 contextual labels have native hover assertions; Tab and Enter activation/cancel proven. Held PATCH explicitly disables all4 icons.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "pages.onboarding.editItem"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All4 contextual labels have native hover assertions; Tab and Enter activation/cancel proven. Held PATCH explicitly disables all4 icons.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "pages.onboarding.removeItem"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All4 contextual labels have native hover assertions; Tab and Enter activation/cancel proven. Held PATCH explicitly disables all4 icons.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Switch",
+        "labelIncludes": "pages.onboarding.enabled"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Desktop pointer503/refusal/retry and touch success with persisted reads; ordinary added-item→toggle did not establish the distinct incoming-array defect.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Input",
+        "labelIncludes": "pages.onboarding.namePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Whitespace invalid, trimmed successful save, real edit200 boundary followed by independent record read and reload.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Input",
+        "labelIncludes": "pages.onboarding.itemLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Whitespace invalid, edit503 retained draft/retry and actual edit500 boundary persisted/read/reload.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Input",
+        "labelIncludes": "pages.onboarding.itemPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "New-item500 boundary, whitespace Add disabled, Enter addition, cap100 and focus after removal. No field-specific error claim.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "select",
+        "labelIncludes": "${t('pages.onboarding.ownerLabel')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Existing item's newcomer→buddy→Cancel and newcomer→head→Save/read/reload.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "select",
+        "labelIncludes": "aria-label={t('pages.onboarding.ownerLabel')}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "New-item role buddy/head/newcomer selected, Enter-added, saved in correct order and independently read/reloaded; cap100 disables selector.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.onboarding.addItem"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Pointer/Enter addition, whitespace/cap100 refusal; new-item draft addition is local until Save.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.onboarding.save"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Held PATCH duplicate submits once, fields frozen; actual peer409 and local503 retain draft, retry persists.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "loading": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.onboarding.cancelChanges"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dirty role cancel, peer version cancel, new item field focus; pending patch freezes Cancel.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Dialog"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Cancel, Close, settled Escape and idle outside click return focus; held DELETE hides Close and ignores outside/Escape/duplicates;503 retry removes exact record. Immediate animation Escape remains pending.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "loading": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.onboarding.deleteTemplate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dialog-confirm action, actual ID-specific delete, same-name isolation and last-record empty recovery.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "loading": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "TemplateCard",
+        "kind": "Button",
+        "childSummaryIncludes": "common.cancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dialog Cancel initial focus and return to opener; pending DELETE disables cancellation.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "OnboardingTemplatesPanel",
+        "kind": "Input",
+        "labelIncludes": "pages.onboarding.namePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Creation name200max, whitespace submit unavailable, retained503 name, Enter creates after last-record empty recovery.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/onboarding-templates.tsx",
+        "component": "OnboardingTemplatesPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.onboarding.newTemplate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Held POST immediate duplicate prevention,503 visible recovery, real new record read; same names are permitted.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "loading": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "templates",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.bold"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.italic"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.heading1"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.heading2"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.bulletList"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.orderedList"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.taskList"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.blockquote"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.codeBlock"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "ToolbarButton",
+        "labelIncludes": "pages.editor.toolbar.callout"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual command, text-caret aria-pressed on/off, independent blocks read and reload. Bold/italic caret-only stored marks update without a document save. Single-format cases only.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "hover": {
+          "status": "tested",
+          "evidenceId": "editor",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "Input",
+        "labelIncludes": "pages.editor.titlePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Long title stays within editable input; parent owns title-save transitions.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "div",
+        "labelIncludes": "role=\"toolbar\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Text formatting toolbar wraps; default controls at all four locales/lightdark in Chromium.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "TranslateTargetPicker"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Each of four target values selected in English; no actual AI result.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/page-editor.tsx",
+        "component": "PageEditor",
+        "kind": "SparkleButton",
+        "labelIncludes": "pages.editor.toolbar.translate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "No selection toast causes zero calls; selected text local503, retry then discard preserves blocks; ordinary edit/reload remains usable.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "excludedAi",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/faq-screen.tsx",
+        "component": "FaqScreen",
+        "kind": "Input",
+        "labelIncludes": "help.search"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Answer-content quiet-hours filter, unmatched status, clearing returns10folded native details.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "empty": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/faq-screen.tsx",
+        "component": "FaqScreen",
+        "kind": "p",
+        "labelIncludes": "role=\"status\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Explicit no matching answer case.",
+      "states": {
+        "empty": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/faq-screen.tsx",
+        "component": "FaqScreen",
+        "kind": "summary",
+        "childSummaryIncludes": "help.items."
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All10 pointer and keyboardEnter open/close/focus; every answer destination actually followed/back, admin boundary as super_admin.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "faq",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "runtimeControls": [
+    {
+      "source": "apps/web/src/features/pages/suggestion-list.ts",
+      "component": "SuggestionList",
+      "kind": "listbox",
+      "controls": [
+        "slash option Heading1",
+        "Heading2",
+        "Bulletlist",
+        "Numberedlist",
+        "Checklist",
+        "Quote",
+        "Codeblock",
+        "Callout",
+        "mention filtered colleague option",
+        "no matching status"
+      ],
+      "states": {
+        "populated": "tested",
+        "selected": "tested",
+        "active": "tested",
+        "empty": "tested",
+        "success": "tested"
+      },
+      "evidenceId": "editor",
+      "note": "Eight slash choices persist; pointer/touchQuote, keyboard heading2, mention pointer/keyboard/touch. No every-option touch or pan claim."
+    },
+    {
+      "source": "apps/web/src/features/pages/page-editor.tsx",
+      "component": "Tiptap EditorContent",
+      "kind": "textbox",
+      "accessibleName": "pages.editor.contentLabel",
+      "states": {
+        "populated": "tested",
+        "focus": "tested",
+        "success": "tested"
+      },
+      "evidenceId": "editor"
+    },
+    {
+      "source": "apps/web/src/features/pages/page-editor.tsx",
+      "component": "Tiptap taskList",
+      "kind": "checkbox",
+      "states": {
+        "selected": "tested",
+        "success": "tested"
+      },
+      "evidenceId": "editor",
+      "note": "Actual check and uncheck independently persist and reload. Recursive/combined lists remain pending."
+    },
+    {
+      "source": "apps/web/src/features/pages/faq-screen.tsx",
+      "component": "FaqScreen",
+      "kind": "RouterLink",
+      "controls": [
+        "start",
+        "head",
+        "admin",
+        "find",
+        "projects",
+        "delete",
+        "files",
+        "profile",
+        "telegram",
+        "ai",
+        "back to Pages"
+      ],
+      "states": {
+        "populated": "tested",
+        "active": "tested",
+        "success": "tested"
+      },
+      "evidenceId": "faq",
+      "note": "All10 answer destinations and Pages footer followed and loaded; head for nonadmin, super_admin for admin."
+    },
+    {
+      "source": "packages/ui/src/primitives/dialog.tsx",
+      "component": "TemplateCard DialogContent",
+      "kind": "DialogClose",
+      "accessibleName": "shell.shortcuts.close",
+      "states": {
+        "default": "tested",
+        "active": "tested",
+        "focus": "tested",
+        "disabled": "not-applicable-with-reason: Close is removed while DELETE is pending"
+      },
+      "evidenceId": "templates",
+      "note": "Actual Close pointer action and opener focus return; pending control absent assertion."
+    }
+  ],
+  "excludedStates": [
+    {
+      "source": "apps/web/src/features/pages/page-editor.tsx",
+      "component": "PageEditor",
+      "kind": "textarea",
+      "reason": "Successful external AI translation is excluded from local QA; preview editing/accepting is not manufactured."
+    }
+  ],
+  "pending": [
+    "All unlisted source control states and runtime controls",
+    "Parent-owned pages/history/membership/Canvas state ledger",
+    "Parent full build/release gates",
+    "Native-readable inspection beyond24 selected current visual originals and30 selected current functional originals/detail regions",
+    "Shared sidebar defect was subsequently repaired and retested in docs/qa/2026-10/sidebar-evidence.json; InboxBell/topbar separate root evidence."
+  ]
+}

@@ -6,6 +6,7 @@
 // job scheduler needs, and keeping it here means the "no bot token / no jobs in test" guard lives next
 // to the code it guards instead of a shared boot file every module would otherwise have to touch.
 import { PgBoss } from 'pg-boss'
+import { queueDatabaseOptions } from '../../lib/queue-database.js'
 import type { FastifyBaseLogger } from 'fastify'
 import { notifyUser } from './notify.js'
 import {
@@ -233,7 +234,7 @@ export async function startJobRunner(
   log: FastifyBaseLogger,
 ): Promise<JobRunnerHandle | null> {
   try {
-    const boss = new PgBoss(databaseUrl)
+    const boss = new PgBoss(queueDatabaseOptions(databaseUrl))
     boss.on('error', (err: unknown) =>
       log.error({ err }, 'notifications: pg-boss reported an error'),
     )

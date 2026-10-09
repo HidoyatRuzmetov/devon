@@ -1,0 +1,8 @@
+{
+  "goalsControls": {
+    "conflict": "This goal changed elsewhere. Your draft is still here. Load the saved version before editing again.",
+    "reload": "Load saved version",
+    "reloadFailed": "Could not load the saved goal. Your draft is still here; try again.",
+    "workloadDenied": "The department workload overview is for the department head. You can see your own workload on Home."
+  }
+}

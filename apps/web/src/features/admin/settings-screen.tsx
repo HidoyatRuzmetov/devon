@@ -25,6 +25,7 @@ import {
 } from '@devon/ui'
 import { AlertTriangle, Copy } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
+import { ApiError } from '../../lib/api-client.js'
 import {
   cancelWipe,
   executeWipe,
@@ -39,6 +40,19 @@ import {
 } from './api.js'
 import { AdminScreen } from './admin-screen.js'
 
+function SettingsReadError({ error, retry }: { error: unknown; retry: () => unknown }) {
+  if (error instanceof ApiError && error.status === 403)
+    return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+  return (
+    <StateView
+      kind="error"
+      titleKey="state.error.title"
+      bodyKey="state.error.body"
+      action={{ labelKey: 'state.error.action', onAction: retry }}
+    />
+  )
+}
+
 function RegistrationCard() {
   const t = useT()
   const meQuery = useMeQuery()
@@ -51,6 +65,7 @@ function RegistrationCard() {
       toast(t('admin.console.settings.registrationSavedToast'))
       void queryClient.invalidateQueries({ queryKey: ['admin', 'instance'] })
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   return (
@@ -63,6 +78,8 @@ function RegistrationCard() {
       </p>
       {query.isPending ? (
         <StateView kind="loading" titleKey="state.loading" />
+      ) : query.isError ? (
+        <SettingsReadError error={query.error} retry={() => query.refetch()} />
       ) : (
         // round2 SEV3 #26: closing registration is reversible, not a destruction -- painting it
         // the same solid red as the wipe card's own button flattened the danger scale that card is
@@ -97,12 +114,29 @@ function MaintenanceCard() {
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
   const query = useQuery({ queryKey: ['admin', 'maintenance'], queryFn: fetchMaintenance })
-  const [messages, setMessages] = React.useState<Record<string, string>>({})
+  const [messages, setMessages] = React.useState<Record<string, string>>(() =>
+    Object.fromEntries(LOCALES.map((locale) => [locale, ''])),
+  )
+  const savedMessages = React.useRef<Record<string, string> | null>(null)
   const [previewLocale, setPreviewLocale] = React.useState<string>(LOCALES[0])
 
   React.useEffect(() => {
-    if (query.data?.message) setMessages(query.data.message)
-  }, [query.data?.message])
+    if (!query.data) return
+    const previous = savedMessages.current
+    const incoming: Record<string, string> = query.data.message ?? {}
+    // Refresh untouched locales while retaining the administrator's unsaved local edits.
+    setMessages((current) =>
+      Object.fromEntries(
+        LOCALES.map((locale) => [
+          locale,
+          previous === null || current[locale] === (previous[locale] ?? '')
+            ? (incoming[locale] ?? '')
+            : (current[locale] ?? ''),
+        ]),
+      ),
+    )
+    savedMessages.current = incoming
+  }, [query.data])
 
   const save = useMutation({
     mutationFn: (enabled: boolean) =>
@@ -111,11 +145,13 @@ function MaintenanceCard() {
       toast(t('admin.console.settings.maintenanceSavedToast'))
       void queryClient.invalidateQueries({ queryKey: ['admin', 'maintenance'] })
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   if (query.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
   }
+  if (query.isError) return <SettingsReadError error={query.error} retry={() => query.refetch()} />
 
   return (
     <section className="rounded-md border border-border bg-card p-6">
@@ -222,6 +258,7 @@ function SentinelCard() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'sentinel', 'status'] })
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   return (
@@ -232,6 +269,8 @@ function SentinelCard() {
       </p>
       {query.isPending ? (
         <StateView kind="loading" titleKey="state.loading" />
+      ) : query.isError ? (
+        <SettingsReadError error={query.error} retry={() => query.refetch()} />
       ) : (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
@@ -273,6 +312,7 @@ function SentinelCard() {
                     void navigator.clipboard
                       .writeText(query.data?.publicKeyB64 ?? '')
                       .then(() => toast(t('admin.console.settings.sentinelKeyCopiedToast')))
+                      .catch(() => toast(t('admin.console.operationFailed')))
                   }}
                 >
                   <Copy className="size-4" aria-hidden="true" />
@@ -353,18 +393,26 @@ function WipeCard() {
       toast(t('admin.console.settings.wipeCancelledToast'))
       void queryClient.invalidateQueries({ queryKey: ['admin', 'wipe'] })
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const execute = useMutation({
     mutationFn: () => executeWipe(meQuery.data?.csrfToken ?? ''),
     onSettled: () => void queryClient.invalidateQueries({ queryKey: ['admin', 'wipe'] }),
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   React.useEffect(() => {
-    if (pending?.status === 'countdown' && secondsRemaining <= 0 && !executedRef.current) {
+    if (
+      statusQuery.isSuccess &&
+      instanceQuery.isSuccess &&
+      pending?.status === 'countdown' &&
+      secondsRemaining <= 0 &&
+      !executedRef.current
+    ) {
       executedRef.current = true
       execute.mutate()
     }
-  }, [pending?.status, secondsRemaining, execute])
+  }, [statusQuery.isSuccess, instanceQuery.isSuccess, pending?.status, secondsRemaining, execute])
 
   const expectedPhrase =
     instanceQuery.data !== undefined
@@ -372,6 +420,15 @@ function WipeCard() {
       : ''
 
   function renderWipeStatus(): React.ReactNode {
+    if (instanceQuery.isPending || statusQuery.isPending)
+      return <StateView kind="loading" titleKey="state.loading" />
+    if (instanceQuery.isError || statusQuery.isError)
+      return (
+        <SettingsReadError
+          error={instanceQuery.error ?? statusQuery.error}
+          retry={() => Promise.all([instanceQuery.refetch(), statusQuery.refetch()])}
+        />
+      )
     if (pending && pending.status === 'countdown') {
       const totalSeconds = totalSecondsRef.current
       const ringPercent =

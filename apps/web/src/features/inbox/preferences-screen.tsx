@@ -13,18 +13,13 @@ import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { SettingsNavigation } from '../accounts/settings-navigation.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import {
-  isQuietHoursTooLoud,
-  AVAILABLE_CHANNELS,
-  PERSONAL_DIGEST_MODES,
-  REASONS,
-  type PrefRow,
-} from './api.js'
+import { isQuietHoursTooLoud, PERSONAL_DIGEST_MODES, REASONS, type PrefRow } from './api.js'
 import {
   usePrefsQuery,
   usePutPrefsMutation,
   usePutQuietHoursMutation,
   useQuietHoursQuery,
+  isPersonalSettingScopeChanged,
 } from './hooks.js'
 import { minutesToTimeInput, timeInputToMinutes, formatMinuteRange } from './time.js'
 import { REASON_TONE, ReasonIcon } from './reason-icon.js'
@@ -64,60 +59,62 @@ function PrefsMatrix({ items }: { items: PrefRow[] }) {
 
   return (
     <>
-      <SectionCard title={t('inbox.preferences.matrixTitle')} className="overflow-hidden">
-        <div className="-mx-5 -my-4 overflow-x-auto">
-          <table className="w-full min-w-140 border-collapse text-body">
+      <SectionCard
+        title={t('inbox.preferences.matrixTitle')}
+        description={`${t('inbox.channel.inapp')} · ${t('inbox.preferences.alwaysOn')}`}
+        className="overflow-hidden"
+      >
+        {/* Native overflow needs a named keyboard entry; the contained table keeps its semantics. */}
+        <div
+          role="region"
+          aria-label={t('inbox.preferences.matrixTitle')}
+          tabIndex={0 /* eslint-disable-line jsx-a11y/no-noninteractive-tabindex */}
+          className="-mx-5 -my-4 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        >
+          <table className="w-full table-fixed border-collapse text-body">
+            <colgroup>
+              <col className="w-3/5" />
+              <col className="w-2/5" />
+            </colgroup>
             <thead>
               <tr className="border-b border-border text-small text-muted-foreground">
-                <th className="px-5 py-3 text-left font-medium">
+                <th className="px-3 py-3 text-left font-medium">
                   {t('inbox.preferences.reasonColumn')}
                 </th>
-                {AVAILABLE_CHANNELS.map((channel) => (
-                  <th key={channel} className="px-4 py-3 text-center font-medium">
-                    {t(`inbox.channel.${channel}`)}
-                  </th>
-                ))}
+                <th className="px-3 py-3 text-center font-medium">{t('inbox.channel.telegram')}</th>
               </tr>
             </thead>
             <tbody>
-              {REASONS.map((reason) => (
-                <tr key={reason} className="border-b border-border last:border-b-0">
-                  <td className="px-5 py-3">
-                    <Chip
-                      tone={REASON_TONE[reason]}
-                      leading={<ReasonIcon reason={reason} className="size-3" />}
-                    >
-                      {t(`inbox.reason.${reason}`)}
-                    </Chip>
-                  </td>
-                  {AVAILABLE_CHANNELS.map((channel) => {
-                    const row = byKey.get(`${reason}:${channel}`)
-                    if (!row) {
-                      return <td key={channel} />
-                    }
-                    return (
-                      <td key={channel} className="px-4 py-3 text-center">
-                        {channel === 'inapp' ? (
-                          <span className="text-small text-muted-foreground">
-                            {t('inbox.preferences.alwaysOn')}
-                          </span>
-                        ) : (
-                          <Switch
-                            checked={row.enabled}
-                            disabled={putPrefs.isPending}
-                            onCheckedChange={() => toggle(row)}
-                            aria-label={t('inbox.preferences.toggleAria', {
-                              reason: t(`inbox.reason.${reason}`),
-                              channel: t(`inbox.channel.${channel}`),
-                            })}
-                            className="mx-auto"
-                          />
-                        )}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+              {REASONS.map((reason) => {
+                const row = byKey.get(`${reason}:telegram`)
+                return (
+                  <tr key={reason} className="border-b border-border last:border-b-0">
+                    <td className="px-3 py-3">
+                      <Chip
+                        tone={REASON_TONE[reason]}
+                        leading={<ReasonIcon reason={reason} className="size-3" />}
+                        className="h-auto min-h-6 py-1 [&>span:last-child]:whitespace-normal"
+                      >
+                        {t(`inbox.reason.${reason}`)}
+                      </Chip>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {row ? (
+                        <Switch
+                          checked={row.enabled}
+                          disabled={putPrefs.isPending}
+                          onCheckedChange={() => toggle(row)}
+                          aria-label={t('inbox.preferences.toggleAria', {
+                            reason: t(`inbox.reason.${reason}`),
+                            channel: t('inbox.channel.telegram'),
+                          })}
+                          className="mx-auto"
+                        />
+                      ) : null}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
@@ -168,6 +165,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
   const [end, setEnd] = React.useState('')
   const [weekends, setWeekends] = React.useState(true)
   const [touched, setTouched] = React.useState(false)
+  const draftRevision = React.useRef(0)
   const [tooLoud, setTooLoud] = React.useState(false)
 
   const data = quietHoursQuery.data
@@ -196,6 +194,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
 
   async function handleSave() {
     setTooLoud(false)
+    const submittedRevision = draftRevision.current
     try {
       await putQuietHours.mutateAsync({
         startMinute: timeInputToMinutes(start),
@@ -203,8 +202,9 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
         includeWeekends: weekends,
       })
       toast(t('inbox.preferences.saved'))
-      setTouched(false)
+      if (draftRevision.current === submittedRevision) setTouched(false)
     } catch (err) {
+      if (isPersonalSettingScopeChanged(err)) return
       if (isQuietHoursTooLoud(err)) setTooLoud(true)
       else toast(t('toast.saveError'))
     }
@@ -212,11 +212,13 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
 
   async function handleUseDefault() {
     setTooLoud(false)
+    const submittedRevision = draftRevision.current
     try {
       await putQuietHours.mutateAsync({ startMinute: null, endMinute: null, includeWeekends: null })
-      setTouched(false)
+      if (draftRevision.current === submittedRevision) setTouched(false)
       toast(t('inbox.preferences.saved'))
-    } catch {
+    } catch (err) {
+      if (isPersonalSettingScopeChanged(err)) return
       toast(t('toast.saveError'))
     }
   }
@@ -259,6 +261,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
             type="time"
             value={start}
             onChange={(e) => {
+              draftRevision.current += 1
               setTouched(true)
               setStart(e.target.value)
             }}
@@ -276,6 +279,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
             type="time"
             value={end}
             onChange={(e) => {
+              draftRevision.current += 1
               setTouched(true)
               setEnd(e.target.value)
             }}
@@ -286,6 +290,7 @@ function QuietHoursCard({ departmentId }: { departmentId: string | null }) {
           <Switch
             checked={weekends}
             onCheckedChange={(v) => {
+              draftRevision.current += 1
               setTouched(true)
               setWeekends(v)
             }}
@@ -411,11 +416,6 @@ export default function PreferencesScreen() {
         eyebrow={t('accounts.settings.title')}
         title={t('inbox.preferences.title')}
         description={t('inbox.preferences.body')}
-        actions={
-          <Button variant="secondary" onClick={() => navigate('/account/telegram')}>
-            {t('telegram.title')}
-          </Button>
-        }
       />
       <SettingsNavigation />
       <PrefsMatrixBody query={prefsQuery} />

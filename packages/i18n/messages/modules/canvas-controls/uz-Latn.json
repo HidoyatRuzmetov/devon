@@ -1,0 +1,42 @@
+{
+  "personal": {
+    "canvas": {
+      "controls": {
+        "pan": "Oq taxtani surish",
+        "finishDrawing": "Chizishni tugatish",
+        "cancelDrawing": "Chizishni bekor qilish",
+        "addObject": "Obyekt qo‘shish",
+        "object": "Tanlangan obyekt",
+        "none": "Tanlanmagan",
+        "x": "Gorizontal",
+        "y": "Vertikal",
+        "editText": "Matnni tahrirlash",
+        "deleteObject": "Tanlangan obyektni o‘chirish",
+        "moveSticky": "Eslatmani ko‘chirish",
+        "hint": "Asbobni tanlab chizing yoki «Obyekt qo‘shish»ni bosing. Tanlangan obyektni yo‘nalish tugmalari bilan ko‘chiring (Shift: 10 qadam). Delete o‘chiradi, Ctrl/Cmd+Z bekor qiladi.",
+        "penHint": "Yo‘nalish tugmalari bilan chizing (Shift: 10 qadam). Enter tugatadi, Escape bekor qiladi.",
+        "type": {
+          "freehand": "Chizma",
+          "rectangle": "To‘rtburchak",
+          "ellipse": "Ellips",
+          "line": "Chiziq",
+          "arrow": "Yo‘nalish",
+          "text": "Matn",
+          "sticky": "Eslatma"
+        },
+        "color": {
+          "ink": "Siyoh",
+          "blue": "Ko‘k",
+          "green": "Yashil",
+          "orange": "To‘q sariq",
+          "red": "Qizil",
+          "purple": "Binafsha",
+          "yellow": "Sariq",
+          "pink": "Pushti",
+          "mint": "Och yashil",
+          "sky": "Havorang"
+        }
+      }
+    }
+  }
+}

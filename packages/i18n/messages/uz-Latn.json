@@ -93,7 +93,8 @@
       "label": "Yangi"
     },
     "inbox": {
-      "aria": "Bildirishnomalar"
+      "aria": "Bildirishnomalar",
+      "unreadAria": "Bildirishnomalar: {count} ta oʻqilmagan"
     },
     "breadcrumb": {
       "aria": "Sahifa yoʻli"

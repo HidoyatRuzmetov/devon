@@ -97,6 +97,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const route = useRoutePath()
   const online = useOnline()
   const isDesktop = useMediaQuery('(min-width: 768px)')
+  const isWideDesktop = useMediaQuery('(min-width: 1280px)')
+  const isLaptop = useMediaQuery('(min-width: 1024px)')
   const theme = useThemePreference()
 
   const meQuery = useMeQuery()
@@ -108,12 +110,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const [drawerOpen, setDrawerOpen] = React.useState(false)
   const [collapsed, setCollapsed] = React.useState(readCollapsed)
+  // The expanded sidebar leaves only 504px at the tablet breakpoint. Use the familiar
+  // compact controls there; a full search label and shortcut must not overlap each other.
+  const hasRoomyHeader = isDesktop && (isWideDesktop || (isLaptop && collapsed))
   const [collapsedGroups, setCollapsedGroups] = React.useState<string[] | null>(readCollapsedGroups)
   const [paletteOpen, setPaletteOpen] = React.useState(false)
+  const searchTriggerRef = React.useRef<HTMLButtonElement>(null)
+  const paletteOpenerRef = React.useRef<HTMLElement | null>(null)
+  const changePaletteOpen = React.useCallback((open: boolean, opener?: HTMLElement) => {
+    if (open) {
+      const active = document.activeElement
+      paletteOpenerRef.current =
+        opener ??
+        (active instanceof HTMLElement && active !== document.body
+          ? active
+          : searchTriggerRef.current)
+    }
+    setPaletteOpen(open)
+  }, [])
+  const restorePaletteFocus = React.useCallback((event: Event) => {
+    event.preventDefault()
+    const target = paletteOpenerRef.current?.isConnected
+      ? paletteOpenerRef.current
+      : searchTriggerRef.current
+    target?.focus()
+    paletteOpenerRef.current = null
+  }, [])
   const [shortcutsOpen, setShortcutsOpen] = React.useState(false)
 
   useShellShortcuts({
-    onOpenPalette: () => setPaletteOpen(true),
+    onOpenPalette: () => changePaletteOpen(true),
     onOpenShortcuts: () => setShortcutsOpen(true),
     onToggleSidebar: () => toggleCollapsed(),
   })
@@ -331,11 +357,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const trailing = (
     <>
-      {isDemo ? (
+      {isDemo && isDesktop ? (
         <DemoChip
-          // Full label at >=768; the short one below that (spec.md §3.5: "using the short label
-          // ('Demo'), never a truncated long label").
-          label={isDesktop ? t('shell.demo.chip.label') : t('shell.demo.chip.short')}
+          label={hasRoomyHeader ? t('shell.demo.chip.label') : t('shell.demo.chip.short')}
           popoverText={t('shell.demo.popover')}
         />
       ) : null}
@@ -348,13 +372,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           actions={quickAddActions}
           label={t('shell.quickAdd.aria')}
           shortLabel={t('shell.quickAdd.label')}
-          compact={!isDesktop}
+          compact={!hasRoomyHeader}
         />
       ) : null}
       {user ? (
         <InboxBell
           count={inboxCount}
-          label={t('shell.inbox.aria')}
+          label={t('shell.inbox.unreadAria', { count: inboxCount })}
+          locale={locale}
           active={route.startsWith('/inbox')}
           onClick={() => navigate('/inbox')}
         />
@@ -437,13 +462,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           }
           search={
             <SearchTrigger
+              ref={searchTriggerRef}
               label={t('shell.search.trigger')}
-              compact={!isDesktop}
-              onClick={() => setPaletteOpen(true)}
+              compact={!hasRoomyHeader}
+              onClick={(event) => changePaletteOpen(true, event.currentTarget)}
             />
           }
           trailing={trailing}
         />
+
+        {isDemo && !isDesktop ? (
+          <div className="flex justify-end border-b border-border bg-card px-4 py-2">
+            <DemoChip label={t('shell.demo.chip.label')} popoverText={t('shell.demo.popover')} />
+          </div>
+        ) : null}
 
         {!online ? (
           <OfflineBanner
@@ -459,7 +491,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ) : null}
 
         <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8">
-          <PaletteProvider onOpen={() => setPaletteOpen(true)}>
+          <PaletteProvider onOpen={() => changePaletteOpen(true)}>
             <PageContainer>
               {/* UI-OVERHAUL.md §3 row 1: the route swap is a crossfade + 8 px slide -- View
                   Transitions where the browser has them, an AnimatePresence fallback otherwise. */}
@@ -493,7 +525,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <CommandPaletteController
         open={paletteOpen}
-        onOpenChange={setPaletteOpen}
+        onOpenChange={changePaletteOpen}
+        onCloseAutoFocus={restorePaletteFocus}
         isSuperAdmin={role === 'super_admin'}
         onChangeLocale={(next) => handleLocaleChange(next)}
         onOpenShortcuts={() => setShortcutsOpen(true)}

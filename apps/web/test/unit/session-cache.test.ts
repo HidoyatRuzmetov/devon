@@ -11,6 +11,10 @@ describe('sign-out data boundary', () => {
     client.setQueryData(['work', 'board'], { title: 'Previous department' })
     client.setQueryData(['admin', 'audit'], ['confidential'])
     localStorage.setItem(ACTIVE_DEPARTMENT_STORAGE_KEY, 'old-department')
+    localStorage.setItem(
+      'devon_unsaved_locale',
+      JSON.stringify({ ownerUserId: 'old-owner', locale: 'ru' }),
+    )
     let resolve!: (value: string) => void
     const pending = client
       .fetchQuery({
@@ -33,5 +37,6 @@ describe('sign-out data boundary', () => {
     expect(client.getQueryData(['me'])).toBeNull()
     expect(client.getMutationCache().getAll()).toHaveLength(0)
     expect(localStorage.getItem(ACTIVE_DEPARTMENT_STORAGE_KEY)).toBeNull()
+    expect(localStorage.getItem('devon_unsaved_locale')).toBeNull()
   })
 })

@@ -31,14 +31,13 @@ import { QuickAddPreview } from '../ai/components/previews.js'
 import { useQuickAddAi } from './lib/use-quick-add-ai.js'
 import {
   SPRINT_KIND_LABEL_KEYS,
-  defaultSprintRange,
+  rolloverSprintRange,
   formatTimeLeft,
   sprintElapsedPct,
   sprintHasEnded,
 } from './lib/sprint-labels.js'
 import {
   useCreateTaskMutation,
-  useDelayedDelete,
   usePatchTaskMutation,
   useRolloverSprintMutation,
   useSprintsQuery,
@@ -100,7 +99,7 @@ function RolloverBanner({ sprint }: { sprint: Sprint }) {
           size="sm"
           loading={rollover.isPending}
           onClick={() => {
-            const range = defaultSprintRange(sprint.kind)
+            const range = rolloverSprintRange(sprint)
             rollover.mutate(
               { id: sprint.id, input: { ...range, goal: sprint.goal } },
               {
@@ -145,9 +144,7 @@ function SprintHero({ sprint, taskCount }: { sprint: Sprint; taskCount: number }
               per-sprint chip in sprints-view.tsx and the "Hafta"/"Inbox" chips further down this
               same screen; a solid `info` fill on the one chip that repeats on every visit read as
               alarmingly loud next to everything else here. */}
-          <Badge tone="neutral" className="bg-info/10 text-info">
-            {t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}
-          </Badge>
+          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
           <span className="text-caption tabular-nums text-muted-foreground">
             {t('personal.today.period.timeLeft', { value: formatTimeLeft(t, remainingMs) })}
           </span>
@@ -186,51 +183,45 @@ export function TodayView({
   const quickAddAi = useQuickAddAi(t, locale)
   const reduced = useReducedMotion()
 
-  // Completing a to-do used to remove its row on the very same tick the checkbox's own `celebrate`
-  // animation (the check draw-in, the 12-particle burst) started -- verified live, the count went
-  // 4 -> 3 and the row simply vanished, so the one designed moment of delight in this workspace was
-  // never actually reachable, and the completion itself was irreversible. `justDoneIds` holds a task
-  // checked but not yet removed, for exactly --dur-celebration (480ms, 0 under reduced motion) with
-  // the strike-through applied; once that beat is up the row moves to `hiddenIds` (removed from view,
-  // AnimatePresence animates it out) and the real mutation is *scheduled*, not sent -- `cancel()` from
-  // the undo toast means the task was never actually touched, not un-done after the fact.
+  // The short celebration affects presentation only. Persist immediately, and announce success
+  // after the response so leaving this tab cannot cancel completion.
   const [justDoneIds, setJustDoneIds] = React.useState<ReadonlySet<string>>(new Set())
-  const [hiddenIds, setHiddenIds] = React.useState<ReadonlySet<string>>(new Set())
-  const tasksRef = React.useRef<readonly Task[]>([])
-  const { schedule: scheduleCompletion, cancel: cancelCompletion } = useDelayedDelete(
-    async (id) => {
-      const task = tasksRef.current.find((tk) => tk.id === id)
-      if (task) await patchTask.mutateAsync({ id, input: { done: true, version: task.version } })
-    },
-  )
+  const completing = React.useRef(new Set<string>())
 
   function toggleTaskDone(task: Task) {
+    if (completing.current.has(task.id)) return
     if (task.doneAt !== null) {
-      // Un-checking an already-done task -- immediate, nothing to celebrate or undo here.
-      patchTask.mutate({ id: task.id, input: { done: false, version: task.version } })
+      patchTask.mutate(
+        { id: task.id, input: { done: false, version: task.version } },
+        {
+          onError: () => toast.error(t('toast.saveError')),
+        },
+      )
       return
     }
+    completing.current.add(task.id)
     setJustDoneIds((prev) => new Set(prev).add(task.id))
+    void patchTask
+      .mutateAsync({ id: task.id, input: { done: true, version: task.version } })
+      .then((updated) => {
+        toastWithUndo({
+          message: t('personal.today.tasks.completedToast'),
+          undoLabel: t('action.undo'),
+          onUndo: () => {
+            void patchTask
+              .mutateAsync({ id: task.id, input: { done: false, version: updated.version } })
+              .catch(() => toast.error(t('toast.saveError')))
+          },
+        })
+      })
+      .catch(() => toast.error(t('toast.saveError')))
+      .finally(() => completing.current.delete(task.id))
     window.setTimeout(
       () => {
         setJustDoneIds((prev) => {
           const next = new Set(prev)
           next.delete(task.id)
           return next
-        })
-        setHiddenIds((prev) => new Set(prev).add(task.id))
-        scheduleCompletion(task.id)
-        toastWithUndo({
-          message: t('personal.today.tasks.completedToast'),
-          undoLabel: t('action.undo'),
-          onUndo: () => {
-            cancelCompletion(task.id)
-            setHiddenIds((prev) => {
-              const next = new Set(prev)
-              next.delete(task.id)
-              return next
-            })
-          },
         })
       },
       reduced ? 0 : 480,
@@ -265,11 +256,10 @@ export function TodayView({
   const endedSprints = activeSprints.filter((s) => sprintHasEnded(s))
   const activeSprintIds = new Set(activeSprints.map((s) => s.id))
   const allTasks = tasksQuery.data
-  tasksRef.current = allTasks
   const inScope = (task: Task) => task.sprintId === null || activeSprintIds.has(task.sprintId)
   const totalTasksInScope = allTasks.filter(inScope)
   const todaysTasks = totalTasksInScope
-    .filter((task) => (task.doneAt === null && !hiddenIds.has(task.id)) || justDoneIds.has(task.id))
+    .filter((task) => task.doneAt === null || justDoneIds.has(task.id))
     .sort((a, b) => a.sort - b.sort)
   const targetSprintId = ongoingSprints[0]?.id ?? null
 
@@ -385,9 +375,7 @@ export function TodayView({
                           <Badge tone="neutral">{t('personal.tasks.inbox')}</Badge>
                         )}
                         {task.sprintId !== null && sourceSprint && (
-                          <Badge tone="neutral" className="bg-info/10 text-info">
-                            {t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}
-                          </Badge>
+                          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sourceSprint.kind])}</Badge>
                         )}
                         {task.estimateMin ? (
                           // ui-blitz round3 #21: same fix as `task-row.tsx` -- a translated unit

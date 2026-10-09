@@ -20,14 +20,16 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
   const releaseMutation = useReleaseItemMutation(eventId)
   const [label, setLabel] = React.useState('')
   const [quantity, setQuantity] = React.useState('1')
+  const draftRevision = React.useRef({ label: 0, quantity: 0 })
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!label.trim()) return
+    const submittedRevision = { ...draftRevision.current }
     try {
       await addMutation.mutateAsync({ label: label.trim(), quantity: Number(quantity) || 1 })
-      setLabel('')
-      setQuantity('1')
+      if (submittedRevision.label === draftRevision.current.label) setLabel('')
+      if (submittedRevision.quantity === draftRevision.current.quantity) setQuantity('1')
     } catch {
       toast(t('events.error.title'))
     }
@@ -70,7 +72,14 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
   function renderItemsBody() {
     if (itemsQuery.isPending) return <Skeleton className="h-24 w-full" />
     if (itemsQuery.isError) {
-      return <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      return (
+        <StateView
+          kind="error"
+          titleKey="events.error.title"
+          bodyKey="events.error.body"
+          action={{ labelKey: 'events.actions.retry', onAction: () => void itemsQuery.refetch() }}
+        />
+      )
     }
     if (itemsQuery.data.items.length === 0) {
       return <p className="text-small text-muted-foreground">{t('events.items.empty')}</p>
@@ -78,9 +87,12 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
     return (
       <ul className="divide-y divide-border rounded-md border border-border">
         {itemsQuery.data.items.map((item) => (
-          <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
-            <div className="flex flex-col">
-              <span className="text-body text-foreground">
+          <li
+            key={item.id}
+            className="flex flex-col items-start gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="wrap-anywhere text-body text-foreground">
                 {item.label}
                 {item.quantity > 1 ? ` ×${item.quantity}` : ''}
               </span>
@@ -102,11 +114,18 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
   return (
     <div className="flex flex-col gap-4">
       <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-2">
-        <Field label={t('events.items.add')} htmlFor="item-label" className="flex-1">
+        <Field
+          label={t('events.items.add')}
+          htmlFor="item-label"
+          className="min-w-0 basis-full sm:basis-auto sm:flex-1"
+        >
           <Input
             id="item-label"
             value={label}
-            onChange={(e) => setLabel(e.target.value)}
+            onChange={(e) => {
+              draftRevision.current.label += 1
+              setLabel(e.target.value)
+            }}
             placeholder={t('events.items.labelPlaceholder')}
             maxLength={200}
           />
@@ -118,7 +137,10 @@ export function ItemsPanel({ eventId }: { eventId: string }) {
             min={1}
             className="w-20"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) => {
+              draftRevision.current.quantity += 1
+              setQuantity(e.target.value)
+            }}
           />
         </Field>
         <Button type="submit" loading={addMutation.isPending} disabled={!label.trim()}>

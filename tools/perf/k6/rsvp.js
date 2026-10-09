@@ -5,7 +5,13 @@
 // requests" row-contention concern, not a simulation of many citizens RSVPing to different events.
 import http from 'k6/http'
 import { check, sleep } from 'k6'
-import { BASE_URL, loginOnce, authHeaders, SUMMARY_TREND_STATS } from './lib.js'
+import {
+  BASE_URL,
+  loginOnce,
+  authHeaders,
+  SUMMARY_TREND_STATS,
+  ownedFixtureCreationAllowed,
+} from './lib.js'
 
 export const options = {
   vus: Number(__ENV.VUS || 1),
@@ -15,17 +21,52 @@ export const options = {
 }
 
 export function setup() {
+  const createFixture = ownedFixtureCreationAllowed()
   const auth = loginOnce()
+  if (createFixture) {
+    const future = Date.now() + 86_400_000
+    const created = http.post(
+      `${BASE_URL}/api/v1/events`,
+      JSON.stringify({
+        title: `Local performance RSVP ${Date.now()}`,
+        startsAt: new Date(future).toISOString(),
+        endsAt: new Date(future + 3_600_000).toISOString(),
+        capacity: 100000,
+        reminderOffsetsMinutes: [],
+      }),
+      { headers: authHeaders(auth) },
+    )
+    if (created.status !== 201)
+      throw new Error(`owned future RSVP fixture creation failed: ${created.status}`)
+    return { auth, eventId: created.json().id, created: true }
+  }
   const eventsRes = http.get(`${BASE_URL}/api/v1/events`, { headers: authHeaders(auth) })
-  if (eventsRes.status !== 200) throw new Error(`events fetch failed in setup: ${eventsRes.status} ${eventsRes.body}`)
+  if (eventsRes.status !== 200)
+    throw new Error(`events fetch failed in setup: ${eventsRes.status} ${eventsRes.body}`)
   const events = eventsRes.json()
   // Must be an "open" event with no passed RSVP deadline -- upsertRsvp 409s ("rsvp_deadline_passed")
   // for status != "no" once the deadline (or the event itself) is in the past (apps/api/src/modules/
   // events/service.ts), and several demo events are deliberately already `done`/`cancelled`/`full`.
-  const open = (events.items || []).find((e) => e.status === 'open')
+  const open = (events.items || []).find(
+    (e) =>
+      e.status === 'open' &&
+      Date.parse(e.startsAt) > Date.now() &&
+      (!e.rsvpDeadline || Date.parse(e.rsvpDeadline) > Date.now()),
+  )
   const eventId = open && open.id
-  if (!eventId) throw new Error('no "open" event on the demo calendar to RSVP to -- is the demo seed loaded?')
+  if (!eventId)
+    throw new Error('no "open" event on the demo calendar to RSVP to -- is the demo seed loaded?')
   return { auth, eventId }
+}
+
+export function teardown({ auth, eventId, created }) {
+  if (!created) return
+  const response = http.post(
+    `${BASE_URL}/api/v1/events/${eventId}/cancel`,
+    JSON.stringify({ reason: 'Local performance fixture cleanup' }),
+    { headers: authHeaders(auth) },
+  )
+  check(response, { 'own future fixture cancelled': (r) => r.status === 200 })
 }
 
 const STATUSES = ['yes', 'maybe', 'no']

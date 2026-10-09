@@ -17,7 +17,7 @@ export function DemoChip({ label, popoverText, className }: DemoChipProps) {
     <Popover>
       <PopoverTrigger
         className={cn(
-          'inline-flex h-6 min-h-6 shrink-0 items-center whitespace-nowrap rounded-sm bg-attention px-2 text-caption font-medium text-attention-foreground',
+          'inline-flex min-h-6 min-w-0 max-w-full items-center whitespace-normal rounded-sm bg-attention px-2 py-0.5 text-caption font-medium text-attention-foreground [overflow-wrap:anywhere]',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           className,
         )}

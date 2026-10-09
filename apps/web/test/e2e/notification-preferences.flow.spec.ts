@@ -71,7 +71,24 @@ test('@flow notification preferences expose working channels and save consistent
     await expect(page).toHaveURL(/\/account\/notifications$/)
     await expect(page.getByRole('heading', { name: 'Bildirishnoma sozlamalari' })).toBeVisible()
     await expect(page.getByRole('columnheader', { name: 'E-pochta' })).toHaveCount(0)
-    await expect(page.getByText('Doim yoqilgan', { exact: true })).toHaveCount(10)
+    await expect(page.getByText('Ilovada · Doim yoqilgan', { exact: true })).toBeVisible()
+    await expect(
+      page
+        .getByRole('region', { name: 'Turi va kanali boʻyicha', exact: true })
+        .getByRole('switch'),
+    ).toHaveCount(10)
+    const currentPreferences = await context.request.get('/api/v1/notifications/prefs')
+    expect(currentPreferences.status()).toBe(200)
+    const inApp = (await currentPreferences.json()).items.filter(
+      (preference: { channel: string }) => preference.channel === 'inapp',
+    )
+    expect(inApp).toHaveLength(10)
+    expect(
+      inApp.every(
+        (preference: { enabled: boolean; digestMode: string }) =>
+          preference.enabled && preference.digestMode === 'instant',
+      ),
+    ).toBe(true)
     await expect(page.getByRole('switch', { name: /Maʼlumot.*Telegram/ })).toBeVisible()
     const assigned = page.getByRole('switch', { name: /Topshiriq.*Telegram/ })
     await expect(assigned).not.toBeChecked()

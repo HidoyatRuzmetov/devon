@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "owner": "event_regressions-head-scope",
+  "provenance": "Actual isolated synthetic local UI/API persistence gates and bounded geometry. Pixel review is maintained separately; generator does not establish it.",
+  "policy": "Only named states and fixture scopes gain evidence. No whole-component, all-role, accessibility or external-integration pass is inferred.",
+  "boundaries": {
+    "db": "devon_flow_e2e_head",
+    "apiPort": 48961,
+    "webPort": 48962,
+    "seedDemo": false,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "gates": {
+    "functional": "24/24 all3 engines (8 distinct journeys)",
+    "narrow": "3/3 all3 engines (1 distinct journey)",
+    "visual": "8/8 Chromium4locales×2themes×6routes×3environments =144 captures; geometry assertions, not full pixel/axe coverage"
+  },
+  "evidence": {
+    "directory": {
+      "test": "apps/web/test/e2e/head-scope.qa.spec.ts",
+      "scenario": "Directory leadership separate from ordinary unassigned; Cards/Table switch and actual optional-unit filter; independent roster, unit-role and owned-card reads.",
+      "roles": [
+        "department-head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "report": "artifacts/qa/2026-10/head-scope/final-twenty-four/results.json"
+    },
+    "assignment": {
+      "test": "apps/web/test/e2e/head-scope.qa.spec.ts",
+      "scenario": "Ordinary colleague selects active department head in native composer, creates a real card, then head Mine/reload retains both own cards.",
+      "roles": [
+        "ordinary-member",
+        "department-head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "report": "artifacts/qa/2026-10/head-scope/final-twenty-four/results.json"
+    },
+    "analytics": {
+      "test": "apps/web/test/e2e/head-scope.qa.spec.ts",
+      "scenario": "Unit-load table/actual CSV preserve leadership, ordinary unassigned, real units and total3; duplicate real unit names retain independent IDs and chart categories.",
+      "roles": [
+        "department-head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "report": "artifacts/qa/2026-10/head-scope/final-twenty-four/results.json"
+    },
+    "indicator": {
+      "test": "apps/web/test/e2e/head-scope.qa.spec.ts",
+      "scenario": "Indicator heading/display distinguish leadership; raw physical unit stays null, own open count stays1; narrow Russian name/task leaf widths checked after wrapping.",
+      "roles": [
+        "department-head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "ru for narrow regression; en for persistence",
+      "report": "artifacts/qa/2026-10/head-scope/indicator-after/results.json",
+      "additionalReport": "artifacts/qa/2026-10/head-scope/final-twenty-four/results.json"
+    },
+    "visual": {
+      "test": "apps/web/test/e2e/head-scope.qa.spec.ts",
+      "scenario": "Six affected routes at320/768 and1280 with200% text, all4 locales×2 themes; leadership and visible person/task leaf text geometry plus page-width assertions. Capturing is not pixel review.",
+      "roles": [
+        "department-head"
+      ],
+      "browsers": [
+        "chromium"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "report": "artifacts/qa/2026-10/head-scope/final-visual/results.json"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/people-screen.tsx",
+        "component": "PeopleScreen",
+        "kind": "SegmentedControl",
+        "labelIncludes": "structure.people.layout.label"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only actual Cards→Table switch in the head directory fixture; other options/states are pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "directory",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/people-screen.tsx",
+        "component": "PeopleScreen",
+        "kind": "FilterChip",
+        "childSummaryIncludes": "{u.name}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the actual physical unit filter with an optionally assigned head and ordinary assigned member; no synthetic unit created for classification.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "directory",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/new-card-dialog.tsx",
+        "component": "NewCardDialog",
+        "kind": "select",
+        "labelIncludes": "work.field.assignee"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only choosing the active head as recipient and persisting that assignment from an ordinary member.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "assignment",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "assignment",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/new-card-dialog.tsx",
+        "component": "NewCardDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "work.actions.create"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the nonempty title/head-assignee create path; due field and other errors are not covered by this slice.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "assignment",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/board-screen.tsx",
+        "component": "BoardScreenInner",
+        "kind": "SegmentedControl",
+        "labelIncludes": "work.board.scopeLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only head Mine scope/reload retaining both personal cards; other users and scope transitions remain pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "assignment",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "PersonCell",
+        "kind": "a"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only visible head/ordinary names in the narrow Russian fixture and the explicit expanded text geometry; no keyboard/link navigation pass inferred.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "indicator",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "TaskChips",
+        "kind": "a",
+        "labelIncludes": "title={card.title}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the fully visible owned task title; no task-link navigation/hover pass inferred.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "indicator",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "IconButton",
+        "labelIncludes": "analytics.actions.viewAsTable"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the unit-load instance, changing its chart into the real table; other ChartCard instances are not covered.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "analytics",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "IconButton",
+        "labelIncludes": "analytics.actions.export"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only opening the unit-load export menu; no PNG or other chart export pass inferred.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "analytics",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "analytics.actions.exportCsv"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only actual unit-load CSV download and content assertion in this fixture; other metrics remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "analytics",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "entries": [
+    {
+      "route": "/people",
+      "scope": "Department-role head leadership grouping; ordinary unassigned distinct; optional physical unit retained and filtered truthfully.",
+      "evidenceId": "directory"
+    },
+    {
+      "route": "/work",
+      "scope": "Head owns and receives work normally, classified at department scope without invented unit IDs.",
+      "evidenceId": "assignment"
+    },
+    {
+      "route": "/analytics",
+      "scope": "Head/group/unit stable scope IDs; counts preserved; same-named real units do not collide.",
+      "evidenceId": "analytics"
+    },
+    {
+      "route": "/people/table",
+      "scope": "Presentation fallback is Department-wide, while raw indicator unit remains null; names and task titles wrap.",
+      "evidenceId": "indicator"
+    },
+    {
+      "route": "/people?person=<head>",
+      "scope": "Null physical unit metadata says Department-wide; actual optional physical unit continues to show its name.",
+      "evidenceId": "directory"
+    },
+    {
+      "route": "/work/workload",
+      "scope": "Head retains actual own load/card capacity with Department-wide caption.",
+      "evidenceId": "assignment"
+    },
+    {
+      "routes": [
+        "/people",
+        "/work",
+        "/people/table",
+        "/people?person=<head>",
+        "/work/workload",
+        "/analytics"
+      ],
+      "scope": "Only affected head fixture geometry across the explicitly executed144 environment/route observations; unlisted interaction states are pending.",
+      "evidenceId": "visual"
+    }
+  ]
+}

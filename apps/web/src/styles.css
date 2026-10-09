@@ -20,3 +20,10 @@ body {
 :where(main) :focus-visible {
   scroll-margin-top: 72px;
 }
+
+/* Native keyboard scrolling must also leave room for the fixed mobile navigation. */
+@media (width < 768px) {
+  :where(main) :focus-visible {
+    scroll-margin-bottom: calc(var(--height-tabbar) + env(safe-area-inset-bottom) + var(--space-3));
+  }
+}

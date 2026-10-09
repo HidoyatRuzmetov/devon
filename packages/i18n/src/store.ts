@@ -9,6 +9,24 @@ let current: Locale = DEFAULT_LOCALE
 /** The locale most recently asked for, which is `current` except while a catalogue is in flight. */
 let requested: Locale = DEFAULT_LOCALE
 const listeners = new Set<() => void>()
+let requestVersion = 0
+let failedLocale: Locale | null = null
+const failureListeners = new Set<() => void>()
+
+function updateFailure(locale: Locale | null): void {
+  if (failedLocale === locale) return
+  failedLocale = locale
+  for (const listener of failureListeners) listener()
+}
+
+export function getLocaleLoadFailure(): Locale | null {
+  return failedLocale
+}
+
+export function subscribeLocaleLoadFailure(listener: () => void): () => void {
+  failureListeners.add(listener)
+  return () => failureListeners.delete(listener)
+}
 
 export function getLocale(): Locale {
   return current
@@ -35,18 +53,26 @@ export function setLocale(next: Locale): void {
       console.error(`[i18n] setLocale() ignored an unknown locale: ${JSON.stringify(next)}`)
     return
   }
-  if (next === current) return
   requested = next
+  const version = ++requestVersion
+  updateFailure(null)
+  if (next === current) return
   if (hasCatalogue(next)) {
     commit(next)
     return
   }
-  void loadCatalogue(next).then(() => {
-    // Guarded, not assumed: somebody clicking through the locale menu can land a second switch
-    // while this chunk is in the air, and the last locale asked for is the one they meant -- an
-    // unconditional commit here would snap the UI back to the one they passed through.
-    if (requested === next) commit(next)
-  })
+  void loadCatalogue(next)
+    .then(() => {
+      // Guarded, not assumed: somebody clicking through the locale menu can land a second switch
+      // while this chunk is in the air, and the last locale asked for is the one they meant -- an
+      // unconditional commit here would snap the UI back to the one they passed through.
+      if (requested === next && requestVersion === version) commit(next)
+    })
+    .catch(() => {
+      // Keep the loaded language usable and expose an explicit recovery state. A late rejection
+      // from a superseded choice must not replace the user's newer successful choice.
+      if (requested === next && requestVersion === version) updateFailure(next)
+    })
 }
 
 export function subscribeLocale(listener: () => void): () => void {
@@ -58,4 +84,6 @@ export function subscribeLocale(listener: () => void): () => void {
 export function resetLocaleForTests(): void {
   current = DEFAULT_LOCALE
   requested = DEFAULT_LOCALE
+  requestVersion += 1
+  updateFailure(null)
 }

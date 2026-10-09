@@ -10,6 +10,8 @@ import { login as apiLogin, requestPasswordReset, verifyTwoFactorLogin } from '.
 import { useForcedState } from '../lib/forced-state.js'
 import { useOnline } from '../lib/use-online.js'
 import { Link, navigate, useSearchParams } from '../lib/router.js'
+import { authEntryPath, authReturnPath } from '../lib/auth-return.js'
+import type { Me } from '../lib/api-schemas.js'
 import { ForcedStateBlock } from '../shell/forced-state-block.js'
 
 // A failed attempt gets the same "no, try again" shake every native form control gives a rejected
@@ -26,6 +28,7 @@ export function LoginRoute() {
   const forced = useForcedState()
   const online = useOnline()
   const params = useSearchParams()
+  const returnTo = authReturnPath(params.get('returnTo'), '/')
   const signedOut = params.get('signedOut') === '1'
   const queryClient = useQueryClient()
 
@@ -49,6 +52,13 @@ export function LoginRoute() {
   // single code field, submitted against the same `challengeToken` until it succeeds.
   const [challengeToken, setChallengeToken] = React.useState<string | null>(null)
   const [code, setCode] = React.useState('')
+  async function finishSignIn() {
+    await queryClient.invalidateQueries({ queryKey: ['me'] })
+    const me = queryClient.getQueryData<Me | null>(['me'])
+    navigate(
+      returnTo === '/' && me?.user.mustChangePassword ? '/account#section-password' : returnTo,
+    )
+  }
 
   const mutation = useMutation({
     mutationFn: () => apiLogin({ login: identifier, password }),
@@ -58,8 +68,7 @@ export function LoginRoute() {
         setChallengeToken(result.challengeToken)
         return
       }
-      await queryClient.invalidateQueries({ queryKey: ['me'] })
-      navigate('/')
+      await finishSignIn()
     },
     onError: () => {
       setFailed(true)
@@ -71,8 +80,7 @@ export function LoginRoute() {
     mutationFn: () => verifyTwoFactorLogin({ challengeToken: challengeToken ?? '', code }),
     onSuccess: async () => {
       setFailed(false)
-      await queryClient.invalidateQueries({ queryKey: ['me'] })
-      navigate('/')
+      await finishSignIn()
     },
     onError: () => {
       setFailed(true)
@@ -322,7 +330,10 @@ export function LoginRoute() {
 
           <p className="text-center text-small text-muted-foreground">
             {t('accounts.login.registerPrompt')}{' '}
-            <Link to="/register" className="text-foreground underline underline-offset-2">
+            <Link
+              to={returnTo === '/' ? '/register' : authEntryPath('/register', returnTo)}
+              className="text-foreground underline underline-offset-2"
+            >
               {t('accounts.login.registerLink')}
             </Link>
           </p>

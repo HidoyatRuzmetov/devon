@@ -112,7 +112,7 @@ export function Sidebar({
   return (
     <nav
       className={cn(
-        'flex h-full flex-col bg-sidebar text-sidebar-foreground',
+        'flex h-full flex-col overflow-y-auto overscroll-contain bg-sidebar text-sidebar-foreground',
         'transition-[width] duration-(--dur-page) ease-(--ease-emphasized)',
         collapsed ? 'w-(--width-sidebar-rail)' : 'w-(--width-sidebar)',
         className,
@@ -120,7 +120,7 @@ export function Sidebar({
     >
       <div
         className={cn(
-          'flex h-(--height-topbar) items-center',
+          'flex min-h-(--height-topbar) shrink-0 items-center',
           collapsed ? 'justify-center px-2' : 'px-4',
         )}
       >
@@ -169,7 +169,7 @@ export function Sidebar({
                         folded && '-rotate-90',
                       )}
                     />
-                    <span data-shell-label className="min-w-0 flex-1">
+                    <span data-shell-label className="min-w-0 flex-1 [overflow-wrap:anywhere]">
                       <GroupLabel labelKey={group.labelKey} />
                     </span>
                     {folded && hiddenCount > 0 ? (
@@ -267,7 +267,7 @@ function NavScroller({ children }: { children: React.ReactNode }): React.JSX.Ele
   }, [measure, children])
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <div className="relative flex min-h-24 flex-1 flex-col">
       <div
         ref={ref}
         onScroll={measure}
@@ -321,6 +321,7 @@ function SidebarItem({
   const row = (
     <Link
       href={entry.route}
+      tabIndex={0}
       aria-current={active ? 'page' : undefined}
       // H5.2 "prefetch on hover/focus": a mouse hover and a keyboard tab-to-focus are the two ways a
       // person reaches this link before actually activating it -- both warm the route's data.
@@ -355,7 +356,10 @@ function SidebarItem({
       {/* wraps rather than truncates -- design.md §3.5 anti-truncation contract */}
       <span
         data-shell-label
-        className={cn('relative min-w-0 flex-1 text-left', collapsed && 'sr-only')}
+        className={cn(
+          'relative min-w-0 flex-1 text-left [overflow-wrap:anywhere]',
+          collapsed && 'sr-only',
+        )}
       >
         {label}
       </span>

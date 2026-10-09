@@ -1,0 +1,7 @@
+{
+  "fields": {
+    "error": {
+      "duplicate_option": "Har bir variantning ichki identifikatori alohida bo‘lishi kerak. Maydonni qayta yuklab, variantlarni qayta qo‘shing."
+    }
+  }
+}

@@ -17,6 +17,10 @@ import type { PomodoroKind, PomodoroSettings } from './types.js'
 export type PomodoroPhase = 'idle' | 'focus' | 'short_break' | 'long_break'
 
 export type PomodoroState = {
+  userId: string | null
+  busy: boolean
+  durationMs: number
+  pendingEnd: { endedAt: string; completed: boolean } | null
   phase: PomodoroPhase
   /** Wall-clock end time (ms since epoch) while running; `null` while idle or paused. */
   endAt: number | null
@@ -26,13 +30,17 @@ export type PomodoroState = {
   cycleIndex: number
   /** The server-side `pomodoro_sessions.id` for the phase in progress, if it has been recorded. */
   sessionId: string | null
-  /** The personal task this focus phase is linked to, if any. */
+  /** The task captured when focus starts, retained locally through automatic breaks. */
   taskId: string | null
 }
 
 const STORAGE_KEY = 'devon.personal.pomodoro.v1'
 
 const IDLE_STATE: PomodoroState = {
+  userId: null,
+  busy: false,
+  durationMs: 0,
+  pendingEnd: null,
   phase: 'idle',
   endAt: null,
   remainingAtPause: null,
@@ -41,26 +49,52 @@ const IDLE_STATE: PomodoroState = {
   taskId: null,
 }
 
-function readState(): PomodoroState {
+function readState(userId: string): PomodoroState {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return IDLE_STATE
+    const raw = window.localStorage.getItem(`${STORAGE_KEY}.${userId}`)
+    if (!raw) return { ...IDLE_STATE, userId }
     const parsed = JSON.parse(raw) as Partial<PomodoroState>
-    return { ...IDLE_STATE, ...parsed }
+    if (
+      parsed.userId !== userId ||
+      !['idle', 'focus', 'short_break', 'long_break'].includes(parsed.phase ?? '') ||
+      typeof parsed.cycleIndex !== 'number' ||
+      !Number.isInteger(parsed.cycleIndex) ||
+      parsed.cycleIndex < 0 ||
+      typeof parsed.durationMs !== 'number' ||
+      !Number.isFinite(parsed.durationMs) ||
+      parsed.durationMs < 0 ||
+      (parsed.endAt !== null &&
+        (typeof parsed.endAt !== 'number' || !Number.isFinite(parsed.endAt))) ||
+      (parsed.remainingAtPause !== null &&
+        (typeof parsed.remainingAtPause !== 'number' ||
+          !Number.isFinite(parsed.remainingAtPause) ||
+          parsed.remainingAtPause < 0)) ||
+      (parsed.sessionId !== null && typeof parsed.sessionId !== 'string') ||
+      (parsed.pendingEnd !== null &&
+        (!parsed.pendingEnd ||
+          typeof parsed.pendingEnd.completed !== 'boolean' ||
+          !Number.isFinite(Date.parse(parsed.pendingEnd.endedAt))))
+    )
+      return { ...IDLE_STATE, userId }
+    return { ...IDLE_STATE, ...parsed, userId, busy: false }
   } catch {
-    return IDLE_STATE
+    return { ...IDLE_STATE, userId }
   }
 }
 
 function writeState(state: PomodoroState): void {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    if (state.userId)
+      window.localStorage.setItem(
+        `${STORAGE_KEY}.${state.userId}`,
+        JSON.stringify({ ...state, busy: false }),
+      )
   } catch {
     // Storage disabled -- the timer still works for the rest of this tab's session (in-memory only).
   }
 }
 
-let state: PomodoroState = typeof window === 'undefined' ? IDLE_STATE : readState()
+let state: PomodoroState = IDLE_STATE
 const listeners = new Set<() => void>()
 let tickHandle: ReturnType<typeof setInterval> | null = null
 
@@ -87,6 +121,24 @@ function ensureTicking(): void {
 
 export function getPomodoroState(): PomodoroState {
   return state
+}
+
+/** The legacy shared key has no ownership proof. Never load one person's timer into another account. */
+export function scopePomodoroState(userId: string | null): void {
+  if (state.userId === userId) return
+  state = userId ? readState(userId) : IDLE_STATE
+  notify()
+}
+
+export function setPomodoroBusy(busy: boolean): void {
+  setState({ busy })
+}
+
+export function preparePomodoroEnd(completed: boolean): { endedAt: string; completed: boolean } {
+  const receipt = state.pendingEnd ?? { endedAt: new Date().toISOString(), completed }
+  pause()
+  setState({ pendingEnd: receipt })
+  return receipt
 }
 
 export function subscribePomodoro(listener: () => void): () => void {
@@ -160,13 +212,17 @@ export function startPhase(
   phase: Exclude<PomodoroPhase, 'idle'>,
   settings: PomodoroSettings,
   taskId: string | null = null,
+  startedAt = Date.now(),
 ): void {
+  const durationMs = durationMsFor(phase, settings)
   setState({
     phase,
-    endAt: Date.now() + durationMsFor(phase, settings),
+    durationMs,
+    pendingEnd: null,
+    endAt: startedAt + durationMs,
     remainingAtPause: null,
     sessionId: null,
-    taskId: phase === 'focus' ? taskId : null,
+    taskId,
   })
 }
 
@@ -180,12 +236,13 @@ export function pause(): void {
 }
 
 export function resume(): void {
-  if (state.phase === 'idle' || state.remainingAtPause === null) return
+  if (state.phase === 'idle' || state.remainingAtPause === null || state.pendingEnd || state.busy)
+    return
   setState({ endAt: Date.now() + state.remainingAtPause, remainingAtPause: null })
 }
 
 export function stopToIdle(): void {
-  setState({ ...IDLE_STATE, cycleIndex: state.cycleIndex })
+  setState({ ...IDLE_STATE, userId: state.userId, busy: state.busy, cycleIndex: state.cycleIndex })
 }
 
 export function advanceCycle(completedFocus: boolean, cyclesBeforeLong: number): number {

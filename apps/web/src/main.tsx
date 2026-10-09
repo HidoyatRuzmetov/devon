@@ -4,6 +4,7 @@ import { loadCatalogue, setLocale, subscribeLocale, getLocale } from '@devon/i18
 import { resolveBootLocale } from './lib/locale-boot.js'
 import { bootTheme } from './lib/theme.js'
 import { App } from './app.js'
+import { LocaleLoadNotice } from './shell/locale-load-notice.js'
 import './styles.css'
 
 // The theme is applied synchronously, before the first render, so there is no flash of the wrong
@@ -28,14 +29,26 @@ if (!container) throw new Error('#root element not found')
 // the default locale -- the common case -- awaits an already-resolved promise and paints in the same
 // frame it always did.
 const boot = resolveBootLocale()
-void loadCatalogue(boot).then(() => {
-  setLocale(boot)
-  applyDocumentLocale()
-  subscribeLocale(applyDocumentLocale)
+const root = createRoot(container)
+void loadCatalogue(boot)
+  .then(() => {
+    setLocale(boot)
+    applyDocumentLocale()
+    subscribeLocale(applyDocumentLocale)
 
-  createRoot(container).render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  )
-})
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>,
+    )
+  })
+  .catch(() => {
+    // No application content is painted in a substitute language. The already-loaded default
+    // catalogue supplies only a clear recovery message before the chosen language is available.
+    applyDocumentLocale()
+    root.render(
+      <main className="mx-auto max-w-xl p-6">
+        <LocaleLoadNotice bootLocale={boot} />
+      </main>,
+    )
+  })

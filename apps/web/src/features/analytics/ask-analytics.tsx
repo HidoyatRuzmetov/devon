@@ -22,7 +22,7 @@ import { AiResultPanel } from '../ai/components/ai-result-panel.js'
 import { AnalyticsAnswerPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type NlAnalyticsOutput } from '../ai/outputs.js'
 import { ApiError } from '../../lib/api-client.js'
-import type { AnalyticsSummary } from './types.js'
+import type { AnalyticsSummary, UnitLoad } from './types.js'
 import { fetchSummary } from './api.js'
 import { useMeQuery } from '../../lib/session.js'
 
@@ -50,6 +50,7 @@ function errorKey(err: unknown): string {
 function answerFrom(
   summary: AnalyticsSummary,
   output: NlAnalyticsOutput,
+  unitLabel: (unit: UnitLoad) => string,
 ): { rows: { label: string; value: number }[]; total?: number } | null {
   const sum = (rows: { value: number }[]): number => rows.reduce((n, row) => n + row.value, 0)
   const nonEmpty = (rows: { label: string; value: number }[]) =>
@@ -82,7 +83,7 @@ function answerFrom(
       if (output.groupBy === 'unit') {
         return nonEmpty(
           summary.loadPerUnit.map((unit) => ({
-            label: unit.unitName ?? '',
+            label: unitLabel(unit),
             value: unit.overdueCount,
           })),
         )
@@ -96,7 +97,7 @@ function answerFrom(
       )
     case 'loadPerUnit':
       return nonEmpty(
-        summary.loadPerUnit.map((unit) => ({ label: unit.unitName ?? '', value: unit.openCount })),
+        summary.loadPerUnit.map((unit) => ({ label: unitLabel(unit), value: unit.openCount })),
       )
     case 'projectProgress':
       return {
@@ -196,12 +197,16 @@ export function AskAnalytics({
   })
   const answer =
     output && answerQuery.data && !answerQuery.isFetching && output.unmappedTerms.length === 0
-      ? answerFrom(answerQuery.data, output)
+      ? answerFrom(answerQuery.data, output, (unit) =>
+          unit.scope === 'department'
+            ? t('headScope.leadership')
+            : (unit.unitName ?? t('analytics.legend.unassigned')),
+        )
       : null
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -213,7 +218,7 @@ export function AskAnalytics({
           }}
           placeholder={t('analytics.ask.placeholder')}
           aria-label={t('analytics.ask.placeholder')}
-          className="min-w-64 flex-1"
+          className="min-w-0 flex-1"
         />
         <SparkleButton
           aria-label={t('analytics.ask.action')}

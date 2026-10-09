@@ -69,6 +69,7 @@ export function StateView({
       <div
         role="status"
         aria-live="polite"
+        aria-busy="true"
         className={cn('mx-auto flex w-full max-w-160 flex-col gap-4 p-6', className)}
       >
         <span className="sr-only">{t(titleKey)}</span>

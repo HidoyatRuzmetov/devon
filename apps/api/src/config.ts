@@ -2,6 +2,7 @@
 // refuses to start if a value still equals its checked-in `.env.example` local-dev default -- so a
 // deploy can never go live silently trusting a placeholder secret or a placeholder database password.
 import { z } from 'zod'
+import { queuePoolMaxSchema } from './lib/queue-database.js'
 
 /** `'true'`/`'1'` -> true, `'false'`/`'0'` -> false. (`z.coerce.boolean()` turns the string `'false'`
  * into `true`, which is the wrong default for a knob whose safe value is the truthy one.) */
@@ -15,12 +16,16 @@ const configSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     API_PORT: z.coerce.number().int().positive().default(3000),
+    // Explicit literal bind addresses avoid DNS at startup. Containers keep the existing all-
+    // interface default; destructive local test harnesses bind only to loopback.
+    API_HOST: z.enum(['0.0.0.0', '127.0.0.1', '::', '::1']).default('0.0.0.0'),
     DEVON_PUBLIC_URL: z.string().default('http://localhost:5173'),
     // H1.10 CORS allow-list. Empty by default: the only allowed origin is `DEVON_PUBLIC_URL`'s own.
     // A comma-separated list here adds further origins explicitly (a separate admin host, say) --
     // there is deliberately no wildcard form (`plugins/security-headers.ts`).
     DEVON_ALLOWED_ORIGINS: z.string().default(''),
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+    QUEUE_DB_POOL_MAX: queuePoolMaxSchema,
     SESSION_COOKIE_NAME: z.string().min(1).default('devon_sid'),
     SESSION_IDLE_MINUTES: z.coerce.number().int().positive().default(720),
     SESSION_ABSOLUTE_DAYS: z.coerce.number().int().positive().default(30),

@@ -1,0 +1,8 @@
+{
+  "eventsControls": {
+    "option": "Вариант {number}",
+    "removeOption": "Удалить вариант {number}",
+    "optionLimit": "В опросе может быть не больше {count} вариантов.",
+    "exportFailed": "Не удалось скачать файл календаря. Попробуйте ещё раз."
+  }
+}

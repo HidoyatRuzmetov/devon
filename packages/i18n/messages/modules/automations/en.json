@@ -1,5 +1,6 @@
 {
   "automations": {
+    "runsLoadMore": "Load older runs",
     "eyebrow": "AUTOMATION",
     "title": "Rules",
     "description": "“When this happens, do that.” Turn repeated manual work into a rule.",
@@ -54,6 +55,11 @@
       "createFollowup": "create a follow-up card"
     },
     "builder": {
+      "chooseValue": "Choose a value",
+      "noDeadlineHint": "Leave empty for no deadline. Zero means today.",
+      "requiredInput": "Choose or fill in the value for this action.",
+      "triggerLocked": "Duplicate this rule to choose a different event.",
+      "anyField": "Any field",
       "nameLabel": "Rule name",
       "namePlaceholder": "For example: tell the head about overdue work",
       "whenLegend": "When",
@@ -71,7 +77,7 @@
         "estimate": "Estimate"
       },
       "filterLabel": "Which cards",
-      "filterHint": "Leave empty to match every card.",
+      "filterHint": "Leave empty to match every card. In rules, @me means the person who created the rule.",
       "filterPlaceholder": "label:request",
       "actionLabel": "Action",
       "addAction": "Add another action",
@@ -96,10 +102,12 @@
         "failed": "Failed"
       },
       "reason": {
+        "targetUnavailable": "A colleague or label used by this rule is unavailable. Edit the rule to choose another.",
         "chainDepth": "The chain went too deep — stopped",
         "loopGuard": "A loop was detected — the rule did not run twice",
         "noValidActions": "No action was left to apply",
         "statusDidNotMatch": "The status did not match",
+        "fieldDidNotMatch": "A different field changed",
         "filterDidNotMatch": "The card did not match the filter",
         "alreadyAppliedToday": "Already applied today",
         "other": "Skipped"
@@ -111,6 +119,7 @@
     "saved": "Rule saved",
     "saveFailed": "Could not save the rule",
     "runsFilter": {
+      "removedRule": "Removed rule",
       "rule": "Rule",
       "status": "Outcome",
       "allRules": "All rules",

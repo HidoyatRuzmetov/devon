@@ -8,6 +8,8 @@
     "removed": "Fayl olib tashlandi",
     "removeName": "{name} faylini olib tashlash",
     "uploading": "Fayl yuklanmoqda…",
+    "cancel": "Yuklashni bekor qilish",
+    "cancelled": "Yuklash bekor qilindi. Fayl biriktirilmadi.",
     "scanning": "Fayl tekshirilmoqda…",
     "scanUnavailable": "Faylni tekshirish vaqtincha ishlamayapti. Yuklashni tugatish uchun qayta urinib koʻring.",
     "tooLarge": "Fayl server hajm chegarasidan katta. Kichikroq fayl tanlang.",

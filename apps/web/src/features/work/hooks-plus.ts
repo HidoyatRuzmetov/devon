@@ -15,12 +15,14 @@ import {
 } from '@tanstack/react-query'
 import * as api from './api-plus.js'
 import { finishWorkWrite, patchCardInCaches, useCsrfToken } from './hooks.js'
-import type { Board, CardDetail } from './api.js'
+import type { Board, Card, CardDetail } from './api.js'
+import { fetchDependencyCandidates } from './dependency-candidates.js'
 
 // Key prefixes. `['work', ...]` throughout, so `hooks.ts`'s own invalidations and these never
 // collide but can still be cleared together when a department switch invalidates everything.
 const DEPENDENCIES_KEY = (cardId: string) => ['work', 'dependencies', cardId] as const
 const DEPENDENCY_GRAPH_KEY = ['work', 'dependency-graph'] as const
+const DEPENDENCY_CANDIDATES_KEY = ['work', 'dependency-candidates'] as const
 const TIME_LOG_KEY = (cardId: string) => ['work', 'time-log', cardId] as const
 const REMINDERS_KEY = (cardId: string) => ['work', 'reminders', cardId] as const
 const TEMPLATES_KEY = (kind?: string) => ['work', 'templates', kind ?? 'all'] as const
@@ -63,6 +65,17 @@ export function useDependencyGraphQuery(
     queryKey: DEPENDENCY_GRAPH_KEY,
     queryFn: api.fetchDependencyGraph,
     enabled,
+    staleTime: 0,
+  })
+}
+
+/** Local title matching requires every page. Refetch on each open, without polling closed pickers. */
+export function useDependencyCandidatesQuery(enabled: boolean): UseQueryResult<Card[], Error> {
+  return useQuery({
+    queryKey: DEPENDENCY_CANDIDATES_KEY,
+    queryFn: fetchDependencyCandidates,
+    enabled,
+    staleTime: 0,
   })
 }
 

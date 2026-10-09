@@ -34,6 +34,7 @@ import type { LocalizedText } from '../notifications/schemas.js'
 import * as workRepo from '../work/repo.js'
 import { scanContext, systemContext } from './context.js'
 import * as repo from './repo.js'
+import { loadFilterFacts } from './filter-facts.js'
 
 /** How long a card's automation chain is remembered. Long enough that the outbox worker's own
  * 2-second poll cannot outrun it, short enough that a genuine human edit ten minutes later starts
@@ -77,6 +78,9 @@ type CardFacts = {
   labels: string[]
   createdByUserId: string
   version: number
+  projectId: string | null
+  description: string | null
+  estimateMin: number | null
 }
 
 async function loadCard(
@@ -97,30 +101,9 @@ async function loadCard(
     labels: card.labels,
     createdByUserId: card.createdByUserId,
     version: card.version,
-  }
-}
-
-/** The filter grammar over one card. The project/label/unit names a full match would need are
- * loaded once per evaluation batch, not per rule -- a department with eight rules still costs one
- * label query. */
-async function filterableFor(
-  ctx: RequestContext,
-  departmentId: string,
-  card: CardFacts,
-): Promise<FilterableCard> {
-  const labels = await workRepo.getLabels(ctx, departmentId)
-  const byId = new Map(labels.map((l) => [l.id, l.name]))
-  return {
-    id: card.id,
-    title: card.title,
-    description: null,
-    status: card.status,
-    assigneeUserId: card.assigneeUserId,
-    giverUserId: card.giverUserId,
-    dueAt: card.dueAt,
-    projectName: null,
-    labelNames: card.labels.map((id) => byId.get(id) ?? '').filter(Boolean),
-    unitName: null,
+    projectId: card.projectId,
+    description: card.description?.text ?? null,
+    estimateMin: card.estimateMin ?? null,
   }
 }
 
@@ -219,10 +202,12 @@ async function applyActions(
         }
         break
     }
-    applied.push(actionLabel(action))
   }
 
   try {
+    if (!(await repo.areActionTargetsEligible(ctx, departmentId, actions))) {
+      return { applied: [], error: 'action_target_unavailable' }
+    }
     if (Object.keys(patch).length > 0) {
       const result = await workRepo.patchCard(
         ctx,
@@ -233,19 +218,49 @@ async function applyActions(
         actorUserId ?? card.createdByUserId,
       )
       if (!result.ok) return { applied, error: `patch_${result.reason}` }
+      applied.push(
+        ...actions
+          .filter((action) =>
+            ['assign', 'set_priority', 'set_status', 'add_label'].includes(action.kind),
+          )
+          .map(actionLabel),
+      )
     }
 
     if (checklist.length > 0) {
       await withContext(ctx, async (tx) => {
+        const parent = await tx.raw<{ id: string }>(sql`select id from app.cards
+          where id=${card.id} and department_id=${departmentId} and deleted_at is null for share`)
+        if (!parent[0]) throw new Error('card_unavailable')
         const values = checklist.map(
           (text, index) =>
             sql`(${randomUUID()}, ${departmentId}, ${card.id}, ${text}, ${`z${index.toString().padStart(4, '0')}`})`,
         )
-        await tx.raw(
+        const added = await tx.raw<{ id: string; text: string }>(
           sql`insert into app.card_checklist_items (id, department_id, card_id, text, order_key)
-              values ${sql.join(values, sql`, `)}`,
+              values ${sql.join(values, sql`, `)} returning id,text`,
         )
+        for (const item of added)
+          tx.audit({
+            action: 'work.checklist_item_added',
+            subjectType: 'card_checklist_item',
+            subjectId: item.id,
+            departmentId,
+          })
+        const activity = added.map(
+          (item) =>
+            sql`(${randomUUID()},${departmentId},${card.id},${actorUserId},'checklist',${JSON.stringify({ added: item.text })}::jsonb)`,
+        )
+        await tx.raw(
+          sql`insert into app.card_activity(id,department_id,card_id,actor_user_id,kind,data) values ${sql.join(activity, sql`, `)}`,
+        )
+        tx.emit({
+          type: 'work.checklist.updated',
+          departmentId,
+          payload: { cardId: card.id, actorUserId },
+        })
       })
+      applied.push(...actions.filter((action) => action.kind === 'add_checklist').map(actionLabel))
     }
 
     if (followUp) {
@@ -270,18 +285,24 @@ async function applyActions(
         createdByUserId: actorUserId ?? card.createdByUserId,
         source: 'template',
       })
+      applied.push(
+        ...actions.filter((action) => action.kind === 'create_followup').map(actionLabel),
+      )
     }
 
     const wantsHead = actions.some((a) => a.kind === 'notify_head')
     const recipients = new Set(notifications.map((n) => n.userId))
-    if (wantsHead) for (const id of await headUserIds(ctx, departmentId)) recipients.add(id)
+    const heads = wantsHead ? await headUserIds(ctx, departmentId) : []
+    if (wantsHead && heads.length === 0) return { applied, error: 'action_target_unavailable' }
+    for (const id of heads) recipients.add(id)
     if (recipients.size > 0) {
       const text = notificationText(ruleName, card.title)
       // `notifyUser` is the one place "create a notification and deliver it on the channels its
       // owner wants right now" happens (notifications/notify.ts) -- the automations module never
       // writes an inbox row or a Telegram message itself.
-      await Promise.all(
-        [...recipients].map((userId) =>
+      const userIds = [...recipients]
+      const outcomes = await Promise.allSettled(
+        userIds.map((userId) =>
           notifyUser(log, {
             userId,
             type: 'automations.rule.ran',
@@ -289,12 +310,27 @@ async function applyActions(
             subjectType: 'card',
             subjectId: card.id,
             departmentId,
+            requireActiveDepartmentMembership: true,
             title: text.title,
             body: text.body,
             deepLink: `/work/card?id=${card.id}`,
           }),
         ),
       )
+      const accepted = new Set(
+        userIds.filter((_, index) => outcomes[index]?.status === 'fulfilled'),
+      )
+      applied.push(
+        ...actions
+          .filter(
+            (action) =>
+              (action.kind === 'notify_user' && !!action.userId && accepted.has(action.userId)) ||
+              (action.kind === 'notify_head' && heads.every((id) => accepted.has(id))),
+          )
+          .map(actionLabel),
+      )
+      const failed = outcomes.find((outcome) => outcome.status === 'rejected')
+      if (failed?.status === 'rejected') throw failed.reason
     }
 
     return { applied, error: null }
@@ -311,7 +347,7 @@ export async function evaluateTrigger(
   cardId: string,
   trigger: AutomationTrigger,
   actorUserId: string | null,
-  options: { timeBased?: boolean } = {},
+  options: { timeBased?: boolean; changedFields?: readonly string[] } = {},
 ): Promise<void> {
   const ctx = systemContext(departmentId, actorUserId)
   const rules = await repo.listEnabledRulesForTrigger(ctx, departmentId, trigger)
@@ -319,17 +355,28 @@ export async function evaluateTrigger(
 
   const card = await loadCard(ctx, departmentId, cardId)
   if (!card) return
-  const filterable = await filterableFor(ctx, departmentId, card)
+  const { filterable, resolveUserIds } = await loadFilterFacts(ctx, departmentId, card)
   const chain = chainFor(cardId)
 
   for (let i = 0; i < rules.length; i += 1) {
     const rule = rules[i]!
     // nosemgrep: query-in-loop -- ordered rules share the chain guard and write the same card.
-    const outcome = await evaluateOneRule(log, ctx, departmentId, rule, card, filterable, chain, {
-      trigger,
-      actorUserId,
-      timeBased: options.timeBased === true,
-    })
+    const outcome = await evaluateOneRule(
+      log,
+      ctx,
+      departmentId,
+      rule,
+      card,
+      filterable,
+      resolveUserIds,
+      chain,
+      {
+        trigger,
+        actorUserId,
+        timeBased: options.timeBased === true,
+        changedFields: options.changedFields ?? [],
+      },
+    )
     if (outcome === 'applied') {
       chain.ruleIds.add(rule.id)
       chain.depth += 1
@@ -345,11 +392,13 @@ async function evaluateOneRule(
   rule: repo.AutomationRule,
   card: CardFacts,
   filterable: FilterableCard,
+  resolveUserIds: (token: string) => readonly string[],
   chain: ChainEntry,
   context: {
     trigger: AutomationTrigger
     actorUserId: string | null
     timeBased: boolean
+    changedFields: readonly string[]
   },
 ): Promise<'applied' | 'skipped' | 'failed'> {
   const skip = async (reason: string) => {
@@ -374,11 +423,17 @@ async function evaluateOneRule(
   ) {
     return skip('status_did_not_match')
   }
+  if (
+    context.trigger === 'card_field_changed' &&
+    config.field != null &&
+    !context.changedFields.includes(config.field)
+  )
+    return skip('field_did_not_match')
   if (config.filter && config.filter.trim().length > 0) {
     const query = parseFilterQuery(config.filter)
     const matched = matchesFilterQuery(filterable, query, {
-      meUserId: null,
-      resolveUserIds: () => [],
+      meUserId: rule.createdByUserId,
+      resolveUserIds,
     })
     if (!matched) return skip('filter_did_not_match')
   }
@@ -438,13 +493,24 @@ function stringField(payload: Record<string, unknown>, key: string): string | nu
  * subscription, and never from a route handler.
  */
 export function registerAutomationSubscriptions(log: FastifyBaseLogger): () => void {
-  const handle = async (event: OutboxEventRecord, trigger: AutomationTrigger): Promise<void> => {
+  const handle = async (
+    event: OutboxEventRecord,
+    trigger: AutomationTrigger,
+    options: { changedFields?: readonly string[] } = {},
+  ): Promise<void> => {
     const departmentId = event.departmentId
     if (!departmentId) return
     const payload = payloadOf(event)
     const cardId = stringField(payload, 'cardId')
     if (!cardId) return
-    await evaluateTrigger(log, departmentId, cardId, trigger, stringField(payload, 'actorUserId'))
+    await evaluateTrigger(
+      log,
+      departmentId,
+      cardId,
+      trigger,
+      stringField(payload, 'actorUserId'),
+      options,
+    )
   }
 
   const unsubscribers = [
@@ -461,7 +527,7 @@ export function registerAutomationSubscriptions(log: FastifyBaseLogger): () => v
       if (
         changes.some((c) => c === 'priority' || c === 'labels' || c === 'dueAt' || c === 'estimate')
       ) {
-        await handle(event, 'card_field_changed')
+        await handle(event, 'card_field_changed', { changedFields: changes })
       }
     }),
   ]

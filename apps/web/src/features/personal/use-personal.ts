@@ -1,8 +1,10 @@
 // React Query hooks over `api.ts` (MODULE-GUIDE.md "Web features"). Every mutation reads the CSRF
 // token off the cached `/me` response (`useMeQuery()` -- the same cache the shell already populates,
 // never a second network call) and invalidates this feature's own query keys on success.
-import * as React from 'react'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { type PersonalDeleteReceipt } from '@devon/contracts'
+import { useT } from '@devon/i18n'
+import { toast, toastWithUndo } from '@devon/ui'
 import { useMeQuery } from '../../lib/session.js'
 import * as api from './api.js'
 import type {
@@ -91,9 +93,74 @@ export function useTasksQuery() {
 // wait a full round trip before the checkbox/strikethrough/indent visibly changed. Same
 // snapshot-and-`rollback()` shape as `work/hooks.ts`'s `patchCardInCaches` (this feature's own
 // established pattern for the identical problem).
-function snapshotTasks(qc: QueryClient): { rollback: () => void } {
-  const prev = qc.getQueryData<Task[]>(KEYS.tasks)
-  return { rollback: () => qc.setQueryData(KEYS.tasks, prev) }
+const TASK_WRITE_KEY = ['personal', 'task-write'] as const
+const taskVersions = new WeakMap<QueryClient, Map<string, { from: number; to: number }>>()
+const taskFields = new WeakMap<QueryClient, Map<string, number>>()
+let nextTaskField = 0
+
+function rememberTaskVersion(qc: QueryClient, id: string, from: number, to: number) {
+  let versions = taskVersions.get(qc)
+  if (!versions) {
+    versions = new Map()
+    taskVersions.set(qc, versions)
+  }
+  const previous = versions.get(id)
+  versions.set(id, { from: previous?.to === from ? previous.from : from, to })
+  qc.setQueryData<Task[]>(KEYS.tasks, (tasks) =>
+    tasks?.map((task) =>
+      task.id === id ? { ...task, version: Math.max(task.version, to) } : task,
+    ),
+  )
+}
+
+function acknowledgedTaskVersion(qc: QueryClient, id: string, version: number) {
+  const own = taskVersions.get(qc)?.get(id)
+  return own && version >= own.from && version <= own.to ? own.to : version
+}
+
+/** Roll back only fields still owned by this write; a failed older edit cannot erase a newer one. */
+function optimisticallyPatchTasks(qc: QueryClient, patches: ReadonlyMap<string, Partial<Task>>) {
+  const previous = qc.getQueryData<Task[]>(KEYS.tasks)
+  const previousById = new Map(previous?.map((task) => [task.id, task]))
+  let generations = taskFields.get(qc)
+  if (!generations) {
+    generations = new Map()
+    taskFields.set(qc, generations)
+  }
+  const own = new Map<string, number>()
+  for (const [id, patch] of patches)
+    for (const field of Object.keys(patch)) {
+      const key = `${id}:${field}`
+      const generation = ++nextTaskField
+      generations.set(key, generation)
+      own.set(key, generation)
+    }
+  qc.setQueryData<Task[]>(KEYS.tasks, (tasks) =>
+    tasks?.map((task) => ({ ...task, ...patches.get(task.id) })),
+  )
+  return {
+    rollback: () =>
+      qc.setQueryData<Task[]>(KEYS.tasks, (tasks) =>
+        tasks?.map((task) => {
+          const before = previousById.get(task.id)
+          const patch = patches.get(task.id)
+          if (!before || !patch) return task
+          const restored: Partial<Task> = {}
+          for (const field of Object.keys(patch) as (keyof Task)[]) {
+            const key = `${task.id}:${field}`
+            if (generations.get(key) === own.get(key) && Object.is(task[field], patch[field]))
+              Object.assign(restored, { [field]: before[field] })
+          }
+          return { ...task, ...restored }
+        }),
+      ),
+  }
+}
+
+function finishTaskWrite(qc: QueryClient) {
+  if (qc.isMutating({ mutationKey: TASK_WRITE_KEY }) <= 1)
+    return qc.invalidateQueries({ queryKey: KEYS.tasks })
+  return Promise.resolve()
 }
 
 export function useCreateTaskMutation() {
@@ -108,96 +175,75 @@ export function useCreateTaskMutation() {
 export function usePatchTaskMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const t = useT()
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: PatchTaskInput }) =>
-      api.patchTask(id, input, csrf),
-    onMutate: ({ id, input }) => {
-      const snapshot = snapshotTasks(qc)
-      qc.setQueryData<Task[]>(KEYS.tasks, (list) =>
-        list
-          ? list.map((task) =>
-              task.id === id
-                ? {
-                    ...task,
-                    ...input,
-                    // `PatchTaskInput.done` is the UI's boolean; the cached `Task` (server) shape is
-                    // `doneAt: string | null` -- map the one the caller actually sent, same
-                    // translation `api.patchTask` itself does server-side.
-                    ...(input.done !== undefined
-                      ? { doneAt: input.done ? new Date().toISOString() : null }
-                      : {}),
-                  }
-                : task,
-            )
-          : list,
-      )
-      return snapshot
+    mutationKey: TASK_WRITE_KEY,
+    scope: { id: 'personal-task-writes' },
+    mutationFn: async ({ id, input }: { id: string; input: PatchTaskInput }) => {
+      // Rebase only over versions minted by preceding writes in this client. A remote version
+      // advance still fails the API's concurrency check rather than silently overwriting it.
+      const version = acknowledgedTaskVersion(qc, id, input.version)
+      const updated = await api.patchTask(id, { ...input, version }, csrf)
+      for (const row of updated.affectedVersions)
+        rememberTaskVersion(qc, row.id, row.beforeVersion, row.afterVersion)
+      return updated.task
     },
-    onError: (_err, _vars, context) => context?.rollback(),
-    // A concurrent edit from another tab/device must never be permanently masked by a stale
-    // optimistic value -- refetch regardless of outcome, exactly like `work/hooks.ts`'s `onSettled`.
-    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
+    onMutate: async ({ id, input }) => {
+      await qc.cancelQueries({ queryKey: KEYS.tasks })
+      const { version: _version, done, ...fields } = input
+      return optimisticallyPatchTasks(
+        qc,
+        new Map([
+          [
+            id,
+            {
+              ...fields,
+              ...(done !== undefined ? { doneAt: done ? new Date().toISOString() : null } : {}),
+            },
+          ],
+        ]),
+      )
+    },
+    onError: (_err, _vars, context) => {
+      context?.rollback()
+      toast.error(t('toast.saveError'))
+    },
+    onSettled: () => finishTaskWrite(qc),
   })
 }
 
 export function useDeleteTaskMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.deleteTask(id, csrf),
-    onMutate: (id) => {
-      const snapshot = snapshotTasks(qc)
-      // Deleting a parent implicitly removes its subtree server-side -- drop every descendant here
-      // too (walking `parentId`), so the optimistic tree matches what the refetch will show instead
-      // of the deleted parent's children reappearing as a visible flash of stale rows.
-      qc.setQueryData<Task[]>(KEYS.tasks, (list) => {
-        if (!list) return list
-        const toRemove = new Set([id])
-        let grew = true
-        while (grew) {
-          grew = false
-          for (const task of list) {
-            if (task.parentId && toRemove.has(task.parentId) && !toRemove.has(task.id)) {
-              toRemove.add(task.id)
-              grew = true
-            }
-          }
-        }
-        return list.filter((task) => !toRemove.has(task.id))
-      })
-      return snapshot
-    },
-    onError: (_err, _vars, context) => context?.rollback(),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
-  })
+  return usePersonalDeletion(
+    KEYS.tasks,
+    api.deleteTask,
+    api.restoreTask,
+    'personal.tasks.deleted.toast',
+  )
 }
 
 export function useReorderTasksMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
+  const t = useT()
   return useMutation({
-    mutationFn: (input: ReorderTasksInput) => api.reorderTasks(input, csrf),
-    onMutate: (input) => {
-      const snapshot = snapshotTasks(qc)
-      const byId = new Map(input.items.map((item) => [item.id, item]))
-      qc.setQueryData<Task[]>(KEYS.tasks, (list) =>
-        list
-          ? list.map((task) => {
-              const item = byId.get(task.id)
-              if (!item) return task
-              return {
-                ...task,
-                sort: item.sort,
-                ...(item.parentId !== undefined ? { parentId: item.parentId } : {}),
-                ...(item.sprintId !== undefined ? { sprintId: item.sprintId } : {}),
-              }
-            })
-          : list,
-      )
-      return snapshot
+    mutationKey: TASK_WRITE_KEY,
+    scope: { id: 'personal-task-writes' },
+    mutationFn: async (input: ReorderTasksInput) => {
+      const updated = await api.reorderTasks(input, csrf)
+      for (const row of updated.affectedVersions)
+        rememberTaskVersion(qc, row.id, row.beforeVersion, row.afterVersion)
+      return updated
     },
-    onError: (_err, _vars, context) => context?.rollback(),
-    onSettled: () => qc.invalidateQueries({ queryKey: KEYS.tasks }),
+    onMutate: async (input) => {
+      await qc.cancelQueries({ queryKey: KEYS.tasks })
+      const patches = new Map(input.items.map(({ id, ...patch }) => [id, patch]))
+      return optimisticallyPatchTasks(qc, patches)
+    },
+    onError: (_err, _vars, context) => {
+      context?.rollback()
+      toast.error(t('toast.saveError'))
+    },
+    onSettled: () => finishTaskWrite(qc),
   })
 }
 
@@ -223,16 +269,17 @@ export function usePatchNoteMutation() {
     mutationFn: ({ id, input }: { id: string; input: PatchNoteInput }) =>
       api.patchNote(id, input, csrf),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.notes }),
+    onError: () => qc.invalidateQueries({ queryKey: KEYS.notes }),
   })
 }
 
 export function useDeleteNoteMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.deleteNote(id, csrf),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.notes }),
-  })
+  return usePersonalDeletion(
+    KEYS.notes,
+    api.deleteNote,
+    api.restoreNote,
+    'personal.notes.deleted.toast',
+  )
 }
 
 // -- Canvases -----------------------------------------------------------------------------------------
@@ -267,16 +314,17 @@ export function usePatchCanvasMutation(id: string) {
       qc.setQueryData(KEYS.canvas(id), updated)
       qc.invalidateQueries({ queryKey: KEYS.canvases })
     },
+    onError: () => qc.invalidateQueries({ queryKey: KEYS.canvas(id) }),
   })
 }
 
 export function useDeleteCanvasMutation() {
-  const qc = useQueryClient()
-  const csrf = useCsrfToken()
-  return useMutation({
-    mutationFn: (id: string) => api.deleteCanvas(id, csrf),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.canvases }),
-  })
+  return usePersonalDeletion(
+    KEYS.canvases,
+    api.deleteCanvas,
+    api.restoreCanvas,
+    'personal.canvas.deleted.toast',
+  )
 }
 
 // -- Pomodoro -----------------------------------------------------------------------------------------
@@ -327,37 +375,31 @@ export function usePatchPomodoroSessionMutation() {
   })
 }
 
-/** Optimistic, delayed deletion (spec-wide rule: "undo over confirm" -- no confirm dialog, ever): the
- * caller hides the row immediately and shows `toastWithUndo`; the real DELETE only fires after the
- * grace window elapses with no undo, via `commit()`. Nothing server-side needs a restore endpoint. */
-export function useDelayedDelete(deleteFn: (id: string) => Promise<void>, graceMs = 5000) {
-  const timers = React.useRef(new Map<string, ReturnType<typeof setTimeout>>())
-
-  const schedule = React.useCallback(
-    (id: string) => {
-      const timer = setTimeout(() => {
-        timers.current.delete(id)
-        void deleteFn(id)
-      }, graceMs)
-      timers.current.set(id, timer)
+/** Persist before announcing success. Mutation callbacks survive tab unmount; Undo uses the
+ * operation receipt so an older toast cannot restore a later deletion of the same item. */
+function usePersonalDeletion(
+  queryKey: readonly string[],
+  deleteItem: (id: string, csrf: string) => Promise<PersonalDeleteReceipt>,
+  restoreItem: (id: string, receipt: PersonalDeleteReceipt, csrf: string) => Promise<unknown>,
+  messageKey: string,
+) {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  const t = useT()
+  return useMutation({
+    mutationFn: (id: string) => deleteItem(id, csrf),
+    onSuccess: async (receipt, id) => {
+      await qc.invalidateQueries({ queryKey })
+      toastWithUndo({
+        message: t(messageKey),
+        undoLabel: t('action.undo'),
+        onUndo: () => {
+          void restoreItem(id, receipt, csrf)
+            .then(() => qc.invalidateQueries({ queryKey }))
+            .catch(() => toast.error(t('toast.saveError')))
+        },
+      })
     },
-    [deleteFn, graceMs],
-  )
-
-  const cancel = React.useCallback((id: string) => {
-    const timer = timers.current.get(id)
-    if (timer) {
-      clearTimeout(timer)
-      timers.current.delete(id)
-    }
-  }, [])
-
-  React.useEffect(() => {
-    const map = timers.current
-    return () => {
-      for (const timer of map.values()) clearTimeout(timer)
-    }
-  }, [])
-
-  return { schedule, cancel }
+    onError: () => toast.error(t('toast.saveError')),
+  })
 }

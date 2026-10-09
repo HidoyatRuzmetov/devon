@@ -1,0 +1,1724 @@
+{
+  "schemaVersion": 1,
+  "owner": "visual_controls",
+  "provenance": "Actual isolated local browser/API/DB regressions and explicit pixel review. Source matches are stable signatures for parent reconciliation after inventory regeneration.",
+  "policy": "Only listed states gain evidence. Unlisted states/controls, hover variations, validation boundaries and unexercised role permutations stay pending. No whole-component blanket pass.",
+  "completedGates": {
+    "core": "18/18 across three engines; 15.9m",
+    "nested": "21/21 assertions across three engines; 9.9m, followed by strengthened defects",
+    "finalAffected": "9/9 across three engines; 6.3m",
+    "api": "19/19; migration lint 10/10"
+  },
+  "evidence": {
+    "board": {
+      "test": "apps/web/test/e2e/visual-controls.flow.spec.ts",
+      "scenario": "calendar alignment and separated selection/movement targets",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "visualLocales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "visualThemes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        1024,
+        768,
+        390,
+        320
+      ],
+      "transitionScope": "selection/unselection and menu keyboard open/Escape: English, dark, 320px"
+    },
+    "milestone": {
+      "test": "apps/web/test/e2e/visual-controls.flow.spec.ts",
+      "scenario": "title completion/reload; pencil keyboard/tooltip/focus; pending 503/draft/retry",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "visualLocales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "visualThemes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        1024,
+        768,
+        390,
+        320
+      ],
+      "transitionScope": "completion and refused/retried edit: Uzbek Latin; localization captures do not prove every transition in every locale"
+    },
+    "conversion": {
+      "test": "apps/web/test/e2e/project-capabilities.flow.spec.ts",
+      "additionalTest": "apps/web/test/e2e/visual-controls.flow.spec.ts",
+      "scenario": "select member, freeze pending/Escape, atomic conversion, original card/checklist; cancel/reset",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "visualLocales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "visualThemes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        390,
+        320
+      ],
+      "transitionScope": "functional writes/cancel in English; localized dialog captures in all four locales"
+    },
+    "projectEdit": {
+      "test": "apps/web/test/e2e/project-capabilities.flow.spec.ts",
+      "scenario": "title/description/status/dates/colour/member removal; pending freeze/Escape/503 retained draft/retry/focus/server read",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "visualLocales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "visualThemes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        320
+      ],
+      "textTokensPercent": [
+        100,
+        200
+      ],
+      "transitionScope": "functional save/refusal/retry in English; populated visual reflow in all four locales/both themes"
+    },
+    "gallery": {
+      "test": "apps/web/test/e2e/project-gallery.flow.spec.ts",
+      "scenario": "gallery choice, pending duplicate prevention, 503 leaves no project, retained draft/retry creates two ordered cards",
+      "roles": [
+        "head",
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en"
+      ],
+      "transitionScope": "head creates gallery project; member uses shared card template through real API/count proof; not a full member UI claim"
+    },
+    "lifecycle": {
+      "test": "apps/web/test/e2e/group-project.flow.spec.ts",
+      "scenario": "chosen milestone add/edit/delete/undo; project delete/undo after page unmount; rendered progress 0/25/50/100",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "uz-Latn"
+      ],
+      "transitionScope": "progress task/checklist changes were made through actual API, not by clicking the project TaskRow checkbox"
+    },
+    "peopleTable": {
+      "test": "apps/web/test/e2e/people-controls.flow.spec.ts",
+      "scenario": "horizontal keyboard scrolling, task target sizes, actual column resize/arrow keys/End/Home and reload",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "visualLocales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "visualThemes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        1024,
+        768,
+        390,
+        320
+      ],
+      "transitionScope": "column resizing/persistence in English; no sort/filter/bulk-write claim"
+    },
+    "peopleLarge": {
+      "test": "apps/web/test/e2e/people-large.flow.spec.ts",
+      "scenario": "all 65 people reachable, variable-height virtual rows, valid mobile definitions, actual last-name viewport hit, zero lifecycle/observer errors",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        768,
+        320
+      ],
+      "textTokensPercent": [
+        100,
+        200
+      ]
+    },
+    "savedView": {
+      "test": "apps/web/test/e2e/people-large.flow.spec.ts",
+      "scenario": "name/share selection, pending disabled fields, 503 error/draft retained, retry and independent reload",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en"
+      ],
+      "widths": [
+        1440
+      ],
+      "transitionScope": "save-as only; overwrite/share-menu/default/delete/revert transitions remain pending"
+    },
+    "labels": {
+      "test": "apps/web/test/e2e/card-readability.flow.spec.ts",
+      "scenario": "full-opacity label contrast/name/target; label toggle/server read; add label pending/refusal/draft/Enter retry; reader applied tags",
+      "roles": [
+        "head",
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        768,
+        390,
+        320
+      ],
+      "transitionScope": "member sees applied tags with edit controls absent; not a member editing claim"
+    },
+    "title": {
+      "test": "apps/web/test/e2e/card-readability.flow.spec.ts",
+      "additionalTest": "apps/web/test/e2e/visual-controls.flow.spec.ts",
+      "scenario": "long title autosize, font-only 200% fitting, repeated width changes without observer errors; edit/persistence/reload",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        768,
+        390,
+        320
+      ],
+      "textTokensPercent": [
+        100,
+        200
+      ]
+    },
+    "org": {
+      "test": "apps/web/test/e2e/structure-readability.flow.spec.ts",
+      "additionalTest": "apps/web/test/e2e/structure.flow.spec.ts",
+      "scenario": "three-level SVG; arrows/Enter/close/focus return; complete department/unit/head names; enlarged labels with no overlap; independent PNG",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        1440,
+        390,
+        320
+      ],
+      "textTokensPercent": [
+        100,
+        200
+      ],
+      "transitionScope": "zoom controls and pan rendered but their gestures were not exercised by this slice"
+    },
+    "dialog": {
+      "test": "apps/web/test/e2e/dialog-scroll.flow.spec.ts",
+      "scenario": "320×480 tall form, start/footer reachable, keyboard menu/date portal focus/selection, Save/result, Escape/focus return",
+      "roles": [
+        "public fixture"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "uz-Latn",
+        "uz-Cyrl",
+        "ru",
+        "en"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        320
+      ],
+      "height": 480,
+      "transitionScope": "isolated actual shared-component fixture; does not blanket-pass all application dialogs"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-tile.tsx",
+        "component": "CardTile",
+        "kind": "Checkbox",
+        "labelIncludes": "work.bulk.selectCard"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/inspection-card-matrix-light-en.png",
+            "artifacts/qa/2026-10/visual-controls/chromium/inspection-card-matrix-dark-uz-Cyrl.png"
+          ],
+          "pixelReviewed": true
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-tile.tsx",
+        "component": "MoveToMenu",
+        "kind": "IconButton",
+        "labelIncludes": "work.card.moveTo"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Menu opens/closes with keyboard; assignment selection itself is not verified here.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-tile.tsx",
+        "component": "CardTile",
+        "kind": "Chip",
+        "childSummaryIncludes": "formatDate(new Date(card.dueAt)"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "board",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/inspection-card-matrix-light-en.png",
+            "artifacts/qa/2026-10/visual-controls/chromium/inspection-card-matrix-dark-uz-Cyrl.png"
+          ],
+          "pixelReviewed": true
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-detail.tsx",
+        "component": "CardTitleField",
+        "kind": "textarea"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "title",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "title",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "title",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-detail.tsx",
+        "component": "CardDetailContent",
+        "kind": "button",
+        "childSummaryIncludes": "{label.name}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-detail.tsx",
+        "component": "CardDetailContent",
+        "kind": "Input",
+        "labelIncludes": "work.card.newLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-detail.tsx",
+        "component": "CardDetailContent",
+        "kind": "IconButton",
+        "labelIncludes": "work.card.newLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "labels",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/milestone-actions.tsx",
+        "component": "MilestoneActions",
+        "kind": "IconButton",
+        "labelIncludes": "projectLifecycle.editMilestoneLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/milestone-actions.tsx",
+        "component": "MilestoneActions",
+        "kind": "Input",
+        "childSummaryIncludes": "projectLifecycle.milestoneTitle"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/milestone-actions.tsx",
+        "component": "MilestoneActions",
+        "kind": "Input",
+        "labelIncludes": "type=\"date\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/milestone-actions.tsx",
+        "component": "MilestoneActions",
+        "kind": "Button",
+        "childSummaryIncludes": "projectLifecycle.deleteMilestone"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/milestone-actions.tsx",
+        "component": "MilestoneActions",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/project-page-screen.tsx",
+        "component": "ProjectPageScreen",
+        "kind": "Checkbox",
+        "labelIncludes": "aria-label={m.title}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "milestone",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/project-page-screen.tsx",
+        "component": "ProjectPageScreen",
+        "kind": "Input",
+        "labelIncludes": "projects.milestone.addPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/project-page-screen.tsx",
+        "component": "ProjectPageScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "projectLifecycle.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/convert-project-dialog.tsx",
+        "component": "ConvertProjectDialog",
+        "kind": "Dialog"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/convert-project-dialog.tsx",
+        "component": "ConvertProjectDialog",
+        "kind": "Checkbox"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "conversion",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "EditProjectDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "projectEdit.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "EditProjectDialog",
+        "kind": "Dialog"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Input",
+        "childSummaryIncludes": "projects.field.title"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/project-edit-ru-light-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/project-edit-uz-Cyrl-dark-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/project-edit-ru-dark-320-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Textarea"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/project-edit-ru-light-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/project-edit-uz-Cyrl-dark-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/project-edit-ru-dark-320-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "select",
+        "childSummaryIncludes": "projectStatusSchema.options"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/project-edit-ru-light-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/project-edit-uz-Cyrl-dark-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/project-edit-ru-dark-320-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Input",
+        "childSummaryIncludes": "projectEdit.start"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/project-edit-ru-light-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/project-edit-uz-Cyrl-dark-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/project-edit-ru-dark-320-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Input",
+        "childSummaryIncludes": "projectEdit.target"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/project-edit-ru-light-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/project-edit-uz-Cyrl-dark-320-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/project-edit-ru-dark-320-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Input",
+        "labelIncludes": "type=\"color\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Checkbox"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/edit-project-dialog.tsx",
+        "component": "ProjectForm",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "projectEdit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/create-project-dialog.tsx",
+        "component": "CreateProjectDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "projects.create.fromGallery"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/create-project-dialog.tsx",
+        "component": "CreateProjectDialog",
+        "kind": "select",
+        "childSummaryIncludes": "galleryTemplates.map"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/create-project-dialog.tsx",
+        "component": "CreateProjectDialog",
+        "kind": "Input",
+        "labelIncludes": "projects.field.titlePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/projects/components/create-project-dialog.tsx",
+        "component": "CreateProjectDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "projects.create.submit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "gallery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "PeopleTable",
+        "kind": "div",
+        "labelIncludes": "role=\"region\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "ColumnResizer",
+        "kind": "button",
+        "labelIncludes": "role=\"slider\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "TaskChips",
+        "kind": "a",
+        "labelIncludes": "title={card.title}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Target size/readability only; link navigation is not a verified transition in this slice.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "peopleTable",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/people-table-screen.tsx",
+        "component": "PersonCell",
+        "kind": "a"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All 65 names are reached by real scrolling; profile navigation is not verified here.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "peopleLarge",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/large-people-en-light-320-text200-end.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/large-people-uz-Latn-dark-320-text200-end.png"
+          ],
+          "pixelReviewed": true
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/components/view-tabs.tsx",
+        "component": "ViewTabs",
+        "kind": "Input",
+        "labelIncludes": "people.table.views.namePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/components/view-tabs.tsx",
+        "component": "ViewTabs",
+        "kind": "Switch",
+        "childSummaryIncludes": "people.table.views.shareLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/people/components/view-tabs.tsx",
+        "component": "ViewTabs",
+        "kind": "Button",
+        "childSummaryIncludes": "people.table.views.saveAsSubmit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "loading": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "savedView",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/org-chart.tsx",
+        "component": "OrgChart",
+        "kind": "svg",
+        "labelIncludes": "role=\"tree\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/org-export-ru-light-text200.png",
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/org-export-uz-Cyrl-dark-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/org-export-en-dark-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/org-export-uz-Latn-light-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/org-export-ru-dark-text200.png"
+          ],
+          "pixelReviewed": true
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/org-chart.tsx",
+        "component": "OrgChart",
+        "kind": "g",
+        "labelIncludes": "role=\"treeitem\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/org-export-ru-light-text200.png",
+            "artifacts/qa/2026-10/visual-controls/chromium/nested/org-export-uz-Cyrl-dark-text200.png",
+            "artifacts/qa/2026-10/visual-controls/firefox/nested/org-export-en-dark-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/org-export-uz-Latn-light-text200.png",
+            "artifacts/qa/2026-10/visual-controls/webkit/nested/org-export-ru-dark-text200.png"
+          ],
+          "pixelReviewed": true
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/org-chart.tsx",
+        "component": "OrgChart",
+        "kind": "Button",
+        "childSummaryIncludes": "structure.units.chart.exportPng"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/org-chart.tsx",
+        "component": "OrgChart",
+        "kind": "Sheet"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/structure/org-chart.tsx",
+        "component": "OrgChart",
+        "kind": "IconButton",
+        "labelIncludes": "structure.units.chart.closePanel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "org",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    }
+  ],
+  "componentFixtures": [
+    {
+      "source": "packages/ui/src/primitives/avatar.tsx",
+      "states": [
+        "default",
+        "populated"
+      ],
+      "test": "apps/web/test/e2e/avatar-readability.flow.spec.ts",
+      "scope": "four sizes, eight palette colours, light/dark, normal/200% token text, 1440/320px in all three engines; no AvatarMenu action claim"
+    },
+    {
+      "source": "packages/ui/src/primitives/badge.tsx",
+      "states": [
+        "default"
+      ],
+      "test": "apps/web/test/e2e/badge-contrast.flow.spec.ts",
+      "scope": "all seven subtle tones on both real surfaces, light/dark, all three engines; measured text contrast only"
+    },
+    {
+      "source": "packages/ui/src/primitives/dialog.tsx",
+      "states": [
+        "populated",
+        "focus",
+        "active",
+        "success"
+      ],
+      "evidenceId": "dialog",
+      "scope": "actual isolated short-height fixture and bounded project heading/form/footer cases; shared implementation, not every application dialog"
+    },
+    {
+      "source": "packages/ui/src/primitives/button.tsx",
+      "states": [
+        "disabled",
+        "loading"
+      ],
+      "test": "packages/ui/src/primitives/button.test.tsx",
+      "scope": "unit loading prevents activation including explicit disabled=false and asChild; browser proof limited to the recorded application Save actions"
+    },
+    {
+      "source": "packages/ui/src/primitives/checkbox.tsx",
+      "states": [
+        "default",
+        "selected"
+      ],
+      "test": "packages/ui/src/primitives/checkbox.test.tsx",
+      "scope": "controlled/uncontrolled check glyph plus bounded card/project/browser targets; do not infer all callers"
+    }
+  ]
+}

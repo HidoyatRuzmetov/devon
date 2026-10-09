@@ -52,6 +52,7 @@ export const DialogContent = React.forwardRef<
         ref={ref}
         className={cn(
           'fixed left-1/2 top-1/2 z-50 w-full max-w-120 -translate-x-1/2 -translate-y-1/2',
+          'max-h-[calc(100dvh-2rem)] overflow-y-auto',
           'rounded-lg border border-border bg-surface-3 p-6 shadow-3',
           'data-[state=open]:animate-[devon-dialog-in_220ms_var(--ease-out)]',
           'data-[state=closed]:animate-[devon-fade-out_140ms_var(--ease-in)]',
@@ -59,14 +60,20 @@ export const DialogContent = React.forwardRef<
         )}
         {...props}
       >
-        <DialogPrimitive.Title className={titleHidden ? 'sr-only' : 'text-h3 text-foreground'}>
+        <DialogPrimitive.Title
+          className={
+            titleHidden
+              ? 'sr-only'
+              : cn('break-words text-h3 text-foreground', showClose && 'pr-10')
+          }
+        >
           {title}
         </DialogPrimitive.Title>
         {children}
         {showClose ? (
           <DialogPrimitive.Close
             className={cn(
-              'absolute right-4 top-4 inline-flex size-9 items-center justify-center rounded-sm',
+              'absolute right-4 top-4 inline-flex size-9 max-md:size-11 items-center justify-center rounded-sm',
               'text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2',
               'focus-visible:ring-ring focus-visible:ring-offset-2',
             )}

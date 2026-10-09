@@ -9,7 +9,7 @@ import { AnimatedCheck } from '../motion/animated-check.js'
 import { crossfade, tweenMicro } from '../motion/tokens.js'
 
 /** DESIGN.md §3: primary / secondary / ghost / destructive, sizes sm/md/lg, loading state.
- * `md` is 40px (44px at 390 per the touch-target floor -- callers set that at the call site with
+ * `md` has a 40px minimum (44px on narrow screens per the touch-target floor -- callers set that with
  * `size="lg"` or a wrapping `min-h-11` on small screens; this component does not sniff viewport).
  *
  * UI-OVERHAUL.md §3 "Buttons": press scale 0.98, loading spinner morph, success check morph. The
@@ -30,9 +30,9 @@ export const buttonVariants = cva(
         destructive: 'bg-destructive text-destructive-foreground hover:opacity-90',
       },
       size: {
-        sm: 'h-9 px-3 text-small',
-        md: 'h-10 px-4',
-        lg: 'h-11 px-6 text-lead',
+        sm: 'min-h-9 px-3 py-2 text-small',
+        md: 'min-h-10 px-4 py-2',
+        lg: 'min-h-11 px-6 py-3 text-lead',
       },
     },
     defaultVariants: { variant: 'primary', size: 'md' },
@@ -85,7 +85,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         <Comp
           ref={ref}
           className={cn(buttonVariants({ variant, size }), className)}
-          disabled={disabled ?? loading}
+          disabled={Boolean(disabled || loading)}
           aria-busy={loading || undefined}
           {...props}
         >
@@ -111,7 +111,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         ref={ref}
         className={cn(buttonVariants({ variant, size }), busy && 'devon-busy-pulse', className)}
-        disabled={disabled ?? loading}
+        disabled={Boolean(disabled || loading)}
         aria-busy={loading || undefined}
         {...props}
       >
@@ -119,7 +119,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             resizes between idle → loading → success. */}
         <span
           className={cn(
-            'inline-flex items-center gap-2 transition-opacity duration-(--dur-micro)',
+            'inline-flex min-w-0 items-center gap-2 transition-opacity duration-(--dur-micro) [&_svg]:shrink-0',
             phase === 'idle' ? 'opacity-100' : 'opacity-0',
           )}
         >
@@ -130,7 +130,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             <motion.span
               key={phase}
               aria-hidden="true"
-              className="absolute inset-0 flex items-center justify-center"
+              // This decoration may leave between pointerdown and pointerup. Keep hit testing
+              // on the stable button/label so a fast retry still produces a native click.
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
               initial={{ opacity: 0, scale: reduced ? 1 : 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: reduced ? 1 : 0.8 }}

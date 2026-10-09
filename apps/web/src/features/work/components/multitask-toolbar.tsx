@@ -8,11 +8,12 @@
 // confirm (DESIGN.md), so the bar acts immediately and offers the way back.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Archive, Check, Tag, Timer, UserRound, X } from 'lucide-react'
+import { Archive, Check, ChevronDown, Tag, Timer, UserRound, X } from 'lucide-react'
 import { parseEstimateMinutes } from '@devon/contracts'
 import { useT, useLocale } from '@devon/i18n'
 import {
   Button,
+  cn,
   DatePicker,
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Input,
+  IconButton,
   springSettle,
   toast,
   toastWithUndo,
@@ -80,7 +82,11 @@ export function useCardSelection(visibleIds: readonly string[]) {
     setSelected(on ? new Set(ids) : new Set())
   }, [])
 
-  const clear = React.useCallback(() => setSelected(new Set()), [])
+  const clear = React.useCallback((ids?: readonly string[]) => {
+    setSelected((current) =>
+      ids ? new Set([...current].filter((id) => !ids.includes(id))) : new Set(),
+    )
+  }, [])
 
   return { selected, toggle, selectRange, selectAll, clear }
 }
@@ -89,7 +95,7 @@ export interface MultitaskToolbarProps {
   ids: readonly string[]
   members: readonly MemberSummary[]
   labels: readonly Label[]
-  onClear: () => void
+  onClear: (ids?: readonly string[]) => void
   className?: string
 }
 
@@ -106,6 +112,8 @@ export function MultitaskToolbar({
   const bulkUndo = useBulkUndoMutation()
   const [estimateDraft, setEstimateDraft] = React.useState('')
   const [estimateOpen, setEstimateOpen] = React.useState(false)
+  const [actionsOpen, setActionsOpen] = React.useState(false)
+  const actionsId = React.useId()
 
   /** Every action funnels through here, so the result message, the partial-refusal sentence and the
    * undo offer are written once rather than per button. */
@@ -124,7 +132,8 @@ export function MultitaskToolbar({
             toast.error(t('work.bulk.noneApplied'))
             return
           }
-          onClear()
+          // A response belongs to the cards it changed. Keep later selections and refused rows.
+          onClear(result.updated)
           const message =
             refused > 0
               ? `${t(messageKey, { count: result.updated.length, ...extra })} · ${t(
@@ -137,7 +146,18 @@ export function MultitaskToolbar({
             undoLabel: t('action.undo'),
             onUndo: () =>
               bulkUndo.mutate(result.undo, {
-                onSuccess: () => toast.success(t('work.bulk.undone')),
+                onSuccess: (restored) => {
+                  if (restored.updated.length === 0) {
+                    toast.error(t('work.bulk.noneApplied'))
+                    return
+                  }
+                  const refused = restored.forbidden.length + restored.notFound.length
+                  toast.success(
+                    refused > 0
+                      ? `${t('work.bulk.undone')} · ${t('work.bulk.partial', { count: refused })}`
+                      : t('work.bulk.undone'),
+                  )
+                },
                 onError: () => toast.error(t('work.bulk.undoFailed')),
               }),
           })
@@ -162,183 +182,223 @@ export function MultitaskToolbar({
         {t('work.bulk.selectedCount', { count: ids.length })}
       </span>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary" disabled={busy}>
-            <UserRound className="size-3.5" aria-hidden="true" />
-            {t('work.bulk.assign')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
-          <DropdownMenuItem onSelect={() => apply({ assigneeUserId: null }, 'work.bulk.assigned')}>
-            {t('work.field.unassigned')}
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          {members.map((m) => (
-            <DropdownMenuItem
-              key={m.userId}
-              onSelect={() => apply({ assigneeUserId: m.userId }, 'work.bulk.assigned')}
-            >
-              {fullName(m)}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="md:hidden"
+        aria-expanded={actionsOpen}
+        aria-controls={actionsId}
+        onClick={() => setActionsOpen((open) => !open)}
+      >
+        {t('cmd.group.actions')}
+        <ChevronDown className={cn('size-3.5', actionsOpen && 'rotate-180')} aria-hidden="true" />
+      </Button>
+      <IconButton
+        className="ml-auto md:hidden"
+        aria-label={t('work.bulk.clear')}
+        tooltip={t('work.bulk.clear')}
+        disabled={busy}
+        onClick={() => onClear()}
+      >
+        <X aria-hidden="true" />
+      </IconButton>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary" disabled={busy || labels.length === 0}>
-            <Tag className="size-3.5" aria-hidden="true" />
-            {t('work.bulk.label')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
-          <DropdownMenuLabel>{t('work.bulk.addLabel')}</DropdownMenuLabel>
-          {labels.map((l) => (
+      <div
+        id={actionsId}
+        className={cn(
+          'w-full flex-wrap items-center gap-2 md:min-w-0 md:w-auto md:flex-1',
+          actionsOpen ? 'flex' : 'hidden md:flex',
+        )}
+      >
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="secondary" disabled={busy}>
+              <UserRound className="size-3.5" aria-hidden="true" />
+              {t('work.bulk.assign')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
             <DropdownMenuItem
-              key={`add-${l.id}`}
-              onSelect={() => apply({ addLabelIds: [l.id] }, 'work.bulk.labelAdded')}
+              onSelect={() => apply({ assigneeUserId: null }, 'work.bulk.assigned')}
             >
-              <span
-                className="size-2 shrink-0 rounded-full"
-                style={{ backgroundColor: l.colour }}
-                aria-hidden="true"
-              />
-              {l.name}
+              {t('work.field.unassigned')}
             </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>{t('work.bulk.removeLabel')}</DropdownMenuLabel>
-          {labels.map((l) => (
-            <DropdownMenuItem
-              key={`remove-${l.id}`}
-              onSelect={() => apply({ removeLabelIds: [l.id] }, 'work.bulk.labelRemoved')}
-            >
-              <span
-                className="size-2 shrink-0 rounded-full opacity-50"
-                style={{ backgroundColor: l.colour }}
-                aria-hidden="true"
-              />
-              {l.name}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuSeparator />
+            {members.map((m) => (
+              <DropdownMenuItem
+                key={m.userId}
+                onSelect={() => apply({ assigneeUserId: m.userId }, 'work.bulk.assigned')}
+              >
+                {fullName(m)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary" disabled={busy}>
-            {t('work.bulk.priority')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {PRIORITIES.map((priority) => (
-            <DropdownMenuItem
-              key={priority}
-              onSelect={() => apply({ priority }, 'work.bulk.prioritySet')}
-            >
-              {t(PRIORITY_LABEL_KEY[priority])}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="secondary" disabled={busy || labels.length === 0}>
+              <Tag className="size-3.5" aria-hidden="true" />
+              {t('work.bulk.label')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+            <DropdownMenuLabel>{t('work.bulk.addLabel')}</DropdownMenuLabel>
+            {labels.map((l) => (
+              <DropdownMenuItem
+                key={`add-${l.id}`}
+                onSelect={() => apply({ addLabelIds: [l.id] }, 'work.bulk.labelAdded')}
+              >
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: l.colour }}
+                  aria-hidden="true"
+                />
+                {l.name}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>{t('work.bulk.removeLabel')}</DropdownMenuLabel>
+            {labels.map((l) => (
+              <DropdownMenuItem
+                key={`remove-${l.id}`}
+                onSelect={() => apply({ removeLabelIds: [l.id] }, 'work.bulk.labelRemoved')}
+              >
+                <span
+                  className="size-2 shrink-0 rounded-full opacity-50"
+                  style={{ backgroundColor: l.colour }}
+                  aria-hidden="true"
+                />
+                {l.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      {/* Left uncontrolled (`selected` always undefined): the bar sets a date on many cards at once,
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="secondary" disabled={busy}>
+              {t('work.bulk.priority')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {PRIORITIES.map((priority) => (
+              <DropdownMenuItem
+                key={priority}
+                onSelect={() => apply({ priority }, 'work.bulk.prioritySet')}
+              >
+                {t(PRIORITY_LABEL_KEY[priority])}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Left uncontrolled (`selected` always undefined): the bar sets a date on many cards at once,
           so there is no single "current" value it could show back. Picking a day applies it and the
           trigger returns to its placeholder. */}
-      <DatePicker
-        locale={locale}
-        selected={undefined}
-        onSelect={(date) => apply({ dueAt: date ? date.toISOString() : null }, 'work.bulk.dueSet')}
-        label={t('work.bulk.due')}
-        placeholder={t('work.bulk.due')}
-        // `w-auto`: the picker trigger is `w-full` by default, which on a flex toolbar
-        // claimed its own row and made the bar three rows tall (seen live on the board).
-        triggerClassName="h-8 w-auto min-w-32"
-      />
+        <DatePicker
+          locale={locale}
+          disabledTrigger={busy}
+          selected={undefined}
+          onSelect={(date) =>
+            apply({ dueAt: date ? date.toISOString() : null }, 'work.bulk.dueSet')
+          }
+          label={t('work.bulk.due')}
+          placeholder={t('work.bulk.due')}
+          // `w-auto`: the picker trigger is `w-full` by default, which on a flex toolbar
+          // claimed its own row and made the bar three rows tall (seen live on the board).
+          triggerClassName="h-8 w-auto min-w-32"
+        />
 
-      <DropdownMenu open={estimateOpen} onOpenChange={setEstimateOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button size="sm" variant="secondary" disabled={busy}>
-            <Timer className="size-3.5" aria-hidden="true" />
-            {t('work.bulk.estimate')}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64 p-2">
-          <form
-            className="flex flex-col gap-2"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const minutes = parseEstimateMinutes(estimateDraft.trim())
-              if (minutes === null) {
-                toast.error(t('work.estimate.unreadable'))
-                return
-              }
-              setEstimateOpen(false)
-              setEstimateDraft('')
-              apply({ estimateMin: minutes }, 'work.bulk.estimateSet')
-            }}
-          >
-            <label htmlFor="bulk-estimate" className="text-caption text-muted-foreground">
-              {t('work.estimate.hint')}
-            </label>
-            <Input
-              id="bulk-estimate"
-              value={estimateDraft}
-              onChange={(e) => setEstimateDraft(e.target.value)}
-              placeholder={t('work.estimate.placeholder')}
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button type="submit" size="sm">
-                {t('common.save')}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setEstimateOpen(false)
-                  setEstimateDraft('')
-                  apply({ estimateMin: null }, 'work.bulk.estimateCleared')
-                }}
-              >
-                {t('work.bulk.clearEstimate')}
-              </Button>
-            </div>
-          </form>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenu open={estimateOpen} onOpenChange={setEstimateOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="secondary" disabled={busy}>
+              <Timer className="size-3.5" aria-hidden="true" />
+              {t('work.bulk.estimate')}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-64 p-2">
+            <form
+              className="flex flex-col gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const minutes = parseEstimateMinutes(estimateDraft.trim())
+                if (minutes === null) {
+                  toast.error(t('work.estimate.unreadable'))
+                  return
+                }
+                setEstimateOpen(false)
+                setEstimateDraft('')
+                apply({ estimateMin: minutes }, 'work.bulk.estimateSet')
+              }}
+            >
+              <label htmlFor="bulk-estimate" className="text-caption text-muted-foreground">
+                {t('work.estimate.hint')}
+              </label>
+              <Input
+                id="bulk-estimate"
+                value={estimateDraft}
+                onChange={(e) => setEstimateDraft(e.target.value)}
+                placeholder={t('work.estimate.placeholder')}
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <Button type="submit" size="sm">
+                  {t('common.save')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setEstimateOpen(false)
+                    setEstimateDraft('')
+                    apply({ estimateMin: null }, 'work.bulk.estimateCleared')
+                  }}
+                >
+                  {t('work.bulk.clearEstimate')}
+                </Button>
+              </div>
+            </form>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={busy}
-        onClick={() => apply({ status: 'done' }, 'work.bulk.movedDone')}
-      >
-        <Check className="size-3.5" aria-hidden="true" />
-        {t('work.bulk.markDone')}
-      </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          onClick={() => apply({ status: 'done' }, 'work.bulk.movedDone')}
+        >
+          <Check className="size-3.5" aria-hidden="true" />
+          {t('work.bulk.markDone')}
+        </Button>
 
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={busy}
-        onClick={() => apply({ status: 'archived' }, 'work.bulk.archived')}
-      >
-        <Archive className="size-3.5" aria-hidden="true" />
-        {t('work.card.archive')}
-      </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={busy}
+          onClick={() => apply({ status: 'archived' }, 'work.bulk.archived')}
+        >
+          <Archive className="size-3.5" aria-hidden="true" />
+          {t('work.card.archive')}
+        </Button>
 
-      <Button size="sm" variant="ghost" className="ml-auto" onClick={onClear} disabled={busy}>
-        <X className="size-3.5" aria-hidden="true" />
-        {t('work.bulk.clear')}
-      </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="ml-auto hidden md:inline-flex"
+          onClick={() => onClear()}
+          disabled={busy}
+        >
+          <X className="size-3.5" aria-hidden="true" />
+          {t('work.bulk.clear')}
+        </Button>
+      </div>
     </div>
   )
 }
 
-/** The toolbar's own entrance: it slides up from the header's bottom edge on the same spring the
+/** The toolbar's own entrance: it fades into its own row on the same spring the
  * app's sheets settle with, so it reads as "this appeared because you selected something" rather
  * than as a layout flicker. Shared by the board and the table so both animate identically. */
 export function MultitaskToolbarSlot({
@@ -354,10 +414,12 @@ export function MultitaskToolbarSlot({
       {show ? (
         <motion.div
           key="multitask-toolbar"
-          className="absolute inset-x-0 top-0 z-10"
-          initial={reduced ? { opacity: 0 } : { y: 12, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={reduced ? { opacity: 0 } : { y: 12, opacity: 0 }}
+          // Reserve the wrapped toolbar's real height. An absolute slot covers the next card's
+          // checkbox on narrow boards and prevents deselection; the table shares this same slot.
+          className="relative z-10 w-full shrink-0 basis-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={reduced ? { duration: 0.15 } : springSettle}
         >
           {children}

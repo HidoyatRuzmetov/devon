@@ -17,7 +17,6 @@ import { CalendarClock } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import { useRealtimeBridge } from '../../lib/realtime/index.js'
 import type { FeatureManifest } from '../types.js'
-import { prefetchAgenda } from './hooks.js'
 
 const CalendarScreen = React.lazy(() => import('./calendar-screen.js'))
 
@@ -31,7 +30,11 @@ const manifest: FeatureManifest = {
       icon: CalendarClock,
       route: '/calendar',
       // H5.2 "prefetch on hover/focus": warms the default 30-day agenda before the click.
-      onPrefetch: () => void prefetchAgenda(queryClient),
+      onPrefetch: () => {
+        void import('./hooks.js')
+          .then(({ prefetchAgenda }) => prefetchAgenda(queryClient))
+          .catch(() => {})
+      },
     },
   ],
   commands: [

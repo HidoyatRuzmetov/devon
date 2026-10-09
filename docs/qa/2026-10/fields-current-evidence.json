@@ -1,0 +1,492 @@
+{
+  "schemaVersion": 1,
+  "owner": "root-fields-current",
+  "provenance": "Exact named real-service browser journeys with independent reads/reload; API negative-only journeys remain workflow entries rather than claiming UI controls.",
+  "policy": "Bound only the listed states in their actual scope. No whole-parent or whole-platform pass. Pixel review is documented separately and is not inferred by this generator.",
+  "boundaries": {
+    "db": "devon_flow_e2e_root",
+    "apiPort": 48952,
+    "webPort": 48951
+  },
+  "evidence": {
+    "values": {
+      "test": "apps/web/test/e2e/platform-fields-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "Nine editable types created in actual dialog; English name/type/options/default submission; profile text Unicode/apostrophes, multiline, zero, chosen date, select, multiselect toggle, person, URL and checkbox true/false; real204, independently read exact values and reload. Three engines.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "options": {
+      "test": "apps/web/test/e2e/platform-fields-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "C++ and C# via actual option addition/label and create action; independent distinct IDs; choose and save C# answer and reload. Three engines.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "reorder": {
+      "test": "apps/web/test/e2e/platform-fields-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "Archive middle definition, actual Show archived switch, move last active upward past archived row; exact request IDs204, independent order and reload, firstUp/lastDowndisabled. Three engines.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "lateCreate": {
+      "test": "apps/web/test/e2e/platform-fields-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "Real create201 committed then held; Escape/reopen/later English draft, release callback, toast and native frames then actual data-state=open and retained value. Three engines.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "inline": {
+      "test": "apps/web/test/e2e/platform-card-fields.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "Real row edit, controlledPUT503 leaves editor/value intact and stored null; actual retry204 independently persists and reloads. Exact accessible input name from visible label. Held committed204 then Cancel/reopen/later draft, old callback preserves editor and actual second204 persists later value. Three engines.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "readRecovery": {
+      "test": "apps/web/test/e2e/platform-card-fields.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "Actual definition GET503 and value GET503 recover through the visible Try again action; the corresponding real GET200 and editable row return. Stored value remains null. Three engines. Other calendar matrix failures in this report are separate and deferred by the user.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    },
+    "apiRefusals": {
+      "test": "apps/web/test/e2e/platform-fields-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/fields-card-calendar-wrapped/summary.json",
+      "scenario": "API-only duplicate option IDs on create/edit refused422 with stored definition/options unchanged. Impossible calendar date refused422/invalid_value with value null; valid leap date204 independently persisted. These checks do not establish UI validation interactions.",
+      "production": "not exercised",
+      "externalCalls": "blocked"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.manager.create"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual New field actions. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "Switch",
+        "labelIncludes": "fields.manager.showArchived"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "reorder",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual Show archived selection. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.moveUp"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "reorder",
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "reorder",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual upward reorder and first-active disabled boundary. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.moveDown"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "reorder",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Last-active disabled boundary only; no downward-click claim. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.archive"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "reorder",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual archival and independent archivedAt read. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id={`field-label-"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "English label input only; repeated locale inputs are not inferred covered. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"field-type\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual nine editable type selections. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Input",
+        "labelIncludes": "fields.form.optionLabelAria"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "options",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual distinct punctuation-heavy option labels. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.form.optionAdd"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "options",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual Add an option actions. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual create submission and independently persisted definitions; edit-save semantics remain separate. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "DialogContent"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lateCreate",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Held prior create receipt must leave current later dialog open; no whole-dialog coverage claim. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Input",
+        "labelIncludes": "fields.input.textPlaceholder"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual profile text/person values; card accessible naming separately checked by inline journey. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Input",
+        "labelIncludes": "type=\"number\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual zero boundary. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Input",
+        "labelIncludes": "type=\"url\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual synthetic HTTPS URL. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Textarea"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual multiline value. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "DatePicker"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual current-month day selection; API impossible dates do not establish picker validation. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Select"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "options",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual separately identified C# selection. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "button"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual multi-select alpha/beta toggle and persisted beta. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Checkbox"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual true then false and exact single accessible/visible label. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/my-fields-section.tsx",
+        "component": "MyFieldsSection",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "values",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual batch204, independent read and reload. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/card-custom-fields.tsx",
+        "component": "CardCustomFields",
+        "kind": "FieldValueInput"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual single text field, visible label association and retained refused/later drafts. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/card-custom-fields.tsx",
+        "component": "CardCustomFields",
+        "kind": "button",
+        "childSummaryIncludes": "fields.card.apply"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual refusal and subsequent real save. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/card-custom-fields.tsx",
+        "component": "CardCustomFields",
+        "kind": "button",
+        "childSummaryIncludes": "fields.card.cancel"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual Cancel during held receipt then reopen. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/card-custom-fields.tsx",
+        "component": "CardCustomFields",
+        "kind": "button",
+        "labelIncludes": "fields.card.editAria"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "inline",
+          "pixelReviewed": false
+        }
+      },
+      "scopeNote": "Actual row edit and persisted value after reload. EN/light/1280x720/synthetic local head/all three engines only. Other roles, states, modalities and environments remain pending."
+    }
+  ],
+  "entries": [
+    {
+      "surface": "Card custom field definition and value read recovery",
+      "evidenceId": "readRecovery",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "surface": "Field definition/value API refusal integrity",
+      "evidenceId": "apiRefusals",
+      "surfaceBinding": "not inferred"
+    }
+  ]
+}

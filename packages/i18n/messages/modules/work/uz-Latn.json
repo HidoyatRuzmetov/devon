@@ -111,6 +111,7 @@
       "estimate": "Baho"
     },
     "card": {
+      "titleRequired": "Karta nomini kiriting.",
       "peekTitle": "Karta tafsilotlari",
       "markDone": "Bajarildi deb belgilash",
       "archive": "Arxivga olish",
@@ -124,6 +125,8 @@
       "newLabel": "Yangi yorliq",
       "descriptionPlaceholder": "Tavsif qoʻshing",
       "addLinkPlaceholder": "Havolani qoʻying",
+      "addLink": "Havola qoʻshish",
+      "removeLink": "Havolani olib tashlash: {title}",
       "unfurlError": "Havolani yuklab boʻlmadi",
       "addChecklistItem": "Band qoʻshish",
       "addCommentPlaceholder": "Izoh yozing, @ bilan xodimni belgilang",
@@ -473,7 +476,7 @@
       "cardCount": "{count} ta karta",
       "emptyTitle": "Andoza yoʻq",
       "emptyBody": "Boshqarmada hali andoza tayyorlanmagan.",
-      "emptyBodyHead": "Kartani ochib, «Andoza sifatida saqlash»ni tanlang."
+      "emptyBodyHead": "Shaxsiy yoki boshqarma andozasini tayyorlash uchun «Yangi kartochka andozasi»ni tanlang."
     },
     "workload": {
       "title": "Yuklama",

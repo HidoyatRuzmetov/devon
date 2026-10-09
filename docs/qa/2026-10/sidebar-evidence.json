@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested-sidebar",
+  "date": "2026-10-09",
+  "policy": "Only explicitly listed runtime controls/states gain bounded evidence. Generic signatures do not cover every parameterized group/link/action. Unlisted states remain pending.",
+  "boundaries": {
+    "db": "devon_flow_e2e_knowledge_nested",
+    "apiPort": 48921,
+    "webPort": 48922,
+    "seedDemo": true,
+    "production": "not exercised",
+    "externalAI": "excluded",
+    "externalTelegram": "excluded",
+    "externalMail": "excluded",
+    "commitPushDeployVideo": "not performed by this agent"
+  },
+  "gates": {
+    "matrix": {
+      "status": "passed in bounded combined evidence",
+      "distinctCases": 24,
+      "runs": [
+        {
+          "run": "sidebar-reflow-final",
+          "passingMatrixCases": 16,
+          "passingProbeCases": 3,
+          "failingBeforeWebKitCases": 8,
+          "wholeRunStatus": "19 passed / 8 failed"
+        },
+        {
+          "run": "sidebar-explicit-focus-webkit",
+          "passingMatrixCases": 8,
+          "wholeRunStatus": "8 passed"
+        }
+      ],
+      "sourceBoundary": "Only explicit SidebarItem tabIndex0 added after Chromium/Firefox16 full cases; WebKit8 full cases after that repair. Current focused native focus after is tracked separately.",
+      "axeChecks": 144,
+      "axeViolations": 0,
+      "pageerrors": 0
+    },
+    "focusedSupplement": {
+      "run": "sidebar-focused-curation-after",
+      "status": "passed",
+      "passed": 9,
+      "sidebarCases": 6,
+      "unrelatedGalleryDiscoverabilityCases": 3,
+      "shortMenuLocales": 4,
+      "shortMenuTheme": "light",
+      "consoleErrors": 0,
+      "pageerrors": 0
+    },
+    "currentSourceNativeFocus": {
+      "run": "work-privacy-draft-after",
+      "status": "passed",
+      "cases": 3,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "scope": "native SidebarItem Pages focus and activation after explicit tabIndex0; does not repeat the full locale/viewport matrix"
+    },
+    "units": {
+      "status": "passed",
+      "passed": 20
+    },
+    "webTypecheck": {
+      "status": "passed"
+    },
+    "scopedESLint": {
+      "status": "passed",
+      "config": "packages/ui/src/lint/eslint.config.js",
+      "scope": "src/shell/sidebar.tsx and src/shell/sidebar-user-block.tsx; zero diagnostics. Wrong generic React config/plugin crash excluded."
+    },
+    "scopedPrettier": {
+      "status": "passed current product source",
+      "scope": "sidebar.tsx and sidebar-user-block.tsx; docs separately formatted"
+    }
+  },
+  "evidence": {
+    "sidebar-matrix": {
+      "test": "apps/web/test/e2e/platform-sidebar.qa.spec.ts",
+      "scope": {
+        "roles": [
+          "department-head"
+        ],
+        "locales": [
+          "en",
+          "ru",
+          "uz-Latn",
+          "uz-Cyrl"
+        ],
+        "themes": [
+          "light",
+          "dark"
+        ],
+        "browsers": [
+          "chromium",
+          "firefox",
+          "webkit"
+        ],
+        "environments": [
+          {
+            "width": 1440,
+            "height": 900,
+            "textScale": 1
+          },
+          {
+            "width": 768,
+            "height": 600,
+            "textScale": 2
+          },
+          {
+            "width": 768,
+            "height": 480,
+            "textScale": 2
+          },
+          {
+            "width": 390,
+            "height": 480,
+            "textScale": 2
+          },
+          {
+            "width": 320,
+            "height": 480,
+            "textScale": 2
+          },
+          {
+            "width": 360,
+            "height": 225,
+            "textScale": 1
+          }
+        ]
+      },
+      "states": "Knowledge expansion/Tab Pages, current-page retention while folded, stored groups, actual profile route/independentlocaleGET/reload, collapse64px/reload/Inboxtooltip/expand264px, actual signout401/reload; Count2 geometry, nav>=88px, width, scopedaxe.",
+      "pixels": "docs/qa/2026-10/sidebar-pixels.json"
+    },
+    "sidebar-short-menu": {
+      "test": "apps/web/test/e2e/platform-sidebar.qa.spec.ts",
+      "run": "sidebar-focused-curation-after",
+      "roles": [
+        "department-head"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "theme": "light",
+      "viewport": "360x225 text100",
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "states": "Home/Profile, End/Signout focused inviewport, Escapeopener, Shortcutsopen/close, zero console/pageerrors.",
+      "pixels": "docs/qa/2026-10/sidebar-pixels.json"
+    },
+    "sidebar-focus-diagnostic": {
+      "run": "sidebar-focused-curation-after",
+      "sourceBoundary": "before explicit tabIndex repair",
+      "actualApp": "anchor tabIndex property0, visible non-hidden non-inert ancestors; native Tab/AltTab sequence recorded; explicit focus+Enter loads Pages.",
+      "nativeComparison": "plain HTML diagnostic, not product coverage; installedWebKit reaches explicit tabindex0 anchor and skips ordinary anchor."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "packages/ui/src/shell/sidebar.tsx",
+        "component": "Sidebar",
+        "kind": "button",
+        "childSummaryIncludes": "<GroupLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only Knowledge group expansion, fold persistence, active Pages retention; no everygroup claim.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/sidebar-pixels.json"
+          ]
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "packages/ui/src/shell/sidebar.tsx",
+        "component": "SidebarItem",
+        "kind": "Link"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only Inbox count2/reflow and native Pages activation/current retained; link parameterization does not establish all destinations.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/sidebar-pixels.json"
+          ]
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/sidebar-pixels.json"
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "packages/ui/src/shell/sidebar.tsx",
+        "component": "SidebarItem",
+        "kind": "Tooltip"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only collapsed Inbox tooltip after focus+hover, native actual label; focus-only trigger remains pending.",
+      "states": {
+        "hover": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "packages/ui/src/shell/sidebar-user-block.tsx",
+        "component": "SidebarUserBlock",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "{action.label}"
+      },
+      "expectedMatches": 2,
+      "scopeNote": "Only Profile, Shortcuts, Signout; Home/End/Escape/open/actualroutes/independentme401 tested; includes normal/danger runtime variants.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/sidebar-pixels.json"
+          ]
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "sidebar-matrix",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "runtimeControls": [
+    {
+      "source": "packages/ui/src/shell/sidebar-user-block.tsx",
+      "component": "SidebarUserBlock",
+      "kind": "button",
+      "controls": [
+        "Account menu trigger"
+      ],
+      "states": {
+        "default": "tested",
+        "focus": "tested",
+        "active": "tested"
+      },
+      "evidenceId": "sidebar-matrix"
+    },
+    {
+      "source": "apps/web/src/features/pages/faq-screen.tsx",
+      "component": "FaqScreen",
+      "kind": "heading",
+      "controls": [
+        "help.groups.account Russian heading at320text200"
+      ],
+      "states": {
+        "default": "tested"
+      },
+      "evidenceId": "sidebar-short-menu",
+      "note": "All3 engine native afterheadingpixels reviewed; glyphrangebefore observed separately; not fullFAQnewmatrix."
+    }
+  ],
+  "pending": [
+    "Every other nav group/destination and tooltip",
+    "Member/superadmin runtime matrices",
+    "Department switching",
+    "Dynamic large counts and countrefusal",
+    "Storage denied persistence",
+    "Touch scrolling/physicaldevices",
+    "Actual browserzoom",
+    "Reducedmotion/systemtheme transitions",
+    "All4dark focusedEnd supplemental pixels"
+  ],
+  "excluded": [
+    "Production actions",
+    "ExternalAI/TG/mail",
+    "Release/video by thisagent"
+  ]
+}

@@ -473,40 +473,90 @@ type CreateCardInput = {
   source?: 'manual' | 'ai' | 'telegram' | 'template' | undefined
 }
 
+export class CardTargetUnavailableError extends Error {
+  readonly statusCode = 422
+
+  constructor() {
+    super('action_target_unavailable')
+    this.name = 'CardTargetUnavailableError'
+  }
+}
+
+/** Hold both membership and account rows until the card write commits. A preflight read in an
+ * HTTP handler or automation evaluation cannot serialize against removal/account locking. */
+export async function lockActiveCardTargets(tx: Tx, departmentId: string, ids: readonly string[]) {
+  const unique = [...new Set(ids)].sort()
+  if (unique.length === 0) return
+  const rows = await tx.raw<{ id: string }>(sql`
+    select m.user_id as id from app.memberships m join app.users u on u.id = m.user_id
+    where m.department_id = ${departmentId} and m.user_id = any(${sql.param(unique)}::uuid[])
+      and m.status = 'active' and m.deleted_at is null
+      and u.status = 'active' and u.deleted_at is null
+    order by m.user_id for share of m, u
+  `)
+  if (new Set(rows.map((row) => row.id)).size !== unique.length)
+    throw new CardTargetUnavailableError()
+}
+
+export async function lockActiveCardLabels(tx: Tx, departmentId: string, ids: readonly string[]) {
+  const unique = [...new Set(ids)].sort()
+  if (unique.length === 0) return
+  const rows = await tx.raw<{ id: string }>(sql`select id from app.labels
+    where department_id = ${departmentId} and deleted_at is null and id = any(${sql.param(unique)}::uuid[])
+    order by id for share`)
+  if (rows.length !== unique.length) throw new CardTargetUnavailableError()
+}
+
 export async function createCard(ctx: RequestContext, input: CreateCardInput): Promise<CardDTO> {
-  return withContext(ctx, async (tx) => {
-    await lockCardOrder(tx, input.departmentId)
-    // Serialize against project deletion: a card cannot be attached to a foreign/tombstoned
-    // project, nor appear after its project's child-deletion sweep has already completed.
-    if (input.projectId) {
-      const projects = await tx.raw<{
-        id: string
-      }>(sql`select id from app.projects
+  return withContext(ctx, (tx) => createCardInTx(ctx, tx, input))
+}
+
+/** Reuse the same target locks, ordering, activity, audit and outbox in a larger atomic write. */
+export async function createCardInTx(
+  ctx: RequestContext,
+  tx: Tx,
+  input: CreateCardInput,
+): Promise<CardDTO> {
+  await lockCardOrder(tx, input.departmentId)
+  // The creator remains historical attribution. Only newly named assignee/giver references
+  // require current membership; the existing default giver=creator semantics stay intact.
+  await lockActiveCardTargets(
+    tx,
+    input.departmentId,
+    [input.assigneeUserId, input.giverUserId].filter((id): id is string => typeof id === 'string'),
+  )
+  await lockActiveCardLabels(tx, input.departmentId, input.labels ?? [])
+  // Serialize against project deletion: a card cannot be attached to a foreign/tombstoned
+  // project, nor appear after its project's child-deletion sweep has already completed.
+  if (input.projectId) {
+    const projects = await tx.raw<{
+      id: string
+    }>(sql`select id from app.projects
         where id = ${input.projectId} and department_id = ${input.departmentId} and deleted_at is null for share`)
-      if (!projects[0])
-        throw Object.assign(new Error('Project is unavailable'), {
-          statusCode: 422,
-        })
-    }
-    const id = randomUUID()
-    const siblings =
-      input.orderKey === undefined
-        ? await columnOrder(tx, input.departmentId, input.assigneeUserId ?? null)
-        : []
-    const orderKey =
-      input.orderKey ?? (await rankForPosition(tx, input.departmentId, siblings, siblings.length))
-    const description = input.description
-      ? { format: 'markdown' as const, text: input.description }
-      : null
-    // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
-    // array bound this way into a real Postgres array literal) -- interpolating the bare array as
-    // `${arr}::uuid[]` instead lets drizzle's own `sql` tag apply its "expand into a parenthesized
-    // value list" rule (built for `where col in (${arr})`), which for an *insert value* produces a
-    // bare `record` -- `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]`
-    // for a non-empty one ("cannot cast type record to uuid[]") -- confirmed live: quick-add crashed
-    // every card create with zero labels, which is every quick-added card.
-    await tx.raw(
-      sql`insert into app.cards (
+    if (!projects[0])
+      throw Object.assign(new Error('Project is unavailable'), {
+        statusCode: 422,
+      })
+  }
+  const id = randomUUID()
+  const siblings =
+    input.orderKey === undefined
+      ? await columnOrder(tx, input.departmentId, input.assigneeUserId ?? null)
+      : []
+  const orderKey =
+    input.orderKey ?? (await rankForPosition(tx, input.departmentId, siblings, siblings.length))
+  const description = input.description
+    ? { format: 'markdown' as const, text: input.description }
+    : null
+  // `sql.param(arr)` binds the whole array as ONE driver parameter (node-postgres serialises a JS
+  // array bound this way into a real Postgres array literal) -- interpolating the bare array as
+  // `${arr}::uuid[]` instead lets drizzle's own `sql` tag apply its "expand into a parenthesized
+  // value list" rule (built for `where col in (${arr})`), which for an *insert value* produces a
+  // bare `record` -- `()::uuid[]` for an empty array (a flat syntax error) or `($1, $2)::uuid[]`
+  // for a non-empty one ("cannot cast type record to uuid[]") -- confirmed live: quick-add crashed
+  // every card create with zero labels, which is every quick-added card.
+  await tx.raw(
+    sql`insert into app.cards (
             id, department_id, kind, title, description, assignee_user_id, giver_user_id,
             project_id, project_scope, priority, start_at, due_at, labels, links,
             order_key, created_by_user_id, estimate_min, recurrence, recurrence_series_id,
@@ -525,33 +575,32 @@ export async function createCard(ctx: RequestContext, input: CreateCardInput): P
             ${input.recurrenceIndex ?? (input.recurrence ? 1 : null)},
             ${input.source ?? 'manual'}
           )`,
-    )
-    await tx.raw(
-      sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
+  )
+  await tx.raw(
+    sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
           values (${randomUUID()}, ${input.departmentId}, ${id}, ${input.createdByUserId}, 'created', ${JSON.stringify({ title: input.title })}::jsonb)`,
-    )
-    tx.audit({
-      action: 'work.card_created',
-      subjectType: 'card',
-      subjectId: id,
-      departmentId: input.departmentId,
-      after: {
-        title: input.title,
-        assigneeUserId: input.assigneeUserId ?? null,
-      },
-    })
-    // The notification registry (`notifications/registry.ts`) resolves "who cares" from the card
-    // itself; the payload only has to name the card and the person who acted, so the registry can
-    // keep the actor out of their own inbox.
-    tx.emit({
-      type: 'work.card.created',
-      payload: { cardId: id, actorUserId: input.createdByUserId },
-      departmentId: input.departmentId,
-    })
-
-    const rows = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${id}`)
-    return toCardDTO(rows[0]!)
+  )
+  tx.audit({
+    action: 'work.card_created',
+    subjectType: 'card',
+    subjectId: id,
+    departmentId: input.departmentId,
+    after: {
+      title: input.title,
+      assigneeUserId: input.assigneeUserId ?? null,
+    },
   })
+  // The notification registry (`notifications/registry.ts`) resolves "who cares" from the card
+  // itself; the payload only has to name the card and the person who acted, so the registry can
+  // keep the actor out of their own inbox.
+  tx.emit({
+    type: 'work.card.created',
+    payload: { cardId: id, actorUserId: input.createdByUserId },
+    departmentId: input.departmentId,
+  })
+
+  const rows = await tx.raw<CardRow>(sql`${cardSelect(ctx.userId)} where c.id = ${id}`)
+  return toCardDTO(rows[0]!)
 }
 
 type PatchCardInput = {
@@ -694,6 +743,19 @@ export async function patchCard(
     if (expectedVersion !== undefined && beforeRow.version !== expectedVersion) {
       return { ok: false, reason: 'conflict' }
     }
+    await lockActiveCardTargets(
+      tx,
+      departmentId,
+      [
+        patch.assigneeUserId !== beforeRow.assignee_user_id ? patch.assigneeUserId : null,
+        patch.giverUserId !== beforeRow.giver_user_id ? patch.giverUserId : null,
+      ].filter((id): id is string => typeof id === 'string'),
+    )
+    await lockActiveCardLabels(
+      tx,
+      departmentId,
+      (patch.labels ?? []).filter((id) => !beforeRow.labels.includes(id)),
+    )
     if (
       patch.assigneeUserId !== undefined &&
       patch.assigneeUserId !== beforeRow.assignee_user_id &&
@@ -714,9 +776,13 @@ export async function patchCard(
         : null
       sets.push(sql`description = ${desc ? JSON.stringify(desc) : null}::jsonb`)
     }
-    if (patch.assigneeUserId !== undefined)
+    // Do not rewrite an unchanged historical reference. Apart from allowing unrelated edits after
+    // a member leaves, this cannot resurrect that reference if an unversioned background patch
+    // overlapped another writer changing it after our read.
+    if (patch.assigneeUserId !== undefined && patch.assigneeUserId !== beforeRow.assignee_user_id)
       sets.push(sql`assignee_user_id = ${patch.assigneeUserId}`)
-    if (patch.giverUserId !== undefined) sets.push(sql`giver_user_id = ${patch.giverUserId}`)
+    if (patch.giverUserId !== undefined && patch.giverUserId !== beforeRow.giver_user_id)
+      sets.push(sql`giver_user_id = ${patch.giverUserId}`)
     if (patch.priority !== undefined) sets.push(sql`priority = ${patch.priority}`)
     if (patch.startAt !== undefined) sets.push(sql`start_at = ${patch.startAt}`)
     if (patch.dueAt !== undefined) sets.push(sql`due_at = ${patch.dueAt}`)

@@ -1,0 +1,11 @@
+{
+  "calendar": {
+    "feeds": {
+      "copyFailed": "Avtomatik nusxalab bo‘lmadi. Havola tanlandi; uni klaviatura yoki sensorli ekran menyusi orqali nusxalang.",
+      "kind": { "eventsHelp": "Boshqarmalaringizdagi tadbirlar." },
+      "create": {
+        "capReached": "Sizda 20 ta faol obuna bor. Yangi obuna yaratishdan oldin bu oynani yoping va kerak bo‘lmagan obunani o‘chiring."
+      }
+    }
+  }
+}

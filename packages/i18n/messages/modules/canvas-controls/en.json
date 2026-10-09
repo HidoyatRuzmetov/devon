@@ -1,0 +1,42 @@
+{
+  "personal": {
+    "canvas": {
+      "controls": {
+        "pan": "Pan canvas",
+        "finishDrawing": "Finish drawing",
+        "cancelDrawing": "Cancel drawing",
+        "addObject": "Add object",
+        "object": "Selected object",
+        "none": "No selection",
+        "x": "Horizontal",
+        "y": "Vertical",
+        "editText": "Edit text",
+        "deleteObject": "Delete selected object",
+        "moveSticky": "Move sticky note",
+        "hint": "Choose a tool, then drag or use Add object. Select an object to move it with the arrow keys (Shift: 10 steps). Delete removes it; Ctrl/Cmd+Z undoes.",
+        "penHint": "Draw with the arrow keys (Shift: 10 steps). Enter finishes; Escape cancels.",
+        "type": {
+          "freehand": "Drawing",
+          "rectangle": "Rectangle",
+          "ellipse": "Ellipse",
+          "line": "Line",
+          "arrow": "Arrow",
+          "text": "Text",
+          "sticky": "Sticky note"
+        },
+        "color": {
+          "ink": "Ink",
+          "blue": "Blue",
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "yellow": "Yellow",
+          "pink": "Pink",
+          "mint": "Mint",
+          "sky": "Light blue"
+        }
+      }
+    }
+  }
+}

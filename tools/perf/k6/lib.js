@@ -19,9 +19,12 @@ export function loginOnce() {
   if (res.status !== 204) {
     fail(`login failed: ${res.status} ${res.body}`)
   }
-  const sid = res.cookies['devon_sid'] && res.cookies['devon_sid'][0] && res.cookies['devon_sid'][0].value
-  const csrf = res.cookies['devon_csrf'] && res.cookies['devon_csrf'][0] && res.cookies['devon_csrf'][0].value
-  if (!sid || !csrf) fail(`login did not return devon_sid/devon_csrf cookies (got: ${JSON.stringify(res.cookies)})`)
+  const sid =
+    res.cookies['devon_sid'] && res.cookies['devon_sid'][0] && res.cookies['devon_sid'][0].value
+  const csrf =
+    res.cookies['devon_csrf'] && res.cookies['devon_csrf'][0] && res.cookies['devon_csrf'][0].value
+  if (!sid || !csrf)
+    fail(`login did not return devon_sid/devon_csrf cookies (got: ${JSON.stringify(res.cookies)})`)
   return { sid, csrf }
 }
 
@@ -37,3 +40,14 @@ export function authHeaders(auth, extra) {
 }
 
 export const SUMMARY_TREND_STATS = ['avg', 'min', 'med', 'p(50)', 'p(90)', 'p(95)', 'p(99)', 'max']
+
+export function ownedFixtureCreationAllowed() {
+  if (__ENV.DEVON_PERF_LOCAL_FIXTURES !== '1') return false
+  if (
+    __ENV.DEVON_PERF_DB_NAME !== 'devon_qa_perf_gate' ||
+    !/^http:\/\/(?:127\.0\.0\.1|localhost|host\.docker\.internal):[0-9]+$/.test(BASE_URL)
+  ) {
+    fail('Fixture creation requires the guarded owned local performance namespace')
+  }
+  return true
+}

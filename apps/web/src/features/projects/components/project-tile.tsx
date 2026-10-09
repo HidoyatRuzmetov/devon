@@ -21,7 +21,6 @@ import {
   ProgressRing,
   cn,
   initialsFromName,
-  useReducedMotion,
 } from '@devon/ui'
 import { RouterLink } from '../../../lib/router.js'
 import type { MemberSummary } from '../../work/api.js'
@@ -63,18 +62,10 @@ export function ProjectTile({
 }) {
   const t = useT()
   const locale = useLocale()
-  const reduced = useReducedMotion()
   const percent = Math.round(project.progress * 100)
-  const pulsing = project.status === 'active' && !reduced
 
   const ring = (
     <span className="relative inline-flex shrink-0 items-center justify-center">
-      {pulsing ? (
-        <span
-          aria-hidden="true"
-          className="absolute inset-0 animate-ping rounded-full bg-primary/20"
-        />
-      ) : null}
       <ProgressRing
         value={percent}
         size={compact ? 40 : 48}

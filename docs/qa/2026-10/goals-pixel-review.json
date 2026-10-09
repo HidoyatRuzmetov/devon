@@ -1,0 +1,375 @@
+{
+  "policy": "Only actual opened images recorded; capture/geometry/axe never implies pixel inspection.",
+  "reviewedImages": 16,
+  "nativeSheetRegions": 32,
+  "images": [
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/en-light.png",
+      "scope": "en-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-392b3-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-392b3-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 139,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-392b3-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-392b3-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/en-dark.png",
+      "scope": "en-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-9514c-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-9514c-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 139,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-9514c-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-9514c-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/ru-light.png",
+      "scope": "ru-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-3d66b-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-3d66b-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 169,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-3d66b-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-3d66b-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/ru-dark.png",
+      "scope": "ru-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-c168f-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-c168f-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 169,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-c168f-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-c168f-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/uz-Latn-light.png",
+      "scope": "uz-Latn-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-b91fd-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-b91fd-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 179,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-b91fd-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-b91fd-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/uz-Latn-dark.png",
+      "scope": "uz-Latn-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-2e4eb-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-2e4eb-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 179,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-2e4eb-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-2e4eb-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/uz-Cyrl-light.png",
+      "scope": "uz-Cyrl-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-f4892-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-f4892-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 139,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-f4892-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-f4892-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/native-sheets/uz-Cyrl-dark.png",
+      "scope": "uz-Cyrl-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-5efd2-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-5efd2-eflow-and-keyboard-recovery-chromium/populated-320-1.png",
+          "x": 0,
+          "y": 139,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-5efd2-eflow-and-keyboard-recovery-chromium/create-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-5efd2-eflow-and-keyboard-recovery-chromium/conflict-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Long title and unbroken description wrap; contextual edit/delete targets retain space; create fields and conflict recovery message/button are readable in the shown crops.",
+      "limitation": "Four320px crops: populated top/bottom and create/conflict viewport. Fixed navigation covers progress pixels in these full-page originals; due/footer and some dialog fields require scrolling and are not visually certified by this sheet. No whole-page or all-control pass."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-392b3-eflow-and-keyboard-recovery-chromium/conflict-1280-2.png",
+      "scope": "en-light/chromium/200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Enlarged target/help text and entire conflict explanation/reload control wrap visibly inside the dialog; all four locale scripts represented.",
+      "limitation": "Scrolled conflict viewport only: title and due/footer are outside the visible dialog. This is not every locale/theme/browser pixel combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-c168f-eflow-and-keyboard-recovery-firefox/conflict-1280-2.png",
+      "scope": "ru-dark/firefox/200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Enlarged target/help text and entire conflict explanation/reload control wrap visibly inside the dialog; all four locale scripts represented.",
+      "limitation": "Scrolled conflict viewport only: title and due/footer are outside the visible dialog. This is not every locale/theme/browser pixel combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-b91fd-eflow-and-keyboard-recovery-webkit/conflict-1280-2.png",
+      "scope": "uz-Latn-light/webkit/200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Enlarged target/help text and entire conflict explanation/reload control wrap visibly inside the dialog; all four locale scripts represented.",
+      "limitation": "Scrolled conflict viewport only: title and due/footer are outside the visible dialog. This is not every locale/theme/browser pixel combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-fifty-one/results/goals-visual.qa-Goals-popu-5efd2-eflow-and-keyboard-recovery-webkit/conflict-1280-2.png",
+      "scope": "uz-Cyrl-dark/webkit/200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Enlarged target/help text and entire conflict explanation/reload control wrap visibly inside the dialog; all four locale scripts represented.",
+      "limitation": "Scrolled conflict viewport only: title and due/footer are outside the visible dialog. This is not every locale/theme/browser pixel combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/zero-cap-before/results/goals.qa-a-zero-card-cap-v-06df3-real-open-card-over-the-cap-chromium/zero-card-cap.png",
+      "scope": "before/chromium/en/light",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual one-open-card/zero-cap renders amber100% of cap with no over-cap text; independent API values were1/0.",
+      "limitation": "Before-fix failure evidence, not acceptance."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-thirty-six/results/goals.qa-a-zero-card-cap-v-06df3-real-open-card-over-the-cap-chromium/zero-card-cap.png",
+      "scope": "after/chromium/en/light",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual one-open-card/zero-cap visibly shows red bar and readable warning icon plus1 over the cap text; edit/delete and counted-card link retain space.",
+      "limitation": "Desktop English/light zero-cap acceptance only; other breakpoint/locale/color combinations are not established by these three images."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-thirty-six/results/goals.qa-a-zero-card-cap-v-06df3-real-open-card-over-the-cap-firefox/zero-card-cap.png",
+      "scope": "after/firefox/en/light",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual one-open-card/zero-cap visibly shows red bar and readable warning icon plus1 over the cap text; edit/delete and counted-card link retain space.",
+      "limitation": "Desktop English/light zero-cap acceptance only; other breakpoint/locale/color combinations are not established by these three images."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/goals/final-thirty-six/results/goals.qa-a-zero-card-cap-v-06df3-real-open-card-over-the-cap-webkit/zero-card-cap.png",
+      "scope": "after/webkit/en/light",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual one-open-card/zero-cap visibly shows red bar and readable warning icon plus1 over the cap text; edit/delete and counted-card link retain space.",
+      "limitation": "Desktop English/light zero-cap acceptance only; other breakpoint/locale/color combinations are not established by these three images."
+    }
+  ]
+}

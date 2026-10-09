@@ -29,6 +29,7 @@
 import type { FastifyBaseLogger } from 'fastify'
 import { sql } from 'drizzle-orm'
 import { PgBoss } from 'pg-boss'
+import { queueDatabaseOptions } from '../../lib/queue-database.js'
 import { withContext, type RequestContext } from '@devon/db'
 import { tashkentDateString } from '../analytics/aggregate.js'
 import {
@@ -276,7 +277,7 @@ export async function startBriefingJobs(
   log: FastifyBaseLogger,
 ): Promise<BriefingJobsHandle | null> {
   try {
-    const instance = new PgBoss(databaseUrl)
+    const instance = new PgBoss(queueDatabaseOptions(databaseUrl))
     instance.on('error', (err: unknown) => log.error({ err }, 'ai: pg-boss reported an error'))
     await instance.start()
     await instance.createQueue(QUEUE_BRIEFING).catch(() => {})

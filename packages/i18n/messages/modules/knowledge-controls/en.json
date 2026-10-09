@@ -1,0 +1,29 @@
+{
+  "pages": {
+    "onboarding": {
+      "ownerLabel": "Responsible role",
+      "deleteTemplate": "Delete checklist",
+      "deleteTitle": "Delete this checklist?",
+      "deleteBody": "This removes the checklist for future newcomers. Tasks already added to personal lists stay there.",
+      "createFailed": "Could not create the checklist. Your name is kept; try again.",
+      "saveFailed": "Could not save the checklist. Your changes are kept; try again.",
+      "deleteFailed": "Could not delete the checklist. Try again.",
+      "changedElsewhere": "This checklist changed in another session. Your draft is kept. Cancel changes to load the latest items, or save to replace them with your draft.",
+      "cancelChanges": "Cancel changes",
+      "itemLimit": "A checklist can contain up to 100 items.",
+      "editTemplate": "Edit checklist name",
+      "editItem": "Edit item",
+      "itemLabel": "Checklist item",
+      "nameRequired": "Enter a checklist name.",
+      "itemRequired": "Enter an item."
+    },
+    "editor": {
+      "contentLabel": "Page content",
+      "suggestions": {
+        "commands": "Block commands",
+        "empty": "No matching options",
+        "formatting": "Text formatting"
+      }
+    }
+  }
+}

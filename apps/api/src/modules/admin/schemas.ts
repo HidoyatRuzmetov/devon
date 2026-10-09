@@ -3,6 +3,7 @@
 // `adminInstanceSchema`/`chainVerificationSchema`, left untouched).
 import { z } from 'zod'
 import { localeSchema } from '../../schemas.js'
+import { adminListCursorSchema } from './list-cursor.js'
 
 export const departmentIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
 export const userIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
@@ -18,7 +19,7 @@ export const adminDepartmentListQuerySchema = z
   .object({
     query: z.string().trim().max(200).optional(),
     status: departmentStatusSchema.optional(),
-    cursor: z.string().optional(),
+    cursor: adminListCursorSchema.optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
   })
   .strict()
@@ -56,7 +57,7 @@ export const adminUserListQuerySchema = z
     query: z.string().trim().max(200).optional(),
     status: userStatusSchema.optional(),
     role: userRoleSchema.optional(),
-    cursor: z.string().optional(),
+    cursor: adminListCursorSchema.optional(),
     limit: z.coerce.number().int().min(1).max(100).default(25),
   })
   .strict()
@@ -145,8 +146,8 @@ export const auditEventQuerySchema = z
     category: z.enum([...AUDIT_CATEGORIES, OTHER_CATEGORY]).optional(),
     actorUserId: z.string().uuid().optional(),
     departmentId: z.string().uuid().optional(),
-    from: z.string().optional(),
-    to: z.string().optional(),
+    from: z.union([z.iso.datetime({ offset: true }), z.iso.date()]).optional(),
+    to: z.union([z.iso.datetime({ offset: true }), z.iso.date()]).optional(),
     cursor: z.coerce.number().int().positive().optional(),
     limit: z.coerce.number().int().min(1).max(200).default(50),
   })

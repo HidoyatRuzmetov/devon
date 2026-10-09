@@ -26,6 +26,8 @@ export interface MemberPickerProps {
   placeholderKey: string
   allowClear?: boolean
   disabled?: boolean
+  /** Name the property as well as its current person; card detail may show two such pickers. */
+  label?: string
   /** Overrides the trigger button's own classes -- e.g. the table view's row cells (round2 SEV1)
    * want a borderless, truncating trigger that reads as plain text until hovered/clicked, not the
    * always-bordered combobox every other picker call site keeps. */
@@ -39,6 +41,7 @@ export function MemberPicker({
   placeholderKey,
   allowClear = true,
   disabled,
+  label,
   triggerClassName,
 }: MemberPickerProps) {
   const t = useT()
@@ -51,6 +54,9 @@ export function MemberPicker({
           variant="secondary"
           size="sm"
           disabled={disabled}
+          aria-label={
+            label ? `${label}: ${selected ? fullName(selected) : t(placeholderKey)}` : undefined
+          }
           className={cn('min-w-0 justify-between gap-2', triggerClassName)}
         >
           {selected ? (
@@ -90,6 +96,11 @@ export function MemberPicker({
               hueSeed={m.userId}
             />
             {fullName(m)}
+            {m.role === 'head' ? (
+              <span className="text-caption text-muted-foreground">
+                {t('departments.members.roleHead')}
+              </span>
+            ) : null}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

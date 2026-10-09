@@ -1,83 +1,17 @@
-// Typed API client functions for the inbox + telegram screens (MODULE-GUIDE.md "Web features":
-// "Build your feature's own endpoint functions on [apiClient]"). `apiClient` itself only exposes
-// GET/POST/PATCH (`src/lib/api-client.ts`) -- this module's routes also need PUT and DELETE, so
-// `putJson`/`delJson` below reuse that file's own exported `ApiError`/`NetworkError` and the shared
-// `problemSchema` to parse a failure exactly the same way, without editing a file outside this
-// feature's paths.
+// Typed same-origin endpoints use the shared client, including field validation Problems.
 import { z } from 'zod'
-import { ApiError, NetworkError, apiClient } from '../../lib/api-client.js'
-import { problemSchema } from '../../lib/api-schemas.js'
+import { ApiError, apiClient } from '../../lib/api-client.js'
 import type { Locale } from '@devon/i18n'
 
-async function raw(path: string, init: RequestInit): Promise<Response> {
-  try {
-    return await fetch(path, {
-      credentials: 'include',
-      headers: { accept: 'application/json', ...(init.headers ?? {}) },
-      ...init,
-    })
-  } catch (cause) {
-    throw new NetworkError(cause)
-  }
-}
-
-async function parseErrorAndThrow(res: Response): Promise<never> {
-  const requestId = res.headers.get('x-request-id')
-  let code = 'internal'
-  try {
-    const body: unknown = await res.json()
-    const parsed = problemSchema.safeParse(body)
-    if (parsed.success) code = parsed.data.code
-  } catch {
-    // Not a Problem body -- fall back to 'internal', same as api-client.ts.
-  }
-  throw new ApiError(res.status, code, requestId)
-}
-
-async function putJson<T>(
-  path: string,
-  body: unknown,
-  schema: z.ZodType<T>,
-  csrfToken: string,
-): Promise<T> {
-  const res = await raw(path, {
-    method: 'PUT',
-    headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) await parseErrorAndThrow(res)
-  if (res.status === 204) return undefined as T
-  return schema.parse(await res.json())
-}
-
-async function patchJson<T>(
-  path: string,
-  body: unknown,
-  schema: z.ZodType<T>,
-  csrfToken: string,
-): Promise<T> {
-  const res = await raw(path, {
-    method: 'PATCH',
-    headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) await parseErrorAndThrow(res)
-  if (res.status === 204) return undefined as T
-  return schema.parse(await res.json())
-}
-
-async function delJson<T>(path: string, schema: z.ZodType<T>, csrfToken: string): Promise<T> {
-  const res = await raw(path, { method: 'DELETE', headers: { 'x-csrf-token': csrfToken } })
-  if (!res.ok) await parseErrorAndThrow(res)
-  if (res.status === 204) return undefined as T
-  return schema.parse(await res.json())
-}
-
-/** A 422 `quiet_hours_too_loud` response (`PUT /notifications/quiet-hours`) carries a domain code the
- * preferences screen renders as a specific message, not the generic error toast -- this narrows
- * `ApiError` the same way callers elsewhere in the app already switch on `.code`. */
+/** The standard validation Problem carries this refusal in its field errors, so the screen can
+ * explain the department's rule instead of treating a rejected range as a transport failure. */
 export function isQuietHoursTooLoud(err: unknown): boolean {
-  return err instanceof ApiError && err.code === 'quiet_hours_too_loud'
+  return (
+    err instanceof ApiError &&
+    err.status === 422 &&
+    err.code === 'validation_failed' &&
+    err.errors.some((error) => error.path === 'quietHours' && error.code === 'quiet_hours_too_loud')
+  )
 }
 
 // --- Shared shapes -----------------------------------------------------------------------------
@@ -180,8 +114,12 @@ export function archiveNotifications(ids: string[], csrfToken: string) {
   return apiClient.post('/api/v1/notifications/archive', { ids }, updatedCountSchema, csrfToken)
 }
 
+export function restoreNotifications(ids: string[], csrfToken: string) {
+  return apiClient.post('/api/v1/notifications/restore', { ids }, updatedCountSchema, csrfToken)
+}
+
 export function snoozeNotification(id: string, minutes: number, csrfToken: string) {
-  return putJson(`/api/v1/notifications/${id}/snooze`, { minutes }, z.void(), csrfToken)
+  return apiClient.put(`/api/v1/notifications/${id}/snooze`, { minutes }, z.void(), csrfToken)
 }
 
 // --- Preferences ---------------------------------------------------------------------------------
@@ -200,7 +138,7 @@ export function fetchPrefs(): Promise<{ items: PrefRow[] }> {
 }
 
 export function putPrefs(items: PrefRow[], csrfToken: string): Promise<{ items: PrefRow[] }> {
-  return putJson('/api/v1/notifications/prefs', { items }, prefsSchema, csrfToken)
+  return apiClient.put('/api/v1/notifications/prefs', { items }, prefsSchema, csrfToken)
 }
 
 // --- Quiet hours -----------------------------------------------------------------------------------
@@ -235,7 +173,7 @@ export function putQuietHours(
   csrfToken: string,
 ): Promise<QuietHoursDto> {
   const q = departmentId ? `?departmentId=${encodeURIComponent(departmentId)}` : ''
-  return putJson(`/api/v1/notifications/quiet-hours${q}`, input, quietHoursSchema, csrfToken)
+  return apiClient.put(`/api/v1/notifications/quiet-hours${q}`, input, quietHoursSchema, csrfToken)
 }
 
 // --- Department settings ---------------------------------------------------------------------------
@@ -266,7 +204,7 @@ export function putDepartmentSettings(
   >,
   csrfToken: string,
 ): Promise<DepartmentSettingsDto> {
-  return putJson(
+  return apiClient.put(
     `/api/v1/notifications/departments/${departmentId}/settings`,
     patch,
     departmentSettingsSchema,
@@ -374,7 +312,7 @@ export function putGroupKinds(
   kinds: GroupKind[],
   csrfToken: string,
 ) {
-  return patchJson(
+  return apiClient.patch(
     `/api/v1/telegram/departments/${departmentId}/groups/${groupId}`,
     { kinds },
     z.void(),
@@ -383,7 +321,7 @@ export function putGroupKinds(
 }
 
 export function disconnectGroup(departmentId: string, groupId: string, csrfToken: string) {
-  return delJson(
+  return apiClient.delete(
     `/api/v1/telegram/departments/${departmentId}/groups/${groupId}`,
     z.void(),
     csrfToken,

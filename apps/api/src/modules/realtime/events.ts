@@ -29,6 +29,7 @@ import { departmentChannel, personalChannel } from './channels.js'
 import { broadcast, publish } from './publisher.js'
 import { sendPushToUser } from './push.js'
 import { systemAuditCtx } from './repo.js'
+import { membershipPersonalChannels } from './membership-publication.js'
 
 /** Reasons worth a phone buzzing (SPEC §10: "reminders and mentions"). Everything else still lands
  * in the inbox and on the live channel; it just does not interrupt anybody. */
@@ -271,6 +272,16 @@ export function registerRealtimeEventSubscriptions(
 
   subscribe('*', async (event: OutboxEventRecord) => {
     try {
+      if (event.type === 'notifications.notification.updated') {
+        const payload = (event.payload ?? {}) as Record<string, unknown>
+        if (typeof payload['userId'] === 'string') {
+          await publish(personalChannel(payload['userId']), {
+            type: 'inbox.notification.updated',
+            payload: {},
+          })
+        }
+        return
+      }
       if (event.type === 'notifications.notification.created') {
         await handleNotificationCreated(
           log,
@@ -284,11 +295,17 @@ export function registerRealtimeEventSubscriptions(
       const projected = projectPayload(event.payload)
       const actorUserId =
         typeof projected['actorUserId'] === 'string' ? projected['actorUserId'] : null
-      await broadcast([departmentChannel(event.departmentId)], {
-        type: event.type,
-        payload: projected,
-        actorUserId,
-      })
+      await broadcast(
+        [
+          departmentChannel(event.departmentId),
+          ...membershipPersonalChannels(event.type, event.payload),
+        ],
+        {
+          type: event.type,
+          payload: projected,
+          actorUserId,
+        },
+      )
     } catch (err) {
       log.debug(
         { err: err instanceof Error ? err.message : String(err), eventType: event.type },

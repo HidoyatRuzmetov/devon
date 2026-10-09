@@ -104,3 +104,12 @@ export const createFromTemplateBodySchema = z.object({
   members: z.array(z.string().uuid()).min(1),
   startOn: dateSchema.optional(),
 })
+
+export const createFromGalleryBodySchema = z
+  .object({
+    templateId: z.string().uuid(),
+    title: z.string().trim().min(1).max(200).optional(),
+    ownerUserId: z.string().uuid(),
+    members: z.array(z.string().uuid()).min(1).max(200),
+  })
+  .strict()

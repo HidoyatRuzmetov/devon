@@ -47,12 +47,15 @@ export function usePatchPageMutation(id: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['pages', 'write', id],
+    scope: { id: `pages-write-${id}` },
     mutationFn: (input: PatchPageInput) => api.patchPage(id, input, csrf),
     onSuccess: (page) => {
       qc.setQueryData(KEYS.page(id), page)
       qc.invalidateQueries({ queryKey: KEYS.pages })
       qc.invalidateQueries({ queryKey: KEYS.versions(id) })
     },
+    onError: () => qc.invalidateQueries({ queryKey: KEYS.page(id) }),
   })
 }
 
@@ -87,9 +90,12 @@ export function useRestoreVersionMutation(pageId: string) {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['pages', 'write', pageId],
+    scope: { id: `pages-write-${pageId}` },
     mutationFn: (versionId: string) => api.restoreVersion(pageId, versionId, csrf),
     onSuccess: (page) => {
       qc.setQueryData(KEYS.page(pageId), page)
+      qc.invalidateQueries({ queryKey: KEYS.pages })
       qc.invalidateQueries({ queryKey: KEYS.versions(pageId) })
     },
   })
@@ -112,6 +118,7 @@ export function usePatchOnboardingTemplateMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['pages', 'templates-write'],
     mutationFn: ({ id, input }: { id: string; input: PatchOnboardingTemplateInput }) =>
       api.patchOnboardingTemplate(id, input, csrf),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.templates }),
@@ -122,6 +129,7 @@ export function useDeleteOnboardingTemplateMutation() {
   const qc = useQueryClient()
   const csrf = useCsrfToken()
   return useMutation({
+    mutationKey: ['pages', 'templates-write'],
     mutationFn: (id: string) => api.deleteOnboardingTemplate(id, csrf),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEYS.templates }),
   })

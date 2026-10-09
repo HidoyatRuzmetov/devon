@@ -254,9 +254,10 @@ const pagesRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const ok = await repo.restorePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
+      const outcome = await repo.restorePage(activeDepartmentId(req), req.params.id, ctxFrom(req))
+      if (outcome === 'forbidden') return sendProblem(reply, 'forbidden')
       // 409, not 404: the page exists, the undo window has simply closed.
-      if (!ok) return sendProblem(reply, 'conflict')
+      if (outcome !== 'restored') return sendProblem(reply, 'conflict')
       return reply.code(204).send()
     },
   )

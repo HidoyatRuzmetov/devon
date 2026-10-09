@@ -218,28 +218,28 @@ export function TimeLogPanel({ cardId, canEdit, members }: TimeLogPanelProps): R
       {entries.length === 0 ? (
         <p className="text-caption text-muted-foreground">{t('work.timeLog.empty')}</p>
       ) : (
-        <Stagger presence className="flex flex-col gap-1" animateKey={`log-${entries.length}`}>
+        <Stagger presence className="flex flex-col gap-1" animateKey={`log-${cardId}`}>
           {entries.map((entry) => {
             const mine = entry.userId === user?.id
             return (
               <StaggerItem key={entry.id} exit="hidden" layout>
-                <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-small hover:bg-muted/60">
-                  <span className="w-24 shrink-0 font-medium tabular-nums text-foreground">
-                    {formatDuration(entry.minutes, t)}
-                  </span>
-                  <span className="shrink-0 text-caption text-muted-foreground">
-                    {nameFor(entry.userId)}
-                  </span>
-                  <span className="shrink-0 text-caption text-muted-foreground">
-                    {formatDate(new Date(entry.spentOn), locale)}
-                  </span>
-                  {entry.note ? (
-                    <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
-                      {entry.note}
+                <div className="flex min-w-0 items-start gap-2 rounded-md px-2 py-1.5 text-small hover:bg-muted/60">
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="font-medium tabular-nums text-foreground">
+                      {formatDuration(entry.minutes, t)}
                     </span>
-                  ) : (
-                    <span className="flex-1" />
-                  )}
+                    <span className="min-w-0 break-words text-caption text-muted-foreground">
+                      {nameFor(entry.userId)}
+                    </span>
+                    <span className="shrink-0 text-caption text-muted-foreground">
+                      {formatDate(new Date(entry.spentOn), locale)}
+                    </span>
+                    {entry.note ? (
+                      <span className="min-w-0 basis-full break-words text-caption text-muted-foreground">
+                        {entry.note}
+                      </span>
+                    ) : null}
+                  </div>
                   {/* Only your own line -- the server enforces the same rule, this only hides
                       a control that would always be refused. */}
                   {mine ? (

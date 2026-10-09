@@ -7,7 +7,6 @@
 // module's allowed paths (MODULE-GUIDE.md: routes/sidebar/commands are the only shell extension
 // points a feature manifest gets today; there is no "always-mounted widget" slot yet). Flagged for
 // the integration step rather than silently shipped as `/personal`-only.
-import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Timer, Pause, Play, SkipForward, Square, Volume2, BellRing } from 'lucide-react'
 import {
@@ -22,28 +21,14 @@ import {
 } from '@devon/ui'
 import {
   PHASE_RING_TONE,
-  advanceCycle,
-  attachSessionId,
-  nextPhaseAfterFocus,
-  notifyPhaseEnd,
   pause as pauseEngine,
-  phaseDurationMs,
-  phaseToKind,
-  playPhaseEndSound,
-  remainingMs,
-  requestNotificationPermission,
   resume as resumeEngine,
-  startPhase,
-  stopToIdle,
   usePomodoroRemainingSec,
   usePomodoroState,
   type PomodoroPhase,
 } from './pomodoro-engine.js'
-import {
-  useCreatePomodoroSessionMutation,
-  usePatchPomodoroSessionMutation,
-  usePomodoroSettingsQuery,
-} from './use-personal.js'
+import { usePomodoroSettingsQuery } from './use-personal.js'
+import { usePomodoroControls } from './pomodoro-controls.js'
 
 function formatCountdown(ms: number): string {
   const totalSeconds = Math.max(0, Math.round(ms / 1000))
@@ -67,93 +52,24 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
   // start/pause/phase change and a phase could run past zero unnoticed.
   const remainingSec = usePomodoroRemainingSec()
   const settingsQuery = usePomodoroSettingsQuery()
-  const createSession = useCreatePomodoroSessionMutation()
-  const patchSession = usePatchPomodoroSessionMutation()
-  const handledEndRef = React.useRef(false)
+  const controls = usePomodoroControls()
 
   const settings = settingsQuery.data
-
-  // Drives the one moment a running phase's countdown reaches zero: end the recorded session,
-  // sound + notify, and either auto-advance or park at idle for the user to start the next phase.
-  React.useEffect(() => {
-    if (!settings) return
-    if (state.phase === 'idle' || state.remainingAtPause !== null) {
-      handledEndRef.current = false
-      return
-    }
-    if (remainingMs() > 0) {
-      handledEndRef.current = false
-      return
-    }
-    if (handledEndRef.current) return
-    handledEndRef.current = true
-
-    const finishedPhase = state.phase
-    if (state.sessionId) {
-      patchSession.mutate({
-        id: state.sessionId,
-        input: { completed: true, endedAt: new Date().toISOString() },
-      })
-    }
-    playPhaseEndSound(settings.sound, finishedPhase)
-    notifyPhaseEnd(
-      settings.notifications,
-      t(PHASE_LABEL_KEY[finishedPhase === 'focus' ? 'focus' : finishedPhase]),
-      t('personal.pomodoro.notification.body'),
-    )
-
-    let next: Exclude<PomodoroPhase, 'idle'>
-    if (finishedPhase === 'focus') {
-      const cycleAfter = advanceCycle(true, settings.cyclesBeforeLong)
-      next = nextPhaseAfterFocus(cycleAfter, settings.cyclesBeforeLong)
-    } else {
-      next = 'focus'
-    }
-
-    if (settings.autoStart) {
-      const nextTaskId = next === 'focus' ? (activeTaskId ?? null) : null
-      startPhase(next, settings, nextTaskId)
-      createSession.mutate(
-        { kind: phaseToKind(next), startedAt: new Date().toISOString(), taskId: nextTaskId },
-        { onSuccess: (row) => attachSessionId(row.id) },
-      )
-    } else {
-      stopToIdle()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on the tick, not on every dep change.
-  }, [state, remainingSec, settings, activeTaskId])
 
   if (!settings) return null
 
   const running = state.phase !== 'idle'
   const paused = running && state.remainingAtPause !== null
   const remaining = remainingSec * 1000
-  const ringValue =
-    running && settings
-      ? 100 -
-        (remaining / phaseDurationMs(state.phase as Exclude<PomodoroPhase, 'idle'>, settings)) * 100
-      : 0
+  const ringValue = running && settings ? 100 - (remaining / state.durationMs) * 100 : 0
 
   function start(kind: 'focus' | 'short_break' | 'long_break') {
     if (!settings) return
-    const taskId = kind === 'focus' ? (activeTaskId ?? null) : null
-    startPhase(kind, settings, taskId)
-    requestNotificationPermission()
-    createSession.mutate(
-      { kind: phaseToKind(kind), startedAt: new Date().toISOString(), taskId },
-      { onSuccess: (row) => attachSessionId(row.id) },
-    )
+    controls.start(kind, settings, activeTaskId ?? null)
   }
 
   function skip() {
-    if (state.phase === 'idle') return
-    if (state.sessionId) {
-      patchSession.mutate({
-        id: state.sessionId,
-        input: { completed: false, endedAt: new Date().toISOString() },
-      })
-    }
-    stopToIdle()
+    if (settings) controls.finish(false, settings, state.taskId)
   }
 
   return (
@@ -215,31 +131,53 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
           <div className="flex flex-wrap gap-2">
             {!running ? (
               <>
-                <Button size="sm" onClick={() => start('focus')}>
+                <Button
+                  size="sm"
+                  disabled={state.busy}
+                  loading={state.busy}
+                  onClick={() => start('focus')}
+                >
                   <Play className="size-4" aria-hidden="true" />
                   {t('personal.pomodoro.action.startFocus')}
                 </Button>
-                <Button size="sm" variant="secondary" onClick={() => start('short_break')}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={state.busy}
+                  onClick={() => start('short_break')}
+                >
                   {t('personal.pomodoro.action.startShortBreak')}
                 </Button>
               </>
             ) : (
               <>
                 {paused ? (
-                  <Button size="sm" onClick={resumeEngine}>
+                  <Button
+                    size="sm"
+                    disabled={state.busy || !!state.pendingEnd}
+                    onClick={resumeEngine}
+                  >
                     <Play className="size-4" aria-hidden="true" />
                     {t('personal.pomodoro.action.resume')}
                   </Button>
                 ) : (
-                  <Button size="sm" variant="secondary" onClick={pauseEngine}>
+                  <Button size="sm" variant="secondary" disabled={state.busy} onClick={pauseEngine}>
                     <Pause className="size-4" aria-hidden="true" />
                     {t('personal.pomodoro.action.pause')}
                   </Button>
                 )}
-                <IconButton aria-label={t('personal.pomodoro.action.skip')} onClick={skip}>
+                <IconButton
+                  aria-label={t('personal.pomodoro.action.skip')}
+                  disabled={state.busy}
+                  onClick={skip}
+                >
                   <SkipForward className="size-4" aria-hidden="true" />
                 </IconButton>
-                <IconButton aria-label={t('personal.pomodoro.action.stop')} onClick={skip}>
+                <IconButton
+                  aria-label={t('personal.pomodoro.action.stop')}
+                  disabled={state.busy}
+                  onClick={skip}
+                >
                   <Square className="size-4" aria-hidden="true" />
                 </IconButton>
               </>
@@ -247,6 +185,16 @@ export function PomodoroWidget({ activeTaskId }: { activeTaskId?: string | null 
           </div>
 
           <Separator />
+          {state.pendingEnd && !state.busy ? (
+            <div className="flex flex-col gap-2">
+              <p role="alert" className="text-small text-destructive">
+                {t('personal.save.error')}
+              </p>
+              <Button size="sm" onClick={skip}>
+                {t('personal.save.retry')}
+              </Button>
+            </div>
+          ) : null}
           <div className="flex items-center gap-3 text-caption text-muted-foreground">
             <span className="inline-flex items-center gap-1">
               <Volume2 className="size-3.5" aria-hidden="true" />

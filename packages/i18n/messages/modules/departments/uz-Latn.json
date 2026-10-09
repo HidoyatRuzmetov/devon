@@ -4,6 +4,9 @@
     "subtitle": "Boshqarmalaringiz va yangisiga qoʻshilish yoʻllari",
     "common": {
       "cancel": "Bekor qilish",
+      "close": "Yopish",
+      "waitForAction": "Boshqarmadagi joriy amal tugashini kuting, keyin qayta urinib koʻring.",
+      "pendingAction": "Amal hali bajarilmoqda. Oynani yopishingiz mumkin; bu amalni bekor qilmaydi.",
       "undo": "Bekor qilish"
     },
     "landing": {
@@ -80,6 +83,8 @@
       "title": "Taklif",
       "link": "Havola",
       "copyLink": "Havolani nusxalash",
+      "copyKey": "Kalitni nusxalash",
+      "copiedKey": "Kalitdan nusxa olindi",
       "qrLabel": "QR kod",
       "keyLabel": "Kalit",
       "passwordLabel": "Parol",
@@ -93,6 +98,7 @@
       "rotatePasswordConfirm": "Eski parol ishlamay qoladi. Parolni yangilaysizmi?",
       "setPassword": "Parolni oʻzim belgilayman",
       "setPasswordSubmit": "Saqlash",
+      "passwordRequirements": "Taklif paroli uchun 8–128 ta belgi kiriting.",
       "approvalToggleLabel": "Qoʻshilishni tasdiqlash",
       "approvalToggleBody": "Yoqilgan boʻlsa, yangi xodimlar boshliq tasdigʻini kutadi.",
       "passwordHiddenNotice": "Xavfsizlik uchun parol faqat yaratilgan yoki yangilangan paytda koʻrsatiladi.",
@@ -113,10 +119,12 @@
         "passwordLabel": "Parol"
       },
       "submit": "Qoʻshilish",
+      "keyHint": "key= dan keyingi kalitni yoki toʻliq taklif havolasini kiriting. Boshligʻingiz bergan taklif parolini yozing.",
       "success": "Boshqarmaga qoʻshildingiz",
       "pendingApproval": "Soʻrovingizni boshliq tasdiqlashi kerak",
       "invalidKeyOrPassword": "Kalit yoki parol notoʻgʻri",
       "rateLimited": "Juda koʻp urinish boʻldi. Birozdan keyin qayta urinib koʻring.",
+      "failed": "Soʻrovni bajarib boʻlmadi. Internet aloqasini tekshirib, qayta urinib koʻring.",
       "pendingApprovalBody": "Boshqarma boshligʻiga xabar bordi. U tasdiqlagach bildirishnoma keladi va ishga kirishasiz.",
       "approvalNotice": "Bu boshqarmaga qoʻshilish uchun boshliq tasdigʻi kerak.",
       "successBody": "Endi boshqarma ishiga kirishasiz."

@@ -4,6 +4,13 @@
 // Config: agentic/i18n.config.json (optional) { "src": "apps/web/src", "messages": "packages/i18n/messages", "locales": ["uz","ru","en"], "allow_hardcoded": ["..."] }
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, extname } from 'node:path'
+import { createRequire } from 'node:module'
+
+// Reuse the workspace's pinned compiler. The checker runs after dependency installation; resolving
+// through its declaring package avoids a phantom root dependency or a second parser dependency.
+const ts = createRequire(new URL('../../packages/config/package.json', import.meta.url))(
+  'typescript',
+)
 
 const root = process.cwd()
 const cfg = Object.assign(
@@ -151,7 +158,6 @@ for (const l of cfg.locales) {
   }
 }
 
-
 const keyRe = /\bt\(\s*['"`]([a-zA-Z0-9_.-]+)['"`]/g
 const transRe = /i18nKey=['"]([a-zA-Z0-9_.-]+)['"]/g
 const used = new Map()
@@ -170,17 +176,65 @@ if (unknown.length) {
   for (const [k, f] of unknown.slice(0, 20)) console.log(`   ${k}  (${f.replace(root, '.')})`)
 }
 
-// hard-coded text heuristic: JSX text nodes with 3+ letters (Latin or Cyrillic) not inside t()/Trans
+// Inspect actual JSX text nodes. A delimiter regex also matched callback return types and code
+// between conditional JSX branches, which made legitimate pending/error rendering fail this gate.
 const hard = []
-const textRe = />\s*([^<>{}\n]*[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳ]{3,}[^<>{}\n]*)\s*</g
+const lettersRe = /[A-Za-zА-Яа-яЁёЎўҚқҒғҲҳ]{3,}/
+function renderedText(text) {
+  if (!text.includes('&')) return text
+  // Let the same pinned JSX compiler decode numeric/named entities and whitespace. Entity names
+  // themselves are not rendered words, but an encoded human label must still be checked.
+  if (text.length > 16_384) throw new Error('JSX entity text exceeds the checker input boundary')
+  const emitted = ts.transpileModule(`const value = <span>${text}</span>`, {
+    compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.Latest },
+  }).outputText
+  const parsed = ts.createSourceFile('entity.js', emitted, ts.ScriptTarget.Latest, true)
+  let decoded = text
+  function visit(node) {
+    if (
+      ts.isCallExpression(node) &&
+      node.arguments.length === 3 &&
+      ts.isStringLiteral(node.arguments[2])
+    )
+      decoded = node.arguments[2].text
+    ts.forEachChild(node, visit)
+  }
+  visit(parsed)
+  return decoded
+}
+function hasNoTranslateAncestor(node) {
+  for (let ancestor = node.parent; ancestor; ancestor = ancestor.parent) {
+    if (!ts.isJsxElement(ancestor)) continue
+    if (
+      ancestor.openingElement.attributes.properties.some(
+        (attribute) =>
+          ts.isJsxAttribute(attribute) &&
+          attribute.name.getText() === 'translate' &&
+          attribute.initializer &&
+          ts.isStringLiteral(attribute.initializer) &&
+          attribute.initializer.text === 'no',
+      )
+    )
+      return true
+  }
+  return false
+}
 for (const f of files.filter((f) => f.endsWith('.tsx') || f.endsWith('.jsx'))) {
   const s = readFileSync(f, 'utf8')
-  let m
-  while ((m = textRe.exec(s))) {
-    const txt = m[1].trim()
-    if (!txt || /^[\d\s.,:;%()/+-]*$/.test(txt) || cfg.allow_hardcoded.includes(txt)) continue
-    hard.push({ f: f.replace(root, '.'), txt })
+  const source = ts.createSourceFile(f, s, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  function visit(node) {
+    if (ts.isJsxText(node)) {
+      const txt = renderedText(node.getText(source).trim())
+      if (
+        lettersRe.test(txt) &&
+        !hasNoTranslateAncestor(node) &&
+        !cfg.allow_hardcoded.includes(txt)
+      )
+        hard.push({ f: f.replace(root, '.'), txt })
+    }
+    ts.forEachChild(node, visit)
   }
+  visit(source)
 }
 if (hard.length) {
   errors += hard.length

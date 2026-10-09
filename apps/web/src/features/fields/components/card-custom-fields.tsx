@@ -23,6 +23,7 @@ import { useMeQuery } from '../../../lib/session.js'
 import { useOnline } from '../../../lib/use-online.js'
 import { fetchDefs, fetchValues, setValue, type FieldDefDto, type WireFieldValue } from '../api.js'
 import { fieldDescription, fieldLabel, isMissing } from '../format.js'
+import { fieldErrorKey } from '../error-key.js'
 import { FieldValueDisplay, FieldValueInput, checkValue } from './field-value-input.js'
 
 export type CardCustomFieldsProps = {
@@ -58,6 +59,19 @@ export function CardCustomFields({
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [draft, setDraft] = React.useState<WireFieldValue>(null)
   const [errorCode, setErrorCode] = React.useState<string | null>(null)
+  const editingSession = React.useRef(0)
+  const currentDraft = React.useRef<WireFieldValue>(null)
+
+  function changeDraft(value: WireFieldValue): void {
+    currentDraft.current = value
+    setDraft(value)
+  }
+
+  function cancelEdit(): void {
+    editingSession.current += 1
+    setEditingId(null)
+    setErrorCode(null)
+  }
 
   const defs = React.useMemo(
     () => (defsQuery.data?.defs ?? []).filter((d) => d.archivedAt === null),
@@ -70,17 +84,28 @@ export function CardCustomFields({
   }, [valuesQuery.data])
 
   const save = useMutation({
-    mutationFn: (input: { defId: string; value: WireFieldValue }) =>
+    mutationFn: (input: { defId: string; value: WireFieldValue; editingSession: number }) =>
       setValue({ defId: input.defId, subjectId: cardId, value: input.value }, csrfToken),
-    onSuccess: () => {
+    onSuccess: (_, input) => {
       void queryClient.invalidateQueries({ queryKey: ['fields', 'values', 'card', cardId] })
       void queryClient.invalidateQueries({ queryKey: ['work'] })
+      // Close only the submitted editor; a reopened or newly typed value is a separate draft.
+      if (
+        editingSession.current === input.editingSession &&
+        JSON.stringify(currentDraft.current) === JSON.stringify(input.value)
+      ) {
+        setEditingId(null)
+        setErrorCode(null)
+      }
       toast.success(t('fields.card.saved'))
     },
     onError: (err: unknown) => {
       if (err instanceof ApiError && err.errors.length > 0) {
-        toast.error(t(`fields.error.${err.errors[0]!.code}`))
-        return
+        const key = fieldErrorKey(err.errors[0]!.code)
+        if (key) {
+          toast.error(t(key))
+          return
+        }
       }
       toast.error(t('fields.card.saveFailed'))
     },
@@ -88,21 +113,24 @@ export function CardCustomFields({
 
   function beginEdit(def: FieldDefDto): void {
     if (!canEdit.allowed || def.type === 'derived') return
+    editingSession.current += 1
     setEditingId(def.id)
-    setDraft(values.get(def.id) ?? null)
+    changeDraft(values.get(def.id) ?? null)
     setErrorCode(null)
   }
 
   function commit(def: FieldDefDto): void {
+    if (save.isPending) return
     const code = checkValue(def, draft)
     if (code) {
       setErrorCode(code)
       return
     }
-    setEditingId(null)
-    setErrorCode(null)
-    if (JSON.stringify(draft ?? null) === JSON.stringify(values.get(def.id) ?? null)) return
-    save.mutate({ defId: def.id, value: draft })
+    if (JSON.stringify(draft ?? null) === JSON.stringify(values.get(def.id) ?? null)) {
+      cancelEdit()
+      return
+    }
+    save.mutate({ defId: def.id, value: draft, editingSession: editingSession.current })
   }
 
   if (defsQuery.isPending || valuesQuery.isPending) {
@@ -122,7 +150,13 @@ export function CardCustomFields({
           compact
           titleKey={online ? 'state.error.title' : 'state.offline.banner'}
           bodyKey={online ? 'state.error.body' : 'state.offline.empty'}
-          action={{ labelKey: 'state.error.action', onAction: () => void valuesQuery.refetch() }}
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => {
+              if (defsQuery.isError) void defsQuery.refetch()
+              if (valuesQuery.isError) void valuesQuery.refetch()
+            },
+          }}
         />
       </div>
     )
@@ -145,6 +179,7 @@ export function CardCustomFields({
           return (
             <div key={def.id} className="grid grid-cols-[minmax(0,7rem)_1fr] items-start gap-2">
               <dt
+                id={`${inputId}-label`}
                 className="pt-1.5 text-small text-muted-foreground"
                 title={fieldDescription(def, locale) || undefined}
               >
@@ -156,15 +191,17 @@ export function CardCustomFields({
                   <div className="flex flex-col gap-1">
                     <FieldValueInput
                       id={inputId}
+                      labelledBy={`${inputId}-label`}
                       def={def}
                       value={draft}
                       errorCode={errorCode}
-                      onChange={setDraft}
+                      onChange={changeDraft}
                     />
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         className="text-small text-accent-foreground underline underline-offset-2"
+                        disabled={save.isPending}
                         onClick={() => commit(def)}
                       >
                         {t('fields.card.apply')}
@@ -172,10 +209,7 @@ export function CardCustomFields({
                       <button
                         type="button"
                         className="text-small text-muted-foreground underline underline-offset-2"
-                        onClick={() => {
-                          setEditingId(null)
-                          setErrorCode(null)
-                        }}
+                        onClick={cancelEdit}
                       >
                         {t('fields.card.cancel')}
                       </button>

@@ -13,6 +13,13 @@ const baseEnv = {
 }
 
 describe('loadConfig production boot guard (H7.3, H17.1)', () => {
+  it('retains the container bind default and permits literal local QA binding', () => {
+    expect(loadConfig(baseEnv).API_HOST).toBe('0.0.0.0')
+    expect(loadConfig({ ...baseEnv, API_HOST: '127.0.0.1' }).API_HOST).toBe('127.0.0.1')
+    expect(loadConfig({ ...baseEnv, API_HOST: '::1' }).API_HOST).toBe('::1')
+    expect(() => loadConfig({ ...baseEnv, API_HOST: 'api.example.org' })).toThrow()
+    expect(() => loadConfig({ ...baseEnv, API_HOST: '127.0.0.1.example.org' })).toThrow()
+  })
   it('never opts a development server into Telegram polling implicitly', () => {
     expect(loadConfig({ ...baseEnv, NODE_ENV: 'development' }).TELEGRAM_POLLING_ENABLED).toBe(false)
     expect(

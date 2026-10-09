@@ -20,10 +20,10 @@ import {
   toast,
   type ComboboxOption,
 } from '@devon/ui'
-import { useCardsQuery } from '../hooks.js'
 import {
   useAddDependencyMutation,
   useCardDependenciesQuery,
+  useDependencyCandidatesQuery,
   useDependencyGraphQuery,
   useRemoveDependencyMutation,
 } from '../hooks-plus.js'
@@ -47,7 +47,7 @@ function DependencyRow({
   const card: CardRef = entry.card
   const open = card.status === 'active'
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+    <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 rounded-md border border-border bg-card px-3 py-2">
       <span
         aria-hidden="true"
         className={cn(
@@ -60,24 +60,16 @@ function DependencyRow({
       <button
         type="button"
         onClick={() => onOpenCard(card.id)}
-        className="min-w-0 flex-1 truncate text-left text-small text-foreground hover:underline"
+        className="min-w-0 text-left text-small text-foreground [overflow-wrap:anywhere] hover:underline"
       >
         {card.title}
       </button>
-      {card.dueAt ? (
-        <span className="shrink-0 text-caption text-muted-foreground">
-          {formatDate(new Date(card.dueAt), locale)}
-        </span>
-      ) : null}
-      <span className="shrink-0 text-caption text-muted-foreground">
-        {open ? t('work.dependencies.stillOpen') : t('work.dependencies.doneAlready')}
-      </span>
       {canEdit ? (
         <IconButton
           aria-label={t('work.dependencies.remove', { title: card.title })}
           onClick={onRemove}
           disabled={removing}
-          className="shrink-0"
+          className="col-start-3 row-start-1 shrink-0"
         >
           {removing ? (
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -86,6 +78,16 @@ function DependencyRow({
           )}
         </IconButton>
       ) : null}
+      <div className="col-start-2 flex min-w-0 flex-wrap gap-x-2 gap-y-1 text-caption text-muted-foreground">
+        {card.dueAt ? (
+          <span className="min-w-0 [overflow-wrap:anywhere]">
+            {formatDate(new Date(card.dueAt), locale)}
+          </span>
+        ) : null}
+        <span className="min-w-0 [overflow-wrap:anywhere]">
+          {open ? t('work.dependencies.stillOpen') : t('work.dependencies.doneAlready')}
+        </span>
+      </div>
     </div>
   )
 }
@@ -109,12 +111,15 @@ export function DependenciesPanel({
   // The graph is only needed once the picker is open -- a card sheet that nobody adds a dependency
   // from never issues this request at all.
   const graph = useDependencyGraphQuery(picking)
-  const candidates = useCardsQuery(picking ? { limit: 100 } : {})
+  const candidates = useDependencyCandidatesQuery(picking)
   const addDependency = useAddDependencyMutation(cardId)
   const removeDependency = useRemoveDependencyMutation(cardId)
 
   const blockedBy = query.data?.blockedBy ?? []
   const blocks = query.data?.blocks ?? []
+  const pickerError = graph.isError || candidates.isError
+  const pickerLoading =
+    graph.isPending || graph.isFetching || candidates.isPending || candidates.isFetching
 
   const edges: DependencyEdge[] = React.useMemo(
     () =>
@@ -131,6 +136,7 @@ export function DependenciesPanel({
   )
 
   const options: ComboboxOption[] = React.useMemo(() => {
+    if (pickerLoading || pickerError) return []
     const list = candidates.data ?? []
     return list
       .filter((candidate) => candidate.id !== cardId && !alreadyLinked.has(candidate.id))
@@ -145,7 +151,7 @@ export function DependenciesPanel({
           ...(cycles ? { description: t('work.dependencies.wouldLoop') } : {}),
         }
       })
-  }, [candidates.data, cardId, alreadyLinked, edges, t])
+  }, [candidates.data, cardId, alreadyLinked, edges, pickerLoading, pickerError, t])
 
   function addBlocker(blockerId: string): void {
     addDependency.mutate(blockerId, {
@@ -153,7 +159,11 @@ export function DependenciesPanel({
         setPicking(false)
         toast.success(t('work.dependencies.added'))
       },
-      onError: () => toast.error(t('work.dependencies.addFailed')),
+      onError: () => {
+        toast.error(t('work.dependencies.addFailed'))
+        // Another writer may have changed the graph after this choice was shown.
+        void graph.refetch()
+      },
     })
   }
 
@@ -218,16 +228,34 @@ export function DependenciesPanel({
         {canEdit ? (
           picking ? (
             <div className="flex flex-col gap-2">
-              <Combobox
-                options={options}
-                value={null}
-                onValueChange={addBlocker}
-                label={t('work.dependencies.pickLabel')}
-                placeholder={t('work.dependencies.pickPlaceholder')}
-                searchPlaceholder={t('work.dependencies.pickSearch')}
-                emptyMessage={t('work.dependencies.pickEmpty')}
-                loading={candidates.isPending || graph.isPending}
-              />
+              {pickerError ? (
+                <StateView
+                  kind="error"
+                  titleKey="state.error.title"
+                  bodyKey="state.error.body"
+                  action={{
+                    labelKey: 'state.error.action',
+                    onAction: () => {
+                      if (graph.isError) void graph.refetch()
+                      if (candidates.isError) void candidates.refetch()
+                    },
+                  }}
+                />
+              ) : null}
+              <div hidden={pickerError}>
+                <Combobox
+                  options={options}
+                  value={null}
+                  onValueChange={addBlocker}
+                  label={t('work.dependencies.pickLabel')}
+                  placeholder={t('work.dependencies.pickPlaceholder')}
+                  searchPlaceholder={t('work.dependencies.pickSearch')}
+                  emptyMessage={t('work.dependencies.pickEmpty')}
+                  loading={pickerLoading}
+                  disabled={pickerError || addDependency.isPending}
+                  contentClassName={cn(pickerError && 'hidden')}
+                />
+              </div>
               <Button variant="ghost" size="sm" onClick={() => setPicking(false)}>
                 {t('common.cancel')}
               </Button>

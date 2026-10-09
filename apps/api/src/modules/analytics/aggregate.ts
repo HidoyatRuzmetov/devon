@@ -20,6 +20,7 @@
 import { sql } from 'drizzle-orm'
 import { withContext, subscribe, type OutboxEventRecord, type RequestContext } from '@devon/db'
 import { PgBoss } from 'pg-boss'
+import { queueDatabaseOptions } from '../../lib/queue-database.js'
 import type { FastifyBaseLogger } from 'fastify'
 
 const TZ_OFFSET_MINUTES = 5 * 60 // Asia/Tashkent, UTC+5, no DST (TECH-SPEC §6).
@@ -205,7 +206,7 @@ export async function startAnalyticsRecomputeWorker(
   log: FastifyBaseLogger,
 ): Promise<RecomputeWorkerHandle | null> {
   try {
-    const boss = new PgBoss(databaseUrl)
+    const boss = new PgBoss(queueDatabaseOptions(databaseUrl))
     boss.on('error', (err: unknown) => log.error({ err }, 'analytics: pg-boss reported an error'))
     await boss.start()
     await boss.createQueue(QUEUE_RECOMPUTE_NIGHTLY).catch(() => {})

@@ -127,6 +127,7 @@
         "revert": "Asliga qaytarish",
         "saveOver": "Saqlash",
         "saved": "«{name}» saqlandi",
+        "saveError": "Koʻrinish saqlanmadi. Oʻzgarishlaringiz saqlanib turibdi. Qayta urinib koʻring.",
         "deleted": "«{name}» oʻchirildi"
       },
       "noResults": {

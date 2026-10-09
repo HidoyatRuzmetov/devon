@@ -11,13 +11,14 @@ import {
   Link2,
   Trash2,
 } from 'lucide-react'
-import { Checkbox, cn, IconButton, SparkleButton, strikethroughClass } from '@devon/ui'
+import { Button, Checkbox, cn, IconButton, SparkleButton, strikethroughClass } from '@devon/ui'
+import { ApiError } from '../../lib/api-client.js'
 import type { TaskNode } from './task-tree.js'
 
 export type TaskRowProps = {
   node: TaskNode
   onToggleDone: (node: TaskNode) => void
-  onTitleCommit: (node: TaskNode, title: string) => void
+  onTitleCommit: (node: TaskNode, title: string) => Promise<unknown>
   onIndent: (node: TaskNode) => void
   onOutdent: (node: TaskNode) => void
   onDelete: (node: TaskNode) => void
@@ -32,6 +33,8 @@ export type TaskRowProps = {
   /** Omitted where an AI budget/flag check has already ruled the feature out for this screen. */
   onAiSubtasks?: (node: TaskNode) => void
   aiSubtasksPending?: boolean
+  deletePending?: boolean
+  canIndent?: boolean
 }
 
 export function TaskRow({
@@ -51,22 +54,61 @@ export function TaskRow({
   onFocusMove,
   onAiSubtasks,
   aiSubtasksPending = false,
+  deletePending = false,
+  canIndent = true,
 }: TaskRowProps) {
   // H4.1: one instance per nested personal task, recursively -- a measured hot spot for a deep
   // sprint tree, opted into the compiler individually (`vite.config.ts`'s note).
   'use memo'
   const t = useT()
   const [title, setTitle] = React.useState(node.title)
-  React.useEffect(() => setTitle(node.title), [node.title])
+  const titleDraft = React.useRef(node.title)
+  const lastSavedTitle = React.useRef(node.title)
+  const titleVersion = React.useRef(node.version)
+  const titleDirty = React.useRef(false)
+  const titleSave = React.useRef<{ value: string; promise: Promise<boolean> } | null>(null)
+  const [titleFailure, setTitleFailure] = React.useState<'error' | 'conflict' | 'required' | null>(
+    null,
+  )
+  React.useEffect(() => {
+    if (!titleDirty.current) {
+      titleDraft.current = node.title
+      lastSavedTitle.current = node.title
+      titleVersion.current = node.version
+      setTitle(node.title)
+    }
+  }, [node.title, node.version])
   const done = node.doneAt !== null
 
-  function commitTitle() {
-    if (title.trim() && title !== node.title) onTitleCommit(node, title.trim())
-    else if (!title.trim()) setTitle(node.title)
+  function commitTitle(): Promise<boolean> {
+    const submitted = titleDraft.current.trim()
+    if (!submitted) {
+      setTitleFailure('required')
+      return Promise.resolve(false)
+    }
+    if (titleSave.current?.value === submitted) return titleSave.current.promise
+    if (!titleDirty.current || submitted === lastSavedTitle.current) return Promise.resolve(true)
+    const promise = onTitleCommit({ ...node, version: titleVersion.current }, submitted)
+      .then(() => {
+        setTitleFailure(null)
+        lastSavedTitle.current = submitted
+        if (titleDraft.current.trim() === submitted) titleDirty.current = false
+        return true
+      })
+      .catch((error) => {
+        setTitleFailure(error instanceof ApiError && error.status === 409 ? 'conflict' : 'error')
+        return false
+      })
+      .finally(() => {
+        if (titleSave.current?.promise === promise) titleSave.current = null
+      })
+    titleSave.current = { value: submitted, promise }
+    return promise
   }
 
   return (
     <div
+      data-personal-task-id={node.id}
       className={cn(
         'group/row flex items-stretch transition-[background-color,opacity,transform] duration-(--dur-standard) ease-(--ease-standard)',
         isDropTarget && 'rounded-sm bg-accent',
@@ -89,12 +131,12 @@ export function TaskRow({
         />
       ))}
 
-      <div className="group flex min-w-0 flex-1 items-center gap-1.5 rounded-sm px-1 py-1.5">
+      <div className="group flex min-w-0 flex-1 flex-wrap items-center gap-1.5 rounded-sm px-1 py-1.5 md:flex-nowrap">
         <button
           type="button"
           draggable
           onDragStart={(e) => onDragStart(node, e)}
-          className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          className="inline-flex size-6 shrink-0 cursor-grab items-center justify-center rounded-sm text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
           aria-label={t('personal.tasks.dragHandle')}
         >
           <GripVertical className="size-4" aria-hidden="true" />
@@ -116,23 +158,35 @@ export function TaskRow({
         />
 
         <input
+          aria-label={t('personal.tasks.title')}
+          maxLength={300}
+          aria-invalid={Boolean(titleFailure) || undefined}
+          aria-describedby={titleFailure ? `personal-task-error-${node.id}` : undefined}
           ref={(el) => registerInputRef(node.id, el)}
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={commitTitle}
+          onChange={(e) => {
+            if (!titleDirty.current) titleVersion.current = node.version
+            titleDraft.current = e.target.value
+            titleDirty.current = true
+            setTitle(e.target.value)
+            if (titleFailure === 'required' && e.target.value.trim()) setTitleFailure(null)
+          }}
+          onBlur={() => void commitTitle()}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
               e.preventDefault()
-              commitTitle()
-              onToggleDone(node)
+              void commitTitle().then((saved) => {
+                if (saved) onToggleDone(node)
+              })
             } else if (e.key === 'Enter') {
               e.preventDefault()
-              commitTitle()
-              onEnter(node)
-            } else if (e.key === 'Tab' && !e.shiftKey) {
+              void commitTitle().then((saved) => {
+                if (saved) onEnter(node)
+              })
+            } else if (e.key === 'ArrowRight' && e.altKey && !e.ctrlKey && !e.metaKey) {
               e.preventDefault()
               onIndent(node)
-            } else if (e.key === 'Tab' && e.shiftKey) {
+            } else if (e.key === 'ArrowLeft' && e.altKey && !e.ctrlKey && !e.metaKey) {
               e.preventDefault()
               onOutdent(node)
             } else if (e.key === 'Backspace' && title.length === 0) {
@@ -173,10 +227,10 @@ export function TaskRow({
 
         <div
           className={cn(
-            'flex shrink-0 items-center gap-0.5',
+            'ml-auto flex shrink-0 items-center gap-0.5 max-md:w-full max-md:justify-end',
             aiSubtasksPending
               ? 'opacity-100'
-              : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
+              : 'md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100',
           )}
         >
           {onAiSubtasks ? (
@@ -187,16 +241,60 @@ export function TaskRow({
               onClick={() => onAiSubtasks(node)}
             />
           ) : null}
-          <IconButton aria-label={t('personal.tasks.outdent')} onClick={() => onOutdent(node)}>
+          <IconButton
+            aria-label={t('personal.tasks.outdent')}
+            tooltip={t('personal.tasks.outdentHint')}
+            disabled={node.parentId === null}
+            onClick={() => onOutdent(node)}
+          >
             <IndentDecrease className="size-3.5" aria-hidden="true" />
           </IconButton>
-          <IconButton aria-label={t('personal.tasks.indent')} onClick={() => onIndent(node)}>
+          <IconButton
+            aria-label={t('personal.tasks.indent')}
+            tooltip={t('personal.tasks.indentHint')}
+            disabled={!canIndent}
+            onClick={() => onIndent(node)}
+          >
             <IndentIncrease className="size-3.5" aria-hidden="true" />
           </IconButton>
-          <IconButton aria-label={t('personal.tasks.delete')} onClick={() => onDelete(node)}>
+          <IconButton
+            aria-label={t('personal.tasks.delete')}
+            disabled={deletePending}
+            aria-busy={deletePending}
+            onClick={() => onDelete(node)}
+          >
             <Trash2 className="size-3.5" aria-hidden="true" />
           </IconButton>
         </div>
+        {titleFailure ? (
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <p
+              id={`personal-task-error-${node.id}`}
+              role="alert"
+              className="text-small text-destructive"
+            >
+              {t(
+                titleFailure === 'required'
+                  ? 'personal.save.titleRequired'
+                  : titleFailure === 'conflict'
+                    ? 'personal.save.conflict'
+                    : 'personal.save.error',
+              )}
+            </p>
+            {titleFailure !== 'required' ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  titleVersion.current = node.version
+                  void commitTitle()
+                }}
+              >
+                {t('personal.save.retry')}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   )

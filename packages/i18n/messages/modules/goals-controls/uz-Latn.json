@@ -1,0 +1,8 @@
+{
+  "goalsControls": {
+    "conflict": "Bu maqsad boshqa joyda o‘zgartirilgan. Yozganlaringiz shu yerda. Qayta tahrirlash uchun saqlangan versiyani yuklang.",
+    "reload": "Saqlangan versiyani yuklash",
+    "reloadFailed": "Saqlangan maqsadni yuklab bo‘lmadi. Yozganlaringiz shu yerda; qayta urinib ko‘ring.",
+    "workloadDenied": "Boshqarma yuklamasi umumiy ko‘rinishi boshliq uchun. O‘z yuklamangizni bosh sahifada ko‘rishingiz mumkin."
+  }
+}

@@ -10,7 +10,9 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { problemSchema } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
+import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { AuditCtx } from '../../types.js'
 import {
@@ -133,21 +135,23 @@ const calendarRoutes: FastifyPluginAsyncZod = async (app) => {
       },
       schema: {
         body: createFeedBodySchema,
-        response: { 200: feedSchema, 422: z.object({ code: z.string() }) },
+        response: { 200: feedSchema, 422: problemSchema },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const existing = await listFeeds(req.actor!.userId)
       // Twenty live feeds per person is already generous (a phone, a laptop, a desktop, a shared
       // room screen); the cap exists so a scripted loop cannot mint credentials without limit.
-      if (existing.length >= 20) return reply.code(422).send({ code: 'too_many_feeds' })
       const row = await createFeed(
         auditCtxFromReq(req),
         req.actor!.userId,
         req.body.kind,
         req.body.label,
       )
+      if (!row)
+        return sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'feeds', code: 'too_many_feeds' }],
+        })
       return reply.type('application/json').send(feedDto(row, publicUrl))
     },
   )

@@ -1,0 +1,29 @@
+{
+  "pages": {
+    "onboarding": {
+      "ownerLabel": "Mas’ul roli",
+      "deleteTemplate": "Ro‘yxatni o‘chirish",
+      "deleteTitle": "Bu ro‘yxat o‘chirilsinmi?",
+      "deleteBody": "Ro‘yxat yangi xodimlarga boshqa qo‘shilmaydi. Shaxsiy ro‘yxatlarga qo‘shilgan vazifalar saqlanadi.",
+      "createFailed": "Ro‘yxat yaratilmadi. Nomi saqlandi; qayta urinib ko‘ring.",
+      "saveFailed": "Ro‘yxat saqlanmadi. O‘zgarishlaringiz saqlandi; qayta urinib ko‘ring.",
+      "deleteFailed": "Ro‘yxat o‘chirilmadi. Qayta urinib ko‘ring.",
+      "changedElsewhere": "Ro‘yxat boshqa seansda o‘zgartirilgan. Qoralamangiz saqlandi. Oxirgi bandlarni yuklash uchun o‘zgarishlarni bekor qiling yoki ularning o‘rniga qoralamangizni saqlang.",
+      "cancelChanges": "O‘zgarishlarni bekor qilish",
+      "itemLimit": "Ro‘yxatga ko‘pi bilan 100 ta band qo‘shish mumkin.",
+      "editTemplate": "Ro‘yxat nomini tahrirlash",
+      "editItem": "Bandni tahrirlash",
+      "itemLabel": "Ro‘yxat bandi",
+      "nameRequired": "Ro‘yxat nomini kiriting.",
+      "itemRequired": "Bandni kiriting."
+    },
+    "editor": {
+      "contentLabel": "Sahifa mazmuni",
+      "suggestions": {
+        "commands": "Blok buyruqlari",
+        "empty": "Mos variantlar topilmadi",
+        "formatting": "Matnni formatlash"
+      }
+    }
+  }
+}

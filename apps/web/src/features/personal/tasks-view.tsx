@@ -1,6 +1,6 @@
 // Nested tasks with checkboxes, drag reorder and keyboard (TECH-SPEC §3.3), grouped by sprint (plus
 // an "Inbox" bucket for tasks with no sprint). Drag-and-drop is native HTML5 DnD -- no extra
-// dependency -- and keyboard (Tab/Shift+Tab indent/outdent, Enter to add a sibling, Cmd/Ctrl+Enter to
+// dependency -- and keyboard (Alt+Right/Left indent/outdent, Enter to add a sibling, Cmd/Ctrl+Enter to
 // mark done, Backspace on an empty title to delete, arrow keys to move focus) covers the same
 // operations without a mouse.
 //
@@ -21,7 +21,6 @@ import {
   EmptyPersonalIllustration,
   Textarea,
   toast,
-  toastWithUndo,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
@@ -38,7 +37,6 @@ import { buildTree, flattenTree, isSelfOrDescendant, type TaskNode } from './tas
 import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   useCreateTaskMutation,
-  useDelayedDelete,
   useDeleteTaskMutation,
   usePatchTaskMutation,
   useReorderTasksMutation,
@@ -72,18 +70,31 @@ export function TasksView() {
   const patchTask = usePatchTaskMutation()
   const deleteTaskMutation = useDeleteTaskMutation()
   const reorderTasks = useReorderTasksMutation()
-  const { schedule, cancel } = useDelayedDelete((id) => deleteTaskMutation.mutateAsync(id))
   const quickAddParse = useRunAiFeatureMutation('quick_add_parse')
   const subtaskBreakdown = useRunAiFeatureMutation('subtask_breakdown')
 
-  const [hiddenIds, setHiddenIds] = React.useState<Set<string>>(new Set())
   const [dragId, setDragId] = React.useState<string | null>(null)
   const [overId, setOverId] = React.useState<string | null>(null)
   const inputRefs = React.useRef(new Map<string, HTMLInputElement>())
+  const [focusRequest, setFocusRequest] = React.useState<{ id: string; select: boolean } | null>(
+    null,
+  )
   const [quickAdd, setQuickAdd] = React.useState<Record<string, string>>({})
   const [quickAddAi, setQuickAddAi] = React.useState<QuickAddAiState | null>(null)
   const [subtaskAi, setSubtaskAi] = React.useState<SubtaskAiState | null>(null)
   const [subtaskDraft, setSubtaskDraft] = React.useState('')
+
+  React.useEffect(() => {
+    if (!focusRequest) return
+    const input = inputRefs.current.get(focusRequest.id)
+    if (!input) return
+    const frame = requestAnimationFrame(() => {
+      input.focus()
+      if (focusRequest.select) input.select()
+      setFocusRequest(null)
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [focusRequest, tasksQuery.data])
 
   if (tasksQuery.isPending || sprintsQuery.isPending) {
     return <StateView kind="loading" titleKey="state.loading" />
@@ -99,7 +110,7 @@ export function TasksView() {
     )
   }
 
-  const allTasks = tasksQuery.data.filter((task) => !hiddenIds.has(task.id))
+  const allTasks = tasksQuery.data
   const sprints = sprintsQuery.data ?? []
   const activeSprints = sprints.filter((s) => s.status === 'active')
 
@@ -119,20 +130,7 @@ export function TasksView() {
   }
 
   function scheduleDelete(node: TaskNode) {
-    setHiddenIds((prev) => new Set(prev).add(node.id))
-    schedule(node.id)
-    toastWithUndo({
-      message: t('personal.tasks.deleted.toast'),
-      undoLabel: t('action.undo'),
-      onUndo: () => {
-        cancel(node.id)
-        setHiddenIds((prev) => {
-          const next = new Set(prev)
-          next.delete(node.id)
-          return next
-        })
-      },
-    })
+    if (!deleteTaskMutation.isPending) deleteTaskMutation.mutate(node.id)
   }
 
   function indent(node: TaskNode) {
@@ -193,20 +191,23 @@ export function TasksView() {
     })
   }
 
-  function focusInput(id: string) {
-    requestAnimationFrame(() => inputRefs.current.get(id)?.focus())
+  function focusInput(id: string, select = false) {
+    setFocusRequest({ id, select })
   }
 
   function submitQuickAdd(sprintId: string | null) {
     const sectionKey = sprintId ?? 'inbox'
-    const title = (quickAdd[sectionKey] ?? '').trim()
-    if (!title) return
+    const submitted = quickAdd[sectionKey] ?? ''
+    const title = submitted.trim()
+    if (!title || createTask.isPending) return
     const siblingCount = tasksInBucket(sprintId, null).length
     createTask.mutate(
       { title, sprintId, sort: siblingCount },
       {
         onSuccess: () => {
-          setQuickAdd((prev) => ({ ...prev, [sectionKey]: '' }))
+          setQuickAdd((prev) =>
+            prev[sectionKey] === submitted ? { ...prev, [sectionKey]: '' } : prev,
+          )
           if (quickAddAi?.sectionKey === sectionKey) setQuickAddAi(null)
         },
       },
@@ -380,16 +381,25 @@ export function TasksView() {
                           })
                         }
                         onTitleCommit={(n, title) =>
-                          patchTask.mutate({ id: n.id, input: { title, version: n.version } })
+                          patchTask.mutateAsync({ id: n.id, input: { title, version: n.version } })
                         }
                         onIndent={indent}
                         onOutdent={outdent}
                         onDelete={scheduleDelete}
-                        onEnter={() => {
-                          const siblingCount = tasksInBucket(section.sprintId, null).length
+                        deletePending={deleteTaskMutation.isPending}
+                        canIndent={
+                          tasksInBucket(node.sprintId, node.parentId).findIndex(
+                            (task) => task.id === node.id,
+                          ) > 0
+                        }
+                        onEnter={(anchor) => {
+                          if (createTask.isPending) return
                           createTask.mutate(
-                            { title: '', sprintId: section.sprintId, sort: siblingCount },
-                            { onSuccess: (created) => focusInput(created.id) },
+                            { title: t('personal.tasks.newTitle'), afterTaskId: anchor.id },
+                            {
+                              onSuccess: (created) => focusInput(created.id, true),
+                              onError: () => toast.error(t('toast.saveError')),
+                            },
                           )
                         }}
                         onDragStart={(n) => setDragId(n.id)}

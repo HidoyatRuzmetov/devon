@@ -207,6 +207,62 @@ function str(f: EventFacts, key: string): string {
  * the emit sites statically and asserts this key set equals that name set.
  */
 export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Object.freeze({
+  'pages.page.created': {
+    notify: false,
+    why: 'A new shared page refreshes open knowledge lists without notifying the whole department.',
+  },
+  'pages.page.updated': {
+    notify: false,
+    why: 'Autosaved knowledge edits refresh open pages without creating an inbox item per save.',
+  },
+  'pages.page.deleted': {
+    notify: false,
+    why: 'Removing a shared page refreshes open knowledge views without adding inbox noise.',
+  },
+  'pages.page.restored': {
+    notify: false,
+    why: 'Undoing page deletion refreshes open knowledge views without adding inbox noise.',
+  },
+  'pages.page.version_restored': {
+    notify: false,
+    why: 'Restoring a page version refreshes open knowledge views and their history without a broadcast notification.',
+  },
+  'pages.onboarding_template.created': {
+    notify: false,
+    why: 'Template management refreshes the head’s checklist settings without notifying colleagues.',
+  },
+  'pages.onboarding_template.updated': {
+    notify: false,
+    why: 'Checklist-template edits refresh open settings without notifying the whole department.',
+  },
+  'pages.onboarding_template.deleted': {
+    notify: false,
+    why: 'Removing a checklist template refreshes settings without creating an inbox item.',
+  },
+  'departments.membership.changed': {
+    notify: false,
+    why: 'Membership invalidation refreshes access and directories; the specific membership decision events supply notifications.',
+  },
+  'automations.rule.created': {
+    notify: false,
+    why: 'Rule management refreshes the head’s rule list without adding inbox noise.',
+  },
+  'automations.rule.updated': {
+    notify: false,
+    why: 'Rule edits refresh the head’s rule list without adding inbox noise.',
+  },
+  'automations.rule.deleted': {
+    notify: false,
+    why: 'Removing a rule refreshes the head’s rule list without notifying colleagues.',
+  },
+  'automations.rules.paused': {
+    notify: false,
+    why: 'The department kill switch refreshes rules without adding inbox noise.',
+  },
+  'automations.rules.resumed': {
+    notify: false,
+    why: 'Resuming department rules refreshes the list without adding inbox noise.',
+  },
   'automations.run.recorded': {
     notify: false,
     why: 'Run log invalidation uses realtime without adding inbox noise.',
@@ -912,6 +968,10 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   'notifications.notification.created': {
     notify: false,
     why: 'Emitted by `insertNotification` itself. Notifying on it would notify on the notification, forever.',
+  },
+  'notifications.notification.updated': {
+    notify: false,
+    why: 'Reading, archiving and restoring refresh the owner’s inbox across tabs without generating another notification.',
   },
   'notifications.action.requested': {
     notify: false,

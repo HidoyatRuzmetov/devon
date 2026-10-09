@@ -14,9 +14,17 @@
 // application code, and `migrations/0500_personal.sql`'s RLS policies enforce the same thing again at
 // the database layer with no super_admin/view-as carve-out -- belt and suspenders, the same posture
 // `audit.ts`'s immutability triggers-plus-grants already takes.
+import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import type { PersonalDeleteReceipt, PersonalTaskVersionChange } from '@devon/contracts'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { AuditCtx } from '../../types.js'
+import {
+  planTaskPlacements,
+  PersonalTaskPlacementUnavailable,
+  type PlacementInput,
+  type TaskPlacement,
+} from './task-placement.js'
 
 function toRequestContext(ctx: AuditCtx): RequestContext {
   return {
@@ -33,6 +41,20 @@ function toRequestContext(ctx: AuditCtx): RequestContext {
 
 function joinSet(parts: SQL[]): SQL {
   return sql.join(parts, sql.raw(', '))
+}
+
+async function lockPersonalTasks(tx: Tx, userId: string) {
+  await tx.raw(
+    sql`select pg_advisory_xact_lock(hashtextextended(${'personal.tasks:' + userId}, 0))`,
+  )
+}
+
+export class PersonalTaskAnchorUnavailable extends Error {
+  readonly statusCode = 422
+  constructor() {
+    super('Personal task anchor is unavailable')
+    this.name = 'PersonalTaskAnchorUnavailable'
+  }
 }
 
 export type MutationOutcome<T> = { ok: 'done'; row: T } | { ok: 'not_found' } | { ok: 'conflict' }
@@ -99,6 +121,8 @@ export async function patchSprint(
   ctx: AuditCtx,
 ): Promise<MutationOutcome<SprintRow>> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    // Match task/rollover lock order so a source edit cannot be read midway through rollover.
+    await lockPersonalTasks(tx, userId)
     const setParts: SQL[] = []
     if (input.goal !== undefined) setParts.push(sql`goal = ${input.goal}`)
     if (input.status !== undefined) setParts.push(sql`status = ${input.status}`)
@@ -131,6 +155,7 @@ export async function patchSprint(
 export type RolloverResult =
   | { ok: 'done'; sprint: SprintRow; movedTaskCount: number }
   | { ok: 'not_found' }
+  | { ok: 'conflict' }
 
 export async function rolloverSprint(
   userId: string,
@@ -139,12 +164,14 @@ export async function rolloverSprint(
   ctx: AuditCtx,
 ): Promise<RolloverResult> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    await lockPersonalTasks(tx, userId)
     const source = await tx.raw<SprintRow>(sql`
       select id, kind, starts_at, ends_at, goal, status, created_at, updated_at, version
-      from app.personal_sprints where id = ${sourceSprintId} and user_id = ${userId} and deleted_at is null
+      from app.personal_sprints where id = ${sourceSprintId} and user_id = ${userId} and deleted_at is null for update
     `)
     const sourceRow = source[0]
     if (!sourceRow) return { ok: 'not_found' }
+    if (sourceRow.status !== 'active') return { ok: 'conflict' }
 
     const created = await tx.raw<SprintRow>(sql`
       insert into app.personal_sprints (user_id, kind, starts_at, ends_at, goal)
@@ -153,12 +180,26 @@ export async function rolloverSprint(
     `)
     const newSprint = created[0]!
 
-    // One statement moves every unfinished task at once (I-16: no query in a loop).
+    // Unfinished-only rollover can split a branch. Detach only boundary edges so completed
+    // historical rows stay in the old period and every moved row remains visible in the new one.
     const moved = await tx.raw<{ id: string }>(sql`
-      update app.personal_tasks
-      set sprint_id = ${newSprint.id}, updated_at = now(), version = version + 1
-      where sprint_id = ${sourceSprintId} and user_id = ${userId} and done_at is null and deleted_at is null
-      returning id
+      with destinations as (
+        select id, parent_id,
+          case when sprint_id = ${sourceSprintId} and done_at is null then ${newSprint.id}::uuid else sprint_id end as sprint_id,
+          sprint_id = ${sourceSprintId} and done_at is null as moving
+        from app.personal_tasks where user_id = ${userId} and deleted_at is null
+      ), placements as (
+        select child.id, child.sprint_id, child.moving,
+          case when parent.id is not null and parent.sprint_id is distinct from child.sprint_id then null else child.parent_id end as parent_id
+        from destinations child left join destinations parent on parent.id = child.parent_id
+        where child.moving or (parent.id is not null and parent.sprint_id is distinct from child.sprint_id and parent.moving)
+      ), changed as (
+        update app.personal_tasks t set sprint_id = p.sprint_id, parent_id = p.parent_id,
+          updated_at = now(), version = t.version + 1
+        from placements p where t.id = p.id and t.user_id = ${userId} and t.deleted_at is null
+        returning t.id
+      )
+      select p.id from placements p join changed c on c.id = p.id where p.moving
     `)
 
     await tx.raw(sql`
@@ -199,12 +240,68 @@ const TASK_COLUMNS = sql.raw(
   'id, sprint_id, parent_id, title, done_at, notes, sort, estimate_min, linked_card_id, created_at, updated_at, version',
 )
 
+async function taskGraph(tx: Tx, userId: string): Promise<TaskRow[]> {
+  return tx.raw<TaskRow>(sql`select ${TASK_COLUMNS} from app.personal_tasks
+    where user_id = ${userId} and deleted_at is null order by id for update`)
+}
+
+async function validatePlacementSprints(
+  tx: Tx,
+  userId: string,
+  graph: readonly TaskPlacement[],
+  inputs: readonly PlacementInput[],
+  placements: readonly TaskPlacement[],
+) {
+  const original = new Map(graph.map((row) => [row.id, row]))
+  const requested = new Set(
+    inputs
+      .filter((input) => input.parentId !== undefined || input.sprintId !== undefined)
+      .map((input) => input.id),
+  )
+  const sprintIds = [
+    ...new Set(
+      placements
+        .filter((row) => requested.has(row.id) || original.get(row.id)?.sprint_id !== row.sprint_id)
+        .flatMap((row) => (row.sprint_id ? [row.sprint_id] : [])),
+    ),
+  ]
+  if (!sprintIds.length) return
+  const found = await tx.raw<{ id: string }>(sql`select id from app.personal_sprints
+    where user_id = ${userId} and deleted_at is null and id in (${sql.join(
+      sprintIds.map((id) => sql`${id}::uuid`),
+      sql.raw(', '),
+    )}) order by id for share`)
+  if (found.length !== sprintIds.length) throw new PersonalTaskPlacementUnavailable()
+}
+
+async function persistPlacements(tx: Tx, userId: string, placements: readonly TaskPlacement[]) {
+  if (!placements.length) return []
+  const values = placements.map(
+    (row) =>
+      sql`(${row.id}::uuid, ${row.sort}::int, ${row.parent_id}::uuid, ${row.sprint_id}::uuid)`,
+  )
+  return tx.raw<{ id: string; version: number }>(sql`update app.personal_tasks t
+    set sort = v.sort, parent_id = v.parent_id, sprint_id = v.sprint_id,
+      updated_at = now(), version = t.version + 1
+    from (values ${sql.join(values, sql.raw(', '))}) v(id, sort, parent_id, sprint_id)
+    where t.id = v.id and t.user_id = ${userId} and t.deleted_at is null returning t.id, t.version`)
+}
+function taskVersionChanges(
+  rows: readonly { id: string; version: number }[],
+): PersonalTaskVersionChange[] {
+  return rows.map((row) => ({
+    id: row.id,
+    beforeVersion: row.version - 1,
+    afterVersion: row.version,
+  }))
+}
+
 export async function listTasks(userId: string, ctx: AuditCtx): Promise<TaskRow[]> {
   return withContext(toRequestContext(ctx), (tx) =>
     tx.raw<TaskRow>(sql`
       select ${TASK_COLUMNS} from app.personal_tasks
       where user_id = ${userId} and deleted_at is null
-      order by sort asc, created_at asc
+      order by sort asc, created_at asc, id asc
     `),
   )
 }
@@ -219,17 +316,96 @@ export async function createTask(
     estimateMin?: number | null | undefined
     linkedCardId?: string | null | undefined
     sort?: number | undefined
+    afterTaskId?: string | undefined
   },
   ctx: AuditCtx,
 ): Promise<TaskRow> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    await lockPersonalTasks(tx, userId)
+    let sprintId = input.sprintId ?? null
+    let parentId = input.parentId ?? null
     let sort = input.sort
+    if (input.afterTaskId !== undefined) {
+      if (input.parentId !== undefined || input.sprintId !== undefined || input.sort !== undefined)
+        throw new PersonalTaskAnchorUnavailable()
+      const anchors = await tx.raw<TaskRow>(sql`
+        select ${TASK_COLUMNS} from app.personal_tasks
+        where id = ${input.afterTaskId} and user_id = ${userId} and deleted_at is null for update
+      `)
+      const anchor = anchors[0]
+      if (!anchor) throw new PersonalTaskAnchorUnavailable()
+      sprintId = anchor.sprint_id
+      parentId = anchor.parent_id
+      if (parentId) {
+        const parents = await tx.raw<{ id: string }>(sql`select id from app.personal_tasks
+          where id = ${parentId} and user_id = ${userId} and deleted_at is null for share`)
+        if (!parents[0]) throw new PersonalTaskAnchorUnavailable()
+      }
+      if (sprintId) {
+        const sprints = await tx.raw<{ id: string }>(sql`select id from app.personal_sprints
+          where id = ${sprintId} and user_id = ${userId} and deleted_at is null for share`)
+        if (!sprints[0]) throw new PersonalTaskAnchorUnavailable()
+      }
+      const graph = await taskGraph(tx, userId)
+      const insertion = { id: randomUUID(), parent_id: null, sprint_id: null, sort: 0 }
+      const placement = planTaskPlacements(
+        [...graph, insertion],
+        [{ id: insertion.id, parentId, sprintId }],
+      )
+      await validatePlacementSprints(
+        tx,
+        userId,
+        [...graph, insertion],
+        [{ id: insertion.id, parentId, sprintId }],
+        placement,
+      )
+      // Integer positions can tie: normalize only this group in stable visible order and make
+      // exactly one slot after the anchor, instead of guessing sort+1 between tied rows.
+      const positioned = await tx.raw<{ insert_sort: number; shifted_ids: string[] }>(sql`
+        with ordered as (
+          select id, (row_number() over(order by sort, created_at, id) - 1)::int as position
+          from app.personal_tasks where user_id = ${userId} and deleted_at is null
+            and parent_id is not distinct from ${parentId}::uuid
+            and sprint_id is not distinct from ${sprintId}::uuid
+        ), anchor as (
+          select position from ordered where id = ${input.afterTaskId}
+        ), shifted as (
+          update app.personal_tasks t
+          set sort = o.position + case when o.position > a.position then 1 else 0 end,
+            updated_at = now(), version = t.version + 1
+          from ordered o cross join anchor a
+          where t.id = o.id and t.user_id = ${userId}
+            and t.sort <> o.position + case when o.position > a.position then 1 else 0 end
+          returning t.id
+        )
+        select a.position + 1 as insert_sort,
+          (select coalesce(array_agg(id order by id), array[]::uuid[]) from shifted) as shifted_ids
+        from anchor a
+      `)
+      sort = positioned[0]!.insert_sort
+      if (positioned[0]!.shifted_ids.length > 0)
+        tx.audit({
+          action: 'personal.task.reordered',
+          subjectType: 'personal_task',
+          subjectId: null,
+          after: { count: positioned[0]!.shifted_ids.length, reason: 'insert_after' },
+        })
+    } else if (parentId !== null || sprintId !== null) {
+      const graph = await taskGraph(tx, userId)
+      const insertion = { id: randomUUID(), parent_id: null, sprint_id: null, sort: 0 }
+      const requested = { id: insertion.id, parentId, sprintId: input.sprintId }
+      const placements = planTaskPlacements([...graph, insertion], [requested])
+      await validatePlacementSprints(tx, userId, [...graph, insertion], [requested], placements)
+      const placement = placements.find((row) => row.id === insertion.id)!
+      parentId = placement.parent_id
+      sprintId = placement.sprint_id
+    }
     if (sort === undefined) {
       const max = await tx.raw<{ max_sort: number | null }>(sql`
         select max(sort) as max_sort from app.personal_tasks
         where user_id = ${userId} and deleted_at is null
-        and sprint_id ${input.sprintId ? sql`= ${input.sprintId}` : sql`is null`}
-        and parent_id ${input.parentId ? sql`= ${input.parentId}` : sql`is null`}
+        and sprint_id ${sprintId ? sql`= ${sprintId}` : sql`is null`}
+        and parent_id ${parentId ? sql`= ${parentId}` : sql`is null`}
       `)
       sort = (max[0]?.max_sort ?? -1) + 1
     }
@@ -237,7 +413,7 @@ export async function createTask(
       insert into app.personal_tasks
         (user_id, sprint_id, parent_id, title, notes, estimate_min, linked_card_id, sort)
       values (
-        ${userId}, ${input.sprintId ?? null}, ${input.parentId ?? null}, ${input.title},
+        ${userId}, ${sprintId}, ${parentId}, ${input.title},
         ${input.notes ?? null}, ${input.estimateMin ?? null}, ${input.linkedCardId ?? null}, ${sort}
       )
       returning ${TASK_COLUMNS}
@@ -268,12 +444,29 @@ export async function patchTask(
     version: number
   },
   ctx: AuditCtx,
-): Promise<MutationOutcome<TaskRow>> {
+): Promise<
+  | { ok: 'done'; row: TaskRow; affectedVersions: PersonalTaskVersionChange[] }
+  | { ok: 'not_found' }
+  | { ok: 'conflict' }
+> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    await lockPersonalTasks(tx, userId)
+    const graph = await taskGraph(tx, userId)
+    const previous = graph.find((row) => row.id === id)
+    if (!previous) return { ok: 'not_found' }
+    if (previous.version !== input.version) return { ok: 'conflict' }
+    const requested = { id, parentId: input.parentId, sprintId: input.sprintId, sort: input.sort }
+    const placements = planTaskPlacements(graph, [requested])
+    await validatePlacementSprints(tx, userId, graph, [requested], placements)
+    const placement = placements.find((row) => row.id === id)!
+    const descendants = placements.filter((row) => row.id !== id)
+    const changedDescendants = await persistPlacements(tx, userId, descendants)
     const setParts: SQL[] = []
     if (input.title !== undefined) setParts.push(sql`title = ${input.title}`)
-    if (input.sprintId !== undefined) setParts.push(sql`sprint_id = ${input.sprintId}`)
-    if (input.parentId !== undefined) setParts.push(sql`parent_id = ${input.parentId}`)
+    if (placement.sprint_id !== previous.sprint_id)
+      setParts.push(sql`sprint_id = ${placement.sprint_id}`)
+    if (placement.parent_id !== previous.parent_id)
+      setParts.push(sql`parent_id = ${placement.parent_id}`)
     if (input.notes !== undefined) setParts.push(sql`notes = ${input.notes}`)
     if (input.estimateMin !== undefined) setParts.push(sql`estimate_min = ${input.estimateMin}`)
     if (input.linkedCardId !== undefined) setParts.push(sql`linked_card_id = ${input.linkedCardId}`)
@@ -299,34 +492,111 @@ export async function patchTask(
       subjectId: row.id,
       after: row,
     })
-    return { ok: 'done', row }
+    if (descendants.length)
+      tx.audit({
+        action: 'personal.task.reordered',
+        subjectType: 'personal_task',
+        subjectId: id,
+        after: { count: descendants.length, reason: 'branch_move' },
+      })
+    return { ok: 'done', row, affectedVersions: taskVersionChanges([row, ...changedDescendants]) }
   })
 }
 
-export async function deleteTask(userId: string, id: string, ctx: AuditCtx): Promise<boolean> {
+export async function deleteTask(
+  userId: string,
+  id: string,
+  ctx: AuditCtx,
+): Promise<PersonalDeleteReceipt | null> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    // Parent and child Undo/delete operations share one owner namespace, avoiding inverted
+    // parent/child row-lock order while preserving strict personal RLS.
+    await lockPersonalTasks(tx, userId)
+    const root = await tx.raw<{ id: string }>(sql`
+      select id from app.personal_tasks
+      where id = ${id} and user_id = ${userId} and deleted_at is null for update
+    `)
+    if (!root[0]) return null
+    const restoreToken = randomUUID()
     // The children of a deleted task are deleted with it -- one statement, not a loop, using a
     // recursive CTE to reach arbitrarily nested subtasks in a single round trip.
     const deleted = await tx.raw<{ id: string }>(sql`
       with recursive subtree as (
         select id from app.personal_tasks where id = ${id} and user_id = ${userId} and deleted_at is null
-        union all
+        union
         select t.id from app.personal_tasks t
         join subtree s on t.parent_id = s.id
         where t.user_id = ${userId} and t.deleted_at is null
       )
-      update app.personal_tasks set deleted_at = now(), updated_at = now(), version = version + 1
-      where id in (select id from subtree)
+      update app.personal_tasks
+      set deleted_at = now(), deleted_operation_id = ${restoreToken}, updated_at = now(), version = version + 1
+      where user_id = ${userId} and deleted_at is null and id in (select id from subtree)
       returning id
     `)
-    if (deleted.length === 0) return false
+    if (deleted.length === 0) return null
     tx.audit({
       action: 'personal.task.deleted',
       subjectType: 'personal_task',
       subjectId: id,
       after: { deletedIds: deleted.map((r) => r.id) },
     })
-    return true
+    return { restoreToken }
+  })
+}
+
+export async function restoreTask(
+  userId: string,
+  id: string,
+  restoreToken: string,
+  ctx: AuditCtx,
+): Promise<MutationOutcome<TaskRow>> {
+  return withContext(toRequestContext(ctx), async (tx) => {
+    await lockPersonalTasks(tx, userId)
+    const roots = await tx.raw<TaskRow>(sql`
+      select ${TASK_COLUMNS} from app.personal_tasks
+      where id = ${id} and user_id = ${userId} and deleted_at is not null
+        and deleted_operation_id = ${restoreToken} for update
+    `)
+    const root = roots[0]
+    if (!root) return { ok: 'not_found' }
+    let restoredSprintId = root.sprint_id
+    if (root.parent_id) {
+      const parent = await tx.raw<{ id: string; sprint_id: string | null }>(sql`
+        select id, sprint_id from app.personal_tasks
+        where id = ${root.parent_id} and user_id = ${userId} and deleted_at is null for share
+      `)
+      if (!parent[0]) return { ok: 'conflict' }
+      restoredSprintId = parent[0].sprint_id
+    }
+    if (restoredSprintId) {
+      const sprint = await tx.raw<{ id: string }>(sql`select id from app.personal_sprints
+        where id = ${restoredSprintId} and user_id = ${userId} and deleted_at is null for share`)
+      if (!sprint[0]) return { ok: 'conflict' }
+    }
+    const restored = await tx.raw<TaskRow>(sql`
+      with recursive subtree as (
+        select id from app.personal_tasks
+        where id = ${id} and user_id = ${userId} and deleted_at is not null
+          and deleted_operation_id = ${restoreToken}
+        union
+        select t.id from app.personal_tasks t join subtree s on t.parent_id = s.id
+        where t.user_id = ${userId} and t.deleted_at is not null
+          and t.deleted_operation_id = ${restoreToken}
+      )
+      update app.personal_tasks
+      set deleted_at = null, deleted_operation_id = null, sprint_id = ${restoredSprintId}, updated_at = now(), version = version + 1
+      where user_id = ${userId} and deleted_at is not null
+        and deleted_operation_id = ${restoreToken} and id in (select id from subtree)
+      returning ${TASK_COLUMNS}
+    `)
+    const row = restored.find((item) => item.id === id)!
+    tx.audit({
+      action: 'personal.task.restored',
+      subjectType: 'personal_task',
+      subjectId: id,
+      after: { restoredIds: restored.map((item) => item.id) },
+    })
+    return { ok: 'done', row }
   })
 }
 
@@ -339,26 +609,13 @@ export async function reorderTasks(
     sprintId?: string | null | undefined
   }[],
   ctx: AuditCtx,
-): Promise<number> {
+): Promise<{ updated: number; affectedVersions: PersonalTaskVersionChange[] }> {
   return withContext(toRequestContext(ctx), async (tx) => {
-    // One statement for the whole drag-reorder batch (I-16: no query in a loop), built as a VALUES
-    // list joined against the table.
-    const valueRows = items.map(
-      (item) =>
-        sql`(${item.id}::uuid, ${item.sort}::int, ${item.parentId ?? null}::uuid, ${item.sprintId === undefined ? null : item.sprintId}::uuid, ${item.parentId !== undefined}::bool, ${item.sprintId !== undefined}::bool)`,
-    )
-    const rows = await tx.raw<{ id: string }>(sql`
-      update app.personal_tasks as t
-      set
-        sort = v.sort,
-        parent_id = case when v.set_parent then v.parent_id else t.parent_id end,
-        sprint_id = case when v.set_sprint then v.sprint_id else t.sprint_id end,
-        updated_at = now(),
-        version = t.version + 1
-      from (values ${sql.join(valueRows, sql.raw(', '))}) as v(id, sort, parent_id, sprint_id, set_parent, set_sprint)
-      where t.id = v.id and t.user_id = ${userId} and t.deleted_at is null
-      returning t.id
-    `)
+    await lockPersonalTasks(tx, userId)
+    const graph = await taskGraph(tx, userId)
+    const placements = planTaskPlacements(graph, items)
+    await validatePlacementSprints(tx, userId, graph, items, placements)
+    const rows = await persistPlacements(tx, userId, placements)
     if (rows.length > 0) {
       tx.audit({
         action: 'personal.task.reordered',
@@ -367,7 +624,7 @@ export async function reorderTasks(
         after: { count: rows.length },
       })
     }
-    return rows.length
+    return { updated: rows.length, affectedVersions: taskVersionChanges(rows) }
   })
 }
 
@@ -458,16 +715,43 @@ export async function patchNote(
   })
 }
 
-export async function deleteNote(userId: string, id: string, ctx: AuditCtx): Promise<boolean> {
+export async function deleteNote(
+  userId: string,
+  id: string,
+  ctx: AuditCtx,
+): Promise<PersonalDeleteReceipt | null> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    const restoreToken = randomUUID()
     const rows = await tx.raw<{ id: string }>(sql`
-      update app.personal_notes set deleted_at = now(), updated_at = now(), version = version + 1
+      update app.personal_notes
+      set deleted_at = now(), deleted_operation_id = ${restoreToken}, updated_at = now(), version = version + 1
       where id = ${id} and user_id = ${userId} and deleted_at is null
       returning id
     `)
-    if (rows.length === 0) return false
+    if (rows.length === 0) return null
     tx.audit({ action: 'personal.note.deleted', subjectType: 'personal_note', subjectId: id })
-    return true
+    return { restoreToken }
+  })
+}
+
+export async function restoreNote(
+  userId: string,
+  id: string,
+  restoreToken: string,
+  ctx: AuditCtx,
+): Promise<MutationOutcome<NoteRow>> {
+  return withContext(toRequestContext(ctx), async (tx) => {
+    const rows = await tx.raw<NoteRow>(sql`
+      update app.personal_notes
+      set deleted_at = null, deleted_operation_id = null, updated_at = now(), version = version + 1
+      where id = ${id} and user_id = ${userId} and deleted_at is not null
+        and deleted_operation_id = ${restoreToken}
+      returning id, title, body, pinned, created_at, updated_at, version
+    `)
+    const row = rows[0]
+    if (!row) return { ok: 'not_found' }
+    tx.audit({ action: 'personal.note.restored', subjectType: 'personal_note', subjectId: id })
+    return { ok: 'done', row }
   })
 }
 
@@ -572,16 +856,43 @@ export async function patchCanvas(
   })
 }
 
-export async function deleteCanvas(userId: string, id: string, ctx: AuditCtx): Promise<boolean> {
+export async function deleteCanvas(
+  userId: string,
+  id: string,
+  ctx: AuditCtx,
+): Promise<PersonalDeleteReceipt | null> {
   return withContext(toRequestContext(ctx), async (tx) => {
+    const restoreToken = randomUUID()
     const rows = await tx.raw<{ id: string }>(sql`
-      update app.personal_canvases set deleted_at = now(), updated_at = now(), version = version + 1
+      update app.personal_canvases
+      set deleted_at = now(), deleted_operation_id = ${restoreToken}, updated_at = now(), version = version + 1
       where id = ${id} and user_id = ${userId} and deleted_at is null
       returning id
     `)
-    if (rows.length === 0) return false
+    if (rows.length === 0) return null
     tx.audit({ action: 'personal.canvas.deleted', subjectType: 'personal_canvas', subjectId: id })
-    return true
+    return { restoreToken }
+  })
+}
+
+export async function restoreCanvas(
+  userId: string,
+  id: string,
+  restoreToken: string,
+  ctx: AuditCtx,
+): Promise<MutationOutcome<CanvasRow>> {
+  return withContext(toRequestContext(ctx), async (tx) => {
+    const rows = await tx.raw<CanvasRow>(sql`
+      update app.personal_canvases
+      set deleted_at = null, deleted_operation_id = null, updated_at = now(), version = version + 1
+      where id = ${id} and user_id = ${userId} and deleted_at is not null
+        and deleted_operation_id = ${restoreToken}
+      returning id, title, scene, stickies, created_at, updated_at, version
+    `)
+    const row = rows[0]
+    if (!row) return { ok: 'not_found' }
+    tx.audit({ action: 'personal.canvas.restored', subjectType: 'personal_canvas', subjectId: id })
+    return { ok: 'done', row }
   })
 }
 

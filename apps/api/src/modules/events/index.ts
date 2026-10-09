@@ -39,6 +39,7 @@ import { requestIp, requestUserAgent } from '../../plugins/session.js'
 import type { RequestContext } from '@devon/db'
 import { EventConflictError, EventForbiddenError, EventNotFoundError } from './errors.js'
 import * as service from './service.js'
+import { registerEventGroupNotifications } from './telegram-delivery.js'
 import {
   cancelEventBodySchema,
   carpoolBodySchema,
@@ -141,6 +142,8 @@ const photoIdParams = z.object({ eventId: z.string().uuid(), photoId: z.string()
 const listQuerySchema = z.object({ from: z.string().optional(), to: z.string().optional() })
 
 const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
+  const unsubscribeGroups = registerEventGroupNotifications()
+  app.addHook('onClose', async () => unsubscribeGroups())
   // Every *write* handler below wraps its service call in `try { ... } catch (err) { if
   // (!mapServiceError(err, reply)) throw err }`; the read handlers never did, because before H1.2
   // they could not raise a domain error. They can now (a `list*` for an event the caller cannot see
@@ -366,7 +369,12 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       try {
-        await service.deleteComment(toDbContext(req), currentActor(req), req.params.commentId)
+        await service.deleteComment(
+          toDbContext(req),
+          currentActor(req),
+          req.params.eventId,
+          req.params.commentId,
+        )
         reply.code(204).send()
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
@@ -427,6 +435,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         await service.claimCarpoolSeat(
           toDbContext(req),
           currentActor(req),
+          req.params.eventId,
           req.params.carpoolId,
           req.body.seats,
         )
@@ -446,7 +455,12 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       try {
-        await service.releaseCarpoolSeat(toDbContext(req), currentActor(req), req.params.carpoolId)
+        await service.releaseCarpoolSeat(
+          toDbContext(req),
+          currentActor(req),
+          req.params.eventId,
+          req.params.carpoolId,
+        )
         reply.code(204).send()
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
@@ -501,6 +515,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       const claimed = await service.claimItem(
         toDbContext(req),
         currentActor(req),
+        req.params.eventId,
         req.params.itemId,
       )
       if (!claimed) {
@@ -522,6 +537,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       const released = await service.releaseItem(
         toDbContext(req),
         currentActor(req),
+        req.params.eventId,
         req.params.itemId,
       )
       if (!released) {
@@ -585,6 +601,7 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
         const poll = await service.voteOnPoll(
           toDbContext(req),
           currentActor(req),
+          req.params.eventId,
           req.params.pollId,
           req.body.optionIds,
         )
@@ -644,7 +661,12 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       try {
-        await service.deletePhoto(toDbContext(req), currentActor(req), req.params.photoId)
+        await service.deletePhoto(
+          toDbContext(req),
+          currentActor(req),
+          req.params.eventId,
+          req.params.photoId,
+        )
         reply.code(204).send()
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err

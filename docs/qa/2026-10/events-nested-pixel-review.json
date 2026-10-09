@@ -1,0 +1,735 @@
+{
+  "policy": "Actual opened images only. Capture/geometry/axe/file existence never implies pixel review.",
+  "reviewedOn": "2026-10-09",
+  "manifest": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/manifest.json",
+  "reviewedImages": 21,
+  "nativeSheetRegions": 56,
+  "separateGeometryStates": "168 current Chromium states; these do not imply168 opened images.",
+  "images": [
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/en-light-0.png",
+      "sha256": "2588c112b06909f84d7e0c94a9f5c52dbcb148fcf233329be641259c47004ffd",
+      "scope": "en-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "00b700edbb84775d45cffdbbe14c7ac6141ee0b696f056589020973677901e6b",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "1a51c89750763c01ed570228fb128cc1bdad2263bbef373af059874264cb2aef",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "6a7c9c0f68ba46a63085ba317e94f0d85fc06abf47c8ecc2b5d1489391c008a3",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "22511723d547bcf083cb2e309a53956bb428fb200e5899b7fa6f08f3d508e9bc",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/en-light-1.png",
+      "sha256": "147eb6cff5c8712e217b7eca40883228cf222f394bcd4df6e95787a8b1f29f35",
+      "scope": "en-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "404b07f7a7f96e244cda0f2cddb4bc82c8a2579fca4b94157155dd1f30695e22",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "9a0f4b2d404b97c309fc1621048cf983b03b48b9928c22dd6dc1640bee47d6f9",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "853283b4fa22907a7cf4b8eb00b4022d34afa49e54744da380def3e95e043303",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/en-dark-0.png",
+      "sha256": "3be87dbdff0c8fb2364f0c20ba1de7e7c0da0bc22b2443922e25ef2061c910f6",
+      "scope": "en-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "5c353cec694c6d3fbf5757b22a9ea8b97b20ccb3711594198ef440d308d75135",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "2aa2f3929241c655ad24dd0fed0202e8464deb8bf739ba51e7cacd8f9c835192",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "09a3a289bf154b59181e16d920d5210f17a7c907d7c2354b50acf9957aadb6ae",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "92de448ebb19d8558d86863c0cc14c0487a6ca6c35b205b0cee2f521ef477ec7",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/en-dark-1.png",
+      "sha256": "640c5ec5128ff1b8c72484d1f3c49284a34330fc62e3838fd3867a2d4781cf23",
+      "scope": "en-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "ad21eb1f55f59cda7b31f654fe60ca0f1ba37e674f4df6655401a4aa4a1a1f8f",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "01a66804b17f26e86f57181b6f8e1d2e07626cdd1f1b104fe7fcdbc95c6e2702",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-9c41c-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "ed5d2942da89e09333e36165aff1bc592d3da2a15bc08488b897cc3e71efc80d",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/ru-light-0.png",
+      "sha256": "9fad1d64d3990fb8fe4ca84464e8e8cf9d7bc9f664b0eeaa72ba0f9b48d49594",
+      "scope": "ru-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "d55f58f5b75236991c14078987b93b4d2693ad2bbe00ecf0ed1cf0a4e5f49655",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "c336b90488cad65c0f02262ede9431447db999b07b5fc7374f8bebce60094d98",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "601882d1df4a9671a7ad32ae0de0870e032eee355d81d4762b3e92e0544a6927",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "9a3ab070c0b1c399a8e66dadc05b975980e4effcf79f59330c5a34bb9730193d",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/ru-light-1.png",
+      "sha256": "4e7c1858eb821f2b6839152d86cbb910c869d6ba8cd9d1c9b9c2fb343ee7e058",
+      "scope": "ru-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "5d9d84fe13c403d109a1484c416377e09f0106852d0e0f45b8a66fe2ffacc3eb",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "420b67206723f2a31f8bb938a4cb501b7b7ba379cef2178485d4b94ad3f9a677",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5c950-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "e62b27fe47f4e9266660a37344ee9f39f8124ac05aa03e46d4ab57e71fb6c932",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/ru-dark-0.png",
+      "sha256": "b5a5dd2222315c1a25163f9abf9af07e226674a790923c3c60e75c56d934adab",
+      "scope": "ru-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "04d26deb8731f9d6be75a27c019e93976cfa6bfda8a2a041ba4881d82568c757",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "e2c8918adb0a01d058be7ecaa65dae17728af8ff8b61d125403ff7c0530c7f05",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "d021635e2bebb83eb2d2b1dc88c4b7d5b44283a64f17201b930e000b25f70f0e",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "cfe89d92885b95da19783753c3fd4e51dff734f88150cf1dbe13121a873ffb10",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/ru-dark-1.png",
+      "sha256": "2ea45e255670f89740d6641ed14e71dc07e6a63487ab1d0261f402472affd8e2",
+      "scope": "ru-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "b4e7f26ffe39ec69fcb398ee729b3695b5447993e6e5a60756791a3cf591e588",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "630a8b66a68f32260c9f6e7fce97f337b8f2af9970a52ab6c616a442c049a309",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "9d87cfc63d42e9b7b9a0e4f88903ad4f5014c378f2ca8aef3bb5a16409f1c08b",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Latn-light-0.png",
+      "sha256": "068ab13d9f118f7b67e2aa5c8c29f8f8a6742209abfe607a187bb28fcdb547de",
+      "scope": "uz-Latn-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "7a2cd97ea7c260345199dcf52bd649b5882177d41469d1373574b281772b573c",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "4360b13c010f41f266a836872dcd7a321fadc57b8e6549c3e4d13c787dd87a60",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "8a9eab1e001a16f062cfc989d52231789a7f846421c44df4ecbef1fba5aeff4e",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "e1c4cd480b658c9f9195e9e8aa7c5238b408751859b62a44ade9571c331bacff",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Latn-light-1.png",
+      "sha256": "6665ea0d7ae912f32141b90e0e7eb7153236728cb33333e11bdb9e77ac684f06",
+      "scope": "uz-Latn-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "7fa5ad74f6081124f582056b76b0afb376705bf986385dae1ed0a0b5d0fc7ec7",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "c6a29cd4be831a89bdc91f3c8fe1791a04dcf8177d0725f482d2aaa2bc849b1b",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "a096a37649754df405427b31d0c81a781ec39fa7f39c544f08f15bcccfbebede",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Latn-dark-0.png",
+      "sha256": "bf0e704adc01fe79ab6a7a0d17f04bd4ed0cc9c039ea8ead1f6ad745e9ad6fa4",
+      "scope": "uz-Latn-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "7d39cbcec9beb62b2203a3b69bbb993c3b4e0979f154353c12ed1c096c100237",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "eadcb0f5f6b802e94871ffcc8a89e548fbe1719cd856d0c47d0ab27b4f8b49f7",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "5e4523c3275d214b609a0e0db3149da54f9fd7d0d97d14bbd42b7e6e4f019f6e",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "cee0982c28afdbae80878a36ff899d7727dc744352fa7221c6e44d8977695461",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Latn-dark-1.png",
+      "sha256": "e43334664fd00af010499e61cf97ec86c89304773f372b0a905b67601ea2c267",
+      "scope": "uz-Latn-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "b395c8a9d0ce7e36cca758e5c80db3faa85a24c0ff6b9acca619611a2a66932e",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "c374aa1be3fa3c032f71d51cd3d2945278ece9f35cc98e6a883286a0673600d5",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-1884a-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "8bd5678bf1cc189d8b76d7dde0e845a30f4815c9526c299582990c37729a7358",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Cyrl-light-0.png",
+      "sha256": "8506ec12a8a2a99dcf44704a9716aae87e12b12a0d1793aaace17b25cee973d8",
+      "scope": "uz-Cyrl-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "aac0f082e6dda402bd9239b9ebfeccbfce6724fdc64d970399ad1f2ccda2a920",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "b260810f5aacfaa2e00b8d2c791e2e2ed3707021caec9e06b0cb2178e5f98cb9",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "40598a625b0f6f93b20ab4657c55a976e0ec608b007ae4b20cb85bbac6e82b50",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "6721fad09abeb4a19b5d48eaca9ceb824d35ac54d4bae190976cf8fbe2237c48",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Cyrl-light-1.png",
+      "sha256": "83060e6dbc70393ac1cfebaab8ca87e6bb47e7697cec77ed1f9c79c4cd990e74",
+      "scope": "uz-Cyrl-light",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "e286a3e7009c278e403e0a292174862031bc41fd9e1a6d76f2c14a41e6054895",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "40b43c4b217bab3b5f481a86aa4642f3511b53a75b2396be8ce7b71a8a72c423",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a8edf-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "ebd80eb8796e600f2e1fef703283c43f723d66761eeef810e5e90e9b2ea9a4de",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Cyrl-dark-0.png",
+      "sha256": "ee804389dc260c879c60581dbae098e2da3ae5fb977f7a94efa806e745dd3d03",
+      "scope": "uz-Cyrl-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "rsvp",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/rsvp-320-1.png",
+          "sha256": "61e8d70f5459183060892dcd95e3390937fd24ebedbf4a2e3c95630ff14549f4",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "comments",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/comments-320-1.png",
+          "sha256": "547510affe33e69daec71410fc2b5847c82fb62a45351d5cd3cc64f6825f18b6",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "items",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/items-320-1.png",
+          "sha256": "8e66b3fa91f12e833a6a13ad14bd37eb09f04dbe829e812e1ff9d57cd30cef8c",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "carpool",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/carpool-320-1.png",
+          "sha256": "4eb7b4e9f41b9c15fbfc153d8d528aacdd8b993a37c0f6b4be1caa2dafded5fe",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-sheets/uz-Cyrl-dark-1.png",
+      "sha256": "e83013b9fa3ed46199390bd94d775ae3ff580c70ef184b35d505b63f58b9d804",
+      "scope": "uz-Cyrl-dark",
+      "opened": true,
+      "kind": "unscaled native sheet",
+      "sourceCrops": [
+        {
+          "tab": "polls",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/polls-320-1.png",
+          "sha256": "70dc63b4620c3219dde30b23be71b7bbb43e0a2c1188606dd3d9f6591fde0879",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "photos",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/photos-320-1.png",
+          "sha256": "3a18c61fdd21940733148467d4c796a942230ad1acb77c8910c94fe82be8fa0a",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "tab": "feedback",
+          "source": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/feedback-320-1.png",
+          "sha256": "c1ee49f2ffcd6ba312bcb8873b1e066b3ea69e2499e22b9175bf09128718d6da",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Seven selected-tab viewport regions across each locale/theme: visible RSVP controls/read list, discussion composer/text, full-width item field/text, intact driver word and wrapped seat badge, poll question, owned local photo and wrapped caption, feedback rating/comment. Localized labels wrap in their actual visible regions.",
+      "limitation": "Each original is320×640 and often includes a scrolled header. Several long rows, claim/vote footers, saved-feedback content and close control are outside these viewports. No whole-dialog, full-scroll focus, nested creation-form or all-browser pixel pass. Native keyboard evidence is separate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-5e548-reflow-and-keyboard-targets-chromium/carpool-1280-2.png",
+      "sha256": "1e5893f05166b15e6de0e2cbef9c6dce54841172d3623e8ab98ed99f3f0acd94",
+      "scope": "en-light/chromium/text200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual enlarged carpool driver word remains intact beside the seat badge; translated Add/Edit/Offer controls and selected carpool tab retain readable space.",
+      "limitation": "Scrolled header/upper offer viewport only; departure/note/claim footer and close control are outside these images. These four represent scripts, not every locale/theme/browser combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-2c8a2-reflow-and-keyboard-targets-chromium/carpool-1280-2.png",
+      "sha256": "49a9a341c01144780399064bf21f6505171da642f1b1e57d1df3621d2aa109d6",
+      "scope": "ru-dark/chromium/text200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual enlarged carpool driver word remains intact beside the seat badge; translated Add/Edit/Offer controls and selected carpool tab retain readable space.",
+      "limitation": "Scrolled header/upper offer viewport only; departure/note/claim footer and close control are outside these images. These four represent scripts, not every locale/theme/browser combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-65828-reflow-and-keyboard-targets-chromium/carpool-1280-2.png",
+      "sha256": "8ea6c14c0b44fa43c7104eda7d7607610f48009532e4d3a6e272a6efcb8dbb1b",
+      "scope": "uz-Latn-light/chromium/text200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual enlarged carpool driver word remains intact beside the seat badge; translated Add/Edit/Offer controls and selected carpool tab retain readable space.",
+      "limitation": "Scrolled header/upper offer viewport only; departure/note/claim footer and close control are outside these images. These four represent scripts, not every locale/theme/browser combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-visual/results/events-nested-visual.qa-ev-a6bce-reflow-and-keyboard-targets-chromium/carpool-1280-2.png",
+      "sha256": "620806256dc9090b33d18ffe1e0071ccb7e5df2f59bb5fd2df86217d0cedc1fb",
+      "scope": "uz-Cyrl-dark/chromium/text200%",
+      "opened": true,
+      "kind": "full original",
+      "observation": "Actual enlarged carpool driver word remains intact beside the seat badge; translated Add/Edit/Offer controls and selected carpool tab retain readable space.",
+      "limitation": "Scrolled header/upper offer viewport only; departure/note/claim footer and close control are outside these images. These four represent scripts, not every locale/theme/browser combination."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/events-nested/final-anchored-caption/chromium.png",
+      "sha256": "2157a97ba4f841d87aa8d5ae9f4749d313aa62fdb4d0d43259143a27276bdcd0",
+      "scope": "en/light/chromium/320×640",
+      "opened": true,
+      "kind": "full original",
+      "observation": "The entire actual saved160-character caption is visibly wrapped below the owned local PNG, without the previous ellipsis; all caption text fits inside the scrolled narrow gallery viewport.",
+      "limitation": "One concrete caption fixture and local linked image only. No arbitrary caption length, remote photo transport or image-upload pixel claim."
+    }
+  ]
+}

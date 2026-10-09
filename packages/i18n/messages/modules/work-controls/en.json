@@ -1,0 +1,20 @@
+{
+  "work": {
+    "recurrence": {
+      "weekdaysEmptyHint": "With no days selected, use the weekday the series started on."
+    },
+    "templateEditor": {
+      "new": "New card template",
+      "edit": "Edit {name}",
+      "editTitle": "Edit card template",
+      "name": "Template name",
+      "scope": "Who can use it",
+      "cardTitle": "Card title",
+      "checklist": "Checklist",
+      "checklistHint": "One instruction per line. Up to 50 instructions, 500 characters each.",
+      "invalid": "Add a name and card title, and keep the checklist within its limits.",
+      "saveFailed": "Could not save this template. Your draft is kept. Try Save again.",
+      "saved": "Template saved"
+    }
+  }
+}

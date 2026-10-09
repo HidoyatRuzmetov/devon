@@ -54,6 +54,11 @@
   --color-destructive-foreground: oklch(99% 0 0);
   --color-info: oklch(55% 0.08 205);
   --color-info-foreground: oklch(99% 0 0);
+  /* Text on the pale semantic tints needs its own contrast, independently of the solid fills. */
+  --color-attention-text: oklch(46% 0.09 72);
+  --color-success-text: oklch(43% 0.1 152);
+  --color-warning-text: oklch(46% 0.09 70);
+  --color-info-text: oklch(43% 0.07 205);
   --color-sidebar: oklch(22% 0.05 252);
   --color-sidebar-foreground: oklch(93% 0.01 240);
   --color-sidebar-accent: oklch(30% 0.05 252);
@@ -99,14 +104,16 @@
 
   /* Unit identity (8-hue categorical set, DESIGN.md §2.1) -- avatars and unit chips only, never a
      status signal. Fixed hues at L 60% C 0.09 stepped every 45deg. */
-  --color-unit-1: oklch(60% 0.09 20);
-  --color-unit-2: oklch(60% 0.09 65);
-  --color-unit-3: oklch(60% 0.09 110);
-  --color-unit-4: oklch(60% 0.09 155);
-  --color-unit-5: oklch(60% 0.09 200);
-  --color-unit-6: oklch(60% 0.09 245);
-  --color-unit-7: oklch(60% 0.09 290);
-  --color-unit-8: oklch(60% 0.09 335);
+  /* White initials need normal-text contrast even at the smallest avatar size. Preserve all
+     categorical hues/chroma while giving their shared foreground a readable ground. */
+  --color-unit-1: oklch(54% 0.09 20);
+  --color-unit-2: oklch(54% 0.09 65);
+  --color-unit-3: oklch(54% 0.09 110);
+  --color-unit-4: oklch(54% 0.09 155);
+  --color-unit-5: oklch(54% 0.09 200);
+  --color-unit-6: oklch(54% 0.09 245);
+  --color-unit-7: oklch(54% 0.09 290);
+  --color-unit-8: oklch(54% 0.09 335);
 
   /* -- Typography -- DESIGN.md §2.3 --------------------------------------------------------------- */
   --font-display: 'Devon Display', 'IBM Plex Serif', 'Source Serif 4', Georgia, serif;
@@ -175,9 +182,16 @@
   --height-tabbar: 60px;
 }
 
+:root,
+[data-theme='light'] {
+  /* Native calendars, option menus and scrollbars must follow the chosen app appearance too. */
+  color-scheme: light;
+}
+
 /* -- Colour, dark theme -- DESIGN.md §2.2. Elevation is lightness tint, not shadow; semantic colours
    are re-tuned for contrast, not just lightened. Never an filter(invert()) shortcut. */
 [data-theme='dark'] {
+  color-scheme: dark;
   --color-background: oklch(18% 0.015 250);
   --color-foreground: oklch(93% 0.01 240);
   --color-card: oklch(22% 0.015 250);
@@ -199,6 +213,10 @@
   --color-destructive-foreground: oklch(14% 0.02 27);
   --color-info: oklch(70% 0.08 205);
   --color-info-foreground: oklch(14% 0.02 205);
+  --color-attention-text: oklch(80% 0.11 72);
+  --color-success-text: oklch(72% 0.13 152);
+  --color-warning-text: oklch(80% 0.12 75);
+  --color-info-text: oklch(70% 0.08 205);
   --color-sidebar: oklch(13% 0.03 252);
   --color-sidebar-foreground: oklch(93% 0.01 240);
   --color-sidebar-accent: oklch(22% 0.04 252);

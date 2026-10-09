@@ -485,6 +485,37 @@ export const automationActionSchema = z
   .strict()
 export type AutomationAction = z.infer<typeof automationActionSchema>
 
+/** Keep stored legacy actions readable, but refuse new writes missing the input their action
+ * actually uses. There is no dynamic recipient mode: assign/notify_user name one colleague. */
+export const automationWritableActionSchema = automationActionSchema.superRefine((action, ctx) => {
+  let field: keyof AutomationAction | null = null
+  switch (action.kind) {
+    case 'assign':
+    case 'notify_user':
+      if (!action.userId) field = 'userId'
+      break
+    case 'set_priority':
+      if (!action.priority) field = 'priority'
+      break
+    case 'set_status':
+      if (!action.status) field = 'status'
+      break
+    case 'add_label':
+      if (!action.labelId) field = 'labelId'
+      break
+    case 'add_checklist':
+      if (!action.checklist?.length || action.checklist.some((line) => !line.trim()))
+        field = 'checklist'
+      break
+    case 'create_followup':
+      if (!action.title?.trim()) field = 'title'
+      break
+    case 'notify_head':
+      break
+  }
+  if (field) ctx.addIssue({ code: 'custom', message: 'action_input_required', path: [field] })
+})
+
 /** Which actions make sense for which trigger, as one table both the rule builder (to fill its
  * second select) and the API (to refuse a nonsense rule) read. Everything is allowed everywhere
  * except `set_status`, which cannot react to a status change without a head starting a ping-pong
@@ -521,7 +552,7 @@ export const automationRuleBodySchema = z
     name: z.string().min(1).max(120),
     trigger: automationTriggerSchema,
     triggerConfig: automationTriggerConfigSchema.default({}),
-    actions: z.array(automationActionSchema).min(1).max(5),
+    actions: z.array(automationWritableActionSchema).min(1).max(5),
     enabled: z.boolean().default(true),
   })
   .strict()

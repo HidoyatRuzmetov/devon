@@ -1,0 +1,1328 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested-work",
+  "date": "2026-10-09",
+  "policy": "Exact named selectors and states only. Old passing slices have explicit source/environment limits. Unlisted states and current unfinished runs remain pending.",
+  "boundaries": {
+    "database": "devon_flow_e2e_knowledge_nested",
+    "apiPort": 48921,
+    "webPort": 48922,
+    "seedDemo": true,
+    "externalAI": "excluded",
+    "externalTelegram": "excluded",
+    "externalMail": "excluded",
+    "production": "not exercised",
+    "commitPushDeployVideo": "not performed"
+  },
+  "gates": {
+    "apiPrivacy": {
+      "status": "passed",
+      "cases": 4,
+      "regression": "apps/api/test/integration/work-template-privacy.test.ts",
+      "adjacentAtomicGalleryCases": 12
+    },
+    "apiBulk": {
+      "status": "passed",
+      "cases": 6,
+      "regression": "apps/api/test/integration/work-bulk-integrity.test.ts",
+      "adjacentAssignmentLockCases": 7,
+      "concurrency": "Actual pg_blocking_pids observed before committing member removal or label deletion; bulk422 leaves every row unchanged."
+    },
+    "apiDependencies": {
+      "status": "passed",
+      "cases": 3,
+      "regression": "apps/api/test/integration/work-dependency-integrity.test.ts",
+      "adjacentBulkCases": 6,
+      "scope": "Actual opposing and triangular concurrent HTTP writes preserve an acyclic graph. Actual PostgreSQL blocking followed by target soft-delete returns404 without an edge. Department-scoped transaction lock precedes active-card locks."
+    },
+    "seed": {
+      "status": "passed",
+      "cases": 20,
+      "scope": "Supported seed/idempotence plus actual subsequent FLOW_SEED_DEMO=1 boots; policy unchanged."
+    },
+    "editorUnits": {
+      "status": "passed",
+      "cases": 3,
+      "regression": "apps/web/test/unit/card-template-editor.test.tsx"
+    },
+    "candidatePaginationUnits": {
+      "status": "passed",
+      "cases": 3,
+      "regression": "apps/web/test/unit/dependency-candidates.test.ts",
+      "scope": "Complete cursor traversal/deduplication, later-page refusal rejects partial results, repeated cursor terminates with error."
+    },
+    "currentDependencyAllEngines": {
+      "status": "passed bounded21",
+      "run": "work-controls-affected-complete",
+      "cases": 21
+    },
+    "currentFunctionalAllEngines": {
+      "status": "pending"
+    },
+    "currentNestedGeometry": {
+      "status": "passed bounded element geometry",
+      "run": "work-controls-current-complete",
+      "cases": 24,
+      "textRangeBoundary": "Separate recurrence-text after proof; no blanket clipping or native Tab pass",
+      "pixelReview": "docs/qa/2026-10/work-controls-pixels.json"
+    },
+    "currentRecurrenceText": {
+      "status": "pending"
+    },
+    "currentCardStacking": {
+      "status": "pending"
+    },
+    "currentTypesLintFormat": {
+      "apiTypes": "passed",
+      "webTypes": "passed after complete-cursor hook and recurrence wrapping source",
+      "workScopedESLint": "passed0errors/2existingwarnings: blockedBy memo fallback and estimate autofocus",
+      "workScopedPrettier": "passed current product+test source"
+    }
+  },
+  "evidence": {
+    "functional-mixed-before": {
+      "run": "work-controls-functional-complete",
+      "status": "50 passed / 4 failed",
+      "scope": "Three Cyrillic/Latin search fixture mismatches are excluded from product defect counts. One actual WebKit checkbox pointer retargeting failure remains unresolved intermittent evidence. This run is not a fully passing gate."
+    },
+    "dependency-warm-before": {
+      "run": "work-reopen-before",
+      "status": "one expected failing-before Chromium assertion; corrected pagination journey passed separately",
+      "scope": "A real separate reverse-edge API write while the picker was closed did not trigger a graph read on reopen within staleTime30s. The cycle candidate remained enabled; independent persisted edge read and native pixels inspected."
+    },
+    "dependency-race-before": {
+      "run": "work-dependency-race-before",
+      "status": "one expected failing-before Chromium assertion",
+      "scope": "Two real browser POSTs released together both returned201; an independent graph read contained opposing persisted edges. Both result PNGs inspected. No success response injection."
+    },
+    "bulk-pointer-boundary": {
+      "runs": [
+        "work-controls-functional-complete",
+        "work-bulk-pointer-diagnostic",
+        "work-bulk-pointer-after",
+        "work-bulk-sonner-before",
+        "work-controls-affected-complete",
+        "work-bulk-scroll-before",
+        "work-bulk-scroll-before-second",
+        "work-bulk-stacking-after"
+      ],
+      "status": "measured stacking cause repaired; full affected replay pending",
+      "scope": "Actual rich WebKit failing probe: down and up point989/372, board scroll4200/101 and HTML99 unchanged. Checkbox down977/360; release hits sticky header960/360/288/52 after PressScale matrix0.991188 creates a stacking context. Toast is at636 and is unrelated. Permanent card isolation plus actual ResizeObserver header scroll margin repairs stable paint order; exact failing full bulk workflow passed1/1 afterward. Earlier horizontal jump remains distinct evidence; full adjacent replay tracked separately."
+    },
+    "current-mixed-before": {
+      "run": "work-controls-current-complete",
+      "status": "68 passed / 7 failed",
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "scope": "Actual first100 dependency candidate omission: three CRUD failures plus four graph/candidate recovery failures after new blockers fell beyond the first page. The24 visual cases are a separate passing subset."
+    },
+    "recurrence-text-before": {
+      "run": "work-recurring-text-before-clip",
+      "status": "one expected failing-before Chromium assertion",
+      "locale": "uz-Cyrl",
+      "theme": "light",
+      "viewport": [
+        320,
+        600,
+        2
+      ],
+      "textRangeRight": 319.03125,
+      "scope": "Actual explanation clips outside the narrower recurrence panel. A preceding viewport-only assertion passed vacuously and is excluded; native PNG explicitly inspected."
+    },
+    "curation": {
+      "test": "apps/web/test/e2e/platform-work-plus.qa.spec.ts",
+      "run": "work-privacy-draft-after",
+      "status": "passed",
+      "workCases": 15,
+      "unrelatedSidebarCases": 3,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "roles": [
+        "department-head",
+        "ordinary-member"
+      ],
+      "locale": "en",
+      "scope": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch."
+    },
+    "curation-visual": {
+      "test": "apps/web/test/e2e/platform-work-curation-visual.qa.spec.ts",
+      "run": "work-curation-visual-complete",
+      "status": "passed",
+      "cases": 24,
+      "nativeCaptures": 240,
+      "scopedAxe": 120,
+      "violations": 0,
+      "pageerrors": 0,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "environments": [
+        [
+          1440,
+          900,
+          1
+        ],
+        [
+          768,
+          600,
+          2
+        ],
+        [
+          390,
+          600,
+          2
+        ],
+        [
+          320,
+          600,
+          2
+        ],
+        [
+          360,
+          225,
+          1
+        ]
+      ],
+      "pixels": "docs/qa/2026-10/work-controls-pixels.json",
+      "sourceBoundary": "Predates later root-owned opaque TopBar/BottomTabBar fill. Comparison-level inspection; narrow tall-gallery footer not visible in initial viewport captures."
+    },
+    "recovery": {
+      "test": "apps/web/test/e2e/platform-work-controls-extra.qa.spec.ts",
+      "run": "work-reflow-recovery-current",
+      "status": "five functional cases passed; whole run five passed / one visual failed",
+      "engine": "chromium",
+      "locale": "en",
+      "scope": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "faultBoundary": "503 and empty Undo HTTP result are deliberate UI fault injections. Real API persistence/permission outcomes are independently read; empty Undo is not claimed as actual mid-Undo role revocation."
+    },
+    "transitions": {
+      "test": "apps/web/test/e2e/platform-work-transitions.qa.spec.ts",
+      "run": "work-transitions-after-first",
+      "status": "bounded passing Chromium transitions; later recurrence-save/current all-engine replay separate",
+      "engine": "chromium",
+      "locale": "en",
+      "scope": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case."
+    },
+    "bulk": {
+      "test": "apps/web/test/e2e/platform-work-bulk.qa.spec.ts",
+      "run": "work-more-controls-before",
+      "status": "bounded two passing bulk cases; whole run three passed / three failed",
+      "engine": "chromium",
+      "locale": "en",
+      "scope": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence."
+    },
+    "current-dependency": {
+      "run": "work-controls-affected-complete",
+      "status": "21 bounded dependency instances passed; mixed30 run29 passed/1 bulk failed",
+      "cases": 21,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "scope": "Seven dependency journeys per engine: CRUD/cancel/remove refusal/loop/blocked status, graph and candidate503 recovery, initial dependency and reminder read refusal, complete cursor list with later-page503/search retention, graph warm reopen after separate real write, opposing real browser writes with refreshed refusal. Independent persistence/reload where applicable; the single bulk pointer failure is separate."
+    },
+    "current-nested-visual": {
+      "run": "work-controls-current-complete",
+      "status": "passed",
+      "cases": 24,
+      "engines": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "environments": [
+        [
+          1440,
+          900,
+          1
+        ],
+        [
+          768,
+          600,
+          2
+        ],
+        [
+          390,
+          600,
+          2
+        ],
+        [
+          320,
+          600,
+          2
+        ],
+        [
+          360,
+          225,
+          1
+        ]
+      ],
+      "scopedAxe": 360,
+      "axeViolations": 0,
+      "pageerrors": 0,
+      "nativeCaptures": 552,
+      "scope": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "pixels": "docs/qa/2026-10/work-controls-pixels.json"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "Input"
+      },
+      "expectedMatches": 2,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "Textarea"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "Select"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "selected": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "Button",
+        "childSummaryIncludes": "common.save"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "Button",
+        "childSummaryIncludes": "common.cancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "p"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only saveFailed503 inline alert; invalid-schema alert is unit-covered, not browser-covered here.",
+      "states": {
+        "error": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-template-editor.tsx",
+        "component": "CardTemplateEditor",
+        "kind": "DialogContent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Predates later root-owned opaque TopBar/BottomTabBar fill. Comparison-level inspection; narrow tall-gallery footer not visible in initial viewport captures.",
+      "states": {
+        "focus": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplateCard",
+        "kind": "article"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the long card-template gallery item across the stated matrix. Narrow/short initial viewport contains its middle; footer simultaneous visibility is not claimed. Shared opaque shell fill postdates these images.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        },
+        "populated": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplatesScreen",
+        "kind": "SegmentedControl"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only default Cards selected and both Cards/Projects labels wrapping within gallery width; switching to Projects is not claimed by this visual record.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "curation-visual",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "docs/qa/2026-10/work-controls-pixels.json"
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "work.templateEditor.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplateCard",
+        "kind": "IconButton",
+        "labelIncludes": "work.templates.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplateCard",
+        "kind": "Button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only card-template use; project consumption is separately owned. Refused503 leaves count/card unchanged, accepted201 preserves payload.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/templates-screen.tsx",
+        "component": "TemplatesScreen",
+        "kind": "Button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual curation cancel/create/refusal/held edit/use/delete; creator personal privacy, metadata preservation and persisted reload. Reminder interrupted typing and refused recurrence Stop. Not every validation branch.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependencyRow",
+        "kind": "button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependencyRow",
+        "kind": "IconButton"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependenciesPanel",
+        "kind": "StateView"
+      },
+      "expectedMatches": 2,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "error": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependenciesPanel",
+        "kind": "Combobox"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only selected blocker, search, disabled cycle candidate and Cancel; graph/candidates refused picker recovery is a separate StateView.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependenciesPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "common.cancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependenciesPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "work.dependencies.add"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-dependency",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "StateView"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "error": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "Input"
+      },
+      "expectedMatches": 2,
+      "scopeNote": "Actual newer date/note typing survives delayed successful create; broader datetime/note validation is tracked in transitions.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "curation",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "Button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "IconButton"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "Chip",
+        "childSummaryIncludes": "work.reminders.pending"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "RadioGroup"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency CRUD/cancel/loop/blocked state/refused removal; personal reminder validation/read/create/delete/refusal/reload; read-only recurrence; newer bulk selection after delayed response. Includes unrelated gallery case.",
+      "states": {
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "transitions",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "Select"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "selected": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only Mon off and Tue/Sun on; not each weekday by pointer/touch.",
+      "states": {
+        "selected": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "Button",
+        "childSummaryIncludes": "common.save"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "Button",
+        "childSummaryIncludes": "work.recurrence.stop"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "Button",
+        "childSummaryIncludes": "work.recurrence.enable"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Initial dependency/reminder read refusal; graph/candidate503 explicit Retry and recovered disabled cycle candidate; recurrence blank-anchor-weekday/monthly/daily/held save; mixed real bulk ownership and controlled empty Undo response.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.assign')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.label')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.priority')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.estimate')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.markDone')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.card.archive')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.clear')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('work.bulk.clearEstimate')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "Button",
+        "childSummaryIncludes": "t('common.save')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "DatePicker"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mixed original label Undo; assignment/unassignment, all five priorities, estimate invalid/90/clear, calendar due/Undo, Done/archive/Undo, manual clear and503 retained selection. Empty Undo truthful feedback is later recovery evidence.",
+      "states": {
+        "active": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "tested",
+          "evidenceId": "bulk",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/card-plus-sections.tsx",
+        "component": "Section",
+        "kind": "button"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only dependencies/reminders/repeat programmatic focus plus Enter; excludes the time section despite its shared signature and does not establish a full native Tab journey.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/dependencies-panel.tsx",
+        "component": "DependencyRow",
+        "kind": "IconButton"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/reminders-panel.tsx",
+        "component": "RemindersPanel",
+        "kind": "IconButton"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/recurrence-field.tsx",
+        "component": "RecurrenceField",
+        "kind": "Button",
+        "childSummaryIncludes": "work.recurrence.stop"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "states": {
+        "default": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/multitask-toolbar.tsx",
+        "component": "MultitaskToolbar",
+        "kind": "div",
+        "labelIncludes": "work.bulk.toolbarLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Dependency/reminder/monthly repeat disclosures plus bulk toolbar, programmatic focus plus Enter/Escape, all5 environments and320 header supplement. This24-case subset is separate from the mixed75-case run. Text-range recurrence correction has separate after proof; pointer-to-programmatic bulk occlusion is not native Tab evidence. Time disclosure and other recurrence modes are not included.",
+      "states": {
+        "populated": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "tested",
+          "evidenceId": "current-nested-visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "entries": [
+    {
+      "workflow": "Work controls",
+      "status": "partial bounded evidence",
+      "reference": "docs/qa/2026-10/work-controls.md",
+      "note": "API/worker and browser responsibilities remain separate; no blanket work feature pass."
+    }
+  ],
+  "pending": [
+    "Current full functional all-engine replay",
+    "Current nested reflow/pixel matrix",
+    "Bulk pending DatePicker probe",
+    "Recurrence worker generation/count/until and reminder sent/delivery",
+    "Template current scope switching/concurrent role revocation browser",
+    "Gallery empty/loading/read-error recovery",
+    "Offline/reconnect and actual mid-Undo revoked role",
+    "Native browser zoom/touch/physical devices",
+    "Current release gates owned by parent",
+    "Measured sticky-header/card stacking repair full affected pointer/native/touch replay"
+  ],
+  "releaseScopeRemoved": [
+    {
+      "scope": "New tiny-screen and200% text matrices",
+      "authority": "Latest human steering relayed by root2026-10-09",
+      "disposition": "Stopped current57 matrix; retain already obtained historical evidence. Recurrence320/390 text200 after replay is not a release blocker."
+    }
+  ]
+}

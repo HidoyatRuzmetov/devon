@@ -43,6 +43,7 @@ export type DemoScope = {
  */
 export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: string }[] = [
   // Events and everything hanging off one.
+  { table: 'app.event_telegram_deliveries' },
   { table: 'app.poll_votes' },
   { table: 'app.poll_options' },
   { table: 'app.polls' },

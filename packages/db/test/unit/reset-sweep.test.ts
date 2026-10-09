@@ -87,6 +87,8 @@ describe('reset sweep coverage', () => {
       ['app.cards', 'app.projects'],
       ['app.field_requests', 'app.field_defs'],
       ['app.field_values', 'app.field_defs'],
+      ['app.event_telegram_deliveries', 'app.polls'],
+      ['app.event_telegram_deliveries', 'app.events'],
       ['app.poll_votes', 'app.poll_options'],
       ['app.poll_options', 'app.polls'],
       ['app.polls', 'app.events'],

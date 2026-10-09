@@ -5,8 +5,6 @@ import * as React from 'react'
 import { GaugeCircle, KanbanSquare, Target } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
-import { prefetchBoard } from './hooks.js'
-import { DepartmentFeatureScreen } from '../../lib/department-feature-screen.js'
 
 const BoardScreen = React.lazy(() => import('./components/board-screen.js'))
 const TableScreen = React.lazy(() => import('./components/table-screen.js'))
@@ -18,11 +16,18 @@ const CardPageScreen = React.lazy(() => import('./components/card-page-screen.js
 // v1.1 SPEC §7: the three screens the work-plus features earned of their own.
 const TemplatesScreen = React.lazy(() => import('./components/templates-screen.js'))
 const WorkloadRoute = React.lazy(async () => {
-  const { default: WorkloadScreen } = await import('./components/workload-screen.js')
+  const [{ default: WorkloadScreen }, { DepartmentFeatureScreen }] = await Promise.all([
+    import('./components/workload-screen.js'),
+    import('../../lib/department-feature-screen.js'),
+  ])
   return {
     default: function WorkloadRoute() {
       return (
-        <DepartmentFeatureScreen feature="workload" action="work.workload.read">
+        <DepartmentFeatureScreen
+          feature="workload"
+          action="work.workload.read"
+          deniedBodyKey="goalsControls.workloadDenied"
+        >
           <WorkloadScreen />
         </DepartmentFeatureScreen>
       )
@@ -30,11 +35,18 @@ const WorkloadRoute = React.lazy(async () => {
   }
 })
 const GoalsRoute = React.lazy(async () => {
-  const { default: GoalsScreen } = await import('./components/goals-screen.js')
+  const [{ default: GoalsScreen }, { DepartmentFeatureScreen }] = await Promise.all([
+    import('./components/goals-screen.js'),
+    import('../../lib/department-feature-screen.js'),
+  ])
   return {
     default: function GoalsRoute() {
       return (
-        <DepartmentFeatureScreen feature="goals" action="goals.read">
+        <DepartmentFeatureScreen
+          feature="goals"
+          action="goals.read"
+          deniedBodyKey="work.goals.forbiddenBody"
+        >
           <GoalsScreen />
         </DepartmentFeatureScreen>
       )
@@ -63,7 +75,12 @@ const manifest: FeatureManifest = {
       labelKey: 'work.title',
       icon: KanbanSquare,
       route: '/work',
-      onPrefetch: () => void prefetchBoard(queryClient),
+      onPrefetch: () => {
+        // Best-effort intent preload; navigation retains the route's own error/retry boundary.
+        void import('./hooks.js')
+          .then(({ prefetchBoard }) => prefetchBoard(queryClient))
+          .catch(() => {})
+      },
     },
     // v1.1 SPEC §3.1: two of the six destinations `shell/nav.ts`'s `manage-head` group reserves ids
     // for. Both declare a head-only action, so the entries -- and the group heading with them --

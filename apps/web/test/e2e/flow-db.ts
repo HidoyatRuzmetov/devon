@@ -15,6 +15,8 @@ import { randomBytes } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { assertLocalTestDatabase } from './flow-safety.js'
+import { assertLocalDockerEndpoint } from './flow-services.js'
 import {
   FLOW_APP_ROLE,
   FLOW_DB_CONTAINER,
@@ -73,6 +75,23 @@ export type FlowDatabase = { appUrl: string }
  * invocations on the same machine -- always starts from a clean slate, so `@flow` specs never inherit
  * state from a previous run. */
 export function bootstrapFlowDatabase(): FlowDatabase {
+  assertLocalTestDatabase({
+    host: FLOW_DB_HOST,
+    database: FLOW_DB_NAME,
+    container: FLOW_DB_CONTAINER,
+    port: FLOW_DB_PORT,
+  })
+  const context = spawnSync(
+    'docker',
+    ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}'],
+    { encoding: 'utf8' },
+  )
+  const endpoint = context.stdout?.trim() ?? ''
+  if (context.status !== 0) {
+    throw new Error('Destructive browser tests refuse a remote Docker context')
+  }
+  if (process.env['DOCKER_HOST']) assertLocalDockerEndpoint(process.env['DOCKER_HOST'])
+  assertLocalDockerEndpoint(endpoint)
   runPsqlInContainer(
     `drop database if exists ${FLOW_DB_NAME};\ncreate database ${FLOW_DB_NAME};`,
     'postgres',

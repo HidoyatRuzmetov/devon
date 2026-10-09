@@ -15,6 +15,7 @@ import {
   matchesFilterQuery,
   parseFilterQuery,
   wouldCreateDependencyCycle,
+  cardTemplatePayloadSchema,
   type CardTemplatePayload,
   type FilterableCard,
   type GoalMetric,
@@ -23,6 +24,7 @@ import {
 } from '@devon/contracts'
 import type { CardDTO } from './schemas.js'
 import type { CardRef } from './schemas-plus.js'
+import { createCardInTx, lockActiveCardTargets, lockActiveCardLabels } from './repo.js'
 
 /** A9: five pinned cards. More than five is a to-do list, not a focus list -- CLICKUP-RESEARCH §9's
  * own finding about "Personal Priorities". */
@@ -135,10 +137,9 @@ export type AddDependencyResult =
   | { ok: false; reason: 'not_found' | 'cycle' | 'duplicate' }
 
 /**
- * The cycle guard runs **inside** the insert's own transaction, not before it: two heads adding
- * "A waits for B" and "B waits for A" at the same moment would both pass a check made beforehand.
- * Reading the edge set inside the transaction that then inserts means the second writer either sees
- * the first one's row (and refuses) or blocks on its lock and then sees it.
+ * Serialize graph decisions per department inside the insert's transaction. A shared lock on
+ * existing edges cannot protect an absent edge: opposing concurrent inserts could otherwise both
+ * pass the cycle check. The next writer reads the preceding writer's committed graph.
  */
 export async function addDependency(
   ctx: RequestContext,
@@ -149,10 +150,13 @@ export async function addDependency(
 ): Promise<AddDependencyResult> {
   if (cardId === blockedByCardId) return { ok: false, reason: 'cycle' }
   return withContext(ctx, async (tx) => {
+    await tx.raw(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`work-dependencies:${departmentId}`}, 0))`,
+    )
     const both = await tx.raw<{ id: string }>(
       sql`select id from app.cards
           where department_id = ${departmentId} and deleted_at is null
-            and id in (${cardId}, ${blockedByCardId})`,
+            and id in (${cardId}, ${blockedByCardId}) order by id for share`,
     )
     if (both.length !== 2) return { ok: false, reason: 'not_found' as const }
 
@@ -477,7 +481,8 @@ export async function listTemplates(
       created_at: Date
     }>(
       // RLS already restricts this to department templates plus the viewer's own personal ones
-      // (`work_templates_read` in 0310), so the query does not repeat that rule in SQL -- doing it
+      // (`work_templates_read` in 0905; operation-specific writes in 2009), so the query does not
+      // repeat that rule in SQL -- doing it
       // twice is how the two copies eventually disagree.
       sql`select id, kind, scope, owner_user_id, name, description, payload, use_count, created_at
           from app.work_templates
@@ -648,19 +653,82 @@ export async function applyCardTemplateChecklist(
   cardId: string,
   payload: CardTemplatePayload,
 ): Promise<number> {
+  return withContext(ctx, (tx) => applyCardTemplateChecklistInTx(tx, departmentId, cardId, payload))
+}
+
+async function applyCardTemplateChecklistInTx(
+  tx: Tx,
+  departmentId: string,
+  cardId: string,
+  payload: CardTemplatePayload,
+): Promise<number> {
   const lines = payload.checklist ?? []
   if (lines.length === 0) return 0
-  return withContext(ctx, async (tx) => {
-    // One multi-row insert, never one statement per line (I-14).
-    const values = lines.map(
-      (text, index) =>
-        sql`(${randomUUID()}, ${departmentId}, ${cardId}, ${text}, ${`a${index.toString().padStart(4, '0')}`})`,
-    )
-    await tx.raw(
-      sql`insert into app.card_checklist_items (id, department_id, card_id, text, order_key)
+  // One multi-row insert, never one statement per line (I-14).
+  const values = lines.map(
+    (text, index) =>
+      sql`(${randomUUID()}, ${departmentId}, ${cardId}, ${text}, ${`a${index.toString().padStart(4, '0')}`})`,
+  )
+  await tx.raw(
+    sql`insert into app.card_checklist_items (id, department_id, card_id, text, order_key)
           values ${sql.join(values, sql`, `)}`,
+  )
+  return lines.length
+}
+
+export async function createFromCardTemplate(
+  ctx: RequestContext,
+  departmentId: string,
+  templateId: string,
+  input: {
+    assigneeUserId?: string | null | undefined
+    giverUserId?: string | null | undefined
+    projectId?: string | null | undefined
+    dueAt?: string | null | undefined
+  },
+) {
+  return withContext(ctx, async (tx) => {
+    const consumed = await tx.raw<{ payload: unknown }>(
+      sql`select app.consume_card_template(${templateId}::uuid) as payload`,
     )
-    return lines.length
+    if (consumed[0]?.payload == null) return { ok: false as const, reason: 'not_found' as const }
+    const parsed = cardTemplatePayloadSchema.safeParse(consumed[0].payload)
+    if (!parsed.success)
+      throw Object.assign(new Error('Template payload is invalid'), { statusCode: 422 })
+    const payload = parsed.data
+    const card = await createCardInTx(ctx, tx, {
+      departmentId,
+      title: payload.title,
+      description: payload.description ?? undefined,
+      kind: input.projectId ? 'project_task' : 'task',
+      assigneeUserId: input.assigneeUserId ?? null,
+      giverUserId: input.giverUserId ?? ctx.userId!,
+      projectId: input.projectId ?? null,
+      projectScope: input.projectId ? 'objective' : 'none',
+      priority: payload.priority ?? 'none',
+      startAt: null,
+      dueAt:
+        input.dueAt !== undefined
+          ? input.dueAt
+          : payload.dueInDays == null
+            ? null
+            : new Date(Date.now() + payload.dueInDays * 86_400_000).toISOString(),
+      labels: payload.labels ?? [],
+      links: [],
+      orderKey: undefined,
+      createdByUserId: ctx.userId!,
+      estimateMin: payload.estimateMin ?? null,
+      source: 'template',
+    })
+    const checklistCount = await applyCardTemplateChecklistInTx(tx, departmentId, card.id, payload)
+    tx.audit({
+      action: 'work.template_used',
+      subjectType: 'work_template',
+      subjectId: templateId,
+      departmentId,
+      after: { cardId: card.id, checklistCount },
+    })
+    return { ok: true as const, id: card.id }
   })
 }
 
@@ -962,6 +1030,8 @@ export type BulkPatch = {
   estimateMin?: number | null | undefined
   addLabelIds?: string[] | undefined
   removeLabelIds?: string[] | undefined
+  /** Internal undo replacement; the ordinary bulk API exposes only add/remove set operations. */
+  restoreLabelIds?: string[] | undefined
 }
 
 export type BulkPrevious = {
@@ -995,122 +1065,152 @@ export async function bulkPatchCards(
   actorUserId: string,
   mayEdit: (ownerUserIds: string[]) => boolean,
 ): Promise<BulkResult> {
-  return withContext(ctx, async (tx) => {
-    const rows = await tx.raw<{
-      id: string
-      assignee_user_id: string | null
-      giver_user_id: string | null
-      created_by_user_id: string
-      priority: CardDTO['priority']
-      due_at: Date | null
-      status: CardDTO['status']
-      estimate_min: number | null
-      labels: string[]
-    }>(
-      sql`select id, assignee_user_id, giver_user_id, created_by_user_id, priority, due_at, status,
+  return withContext(ctx, (tx) =>
+    bulkPatchCardsInTx(tx, departmentId, ids, patch, actorUserId, mayEdit),
+  )
+}
+
+/** Apply one set inside a caller's atomic undo transaction. Never open a nested connection. */
+export async function bulkPatchCardsInTx(
+  tx: Tx,
+  departmentId: string,
+  ids: readonly string[],
+  patch: BulkPatch,
+  actorUserId: string,
+  mayEdit: (ownerUserIds: string[]) => boolean,
+): Promise<BulkResult> {
+  const rows = await tx.raw<{
+    id: string
+    assignee_user_id: string | null
+    giver_user_id: string | null
+    created_by_user_id: string
+    priority: CardDTO['priority']
+    due_at: Date | null
+    status: CardDTO['status']
+    estimate_min: number | null
+    labels: string[]
+  }>(
+    sql`select id, assignee_user_id, giver_user_id, created_by_user_id, priority, due_at, status,
                  estimate_min, labels
           from app.cards
           where department_id = ${departmentId} and deleted_at is null
             and id = any(${sql.param([...ids])}::uuid[])
           for update`,
+  )
+  const found = new Map(rows.map((r) => [r.id, r]))
+  const notFound = ids.filter((id) => !found.has(id))
+  const forbidden: string[] = []
+  const updatable: typeof rows = []
+  for (const row of rows) {
+    const owners = [row.created_by_user_id, row.giver_user_id, row.assignee_user_id].filter(
+      (id): id is string => Boolean(id),
     )
-    const found = new Map(rows.map((r) => [r.id, r]))
-    const notFound = ids.filter((id) => !found.has(id))
-    const forbidden: string[] = []
-    const updatable: typeof rows = []
-    for (const row of rows) {
-      const owners = [row.created_by_user_id, row.giver_user_id, row.assignee_user_id].filter(
-        (id): id is string => Boolean(id),
-      )
-      if (mayEdit(owners)) updatable.push(row)
-      else forbidden.push(row.id)
-    }
-    if (updatable.length === 0) {
-      return { updated: [], forbidden, notFound: [...notFound], undo: [] }
-    }
+    if (mayEdit(owners)) updatable.push(row)
+    else forbidden.push(row.id)
+  }
+  if (updatable.length === 0) {
+    return { updated: [], forbidden, notFound: [...notFound], undo: [] }
+  }
 
-    const undo: BulkPrevious[] = updatable.map((r) => ({
-      id: r.id,
-      assigneeUserId: r.assignee_user_id,
-      priority: r.priority,
-      dueAt: r.due_at ? new Date(r.due_at).toISOString() : null,
-      status: r.status,
-      estimateMin: r.estimate_min === null ? null : Number(r.estimate_min),
-      labels: r.labels ?? [],
-    }))
+  await lockActiveCardTargets(
+    tx,
+    departmentId,
+    typeof patch.assigneeUserId === 'string' &&
+      updatable.some((row) => row.assignee_user_id !== patch.assigneeUserId)
+      ? [patch.assigneeUserId]
+      : [],
+  )
+  await lockActiveCardLabels(
+    tx,
+    departmentId,
+    [...new Set([...(patch.addLabelIds ?? []), ...(patch.restoreLabelIds ?? [])])].filter((id) =>
+      updatable.some((row) => !row.labels.includes(id)),
+    ),
+  )
 
-    const sets: SQL[] = [sql`updated_at = now()`, sql`version = version + 1`]
-    if (patch.assigneeUserId !== undefined) {
-      sets.push(sql`assignee_user_id = ${patch.assigneeUserId}`)
-    }
-    if (patch.priority !== undefined) sets.push(sql`priority = ${patch.priority}`)
-    if (patch.dueAt !== undefined) sets.push(sql`due_at = ${patch.dueAt}`)
-    if (patch.estimateMin !== undefined) sets.push(sql`estimate_min = ${patch.estimateMin}`)
-    if (patch.status !== undefined) {
-      sets.push(sql`status = ${patch.status}`)
-      sets.push(sql`done_at = ${patch.status === 'done' ? sql`now()` : null}`)
-      sets.push(sql`archived_at = ${patch.status === 'archived' ? sql`now()` : null}`)
-    }
-    // Labels are a set operation, not a replacement: "add this label to the selection" must not
-    // wipe the labels each card already carries, which a plain `labels = $1` would.
-    if (patch.addLabelIds && patch.addLabelIds.length > 0) {
-      sets.push(
-        sql`labels = (
+  const undo: BulkPrevious[] = updatable.map((r) => ({
+    id: r.id,
+    assigneeUserId: r.assignee_user_id,
+    priority: r.priority,
+    dueAt: r.due_at ? new Date(r.due_at).toISOString() : null,
+    status: r.status,
+    estimateMin: r.estimate_min === null ? null : Number(r.estimate_min),
+    labels: r.labels ?? [],
+  }))
+
+  const sets: SQL[] = [sql`updated_at = now()`, sql`version = version + 1`]
+  if (patch.assigneeUserId !== undefined) {
+    sets.push(sql`assignee_user_id = ${patch.assigneeUserId}`)
+  }
+  if (patch.priority !== undefined) sets.push(sql`priority = ${patch.priority}`)
+  if (patch.dueAt !== undefined) sets.push(sql`due_at = ${patch.dueAt}`)
+  if (patch.estimateMin !== undefined) sets.push(sql`estimate_min = ${patch.estimateMin}`)
+  if (patch.status !== undefined) {
+    sets.push(sql`status = ${patch.status}`)
+    sets.push(sql`done_at = ${patch.status === 'done' ? sql`now()` : null}`)
+    sets.push(sql`archived_at = ${patch.status === 'archived' ? sql`now()` : null}`)
+  }
+  // Labels are a set operation, not a replacement: "add this label to the selection" must not
+  // wipe the labels each card already carries, which a plain `labels = $1` would.
+  if (patch.addLabelIds && patch.addLabelIds.length > 0) {
+    sets.push(
+      sql`labels = (
           select coalesce(array_agg(distinct l), '{}')
           from unnest(labels || ${sql.param(patch.addLabelIds)}::uuid[]) as l
         )`,
-      )
-    }
-    if (patch.removeLabelIds && patch.removeLabelIds.length > 0) {
-      sets.push(
-        sql`labels = (
+    )
+  }
+  if (patch.removeLabelIds && patch.removeLabelIds.length > 0) {
+    sets.push(
+      sql`labels = (
           select coalesce(array_agg(l), '{}')
           from unnest(labels) as l
           where not (l = any(${sql.param(patch.removeLabelIds)}::uuid[]))
         )`,
-      )
-    }
+    )
+  }
+  if (patch.restoreLabelIds !== undefined)
+    sets.push(sql`labels = ${sql.param([...new Set(patch.restoreLabelIds)])}::uuid[]`)
 
-    const targetIds = updatable.map((r) => r.id)
-    const updated = await tx.raw<{ id: string }>(
-      sql`update app.cards set ${sql.join(sets, sql`, `)}
+  const targetIds = updatable.map((r) => r.id)
+  const updated = await tx.raw<{ id: string }>(
+    sql`update app.cards set ${sql.join(sets, sql`, `)}
           where id = any(${sql.param(targetIds)}::uuid[])
           returning id`,
-    )
+  )
 
-    // One activity row per touched card, written as one multi-row insert.
-    const activityValues = targetIds.map(
-      (id) =>
-        sql`(${randomUUID()}, ${departmentId}, ${id}, ${actorUserId}, 'bulk', ${JSON.stringify(
-          bulkActivityData(patch),
-        )}::jsonb)`,
-    )
-    await tx.raw(
-      sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
+  // One activity row per touched card, written as one multi-row insert.
+  const activityValues = targetIds.map(
+    (id) =>
+      sql`(${randomUUID()}, ${departmentId}, ${id}, ${actorUserId}, 'bulk', ${JSON.stringify(
+        bulkActivityData(patch),
+      )}::jsonb)`,
+  )
+  await tx.raw(
+    sql`insert into app.card_activity (id, department_id, card_id, actor_user_id, kind, data)
           values ${sql.join(activityValues, sql`, `)}`,
-    )
+  )
 
-    tx.audit({
-      action: 'work.cards_bulk_updated',
-      subjectType: 'card',
-      subjectId: targetIds[0] ?? null,
-      departmentId,
-      after: { count: targetIds.length, patch: bulkActivityData(patch) },
-    })
-    // Deliberately no outbox event. A bulk action is one considered act by one person over a
-    // selection they are looking at; fanning it out as forty `work.card.updated` notifications --
-    // or as one event whose recipients rule would have to pick a single card to stand for the set --
-    // is exactly the noise that makes people mute an inbox (SPEC §11's own recipients reasoning).
-    // The per-card activity rows above and the audit row are the record that it happened, and the
-    // undo toast is the affordance that matters in the seconds after it does.
-
-    return {
-      updated: updated.map((r) => r.id),
-      forbidden,
-      notFound: [...notFound],
-      undo,
-    }
+  tx.audit({
+    action: 'work.cards_bulk_updated',
+    subjectType: 'card',
+    subjectId: targetIds[0] ?? null,
+    departmentId,
+    after: { count: targetIds.length, patch: bulkActivityData(patch) },
   })
+  // Deliberately no outbox event. A bulk action is one considered act by one person over a
+  // selection they are looking at; fanning it out as forty `work.card.updated` notifications --
+  // or as one event whose recipients rule would have to pick a single card to stand for the set --
+  // is exactly the noise that makes people mute an inbox (SPEC §11's own recipients reasoning).
+  // The per-card activity rows above and the audit row are the record that it happened, and the
+  // undo toast is the affordance that matters in the seconds after it does.
+
+  return {
+    updated: updated.map((r) => r.id),
+    forbidden,
+    notFound: [...notFound],
+    undo,
+  }
 }
 
 function bulkActivityData(patch: BulkPatch): Record<string, unknown> {
@@ -1122,6 +1222,7 @@ function bulkActivityData(patch: BulkPatch): Record<string, unknown> {
   if (patch.estimateMin !== undefined) out['estimateMin'] = patch.estimateMin
   if (patch.addLabelIds?.length) out['addLabelIds'] = patch.addLabelIds
   if (patch.removeLabelIds?.length) out['removeLabelIds'] = patch.removeLabelIds
+  if (patch.restoreLabelIds !== undefined) out['labels'] = patch.restoreLabelIds
   return out
 }
 

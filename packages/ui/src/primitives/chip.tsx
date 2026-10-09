@@ -55,7 +55,7 @@ export const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
           type="button"
           onClick={onRemove}
           aria-label={removeLabel ?? ''}
-          className="-mr-1 inline-flex size-4 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-(--dur-micro) hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="-mr-1 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-(--dur-micro) hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-3" aria-hidden="true" />
         </button>

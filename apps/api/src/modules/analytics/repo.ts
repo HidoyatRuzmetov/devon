@@ -68,7 +68,13 @@ export type WeekPoint = { weekStart: string; count: number }
 export type OnTimePoint = { weekStart: string; dueCount: number; onTimeCount: number }
 export type OpenOverduePoint = { weekStart: string; openCount: number; overdueCount: number }
 export type PersonLoad = { userId: string; name: string; openCount: number; overdueCount: number }
-export type UnitLoad = { unitName: string | null; openCount: number; overdueCount: number }
+export type UnitLoad = {
+  scope: 'department' | 'unit' | 'unassigned'
+  unitId: string | null
+  unitName: string | null
+  openCount: number
+  overdueCount: number
+}
 export type ProjectProgress = {
   id: string
   title: string
@@ -306,15 +312,18 @@ async function loadPerUnit(
   departmentId: string,
   filter: ResolvedFilter,
 ): Promise<UnitLoad[]> {
-  // A member with no `unit_roles` row groups under `unitName: null` ("unassigned") -- structure's own
-  // TECH-SPEC decision 12 ("UI complete without unit heads") applies equally here: a department with
-  // no units at all still gets one correct "unassigned" bar, never an empty chart.
+  // Department leadership is a scope, not a missing unit. Keep stable unit IDs (two units can
+  // share a name) and ordinary unassigned members distinct, without changing anyone's assignment.
   const rows = await tx.raw<{
+    scope: UnitLoad['scope']
+    unit_id: string | null
     unit_name: string | null
     open_count: string
     overdue_count: string
   }>(sql`
-    select un.name as unit_name,
+    select case when m.role = 'head' then 'department' when un.id is not null then 'unit' else 'unassigned' end as scope,
+      case when m.role = 'head' then null else un.id end as unit_id,
+      case when m.role = 'head' then null else un.name end as unit_name,
       count(c.id) filter (where c.status = 'active') as open_count,
       count(c.id) filter (where c.status = 'active' and c.due_at is not null and c.due_at < now()) as overdue_count
     from app.memberships m
@@ -324,10 +333,12 @@ async function loadPerUnit(
     left join app.cards c on c.assignee_user_id = u.id and c.department_id = ${departmentId} and c.deleted_at is null
       and ${cardsFilterSql(filter, 'c')}
     where m.department_id = ${departmentId} and m.status = 'active' and m.deleted_at is null
-    group by un.name
-    order by open_count desc
+    group by 1, 2, 3
+    order by open_count desc, scope, unit_id
   `)
   return rows.map((r) => ({
+    scope: r.scope,
+    unitId: r.unit_id,
     unitName: r.unit_name,
     openCount: Number(r.open_count),
     overdueCount: Number(r.overdue_count),

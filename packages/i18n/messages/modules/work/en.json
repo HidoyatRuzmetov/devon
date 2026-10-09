@@ -111,6 +111,7 @@
       "estimate": "Estimate"
     },
     "card": {
+      "titleRequired": "Enter a card title.",
       "peekTitle": "Card details",
       "markDone": "Mark done",
       "archive": "Archive",
@@ -124,6 +125,8 @@
       "newLabel": "New label",
       "descriptionPlaceholder": "Add a description",
       "addLinkPlaceholder": "Paste a link",
+      "addLink": "Add link",
+      "removeLink": "Remove link: {title}",
       "unfurlError": "Could not load that link",
       "addChecklistItem": "Add an item",
       "addCommentPlaceholder": "Write a comment, @ to mention someone",
@@ -473,7 +476,7 @@
       "cardCount": "{count} cards",
       "emptyTitle": "No templates yet",
       "emptyBody": "Nobody has prepared a template for this department yet.",
-      "emptyBodyHead": "Open a card and save it as a template."
+      "emptyBodyHead": "Choose New card template to prepare a personal or department template."
     },
     "workload": {
       "title": "Workload",

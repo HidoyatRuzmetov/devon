@@ -11,10 +11,12 @@ import { navigate } from './router.js'
 export function DepartmentFeatureScreen({
   feature,
   action,
+  deniedBodyKey = 'state.denied.body',
   children,
 }: {
   feature: FeatureKey
   action: AppActionId
+  deniedBodyKey?: string
   children: React.ReactNode
 }) {
   const t = useT()
@@ -23,7 +25,7 @@ export function DepartmentFeatureScreen({
   const { department } = useDepartment()
   if (isLoading) return <RouteSkeleton label={t('shell.loading.route')} />
   if (!permission.allowed)
-    return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
+    return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey={deniedBodyKey} />
   if (isError)
     return (
       <StateView

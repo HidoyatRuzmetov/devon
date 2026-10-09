@@ -57,7 +57,7 @@ async function main(): Promise<void> {
   // to this app and to `@devon/db`'s module-private pool; see both headers.
   registerGracefulShutdown(app)
 
-  await app.listen({ port: config.API_PORT, host: '0.0.0.0' })
+  await app.listen({ port: config.API_PORT, host: config.API_HOST })
 }
 
 main().catch((err: unknown) => {

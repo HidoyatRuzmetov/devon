@@ -5,7 +5,7 @@
 // with tabs, one `SectionCard` per concern each with its own save, danger zone last with a full,
 // typed-confirmation dialog -- replacing every `window.confirm()` the previous revision used.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useIsMutating, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QRCodeSVG } from 'qrcode.react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
@@ -65,6 +65,7 @@ import {
 } from './api.js'
 
 type Tab = 'general' | 'invite' | 'members' | 'danger'
+const departmentActionKey = (id: string) => ['departments', 'pendingAction', id] as const
 
 function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   const t = useT()
@@ -78,27 +79,25 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
   const [allowSelfAssign, setAllowSelfAssign] = React.useState(true)
   const [allowStructureEdit, setAllowStructureEdit] = React.useState(true)
   const [telegramPerm, setTelegramPerm] = React.useState<'everyone' | 'head'>('everyone')
+  const dirty = React.useRef(false)
 
   React.useEffect(() => {
-    if (deptQuery.data) {
+    if (!isHead) dirty.current = false
+    if (deptQuery.data && !dirty.current) {
       setAllowSelfAssign(deptQuery.data.settings.allowSelfAssign)
       setAllowStructureEdit(deptQuery.data.settings.allowStructureEdit)
       setTelegramPerm(deptQuery.data.settings.whoCanConnectTelegramGroup)
     }
-  }, [deptQuery.data])
+  }, [deptQuery.data, isHead])
 
   const save = useMutation({
-    mutationFn: () =>
-      patchDepartmentSettings(
-        id,
-        {
-          allowSelfAssign,
-          allowStructureEdit,
-          whoCanConnectTelegramGroup: telegramPerm,
-        },
-        meQuery.data?.csrfToken ?? '',
-      ),
+    mutationFn: (settings: {
+      allowSelfAssign: boolean
+      allowStructureEdit: boolean
+      whoCanConnectTelegramGroup: 'everyone' | 'head'
+    }) => patchDepartmentSettings(id, settings, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
+      dirty.current = false
       toast(t('departments.settings.saved'))
       void queryClient.invalidateQueries({
         queryKey: ['departments', 'detail', id],
@@ -149,21 +148,39 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
         }
         actions={
           isHead ? (
-            <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
+            <Button
+              size="sm"
+              loading={save.isPending}
+              onClick={() =>
+                save.mutate({
+                  allowSelfAssign,
+                  allowStructureEdit,
+                  whoCanConnectTelegramGroup: telegramPerm,
+                })
+              }
+            >
               {t('departments.settings.save')}
             </Button>
           ) : undefined
         }
       >
         <div className="flex flex-col gap-5">
+          {save.isError ? (
+            <p role="alert" className="text-small text-destructive">
+              {t('toast.saveError')}
+            </p>
+          ) : null}
           <label className="flex items-center justify-between gap-4">
             <span className="text-body text-foreground">
               {t('departments.settings.allowSelfAssign')}
             </span>
             <Switch
               checked={allowSelfAssign}
-              disabled={!isHead}
-              onCheckedChange={setAllowSelfAssign}
+              disabled={!isHead || save.isPending}
+              onCheckedChange={(value) => {
+                dirty.current = true
+                setAllowSelfAssign(value)
+              }}
             />
           </label>
           <label className="flex items-center justify-between gap-4">
@@ -172,8 +189,11 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
             </span>
             <Switch
               checked={allowStructureEdit}
-              disabled={!isHead}
-              onCheckedChange={setAllowStructureEdit}
+              disabled={!isHead || save.isPending}
+              onCheckedChange={(value) => {
+                dirty.current = true
+                setAllowStructureEdit(value)
+              }}
             />
           </label>
           <div className="flex flex-col gap-2">
@@ -182,17 +202,20 @@ function GeneralTab({ id, isHead }: { id: string; isHead: boolean }) {
             </span>
             <RadioGroup
               value={telegramPerm}
-              onValueChange={(v) => setTelegramPerm(v as typeof telegramPerm)}
+              onValueChange={(v) => {
+                dirty.current = true
+                setTelegramPerm(v as typeof telegramPerm)
+              }}
             >
               <RadioOption
                 value="everyone"
                 label={t('departments.settings.telegramEveryone')}
-                disabled={!isHead}
+                disabled={!isHead || save.isPending}
               />
               <RadioOption
                 value="head"
                 label={t('departments.settings.telegramHeadOnly')}
-                disabled={!isHead}
+                disabled={!isHead || save.isPending}
               />
             </RadioGroup>
           </div>
@@ -209,6 +232,7 @@ function InviteTab({ id }: { id: string }) {
   const t = useT()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
+  const pendingCount = useIsMutating({ mutationKey: departmentActionKey(id) })
   const inviteQuery = useQuery({
     queryKey: ['departments', 'invite', id],
     queryFn: () => fetchInvite(id),
@@ -221,6 +245,7 @@ function InviteTab({ id }: { id: string }) {
     queryClient.invalidateQueries({ queryKey: ['departments', 'invite', id] })
 
   const rotateKey = useMutation({
+    mutationKey: departmentActionKey(id),
     mutationFn: () => rotateJoinKey(id, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
       setConfirmRotate(null)
@@ -228,6 +253,7 @@ function InviteTab({ id }: { id: string }) {
     },
   })
   const rotatePassword = useMutation({
+    mutationKey: departmentActionKey(id),
     mutationFn: () => rotateJoinPassword(id, meQuery.data?.csrfToken ?? ''),
     onSuccess: (result) => {
       setRevealedPassword(result.password)
@@ -236,6 +262,7 @@ function InviteTab({ id }: { id: string }) {
     },
   })
   const setPassword = useMutation({
+    mutationKey: departmentActionKey(id),
     mutationFn: () => setJoinPassword(id, customPassword, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
       setRevealedPassword(customPassword)
@@ -244,9 +271,16 @@ function InviteTab({ id }: { id: string }) {
     },
   })
   const toggleApproval = useMutation({
+    mutationKey: departmentActionKey(id),
     mutationFn: (value: boolean) => setJoinApproval(id, value, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => invalidate(),
   })
+  const invitePending =
+    rotateKey.isPending ||
+    rotatePassword.isPending ||
+    setPassword.isPending ||
+    toggleApproval.isPending ||
+    pendingCount > 0
 
   if (inviteQuery.isPending) return <StateView kind="loading" titleKey="state.loading" compact />
   if (inviteQuery.isError) {
@@ -275,7 +309,10 @@ function InviteTab({ id }: { id: string }) {
       link,
       password: revealedPassword,
     })
-    void navigator.clipboard.writeText(text).then(() => toast(t('departments.invite.copiedInvite')))
+    void navigator.clipboard
+      .writeText(text)
+      .then(() => toast(t('departments.invite.copiedInvite')))
+      .catch(() => toast.error(t('toast.saveError')))
   }
 
   return (
@@ -284,7 +321,15 @@ function InviteTab({ id }: { id: string }) {
         title={t('departments.invite.title')}
         description={t('departments.invite.linkDescription')}
         actions={
-          <Button variant="secondary" size="sm" onClick={() => setConfirmRotate('key')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={invitePending}
+            onClick={() => {
+              rotateKey.reset()
+              setConfirmRotate('key')
+            }}
+          >
             <RefreshCw className="size-4" aria-hidden="true" />
             {t('departments.invite.rotateKey')}
           </Button>
@@ -306,6 +351,29 @@ function InviteTab({ id }: { id: string }) {
                     void navigator.clipboard
                       .writeText(link)
                       .then(() => toast(t('departments.invite.copiedLink')))
+                      .catch(() => toast.error(t('toast.saveError')))
+                  }}
+                >
+                  <Copy className="size-4" aria-hidden="true" />
+                </IconButton>
+              </div>
+              <span className="text-caption text-muted-foreground">
+                {t('departments.invite.keyLabel')}
+              </span>
+              <div className="flex items-center gap-2">
+                <Input
+                  aria-label={t('departments.invite.keyLabel')}
+                  readOnly
+                  value={invite.joinKey ?? ''}
+                  className="min-w-0 flex-1 font-mono text-small"
+                />
+                <IconButton
+                  aria-label={t('departments.invite.copyKey')}
+                  onClick={() => {
+                    void navigator.clipboard
+                      .writeText(invite.joinKey ?? '')
+                      .then(() => toast(t('departments.invite.copiedKey')))
+                      .catch(() => toast.error(t('toast.saveError')))
                   }}
                 >
                   <Copy className="size-4" aria-hidden="true" />
@@ -317,12 +385,18 @@ function InviteTab({ id }: { id: string }) {
                 </span>
                 <Switch
                   checked={invite.joinRequiresApproval}
+                  disabled={invitePending}
                   onCheckedChange={(v) => toggleApproval.mutate(v)}
                 />
               </label>
               <p className="text-caption text-muted-foreground">
                 {t('departments.invite.approvalToggleBody')}
               </p>
+              {toggleApproval.isError ? (
+                <p role="alert" className="text-small text-destructive">
+                  {t('toast.saveError')}
+                </p>
+              ) : null}
             </div>
             {/* Fixed black-on-white, never theme tokens: a QR scanner needs the highest contrast the
                 camera can find, not the current colour scheme. */}
@@ -349,13 +423,26 @@ function InviteTab({ id }: { id: string }) {
         title={t('departments.invite.passwordLabel')}
         description={t('departments.invite.passwordHiddenNotice')}
         actions={
-          <Button variant="secondary" size="sm" onClick={() => setConfirmRotate('password')}>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={invitePending}
+            onClick={() => {
+              rotatePassword.reset()
+              setConfirmRotate('password')
+            }}
+          >
             <RefreshCw className="size-4" aria-hidden="true" />
             {t('departments.invite.rotatePassword')}
           </Button>
         }
       >
         <div className="flex flex-col gap-4">
+          {setPassword.isError ? (
+            <p role="alert" className="text-small text-destructive">
+              {t('toast.saveError')}
+            </p>
+          ) : null}
           {revealedPassword ? (
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-2">
@@ -381,6 +468,11 @@ function InviteTab({ id }: { id: string }) {
               </span>
               <Input
                 type="password"
+                autoComplete="new-password"
+                maxLength={128}
+                minLength={8}
+                aria-describedby="department-invite-password-help"
+                disabled={invitePending}
                 value={customPassword}
                 onChange={(e) => setCustomPassword(e.target.value)}
               />
@@ -388,13 +480,16 @@ function InviteTab({ id }: { id: string }) {
             <Button
               size="sm"
               variant="secondary"
-              disabled={!customPassword || setPassword.isPending}
+              disabled={customPassword.length < 8 || invitePending}
               loading={setPassword.isPending}
               onClick={() => setPassword.mutate()}
             >
               {t('departments.invite.setPasswordSubmit')}
             </Button>
           </div>
+          <p id="department-invite-password-help" className="text-caption text-muted-foreground">
+            {t('departments.invite.passwordRequirements')}
+          </p>
         </div>
       </SectionCard>
 
@@ -418,6 +513,11 @@ function InviteTab({ id }: { id: string }) {
         )}
         cancelLabel={t('departments.common.cancel')}
         loading={confirmRotate === 'key' ? rotateKey.isPending : rotatePassword.isPending}
+        error={
+          (confirmRotate === 'key' ? rotateKey.isError : rotatePassword.isError)
+            ? t('toast.saveError')
+            : undefined
+        }
         onConfirm={() => (confirmRotate === 'key' ? rotateKey.mutate() : rotatePassword.mutate())}
       />
     </div>
@@ -438,6 +538,7 @@ function JoinRequestsCard({ id }: { id: string }) {
   const locale = useLocale()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
+  const pendingCount = useIsMutating({ mutationKey: departmentActionKey(id) })
   const query = useQuery({
     queryKey: ['departments', 'joinRequests', id],
     queryFn: () => fetchJoinRequests(id),
@@ -458,8 +559,17 @@ function JoinRequestsCard({ id }: { id: string }) {
   const [approvedUserId, setApprovedUserId] = React.useState<string | null>(null)
 
   const decide = useMutation({
-    mutationFn: (input: { userId: string; decision: 'approve' | 'reject' | 'undo' }) =>
-      decideJoinRequest(id, input.userId, input.decision, meQuery.data?.csrfToken ?? ''),
+    mutationKey: departmentActionKey(id),
+    mutationFn: (input: {
+      userId: string
+      decision: 'approve' | 'reject' | 'undo'
+      expectedVersion: number
+      originalDecision?: 'approve' | 'reject'
+    }) =>
+      decideJoinRequest(id, input.userId, input.decision, meQuery.data?.csrfToken ?? '', {
+        expectedVersion: input.expectedVersion,
+        ...(input.originalDecision ? { originalDecision: input.originalDecision } : {}),
+      }),
     onSuccess: (_result, input) => {
       if (input.decision === 'approve') setApprovedUserId(input.userId)
       invalidate()
@@ -467,6 +577,7 @@ function JoinRequestsCard({ id }: { id: string }) {
         toast(t('departments.joinRequests.undone'))
         return
       }
+      const originalDecision = input.decision
       toast(
         t(
           input.decision === 'approve'
@@ -476,13 +587,41 @@ function JoinRequestsCard({ id }: { id: string }) {
         {
           action: {
             label: t('departments.common.undo'),
-            onClick: () => decide.mutate({ userId: input.userId, decision: 'undo' }),
+            onClick: (event) => {
+              if (
+                !submitDecision({
+                  userId: input.userId,
+                  decision: 'undo',
+                  expectedVersion: input.expectedVersion + 1,
+                  originalDecision,
+                })
+              )
+                event.preventDefault()
+            },
           },
         },
       )
     },
-    onError: () => toast(t('departments.joinRequests.conflict')),
+    onError: (error) => {
+      toast.error(
+        t(
+          error instanceof ApiError && error.status === 409
+            ? 'departments.joinRequests.conflict'
+            : 'toast.saveError',
+        ),
+      )
+      if (error instanceof ApiError && error.status === 409) invalidate()
+    },
   })
+
+  function submitDecision(input: Parameters<typeof decide.mutate>[0]) {
+    if (queryClient.isMutating({ mutationKey: departmentActionKey(id) })) {
+      toast(t('departments.common.waitForAction'))
+      return false
+    }
+    decide.mutate(input)
+    return true
+  }
 
   if (query.isPending) {
     return (
@@ -550,11 +689,12 @@ function JoinRequestsCard({ id }: { id: string }) {
                       <Button
                         size="sm"
                         variant="secondary"
-                        disabled={decide.isPending}
+                        disabled={pendingCount > 0}
                         onClick={() =>
-                          decide.mutate({
+                          submitDecision({
                             userId: r.userId,
                             decision: 'reject',
+                            expectedVersion: r.version,
                           })
                         }
                       >
@@ -563,11 +703,12 @@ function JoinRequestsCard({ id }: { id: string }) {
                       <span className="relative inline-flex">
                         <Button
                           size="sm"
-                          disabled={decide.isPending}
+                          disabled={pendingCount > 0}
                           onClick={() =>
-                            decide.mutate({
+                            submitDecision({
                               userId: r.userId,
                               decision: 'approve',
+                              expectedVersion: r.version,
                             })
                           }
                         >
@@ -639,6 +780,7 @@ function FeaturesCard({
         },
       })
     },
+    onError: () => toast.error(t('toast.saveError')),
   })
 
   return (
@@ -686,7 +828,7 @@ function MemberRow({
   onRemove,
   onLeave,
   onResetPassword,
-  resetPasswordPending,
+  actionPending,
 }: {
   member: Member
   isHead: boolean
@@ -696,7 +838,7 @@ function MemberRow({
   onRemove: () => void
   onLeave: () => void
   onResetPassword: () => void
-  resetPasswordPending: boolean
+  actionPending: boolean
 }) {
   const t = useT()
   const locale = useLocale()
@@ -723,7 +865,7 @@ function MemberRow({
       trailing={
         <>
           {isMe ? (
-            <Button size="sm" variant="ghost" onClick={onLeave}>
+            <Button size="sm" variant="ghost" disabled={actionPending} onClick={onLeave}>
               {t('departments.members.leave')}
             </Button>
           ) : null}
@@ -734,23 +876,26 @@ function MemberRow({
                     "Aʼzolar" -- the section heading -- so a screen-reader user could not tell whose
                     menu they were about to open. Named after its member, the same pattern the
                     people table already gets right ("Nodira Karimovaga vazifa berish"). */}
-                <IconButton aria-label={t('departments.members.rowMenuAria', { name })}>
+                <IconButton
+                  aria-label={t('departments.members.rowMenuAria', { name })}
+                  disabled={actionPending}
+                >
                   <MoreVertical className="size-4" aria-hidden="true" />
                 </IconButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 {isHead && !isMe ? (
                   <>
-                    <DropdownMenuItem onSelect={onTransfer}>
+                    <DropdownMenuItem disabled={actionPending} onSelect={onTransfer}>
                       {t('departments.members.transfer')}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={onRemove}>
+                    <DropdownMenuItem disabled={actionPending} onSelect={onRemove}>
                       {t('departments.members.remove')}
                     </DropdownMenuItem>
                   </>
                 ) : null}
                 {(isSuperAdmin && !isMe) || canResetAsHead ? (
-                  <DropdownMenuItem disabled={resetPasswordPending} onSelect={onResetPassword}>
+                  <DropdownMenuItem disabled={actionPending} onSelect={onResetPassword}>
                     {t('accounts.admin.resetPassword.button')}
                   </DropdownMenuItem>
                 ) : null}
@@ -788,50 +933,89 @@ function MemberRow({
   )
 }
 
+type MemberAction = {
+  kind: 'transfer' | 'remove' | 'leave' | 'resetPassword'
+  member?: Member
+}
+
 function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myUserId: string }) {
   const t = useT()
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
+  const pendingCount = useIsMutating({ mutationKey: departmentActionKey(id) })
   const membersQuery = useQuery({
     queryKey: ['departments', 'members', id],
     queryFn: () => fetchMembers(id),
   })
   const isSuperAdmin = meQuery.data?.user.role === 'super_admin'
   const [tempPassword, setTempPassword] = React.useState<string | null>(null)
-  const [confirmAction, setConfirmAction] = React.useState<{
-    kind: 'transfer' | 'remove' | 'leave' | 'resetPassword'
-    member?: Member
-  } | null>(null)
+  const [confirmAction, setConfirmAction] = React.useState<MemberAction | null>(null)
+  // Capture the selected operation before transport starts. Closing its dialog must not
+  // retarget a pending write or let its late response dismiss a different confirmation.
+  const pendingAction = React.useRef<MemberAction | null>(null)
+  const mounted = React.useRef(false)
+  React.useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
+  const closeCompletedAction = (action: MemberAction) => {
+    if (mounted.current) setConfirmAction((current) => (current === action ? null : current))
+  }
+  const settleAction = (_data: unknown, _error: unknown, action: MemberAction) => {
+    if (pendingAction.current === action) pendingAction.current = null
+  }
 
   const invalidate = () => {
     void queryClient.invalidateQueries({
       queryKey: ['departments', 'members', id],
     })
     void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
+    void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+    void queryClient.invalidateQueries({ queryKey: ['me'] })
   }
   const remove = useMutation({
-    mutationFn: (userId: string) => removeMember(id, userId, meQuery.data?.csrfToken ?? ''),
-    onSuccess: () => {
+    mutationKey: departmentActionKey(id),
+    mutationFn: (action: MemberAction) =>
+      removeMember(id, action.member!.userId, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (_result, action) => {
       toast(t('departments.members.removedToast'))
-      setConfirmAction(null)
+      closeCompletedAction(action)
       invalidate()
     },
+    onSettled: settleAction,
   })
   const transfer = useMutation({
-    mutationFn: (userId: string) => transferHeadship(id, userId, meQuery.data?.csrfToken ?? ''),
-    onSuccess: () => {
+    mutationKey: departmentActionKey(id),
+    mutationFn: (action: MemberAction) =>
+      transferHeadship(id, action.member!.userId, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (_result, action) => {
       toast(t('departments.members.transferredToast'))
-      setConfirmAction(null)
+      closeCompletedAction(action)
       invalidate()
     },
+    onSettled: settleAction,
   })
   const leave = useMutation({
-    mutationFn: () => leaveDepartment(id, meQuery.data?.csrfToken ?? ''),
-    onSuccess: () => {
+    mutationKey: departmentActionKey(id),
+    mutationFn: (_action: MemberAction) => leaveDepartment(id, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (_result, action) => {
       toast(t('departments.members.leftToast'))
-      navigate('/departments')
+      closeCompletedAction(action)
+      invalidate()
+      if (mounted.current && pendingAction.current === action) navigate('/departments')
     },
-    onError: () => toast(t('departments.members.leaveBlockedHead')),
+    onError: (error) =>
+      toast.error(
+        t(
+          error instanceof ApiError && error.status === 409
+            ? 'departments.members.leaveBlockedHead'
+            : 'toast.saveError',
+        ),
+      ),
+    onSettled: settleAction,
   })
   // Two different routes behind one menu item, picked by who is asking (v1.1 SPEC §2.2):
   //  - a **head** resets an ordinary member of their own department
@@ -841,16 +1025,35 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
   // Before v1.1 only the second existed, so every forgotten password in every department escalated
   // to the single ministry super admin (WALKTHROUGH-FINDINGS §2.5).
   const resetPassword = useMutation({
-    mutationFn: (userId: string) =>
+    mutationKey: departmentActionKey(id),
+    mutationFn: (action: MemberAction) =>
       isHead
-        ? resetMemberPassword(id, userId, meQuery.data?.csrfToken ?? '')
-        : adminResetPassword(userId, meQuery.data?.csrfToken ?? ''),
-    onSuccess: (result) => {
+        ? resetMemberPassword(id, action.member!.userId, meQuery.data?.csrfToken ?? '')
+        : adminResetPassword(action.member!.userId, meQuery.data?.csrfToken ?? ''),
+    onSuccess: (result, action) => {
       toast(t('accounts.admin.resetPassword.success'))
-      setConfirmAction(null)
-      setTempPassword(result.temporaryPassword)
+      closeCompletedAction(action)
+      // The returned password is shown once even if its pending confirmation was closed.
+      if (mounted.current) setTempPassword(result.temporaryPassword)
     },
+    onSettled: settleAction,
   })
+  const actionPending =
+    transfer.isPending ||
+    remove.isPending ||
+    leave.isPending ||
+    resetPassword.isPending ||
+    pendingCount > 0
+
+  function openAction(action: MemberAction) {
+    if (pendingAction.current || queryClient.isMutating({ mutationKey: departmentActionKey(id) }))
+      return
+    if (action.kind === 'transfer') transfer.reset()
+    else if (action.kind === 'remove') remove.reset()
+    else if (action.kind === 'resetPassword') resetPassword.reset()
+    else leave.reset()
+    setConfirmAction(action)
+  }
 
   if (membersQuery.isPending) return <StateView kind="loading" titleKey="state.loading" compact />
   if (membersQuery.isError) {
@@ -868,7 +1071,8 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
     )
   }
 
-  const members = membersQuery.data.members
+  // Removed memberships remain in the API for history, but are no longer people in this team.
+  const members = membersQuery.data.members.filter((member) => member.status !== 'removed')
 
   return (
     <div className="flex flex-col gap-4">
@@ -885,11 +1089,11 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
                 isHead={isHead}
                 isSuperAdmin={isSuperAdmin}
                 myUserId={myUserId}
-                resetPasswordPending={resetPassword.isPending}
-                onTransfer={() => setConfirmAction({ kind: 'transfer', member: m })}
-                onRemove={() => setConfirmAction({ kind: 'remove', member: m })}
-                onLeave={() => setConfirmAction({ kind: 'leave' })}
-                onResetPassword={() => setConfirmAction({ kind: 'resetPassword', member: m })}
+                actionPending={actionPending}
+                onTransfer={() => openAction({ kind: 'transfer', member: m })}
+                onRemove={() => openAction({ kind: 'remove', member: m })}
+                onLeave={() => openAction({ kind: 'leave' })}
+                onResetPassword={() => openAction({ kind: 'resetPassword', member: m })}
               />
             ))}
           </DataList>
@@ -936,18 +1140,36 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
                 : 'departments.members.leave',
         )}
         cancelLabel={t('departments.common.cancel')}
-        loading={
-          transfer.isPending || remove.isPending || leave.isPending || resetPassword.isPending
+        loading={actionPending}
+        error={
+          (
+            confirmAction?.kind === 'transfer'
+              ? transfer.isError
+              : confirmAction?.kind === 'remove'
+                ? remove.isError
+                : confirmAction?.kind === 'resetPassword'
+                  ? resetPassword.isError
+                  : leave.isError
+          )
+            ? t('toast.saveError')
+            : undefined
         }
         onConfirm={() => {
-          if (!confirmAction) return
+          if (
+            !confirmAction ||
+            pendingAction.current ||
+            queryClient.isMutating({ mutationKey: departmentActionKey(id) })
+          )
+            return
+          pendingAction.current = confirmAction
           if (confirmAction.kind === 'transfer' && confirmAction.member)
-            transfer.mutate(confirmAction.member.userId)
+            transfer.mutate(confirmAction)
           else if (confirmAction.kind === 'remove' && confirmAction.member)
-            remove.mutate(confirmAction.member.userId)
+            remove.mutate(confirmAction)
           else if (confirmAction.kind === 'resetPassword' && confirmAction.member)
-            resetPassword.mutate(confirmAction.member.userId)
-          else if (confirmAction.kind === 'leave') leave.mutate()
+            resetPassword.mutate(confirmAction)
+          else if (confirmAction.kind === 'leave') leave.mutate(confirmAction)
+          else pendingAction.current = null
         }}
       />
 
@@ -968,9 +1190,13 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
         confirmLabel={t('accounts.admin.resetPassword.copy')}
         cancelLabel={t('departments.common.cancel')}
         onConfirm={async () => {
-          if (tempPassword) await navigator.clipboard.writeText(tempPassword)
-          toast(t('accounts.admin.resetPassword.copied'))
-          setTempPassword(null)
+          try {
+            if (tempPassword) await navigator.clipboard.writeText(tempPassword)
+            toast(t('accounts.admin.resetPassword.copied'))
+            setTempPassword(null)
+          } catch {
+            toast.error(t('toast.saveError'))
+          }
         }}
       />
     </div>
@@ -980,12 +1206,17 @@ function MembersTab({ id, isHead, myUserId }: { id: string; isHead: boolean; myU
 function DangerTab({ id, departmentName }: { id: string; departmentName: string }) {
   const t = useT()
   const meQuery = useMeQuery()
+  const queryClient = useQueryClient()
+  const pendingCount = useIsMutating({ mutationKey: departmentActionKey(id) })
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const request = useMutation({
+    mutationKey: departmentActionKey(id),
     mutationFn: () => requestDepartmentDeletion(id, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
       toast(t('departments.settings.deletionRequested'))
       setConfirmOpen(false)
+      void queryClient.invalidateQueries({ queryKey: ['departments', 'detail', id] })
+      void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
     },
   })
   return (
@@ -994,7 +1225,15 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
       description={t('departments.settings.dangerZoneDescription')}
       className="border-destructive/40"
     >
-      <Button variant="destructive" size="sm" onClick={() => setConfirmOpen(true)}>
+      <Button
+        variant="destructive"
+        size="sm"
+        disabled={request.isPending || pendingCount > 0}
+        onClick={() => {
+          request.reset()
+          setConfirmOpen(true)
+        }}
+      >
         {t('departments.settings.requestDeletion')}
       </Button>
 
@@ -1007,6 +1246,7 @@ function DangerTab({ id, departmentName }: { id: string; departmentName: string 
         confirmLabel={t('departments.settings.requestDeletion')}
         cancelLabel={t('departments.common.cancel')}
         loading={request.isPending}
+        error={request.isError ? t('toast.saveError') : undefined}
         onConfirm={() => request.mutate()}
         typedConfirmValue={departmentName}
         typedConfirmLabel={t('departments.settings.typedConfirmLabel', {
@@ -1088,7 +1328,11 @@ export default function DepartmentDetailScreen() {
   const myUserId = meQuery.data?.user.id ?? ''
 
   return (
-    <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col gap-6">
+    <Tabs
+      value={!isHead && (tab === 'invite' || tab === 'danger') ? 'general' : tab}
+      onValueChange={(v) => setTab(v as Tab)}
+      className="flex flex-col gap-6"
+    >
       <PageHeader
         eyebrow={t('departments.title')}
         title={`${dept.emoji ? `${dept.emoji} ` : ''}${dept.name}`}
@@ -1107,19 +1351,19 @@ export default function DepartmentDetailScreen() {
       />
 
       <TabsContent value="general">
-        <GeneralTab id={id} isHead={isHead} />
+        <GeneralTab key={id} id={id} isHead={isHead} />
       </TabsContent>
       {isHead ? (
         <TabsContent value="invite">
-          <InviteTab id={id} />
+          <InviteTab key={id} id={id} />
         </TabsContent>
       ) : null}
       <TabsContent value="members">
-        <MembersTab id={id} isHead={isHead} myUserId={myUserId} />
+        <MembersTab key={id} id={id} isHead={isHead} myUserId={myUserId} />
       </TabsContent>
       {isHead ? (
         <TabsContent value="danger">
-          <DangerTab id={id} departmentName={dept.name} />
+          <DangerTab key={id} id={id} departmentName={dept.name} />
         </TabsContent>
       ) : null}
     </Tabs>

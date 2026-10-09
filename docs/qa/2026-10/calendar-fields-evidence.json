@@ -1,0 +1,679 @@
+{
+  "schemaVersion": 1,
+  "owner": "event_regressions-calendar-fields",
+  "provenance": "Actual isolated synthetic local UI/API persistence and scoped source bindings. No pixel review is claimed by this functional slice.",
+  "policy": "Only listed named states and fixture scopes receive evidence. All other controls, environments and boundaries remain pending. Production and external integrations were excluded.",
+  "boundaries": {
+    "db": "devon_flow_e2e_calendar_fields",
+    "apiPort": 48961,
+    "webPort": 48962,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "gates": {
+    "functional": {
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "distinctWorkflows": 7
+    },
+    "webTypecheck": "passed",
+    "apiTypecheck": "passed",
+    "scopedLint": "passed"
+  },
+  "evidence": {
+    "feedCreate": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Controlled create503 retains label and real retry200/reload persists",
+      "roles": [
+        "fresh-account"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "feedLifecycle": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "All three kinds, URL selection, local ICS read, CalDAV write403, rotate cancel/refusal/retry, old credential404, revoke refusal/retry/reload",
+      "roles": [
+        "fresh-account"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "clipboard": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Real clipboard write/read after actual Copy action",
+      "roles": [
+        "fresh-account"
+      ],
+      "browsers": [
+        "chromium"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "fieldsLifecycle": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Head creates option/number definitions, renames persisted option retaining ID/answer, moves down, archives/Undo, archived restore and answer/reload",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "fieldsMember": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Member manager403 guidance, required refusal, real own answer save/reload; head own answer remains empty; foreign feed rotate404/revoke inert",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "date": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Choose day15 in actual custom date picker, real save/reload and independent GET exact YYYY-MM-DD",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "timezone": "Asia/Tashkent",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "draft": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Hold actual committed200, type newer text, receive first reply, save newer text and prove independent GET/reload",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "default light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    },
+    "cap": {
+      "test": "apps/web/test/e2e/calendar-fields.qa.spec.ts",
+      "scenario": "Nineteen live credentials then eight real concurrent POSTs; exactly one200/seven422 and twenty returned",
+      "roles": [
+        "fresh-account"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "execution": "Local real API concurrency; browser fixture context, no control coverage inferred",
+      "report": "artifacts/qa/2026-10/calendar-fields/final-twenty-one/results.json"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CreateFeedDialog",
+        "kind": "Input",
+        "labelIncludes": "calendar.feeds.create.labelPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "feedCreate",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "feedCreate",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CreateFeedDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "calendar.feeds.create.submit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "feedCreate",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "feedCreate",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "feedCreate",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CreateFeedDialog",
+        "kind": "RadioOption",
+        "labelIncludes": "calendar.feeds.kind."
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All three actual radio choices; other labels/locales/pending states not inferred.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CopyRow",
+        "kind": "input"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual three credential inputs select the full value; no pixel claim.",
+      "states": {
+        "focus": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CopyRow",
+        "kind": "IconButton",
+        "labelIncludes": "calendar.actions.copy"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "clipboard",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "FeedCard",
+        "kind": "IconButton",
+        "labelIncludes": "calendar.actions.open"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "FeedCard",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "calendar.feeds.rotate.action"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "FeedCard",
+        "kind": "Button",
+        "childSummaryIncludes": "calendar.feeds.rotate.cancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "FeedCard",
+        "kind": "Button",
+        "childSummaryIncludes": "calendar.feeds.rotate.confirm'"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "FeedCard",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "calendar.feeds.revoke.action"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "feedLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Input",
+        "labelIncludes": "fields.form.namePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only English name input within this locale-generated source site.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"field-type\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual select and number types chosen; other field types not inferred.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Input",
+        "labelIncludes": "fields.form.optionLabelAria"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Single Basic option renamed Foundation; no multi-option boundary claim.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.form.optionAdd"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-form-dialog.tsx",
+        "component": "FieldFormDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.form.create"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.moveDown"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.archive"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "fields.manager.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.manager.restore"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/fields-screen.tsx",
+        "component": "FieldsScreen",
+        "kind": "Switch",
+        "labelIncludes": "fields.manager.showArchived"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "fieldsLifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/my-fields-section.tsx",
+        "component": "MyFieldsSection",
+        "kind": "Button",
+        "childSummaryIncludes": "fields.my.save"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "validation": {
+          "status": "verified",
+          "evidenceId": "fieldsMember",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "fieldsMember",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "DatePicker"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the explicit scenario and fixture scope; other boundaries remain pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "date",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "date",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Input",
+        "labelIncludes": "fields.input.textPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the text branch; person type shares the source but is not covered.",
+      "states": {
+        "validation": {
+          "status": "verified",
+          "evidenceId": "fieldsMember",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/fields/components/field-value-input.tsx",
+        "component": "FieldValueInput",
+        "kind": "Input",
+        "labelIncludes": "fields.input.textPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the text branch and the held200 typing journey.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "draft",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "entries": [
+    {
+      "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+      "controls": [
+        "subscription cap"
+      ],
+      "states": [
+        "concurrent last-slot acceptance/refusal"
+      ],
+      "status": "verified-listed-states",
+      "evidenceId": "cap",
+      "surfaceBinding": "API scenario only"
+    }
+  ],
+  "pending": [
+    "Feed read-error Retry, clipboard refusal fallback, feed cap-specific guidance, external calendar client integration",
+    "Field blocklist/duplicate/cap/option-removal validation, all nine value types, card-field inline refusal and required status gate",
+    "Field manager concurrent draft refetch/owner/dept replacement, mobile/locale/theme/pixel/zoom matrices",
+    "Calendar agenda ranges, configured/disabled push settings, add-to-calendar event download"
+  ]
+}

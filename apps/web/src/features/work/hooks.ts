@@ -272,6 +272,9 @@ export function usePatchCardMutation() {
   const t = useT()
   return useMutation({
     mutationKey: ['work', 'card-write', 'patch'],
+    // A second edit must not overtake a slower first save. The cache remains optimistic while
+    // this short queue preserves the order of card edits made in this client.
+    scope: { id: 'work-card-patches' },
     mutationFn: ({ id, patch }: { id: string; patch: api.PatchCardInput }) =>
       api.patchCard(id, patch, csrf),
     onMutate: async ({ id, patch }) => {

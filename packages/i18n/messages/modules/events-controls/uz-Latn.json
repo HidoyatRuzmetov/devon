@@ -1,0 +1,8 @@
+{
+  "eventsControls": {
+    "option": "Variant {number}",
+    "removeOption": "{number}-variantni o‘chirish",
+    "optionLimit": "So‘rovnomada ko‘pi bilan {count} ta variant bo‘lishi mumkin.",
+    "exportFailed": "Taqvim faylini yuklab bo‘lmadi. Qayta urinib ko‘ring."
+  }
+}

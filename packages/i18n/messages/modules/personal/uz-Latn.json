@@ -1,5 +1,11 @@
 {
   "personal": {
+    "save": {
+      "titleRequired": "Nom kiriting.",
+      "error": "Saqlab bo‘lmadi. Yozganlaringiz shu yerda qoldi.",
+      "conflict": "Bu yozuv boshqa joyda o‘zgartirilgan. Yozganlaringiz shu yerda; o‘zgarishlaringizni saqlash uchun qayta urinib ko‘ring.",
+      "retry": "Qayta saqlash"
+    },
     "title": "Shaxsiy",
     "eyebrow": "FAQAT SIZGA",
     "description": "Davrlar, vazifalar, qaydlar, oq taxta va diqqat vaqti — faqat sizga koʻrinadigan maydon.",
@@ -60,6 +66,11 @@
         "submit": "Davrni boshlash"
       },
       "goal": "Maqsad",
+      "edit": "Davrni tahrirlash",
+      "save": "Saqlash",
+      "starts": "Boshlanishi",
+      "ends": "Tugashi",
+      "invalidRange": "Tugash vaqti boshlanish vaqtidan keyin boʻlishi kerak.",
       "goalPlaceholder": "Nimaga erishmoqchisiz?",
       "history": {
         "title": "Tarix ({count})"
@@ -86,6 +97,10 @@
       }
     },
     "tasks": {
+      "title": "Vazifa nomi",
+      "newTitle": "Yangi vazifa",
+      "indentHint": "Ichki vazifaga aylantirish (Alt + →)",
+      "outdentHint": "Bir daraja tashqariga chiqarish (Alt + ←)",
       "inbox": "Yigʻma",
       "addPlaceholder": "Vazifa qoʻshish",
       "openCount": "{count} ta ochiq",
@@ -102,6 +117,8 @@
       }
     },
     "notes": {
+      "title": "Qayd nomi",
+      "body": "Qayd matni",
       "create": "Yangi qayd",
       "newTitle": "Yangi qayd",
       "bodyPlaceholder": "Xohlagan narsangizni yozing",
@@ -121,6 +138,7 @@
       }
     },
     "canvas": {
+      "title": "Oq taxta nomi",
       "create": "Yangi oq taxta",
       "newTitle": "Yangi oq taxta",
       "open": "Ochish",
@@ -138,6 +156,10 @@
         "body": "Oq taxta — eskiz va eslatma qogʻozlari uchun erkin maydon."
       },
       "addSticky": "Eslatma qogʻozi qoʻshish",
+      "deleteSticky": "Eslatma qogʻozini oʻchirish",
+      "stickyText": "Eslatma qogʻozi matni",
+      "drawingText": "Chizma matni",
+      "drawingSurface": "Chizma maydoni",
       "undo": "Bekor qilish",
       "redo": "Qaytarish",
       "zoomIn": "Kattalashtirish",
@@ -190,6 +212,8 @@
       },
       "settings": {
         "title": "Pomodoro sozlamalari",
+        "revert": "Saqlangan sozlamalarga qaytish",
+        "invalidRange": "{min} dan {max} gacha butun son kiriting.",
         "focusMin": "Diqqat (daqiqa)",
         "shortBreakMin": "Qisqa tanaffus (daqiqa)",
         "longBreakMin": "Uzoq tanaffus (daqiqa)",
@@ -211,6 +235,7 @@
         "yesterday": "Kecha",
         "completed": "Yakunlangan",
         "skipped": "Oʻtkazib yuborilgan",
+        "ongoing": "Davom etmoqda",
         "showMore": "Yana {count} kunni koʻrsatish",
         "empty": {
           "title": "Hali seans yoʻq",

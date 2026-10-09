@@ -33,6 +33,7 @@ import {
   toast,
 } from '@devon/ui'
 import { avatarUrl } from '../../lib/avatar.js'
+import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery } from '../../lib/session.js'
 import {
   avatarErrorKey,
@@ -177,7 +178,14 @@ function SessionsSection() {
   if (query.isPending) {
     body = <StateView kind="loading" titleKey="state.loading" />
   } else if (query.isError) {
-    body = <StateView kind="error" titleKey="state.error.title" bodyKey="state.error.body" />
+    body = (
+      <StateView
+        kind="error"
+        titleKey="state.error.title"
+        bodyKey="state.error.body"
+        action={{ labelKey: 'state.error.action', onAction: () => void query.refetch() }}
+      />
+    )
   } else if (query.data.sessions.length === 0) {
     body = <StateView kind="empty" titleKey="accounts.sessions.empty.title" />
   } else {
@@ -297,6 +305,11 @@ function SessionsSection() {
       }
     >
       {body}
+      {revokeOne.isError ? (
+        <p role="alert" className="text-small text-destructive">
+          {t('accounts.settings.saveError')}
+        </p>
+      ) : null}
 
       <Dialog open={revokeAllOpen} onOpenChange={setRevokeAllOpen}>
         <DialogContent title={t('accounts.sessions.revokeAll')}>
@@ -304,6 +317,11 @@ function SessionsSection() {
             <p className="text-body text-muted-foreground">
               {t('accounts.sessions.revokeAllConfirm')}
             </p>
+            {revokeAll.isError ? (
+              <p role="alert" className="text-small text-destructive">
+                {t('accounts.settings.saveError')}
+              </p>
+            ) : null}
             <Button
               variant="destructive"
               loading={revokeAll.isPending}
@@ -331,7 +349,7 @@ function TwoFactorSection() {
   const [recoveryCodes, setRecoveryCodes] = React.useState<string[] | null>(null)
   const [disableOpen, setDisableOpen] = React.useState(false)
   const [disablePassword, setDisablePassword] = React.useState('')
-  const [disableError, setDisableError] = React.useState(false)
+  const [disableError, setDisableError] = React.useState<'password' | 'failed' | null>(null)
   // UI-OVERHAUL.md §3 "Buttons: ... success check morph" -- the "Yoqish" button gets a beat of its
   // own drawn check before the screen advances to the QR step, instead of the QR code simply
   // appearing the instant the request resolves (round2 SEV2: "no success morph" on this exact button).
@@ -361,16 +379,27 @@ function TwoFactorSection() {
     onSuccess: () => {
       setDisableOpen(false)
       setDisablePassword('')
-      setDisableError(false)
+      setDisableError(null)
       void queryClient.invalidateQueries({ queryKey: ['accounts', '2fa'] })
     },
-    onError: () => setDisableError(true),
+    onError: (error) =>
+      setDisableError(error instanceof ApiError && error.status === 403 ? 'password' : 'failed'),
   })
 
   const enabled = statusQuery.data?.ok ?? false
 
   let mainContent: React.ReactNode
-  if (recoveryCodes) {
+  if (statusQuery.isPending) {
+    mainContent = <StateView kind="loading" titleKey="state.loading" />
+  } else if (statusQuery.isError) {
+    mainContent = (
+      <StateView
+        kind="error"
+        titleKey="state.error.title"
+        action={{ labelKey: 'state.error.action', onAction: () => void statusQuery.refetch() }}
+      />
+    )
+  } else if (recoveryCodes) {
     mainContent = (
       <div className="flex flex-col gap-3 rounded-md border border-border bg-muted p-4">
         <h3 className="text-body font-medium text-foreground">
@@ -390,10 +419,17 @@ function TwoFactorSection() {
           size="sm"
           variant="secondary"
           onClick={async () => {
-            await navigator.clipboard.writeText(recoveryCodes.join('\n'))
-            toast(t('accounts.twoFactor.enroll.recoveryCopied'))
+            try {
+              await navigator.clipboard.writeText(recoveryCodes.join('\n'))
+              toast(t('accounts.twoFactor.enroll.recoveryCopied'))
+            } catch {
+              toast.error(t('accounts.settings.saveError'))
+            }
           }}
         >
+          {t('accounts.twoFactor.enroll.copy')}
+        </Button>
+        <Button size="sm" onClick={() => setRecoveryCodes(null)}>
           {t('accounts.twoFactor.enroll.done')}
         </Button>
       </div>
@@ -429,6 +465,19 @@ function TwoFactorSection() {
         <Button size="sm" loading={verify.isPending} onClick={() => verify.mutate()}>
           {t('accounts.twoFactor.enroll.verify')}
         </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={verify.isPending}
+          onClick={() => {
+            setEnrolling(null)
+            setCode('')
+            verify.reset()
+            enroll.reset()
+          }}
+        >
+          {t('accounts.twoFactor.enroll.cancel')}
+        </Button>
       </div>
     )
   } else if (enabled) {
@@ -463,6 +512,11 @@ function TwoFactorSection() {
       }
     >
       {mainContent}
+      {enroll.isError ? (
+        <p role="alert" className="text-small text-destructive">
+          {t('accounts.settings.saveError')}
+        </p>
+      ) : null}
 
       <Dialog open={disableOpen} onOpenChange={setDisableOpen}>
         <DialogContent title={t('accounts.twoFactor.disableDialog.title')}>
@@ -479,7 +533,11 @@ function TwoFactorSection() {
             </label>
             {disableError ? (
               <p role="alert" className="text-small text-destructive">
-                {t('accounts.twoFactor.disableDialog.error')}
+                {t(
+                  disableError === 'password'
+                    ? 'accounts.twoFactor.disableDialog.error'
+                    : 'accounts.settings.saveError',
+                )}
               </p>
             ) : null}
             <Button
@@ -499,18 +557,35 @@ function TwoFactorSection() {
 function PasswordSection() {
   const t = useT()
   const csrfToken = useCsrfToken()
+  const queryClient = useQueryClient()
+  const meQuery = useMeQuery()
+  const formId = React.useId()
+  React.useEffect(() => {
+    if (window.location.hash === '#section-password')
+      document.getElementById(formId)?.querySelector('input')?.focus()
+  }, [formId])
   const [current, setCurrent] = React.useState('')
   const [next, setNext] = React.useState('')
-  const [message, setMessage] = React.useState<'success' | 'error' | null>(null)
+  const [message, setMessage] = React.useState<
+    'success' | 'error' | 'validation' | 'failed' | null
+  >(null)
 
   const mutation = useMutation({
     mutationFn: () => changePassword(current, next, csrfToken),
-    onSuccess: () => {
+    onSuccess: async () => {
       setMessage('success')
       setCurrent('')
       setNext('')
+      await queryClient.invalidateQueries({ queryKey: ['me'] })
     },
-    onError: () => setMessage('error'),
+    onError: (error) =>
+      setMessage(
+        error instanceof ApiError && error.status === 422
+          ? 'validation'
+          : error instanceof ApiError && error.status === 403
+            ? 'error'
+            : 'failed',
+      ),
   })
 
   return (
@@ -518,20 +593,57 @@ function PasswordSection() {
       id="section-password"
       title={t('accounts.password.title')}
       actions={
-        <Button size="sm" loading={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button
+          size="sm"
+          form={formId}
+          type="submit"
+          loading={mutation.isPending}
+          disabled={!current || !next}
+        >
           {t('accounts.password.submit')}
         </Button>
       }
     >
-      <div className="flex max-w-sm flex-col gap-3">
+      <form
+        id={formId}
+        className="flex max-w-sm flex-col gap-3"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!mutation.isPending && current && next) mutation.mutate()
+        }}
+      >
+        {meQuery.data?.user.mustChangePassword ? (
+          <p role="status" className="text-small text-foreground">
+            {t('accounts.password.temporary')}
+          </p>
+        ) : null}
         <label className="flex flex-col gap-1.5">
           <span className="text-small text-foreground">{t('accounts.password.current')}</span>
-          <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="current-password"
+            required
+            maxLength={256}
+            disabled={mutation.isPending}
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+          />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="text-small text-foreground">{t('accounts.password.new')}</span>
-          <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            required
+            minLength={12}
+            maxLength={256}
+            disabled={mutation.isPending}
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+          />
         </label>
+        <p className="text-caption text-muted-foreground">{t('accounts.register.passwordHint')}</p>
         {message !== null ? (
           <p
             role={message === 'success' ? 'status' : 'alert'}
@@ -539,10 +651,10 @@ function PasswordSection() {
               message === 'success' ? 'text-small text-foreground' : 'text-small text-destructive'
             }
           >
-            {message === 'success' ? t('accounts.password.success') : t('accounts.password.error')}
+            {t(`accounts.password.${message}`)}
           </p>
         ) : null}
-      </div>
+      </form>
     </SectionCard>
   )
 }
@@ -588,7 +700,15 @@ function DeleteAccountSection() {
       title={t('accounts.delete.title')}
       description={t('accounts.delete.warning')}
     >
-      {scheduledFor ? (
+      {statusQuery.isPending ? (
+        <StateView kind="loading" titleKey="state.loading" />
+      ) : statusQuery.isError ? (
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          action={{ labelKey: 'state.error.action', onAction: () => void statusQuery.refetch() }}
+        />
+      ) : scheduledFor ? (
         <div className="flex items-center gap-3">
           <p className="text-small text-foreground">
             {t('accounts.delete.scheduled', { date: formatDate(new Date(scheduledFor), locale) })}
@@ -612,6 +732,11 @@ function DeleteAccountSection() {
           {t('accounts.delete.confirm')}
         </Button>
       )}
+      {cancel.isError ? (
+        <p role="alert" className="text-small text-destructive">
+          {t('accounts.settings.saveError')}
+        </p>
+      ) : null}
 
       <Dialog
         open={confirmOpen}
@@ -623,6 +748,11 @@ function DeleteAccountSection() {
         <DialogContent title={t('accounts.delete.title')}>
           <div className="flex flex-col gap-3 pt-4">
             <p className="text-body text-muted-foreground">{t('accounts.delete.confirmDialog')}</p>
+            {request.isError ? (
+              <p role="alert" className="text-small text-destructive">
+                {t('accounts.settings.saveError')}
+              </p>
+            ) : null}
             <label className="flex flex-col gap-1.5">
               <span className="text-small text-foreground">
                 {t('accounts.delete.dialog.loginLabel', { login: expectedLogin })}

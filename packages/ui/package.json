@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "**/*.css",
+    "./src/test-config/setup.ts"
+  ],
   "description": "Tokens (DTCG -> Tailwind v4 @theme, Palette B), primitives, state components, shell patterns, Storybook and self-hosted fonts -- the only place Devon UI is styled.",
   "license": "UNLICENSED",
   "exports": {

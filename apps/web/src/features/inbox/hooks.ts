@@ -9,8 +9,10 @@ import {
   useQueryClient,
   type QueryClient,
   type UseQueryResult,
+  type MutateOptions,
 } from '@tanstack/react-query'
 import { useMeQuery } from '../../lib/session.js'
+import type { Me } from '../../lib/api-schemas.js'
 import {
   archiveNotifications,
   disconnectGroup,
@@ -30,6 +32,7 @@ import {
   putQuietHours,
   requestGroupConnectCode,
   requestTelegramLinkCode,
+  restoreNotifications,
   snoozeNotification,
   unlinkTelegram,
   type DepartmentSettingsDto,
@@ -56,7 +59,7 @@ export function useNotificationsQuery(status: InboxStatus, active = true) {
     queryKey: ['inbox', 'notifications', status],
     queryFn: () => fetchNotifications(status),
     staleTime: 15_000,
-    // a lightweight poll -- there is no realtime push transport in this epic
+    // Also refresh when live delivery is unavailable; personal publications refresh this cache.
     refetchInterval: active ? 60_000 : false,
   })
 }
@@ -117,80 +120,148 @@ export function useSnoozeMutation() {
   })
 }
 
-/** "Undo over confirm" (CLAUDE.md): archiving does not ask "are you sure?" -- it happens immediately
- * and a toast offers a few seconds to undo. Since the API has no unarchive endpoint, "undo" here means
- * the archive call is delayed (never fired if the caller's own `cancel()` runs first), not reversed
- * after the fact -- the same effect, without a server round-trip either way. */
-export function useUndoableArchive(delayMs = 5000) {
+/** Archive is persisted before announcing success. Undo performs an owner-scoped restore,
+ * so navigating away or reloading cannot silently cancel a confirmed action. */
+export function useUndoableArchive() {
   const csrfToken = useCsrfToken()
-  const queryClient = useQueryClient()
+  const { mutateAsync } = useArchiveMutation()
   const invalidate = useInvalidateInbox()
-  const timers = React.useRef(new Map<string, ReturnType<typeof setTimeout>>())
-
-  const commit = React.useCallback(
-    (batchId: string, ids: string[]) => {
-      timers.current.delete(batchId)
-      void archiveNotifications(ids, csrfToken ?? '').then(invalidate)
-    },
-    [csrfToken, invalidate],
-  )
-
-  const archive = React.useCallback(
-    (ids: string[]): { batchId: string; cancel: () => void } => {
-      const batchId = ids.join(',') + ':' + Date.now()
-      // Optimistic: the row disappears from every cached inbox list right away (design's "undo over
-      // confirm" means the action *looks* done immediately); `previous` is every list this touched, so
-      // `cancel()` below can put the exact same rows back rather than re-fetching.
-      const previous = queryClient.getQueriesData<{ items: { id: string }[] }>({
-        queryKey: ['inbox', 'notifications'],
-      })
-      for (const [key, data] of previous) {
-        if (!data) continue
-        queryClient.setQueryData(key, {
-          ...data,
-          items: data.items.filter((n) => !ids.includes(n.id)),
-        })
-      }
-      const timer = setTimeout(() => commit(batchId, ids), delayMs)
-      timers.current.set(batchId, timer)
+  return React.useCallback(
+    async (id: string) => {
+      const result = await mutateAsync([id])
       return {
-        batchId,
-        cancel: () => {
-          const t = timers.current.get(batchId)
-          if (t) {
-            clearTimeout(t)
-            timers.current.delete(batchId)
-          }
-          for (const [key, data] of previous) queryClient.setQueryData(key, data)
-        },
+        cancel:
+          result.updated > 0
+            ? async () => {
+                await restoreNotifications([id], csrfToken ?? '')
+                await invalidate()
+              }
+            : null,
       }
     },
-    [commit, delayMs, queryClient],
+    [mutateAsync, csrfToken, invalidate],
   )
-
-  React.useEffect(() => {
-    const map = timers.current
-    return () => {
-      for (const t of map.values()) clearTimeout(t)
-    }
-  }, [])
-
-  return archive
 }
 
 // --- Preferences -----------------------------------------------------------------------------------
+
+type PersonalSettingCommand<T, TScope> = {
+  input: T
+  ownerUserId: string | null
+  csrfToken: string
+  scope: TScope
+}
+class PersonalSettingScopeChanged extends Error {}
+export function isPersonalSettingScopeChanged(error: unknown): boolean {
+  return error instanceof PersonalSettingScopeChanged
+}
+
+/** Capture the actual owner at the public call boundary; a late receipt cannot enter another
+ * account's cache, and a command delayed until after replacement cannot send under its session. */
+function usePersonalSettingMutation<TInput, TData, TScope>(
+  send: (input: TInput, csrfToken: string, scope: TScope) => Promise<TData>,
+  merge: (data: TData, scope: TScope) => void,
+  scope: TScope,
+) {
+  const queryClient = useQueryClient()
+  const currentScope = React.useRef(scope)
+  React.useLayoutEffect(() => {
+    currentScope.current = scope
+  }, [scope])
+  const owns = (id: string | null) =>
+    Boolean(id && queryClient.getQueryData<Me | null>(['me'])?.user.id === id)
+  const current = (command: PersonalSettingCommand<TInput, TScope>) =>
+    owns(command.ownerUserId) && Object.is(command.scope, currentScope.current)
+  const mutation = useMutation({
+    mutationFn: (command: PersonalSettingCommand<TInput, TScope>) => {
+      if (!current(command)) throw new PersonalSettingScopeChanged('The settings context changed')
+      return send(command.input, command.csrfToken, command.scope)
+    },
+    onSuccess: (data, command) => {
+      if (owns(command.ownerUserId)) merge(data, command.scope)
+    },
+  })
+  const command = (input: TInput): PersonalSettingCommand<TInput, TScope> => {
+    const current = queryClient.getQueryData<Me | null>(['me'])
+    return {
+      input,
+      ownerUserId: current?.user.id ?? null,
+      csrfToken: current?.csrfToken ?? '',
+      scope,
+    }
+  }
+  const optionsFor = (options?: MutateOptions<TData, Error, TInput, unknown>) => ({
+    ...(options?.onSuccess
+      ? {
+          onSuccess: (
+            data: TData,
+            variables: PersonalSettingCommand<TInput, TScope>,
+            result: unknown,
+            context: Parameters<NonNullable<typeof options.onSuccess>>[3],
+          ) => {
+            if (current(variables)) options.onSuccess!(data, variables.input, result, context)
+          },
+        }
+      : {}),
+    ...(options?.onError
+      ? {
+          onError: (
+            error: Error,
+            variables: PersonalSettingCommand<TInput, TScope>,
+            result: unknown,
+            context: Parameters<NonNullable<typeof options.onError>>[3],
+          ) => {
+            if (current(variables)) options.onError!(error, variables.input, result, context)
+          },
+        }
+      : {}),
+    ...(options?.onSettled
+      ? {
+          onSettled: (
+            data: TData | undefined,
+            error: Error | null,
+            variables: PersonalSettingCommand<TInput, TScope>,
+            result: unknown,
+            context: Parameters<NonNullable<typeof options.onSettled>>[4],
+          ) => {
+            if (current(variables))
+              options.onSettled!(data, error, variables.input, result, context)
+          },
+        }
+      : {}),
+  })
+  return {
+    ...mutation,
+    variables: mutation.variables?.input,
+    mutate: (input: TInput, options?: MutateOptions<TData, Error, TInput, unknown>) =>
+      mutation.mutate(command(input), optionsFor(options)),
+    mutateAsync: async (input: TInput, options?: MutateOptions<TData, Error, TInput, unknown>) => {
+      const submitted = command(input)
+      try {
+        const data = await mutation.mutateAsync(submitted, optionsFor(options))
+        if (!current(submitted))
+          throw new PersonalSettingScopeChanged('The settings context changed')
+        return data
+      } catch (error) {
+        if (!current(submitted))
+          throw new PersonalSettingScopeChanged('The settings context changed')
+        throw error
+      }
+    },
+  }
+}
 
 export function usePrefsQuery() {
   return useQuery({ queryKey: ['inbox', 'prefs'], queryFn: fetchPrefs })
 }
 
 export function usePutPrefsMutation() {
-  const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (items: PrefRow[]) => putPrefs(items, csrfToken ?? ''),
-    onSuccess: (data) => queryClient.setQueryData(['inbox', 'prefs'], data),
-  })
+  return usePersonalSettingMutation(
+    (items: PrefRow[], csrf: string) => putPrefs(items, csrf),
+    (data) => queryClient.setQueryData(['inbox', 'prefs'], data),
+    'preferences',
+  )
 }
 
 // --- Quiet hours -----------------------------------------------------------------------------------
@@ -203,12 +274,16 @@ export function useQuietHoursQuery(departmentId: string | null) {
 }
 
 export function usePutQuietHoursMutation(departmentId: string | null) {
-  const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (input: QuietHoursInput) => putQuietHours(departmentId, input, csrfToken ?? ''),
-    onSuccess: (data) => queryClient.setQueryData(['inbox', 'quiet-hours', departmentId], data),
-  })
+  return usePersonalSettingMutation(
+    (input: QuietHoursInput, csrf: string, capturedDepartmentId: string | null) =>
+      putQuietHours(capturedDepartmentId, input, csrf),
+    (data, capturedDepartmentId) => {
+      queryClient.setQueryData(['inbox', 'quiet-hours', capturedDepartmentId], data)
+      void queryClient.invalidateQueries({ queryKey: ['inbox', 'quiet-hours'] })
+    },
+    departmentId,
+  )
 }
 
 // --- ICS -------------------------------------------------------------------------------------------

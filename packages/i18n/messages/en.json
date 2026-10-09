@@ -93,7 +93,8 @@
       "label": "New"
     },
     "inbox": {
-      "aria": "Notifications"
+      "aria": "Notifications",
+      "unreadAria": "Notifications: {count} unread"
     },
     "breadcrumb": {
       "aria": "Breadcrumb"

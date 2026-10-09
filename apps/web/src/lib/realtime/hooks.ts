@@ -9,6 +9,7 @@ import {
   onRealtimeStatus,
   realtimeChannels,
   realtimeStatus,
+  resetRealtime,
   subscribeChannel,
   subscribePresence,
   type PresenceMember,
@@ -170,38 +171,104 @@ export function useSignalWhile(
 const INVALIDATIONS: ReadonlyArray<{
   match: RegExp
   keys: readonly (readonly string[])[]
+  mutationKeys?: readonly (readonly string[])[]
 }> = [
   {
     match: /^work\.(card|checklist|focus)\./,
     keys: [['work'], ['projects']],
+    mutationKeys: [
+      ['work', 'checklist'],
+      ['work', 'card-write'],
+    ],
   },
-  { match: /^projects\./, keys: [['projects'], ['work', 'board']] },
-  { match: /^events\./, keys: [['events']] },
+  {
+    match: /^projects\./,
+    keys: [['projects'], ['work', 'board']],
+    mutationKeys: [
+      ['work', 'checklist'],
+      ['work', 'card-write'],
+    ],
+  },
+  { match: /^events\./, keys: [['events']], mutationKeys: [['events', 'rsvp']] },
   { match: /^structure\./, keys: [['structure']] },
-  { match: /^pages\./, keys: [['pages']] },
-  { match: /^departments\./, keys: [['departments'], ['people']] },
+  { match: /^automations\./, keys: [['automations']] },
+  {
+    match: /^pages\./,
+    keys: [['pages']],
+    mutationKeys: [
+      ['pages', 'write'],
+      ['pages', 'templates-write'],
+    ],
+  },
+  {
+    match: /^departments\.(membership\.changed|join_request\.decided)$/,
+    keys: [['departments'], ['me'], ['people'], ['structure'], ['projects'], ['work']],
+    mutationKeys: [
+      ['departments', 'pendingAction'],
+      ['work', 'card-write'],
+      ['work', 'checklist'],
+    ],
+  },
+  {
+    match: /^departments\.(?!(membership\.changed|join_request\.decided)$)/,
+    keys: [['departments'], ['people']],
+  },
   { match: /^realtime\.canvas\./, keys: [['realtime', 'canvas-shares']] },
   { match: /^inbox\.notification\./, keys: [['inbox', 'notifications']] },
 ]
 
-function invalidateFor(queryClient: QueryClient, type: string): void {
-  // The last checklist mutation refetches committed state. A live echo during an optimistic
-  // toggle must not overwrite the newer local state with an intermediate server response.
-  if (
-    (type.startsWith('work.') || type.startsWith('projects.')) &&
-    queryClient.isMutating({ mutationKey: ['work', 'checklist'] }) > 0
-  )
-    return
-  // The final local write refreshes all work/project surfaces. Fetching an earlier live echo while
-  // a drag or pin is pending replaced the optimistic layout and made it snap back repeatedly.
-  if (
-    (type.startsWith('work.') || type.startsWith('projects.')) &&
-    queryClient.isMutating({ mutationKey: ['work', 'card-write'] }) > 0
-  )
-    return
-  for (const rule of INVALIDATIONS) {
-    if (!rule.match.test(type)) continue
+/** Keep live updates received during optimistic writes and refresh after the last write settles.
+ * A read during a pending write can replace newer local input with an older server snapshot;
+ * dropping the message entirely can leave another colleague's changes invisible after failure. */
+export function createRealtimeInvalidator(queryClient: QueryClient): {
+  receive: (type: string) => void
+  catchUp: () => void
+  dispose: () => void
+} {
+  const deferred = new Set<(typeof INVALIDATIONS)[number]>()
+  const blocked = (rule: (typeof INVALIDATIONS)[number]) =>
+    rule.mutationKeys?.some((key) => queryClient.isMutating({ mutationKey: [...key] }) > 0)
+  const refresh = (rule: (typeof INVALIDATIONS)[number]) => {
     for (const key of rule.keys) void queryClient.invalidateQueries({ queryKey: [...key] })
+  }
+  const unsubscribe = queryClient.getMutationCache().subscribe(() => {
+    for (const rule of deferred) {
+      if (blocked(rule)) continue
+      deferred.delete(rule)
+      refresh(rule)
+    }
+  })
+  return {
+    catchUp() {
+      // Channels have no retained history. Reconnection must refresh cached reads, including
+      // dashboards and counters, before polling is suspended again. Pending optimistic writes
+      // retain their local state and receive this refresh once they settle.
+      void queryClient.invalidateQueries({
+        predicate: (query) => {
+          for (const rule of INVALIDATIONS) {
+            const matches = rule.keys.some((key) =>
+              key.every((part, i) => query.queryKey[i] === part),
+            )
+            if (matches && blocked(rule)) {
+              deferred.add(rule)
+              return false
+            }
+          }
+          return true
+        },
+      })
+    },
+    receive(type) {
+      for (const rule of INVALIDATIONS) {
+        if (!rule.match.test(type)) continue
+        if (blocked(rule)) deferred.add(rule)
+        else refresh(rule)
+      }
+    },
+    dispose() {
+      unsubscribe()
+      deferred.clear()
+    },
   }
 }
 
@@ -220,26 +287,62 @@ export function useRealtimeBridge(): void {
   const queryClient = useQueryClient()
   const meQuery = useMeQuery()
   const signedIn = meQuery.data != null
+  const userId = meQuery.data?.user.id ?? null
+  const departmentId = meQuery.data?.activeDepartmentId ?? null
   const status = useRealtimeStatus()
   const channels = React.useMemo(() => realtimeChannels(), [status])
+  const invalidator = React.useRef<ReturnType<typeof createRealtimeInvalidator> | null>(null)
+  React.useEffect(() => {
+    const bridge = createRealtimeInvalidator(queryClient)
+    invalidator.current = bridge
+    return () => {
+      invalidator.current = null
+      bridge.dispose()
+    }
+  }, [queryClient])
 
   useChannel(signedIn ? (channels?.department ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type)
+    invalidator.current?.receive(message.type)
   })
   useChannel(signedIn ? (channels?.personal ?? null) : null, (message) => {
-    invalidateFor(queryClient, message.type)
+    invalidator.current?.receive(message.type)
   })
+
+  React.useEffect(() => {
+    if (!signedIn || status !== 'connected') return
+    // A healthy socket does not prove the server successfully published every committed write.
+    // Reconcile visible screens at a bounded interval; the publisher is best-effort with no history.
+    const reconcile = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) invalidator.current?.catchUp()
+    }
+    reconcile()
+    const timer = window.setInterval(reconcile, 30_000)
+    document.addEventListener('visibilitychange', reconcile)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', reconcile)
+    }
+  }, [signedIn, status])
 
   // Kick the connection off on the first render of a signed-in shell. `subscribeChannel` connects
   // lazily, but the channel names only exist once `/realtime/config` has answered -- so something
   // has to ask first.
   React.useEffect(() => {
-    if (!signedIn) return
+    // Configuration and subscriptions belong to this exact session/department. Approval can
+    // change it without navigation; retaining the previous socket leaves the new board silent.
+    resetRealtime()
+    if (!userId) return
     void ensureRealtimeConnection()
-    const reconnect = () => void ensureRealtimeConnection()
+    const reconnect = () => {
+      invalidator.current?.catchUp()
+      void ensureRealtimeConnection()
+    }
     window.addEventListener('online', reconnect)
-    return () => window.removeEventListener('online', reconnect)
-  }, [signedIn])
+    return () => {
+      window.removeEventListener('online', reconnect)
+      resetRealtime()
+    }
+  }, [userId, departmentId])
 
   // A failed initial config/token request must recover without requiring a page reload. The
   // WebSocket library handles normal transport reconnects; this also retries bootstrap failures.

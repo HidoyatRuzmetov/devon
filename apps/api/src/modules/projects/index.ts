@@ -14,6 +14,7 @@ import { getCardOwners } from '../work/repo.js'
 import {
   addMilestoneBodySchema,
   createFromTemplateBodySchema,
+  createFromGalleryBodySchema,
   createProjectBodySchema,
   createFromCardBodySchema,
   idParamsSchema,
@@ -93,7 +94,8 @@ const PROJECT_TEMPLATES = [
 
 const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
   app.setErrorHandler((error, _req, reply) => {
-    if (error instanceof repo.InvalidProjectMembers) return sendProblem(reply, 'validation_failed')
+    if (error instanceof repo.InvalidProjectMembers || error instanceof repo.InvalidProjectTemplate)
+      return sendProblem(reply, 'validation_failed')
     throw error
   })
   app.delete(
@@ -230,6 +232,29 @@ const projectsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (_req, reply) => {
       return reply.send(PROJECT_TEMPLATES.map((t) => ({ ...t, milestones: [...t.milestones] })))
+    },
+  )
+
+  app.post(
+    '/projects/from-gallery',
+    {
+      config: {
+        permission: {
+          action: 'create',
+          subject: (r) => departmentChildSubject(requireDepartmentId(r)),
+        },
+      },
+      schema: { body: createFromGalleryBodySchema, response: { 201: projectSchema } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const project = await repo.createFromGallery(contextFromRequest(req), {
+        ...req.body,
+        departmentId: requireDepartmentId(req)!,
+        ownerUserId: resolveOwnerOnCreate(req, req.body.ownerUserId),
+      })
+      if (!project) return sendProblem(reply, 'not_found')
+      return reply.code(201).send(project)
     },
   )
 

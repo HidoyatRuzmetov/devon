@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "dev": "vite --config src/vite.config.ts",
-    "build": "vite build --config src/vite.config.ts && node scripts/move-sourcemaps.mjs",
+    "build": "node scripts/build.mjs && node scripts/move-sourcemaps.mjs",
     "preview": "vite preview --config src/vite.config.ts",
     "typecheck": "tsc --noEmit -p src/tsconfig.json",
     "lint": "eslint --config src/lint/eslint.config.js . && prettier --check --config ../../packages/config/prettier.config.js --ignore-unknown \"src/**/*.{ts,tsx,css,html}\" \"test/**/*.{ts,tsx}\" \"*.json\"",

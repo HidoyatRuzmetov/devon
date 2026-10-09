@@ -45,7 +45,7 @@ export function ShortcutOverlay({ title, open, onOpenChange, shortcuts }: Shortc
               <ul className="flex flex-col gap-2">
                 {group.entries.map((shortcut) => (
                   <li
-                    key={shortcut.description}
+                    key={JSON.stringify([shortcut.keys, shortcut.description])}
                     className="flex min-h-8 items-center justify-between gap-4"
                   >
                     <span data-shell-label className="min-w-0 text-body text-foreground">

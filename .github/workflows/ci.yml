@@ -156,7 +156,12 @@ jobs:
           sudo install -m 0755 trivy /usr/local/bin/trivy
           rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
 
+      - name: Install pinned performance tools
+        run: bash scripts/install-perf-tools.sh
+
       - name: Run the release gate profile
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
         run: node agentic/scripts/gate.mjs --profile release
 
       - name: Upload gate report

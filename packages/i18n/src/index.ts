@@ -23,7 +23,13 @@ export {
 
 export { t, translate, type TParams } from './t.js'
 export { useT, useLocale } from './react.js'
-export { getLocale, setLocale, subscribeLocale } from './store.js'
+export {
+  getLocale,
+  setLocale,
+  subscribeLocale,
+  getLocaleLoadFailure,
+  subscribeLocaleLoadFailure,
+} from './store.js'
 
 export {
   formatDate,

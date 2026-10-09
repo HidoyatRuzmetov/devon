@@ -46,7 +46,7 @@ export const DEFAULT_RECURRENCE: RecurrenceRule = {
 
 export interface RecurrenceFieldProps {
   value: RecurrenceRule | null
-  onCommit: (rule: RecurrenceRule | null) => void
+  onCommit: (rule: RecurrenceRule | null) => void | Promise<void>
   /** The card's own due date -- the preview counts the next occurrence from it, exactly as the job
    * does, so "keyingi: 19.09.2026" on screen is the date that will actually be created. */
   anchorIso: string | null
@@ -57,34 +57,53 @@ export function RecurrenceField({
   value,
   onCommit,
   anchorIso,
-  disabled = false,
+  disabled: readOnly = false,
 }: RecurrenceFieldProps): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const fieldId = React.useId()
   const [draft, setDraft] = React.useState<RecurrenceRule | null>(value)
+  const [saving, setSaving] = React.useState(false)
+  const dirty = React.useRef(false)
+  const pending = React.useRef(false)
+  const disabled = readOnly || saving
 
-  React.useEffect(() => setDraft(value), [value])
+  React.useEffect(() => {
+    if (!dirty.current && !pending.current) setDraft(value)
+  }, [value])
 
   const editing = draft !== null
 
   function update(patch: Partial<RecurrenceRule>): void {
+    dirty.current = true
     setDraft((prev) => ({ ...(prev ?? DEFAULT_RECURRENCE), ...patch }))
   }
 
-  function save(): void {
-    if (draft === null) {
-      onCommit(null)
-      return
+  async function commit(rule: RecurrenceRule | null): Promise<void> {
+    if (pending.current || readOnly) return
+    pending.current = true
+    setSaving(true)
+    try {
+      await onCommit(rule)
+      dirty.current = false
+      setDraft(rule)
+    } catch {
+      // The caller reports the refusal. Keep the local draft through optimistic rollback.
+    } finally {
+      pending.current = false
+      setSaving(false)
     }
+  }
+
+  function save(): void {
+    if (draft === null) return
     const parsed = recurrenceRuleSchema.safeParse(draft)
     if (!parsed.success) {
-      // The editor's own controls cannot normally produce an invalid rule; this catches the one case
-      // they can (a weekly rule with every weekday unticked) with a sentence rather than a 422.
+      // Preserve the contracts' recurrence rules. Empty weekly weekdays use the original weekday.
       toast.error(t('work.recurrence.invalid'))
       return
     }
-    onCommit(parsed.data)
+    void commit(parsed.data)
   }
 
   const preview = React.useMemo(() => {
@@ -104,7 +123,10 @@ export function RecurrenceField({
           size="sm"
           className="self-start"
           disabled={disabled}
-          onClick={() => setDraft(DEFAULT_RECURRENCE)}
+          onClick={() => {
+            dirty.current = true
+            setDraft(DEFAULT_RECURRENCE)
+          }}
         >
           <Repeat className="size-4" aria-hidden="true" />
           {t('work.recurrence.enable')}
@@ -118,9 +140,10 @@ export function RecurrenceField({
   const weekdays = rule.weekdays ?? []
 
   return (
-    <div className="flex flex-col gap-4 rounded-md border border-border bg-muted/30 p-3">
+    <div className="flex min-w-0 flex-col gap-4 rounded-md border border-border bg-muted/30 p-3 [overflow-wrap:anywhere]">
       <RadioGroup
         value={rule.mode}
+        disabled={disabled}
         onValueChange={(mode) => update({ mode: mode as RecurrenceMode })}
         aria-label={t('work.recurrence.modeLabel')}
         className="flex flex-col gap-2"
@@ -227,6 +250,7 @@ export function RecurrenceField({
               const raw = e.target.value
               if (raw === '') {
                 const { dayOfMonth: _dropped, ...rest } = rule
+                dirty.current = true
                 setDraft(rest)
                 return
               }
@@ -285,15 +309,7 @@ export function RecurrenceField({
         <Button size="sm" onClick={save} disabled={disabled}>
           {t('common.save')}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={disabled}
-          onClick={() => {
-            setDraft(null)
-            onCommit(null)
-          }}
-        >
+        <Button variant="ghost" size="sm" disabled={disabled} onClick={() => void commit(null)}>
           {t('work.recurrence.stop')}
         </Button>
       </div>

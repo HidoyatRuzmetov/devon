@@ -61,8 +61,11 @@ export function TranslateTargetPicker({
     label: t(`ai.translateTarget.${locale}`),
   }))
   return (
-    <label className="flex items-center gap-2 text-caption text-muted-foreground" htmlFor={id}>
-      {t('ai.translateTarget.label')}
+    <label
+      className="flex min-w-0 max-w-full flex-wrap items-center gap-2 text-caption text-muted-foreground"
+      htmlFor={id}
+    >
+      <span className="min-w-0">{t('ai.translateTarget.label')}</span>
       <Select
         id={id}
         value={value}
@@ -70,7 +73,7 @@ export function TranslateTargetPicker({
         disabled={disabled ?? false}
         onChange={(event) => onChange(event.target.value as Locale)}
         aria-label={t('ai.translateTarget.label')}
-        className="h-9 w-40 text-small"
+        className="h-auto min-h-9 min-w-0 max-w-full flex-1 basis-40 py-1.5 text-small"
       />
     </label>
   )

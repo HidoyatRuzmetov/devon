@@ -3,9 +3,8 @@
 // email marks it read, never a separate button for something that already happened.
 //
 // UI-OVERHAUL.md "Inbox to Linear quality: list + detail split (stack at 390)": `NotificationDetail`
-// is the shared content, rendered inline as the right pane of the split at >=768
-// (`inbox-screen.tsx`) and inside a bottom `Sheet` below that (`NotificationSheet`, used here for the
-// 390 px stack) -- one detail view, two shells, so the two widths never drift apart.
+// is the shared content, rendered inline where both panes have room (>=1280) and inside a bottom
+// `Sheet` below that -- one detail view, two shells, so their behavior stays consistent.
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import { Button, Chip, IconButton, Sheet, SheetContent } from '@devon/ui'
 import { ExternalLink, X } from 'lucide-react'
@@ -71,7 +70,6 @@ export function NotificationDetail({
           variant="ghost"
           onClick={() => {
             onArchive(notification.id)
-            onClose?.()
           }}
         >
           {t('inbox.row.archive')}
@@ -81,25 +79,30 @@ export function NotificationDetail({
   )
 }
 
-/** The 390 px shell: the same `NotificationDetail`, in a bottom sheet, stacked on top of the list
- * instead of sitting beside it (UI-OVERHAUL.md "stack at 390"). */
+/** The narrow-screen shell for the same detail, with focus returned to its actual opener. */
 export function NotificationSheet({
   notification,
   onOpenChange,
   onArchive,
+  onRestoreFocus,
 }: {
   notification: NotificationDto | null
   onOpenChange: (open: boolean) => void
   onArchive: (id: string) => void
+  onRestoreFocus: () => void
 }) {
   const t = useT()
   return (
-    <Sheet direction="bottom" open={notification !== null} onOpenChange={onOpenChange}>
+    <Sheet direction="bottom" open={notification !== null} onOpenChange={onOpenChange} autoFocus>
       {notification ? (
         <SheetContent
           title={t('inbox.detail.title')}
           side="bottom"
           className="mx-auto max-w-160 overflow-y-auto"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            onRestoreFocus()
+          }}
         >
           <div className="p-6">
             <NotificationDetail

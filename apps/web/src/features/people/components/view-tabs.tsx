@@ -33,7 +33,11 @@ export type ViewTabsProps = {
   onSelect: (view: PeopleView | null) => void
   onRevert: () => void
   onSaveOver: (view: PeopleView) => void
-  onSaveAs: (input: { name: string; shared: boolean; makeDepartmentDefault: boolean }) => void
+  onSaveAs: (input: {
+    name: string
+    shared: boolean
+    makeDepartmentDefault: boolean
+  }) => Promise<void>
   onMakeDefault: (view: PeopleView) => void
   onToggleShared: (view: PeopleView) => void
   onDelete: (view: PeopleView) => void
@@ -60,16 +64,22 @@ export function ViewTabs({
   const [shared, setShared] = React.useState(false)
   const [makeDefault, setMakeDefault] = React.useState(false)
   const [open, setOpen] = React.useState(false)
+  const [saveError, setSaveError] = React.useState(false)
   const active = views.find((v) => v.id === activeViewId) ?? null
 
-  function saveAs(): void {
+  async function saveAs(): Promise<void> {
     const trimmed = name.trim()
-    if (trimmed.length === 0) return
-    onSaveAs({ name: trimmed, shared, makeDepartmentDefault: makeDefault })
-    setName('')
-    setShared(false)
-    setMakeDefault(false)
-    setOpen(false)
+    if (trimmed.length === 0 || busy) return
+    setSaveError(false)
+    try {
+      await onSaveAs({ name: trimmed, shared, makeDepartmentDefault: makeDefault })
+      setName('')
+      setShared(false)
+      setMakeDefault(false)
+      setOpen(false)
+    } catch {
+      setSaveError(true)
+    }
   }
 
   return (
@@ -143,26 +153,37 @@ export function ViewTabs({
             {t('people.table.views.saveAs')}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="flex w-80 flex-col gap-3">
-          <p className="text-small font-medium">{t('people.table.views.saveAsHeading')}</p>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('people.table.views.namePlaceholder')}
-            aria-label={t('people.table.views.namePlaceholder')}
-            maxLength={60}
-          />
-          <label className="flex min-h-11 items-center justify-between gap-3 text-small">
-            <span>{t('people.table.views.shareLabel')}</span>
-            <Switch checked={shared} onCheckedChange={setShared} />
-          </label>
-          <label className="flex min-h-11 items-center justify-between gap-3 text-small">
-            <span>{t('people.table.views.defaultLabel')}</span>
-            <Switch checked={makeDefault} onCheckedChange={setMakeDefault} />
-          </label>
-          <Button onClick={saveAs} disabled={busy || name.trim().length === 0} loading={busy}>
-            {t('people.table.views.saveAsSubmit')}
-          </Button>
+        <PopoverContent align="start" className="flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-3">
+          <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3">
+            <p className="text-small font-medium">{t('people.table.views.saveAsHeading')}</p>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('people.table.views.namePlaceholder')}
+              aria-label={t('people.table.views.namePlaceholder')}
+              maxLength={60}
+            />
+            <label className="flex min-h-11 items-center justify-between gap-3 text-small">
+              <span>{t('people.table.views.shareLabel')}</span>
+              <Switch checked={shared} onCheckedChange={setShared} />
+            </label>
+            <label className="flex min-h-11 items-center justify-between gap-3 text-small">
+              <span>{t('people.table.views.defaultLabel')}</span>
+              <Switch checked={makeDefault} onCheckedChange={setMakeDefault} />
+            </label>
+            {saveError ? (
+              <p role="alert" className="text-small text-destructive">
+                {t('people.table.views.saveError')}
+              </p>
+            ) : null}
+            <Button
+              onClick={() => void saveAs()}
+              disabled={busy || name.trim().length === 0}
+              loading={busy}
+            >
+              {t('people.table.views.saveAsSubmit')}
+            </Button>
+          </fieldset>
         </PopoverContent>
       </Popover>
 

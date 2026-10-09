@@ -1,0 +1,8 @@
+{
+  "eventsControls": {
+    "option": "Вариант {number}",
+    "removeOption": "{number}-вариантни ўчириш",
+    "optionLimit": "Сўровномада кўпи билан {count} та вариант бўлиши мумкин.",
+    "exportFailed": "Тақвим файлини юклаб бўлмади. Қайта уриниб кўринг."
+  }
+}

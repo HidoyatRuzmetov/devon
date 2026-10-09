@@ -302,29 +302,36 @@ export default function TableScreen() {
             // Mobile has no room for five sort headers side by side -- one compact control picking
             // the same `sort` state the desktop headers drive, so sorting still works, it just costs
             // a tap on a menu instead of a click on a column label.
-            <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
-              <Checkbox
-                checked={allSelected ? true : someSelected ? 'indeterminate' : false}
-                onCheckedChange={(v) => toggleAll(v === true)}
-                aria-label={t('work.table.selectAll')}
-              />
-              <Select
-                aria-label={t('work.table.sort.label')}
-                value={sort ? `${sort.field}:${sort.dir}` : ''}
-                onChange={(e) => {
-                  const [field, dir] = e.target.value.split(':') as [SortField, 'asc' | 'desc']
-                  setSort(e.target.value ? { field, dir } : null)
-                }}
-                options={[
-                  { value: '', label: t('work.table.sort.none') },
-                  { value: 'title:asc', label: t('work.field.title') },
-                  { value: 'assignee:asc', label: t('work.field.assignee') },
-                  { value: 'priority:asc', label: t('work.field.priority') },
-                  { value: 'due:asc', label: t('work.field.due') },
-                  { value: 'status:asc', label: t('work.field.status') },
-                ]}
-                className="h-8 max-w-40 text-caption"
-              />
+            <div
+              role="row"
+              className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2"
+            >
+              <div role="columnheader">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                  onCheckedChange={(v) => toggleAll(v === true)}
+                  aria-label={t('work.table.selectAll')}
+                />
+              </div>
+              <div role="columnheader">
+                <Select
+                  aria-label={t('work.table.sort.label')}
+                  value={sort ? `${sort.field}:${sort.dir}` : ''}
+                  onChange={(e) => {
+                    const [field, dir] = e.target.value.split(':') as [SortField, 'asc' | 'desc']
+                    setSort(e.target.value ? { field, dir } : null)
+                  }}
+                  options={[
+                    { value: '', label: t('work.table.sort.none') },
+                    { value: 'title:asc', label: t('work.field.title') },
+                    { value: 'assignee:asc', label: t('work.field.assignee') },
+                    { value: 'priority:asc', label: t('work.field.priority') },
+                    { value: 'due:asc', label: t('work.field.due') },
+                    { value: 'status:asc', label: t('work.field.status') },
+                  ]}
+                  className="h-8 max-w-40 text-caption"
+                />
+              </div>
             </div>
           )}
           <VirtualRows

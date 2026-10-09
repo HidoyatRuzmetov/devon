@@ -6,7 +6,7 @@ import { CountFlow } from '../motion/count-flow.js'
 
 export interface InboxBellProps {
   count: number
-  /** Accessible name; the caller interpolates the count, e.g. `t('inbox.bell.aria', { count })` --
+  /** Accessible name; the caller interpolates the count, e.g. `t('shell.inbox.unreadAria', { count })` --
    * "3 ta oʻqilmagan xabar". A bare "Inbox" would hide the number from a screen reader. */
   label: string
   onClick: () => void
@@ -58,7 +58,7 @@ export function InboxBell({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'relative inline-flex size-9 shrink-0 items-center justify-center rounded-sm',
+        'relative inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1 rounded-sm px-1 py-0.5',
         'transition-colors duration-(--dur-micro) ease-out hover:bg-accent',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         active ? 'bg-accent text-foreground' : 'text-foreground',
@@ -70,7 +70,7 @@ export function InboxBell({
         <span
           aria-hidden="true"
           className={cn(
-            'absolute -right-0.5 -top-0.5 inline-flex min-w-4 items-center justify-center rounded-full',
+            'inline-flex min-w-4 items-center justify-center rounded-full',
             'bg-attention px-1 text-caption font-medium tabular-nums text-attention-foreground',
             pop && !reduced && 'animate-[devon-badge-pop_300ms_var(--ease-out)]',
           )}

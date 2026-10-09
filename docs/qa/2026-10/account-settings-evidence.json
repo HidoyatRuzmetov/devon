@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "owner": "local_services",
+  "provenance": "Actual guarded local UI/API/database responses and explicit selected pixel reads. Source paths bind this bounded audit after parent inventory reconciliation.",
+  "policy": "Only listed states gain evidence. Captured but unread pixels, other roles, every field/failure combination, production TLS and external integrations remain unproved.",
+  "entries": [
+    {
+      "source": "apps/web/src/features/accounts/profile-section.tsx",
+      "controls": ["givenName", "familyName", "patronymic", "title", "login", "email", "Save"],
+      "states": [
+        "actual six-field persistence and renamed/email login",
+        "duplicate username refusal",
+        "continued typing during held200",
+        "late owner receipt refusal",
+        "cross-tab disjoint field patches",
+        "older receipt after newer authoritative GET",
+        "native uppercase/space/@ refusal with zero PATCH and valid dotted/dashed username persistence",
+        "observed interrupted transport and retry"
+      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "browserEnvironment": { "locale": "en", "theme": "light", "width": 1280, "height": 720 },
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/account-boundary.qa.spec.ts"
+      ],
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/profile-interruption-three/results.json",
+        "docs/qa/2026-10/accounts-onboarding.md"
+      ],
+      "status": "verified-listed-states",
+      "pending": ["same-field write compare-and-swap", "all-role all-locale editing matrix"]
+    },
+    {
+      "source": "apps/web/src/features/inbox/preferences-screen.tsx",
+      "controls": [
+        "Assignment via Telegram",
+        "Summary frequency",
+        "daily",
+        "weekly",
+        "off",
+        "named preferences region"
+      ],
+      "states": [
+        "late owner success cannot replace new account",
+        "keyboard region/switch persistence",
+        "actual three-mode replace and reload",
+        "in-app Always on and no Email column",
+        "actual prefs read interruption/retry",
+        "all ten switches visible without horizontal scrolling and full reason labels in the render matrix"
+      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "browserEnvironment": { "locale": "en", "theme": "light", "width": 320, "height": 800 },
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/settings-nested.qa.spec.ts"
+      ],
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json"
+      ],
+      "status": "verified-listed-states",
+      "pending": ["every preference reason/failure type", "external delivery"]
+    },
+    {
+      "source": "apps/web/src/features/inbox/preferences-screen.tsx",
+      "controls": ["Starts", "Ends", "Include weekends", "Save", "Use department default"],
+      "states": [
+        "late receipt preserves newer time draft",
+        "owner replacement success and refusal",
+        "actual department switch retains captured context",
+        "standard too-short refusal and retained draft",
+        "valid retry and reload"
+      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/settings-nested.qa.spec.ts"
+      ],
+      "apiEvidence": "artifacts/qa/2026-10/settings/quiet-api-final.json",
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json"
+      ],
+      "status": "verified-listed-states",
+      "pending": [
+        "every null-field/weekend/time boundary",
+        "concurrent Leave authorization race",
+        "delivery across multiple distinct department defaults"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/accounts/appearance-section.tsx",
+      "controls": ["Language", "Appearance light", "Appearance dark"],
+      "states": [
+        "actual selected locale/theme",
+        "reload persistence",
+        "320px normal text",
+        "768px short viewport with200% typography",
+        "selected native option text fits beside its native arrow"
+      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+      "themes": ["light", "dark"],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-render-and-selection-states",
+      "pending": [
+        "system preference transition",
+        "every captured pixel read",
+        "400% reflow",
+        "OS high contrast"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/accounts/settings-navigation.tsx",
+      "controls": ["Profile settings", "Telegram", "Notification preferences"],
+      "states": [
+        "actual route transitions",
+        "translated current-page navigation",
+        "narrow/enlarged wrapping"
+      ],
+      "roles": ["member"],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-render-and-route-states",
+      "pending": ["all keyboard route/focus restoration combinations"]
+    },
+    {
+      "source": "apps/web/src/features/inbox/telegram-screen.tsx",
+      "controls": ["Settings navigation Telegram", "unconfigured status", "read-error Retry"],
+      "states": [
+        "actual status configured false",
+        "connection-code control absent",
+        "actual interrupted GET then successful retry",
+        "translated narrow/enlarged default state"
+      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-read-refusal-and-render-states",
+      "pending": [
+        "external linking/delivery",
+        "configured unavailable bot",
+        "linked mute/unlink",
+        "group setup and permissions"
+      ]
+    }
+  ],
+  "ledger": "docs/qa/2026-10/account-notification-settings.md"
+}

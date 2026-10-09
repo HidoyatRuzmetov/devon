@@ -4,7 +4,12 @@ import { MotionProvider, RouteSkeleton, StateView, TooltipProvider } from '@devo
 import { useT } from '@devon/i18n'
 import { queryClient } from './lib/query-client.js'
 import { reconcileLocaleWithUser } from './lib/locale-boot.js'
-import { useMeQuery } from './lib/session.js'
+import {
+  useInstanceQuery,
+  useLocaleMutation,
+  useLocalePreferenceRecovery,
+  useMeQuery,
+} from './lib/session.js'
 import { useForcedState } from './lib/forced-state.js'
 import { ForcedStateBlock } from './shell/forced-state-block.js'
 import { navigate, useRouteName, useRoutePath } from './lib/router.js'
@@ -13,6 +18,9 @@ import { matchFeatureRoute } from './features/registry.js'
 import { AppShell } from './shell/app-shell.js'
 import { AuthShell } from './shell/auth-shell.js'
 import { RouteErrorBoundary } from './shell/route-error-boundary.js'
+import { LocaleLoadNotice } from './shell/locale-load-notice.js'
+import { LocalePreferenceNotice } from './shell/locale-preference-notice.js'
+import { PomodoroController } from './features/personal/pomodoro-controller.js'
 
 // H4.3 (route-level code splitting): every `features/*/manifest.ts(x)` route is already
 // `React.lazy` -- these four core routes were the one place that wasn't, so their weight (plus
@@ -40,13 +48,33 @@ const NotFoundRoute = React.lazy(() =>
 /** design.md §4.3/§8: once the signed-in user's own record resolves, its `locale` wins over whatever
  * `bootLocale()` guessed from storage/header (resolution order: user record → localStorage →
  * Accept-Language → default). Mounted once, above the route switch, so every route benefits without
- * each one re-implementing this reconciliation. */
+ * each one re-implementing this reconciliation. An unsaved local choice takes precedence only for
+ * its exact signed owner until explicitly retried and acknowledged. */
 function LocaleReconciler() {
   const meQuery = useMeQuery()
-  const userLocale = meQuery.data?.user.locale
+  const recovery = useLocalePreferenceRecovery(meQuery.data)
+  const localeMutation = useLocaleMutation()
+  const userLocale = recovery?.locale ?? meQuery.data?.user.locale
   React.useEffect(() => {
     if (userLocale) reconcileLocaleWithUser(userLocale)
   }, [userLocale])
+  return (
+    <>
+      <LocaleLoadNotice />
+      <LocalePreferenceNotice
+        recovery={recovery}
+        onRetry={() => {
+          if (recovery) localeMutation.mutate(recovery.locale)
+        }}
+      />
+    </>
+  )
+}
+
+/** This public configuration has no session dependency. Start its existing shared query alongside
+ * /me so a signed-in shell need not pay another round trip after the session resolves. */
+function PublicInstanceBoot() {
+  useInstanceQuery()
   return null
 }
 
@@ -139,15 +167,20 @@ export function RouteOutlet() {
     )
   }
   if (requiresSession && meQuery.isError) {
+    // A known signed superadmin lens must retain its Exit control while the session read retries.
+    const ErrorShell =
+      meQuery.data?.user.role === 'super_admin' && meQuery.data.activeDepartmentId != null
+        ? AppShell
+        : AuthShell
     return (
-      <AuthShell>
+      <ErrorShell>
         <StateView
           kind="error"
           titleKey="state.error.title"
           bodyKey="state.error.body"
           action={{ labelKey: 'state.error.action', onAction: () => void meQuery.refetch() }}
         />
-      </AuthShell>
+      </ErrorShell>
     )
   }
   if (requiresSession && !meQuery.data) {
@@ -217,16 +250,19 @@ export function RouteOutlet() {
         </AuthShell>
       )
     case 'not-found':
-    default:
+    default: {
+      // An unknown public URL must not mount navigation badges that fetch private data.
+      const NotFoundShell = meQuery.data ? AppShell : AuthShell
       return (
-        <AppShell>
+        <NotFoundShell>
           <RouteErrorBoundary>
             <React.Suspense fallback={<RouteFallback />}>
               <NotFoundRoute />
             </React.Suspense>
           </RouteErrorBoundary>
-        </AppShell>
+        </NotFoundShell>
       )
+    }
   }
 }
 
@@ -238,7 +274,9 @@ export function App() {
           (DESIGN.md §2.5 -- replace, never delete). */}
       <MotionProvider>
         <TooltipProvider delayDuration={200}>
+          <PublicInstanceBoot />
           <LocaleReconciler />
+          <PomodoroController />
           <RouteOutlet />
         </TooltipProvider>
       </MotionProvider>

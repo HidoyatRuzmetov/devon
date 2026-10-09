@@ -11,7 +11,7 @@
     "test:unit": "vitest run --config test/vitest.config.ts",
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
+    "start": "node --import tsx dist/src/server.js",
     "setup:prove": "tsx test/checks/setup-prove.ts",
     "session:prove": "tsx test/checks/session-prove.ts",
     "admin:prove": "tsx test/checks/admin-prove.ts",

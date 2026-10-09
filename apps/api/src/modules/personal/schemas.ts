@@ -65,15 +65,26 @@ export type TaskDto = z.infer<typeof taskSchema>
 
 export const taskListSchema = z.array(taskSchema)
 
-export const createTaskBodySchema = z.object({
-  title: z.string().trim().min(1).max(500),
-  sprintId: idSchema.nullish(),
-  parentId: idSchema.nullish(),
-  notes: z.string().max(10000).trim().nullish(),
-  estimateMin: z.number().int().min(0).max(1440).nullish(),
-  linkedCardId: idSchema.nullish(),
-  sort: z.number().int().optional(),
-})
+export const createTaskBodySchema = z
+  .object({
+    title: z.string().trim().min(1).max(500),
+    sprintId: idSchema.nullish(),
+    parentId: idSchema.nullish(),
+    notes: z.string().max(10000).trim().nullish(),
+    estimateMin: z.number().int().min(0).max(1440).nullish(),
+    linkedCardId: idSchema.nullish(),
+    sort: z.number().int().optional(),
+    afterTaskId: idSchema.optional(),
+  })
+  .refine(
+    (input) =>
+      input.afterTaskId === undefined ||
+      (input.parentId === undefined && input.sprintId === undefined && input.sort === undefined),
+    {
+      path: ['afterTaskId'],
+      message: 'Insert-after derives its parent, period and position from the existing task',
+    },
+  )
 
 export const patchTaskBodySchema = z.object({
   title: z.string().trim().min(1).max(500).optional(),

@@ -45,6 +45,8 @@ export interface CommandPaletteGroup {
 export interface CommandPaletteProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Controlled callers capture the opener before opening (including keyboard shortcuts). */
+  onCloseAutoFocus?: (event: Event) => void
   /** Accessible name, e.g. `t('search.aria')` = "Qidirish va amallar" -- not shown visually
    * (spec.md §5: the palette's own structure starts with the input, no heading above it). */
   title: string
@@ -337,14 +339,20 @@ function CommandPaletteBody({
 export function CommandPalette({
   open,
   onOpenChange,
+  onCloseAutoFocus,
   title,
   variant = 'dialog',
   ...body
 }: CommandPaletteProps) {
   if (variant === 'sheet') {
     return (
-      <Sheet direction="bottom" open={open} onOpenChange={onOpenChange}>
-        <SheetContent title={title} side="bottom" className="flex h-[70vh] flex-col p-0">
+      <Sheet direction="bottom" open={open} onOpenChange={onOpenChange} autoFocus>
+        <SheetContent
+          title={title}
+          side="bottom"
+          className="flex h-[70vh] flex-col p-0"
+          onCloseAutoFocus={onCloseAutoFocus}
+        >
           {/* Verdict F2: the list is built only while the palette is actually open, never kept warm
               behind a closed overlay -- so a Ctrl/Cmd+K costs one mount, and a route change while the
               palette is shut costs nothing at all. */}
@@ -357,6 +365,7 @@ export function CommandPalette({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title={title}
+        onCloseAutoFocus={onCloseAutoFocus}
         titleHidden
         showClose={false}
         className="top-[12vh] flex h-125 max-h-[76vh] max-w-160 -translate-y-0 flex-col overflow-hidden p-0"

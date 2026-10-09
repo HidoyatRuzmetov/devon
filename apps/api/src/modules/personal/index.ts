@@ -8,6 +8,12 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import {
+  personalDeleteReceiptSchema,
+  personalRestoreBodySchema,
+  personalTaskVersionChangeSchema,
+  personalTaskVersionsQuerySchema,
+} from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
@@ -52,6 +58,7 @@ import {
 } from './schemas.js'
 
 const idParamsSchema = z.object({ id: z.string().uuid() })
+const deleteQuerySchema = z.object({ receipt: z.enum(['true', 'false']).optional() })
 
 function ctxFrom(req: FastifyRequest): AuditCtx {
   return {
@@ -140,6 +147,7 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
         ctxFrom(req),
       )
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
+      if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
       return reply.send({
         sprint: sprintToDto(outcome.sprint),
         movedTaskCount: outcome.movedTaskCount,
@@ -178,7 +186,20 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/tasks/:id',
     {
       config: { permission: { action: 'update', subject: ownerSubject } },
-      schema: { params: idParamsSchema, body: patchTaskBodySchema, response: { 200: taskSchema } },
+      schema: {
+        params: idParamsSchema,
+        body: patchTaskBodySchema,
+        querystring: personalTaskVersionsQuerySchema,
+        response: {
+          200: z.union([
+            taskSchema,
+            z.object({
+              task: taskSchema,
+              affectedVersions: z.array(personalTaskVersionChangeSchema),
+            }),
+          ]),
+        },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
@@ -190,6 +211,11 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       const outcome = await repo.patchTask(req.actor!.userId, req.params.id, req.body, ctxFrom(req))
       if (outcome.ok === 'not_found') return sendProblem(reply, 'not_found')
       if (outcome.ok === 'conflict') return sendProblem(reply, 'conflict')
+      if (req.query.versions === 'true')
+        return reply.send({
+          task: taskToDto(outcome.row),
+          affectedVersions: outcome.affectedVersions,
+        })
       return reply.type('application/json').send(taskToDto(outcome.row))
     },
   )
@@ -198,13 +224,42 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/tasks/:id',
     {
       config: { permission: { action: 'delete', subject: ownerSubject } },
-      schema: { params: idParamsSchema },
+      schema: {
+        params: idParamsSchema,
+        querystring: deleteQuerySchema,
+        response: { 200: personalDeleteReceiptSchema, 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const ok = await repo.deleteTask(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!ok) return sendProblem(reply, 'not_found')
+      const receipt = await repo.deleteTask(req.actor!.userId, req.params.id, ctxFrom(req))
+      if (!receipt) return sendProblem(reply, 'not_found')
+      if (req.query.receipt === 'true') return reply.type('application/json').send(receipt)
       return reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/tasks/:id/restore',
+    {
+      config: { permission: { action: 'update', subject: ownerSubject } },
+      schema: {
+        params: idParamsSchema,
+        body: personalRestoreBodySchema,
+        response: { 200: taskSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.restoreTask(
+        req.actor!.userId,
+        req.params.id,
+        req.body.restoreToken,
+        ctxFrom(req),
+      )
+      if (result.ok === 'not_found') return sendProblem(reply, 'not_found')
+      if (result.ok === 'conflict') return sendProblem(reply, 'conflict')
+      return reply.type('application/json').send(taskToDto(result.row))
     },
   )
 
@@ -214,13 +269,21 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { permission: { action: 'update', subject: ownerSubject } },
       schema: {
         body: reorderTasksBodySchema,
-        response: { 200: z.object({ updated: z.number().int() }) },
+        querystring: personalTaskVersionsQuerySchema,
+        response: {
+          200: z.object({
+            updated: z.number().int(),
+            affectedVersions: z.array(personalTaskVersionChangeSchema).optional(),
+          }),
+        },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const updated = await repo.reorderTasks(req.actor!.userId, req.body.items, ctxFrom(req))
-      return reply.send({ updated })
+      const result = await repo.reorderTasks(req.actor!.userId, req.body.items, ctxFrom(req))
+      return reply
+        .type('application/json')
+        .send(req.query.versions === 'true' ? result : { updated: result.updated })
     },
   )
 
@@ -270,13 +333,42 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/notes/:id',
     {
       config: { permission: { action: 'delete', subject: ownerSubject } },
-      schema: { params: idParamsSchema },
+      schema: {
+        params: idParamsSchema,
+        querystring: deleteQuerySchema,
+        response: { 200: personalDeleteReceiptSchema, 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const ok = await repo.deleteNote(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!ok) return sendProblem(reply, 'not_found')
+      const receipt = await repo.deleteNote(req.actor!.userId, req.params.id, ctxFrom(req))
+      if (!receipt) return sendProblem(reply, 'not_found')
+      if (req.query.receipt === 'true') return reply.type('application/json').send(receipt)
       return reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/notes/:id/restore',
+    {
+      config: { permission: { action: 'update', subject: ownerSubject } },
+      schema: {
+        params: idParamsSchema,
+        body: personalRestoreBodySchema,
+        response: { 200: noteSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.restoreNote(
+        req.actor!.userId,
+        req.params.id,
+        req.body.restoreToken,
+        ctxFrom(req),
+      )
+      if (result.ok === 'not_found') return sendProblem(reply, 'not_found')
+      if (result.ok === 'conflict') return sendProblem(reply, 'conflict')
+      return reply.type('application/json').send(noteToDto(result.row))
     },
   )
 
@@ -348,13 +440,42 @@ const personalRoutes: FastifyPluginAsyncZod = async (app) => {
     '/canvases/:id',
     {
       config: { permission: { action: 'delete', subject: ownerSubject } },
-      schema: { params: idParamsSchema },
+      schema: {
+        params: idParamsSchema,
+        querystring: deleteQuerySchema,
+        response: { 200: personalDeleteReceiptSchema, 204: z.undefined() },
+      },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      const ok = await repo.deleteCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
-      if (!ok) return sendProblem(reply, 'not_found')
+      const receipt = await repo.deleteCanvas(req.actor!.userId, req.params.id, ctxFrom(req))
+      if (!receipt) return sendProblem(reply, 'not_found')
+      if (req.query.receipt === 'true') return reply.type('application/json').send(receipt)
       return reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/canvases/:id/restore',
+    {
+      config: { permission: { action: 'update', subject: ownerSubject } },
+      schema: {
+        params: idParamsSchema,
+        body: personalRestoreBodySchema,
+        response: { 200: canvasSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const result = await repo.restoreCanvas(
+        req.actor!.userId,
+        req.params.id,
+        req.body.restoreToken,
+        ctxFrom(req),
+      )
+      if (result.ok === 'not_found') return sendProblem(reply, 'not_found')
+      if (result.ok === 'conflict') return sendProblem(reply, 'conflict')
+      return reply.type('application/json').send(canvasToDto(result.row))
     },
   )
 

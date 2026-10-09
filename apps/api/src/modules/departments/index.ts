@@ -19,6 +19,7 @@ import {
   inviteSecretSchema,
   inviteViewSchema,
   joinBodySchema,
+  joinDecisionBodySchema,
   joinKeyParamsSchema,
   joinPreviewSchema,
   joinRequestListSchema,
@@ -559,6 +560,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
       return reply.send({
         requests: rows.map((r) => ({
           userId: r.userId,
+          version: r.version,
           givenName: r.givenName,
           familyName: r.familyName,
           patronymic: r.patronymic,
@@ -586,7 +588,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
             subject: (r) => departmentManaged((r.params as { id: string }).id),
           },
         },
-        schema: { params: memberParamsSchema },
+        schema: { params: memberParamsSchema, body: joinDecisionBodySchema },
       },
       async (req, reply) => {
         if (!checkCsrf(req, reply)) return
@@ -596,6 +598,7 @@ const departmentsRoutes: FastifyPluginAsyncZod = async (app) => {
           req.params.userId,
           decision,
           auditCtx(req),
+          req.body,
         )
         if (!ok) {
           // Another head already decided, or the membership moved on -- a conflict, not a 404: the

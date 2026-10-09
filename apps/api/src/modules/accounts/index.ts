@@ -419,6 +419,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const { userId } = req.params
       const temporaryPassword = await repo.adminResetPassword(userId, auditCtx(req))
+      if (temporaryPassword === null) return sendProblem(reply, 'not_found')
       return reply.send({ temporaryPassword })
     },
   )

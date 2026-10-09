@@ -49,17 +49,20 @@ function StateShell({
         className,
       )}
     >
-      <div {...(role ? { role } : {})} className="flex flex-col items-center gap-4">
+      <div
+        {...(role ? { role } : {})}
+        className="flex min-w-0 w-full flex-col items-center gap-4 [overflow-wrap:anywhere]"
+      >
         {compact || !illustration ? null : (
           // UI-OVERHAUL.md §3 "Empty states": the illustration floats on a 4 s loop and stops
           // completely under reduced motion.
           <IdleFloat className="w-40 max-w-full text-illustration-ink">{illustration}</IdleFloat>
         )}
-        <h3 className="font-display text-h3 text-foreground">{title}</h3>
-        {body ? <p className="max-w-100 text-body text-muted-foreground">{body}</p> : null}
+        <h3 className="max-w-full font-display text-h3 text-foreground">{title}</h3>
+        {body ? <p className="w-full max-w-100 text-body text-muted-foreground">{body}</p> : null}
         {extra}
         {action ? (
-          <Button data-primary onClick={action.onAction}>
+          <Button data-primary className="max-w-full" onClick={action.onAction}>
             {action.label}
           </Button>
         ) : null}

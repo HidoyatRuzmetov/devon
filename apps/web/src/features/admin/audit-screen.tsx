@@ -10,7 +10,7 @@
 // subject types the super admin console can actually navigate to), rows group by day under a date
 // sub-head, and the text filter is the same `FilterChip` row every other screen uses.
 import * as React from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { useT, useLocale, formatDate, formatTime } from '@devon/i18n'
 import {
   AnimatedCheck,
@@ -19,6 +19,7 @@ import {
   Button,
   Chip,
   FilterChip,
+  Input,
   Stagger,
   StaggerItem,
   StateView,
@@ -27,7 +28,8 @@ import {
 } from '@devon/ui'
 import { AlertTriangle } from 'lucide-react'
 import { RouterLink } from '../../lib/router.js'
-import { auditExportUrl, fetchAuditEvents, fetchAuditVerify, type AuditEventRow } from './api.js'
+import { fetchAuditExport, fetchAuditEvents, fetchAuditVerify, type AuditEventRow } from './api.js'
+import { ApiError } from '../../lib/api-client.js'
 import { AdminScreen } from './admin-screen.js'
 
 /** UI-OVERHAUL.md §2 "Admin console ... audit viewer with chain-verify badge animation": the check
@@ -94,6 +96,7 @@ const VERB_KEY_ALIAS: Partial<Record<string, string>> = {
   'personal.sprint.updated': 'personal.cycle.updated',
   'personal.task.created': 'personal.item.created',
   'personal.task.deleted': 'personal.item.deleted',
+  'personal.task.restored': 'personal.item.restored',
   'personal.task.reordered': 'personal.item.reordered',
   'personal.task.updated': 'personal.item.updated',
 }
@@ -199,11 +202,16 @@ function AuditBody() {
   const locale = useLocale()
   const [category, setCategory] = React.useState<string | null>(null)
   const [cursors, setCursors] = React.useState<number[]>([])
+  const [fromDate, setFromDate] = React.useState('')
+  const [toDate, setToDate] = React.useState('')
+  const from = fromDate ? new Date(`${fromDate}T00:00:00`).toISOString() : undefined
+  const to = toDate ? new Date(`${toDate}T23:59:59.999`).toISOString() : undefined
   const cursor = cursors[cursors.length - 1]
 
   const listQuery = useQuery({
-    queryKey: ['admin', 'audit', 'events', category, cursor],
-    queryFn: () => fetchAuditEvents({ category: category ?? undefined, cursor }),
+    queryKey: ['admin', 'audit', 'events', category, cursor, from, to],
+    queryFn: () => fetchAuditEvents({ category: category ?? undefined, cursor, from, to }),
+    placeholderData: keepPreviousData,
   })
 
   const verify = useMutation({
@@ -215,6 +223,29 @@ function AuditBody() {
           : t('admin.console.audit.verifyFailedToast'),
       )
     },
+    onError: () => toast(t('admin.console.operationFailed')),
+  })
+  const download = useMutation({
+    mutationFn: () => fetchAuditExport(category ?? undefined, { from, to }),
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'audit-export.csv'
+      document.body.append(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    },
+    onError: (error) =>
+      toast(
+        t(
+          error instanceof ApiError &&
+            error.errors.some((row) => row.path === 'export' && row.code === 'too_many_events')
+            ? 'admin.console.audit.exportTooLarge'
+            : 'admin.console.operationFailed',
+        ),
+      ),
   })
 
   if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -254,10 +285,40 @@ function AuditBody() {
           <Button variant="secondary" onClick={() => verify.mutate()} loading={verify.isPending}>
             {t('admin.console.audit.verifyChain')}
           </Button>
-          <a href={auditExportUrl(category ?? undefined)}>
-            <Button variant="secondary">{t('admin.console.audit.export')}</Button>
-          </a>
+          <Button
+            variant="secondary"
+            onClick={() => download.mutate()}
+            loading={download.isPending}
+          >
+            {t('admin.console.audit.export')}
+          </Button>
         </div>
+      </div>
+      <div className="flex flex-wrap gap-3">
+        <label className="flex min-w-0 flex-col gap-1 text-small text-foreground">
+          {t('admin.console.audit.fromDate')}
+          <Input
+            type="date"
+            value={fromDate}
+            max={toDate || undefined}
+            onChange={(event) => {
+              setFromDate(event.target.value)
+              setCursors([])
+            }}
+          />
+        </label>
+        <label className="flex min-w-0 flex-col gap-1 text-small text-foreground">
+          {t('admin.console.audit.toDate')}
+          <Input
+            type="date"
+            value={toDate}
+            min={fromDate || undefined}
+            onChange={(event) => {
+              setToDate(event.target.value)
+              setCursors([])
+            }}
+          />
+        </label>
       </div>
 
       {verify.data ? (

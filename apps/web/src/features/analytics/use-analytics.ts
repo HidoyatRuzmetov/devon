@@ -24,8 +24,12 @@ function useCsrfToken(): string {
   return meQuery.data?.csrfToken ?? ''
 }
 
-export function useSummaryQuery(query: SummaryQuery) {
-  return useQuery({ queryKey: KEYS.summary(query), queryFn: () => api.fetchSummary(query) })
+export function useSummaryQuery(query: SummaryQuery, enabled = true) {
+  return useQuery({
+    queryKey: KEYS.summary(query),
+    queryFn: () => api.fetchSummary(query),
+    enabled,
+  })
 }
 
 export function usePersonalOverviewQuery() {
@@ -64,8 +68,8 @@ export function useDeleteSavedFilterMutation() {
   })
 }
 
-export function usePinnedChartsQuery() {
-  return useQuery({ queryKey: KEYS.pins, queryFn: api.fetchPinnedCharts })
+export function usePinnedChartsQuery(enabled = true) {
+  return useQuery({ queryKey: KEYS.pins, queryFn: api.fetchPinnedCharts, enabled })
 }
 
 export function usePinChartMutation() {

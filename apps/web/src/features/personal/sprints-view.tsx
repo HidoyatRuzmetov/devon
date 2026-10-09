@@ -10,7 +10,7 @@
 // Both go through Accept/Edit/Discard, and Edit is a real edit, never a second Discard.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { Plus, RotateCcw, Sparkles, Target } from 'lucide-react'
+import { Pencil, Plus, RotateCcw, Sparkles, Target } from 'lucide-react'
 import {
   Badge,
   Button,
@@ -39,6 +39,7 @@ import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   SPRINT_KIND_LABEL_KEYS,
   defaultSprintRange,
+  rolloverSprintRange,
   formatTimeLeft,
   sprintElapsedPct,
   sprintHasEnded,
@@ -55,6 +56,65 @@ import {
 import type { Sprint, SprintKind, Task } from './types.js'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+function localDateTime(iso: string): string {
+  const date = new Date(iso)
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
+function chosenRange(start: string, end: string) {
+  const startsAt = new Date(start)
+  const endsAt = new Date(end)
+  if (
+    !Number.isFinite(startsAt.getTime()) ||
+    !Number.isFinite(endsAt.getTime()) ||
+    endsAt <= startsAt
+  )
+    return null
+  return { startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }
+}
+
+function DateRangeFields({
+  start,
+  end,
+  setStart,
+  setEnd,
+  disabled,
+}: {
+  start: string
+  end: string
+  setStart: (value: string) => void
+  setEnd: (value: string) => void
+  disabled: boolean
+}) {
+  const t = useT()
+  return (
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14em),1fr))] gap-3 text-body">
+      <label className="flex min-w-0 flex-col gap-1">
+        <span className="text-small">{t('personal.sprints.starts')}</span>
+        <Input
+          type="datetime-local"
+          value={start}
+          onChange={(event) => setStart(event.target.value)}
+          required
+          disabled={disabled}
+          className="min-w-0"
+        />
+      </label>
+      <label className="flex min-w-0 flex-col gap-1">
+        <span className="text-small">{t('personal.sprints.ends')}</span>
+        <Input
+          type="datetime-local"
+          value={end}
+          onChange={(event) => setEnd(event.target.value)}
+          required
+          disabled={disabled}
+          className="min-w-0"
+        />
+      </label>
+    </div>
+  )
+}
 
 type PlanAiState =
   | { sprintId: string; status: 'pending' }
@@ -175,6 +235,19 @@ export function SprintsView() {
   const [open, setOpen] = React.useState(false)
   const [kind, setKind] = React.useState<SprintKind>('week')
   const [goal, setGoal] = React.useState('')
+  const [customStart, setCustomStart] = React.useState(() =>
+    localDateTime(defaultSprintRange('custom').startsAt),
+  )
+  const [customEnd, setCustomEnd] = React.useState(() =>
+    localDateTime(defaultSprintRange('custom').endsAt),
+  )
+  const [dateError, setDateError] = React.useState(false)
+  const [editing, setEditing] = React.useState<Sprint | null>(null)
+  const [editGoal, setEditGoal] = React.useState('')
+  const [editStart, setEditStart] = React.useState('')
+  const [editEnd, setEditEnd] = React.useState('')
+  const [editDateError, setEditDateError] = React.useState(false)
+  const periodPending = createSprint.isPending || patchSprint.isPending || rollover.isPending
   const [planAi, setPlanAi] = React.useState<PlanAiState | null>(null)
   const [planDraft, setPlanDraft] = React.useState('')
   const [catchUpAi, setCatchUpAi] = React.useState<CatchUpAiState | null>(null)
@@ -196,6 +269,15 @@ export function SprintsView() {
       />
     )
   }
+  if (tasksQuery.isError)
+    return (
+      <StateView
+        kind="error"
+        titleKey="state.error.title"
+        bodyKey="state.error.body"
+        action={{ labelKey: 'state.error.action', onAction: () => tasksQuery.refetch() }}
+      />
+    )
 
   const sprints = sprintsQuery.data
   const tasks: Task[] = tasksQuery.data ?? []
@@ -204,7 +286,13 @@ export function SprintsView() {
 
   function submitCreate(e: React.FormEvent) {
     e.preventDefault()
-    const range = defaultSprintRange(kind)
+    if (periodPending) return
+    const range = kind === 'custom' ? chosenRange(customStart, customEnd) : defaultSprintRange(kind)
+    if (!range) {
+      setDateError(true)
+      return
+    }
+    setDateError(false)
     createSprint.mutate(
       { kind, goal: goal.trim() || null, ...range },
       {
@@ -218,13 +306,45 @@ export function SprintsView() {
   }
 
   function doRollover(sprint: Sprint) {
-    const range = defaultSprintRange(sprint.kind)
+    if (periodPending) return
+    const range = rolloverSprintRange(sprint)
     rollover.mutate(
       { id: sprint.id, input: { ...range, goal: sprint.goal } },
       {
         onSuccess: (result) =>
           toast(t('personal.sprints.rollover.toast', { count: result.movedTaskCount })),
         onError: () => toast(t('toast.saveError')),
+      },
+    )
+  }
+
+  function editPeriod(sprint: Sprint) {
+    if (periodPending) return
+    setEditing(sprint)
+    setEditGoal(sprint.goal ?? '')
+    setEditStart(localDateTime(sprint.startsAt))
+    setEditEnd(localDateTime(sprint.endsAt))
+    setEditDateError(false)
+    patchSprint.reset()
+  }
+
+  function submitEdit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!editing || periodPending) return
+    const range = chosenRange(editStart, editEnd)
+    if (!range) {
+      setEditDateError(true)
+      return
+    }
+    setEditDateError(false)
+    patchSprint.mutate(
+      {
+        id: editing.id,
+        input: { goal: editGoal.trim() || null, ...range, version: editing.version },
+      },
+      {
+        onSuccess: () => setEditing(null),
+        onError: () => toast.error(t('toast.saveError')),
       },
     )
   }
@@ -431,7 +551,7 @@ export function SprintsView() {
           />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button size="sm">
+              <Button size="sm" disabled={periodPending}>
                 <Plus className="size-4" aria-hidden="true" />
                 {t('personal.sprints.create.action')}
               </Button>
@@ -445,6 +565,7 @@ export function SprintsView() {
                       type="button"
                       size="sm"
                       variant={kind === k ? 'primary' : 'secondary'}
+                      disabled={periodPending}
                       onClick={() => setKind(k)}
                     >
                       {t(SPRINT_KIND_LABEL_KEYS[k])}
@@ -460,8 +581,23 @@ export function SprintsView() {
                     onChange={(e) => setGoal(e.target.value)}
                     placeholder={t('personal.sprints.goalPlaceholder')}
                     maxLength={2000}
+                    disabled={periodPending}
                   />
                 </label>
+                {kind === 'custom' ? (
+                  <DateRangeFields
+                    start={customStart}
+                    end={customEnd}
+                    setStart={setCustomStart}
+                    setEnd={setCustomEnd}
+                    disabled={periodPending}
+                  />
+                ) : null}
+                {dateError ? (
+                  <p role="alert" className="text-small text-destructive">
+                    {t('personal.sprints.invalidRange')}
+                  </p>
+                ) : null}
                 <Button type="submit" loading={createSprint.isPending}>
                   {t('personal.sprints.create.submit')}
                 </Button>
@@ -503,7 +639,12 @@ export function SprintsView() {
           titleKey="personal.sprints.empty.title"
           bodyKey="personal.sprints.empty.body"
           illustration={<EmptyPersonalIllustration />}
-          action={{ labelKey: 'personal.sprints.create.action', onAction: () => setOpen(true) }}
+          action={{
+            labelKey: 'personal.sprints.create.action',
+            onAction: () => {
+              if (!periodPending) setOpen(true)
+            },
+          }}
         />
       ) : (
         <Stagger className="flex flex-col gap-3" as="ul">
@@ -530,9 +671,7 @@ export function SprintsView() {
                           {/* DESIGN.md §9.2: a tinted badge, not a solid one -- this repeats once
                               per sprint row, and a solid fill on every row of a dense list reads as
                               alarming/noisy rather than a plain category label. */}
-                          <Badge tone="neutral" className="bg-info/10 text-info">
-                            {t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}
-                          </Badge>
+                          <Badge tone="info">{t(SPRINT_KIND_LABEL_KEYS[sprint.kind])}</Badge>
                           <span className="text-caption tabular-nums text-muted-foreground">
                             {ended
                               ? t('personal.sprints.ended')
@@ -552,6 +691,15 @@ export function SprintsView() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={periodPending}
+                      onClick={() => editPeriod(sprint)}
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
+                      {t('personal.sprints.edit')}
+                    </Button>
                     <SparkleButton
                       aria-label={t('personal.ai.planSprint.action')}
                       label={t('personal.ai.planSprint.action')}
@@ -564,6 +712,7 @@ export function SprintsView() {
                       variant="secondary"
                       onClick={() => doRollover(sprint)}
                       loading={rollover.isPending}
+                      disabled={periodPending}
                     >
                       <RotateCcw className="size-4" aria-hidden="true" />
                       {t('personal.sprints.rollover.action')}
@@ -572,6 +721,7 @@ export function SprintsView() {
                       <Button
                         size="sm"
                         variant="ghost"
+                        disabled={periodPending}
                         onClick={() =>
                           patchSprint.mutate(
                             {
@@ -583,6 +733,7 @@ export function SprintsView() {
                                 setCelebratingSprintId(sprint.id)
                                 toast(t('personal.sprints.complete.toast'))
                               },
+                              onError: () => toast.error(t('toast.saveError')),
                             },
                           )
                         }
@@ -619,6 +770,47 @@ export function SprintsView() {
           })}
         </Stagger>
       )}
+
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(value) => {
+          if (!value) setEditing(null)
+        }}
+      >
+        <DialogContent title={t('personal.sprints.edit')}>
+          <form className="mt-4 flex flex-col gap-4" onSubmit={submitEdit}>
+            <label className="flex flex-col gap-1">
+              <span className="text-small">{t('personal.sprints.goal')}</span>
+              <Input
+                value={editGoal}
+                onChange={(event) => setEditGoal(event.target.value)}
+                maxLength={2000}
+                disabled={periodPending}
+              />
+            </label>
+            <DateRangeFields
+              start={editStart}
+              end={editEnd}
+              setStart={setEditStart}
+              setEnd={setEditEnd}
+              disabled={periodPending}
+            />
+            {editDateError ? (
+              <p role="alert" className="text-small text-destructive">
+                {t('personal.sprints.invalidRange')}
+              </p>
+            ) : null}
+            {patchSprint.isError ? (
+              <p role="alert" className="text-small text-destructive">
+                {t('personal.save.error')}
+              </p>
+            ) : null}
+            <Button type="submit" loading={patchSprint.isPending}>
+              {t('personal.sprints.save')}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {past.length > 0 ? (
         <details className="text-body text-foreground">

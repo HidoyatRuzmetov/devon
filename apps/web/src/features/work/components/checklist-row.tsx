@@ -74,6 +74,7 @@ export function ChecklistRow({
           <IconButton
             type="submit"
             aria-label={t('work.card.saveChecklistItem')}
+            tooltip={t('work.card.saveChecklistItem')}
             disabled={saving || !draft.trim()}
           >
             <Check className="size-3.5" />
@@ -81,6 +82,7 @@ export function ChecklistRow({
           <IconButton
             type="button"
             aria-label={t('work.card.cancelChecklistEdit')}
+            tooltip={t('work.card.cancelChecklistEdit')}
             disabled={saving}
             onClick={() => setEditing(false)}
           >
@@ -99,6 +101,7 @@ export function ChecklistRow({
             <>
               <IconButton
                 aria-label={t('work.card.editChecklistItem')}
+                tooltip={t('work.card.editChecklistItem')}
                 onClick={() => {
                   setDraft(item.text)
                   setEditing(true)
@@ -106,7 +109,11 @@ export function ChecklistRow({
               >
                 <Pencil className="size-3.5" />
               </IconButton>
-              <IconButton aria-label={t('work.action.delete')} onClick={onDelete}>
+              <IconButton
+                aria-label={t('work.action.delete')}
+                tooltip={t('work.action.delete')}
+                onClick={onDelete}
+              >
                 <Trash2 className="size-3.5" />
               </IconButton>
             </>

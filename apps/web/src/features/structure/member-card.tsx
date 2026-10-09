@@ -119,7 +119,11 @@ export function MemberCard({
             'flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 shadow-1 transition-[transform,box-shadow] duration-(--dur-micro) ease-out hover:-translate-y-0.5 hover:shadow-2 motion-reduce:hover:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
       }
     >
-      <div className={compact ? 'contents' : 'flex items-center gap-3'}>
+      <div
+        className={
+          compact ? 'contents' : 'grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2'
+        }
+      >
         <Avatar
           src={avatarUrl(member.avatarKey, compact ? 64 : 128)}
           size={compact ? 'sm' : 'lg'}
@@ -131,20 +135,26 @@ export function MemberCard({
           <p
             className={
               compact
-                ? 'truncate text-small text-foreground'
-                : 'truncate text-body font-medium text-foreground'
+                ? 'break-words text-small text-foreground'
+                : 'break-words text-body font-medium text-foreground'
             }
           >
             {fullName(member)}
           </p>
           {member.title ? (
-            <p className="truncate text-caption text-muted-foreground">{member.title}</p>
+            <p className="break-words text-caption text-muted-foreground">{member.title}</p>
           ) : null}
         </div>
         {/* WALKTHROUGH-FINDINGS §6: "you cannot tell who the head is" -- the boshqarma boshligʻi was
             identifiable only by a free-text job title. The department role is the fact, so it is the
             badge; the unit role stays beside it when the person also leads or sits in a boʻlim. */}
-        <span className="flex shrink-0 items-center gap-1.5">
+        <span
+          className={
+            compact
+              ? 'flex shrink-0 flex-wrap items-center gap-1.5'
+              : 'col-start-2 flex flex-wrap items-center gap-1.5'
+          }
+        >
           {member.membershipRole === 'head' ? (
             <Badge tone="info">{t('departments.members.roleHead')}</Badge>
           ) : null}
@@ -178,7 +188,11 @@ export function MemberCard({
   } else if (!unit) {
     unitControl = (
       <p className="mt-3 text-small text-muted-foreground">
-        {t('structure.people.memberCard.noUnit')}
+        {t(
+          member.membershipRole === 'head'
+            ? 'headScope.departmentWide'
+            : 'structure.people.memberCard.noUnit',
+        )}
       </p>
     )
   } else {
@@ -197,10 +211,12 @@ export function MemberCard({
             initials={initialsFromName(member.givenName, member.familyName)}
             hueSeed={member.unitId ?? member.userId}
           />
-          <div className="min-w-0">
-            <p className="truncate text-body font-medium text-foreground">{formalName(member)}</p>
+          <div className="min-w-0 flex-1">
+            <p className="break-words text-body font-medium text-foreground">
+              {formalName(member)}
+            </p>
             {member.title ? (
-              <p className="truncate text-small text-muted-foreground">{member.title}</p>
+              <p className="break-words text-small text-muted-foreground">{member.title}</p>
             ) : null}
           </div>
         </div>

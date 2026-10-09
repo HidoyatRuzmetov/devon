@@ -403,7 +403,12 @@ export function validateFieldValue(def: FieldDef, raw: FieldValue): FieldValueCh
     }
     case 'date': {
       const s = String(raw).slice(0, 10)
-      if (!ISO_DATE.test(s) || Number.isNaN(new Date(s).getTime())) {
+      const date = new Date(s)
+      if (
+        !ISO_DATE.test(s) ||
+        Number.isNaN(date.getTime()) ||
+        date.toISOString().slice(0, 10) !== s
+      ) {
         return { ok: false, error: 'not_a_date' }
       }
       return { ok: true, value: s }

@@ -235,6 +235,7 @@ export function transferHeadship(id: string, userId: string, csrfToken: string) 
 
 const joinRequestSchema = z.object({
   userId: z.string().uuid(),
+  version: z.number().int().positive(),
   givenName: z.string(),
   familyName: z.string(),
   patronymic: z.string().nullable(),
@@ -258,10 +259,11 @@ export function decideJoinRequest(
   userId: string,
   decision: 'approve' | 'reject' | 'undo',
   csrfToken: string,
+  receipt: { expectedVersion: number; originalDecision?: 'approve' | 'reject' | undefined },
 ) {
   return apiClient.post(
     `/api/v1/departments/${id}/join-requests/${userId}/${decision}`,
-    {},
+    receipt,
     z.void(),
     csrfToken,
   )

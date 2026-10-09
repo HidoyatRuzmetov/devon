@@ -16,6 +16,7 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  toast,
 } from '@devon/ui'
 import { CalendarDays, Download, List, MoreVertical, Plus } from 'lucide-react'
 import { ApiError } from '../../lib/api-client.js'
@@ -65,6 +66,7 @@ export default function EventsScreen() {
   const [view, setView] = React.useState<View>('list')
   const [month, setMonth] = React.useState(() => new Date())
   const [downloadingMine, setDownloadingMine] = React.useState(false)
+  const createdEventId = React.useRef<string | null>(null)
 
   const eventsQuery = useEventsQuery()
   const createMutation = useCreateEventMutation()
@@ -79,6 +81,8 @@ export default function EventsScreen() {
     try {
       const ics = await fetchMyIcs()
       downloadIcs(ics.filename, ics.content)
+    } catch {
+      toast(t('eventsControls.exportFailed'))
     } finally {
       setDownloadingMine(false)
     }
@@ -246,13 +250,18 @@ export default function EventsScreen() {
       <EventFormDialog
         open={creating}
         onOpenChange={(open) => {
-          if (!open) closeOverlay()
+          if (!open) {
+            const createdId = createdEventId.current
+            createdEventId.current = null
+            if (createdId) navigate(`/events?event=${createdId}`, { replace: true })
+            else closeOverlay()
+          }
         }}
         event={null}
         submitting={createMutation.isPending}
         onSubmit={async (values) => {
           const created = await createMutation.mutateAsync(eventFormValuesToCreateInput(values))
-          navigate(`/events?event=${created.id}`, { replace: true })
+          createdEventId.current = created.id
         }}
       />
 

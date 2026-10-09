@@ -1,0 +1,545 @@
+{
+  "owner": "event_regressions-head-scope",
+  "reviewBasis": "Actual view_image pixel inspection",
+  "reviewedImages": 23,
+  "capturedMatrixImages": 144,
+  "noBlanketPixelPass": true,
+  "reviewed": [
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/en-light.png",
+      "scope": "en-light",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2250,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/en-dark.png",
+      "scope": "en-dark",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2250,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/ru-light.png",
+      "scope": "ru-light",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2370,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/ru-dark.png",
+      "scope": "ru-dark",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2370,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/uz-Latn-light.png",
+      "scope": "uz-Latn-light",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2352,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/uz-Latn-dark.png",
+      "scope": "uz-Latn-dark",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2352,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/uz-Cyrl-light.png",
+      "scope": "uz-Cyrl-light",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2364,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/native-sheets/uz-Cyrl-dark.png",
+      "scope": "uz-Cyrl-dark",
+      "kind": "unscaled native sheet",
+      "opened": true,
+      "sourceCrops": [
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/0-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/1-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/2-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/3-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/4-320-1.png",
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 640
+        },
+        {
+          "source": "artifacts/qa/2026-10/results/head-scope-visual/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/5-320-1.png",
+          "x": 0,
+          "y": 2364,
+          "width": 320,
+          "height": 640
+        }
+      ],
+      "observation": "Main directory leadership grouping, own board card, indicator wrapping, Department-wide metadata/workload and visible scoped analytics rows inspected.",
+      "limitation": "Six 320px native-width crops, not whole-page review. Fixed mobile navigation may overlay lower head badge pixels; Russian analytics crop excludes the third unit row. No focus/contrast pass inferred."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-4debc-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "en-light",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-95165-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "en-dark",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-2b1cc-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "ru-light",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-01236-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "ru-dark",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "uz-Latn-light",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-9ad1f-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "uz-Latn-dark",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-165cb-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "uz-Cyrl-light",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-3da48-ow-tablet-and-enlarged-text-chromium/0-1280-2.png",
+      "scope": "uz-Cyrl-dark",
+      "kind": "full original",
+      "opened": true,
+      "observation": "At 200% text, all three main directory names wrap completely and role badges have a separate row.",
+      "limitation": "Directory content only; this is not a new shared-shell acceptance gate."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-twenty-four/results/head-scope.qa-directory-na-e6787-le-at-200-percent-text-size-chromium/directory-enlarged.png",
+      "scope": "chromium/en/200%",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Main directory names and badge wrapping inspected in all three engines.",
+      "limitation": "The other functional screenshot originals are not claimed reviewed by this record."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/indicator-after/results/head-scope.qa-narrow-Russi-f0eb8-dable-beside-the-head-badge-chromium/indicator-narrow-ru.png",
+      "scope": "chromium/ru/320",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Full main person name and task title fit/wrap; ordinary unassigned and actual unit groups remain distinct.",
+      "limitation": "Fixed bottom navigation overlays the head badge area at original viewport y580. No unobscured focus or badge pixel claim from this capture."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-twenty-four/results/head-scope.qa-directory-na-e6787-le-at-200-percent-text-size-firefox/directory-enlarged.png",
+      "scope": "firefox/en/200%",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Main directory names and badge wrapping inspected in all three engines.",
+      "limitation": "The other functional screenshot originals are not claimed reviewed by this record."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/indicator-after/results/head-scope.qa-narrow-Russi-f0eb8-dable-beside-the-head-badge-firefox/indicator-narrow-ru.png",
+      "scope": "firefox/ru/320",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Full main person name and task title fit/wrap; ordinary unassigned and actual unit groups remain distinct.",
+      "limitation": "Fixed bottom navigation overlays the head badge area at original viewport y580. No unobscured focus or badge pixel claim from this capture."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-twenty-four/results/head-scope.qa-directory-na-e6787-le-at-200-percent-text-size-webkit/directory-enlarged.png",
+      "scope": "webkit/en/200%",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Main directory names and badge wrapping inspected in all three engines.",
+      "limitation": "The other functional screenshot originals are not claimed reviewed by this record."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/indicator-after/results/head-scope.qa-narrow-Russi-f0eb8-dable-beside-the-head-badge-webkit/indicator-narrow-ru.png",
+      "scope": "webkit/ru/320",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Full main person name and task title fit/wrap; ordinary unassigned and actual unit groups remain distinct.",
+      "limitation": "Fixed bottom navigation overlays the head badge area at original viewport y580. No unobscured focus or badge pixel claim from this capture."
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/head-scope/final-visual/results/head-scope.qa--head-visual-73674-ow-tablet-and-enlarged-text-chromium/2-768-1.png",
+      "scope": "chromium/uz-Latn/light/768",
+      "kind": "full original",
+      "opened": true,
+      "observation": "Name column now has readable width instead of one-character wrapping; head name/badge and task titles inspected.",
+      "limitation": "Existing horizontal table scroll contains later columns outside this original visible region."
+    }
+  ]
+}

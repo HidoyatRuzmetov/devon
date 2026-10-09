@@ -118,8 +118,18 @@ export async function createFeed(
   userId: string,
   kind: FeedKind,
   label: string,
-): Promise<FeedRow> {
+): Promise<FeedRow | null> {
   return withContext(toRequestContext(ctx, { userId }), async (tx) => {
+    // Checking the cap and minting its credential share one owner-scoped transaction. Two clients
+    // creating the twentieth feed cannot both observe nineteen and each add another live secret.
+    await tx.raw(
+      sql`select pg_advisory_xact_lock(hashtextextended(${'calendar.feeds:' + userId}, 0))`,
+    )
+    const count = await tx.raw<{ n: string }>(sql`
+      select count(*)::text as n from app.calendar_feeds
+      where user_id = ${userId} and revoked_at is null
+    `)
+    if (Number(count[0]?.n ?? 0) >= 20) return null
     const rows = await tx.raw<FeedSqlRow>(sql`
       insert into app.calendar_feeds (user_id, kind, secret, label)
       values (${userId}, ${kind}::app.calendar_feed_kind, ${newFeedSecret()}, ${label})

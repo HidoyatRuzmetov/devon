@@ -59,7 +59,7 @@ export function RadioOption({
         {...(disabled === undefined ? {} : { disabled })}
         className="mt-0.5"
       />
-      <label htmlFor={id} className="min-w-0 cursor-pointer">
+      <label htmlFor={id} className="min-w-0 cursor-pointer break-words [overflow-wrap:anywhere]">
         <span className="block text-body text-foreground">{label}</span>
         {description ? (
           <span className="block text-small text-muted-foreground">{description}</span>

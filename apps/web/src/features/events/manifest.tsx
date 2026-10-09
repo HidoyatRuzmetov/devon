@@ -4,7 +4,6 @@ import * as React from 'react'
 import { CalendarDays } from 'lucide-react'
 import { queryClient } from '../../lib/query-client.js'
 import type { FeatureManifest } from '../types.js'
-import { prefetchEvents } from './hooks.js'
 
 const EventsScreen = React.lazy(() => import('./events-screen.js'))
 
@@ -18,7 +17,11 @@ const manifest: FeatureManifest = {
       labelKey: 'events.title',
       icon: CalendarDays,
       route: '/events',
-      onPrefetch: () => void prefetchEvents(queryClient),
+      onPrefetch: () => {
+        void import('./hooks.js')
+          .then(({ prefetchEvents }) => prefetchEvents(queryClient))
+          .catch(() => {})
+      },
     },
   ],
   commands: [{ id: 'events.create', labelKey: 'events.actions.create', path: '/events?new=1' }],

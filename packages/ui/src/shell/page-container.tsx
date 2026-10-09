@@ -42,7 +42,12 @@ export interface RouteSkeletonProps {
  * lands (DESIGN.md §4: "skeleton matching final layout"). */
 export function RouteSkeleton({ label, className }: RouteSkeletonProps): React.JSX.Element {
   return (
-    <div role="status" aria-live="polite" className={cn('flex w-full flex-col gap-6', className)}>
+    <div
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      className={cn('flex w-full flex-col gap-6', className)}
+    >
       <span className="sr-only">{label}</span>
       <div className="flex flex-col gap-3">
         <Skeleton className="h-4 w-24" />

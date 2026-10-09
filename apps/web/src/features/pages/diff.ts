@@ -1,8 +1,7 @@
 // A small, dependency-free word-level diff for "versions with diff" (TECH-SPEC §3.5). Two Tiptap
 // documents are first flattened to plain text (block boundaries become newlines), then compared with
-// the classic LCS-backtrack algorithm -- more than adequate for a page's prose at the sizes this
-// editor ever produces (`pageBlocksSchema`'s own 2 MB ceiling), and it keeps this feature's dependency
-// list at zero for something this contained.
+// a bounded LCS comparison. Large changed regions use complete removed/added blocks, so a valid
+// long page cannot allocate a quadratic grid and freeze its reader. No document text is truncated.
 import type { TiptapNode } from './types.js'
 
 export function extractText(node: TiptapNode): string {
@@ -42,13 +41,45 @@ function tokenize(text: string): string[] {
 
 export type DiffPart = { type: 'same' | 'added' | 'removed'; text: string }
 
-/** Myers-style LCS diff over word tokens (including whitespace tokens, so re-joining `text` for every
- * part reconstructs the original strings exactly). O(n*m) table -- fine at prose sizes. */
+/** Word-token LCS for bounded changed regions. Preserve shared context and exact text on both sides;
+ * use a coarse whole-region difference when fine alignment would exceed the memory/work budget. */
 export function diffText(before: string, after: string): DiffPart[] {
-  const a = tokenize(before)
-  const b = tokenize(after)
+  if (before === after) return before ? [{ type: 'same', text: before }] : []
+  const originalA = tokenize(before)
+  const originalB = tokenize(after)
+  let prefix = 0
+  while (
+    prefix < originalA.length &&
+    prefix < originalB.length &&
+    originalA[prefix] === originalB[prefix]
+  )
+    prefix++
+  let suffix = 0
+  while (
+    suffix < originalA.length - prefix &&
+    suffix < originalB.length - prefix &&
+    originalA[originalA.length - suffix - 1] === originalB[originalB.length - suffix - 1]
+  )
+    suffix++
+  const a = originalA.slice(prefix, originalA.length - suffix)
+  const b = originalB.slice(prefix, originalB.length - suffix)
   const n = a.length
   const m = b.length
+  const parts: DiffPart[] = []
+  const push = (type: DiffPart['type'], text: string) => {
+    if (!text) return
+    const last = parts[parts.length - 1]
+    if (last && last.type === type) last.text += text
+    else parts.push({ type, text })
+  }
+  push('same', originalA.slice(0, prefix).join(''))
+  const tail = suffix ? originalA.slice(originalA.length - suffix).join('') : ''
+  if ((n + 1) * (m + 1) > 1_000_000) {
+    push('removed', a.join(''))
+    push('added', b.join(''))
+    push('same', tail)
+    return parts
+  }
   const lcs: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0))
 
   for (let i = n - 1; i >= 0; i -= 1) {
@@ -58,14 +89,8 @@ export function diffText(before: string, after: string): DiffPart[] {
     }
   }
 
-  const parts: DiffPart[] = []
   let i = 0
   let j = 0
-  const push = (type: DiffPart['type'], text: string) => {
-    const last = parts[parts.length - 1]
-    if (last && last.type === type) last.text += text
-    else parts.push({ type, text })
-  }
   while (i < n && j < m) {
     if (a[i] === b[j]) {
       push('same', a[i]!)
@@ -87,5 +112,6 @@ export function diffText(before: string, after: string): DiffPart[] {
     push('added', b[j]!)
     j += 1
   }
+  push('same', tail)
   return parts
 }

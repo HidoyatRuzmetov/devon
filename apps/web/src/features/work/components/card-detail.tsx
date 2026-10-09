@@ -11,7 +11,7 @@
 // path that writes a generated result into the card without that Accept.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
+import { Check, ChevronDown, Link2, Pin, PinOff, Plus, Trash2, X } from 'lucide-react'
 import { useT, useLocale, formatDate, type Locale } from '@devon/i18n'
 import { useCardSignals, useSignalWhile } from '../../../lib/realtime/index.js'
 import {
@@ -70,6 +70,7 @@ import type { AiFeatureId, RunMeta } from '../../ai/types.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 import { CardAttachments } from './card-attachments.js'
+import { CardLinkLabel } from './card-link-label.js'
 import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
@@ -165,8 +166,16 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   const startFlash = useFieldFlash()
 
   const [titleDraft, setTitleDraft] = React.useState('')
+  const [titleError, setTitleError] = React.useState(false)
   const [descDraft, setDescDraft] = React.useState('')
+  const draftCardId = React.useRef<string | null>(null)
+  const titleEditing = React.useRef(false)
+  const descriptionEditing = React.useRef(false)
+  const currentTitleDraft = React.useRef('')
+  const currentDescriptionDraft = React.useRef('')
   const [linkInput, setLinkInput] = React.useState('')
+  const [linkPending, setLinkPending] = React.useState(false)
+  const linkWritePending = React.useRef(false)
   const [newLabelName, setNewLabelName] = React.useState('')
   const [activityOpen, setActivityOpen] = React.useState(false)
   const doneCelebrate = useCelebrate()
@@ -175,12 +184,37 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   /** The server's own answer (`canEdit` on the card DTO), never a client-side guess. Absent means an
    * older server: treat as editable, exactly as before v1.1. */
   const canEdit = card?.canEdit !== false
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (card) {
-      setTitleDraft(card.title)
-      setDescDraft(card.description?.text ?? '')
+      if (draftCardId.current !== card.id) {
+        draftCardId.current = card.id
+        titleEditing.current = false
+        descriptionEditing.current = false
+        setTitleError(false)
+      }
+      // Realtime/refetch and a different field's optimistic rollback must not erase unsaved text.
+      if (!titleEditing.current) {
+        currentTitleDraft.current = card.title
+        setTitleDraft(card.title)
+      }
+      if (!descriptionEditing.current) {
+        currentDescriptionDraft.current = card.description?.text ?? ''
+        setDescDraft(currentDescriptionDraft.current)
+      }
     }
   }, [card?.id, card?.title, card?.description?.text]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function editTitleDraft(value: string) {
+    titleEditing.current = true
+    currentTitleDraft.current = value
+    setTitleDraft(value)
+    if (value.trim()) setTitleError(false)
+  }
+  function editDescriptionDraft(value: string) {
+    descriptionEditing.current = true
+    currentDescriptionDraft.current = value
+    setDescDraft(value)
+  }
 
   const translateEnabled = useAiFeatureEnabled('translate')
   const translateAi = useRunAiFeatureMutation('translate')
@@ -249,13 +283,44 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
     }))
 
   async function saveTitle() {
-    if (titleDraft.trim().length === 0 || titleDraft === card!.title) return
-    await patchCard.mutateAsync({ id: card!.id, patch: { title: titleDraft.trim() } })
+    if (!canEdit) return
+    if (titleDraft.trim().length === 0) {
+      setTitleError(true)
+      return
+    }
+    if (titleDraft === card!.title) {
+      titleEditing.current = false
+      return
+    }
+    const draft = titleDraft
+    const id = card!.id
+    try {
+      await patchCard.mutateAsync({ id, patch: { title: draft.trim() } })
+      if (draftCardId.current === id && currentTitleDraft.current === draft) {
+        titleEditing.current = false
+        currentTitleDraft.current = draft.trim()
+        setTitleDraft(draft.trim())
+      }
+    } catch {
+      // The shared mutation reports the refusal. Keep dirty text for correction/retry.
+    }
   }
   async function saveDescription(nextText?: string) {
+    if (!canEdit) return false
     const next = nextText ?? descDraft
-    if (next === (card!.description?.text ?? '')) return
-    await patchCard.mutateAsync({ id: card!.id, patch: { description: next || null } })
+    if (next === (card!.description?.text ?? '')) {
+      descriptionEditing.current = false
+      return true
+    }
+    const id = card!.id
+    try {
+      await patchCard.mutateAsync({ id, patch: { description: next || null } })
+      if (draftCardId.current === id && currentDescriptionDraft.current === next)
+        descriptionEditing.current = false
+      return true
+    } catch {
+      return false
+    }
   }
 
   async function markDone() {
@@ -306,7 +371,13 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
 
   async function addLink() {
     const url = linkInput.trim()
-    if (!url) return
+    if (!url || !canEdit || linkWritePending.current || patchCard.isPending) return
+    if (card!.links.some((link) => link.url === url)) {
+      setLinkInput('')
+      return
+    }
+    linkWritePending.current = true
+    setLinkPending(true)
     try {
       const result = await unfurl.mutateAsync(url)
       await patchCard.mutateAsync({
@@ -321,21 +392,35 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
       setLinkInput('')
     } catch {
       toast(t('work.card.unfurlError'))
+    } finally {
+      linkWritePending.current = false
+      setLinkPending(false)
     }
   }
 
   async function removeLink(url: string) {
-    await patchCard.mutateAsync({
-      id: card!.id,
-      patch: { links: card!.links.filter((l) => l.url !== url) },
-    })
+    if (!canEdit || linkWritePending.current || patchCard.isPending) return
+    linkWritePending.current = true
+    setLinkPending(true)
+    try {
+      await patchCard.mutateAsync({
+        id: card!.id,
+        patch: { links: card!.links.filter((l) => l.url !== url) },
+      })
+    } catch {
+      toast(t('toast.saveError'))
+    } finally {
+      linkWritePending.current = false
+      setLinkPending(false)
+    }
   }
 
   function toggleLabel(labelId: string) {
+    if (!canEdit || patchCard.isPending) return
     const next = card!.labels.includes(labelId)
       ? card!.labels.filter((l) => l !== labelId)
       : [...card!.labels, labelId]
-    void patchCard.mutateAsync({ id: card!.id, patch: { labels: next } })
+    patchCard.mutate({ id: card!.id, patch: { labels: next } })
   }
 
   function runTranslate() {
@@ -446,10 +531,10 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
   }
 
   async function acceptTranslate() {
-    if (!translatePreview) return
+    if (!canEdit || !translatePreview) return
     const text = translatePreview.output.translatedText
-    setDescDraft(text)
-    await saveDescription(text)
+    editDescriptionDraft(text)
+    if (!(await saveDescription(text))) return
     setTranslatePreview(null)
     translateAi.reset()
   }
@@ -491,16 +576,23 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
       ) : null}
       <header className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <textarea
+          <CardTitleField
             value={titleDraft}
-            onChange={(e) => setTitleDraft(e.target.value)}
+            onChange={(e) => editTitleDraft(e.target.value)}
             onBlur={() => void saveTitle()}
-            rows={1}
             readOnly={!canEdit}
             aria-label={t('work.field.title')}
-            className="w-full resize-none rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
+            aria-invalid={titleError || undefined}
+            aria-describedby={titleError ? `card-title-error-${cardId}` : undefined}
+            maxLength={300}
+            className="w-full resize-none overflow-hidden rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
           />
         </div>
+        {titleError ? (
+          <p id={`card-title-error-${cardId}`} role="alert" className="text-small text-destructive">
+            {t('work.card.titleRequired')}
+          </p>
+        ) : null}
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral">{t(`work.status.${card.status}`)}</Badge>
           {card.priority !== 'none' ? (
@@ -609,9 +701,10 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
       <div className="flex min-w-0 flex-col gap-6">
         <Field
           label={t('work.field.description')}
+          grouped
           action={
-            translateEnabled && descDraft.trim() ? (
-              <span className="flex flex-wrap items-center gap-2">
+            canEdit && translateEnabled && descDraft.trim() ? (
+              <span className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
                 <TranslateTargetPicker
                   id={`card-translate-target-${card.id}`}
                   value={translateTarget}
@@ -629,8 +722,10 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           }
         >
           <textarea
+            aria-label={t('work.field.description')}
+            readOnly={!canEdit}
             value={descDraft}
-            onChange={(e) => setDescDraft(e.target.value)}
+            onChange={(e) => editDescriptionDraft(e.target.value)}
             onBlur={() => void saveDescription()}
             rows={5}
             placeholder={t('work.card.descriptionPlaceholder')}
@@ -649,7 +744,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               // Edit puts the translation in the textarea without saving it, so the person can adjust
               // a term before it becomes the card's description. v1.0's Edit discarded the answer.
               onEdit={() => {
-                if (translatePreview) setDescDraft(translatePreview.output.translatedText)
+                if (translatePreview) editDescriptionDraft(translatePreview.output.translatedText)
                 setTranslatePreview(null)
                 translateAi.reset()
               }}
@@ -691,10 +786,13 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               the undo restores exactly what was there, including "nobody". */}
           <Field
             label={t('work.field.assignee')}
+            grouped
             flashedAt={assigneeFlash.flashedAt}
             rejectedAt={assigneeFlash.rejectedAt}
           >
             <MemberPicker
+              label={t('work.field.assignee')}
+              disabled={!canEdit}
               members={members}
               value={card.assigneeUserId}
               onChange={(userId) => {
@@ -762,10 +860,13 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           </Field>
           <Field
             label={t('work.field.giver')}
+            grouped
             flashedAt={giverFlash.flashedAt}
             rejectedAt={giverFlash.rejectedAt}
           >
             <MemberPicker
+              label={t('work.field.giver')}
+              disabled={!canEdit}
               members={members}
               value={card.giverUserId}
               onChange={(userId) => {
@@ -797,6 +898,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             rejectedAt={priorityFlash.rejectedAt}
           >
             <Select
+              disabled={!canEdit}
               aria-label={t('work.field.priority')}
               value={card.priority}
               onChange={(e) =>
@@ -817,6 +919,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             rejectedAt={dueFlash.rejectedAt}
           >
             <DatePicker
+              disabledTrigger={!canEdit}
               locale={locale}
               label={t('work.field.due')}
               placeholder={t('work.field.due')}
@@ -836,6 +939,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             rejectedAt={startFlash.rejectedAt}
           >
             <DatePicker
+              disabledTrigger={!canEdit}
               locale={locale}
               label={t('work.field.start')}
               placeholder={t('work.field.start')}
@@ -863,45 +967,85 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
               </Button>
             </div>
           </Field>
-          <Field label={t('work.field.labels')}>
+          <Field label={t('work.field.labels')} grouped>
             <div className="flex flex-wrap gap-1.5">
-              {labels.map((label) => {
-                const active = card.labels.includes(label.id)
-                // A pastel label colour with hardcoded white text was illegible the moment
-                // someone picked a light hue ("Hisobot"/"Tashqi" in the item handoff) --
-                // labelChipColors derives a background/foreground pair from that one colour,
-                // guaranteed >= 4.5:1 contrast, so any colour a member picks stays readable in
-                // both themes.
-                const { background, foreground } = labelChipColors(label.colour, isDark)
-                return (
-                  <button
-                    key={label.id}
-                    type="button"
-                    onClick={() => toggleLabel(label.id)}
-                    className="rounded-sm px-2 py-0.5 text-caption font-medium transition-opacity"
-                    style={{
-                      backgroundColor: background,
-                      color: foreground,
-                      opacity: active ? 1 : 0.35,
-                    }}
-                    aria-pressed={active}
-                  >
-                    {label.name}
-                  </button>
-                )
-              })}
-              <Input
-                value={newLabelName}
-                onChange={(e) => setNewLabelName(e.target.value)}
-                placeholder={t('work.card.newLabel')}
-                className="h-7 w-full px-2 text-caption"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newLabelName.trim()) {
-                    createLabel.mutate({ name: newLabelName.trim() })
-                    setNewLabelName('')
+              {labels
+                .filter((label) => canEdit || card.labels.includes(label.id))
+                .map((label) => {
+                  const active = card.labels.includes(label.id)
+                  // A pastel label colour with hardcoded white text was illegible the moment
+                  // someone picked a light hue ("Hisobot"/"Tashqi" in the item handoff) --
+                  // labelChipColors derives a background/foreground pair from that one colour,
+                  // guaranteed >= 4.5:1 contrast, so any colour a member picks stays readable in
+                  // both themes.
+                  const { background, foreground } = labelChipColors(label.colour, isDark)
+                  if (!canEdit) {
+                    return (
+                      <Chip
+                        key={label.id}
+                        style={{ backgroundColor: background, color: foreground }}
+                      >
+                        {label.name}
+                      </Chip>
+                    )
                   }
-                }}
-              />
+                  return (
+                    <button
+                      key={label.id}
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      disabled={patchCard.isPending}
+                      className="inline-flex min-h-6 items-center gap-1.5 rounded-sm px-2 py-1 text-caption font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-md:min-h-11"
+                      style={{
+                        backgroundColor: background,
+                        color: foreground,
+                      }}
+                      aria-pressed={active}
+                    >
+                      {active ? (
+                        <Check aria-hidden="true" className="size-3 shrink-0" />
+                      ) : (
+                        <Plus aria-hidden="true" className="size-3 shrink-0" />
+                      )}
+                      {label.name}
+                    </button>
+                  )
+                })}
+              {canEdit ? (
+                <form
+                  className="flex w-full items-center gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    if (!newLabelName.trim() || createLabel.isPending) return
+                    createLabel.mutate(
+                      { name: newLabelName.trim() },
+                      {
+                        onSuccess: () => setNewLabelName(''),
+                        onError: () => toast.error(t('toast.saveError')),
+                      },
+                    )
+                  }}
+                >
+                  <Input
+                    value={newLabelName}
+                    onChange={(e) => setNewLabelName(e.target.value)}
+                    placeholder={t('work.card.newLabel')}
+                    aria-label={t('work.card.newLabel')}
+                    maxLength={60}
+                    disabled={createLabel.isPending}
+                    className="h-11 min-w-0 flex-1 px-2 text-caption md:h-7"
+                  />
+                  <IconButton
+                    type="submit"
+                    aria-label={t('work.card.newLabel')}
+                    tooltip={t('work.card.newLabel')}
+                    aria-busy={createLabel.isPending || undefined}
+                    disabled={!newLabelName.trim() || createLabel.isPending}
+                  >
+                    <Plus aria-hidden="true" className="size-4" />
+                  </IconButton>
+                </form>
+              ) : null}
             </div>
           </Field>
 
@@ -921,40 +1065,42 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
                 className="flex items-center gap-2 rounded-sm border border-border p-2"
               >
                 <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex-1 truncate text-small text-primary underline"
-                >
-                  {link.title}
-                </a>
-                <IconButton
-                  aria-label={t('work.action.delete')}
-                  onClick={() => void removeLink(link.url)}
-                >
-                  <X className="size-3.5" />
-                </IconButton>
+                <CardLinkLabel url={link.url} title={link.title} />
+                {canEdit ? (
+                  <IconButton
+                    aria-label={t('work.card.removeLink', { title: link.title })}
+                    disabled={linkPending || patchCard.isPending}
+                    onClick={() => void removeLink(link.url)}
+                  >
+                    <X className="size-3.5" />
+                  </IconButton>
+                ) : null}
               </div>
             ))}
-            <div className="flex gap-2">
-              <Input
-                value={linkInput}
-                onChange={(e) => setLinkInput(e.target.value)}
-                placeholder={t('work.card.addLinkPlaceholder')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') void addLink()
-                }}
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => void addLink()}
-                loading={unfurl.isPending}
-              >
-                <Plus className="size-4" />
-              </Button>
-            </div>
+            {canEdit ? (
+              <div className="flex gap-2">
+                <Input
+                  value={linkInput}
+                  aria-label={t('work.card.addLinkPlaceholder')}
+                  disabled={linkPending || patchCard.isPending}
+                  onChange={(e) => setLinkInput(e.target.value)}
+                  placeholder={t('work.card.addLinkPlaceholder')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void addLink()
+                  }}
+                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  aria-label={t('work.card.addLink')}
+                  disabled={!linkInput.trim() || linkPending || patchCard.isPending}
+                  onClick={() => void addLink()}
+                  loading={linkPending}
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </div>
+            ) : null}
           </div>
         </Field>
 
@@ -972,14 +1118,17 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             void patchCard.mutateAsync({ id: card.id, patch: { estimateMin } })
           }
           onRecurrenceChange={(recurrence) =>
-            void patchCard
+            patchCard
               .mutateAsync({ id: card.id, patch: { recurrence } })
-              .then(() =>
+              .then(() => {
                 toast.success(
                   recurrence ? t('work.recurrence.saved') : t('work.recurrence.stopped'),
-                ),
-              )
-              .catch(() => toast.error(t('work.recurrence.saveFailed')))
+                )
+              })
+              .catch((error: unknown) => {
+                toast.error(t('work.recurrence.saveFailed'))
+                throw error
+              })
           }
         />
 
@@ -1081,11 +1230,11 @@ function Field({
       className="flex flex-col gap-1.5 text-small"
       {...(grouped ? { 'aria-label': label } : {})}
     >
-      <span className="flex items-center gap-2">
+      <span className="flex min-w-0 flex-wrap items-center gap-2">
         <span className="text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {label}
         </span>
-        {action ? <span className="ml-auto">{action}</span> : null}
+        {action ? <span className="ml-auto min-w-0 max-w-full">{action}</span> : null}
       </span>
       {/* v1.1 motion pass: this was a bespoke `AnimatePresence` sweep written here, and the same
           gesture is now `<FlashOnChange>` in `packages/ui/src/motion` -- one implementation, one
@@ -1593,6 +1742,81 @@ function Comments({
         </div>
       </div>
     </Field>
+  )
+}
+
+/** Keep the complete title readable when text wraps, after both edits and viewport changes. */
+function CardTitleField({ value, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = React.useRef<HTMLTextAreaElement>(null)
+  const metricsRef = React.useRef<HTMLSpanElement>(null)
+  const fit = React.useCallback(() => {
+    const element = ref.current
+    if (!element) return
+    element.style.height = 'auto'
+    const border = element.offsetHeight - element.clientHeight
+    element.style.height = `${element.scrollHeight + border}px`
+  }, [])
+  React.useLayoutEffect(fit, [value, fit])
+  React.useEffect(() => {
+    const element = ref.current
+    if (!element) return
+    let width: number | undefined
+    let frame: number | undefined
+    const scheduleFit = () => {
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        frame = undefined
+        fit()
+      })
+    }
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        // The independent glyph responds to text-only font enlargement even when the field's
+        // inline width stays unchanged. Its intrinsic size cannot depend on textarea height.
+        if (entry.target === metricsRef.current) {
+          scheduleFit()
+        } else {
+          const nextWidth = entry.borderBoxSize[0]?.inlineSize ?? entry.contentRect.width
+          // Changing the textarea height must never trigger another fit of that same block size.
+          if (nextWidth === width) continue
+          width = nextWidth
+          scheduleFit()
+        }
+      }
+    })
+    observer.observe(element)
+    if (metricsRef.current) observer.observe(metricsRef.current)
+    document.fonts.addEventListener('loadingdone', scheduleFit)
+    return () => {
+      observer.disconnect()
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      document.fonts.removeEventListener('loadingdone', scheduleFit)
+    }
+  }, [fit])
+  return (
+    <>
+      <textarea {...props} ref={ref} rows={1} value={value} />
+      <span
+        ref={metricsRef}
+        aria-hidden="true"
+        className={props.className}
+        style={{
+          ...props.style,
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          width: 'max-content',
+          height: 'auto',
+          padding: 0,
+          border: 0,
+          whiteSpace: 'pre',
+          visibility: 'hidden',
+          pointerEvents: 'none',
+        }}
+      >
+        M
+      </span>
+    </>
   )
 }
 

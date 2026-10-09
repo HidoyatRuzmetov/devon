@@ -6,8 +6,10 @@ import {
   automationRunStatusSchema,
   automationTriggerSchema,
   automationActionSchema,
+  automationWritableActionSchema,
   automationTriggerConfigSchema,
 } from '@devon/contracts'
+import { runCursorSchema } from './cursor.js'
 
 export const automationRuleSchema = z.object({
   id: z.string().uuid(),
@@ -53,15 +55,16 @@ export const automationRunListSchema = z.object({
 
 export const runsQuerySchema = z.object({
   ruleId: z.string().uuid().optional(),
+  status: automationRunStatusSchema.optional(),
   limit: z.coerce.number().int().min(1).max(100).optional(),
-  cursor: z.string().optional(),
+  cursor: runCursorSchema.optional(),
 })
 
 export const patchAutomationBodySchema = z
   .object({
     name: z.string().min(1).max(120),
     triggerConfig: automationTriggerConfigSchema,
-    actions: z.array(automationActionSchema).min(1).max(5),
+    actions: z.array(automationWritableActionSchema).min(1).max(5),
     enabled: z.boolean(),
     version: z.number().int(),
   })

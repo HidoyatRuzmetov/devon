@@ -11,13 +11,20 @@
 // place for the one process every spec needs); this only brings up the second one.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { randomBytes } from 'node:crypto'
+import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { bootstrapFlowDatabase } from './flow-db.js'
 import { spawnManaged, waitForHttp, type ManagedProcess } from './flow-process.js'
+import { localFlowEnvironment } from './flow-safety.js'
+import { startFlowServices, type FlowServices } from './flow-services.js'
+import { safeFlowDiagnostics } from './flow-diagnostics.js'
 import {
   FLOW_API_BASE_URL,
   FLOW_API_LOG_FILE,
   FLOW_API_PORT,
+  FLOW_DB_NAME,
+  FLOW_DB_PORT,
   FLOW_SUPERADMIN_FILE,
   FLOW_TMP_DIR,
   FLOW_WEB_BASE_URL,
@@ -36,36 +43,51 @@ function extractSetupToken(lines: readonly string[]): string | null {
 }
 
 let apiProcess: ManagedProcess | null = null
+let services: FlowServices | null = null
 
 export default async function globalSetup(): Promise<() => Promise<void>> {
   await mkdir(FLOW_TMP_DIR, { recursive: true })
   await writeFile(FLOW_API_LOG_FILE, '', 'utf8').catch(() => {})
 
-  console.log('[flow global-setup] bootstrapping a dedicated database (devon_flow_e2e)')
+  console.log(`[flow global-setup] bootstrapping a dedicated database (${FLOW_DB_NAME})`)
   const db = bootstrapFlowDatabase()
-
-  console.log(
-    `[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`,
-  )
-  // Test servers must not restart halfway through requests when another local edit is saved.
-  apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', 'src/server.ts'], {
-    cwd: REPO_ROOT,
-    logFile: FLOW_API_LOG_FILE,
-    env: {
-      ...process.env,
-      API_PORT: String(FLOW_API_PORT),
-      DATABASE_URL: db.appUrl,
-      CSRF_SECRET: randomBytes(24).toString('base64url'),
-      DEVON_PUBLIC_URL: FLOW_WEB_BASE_URL,
-      NODE_ENV: 'development',
-    },
-  })
+  services = await startFlowServices()
 
   try {
+    console.log(
+      `[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`,
+    )
+    // Test servers must not restart halfway through requests when another local edit is saved.
+    apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', 'src/server.ts'], {
+      cwd: REPO_ROOT,
+      logFile: FLOW_API_LOG_FILE,
+      env: localFlowEnvironment(
+        process.env,
+        {
+          API_PORT: String(FLOW_API_PORT),
+          API_HOST: '127.0.0.1',
+          DATABASE_URL: db.appUrl,
+          CSRF_SECRET: randomBytes(24).toString('base64url'),
+          DEVON_PUBLIC_URL: FLOW_WEB_BASE_URL,
+          NODE_ENV: 'development',
+          ...services.env,
+          FLOW_NETWORK_GUARD: '1',
+          FLOW_ALLOWED_TCP_PORTS: JSON.stringify([
+            FLOW_DB_PORT,
+            ...(services.env['CENTRIFUGO_API_URL']
+              ? [Number(new URL(services.env['CENTRIFUGO_API_URL']).port)]
+              : []),
+          ]),
+          NODE_OPTIONS: `--import=${pathToFileURL(join(import.meta.dirname, 'flow-network-guard.mjs')).href}`,
+        },
+        join(FLOW_TMP_DIR, 'storage'),
+      ),
+    })
+
     const up = await waitForHttp(`${FLOW_API_BASE_URL}/healthz`, 90_000)
     if (!up) {
       console.log('[flow global-setup] apps/api did not answer /healthz within 90s; recent output:')
-      console.log(apiProcess.lines.slice(-40).join('\n'))
+      console.log(safeFlowDiagnostics(apiProcess.lines.slice(-40)))
       throw new Error('flow suite: apps/api never became healthy')
     }
     console.log('[flow global-setup] apps/api is up.')
@@ -96,14 +118,38 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     } else {
       throw new Error('flow suite: fresh database did not produce a setup token')
     }
+    if (process.env['FLOW_SEED_DEMO'] === '1') {
+      const result = spawnSync(
+        process.execPath,
+        [
+          join(REPO_ROOT, 'packages/db/node_modules/tsx/dist/cli.mjs'),
+          join(REPO_ROOT, 'packages/db/src/seed/cli-demo.ts'),
+        ],
+        {
+          cwd: REPO_ROOT,
+          env: localFlowEnvironment(
+            process.env,
+            { DATABASE_URL: db.appUrl, NODE_ENV: 'development' },
+            join(FLOW_TMP_DIR, 'storage'),
+          ),
+          encoding: 'utf8',
+          timeout: 60_000,
+        },
+      )
+      if (result.status !== 0)
+        throw new Error(`Local QA demo seed failed: ${result.stderr?.slice(-2000)}`)
+      console.log('[flow global-setup] synthetic populated QA fixtures seeded')
+    }
   } catch (error) {
     // Playwright cannot call a teardown that globalSetup never returned. Stop our own child on
     // startup/bootstrap failure, too, so retries cannot attach to a stale API/database connection.
-    await apiProcess.stop()
+    await apiProcess?.stop()
+    await services.stop()
     throw error
   }
 
   return async function globalTeardown() {
     await apiProcess?.stop()
+    await services?.stop()
   }
 }

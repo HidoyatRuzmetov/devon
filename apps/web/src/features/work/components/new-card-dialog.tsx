@@ -87,6 +87,7 @@ export function NewCardDialog() {
                     {members.map((member) => (
                       <option key={member.userId} value={member.userId}>
                         {member.givenName} {member.familyName}
+                        {member.role === 'head' ? ` · ${t('departments.members.roleHead')}` : ''}
                       </option>
                     ))}
                   </select>

@@ -1,7 +1,7 @@
 // Zod schemas for `/api/v1/departments/*` (EPIC-002). See `modules/accounts/schemas.ts`'s header for
 // why this lives inside the module rather than the shared `apps/api/src/schemas.ts`.
 import { z } from 'zod'
-import { FEATURE_KEYS } from '@devon/contracts'
+import { FEATURE_KEYS, normalizeInvitationKey } from '@devon/contracts'
 import { localeSchema } from '../../schemas.js'
 
 const HEX_COLOUR = /^#[0-9a-fA-F]{6}$/
@@ -126,7 +126,7 @@ export const joinPreviewSchema = z.object({
 
 export const joinBodySchema = z
   .object({
-    key: z.string().min(6).max(32),
+    key: z.string().max(2048).transform(normalizeInvitationKey).pipe(z.string().min(6).max(32)),
     password: z.string().min(1).max(128),
   })
   .strict()
@@ -152,6 +152,7 @@ export const memberListSchema = z.object({ members: z.array(memberViewSchema) })
 
 export const joinRequestViewSchema = z.object({
   userId: z.string().uuid(),
+  version: z.number().int().positive(),
   givenName: z.string(),
   familyName: z.string(),
   patronymic: z.string().nullable(),
@@ -160,6 +161,12 @@ export const joinRequestViewSchema = z.object({
   requestedAt: z.string(),
 })
 export const joinRequestListSchema = z.object({ requests: z.array(joinRequestViewSchema) })
+export const joinDecisionBodySchema = z
+  .object({
+    expectedVersion: z.number().int().positive().optional(),
+    originalDecision: z.enum(['approve', 'reject']).optional(),
+  })
+  .strict()
 
 // --- v1.1 SPEC §7: Imkoniyatlar ------------------------------------------------------------------
 
@@ -177,4 +184,8 @@ export const memberParamsSchema = z
   .object({ id: z.string().uuid(), userId: z.string().uuid() })
   .strict()
 export const requestIdParamsSchema = z.object({ id: z.string().uuid() }).strict()
-export const joinKeyParamsSchema = z.object({ key: z.string().min(1).max(32) }).strict()
+export const joinKeyParamsSchema = z
+  .object({
+    key: z.string().max(2048).transform(normalizeInvitationKey).pipe(z.string().min(1).max(32)),
+  })
+  .strict()

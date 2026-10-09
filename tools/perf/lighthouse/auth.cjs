@@ -12,7 +12,10 @@ module.exports = async (browser, { url }) => {
   try {
     // Idempotent: `invokePuppeteerScriptForUrl` runs once per URL, and lhci may collect >1 run per
     // URL -- skip the login flow entirely if the session is already live.
-    const me = await page.goto(`${origin}/api/v1/me`, { waitUntil: 'domcontentloaded', timeout: 15000 })
+    const me = await page.goto(`${origin}/api/v1/me`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
+    })
     if (me && me.ok()) return
 
     await page.goto(`${origin}/login`, { waitUntil: 'networkidle2', timeout: 30000 })
@@ -23,6 +26,12 @@ module.exports = async (browser, { url }) => {
       page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }),
       page.click('button[type="submit"]'),
     ])
+    const authenticated = await page.goto(`${origin}/api/v1/me`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000,
+    })
+    if (!authenticated || !authenticated.ok())
+      throw new Error('Local performance authentication did not establish a real session')
   } finally {
     await page.close()
   }

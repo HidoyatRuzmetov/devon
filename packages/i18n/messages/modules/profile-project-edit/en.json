@@ -25,7 +25,7 @@
     "saved": "Project saved",
     "conflict": "Someone updated this project. Close this window, refresh and try again.",
     "error": "Could not save. Check the selected people and try again.",
-    "convert": "Add people · make a group project",
+    "convert": "Create group",
     "convertHint": "Choose your teammates. This card becomes the first shared card in a new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
     "converted": "Group project created"
   }

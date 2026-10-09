@@ -1,0 +1,625 @@
+{
+  "exactRecordsApplied": 353,
+  "stateBindingsApplied": 711,
+  "issues": [],
+  "owners": [
+    "event_regressions",
+    "visual_controls",
+    "knowledge_nested",
+    "local_services",
+    "event_regressions-calendar-fields",
+    "root-calendar-shell",
+    "root-fields-current",
+    "root-knowledge-publication",
+    "knowledge_nested-sidebar",
+    "event_regressions-head-scope",
+    "root-shared-recovery",
+    "event_regressions-goals",
+    "knowledge_nested-work",
+    "event_regressions-events-nested"
+  ],
+  "workflowEntries": [
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+      "controls": [
+        "wizard Next",
+        "wizard Create",
+        "step title and schedule inputs",
+        "capacity input"
+      ],
+      "states": [
+        "default",
+        "validation",
+        "pending duplicate submission",
+        "failed create with retained draft",
+        "successful persisted create/deep link"
+      ],
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "unitEvidence": "apps/web/test/unit/event-form-dialog.test.tsx",
+      "ledger": "docs/qa/2026-10/event-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every field boundary",
+        "Back/step-jump interaction",
+        "full Escape/focus restoration",
+        "mobile/locale/theme matrix",
+        "external AI draft output"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+      "controls": [
+        "yes/no RSVP",
+        "Update RSVP"
+      ],
+      "states": [
+        "saved answer",
+        "updated answer",
+        "reload",
+        "capacity waitlist/promotion",
+        "independent account view"
+      ],
+      "roles": [
+        "member",
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "unitEvidence": [
+        "apps/web/test/unit/event-rsvp-cache.test.tsx",
+        "apps/web/test/unit/event-rsvp-panel.test.tsx"
+      ],
+      "ledger": "docs/qa/2026-10/event-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "maybe/guests/note controls",
+        "deadline/closed event",
+        "Undo/attendees drawer",
+        "failure/offline/concurrent live delivery"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/automations",
+      "controls": [
+        "rule create",
+        "Pause all",
+        "paused edit",
+        "paused duplicate",
+        "trigger lock",
+        "enable/disable",
+        "rule delete",
+        "selected-field rule builder"
+      ],
+      "states": [
+        "valid persistence/reload",
+        "legacy missing values and repair",
+        "required recipient/action validation",
+        "cross-client rule/run refresh",
+        "due-date skip and priority apply",
+        "checklist audit/outbox"
+      ],
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "transitionEnvironment": {
+        "locale": "en",
+        "theme": "light"
+      },
+      "tests": [
+        "apps/web/test/e2e/management-controls.qa.spec.ts",
+        "apps/api/test/integration/automation-consistency.test.ts",
+        "apps/api/test/integration/automation-engine-consistency.test.ts"
+      ],
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every trigger/action/filter UI combination",
+        "older run history through populated browser pages",
+        "all error/offline/keyboard permutations",
+        "Firefox/WebKit complete role/locale/theme matrix"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/analytics",
+      "controls": [
+        "applied filter/save/delete",
+        "home pin",
+        "CSV and PNG download",
+        "no-department admin guidance action"
+      ],
+      "states": [
+        "actual persistence/reload",
+        "applied vs unsaved advanced filter",
+        "three-column table",
+        "download signature",
+        "superadmin no-lens guidance",
+        "read-only active lens boundary"
+      ],
+      "roles": [
+        "head",
+        "member",
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "tests": [
+        "apps/web/test/e2e/management-controls.qa.spec.ts",
+        "apps/web/test/e2e/management-context-qa.config.ts",
+        "apps/web/test/unit/analytics-filter-bar.test.tsx"
+      ],
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every chart/date/category/formula boundary",
+        "export menu keyboard permutations",
+        "every missing/empty/error response"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/automations + apps/web/src/features/analytics",
+      "controls": [
+        "loaded routes",
+        "head follow-up dialog",
+        "paused descriptions/run status badges"
+      ],
+      "states": [
+        "populated",
+        "member no-permission",
+        "admin no-department guidance",
+        "narrow contrast/geometry"
+      ],
+      "matrixEvidence": "Chromium72 route +12 follow-up dialog captures:3roles ×4locales ×3themes ×2routes at320. Separate final admin-context36 captures across3engines; final populated automations12 observations across3engines at1440/768/390/320.",
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "full Firefox/WebKit72-route matrix",
+        "200% text zoom",
+        "short landscape",
+        "every responsive breakpoint/dialog configuration"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions",
+      "source": "apps/web/src/features/admin",
+      "controls": [
+        "settings registration/maintenance/local Sentinel key",
+        "wipe warning/back/cancel",
+        "account/departments pagination/search",
+        "account lock/unlock/password/2FA/anonymize",
+        "department pause/resume/archive/restore/view-as",
+        "AI metering pagination/status filter",
+        "audit verify/filter/export",
+        "health refresh",
+        "overview More departments"
+      ],
+      "states": [
+        "safe synthetic persistence",
+        "503 unavailable reads",
+        "503 failed writes",
+        "cap refusal and recovered actual download",
+        "protected/missing/deleted target refusal",
+        "head/member forbidden boundaries",
+        "signed lens entry/exit",
+        "keyboard search focus"
+      ],
+      "tests": [
+        "apps/web/test/e2e/admin-controls.qa.spec.ts",
+        "apps/api/test/integration/admin-pagination.test.ts",
+        "apps/api/test/unit/admin-export.test.ts",
+        "apps/web/test/unit/admin-view-as-cache.test.ts"
+      ],
+      "ledger": "docs/qa/2026-10/admin-controls.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "all destructive confirmation/error variations",
+        "real wipe/countdown/Sentinel delivery",
+        "external backup restore",
+        "zoom/short-landscape/other widths",
+        "most252 individual pixel reviews; other widths/zoom/short landscape"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/accounts/profile-section.tsx",
+      "controls": [
+        "givenName",
+        "familyName",
+        "patronymic",
+        "title",
+        "login",
+        "email",
+        "Save"
+      ],
+      "states": [
+        "actual six-field persistence and renamed/email login",
+        "duplicate username refusal",
+        "continued typing during held200",
+        "late owner receipt refusal",
+        "cross-tab disjoint field patches",
+        "older receipt after newer authoritative GET",
+        "native uppercase/space/@ refusal with zero PATCH and valid dotted/dashed username persistence",
+        "observed interrupted transport and retry"
+      ],
+      "roles": [
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/account-boundary.qa.spec.ts"
+      ],
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/profile-interruption-three/results.json",
+        "docs/qa/2026-10/accounts-onboarding.md"
+      ],
+      "status": "verified-listed-states",
+      "pending": [
+        "same-field write compare-and-swap",
+        "all-role all-locale editing matrix"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/inbox/preferences-screen.tsx",
+      "controls": [
+        "Assignment via Telegram",
+        "Summary frequency",
+        "daily",
+        "weekly",
+        "off",
+        "named preferences region"
+      ],
+      "states": [
+        "late owner success cannot replace new account",
+        "keyboard region/switch persistence",
+        "actual three-mode replace and reload",
+        "in-app Always on and no Email column",
+        "actual prefs read interruption/retry",
+        "all ten switches visible without horizontal scrolling and full reason labels in the render matrix"
+      ],
+      "roles": [
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 320,
+        "height": 800
+      },
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/settings-nested.qa.spec.ts"
+      ],
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json"
+      ],
+      "status": "verified-listed-states",
+      "pending": [
+        "every preference reason/failure type",
+        "external delivery"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/inbox/preferences-screen.tsx",
+      "controls": [
+        "Starts",
+        "Ends",
+        "Include weekends",
+        "Save",
+        "Use department default"
+      ],
+      "states": [
+        "late receipt preserves newer time draft",
+        "owner replacement success and refusal",
+        "actual department switch retains captured context",
+        "standard too-short refusal and retained draft",
+        "valid retry and reload"
+      ],
+      "roles": [
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "test": [
+        "apps/web/test/e2e/settings-boundary.qa.spec.ts",
+        "apps/web/test/e2e/settings-nested.qa.spec.ts"
+      ],
+      "apiEvidence": "artifacts/qa/2026-10/settings/quiet-api-final.json",
+      "report": [
+        "artifacts/qa/2026-10/settings/final-twenty-seven/results.json",
+        "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json"
+      ],
+      "status": "verified-listed-states",
+      "pending": [
+        "every null-field/weekend/time boundary",
+        "concurrent Leave authorization race",
+        "delivery across multiple distinct department defaults"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/accounts/appearance-section.tsx",
+      "controls": [
+        "Language",
+        "Appearance light",
+        "Appearance dark"
+      ],
+      "states": [
+        "actual selected locale/theme",
+        "reload persistence",
+        "320px normal text",
+        "768px short viewport with200% typography",
+        "selected native option text fits beside its native arrow"
+      ],
+      "roles": [
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-render-and-selection-states",
+      "pending": [
+        "system preference transition",
+        "every captured pixel read",
+        "400% reflow",
+        "OS high contrast"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/accounts/settings-navigation.tsx",
+      "controls": [
+        "Profile settings",
+        "Telegram",
+        "Notification preferences"
+      ],
+      "states": [
+        "actual route transitions",
+        "translated current-page navigation",
+        "narrow/enlarged wrapping"
+      ],
+      "roles": [
+        "member"
+      ],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-render-and-route-states",
+      "pending": [
+        "all keyboard route/focus restoration combinations"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "local_services",
+      "source": "apps/web/src/features/inbox/telegram-screen.tsx",
+      "controls": [
+        "Settings navigation Telegram",
+        "unconfigured status",
+        "read-error Retry"
+      ],
+      "states": [
+        "actual status configured false",
+        "connection-code control absent",
+        "actual interrupted GET then successful retry",
+        "translated narrow/enlarged default state"
+      ],
+      "roles": [
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
+      "status": "verified-listed-read-refusal-and-render-states",
+      "pending": [
+        "external linking/delivery",
+        "configured unavailable bot",
+        "linked mute/unlink",
+        "group setup and permissions"
+      ],
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-calendar-fields",
+      "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+      "controls": [
+        "subscription cap"
+      ],
+      "states": [
+        "concurrent last-slot acceptance/refusal"
+      ],
+      "status": "verified-listed-states",
+      "evidenceId": "cap",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "root-calendar-shell",
+      "surface": "Shared sticky TopBar and mobile BottomTabBar",
+      "evidenceId": "navigation",
+      "note": "Rendered shared navigation has no standalone exact JSX surface in the current scanner. This workflow stays explicit and does not bind child controls as blanket passes.",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "root-fields-current",
+      "surface": "Card custom field definition and value read recovery",
+      "evidenceId": "readRecovery",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "root-fields-current",
+      "surface": "Field definition/value API refusal integrity",
+      "evidenceId": "apiRefusals",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/people",
+      "scope": "Department-role head leadership grouping; ordinary unassigned distinct; optional physical unit retained and filtered truthfully.",
+      "evidenceId": "directory",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/work",
+      "scope": "Head owns and receives work normally, classified at department scope without invented unit IDs.",
+      "evidenceId": "assignment",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/analytics",
+      "scope": "Head/group/unit stable scope IDs; counts preserved; same-named real units do not collide.",
+      "evidenceId": "analytics",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/people/table",
+      "scope": "Presentation fallback is Department-wide, while raw indicator unit remains null; names and task titles wrap.",
+      "evidenceId": "indicator",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/people?person=<head>",
+      "scope": "Null physical unit metadata says Department-wide; actual optional physical unit continues to show its name.",
+      "evidenceId": "directory",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "route": "/work/workload",
+      "scope": "Head retains actual own load/card capacity with Department-wide caption.",
+      "evidenceId": "assignment",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-head-scope",
+      "routes": [
+        "/people",
+        "/work",
+        "/people/table",
+        "/people?person=<head>",
+        "/work/workload",
+        "/analytics"
+      ],
+      "scope": "Only affected head fixture geometry across the explicitly executed144 environment/route observations; unlisted interaction states are pending.",
+      "evidenceId": "visual",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "knowledge_nested-work",
+      "workflow": "Work controls",
+      "status": "partial bounded evidence",
+      "reference": "docs/qa/2026-10/work-controls.md",
+      "note": "API/worker and browser responsibilities remain separate; no blanket work feature pass.",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-events-nested",
+      "route": "/events?event=<owned-id>",
+      "evidenceId": "visual",
+      "scope": "Saved discussion/item/carpool/poll/feedback text wraps; native caption remains fully readable. Paragraphs/figcaption are workflow evidence, not blanket census surface matches. Actual opened native images and lower-fold exclusions are in the pixel ledger.",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-events-nested",
+      "route": "/events?new=1",
+      "evidenceId": "functional",
+      "scope": "Ordinary member publishes own event only after final wizard action, persists organizer ownID, edits description, cancels with reason; head independently rereads. Original accidental-publish regressions remain in event-issues.md. No unexecuted wizard input receives this entry as a source binding.",
+      "surfaceBinding": "not inferred"
+    },
+    {
+      "owner": "event_regressions-events-nested",
+      "route": "/events?event=<owned-id>",
+      "evidenceId": "functional",
+      "scope": "Organizer exact unchanged timestamps retained; explicit Back/edit/reconnect preserves current step/draft. New combinations of every input are not inferred.",
+      "surfaceBinding": "not inferred"
+    }
+  ]
+}
