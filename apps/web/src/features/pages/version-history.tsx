@@ -3,6 +3,7 @@
 // diff against the page's current content (`diff.ts`), and "Restore" reapplies that version's content
 // as a brand-new version (server-side, `pages/repo.ts`'s `restoreVersion`).
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useT, formatDate } from '@devon/i18n'
 import { useLocale } from '@devon/i18n'
 import { Button, StateView, cn } from '@devon/ui'
@@ -24,7 +25,7 @@ function DiffView({ before, after }: { before: string; after: string }) {
         <span
           key={i}
           className={cn(
-            part.type === 'added' && 'bg-success/20 text-success',
+            part.type === 'added' && 'bg-success/20 text-success-text',
             part.type === 'removed' && 'bg-destructive/20 text-destructive line-through',
           )}
         >
@@ -39,36 +40,40 @@ export function VersionHistory({
   page,
   onRestored,
   authorName,
+  canRestore = true,
+  restoreDisabled = false,
 }: {
   page: Page
   onRestored: () => void
   /** Resolves `authorUserId` to a display name (the department's member roster the editor already
    * loaded for `@mentions`) -- falls back to a shortened id when the author is no longer a member. */
   authorName?: (userId: string) => string | undefined
+  canRestore?: boolean
+  restoreDisabled?: boolean
 }) {
   const t = useT()
   const locale = useLocale()
   const versionsQuery = useVersionsQuery(page.id)
   const restoreVersion = useRestoreVersionMutation(page.id)
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
-  const [selectedText, setSelectedText] = React.useState<string | null>(null)
-  const currentText = React.useMemo(() => extractText(page.blocks), [page.blocks])
+  const selectedQuery = useQuery({
+    queryKey: ['pages', 'version', page.id, selectedId],
+    queryFn: () => fetchVersion(page.id, selectedId!),
+    enabled: selectedId !== null,
+  })
+  const currentText = `${page.title}\n\n${extractText(page.blocks)}`
 
-  React.useEffect(() => {
-    if (!selectedId) {
-      setSelectedText(null)
-      return
-    }
-    let cancelled = false
-    fetchVersion(page.id, selectedId).then((v) => {
-      if (!cancelled) setSelectedText(extractText(v.blocks))
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [page.id, selectedId])
-
-  if (versionsQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
+  if (versionsQuery.isPending) return <StateView compact kind="loading" titleKey="state.loading" />
+  if (versionsQuery.isError)
+    return (
+      <StateView
+        compact
+        kind="error"
+        titleKey="state.error.title"
+        bodyKey="state.error.body"
+        action={{ labelKey: 'state.error.action', onAction: () => versionsQuery.refetch() }}
+      />
+    )
   const versions = versionsQuery.data ?? []
   if (versions.length === 0) {
     return <p className="text-small text-muted-foreground">{t('pages.versions.empty')}</p>
@@ -101,23 +106,41 @@ export function VersionHistory({
             </button>
             {selectedId === v.id ? (
               <div className="ml-2 flex flex-col gap-2 border-l-2 border-border py-2 pl-3">
-                {selectedText === null ? (
-                  <StateView kind="loading" titleKey="state.loading" />
+                {selectedQuery.isError ? (
+                  <div>
+                    <StateView
+                      compact
+                      kind="error"
+                      titleKey="state.error.title"
+                      bodyKey="state.error.body"
+                      action={{
+                        labelKey: 'state.error.action',
+                        onAction: () => selectedQuery.refetch(),
+                      }}
+                    />
+                  </div>
+                ) : selectedQuery.isPending ? (
+                  <StateView compact kind="loading" titleKey="state.loading" />
                 ) : (
-                  <DiffView before={selectedText} after={currentText} />
+                  <DiffView
+                    before={`${selectedQuery.data.title}\n\n${extractText(selectedQuery.data.blocks)}`}
+                    after={currentText}
+                  />
                 )}
-                {i !== 0 ? (
+                {i !== 0 && canRestore ? (
                   <Button
                     variant="secondary"
                     size="sm"
                     className="self-start"
                     loading={restoreVersion.isPending}
+                    disabled={restoreDisabled || selectedQuery.isPending || selectedQuery.isError}
                     onClick={() =>
                       restoreVersion.mutate(v.id, {
                         onSuccess: () => {
                           toast(t('pages.versions.restored'))
                           onRestored()
                         },
+                        onError: () => toast.error(t('toast.saveError')),
                       })
                     }
                   >

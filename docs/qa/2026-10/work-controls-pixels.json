@@ -1,0 +1,3624 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested-work",
+  "date": "2026-10-09",
+  "method": "All30 generated original-pixel comparison PNGs explicitly opened through view_image. Desktop viewer downsizing is retained as a review limit. Capture metadata itself is not pixel proof.",
+  "sourceBoundary": "Predates later root-owned opaque TopBar/BottomTabBar fill. Comparison-level inspection; narrow tall-gallery footer not visible in initial viewport captures.",
+  "inspected": [
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-editor-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [440, 0, 1000, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-editor-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-editor-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-editor-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-editor-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [104, 0, 664, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-gallery-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [264, 0, 1440, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-gallery-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-gallery-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-gallery-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\chromium-gallery-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-chromium\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "chromium",
+          "comparisonCrop": [0, 0, 768, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-editor-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [440, 0, 1000, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-editor-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-editor-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-editor-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-editor-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [104, 0, 664, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-gallery-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [264, 0, 1440, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-gallery-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-gallery-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-gallery-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\firefox-gallery-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-firefox\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "firefox",
+          "comparisonCrop": [0, 0, 768, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-editor-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "editor-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [440, 0, 1000, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-editor-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-editor-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "editor-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-editor-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-editor-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "editor-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\editor-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [104, 0, 664, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-gallery-1440-900-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 1440,
+          "height": 900,
+          "scale": 1,
+          "state": "gallery-1440-900-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-1440-900-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [264, 0, 1440, 900]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-gallery-320-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 320,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-320-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-320-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 320, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-gallery-360-225-text100.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 360,
+          "height": 225,
+          "scale": 1,
+          "state": "gallery-360-225-text100",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-360-225-text100.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 360, 225]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-gallery-390-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 390,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-390-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-390-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 390, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    },
+    {
+      "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\work-curation-comparison\\webkit-gallery-768-600-text200.png",
+      "records": [
+        {
+          "locale": "en",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-en-dark-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "en",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-91c1e-qa-curation-reflow-en-light-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-visual.qa--qa-curation-reflow-ru-dark-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "ru",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-27193-qa-curation-reflow-ru-light-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-b7ba2-uration-reflow-uz-Latn-dark-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Latn",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-ede25-ration-reflow-uz-Latn-light-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "dark",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-c1082-uration-reflow-uz-Cyrl-dark-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        },
+        {
+          "locale": "uz-Cyrl",
+          "theme": "light",
+          "width": 768,
+          "height": 600,
+          "scale": 2,
+          "state": "gallery-768-600-text200",
+          "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-curation-visual-complete\\platform-work-curation-vis-22702-ration-reflow-uz-Cyrl-light-webkit\\gallery-768-600-text200.png",
+          "pixelInspected": false,
+          "engine": "webkit",
+          "comparisonCrop": [0, 0, 768, 600]
+        }
+      ],
+      "pixelInspected": true,
+      "review": "Long names/translated labels wrap within gallery/editor; keyboard-focused Save is bounded. Narrow tall gallery initial image does not show footer; no full-resolution per-source inspection claim."
+    }
+  ],
+  "inspectedNativeSupplement": [
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-reflow-pending-current\\platform-work-controls-vis-344f3-rk-controls-reflow-ru-light-chromium\\deps-heading-320-text200.png",
+      "pixelInspected": true,
+      "sourceBoundary": "Current repaired rows/header, Chromium Russian/light; precedes only bulk Due disabledTrigger. Exact original image opened through view_image."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-reflow-pending-current\\platform-work-controls-vis-344f3-rk-controls-reflow-ru-light-chromium\\deps-320-600-text200.png",
+      "pixelInspected": true,
+      "sourceBoundary": "Current repaired rows/header, Chromium Russian/light; precedes only bulk Due disabledTrigger. Exact original image opened through view_image."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-reflow-pending-current\\platform-work-controls-vis-344f3-rk-controls-reflow-ru-light-chromium\\reminders-390-600-text200.png",
+      "pixelInspected": true,
+      "sourceBoundary": "Current repaired rows/header, Chromium Russian/light; precedes only bulk Due disabledTrigger. Exact original image opened through view_image."
+    },
+    {
+      "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-reflow-pending-current\\platform-work-controls-vis-344f3-rk-controls-reflow-ru-light-chromium\\reminders-360-225-text100.png",
+      "pixelInspected": true,
+      "sourceBoundary": "Current repaired rows/header, Chromium Russian/light; precedes only bulk Due disabledTrigger. Exact original image opened through view_image."
+    }
+  ],
+  "pending": [
+    "Current narrow gallery footer native pixels",
+    "Shared shell opaque fill replay is root-owned"
+  ],
+  "currentReviews": {
+    "schemaVersion": 1,
+    "owner": "knowledge_nested-work",
+    "date": "2026-10-09",
+    "method": "Each listed comparison PNG explicitly opened through view_image. Desktop comparison display resizing remains a review limit; these are not full-resolution glyph inspections of every native source.",
+    "sourceBoundary": "work-controls-current-complete source before dependency pagination and recurrence long-word wrap. Root opaque header/navigation fill is loaded.",
+    "inspected": [
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-bulk-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-bulk-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-bulk-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-bulk-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-bulk-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-deps-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-reminders-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\chromium-repeat-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Uzbek Cyrillic long-word schedule explanation clips at right in320/text200; actual repair and text-range after proof are separate. Other headings wrap."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-bulk-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-bulk-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-bulk-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-bulk-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-bulk-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-deps-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-reminders-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\firefox-repeat-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Uzbek Cyrillic long-word schedule explanation clips at right in320/text200; actual repair and text-range after proof are separate. Other headings wrap."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-bulk-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-bulk-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-bulk-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-bulk-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-bulk-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Width reflows; short pointer-to-programmatic Priority focus can be obscured by fixed navigation without focus-visible. Root native Tab proof is separate; no native keyboard failure claimed."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-deps-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-reminders-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-1440-900-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-320-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-360-225-text100.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-390-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-768-600-text200.png",
+        "pixelInspected": true,
+        "review": "Dependency/reminder rows, full wrapped names/notes, focused Add/Delete/Stop and heading summaries are readable within the visible card column. Vertical content scrolls; not all controls appear simultaneously."
+      },
+      {
+        "comparison": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-current-complete\\pixel-sheets\\webkit-repeat-heading-320-text200.png",
+        "pixelInspected": true,
+        "review": "Uzbek Cyrillic long-word schedule explanation clips at right in320/text200; actual repair and text-range after proof are separate. Other headings wrap."
+      }
+    ],
+    "pending": [
+      "Recurrence long-word wrapping after pixels/text-range proof",
+      "Later-page dependency refusal/recovered draft after pixels",
+      "Narrow gallery footer pixels"
+    ]
+  },
+  "nativeAfterReviews": {
+    "schemaVersion": 1,
+    "owner": "knowledge_nested-work",
+    "date": "2026-10-09",
+    "method": "Each listed native PNG explicitly opened through view_image, original detail. Screenshot metadata is not inspection proof.",
+    "currentSourceSha256": [
+      {
+        "Algorithm": "SHA256",
+        "Hash": "E11A11A8FA3BF5BEE96B7323C3F441F39DAA427E2E919E51084C0D221E5D01E4",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\apps\\web\\src\\features\\work\\components\\card-tile.tsx"
+      },
+      {
+        "Algorithm": "SHA256",
+        "Hash": "B32DFCEBEC3CD290543953B3E234E72D4B4903F48A900752BC7EAAD923DD561A",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\ui\\src\\styles\\tokens.css"
+      },
+      {
+        "Algorithm": "SHA256",
+        "Hash": "FE4639B023E9C1DC28AE7A5B9FF0C94F5F4C5E840747914797EF82420F48F175",
+        "Path": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\packages\\db\\migrations\\2009_work_template_privacy.sql"
+      }
+    ],
+    "inspected": [
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-chromium\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-firefox\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-dependency-r-4e303-ites-cannot-persist-a-cycle-webkit\\refused-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Refused opposing write refreshes graph and shows disabled cycle-closing choice."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-chromium\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-firefox\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-graph-freshn-cb1d8--concurrently-changed-graph-webkit\\reopened-cycle-choice.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Reopened cycle-closing candidate disabled after an independent reverse-edge write."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-chromium\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-firefox\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-recovered-search.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Literal search retained and matching later-page candidate readable."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-controls-affected-complete\\platform-work-picker.qa--q-2e5a3-ater-page-refusal-and-retry-webkit\\later-page-refusal.png",
+        "pixelInspected": true,
+        "run": "work-controls-affected-complete",
+        "review": "Controlled later-page refusal; Chromium/WebKit show upper recovery block only. Retry functionality is separately asserted."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-webkit\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox is visible below sticky header. Phone crops far-right card contents; desktop shows only upper target card. No whole-card/footer pixel claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-firefox\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-390-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      },
+      {
+        "screenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts/qa/2026-10/results/platform/work-card-native-final\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+        "pixelInspected": true,
+        "run": "work-card-native-final",
+        "review": "Checkbox remains visibly below sticky header and clear of navigation; visible Avatar initials readable. No complete native Tab or drag claim."
+      }
+    ],
+    "before": {
+      "run": "work-card-native-runtime",
+      "runtimeReceipts": "Current54% token/white foreground with static wrapper opacity0.8; actual axe3.33. All3 cases failed.",
+      "inspectedScreenshot": "C:\\Users\\rpwal\\Documents\\Work\\eGov\\WorkPortal\\artifacts\\qa\\2026-10\\results\\platform\\work-card-native-runtime\\platform-work-card-stackin-19021-uch-targets-stable-en-light-chromium\\card-target-1440-text100.png",
+      "pixelInspected": true
+    },
+    "boundary": "Dependency proofs precede final card opacity repair. Normal card proofs use English/light, normal text1440x900 and390x600 only. Historical all-locale/text200 comparison sheets remain separate."
+  }
+}

@@ -338,13 +338,8 @@ const workRoutes: FastifyPluginAsyncZod = async (app) => {
       // everyone else gets a 403 and the board hides the affordance (`canEdit` on the DTO).
       const ownership = await requireCardOwnership(req, reply, departmentId, req.params.id)
       if (!ownership.ok) return
-      const named = [patch.assigneeUserId, patch.giverUserId].filter(
-        (id): id is string => typeof id === 'string',
-      )
-      if (named.length) {
-        const members = await repo.filterDepartmentMemberIds(ctx, departmentId, named)
-        if (named.some((id) => !members.has(id))) return sendProblem(reply, 'validation_failed')
-      }
+      // patchCard validates changed assignee/giver references under row locks in its write
+      // transaction. Unchanged historical references and explicit unassignment remain editable.
       // v1.1 SPEC §5: "required fields block moving to done with an inline message". The refusal is
       // here, on the server, because a card that leaves the board without its required answers is
       // exactly the hole a client-side check leaves open. Only on the transition *into* done or

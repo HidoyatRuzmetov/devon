@@ -1,0 +1,1547 @@
+{
+  "schemaVersion": 1,
+  "owner": "event_regressions-events-nested",
+  "provenance": "Actual synthetic local browser/API/PostgreSQL evidence; no production/external calls.",
+  "policy": "Exact authored source/state scope only; no parent/component blanket pass or inferred pixel review.",
+  "boundaries": {
+    "db": "devon_flow_e2e_events_nested",
+    "apiPort": 48961,
+    "webPort": 48962,
+    "seedDemo": false,
+    "brokerEnabled": false,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "gates": {
+    "functional": "93/93 all3;29 journeys plus2 motion variants",
+    "visual": "8/8 Chromium;168 read-panel states"
+  },
+  "releaseScopeSteering": "Latest user steering defers tiny-screen/enlarged-text release cases. The visual journeys already running were completed and retained with their exact scope; no new such matrix or release blocker is inferred.",
+  "evidence": {
+    "functional": {
+      "tests": [
+        "apps/web/test/e2e/events-nested.qa.spec.ts",
+        "apps/web/test/e2e/events-boundaries.qa.spec.ts",
+        "apps/web/test/e2e/events-pointer.qa.spec.ts"
+      ],
+      "report": "artifacts/qa/2026-10/events-nested/complete-anchored/results.json",
+      "roles": [
+        "department-head",
+        "ordinary-member including own event organizer"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "scenario": "29 distinct synthetic local journeys plus two motion variants of the held-pointer regression,93 executions: seven resource503/Retry paths, RSVP/changed Undo, shared-item claims, carpool seat/failed Undo recovery, poll vote/change/Undo, date/anonymous construction, option cap/removal, per-kind drafts, member/organizer publish/edit/cancel, native feedback/photo keyboard, actual held writes/read/draft boundaries and recovered Mine ICS download. Exact writes independently reread through the real API/PostgreSQL; only transport refusal/timing boundaries are intercepted."
+    },
+    "visual": {
+      "test": "apps/web/test/e2e/events-nested-visual.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/events-nested/complete-anchored/results.json",
+      "roles": [
+        "department-head viewing populated head/member fixtures"
+      ],
+      "browsers": [
+        "chromium"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "scenario": "Eight journeys select all seven populated tabs at320×640,768×800 and1280×600/text200%;168 named-tabpanel, clipping, scoped serious/critical axe states and native captures. Item-label/driver first-word geometry also checked. This is read-panel reflow, not a matrix of nested create forms, native keyboard journeys or every role."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "EventDetailDialog",
+        "kind": "Dialog"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the synthetic detail deep link and subsequent tested actions; not all loading/forbidden/cancel-animation states.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "EventDetailDialog",
+        "kind": "DialogContent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Populated seven-tab read reflow and scoped axe only. Native viewport crop limits are listed in the separate pixel ledger; no full-scroll focus claim.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "Tabs"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All seven actual tab selections have a named matching mounted panel at each executed size. Native keyboard switching remains outside this matrix.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsList"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the implemented seven labels in the populated fixture and named tablist; not a shared TabsList component pass.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsTrigger"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One mapped source callsite, seven runtime triggers actually selected; no keyboard-shortcut claim.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<RsvpPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated RSVP panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<CarpoolPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated carpool panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<ItemsPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated items panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<PollsPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated polls panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<CommentsPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated comments panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<PhotosPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated photos panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "renderDialogBody",
+        "kind": "TabsContent",
+        "childSummaryIncludes": "<FeedbackPanel "
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the populated feedback panel matching its selected trigger; inactive bodies remain unmounted and are not marked tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "EventHeader",
+        "kind": "Button",
+        "childSummaryIncludes": "events.actions.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Head organizer and ordinary-member own event edit/back/save, exact unchanged ISO precision, persisted descriptions; unrelated member lacks the action and gets API403.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "EventHeader",
+        "kind": "IconButton",
+        "labelIncludes": "events.actions.moreActions"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Native overflow click opens actual cancellation item for the organizer. Other menu keyboard/dismissal states remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-detail-dialog.tsx",
+        "component": "EventHeader",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "events.actions.cancelEvent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Organizer cancellation item opens required-reason confirmation; no reopening capability is inferred.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/cancel-dialog.tsx",
+        "component": "CancelDialog",
+        "kind": "DialogContent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Head Keep/reopen plus blank/whitespace reason disable and real cancellation; member organizer real cancellation. No cancellation503 recovery claim.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/cancel-dialog.tsx",
+        "component": "CancelDialog",
+        "kind": "Textarea",
+        "labelIncludes": "events.cancelDialog.reasonPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual typed cancellation reason and whitespace guard; independent reads retain exact reason.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/cancel-dialog.tsx",
+        "component": "CancelDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "events.cancelDialog.keepEvent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Keep closes confirmation without changing the saved event; reopening and real cancellation are separately observed.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/cancel-dialog.tsx",
+        "component": "CancelDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "events.cancelDialog.confirm"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Blank/whitespace reason disabled and real cancellation persisted; no stale-context cancellation race claim.",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/comments-panel.tsx",
+        "component": "CommentsPanel",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "renderItemsBody",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/carpool-panel.tsx",
+        "component": "renderCarpoolsBody",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "renderPollsBody",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/photos-panel.tsx",
+        "component": "renderGalleryBody",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "FeedbackPanel",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only this child resource actualGET503, native Retry, subsequentGET200 and independent empty read; no other shared StateView scenario receives evidence.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/comments-panel.tsx",
+        "component": "CommentsPanel",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real comment creation, held201 retains next draft; pointerdown/read-completion/mouseup also persists in both motion modes. Actual normal-motion before measurement showed centered dialog moves Post53px during Swap exit; event detail anchoring repairs that mechanism. Earlier standalone WebKit click failure remains historical without its own native-event proof.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/comments-panel.tsx",
+        "component": "CommentsPanel",
+        "kind": "Textarea",
+        "labelIncludes": "events.comments.placeholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "New draft remains after the acknowledged earlier POST; AI insertion is only source-reviewed and external generation is excluded.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/comments-panel.tsx",
+        "component": "CommentsPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "events.comments.submit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Native Post dispatch and real paragraph persistence, including holding a real gesture through actual Swap exit under both motion modes. No generic failed-comment-write claim.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/comments-panel.tsx",
+        "component": "CommentsPanel",
+        "kind": "IconButton",
+        "labelIncludes": "events.comments.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Own comment deletion accepts the actual native confirmation and independently removes the row; refusal/cross-owner deletion not established here.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "ItemsPanel",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Head add persists real shared item; held201 preserves newer label and quantity independently.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "ItemsPanel",
+        "kind": "Input",
+        "labelIncludes": "events.items.labelPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only actual new/submitted item-label drafts; visual narrow field occupies a complete row.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "ItemsPanel",
+        "kind": "Input",
+        "labelIncludes": "type=\"number\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual newer quantity retained after held save; numeric edge validation remains pending.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "renderClaimButton",
+        "kind": "Button",
+        "childSummaryIncludes": "events.items.claim"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Member claim persists; another viewer sees claimant and cannot claim/release. Simultaneous two-person arbitration is not a browser claim.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/items-panel.tsx",
+        "component": "renderClaimButton",
+        "kind": "Button",
+        "childSummaryIncludes": "events.items.release"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Own release independently yields null claimant; other-person management action absent.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/carpool-panel.tsx",
+        "component": "CarpoolPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "events.carpool.offer",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual one-seat offer submit and held201 preserves a fresh reopened form. The separate same-label header action is not bound by this selector.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/carpool-panel.tsx",
+        "component": "CarpoolPanel",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Head creates one-seat offer; held201/new form boundary. Nested form locale/reflow remains pending.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/carpool-panel.tsx",
+        "component": "renderActionArea",
+        "kind": "Button",
+        "childSummaryIncludes": "events.carpool.claim"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Member claims the actual seat; driver self-claim action absent. Second-passenger waitlist/promotion remains pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/carpool-panel.tsx",
+        "component": "renderActionArea",
+        "kind": "Button",
+        "childSummaryIncludes": "events.carpool.release"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Own release persists, failed503 Undo remains retryable and recovered Undo restores seat; no concurrent replacement-user proof.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/photos-panel.tsx",
+        "component": "PhotosPanel",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Owned loopback PNG link/caption create and held201 retain next URL/caption. External photos and uploaded-file behavior excluded.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/photos-panel.tsx",
+        "component": "PhotosPanel",
+        "kind": "Input",
+        "labelIncludes": "type=\"url\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real local URL submission and next URL retained; malicious/external URL policies are not established by this stream.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/photos-panel.tsx",
+        "component": "PhotosPanel",
+        "kind": "Textarea",
+        "childSummaryIncludes": "id=\"photo-caption\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Caption draft retention and native Tab from the field to owned Delete; full caption readability is a separate workflow entry.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/photos-panel.tsx",
+        "component": "renderGalleryBody",
+        "kind": "IconButton",
+        "labelIncludes": "events.photos.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Native Tab proves focused control opacity1, Enter removes real metadata; no permanent file deletion or non-owner refusal inference.",
+      "states": {
+        "focus": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "StarRating",
+        "kind": "div",
+        "labelIncludes": "role=\"radiogroup\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual3→ArrowRight4, exact focused4 then Tab into comment; wrap/end key permutations remain pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "StarRating",
+        "kind": "button",
+        "labelIncludes": "role=\"radio\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One mapped source callsite with actual3/4 radio interaction and persisted4. This does not mark every star state tested.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "FeedbackPanel",
+        "kind": "Textarea",
+        "childSummaryIncludes": "id=\"feedback-comment\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Held real GET after update cannot replace a newer comment draft; actual anonymous reload/update independently preserves author=null.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "FeedbackPanel",
+        "kind": "Checkbox",
+        "childSummaryIncludes": "id=\"feedback-anonymous\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real anonymous submit, reload, comment update and independent null-author read; no public identity disclosure beyond that fixture.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/feedback-panel.tsx",
+        "component": "FeedbackPanel",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual submit/update one own response. Feedback is not newly restricted to completed events because current documented API semantics permit this fixture.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "PollsPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "events.polls.create"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Show/hide/reopen form; old201 cannot close a later form. Role/expiry combinations remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual single/date anonymous construction, invalid blank date submission disabled, ten-option cap/removal and per-kind draft retention; multi voting remains pending.",
+      "states": {
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"poll-kind\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual single→date→multi→date retains separate text/date drafts and avoids invisible stale text. No multi ballot persistence claim.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "Input",
+        "labelIncludes": "eventsControls.option"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mapped numbered option inputs, scoped axe label check, actual two dates and ten text choices persisted. Other date parsing/range boundaries pending.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "IconButton",
+        "labelIncludes": "eventsControls.removeOption"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Named Remove option1 at the ten-option cap restores Add capacity; native-keyboard remove/focus repair not established.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "Button",
+        "childSummaryIncludes": "events.polls.addOption"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual add2→10 disabled, removal9 enabled, add10 disabled; no cap beyond real contract invented.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "Checkbox",
+        "childSummaryIncludes": "id=\"poll-anonymous\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Ordinary member creates real anonymous date poll and independent DTO confirms flag; ballot anonymity serialization scope is not broader.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "CreatePollForm",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Blank/invalid date options disabled; actual valid two-date or ten-text-option create persisted. Failed create receipt handling outside held-success lifetime remains pending.",
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "PollCard",
+        "kind": "input",
+        "labelIncludes": "type=\"radio\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Single ballotA→B→UndoA and new editor authoritativeA; anonymous date ballot selected and real save. Multi checkboxes not inferred.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "PollCard",
+        "kind": "Button",
+        "childSummaryIncludes": "events.polls.vote"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real single/date vote and replacement ballot; closed deadline/refused vote remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/polls-panel.tsx",
+        "component": "PollCard",
+        "kind": "Button",
+        "childSummaryIncludes": "events.polls.changeVote"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "After changed-vote Undo, next editor checks authoritativeA rather than previous localB.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real Yes guest1/note→Maybe→UndoYes→No, independent RSVP reads; guests at bounds/deadline/full/waitlist are not established.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "button",
+        "labelIncludes": "type=\"button\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Mapped Yes/Maybe/No native clicks and persisted status only; selected accessibility semantics are not claimed.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "Button",
+        "labelIncludes": "aria-label=\"+\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual0→1 guest and savedYes guest1; minus/upper bound not executed.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "Textarea",
+        "labelIncludes": "events.rsvp.notePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual note persists through changed answer Undo; no maximum-length/refused RSVP draft claim.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual first and changed RSVP acknowledgements plus in-dialog previous answer restore.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-undo.tsx",
+        "component": "useEventUndo",
+        "kind": "Button",
+        "childSummaryIncludes": "events.actions.undo"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One helper callsite exercised through poll, RSVP and carpool. Actual carpool503 keeps in-dialog action retryable; source captures actor/dept/view-as/CSRF but replacement-context browser races remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/events-screen.tsx",
+        "component": "EventsScreen",
+        "kind": "IconButton",
+        "labelIncludes": "events.actions.moreActions"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only MineICS503 visible translated failure/no pageerror followed by real .ics download containing actual RSVP event. External calendars and late download context replacement remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/events-screen.tsx",
+        "component": "EventsScreen",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "events.ics.exportMine"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only MineICS503 visible translated failure/no pageerror followed by real .ics download containing actual RSVP event. External calendars and late download context replacement remain pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "pixelLedger": "docs/qa/2026-10/events-nested-pixel-review.json",
+  "entries": [
+    {
+      "route": "/events?event=<owned-id>",
+      "evidenceId": "visual",
+      "scope": "Saved discussion/item/carpool/poll/feedback text wraps; native caption remains fully readable. Paragraphs/figcaption are workflow evidence, not blanket census surface matches. Actual opened native images and lower-fold exclusions are in the pixel ledger."
+    },
+    {
+      "route": "/events?new=1",
+      "evidenceId": "functional",
+      "scope": "Ordinary member publishes own event only after final wizard action, persists organizer ownID, edits description, cancels with reason; head independently rereads. Original accidental-publish regressions remain in event-issues.md. No unexecuted wizard input receives this entry as a source binding."
+    },
+    {
+      "route": "/events?event=<owned-id>",
+      "evidenceId": "functional",
+      "scope": "Organizer exact unchanged timestamps retained; explicit Back/edit/reconnect preserves current step/draft. New combinations of every input are not inferred."
+    }
+  ]
+}

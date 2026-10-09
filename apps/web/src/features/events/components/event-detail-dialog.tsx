@@ -22,6 +22,7 @@ import {
   Skeleton,
   StateView,
   Tabs,
+  TabsContent,
   TabsList,
   TabsTrigger,
   initialsFromName,
@@ -376,7 +377,7 @@ export function EventDetailDialog({
       const ics = await fetchEventIcs(eventId)
       downloadIcs(ics.filename, ics.content)
     } catch {
-      toast(t('events.error.title'))
+      toast(t('eventsControls.exportFailed'))
     } finally {
       setExporting(false)
     }
@@ -436,7 +437,7 @@ export function EventDetailDialog({
           onExportIcs={handleExportIcs}
           exporting={exporting}
         />
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-5">
           <TabsList aria-label={event.title}>
             {tabs.map((item) => (
               <TabsTrigger key={item.id} value={item.id}>
@@ -444,16 +445,28 @@ export function EventDetailDialog({
               </TabsTrigger>
             ))}
           </TabsList>
+          <TabsContent value="rsvp">
+            <RsvpPanel event={event} eventId={eventId} />
+          </TabsContent>
+          <TabsContent value="carpool">
+            <CarpoolPanel eventId={eventId} />
+          </TabsContent>
+          <TabsContent value="items">
+            <ItemsPanel eventId={eventId} />
+          </TabsContent>
+          <TabsContent value="polls">
+            <PollsPanel eventId={eventId} />
+          </TabsContent>
+          <TabsContent value="comments">
+            <CommentsPanel eventId={eventId} eventTitle={event.title} />
+          </TabsContent>
+          <TabsContent value="photos">
+            <PhotosPanel eventId={eventId} />
+          </TabsContent>
+          <TabsContent value="feedback">
+            <FeedbackPanel eventId={eventId} />
+          </TabsContent>
         </Tabs>
-        <div>
-          {tab === 'rsvp' ? <RsvpPanel event={event} eventId={eventId} /> : null}
-          {tab === 'carpool' ? <CarpoolPanel eventId={eventId} /> : null}
-          {tab === 'items' ? <ItemsPanel eventId={eventId} /> : null}
-          {tab === 'polls' ? <PollsPanel eventId={eventId} /> : null}
-          {tab === 'comments' ? <CommentsPanel eventId={eventId} eventTitle={event.title} /> : null}
-          {tab === 'photos' ? <PhotosPanel eventId={eventId} /> : null}
-          {tab === 'feedback' ? <FeedbackPanel eventId={eventId} /> : null}
-        </div>
       </div>
     )
   }
@@ -467,7 +480,10 @@ export function EventDetailDialog({
           // `overflow-x-hidden` as well as `-y-auto`: a long place name or a pasted URL in the
           // description must wrap, never widen the sheet into a horizontal scroller (the 390px
           // half of WALKTHROUGH-FINDINGS 2.6).
-          className="max-h-[88vh] w-[calc(100vw-2rem)] max-w-180 overflow-y-auto overflow-x-hidden"
+          // Anchor this asynchronously sized detail dialog at the top. Vertical centering moves
+          // the composer when an exiting taller skeleton unmounts: a native held Post gesture
+          // then releases over the textarea instead of the button. Scrolling/height stay bounded.
+          className="top-[6vh] max-h-[88vh] w-[calc(100vw-2rem)] max-w-180 translate-y-0 overflow-y-auto overflow-x-hidden"
         >
           {renderDialogBody()}
         </DialogContent>
@@ -480,7 +496,7 @@ export function EventDetailDialog({
           event={eventQuery.data}
           submitting={updateMutation.isPending}
           onSubmit={async (values) => {
-            await updateMutation.mutateAsync(eventFormValuesToUpdateInput(values))
+            await updateMutation.mutateAsync(eventFormValuesToUpdateInput(values, eventQuery.data))
           }}
         />
       ) : null}

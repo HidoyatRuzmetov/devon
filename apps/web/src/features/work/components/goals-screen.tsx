@@ -11,6 +11,7 @@
 // must show them the designed no-permission state rather than firing a request that comes back 403
 // and rendering "Maʼlumotlarni yuklab boʻlmadi" (seen live as demo.xodim before this guard).
 import * as React from 'react'
+import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowUpRight, Loader2, Pencil, Plus, Target, Trash2 } from 'lucide-react'
 import type { GoalMetric } from '@devon/contracts'
 import { useT, useLocale, formatDate } from '@devon/i18n'
@@ -37,6 +38,8 @@ import {
   useCelebrate,
 } from '@devon/ui'
 import { useDepartment } from '../../../lib/session.js'
+import { ApiError } from '../../../lib/api-client.js'
+import type { Me } from '../../../lib/api-schemas.js'
 import { navigate } from '../../../lib/router.js'
 import {
   useCreateGoalMutation,
@@ -61,6 +64,23 @@ const METRICS: readonly GoalMetric[] = [
   'estimate_hours',
   'open_cards_max',
 ]
+
+/** Toast actions outlive the route that created them. Capture the actual transaction context,
+ * rather than letting a later department/session reuse an old goal command. */
+function captureGoalScope(queryClient: QueryClient): () => boolean {
+  const submitted = queryClient.getQueryData<Me | null>(['me'])
+  return () => {
+    const current = queryClient.getQueryData<Me | null>(['me'])
+    return Boolean(
+      submitted &&
+      current &&
+      submitted.user.id === current.user.id &&
+      submitted.activeDepartmentId === current.activeDepartmentId &&
+      submitted.actingForUserId === current.actingForUserId &&
+      submitted.csrfToken === current.csrfToken,
+    )
+  }
+}
 
 const METRIC_HINT_KEY: Record<GoalMetric, string> = {
   cards_done: 'work.goals.metricHint.cardsDone',
@@ -98,7 +118,7 @@ export function GoalCard({
   goal: Goal
   canManage: boolean
   onDelete: () => void
-  onEdit?: (() => void) | undefined
+  onEdit?: ((trigger: HTMLButtonElement) => void) | undefined
   busy: boolean
 }): React.JSX.Element {
   const t = useT()
@@ -119,7 +139,7 @@ export function GoalCard({
   }, [reached, reachedCelebrate])
   const ceiling = isCeilingMetric(goal.metric)
   const percent = isPercentMetric(goal.metric)
-  const overCap = ceiling && goal.targetValue > 0 && goal.currentValue > goal.targetValue
+  const overCap = ceiling && goal.currentValue > goal.targetValue
 
   return (
     <article className="flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4">
@@ -138,7 +158,10 @@ export function GoalCard({
         {canManage ? (
           <div className="flex shrink-0 items-center gap-0.5">
             {onEdit ? (
-              <IconButton aria-label={t('work.goals.edit', { title: goal.title })} onClick={onEdit}>
+              <IconButton
+                aria-label={t('work.goals.edit', { title: goal.title })}
+                onClick={(event) => onEdit(event.currentTarget)}
+              >
                 <Pencil className="size-4" aria-hidden="true" />
               </IconButton>
             ) : null}
@@ -158,7 +181,9 @@ export function GoalCard({
       </div>
 
       {goal.description ? (
-        <p className="text-small text-muted-foreground">{goal.description}</p>
+        <p className="min-w-0 whitespace-pre-wrap break-words text-small text-muted-foreground">
+          {goal.description}
+        </p>
       ) : null}
 
       <div className="flex flex-col gap-1.5">
@@ -249,14 +274,18 @@ function GoalDialog({
   open,
   goal,
   onOpenChange,
+  restoreFocus,
 }: {
   open: boolean
   goal: Goal | null
   onOpenChange: (open: boolean) => void
+  restoreFocus: () => void
 }): React.JSX.Element {
   const t = useT()
   const createGoal = useCreateGoalMutation()
+  const queryClient = useQueryClient()
   const patchGoal = usePatchGoalMutation()
+  const savedGoals = useGoalsQuery(false)
   const editing = goal !== null
   const [title, setTitle] = React.useState('')
   const [description, setDescription] = React.useState('')
@@ -264,6 +293,21 @@ function GoalDialog({
   const [filter, setFilter] = React.useState('')
   const [target, setTarget] = React.useState('10')
   const [dueOn, setDueOn] = React.useState('')
+  const [conflict, setConflict] = React.useState(false)
+  const [reloadPending, setReloadPending] = React.useState(false)
+  const session = React.useRef(0)
+  const version = React.useRef<number | undefined>(undefined)
+
+  function seed(saved: Goal): void {
+    setTitle(saved.title)
+    setDescription(saved.description ?? '')
+    setMetric(saved.metric)
+    setFilter(saved.filter ?? '')
+    setTarget(String(saved.targetValue))
+    setDueOn(saved.dueOn ?? '')
+    version.current = saved.version
+    setConflict(false)
+  }
 
   function reset(): void {
     setTitle('')
@@ -272,32 +316,64 @@ function GoalDialog({
     setFilter('')
     setTarget('10')
     setDueOn('')
+    version.current = undefined
+    setConflict(false)
   }
 
   // Seeded on open, not on every render: a head halfway through editing a target must not have it
   // overwritten by a background refetch of the goals list.
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
+    session.current += 1
+    setReloadPending(false)
     if (!open) return
     if (goal === null) {
       reset()
       return
     }
-    setTitle(goal.title)
-    setDescription(goal.description ?? '')
-    setMetric(goal.metric)
-    setFilter(goal.filter ?? '')
-    setTarget(String(goal.targetValue))
-    setDueOn(goal.dueOn ?? '')
+    seed(goal)
     // `goal.id` rather than `goal`: the object identity changes on every refetch, the goal does not.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, goal?.id])
 
   const targetValue = Number(target)
-  const valid = title.trim().length > 0 && Number.isFinite(targetValue) && targetValue >= 0
+  const valid =
+    title.trim().length > 0 &&
+    target.trim().length > 0 &&
+    Number.isFinite(targetValue) &&
+    targetValue >= 0 &&
+    targetValue <= 1_000_000
+
+  function changeOpen(next: boolean): void {
+    // Invalidate callbacks synchronously when Cancel/Escape closes a session. A committed older
+    // request may still finish, but its receipt must not reset or close the next opened draft.
+    session.current += 1
+    onOpenChange(next)
+  }
+
+  async function reloadSaved(): Promise<void> {
+    if (goal === null || reloadPending) return
+    const commandSession = session.current
+    const currentScope = captureGoalScope(queryClient)
+    setReloadPending(true)
+    try {
+      const latest = await savedGoals.refetch({ throwOnError: true })
+      if (session.current !== commandSession || !currentScope()) return
+      const saved = latest.data?.find((item) => item.id === goal.id)
+      if (saved) seed(saved)
+      else toast.error(t('goalsControls.reloadFailed'))
+    } catch {
+      if (session.current === commandSession && currentScope())
+        toast.error(t('goalsControls.reloadFailed'))
+    } finally {
+      if (session.current === commandSession) setReloadPending(false)
+    }
+  }
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
-    if (!valid) return
+    if (!valid || conflict || reloadPending || createGoal.isPending || patchGoal.isPending) return
+    const commandSession = session.current
+    const currentScope = captureGoalScope(queryClient)
     const draft = {
       title: title.trim(),
       metric,
@@ -310,13 +386,18 @@ function GoalDialog({
     }
     if (editing) {
       patchGoal.mutate(
-        { id: goal.id, patch: draft },
+        { id: goal.id, patch: { ...draft, version: version.current ?? goal.version } },
         {
           onSuccess: () => {
+            if (session.current !== commandSession || !currentScope()) return
             toast.success(t('work.goals.saved'))
-            onOpenChange(false)
+            changeOpen(false)
           },
-          onError: () => toast.error(t('work.goals.saveFailed')),
+          onError: (error) => {
+            if (session.current !== commandSession || !currentScope()) return
+            if (error instanceof ApiError && error.status === 409) setConflict(true)
+            else toast.error(t('work.goals.saveFailed'))
+          },
         },
       )
       return
@@ -332,20 +413,28 @@ function GoalDialog({
       },
       {
         onSuccess: () => {
+          if (session.current !== commandSession || !currentScope()) return
           toast.success(t('work.goals.created'))
           reset()
-          onOpenChange(false)
+          changeOpen(false)
         },
-        onError: () => toast.error(t('work.goals.createFailed')),
+        onError: () => {
+          if (session.current === commandSession && currentScope())
+            toast.error(t('work.goals.createFailed'))
+        },
       },
     )
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={changeOpen}>
       <DialogContent
         title={editing ? t('work.goals.editTitle') : t('work.goals.newTitle')}
         className="max-w-lg"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          restoreFocus()
+        }}
       >
         <form onSubmit={submit} className="flex flex-col gap-4">
           <Field label={t('work.goals.fieldTitle')} htmlFor="goal-title">
@@ -391,11 +480,30 @@ function GoalDialog({
               id="goal-target"
               type="number"
               min={0}
+              max={1_000_000}
+              step="any"
+              required
               inputMode="numeric"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
             />
           </Field>
+
+          {conflict ? (
+            <div className="flex flex-col gap-2 rounded-md border border-warning/30 bg-warning/10 p-3">
+              <p role="alert" className="text-small text-foreground">
+                {t('goalsControls.conflict')}
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                loading={reloadPending}
+                onClick={() => void reloadSaved()}
+              >
+                {t('goalsControls.reload')}
+              </Button>
+            </div>
+          ) : null}
 
           <Field
             label={t('work.goals.fieldFilter')}
@@ -421,12 +529,12 @@ function GoalDialog({
           </Field>
 
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={() => changeOpen(false)}>
               {t('common.cancel')}
             </Button>
             <Button
               type="submit"
-              disabled={!valid}
+              disabled={!valid || conflict || reloadPending}
               loading={editing ? patchGoal.isPending : createGoal.isPending}
             >
               {editing ? t('work.goals.save') : t('work.goals.create')}
@@ -440,6 +548,7 @@ function GoalDialog({
 
 export default function GoalsScreen(): React.JSX.Element {
   const t = useT()
+  const queryClient = useQueryClient()
   const { department } = useDepartment()
   const isHead = department?.role === 'head'
   // Gated on `isHead`, so a member issues no request at all.
@@ -450,22 +559,24 @@ export default function GoalsScreen(): React.JSX.Element {
   // SEV2 #8: `null` opens the dialog on "create", a goal opens it on "edit".
   const [editingGoal, setEditingGoal] = React.useState<Goal | null>(null)
   const [pending, setPending] = React.useState<string | null>(null)
+  const opener = React.useRef<HTMLButtonElement | null>(null)
+  const createButton = React.useRef<HTMLButtonElement | null>(null)
 
   const goals = (query.data ?? []).filter((goal) => goal.archivedAt === null)
 
   function remove(goal: Goal): void {
+    const currentScope = captureGoalScope(queryClient)
     setPending(goal.id)
     deleteGoal.mutate(goal.id, {
-      onSettled: () => setPending(null),
+      onSettled: () => setPending((current) => (current === goal.id ? null : current)),
       onSuccess: () => {
-        // Undo over confirm: deleting recreates from the values we still hold, rather than asking
-        // first. The recreated goal gets a new id, which is honest -- its progress is recomputed
-        // from the same filter either way.
-        toastWithUndo({
-          message: t('work.goals.deleted', { title: goal.title }),
-          undoLabel: t('action.undo'),
-          onUndo: () =>
-            createGoal.mutate({
+        if (!currentScope()) return
+        let restoring = false
+        const restore = () => {
+          if (!currentScope() || restoring) return
+          restoring = true
+          createGoal.mutate(
+            {
               title: goal.title,
               metric: goal.metric,
               targetValue: goal.targetValue,
@@ -473,10 +584,34 @@ export default function GoalsScreen(): React.JSX.Element {
               ...(goal.filter ? { filter: goal.filter } : {}),
               ...(goal.startsOn ? { startsOn: goal.startsOn } : {}),
               ...(goal.dueOn ? { dueOn: goal.dueOn } : {}),
-            }),
+            },
+            {
+              onSuccess: () => {
+                if (currentScope()) toast.success(t('work.goals.created'))
+              },
+              onError: () => {
+                restoring = false
+                if (!currentScope()) return
+                toast.error(t('work.goals.createFailed'), {
+                  duration: Infinity,
+                  action: { label: t('state.error.action'), onClick: restore },
+                })
+              },
+            },
+          )
+        }
+        // Undo over confirm: deleting recreates from the values we still hold, rather than asking
+        // first. The recreated goal gets a new id, which is honest -- its progress is recomputed
+        // from the same filter either way.
+        toastWithUndo({
+          message: t('work.goals.deleted', { title: goal.title }),
+          undoLabel: t('action.undo'),
+          onUndo: restore,
         })
       },
-      onError: () => toast.error(t('work.goals.deleteFailed')),
+      onError: () => {
+        if (currentScope()) toast.error(t('work.goals.deleteFailed'))
+      },
     })
   }
 
@@ -520,6 +655,10 @@ export default function GoalsScreen(): React.JSX.Element {
         action={{
           labelKey: 'work.goals.create',
           onAction: () => {
+            opener.current =
+              document.activeElement instanceof HTMLButtonElement
+                ? document.activeElement
+                : createButton.current
             setEditingGoal(null)
             setDialogOpen(true)
           },
@@ -540,7 +679,8 @@ export default function GoalsScreen(): React.JSX.Element {
               canManage={isHead}
               busy={pending === goal.id}
               onDelete={() => remove(goal)}
-              onEdit={() => {
+              onEdit={(trigger) => {
+                opener.current = trigger
                 setEditingGoal(goal)
                 setDialogOpen(true)
               }}
@@ -560,7 +700,9 @@ export default function GoalsScreen(): React.JSX.Element {
         actions={
           isHead ? (
             <Button
-              onClick={() => {
+              ref={createButton}
+              onClick={(event) => {
+                opener.current = event.currentTarget
                 setEditingGoal(null)
                 setDialogOpen(true)
               }}
@@ -576,6 +718,10 @@ export default function GoalsScreen(): React.JSX.Element {
         <GoalDialog
           open={dialogOpen}
           goal={editingGoal}
+          restoreFocus={() => {
+            const target = opener.current?.isConnected ? opener.current : createButton.current
+            target?.focus()
+          }}
           onOpenChange={(next) => {
             setDialogOpen(next)
             if (!next) setEditingGoal(null)

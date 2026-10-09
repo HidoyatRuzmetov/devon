@@ -4,7 +4,7 @@
 // `AdminRoute`/`routes/admin.tsx` file is unreachable dead code left for a follow-up cleanup pass
 // (outside this module's own paths -- see this item's report).
 import * as React from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { formatNumber, numberFlowLocale, useLocale, useT } from '@devon/i18n'
 import { Badge, Button, Collapsible, CountFlow, DataList, DataRow, StateView, cn } from '@devon/ui'
 import {
@@ -133,12 +133,17 @@ function HealthSnapshot() {
 
         {/* SEV2 #26: an unconfigured backup is a warning with somewhere to go, not a grey dot. */}
         {backups && backups.status === 'not_configured' ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-md border border-warning/40 bg-warning/5 px-3 py-2">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-3 rounded-md border border-warning/40 bg-warning/5 px-3 py-2 sm:flex sm:items-center">
             <AlertTriangle aria-hidden="true" className="size-4 shrink-0 text-warning" />
             <span className="min-w-0 flex-1 text-small text-foreground">
               {t('admin.console.dashboard.backupsUnconfigured')}
             </span>
-            <Button asChild variant="secondary" size="sm">
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="col-start-2 h-auto min-h-8 max-w-full justify-self-start whitespace-normal sm:shrink-0"
+            >
               <Link to="/admin/health">{t('admin.console.dashboard.backupsConfigure')}</Link>
             </Button>
           </div>
@@ -158,14 +163,16 @@ function UserCountTile({ total }: { total: number }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
   const [open, setOpen] = React.useState(false)
-  const departments = useQuery({
+  const departments = useInfiniteQuery({
     queryKey: ['admin', 'departments', 'breakdown'],
-    queryFn: () => fetchAdminDepartments({}),
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) => fetchAdminDepartments({ cursor: pageParam }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     // Only fetched once the super admin actually asks for the breakdown.
     enabled: open,
   })
 
-  const rows = [...(departments.data?.departments ?? [])].sort(
+  const rows = [...(departments.data?.pages.flatMap((page) => page.departments) ?? [])].sort(
     (a, b) => b.memberCount - a.memberCount,
   )
 
@@ -176,24 +183,42 @@ function UserCountTile({ total }: { total: number }): React.JSX.Element {
     if (departments.isPending) {
       return <p className="text-caption text-muted-foreground">{t('state.loading')}</p>
     }
-    if (departments.isError) {
+    if (departments.isError && !departments.data) {
       return (
-        <p className="text-caption text-muted-foreground">
-          {t('admin.console.dashboard.healthUnavailable')}
-        </p>
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          action={{ labelKey: 'state.error.action', onAction: () => departments.refetch() }}
+        />
       )
     }
     return (
-      <ul className="flex flex-col gap-1">
-        {rows.map((department) => (
-          <li key={department.id} className="flex items-baseline justify-between gap-2">
-            <span className="min-w-0 truncate text-small text-foreground">{department.name}</span>
-            <span className="shrink-0 text-small tabular-nums text-muted-foreground">
-              {formatNumber(department.memberCount, locale)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-1">
+          {rows.map((department) => (
+            <li key={department.id} className="flex items-baseline justify-between gap-2">
+              <span className="min-w-0 truncate text-small text-foreground">{department.name}</span>
+              <span className="shrink-0 text-small tabular-nums text-muted-foreground">
+                {formatNumber(department.memberCount, locale)}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {departments.hasNextPage ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            loading={departments.isFetchingNextPage}
+            onClick={() => departments.fetchNextPage()}
+          >
+            {t(
+              departments.isFetchNextPageError
+                ? 'state.error.action'
+                : 'admin.console.dashboard.moreDepartments',
+            )}
+          </Button>
+        ) : null}
+      </div>
     )
   }
 

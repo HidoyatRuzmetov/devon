@@ -2,18 +2,105 @@
 // `withContext()`/`tx.raw()` directly, one transaction per function, no query in a loop.
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
-import { withContext, type RequestContext } from '@devon/db'
+import { withContext, type RequestContext, type Tx } from '@devon/db'
 import {
+  AUTOMATION_MAX_RULES,
   automationActionSchema,
+  automationWritableActionSchema,
   automationTriggerConfigSchema,
   type AutomationAction,
   type AutomationRunStatus,
   type AutomationTrigger,
   type AutomationTriggerConfig,
 } from '@devon/contracts'
+import { decodeRunCursor, encodeRunCursor } from './cursor.js'
+
+export class AutomationLimitError extends Error {
+  constructor() {
+    super('too_many_enabled_rules')
+  }
+}
+
+export class AutomationTargetError extends Error {
+  constructor() {
+    super('action_target_unavailable')
+  }
+}
+
+async function validateActionTargets(
+  tx: Tx,
+  departmentId: string,
+  actions: readonly AutomationAction[],
+) {
+  if (
+    !Array.isArray(actions) ||
+    actions.length === 0 ||
+    actions.some((action) => !automationWritableActionSchema.safeParse(action).success)
+  )
+    throw new AutomationTargetError()
+  const users = [
+    ...new Set(
+      actions
+        .filter((action) => action.kind === 'assign' || action.kind === 'notify_user')
+        .map((action) => action.userId!),
+    ),
+  ]
+  const labels = [
+    ...new Set(
+      actions.filter((action) => action.kind === 'add_label').map((action) => action.labelId!),
+    ),
+  ]
+  if (users.length > 0) {
+    const eligible = await tx.raw<{ user_id: string }>(sql`select m.user_id
+      from app.memberships m join app.users u on u.id=m.user_id
+      where m.department_id=${departmentId} and m.status='active' and m.deleted_at is null
+        and u.status='active' and u.deleted_at is null and m.user_id=any(${sql.param(users)}::uuid[])
+      order by m.user_id for share of m,u`)
+    if (new Set(eligible.map((row) => row.user_id)).size !== users.length)
+      throw new AutomationTargetError()
+  }
+  if (labels.length > 0) {
+    const eligible = await tx.raw<{ id: string }>(sql`select id from app.labels
+      where department_id=${departmentId} and deleted_at is null and id=any(${sql.param(labels)}::uuid[])
+      order by id for share`)
+    if (eligible.length !== labels.length) throw new AutomationTargetError()
+  }
+}
+
+/** Preflight avoids partial work for an already invalid rule. The work/notification write
+ * transactions independently lock their actual targets to close the later check/use window. */
+export async function areActionTargetsEligible(
+  ctx: RequestContext,
+  departmentId: string,
+  actions: readonly AutomationAction[],
+): Promise<boolean> {
+  try {
+    await withContext(ctx, (tx) => validateActionTargets(tx, departmentId, actions))
+    return true
+  } catch (error) {
+    if (error instanceof AutomationTargetError) return false
+    throw error
+  }
+}
+
+async function lockDepartment(tx: Tx, departmentId: string) {
+  // Heads can read their department but cannot UPDATE its row under RLS. A FOR UPDATE there
+  // silently locks no row; use the same transaction-scoped namespace lock as card ordering.
+  await tx.raw(
+    sql`select pg_advisory_xact_lock(hashtextextended(${`automations:${departmentId}`}, 0))`,
+  )
+}
+
+async function enforceEnabledLimit(tx: Tx, departmentId: string, exceptId?: string) {
+  const except = exceptId ? sql` and id <> ${exceptId}` : sql``
+  const rows = await tx.raw<{ n: number }>(sql`select count(*)::int as n from app.automation_rules
+    where department_id = ${departmentId} and enabled = true and deleted_at is null${except}`)
+  if ((rows[0]?.n ?? 0) >= AUTOMATION_MAX_RULES) throw new AutomationLimitError()
+}
 
 export type AutomationRule = {
   id: string
+  createdByUserId: string
   name: string
   trigger: AutomationTrigger
   triggerConfig: AutomationTriggerConfig
@@ -28,6 +115,7 @@ export type AutomationRule = {
 
 type RuleRow = {
   id: string
+  created_by_user_id: string
   name: string
   trigger: AutomationTrigger
   trigger_config: unknown
@@ -52,6 +140,7 @@ function toRule(row: RuleRow): AutomationRule {
     .map((r) => r.data)
   return {
     id: row.id,
+    createdByUserId: row.created_by_user_id,
     name: row.name,
     trigger: row.trigger,
     triggerConfig: config.success ? config.data : {},
@@ -65,7 +154,7 @@ function toRule(row: RuleRow): AutomationRule {
   }
 }
 
-const RULE_COLUMNS = sql`id, name, trigger, trigger_config, actions, enabled, run_count,
+const RULE_COLUMNS = sql`id, created_by_user_id, name, trigger, trigger_config, actions, enabled, run_count,
   last_run_at, last_error, created_at, version`
 
 export async function listRules(
@@ -125,6 +214,9 @@ export async function createRule(
   },
 ): Promise<string> {
   return withContext(ctx, async (tx) => {
+    await lockDepartment(tx, departmentId)
+    if (input.enabled) await enforceEnabledLimit(tx, departmentId)
+    await validateActionTargets(tx, departmentId, input.actions)
     const id = randomUUID()
     await tx.raw(
       sql`insert into app.automation_rules
@@ -144,6 +236,7 @@ export async function createRule(
         enabled: input.enabled,
       },
     })
+    tx.emit({ type: 'automations.rule.created', departmentId, payload: { ruleId: id } })
     return id
   })
 }
@@ -161,6 +254,17 @@ export async function patchRule(
   expectedVersion: number | undefined,
 ): Promise<'ok' | 'not_found' | 'conflict'> {
   return withContext(ctx, async (tx) => {
+    await lockDepartment(tx, departmentId)
+    const current = await tx.raw<{
+      version: number
+      actions: AutomationAction[]
+    }>(sql`select version,actions from app.automation_rules
+      where id = ${id} and department_id = ${departmentId} and deleted_at is null`)
+    if (current.length === 0) return 'not_found'
+    if (expectedVersion !== undefined && current[0]!.version !== expectedVersion) return 'conflict'
+    if (patch.enabled) await enforceEnabledLimit(tx, departmentId, id)
+    if (patch.actions || patch.enabled)
+      await validateActionTargets(tx, departmentId, patch.actions ?? current[0]!.actions)
     const sets: SQL[] = [sql`updated_at = now()`, sql`version = version + 1`]
     if (patch.name !== undefined) sets.push(sql`name = ${patch.name}`)
     if (patch.triggerConfig !== undefined) {
@@ -195,6 +299,7 @@ export async function patchRule(
       departmentId,
       after: patch,
     })
+    tx.emit({ type: 'automations.rule.updated', departmentId, payload: { ruleId: id } })
     return 'ok'
   })
 }
@@ -217,6 +322,7 @@ export async function deleteRule(
       subjectId: id,
       departmentId,
     })
+    tx.emit({ type: 'automations.rule.deleted', departmentId, payload: { ruleId: id } })
     return true
   })
 }
@@ -230,6 +336,26 @@ export async function setAllRulesEnabled(
   enabled: boolean,
 ): Promise<number> {
   return withContext(ctx, async (tx) => {
+    await lockDepartment(tx, departmentId)
+    if (enabled) {
+      const count = await tx.raw<{
+        n: number
+      }>(sql`select count(*)::int as n from app.automation_rules
+        where department_id = ${departmentId} and deleted_at is null`)
+      if ((count[0]?.n ?? 0) > AUTOMATION_MAX_RULES) throw new AutomationLimitError()
+      const rules = await tx.raw<{
+        actions: AutomationAction[]
+      }>(sql`select actions from app.automation_rules
+        where department_id=${departmentId} and deleted_at is null and enabled=false`)
+      if (rules.some((rule) => !Array.isArray(rule.actions) || rule.actions.length === 0))
+        throw new AutomationTargetError()
+      if (rules.length > 0)
+        await validateActionTargets(
+          tx,
+          departmentId,
+          rules.flatMap((rule) => rule.actions),
+        )
+    }
     const rows = await tx.raw<{ id: string }>(
       sql`update app.automation_rules
           set enabled = ${enabled}, updated_at = now(), version = version + 1
@@ -243,6 +369,13 @@ export async function setAllRulesEnabled(
       departmentId,
       after: { count: rows.length },
     })
+    if (rows.length > 0) {
+      if (enabled) {
+        tx.emit({ type: 'automations.rules.resumed', departmentId, payload: {} })
+      } else {
+        tx.emit({ type: 'automations.rules.paused', departmentId, payload: {} })
+      }
+    }
     return rows.length
   })
 }
@@ -263,13 +396,20 @@ export async function listRuns(
   departmentId: string,
   options: {
     ruleId?: string | undefined
+    status?: AutomationRunStatus | undefined
     limit: number
     cursor?: string | undefined
   },
 ): Promise<{ items: RunRow[]; nextCursor: string | null; total: number }> {
   return withContext(ctx, async (tx) => {
     const ruleFilter = options.ruleId ? sql` and r.rule_id = ${options.ruleId}` : sql``
-    const cursorFilter = options.cursor ? sql` and r.at < ${options.cursor}` : sql``
+    const statusFilter = options.status ? sql` and r.status = ${options.status}` : sql``
+    const cursor = options.cursor ? decodeRunCursor(options.cursor) : null
+    const cursorFilter = cursor
+      ? cursor.id
+        ? sql` and (r.at, r.id) < (${cursor.at}::timestamptz, ${cursor.id}::uuid)`
+        : sql` and r.at < ${cursor.at}::timestamptz`
+      : sql``
     const rows = await tx.raw<{
       id: string
       rule_id: string
@@ -279,14 +419,16 @@ export async function listRuns(
       status: AutomationRunStatus
       detail: { actions?: string[]; reason?: string; error?: string } | null
       at: Date
+      cursor_at: string
     }>(
       sql`select r.id, r.rule_id, ar.name as rule_name, c.id as card_id, c.title as card_title,
-                 r.status, r.detail, r.at
+                 r.status, r.detail, r.at,
+                 to_char(r.at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_at
           from app.automation_runs r
           join app.automation_rules ar on ar.id = r.rule_id
           left join app.cards c on c.id = r.card_id and c.deleted_at is null
-          where r.department_id = ${departmentId}${ruleFilter}${cursorFilter}
-          order by r.at desc
+          where r.department_id = ${departmentId}${ruleFilter}${statusFilter}${cursorFilter}
+          order by r.at desc, r.id desc
           limit ${options.limit + 1}`,
     )
     const page = rows.slice(0, options.limit)
@@ -298,7 +440,7 @@ export async function listRuns(
     const totals = await tx.raw<{ n: number }>(
       sql`select count(*)::int as n
           from app.automation_runs r
-          where r.department_id = ${departmentId}${ruleFilter}`,
+          where r.department_id = ${departmentId}${ruleFilter}${statusFilter}`,
     )
     return {
       total: totals[0]?.n ?? page.length,
@@ -314,7 +456,7 @@ export async function listRuns(
       })),
       nextCursor:
         rows.length > options.limit && page.length > 0
-          ? new Date(page[page.length - 1]!.at).toISOString()
+          ? encodeRunCursor(page[page.length - 1]!.cursor_at, page[page.length - 1]!.id)
           : null,
     }
   })

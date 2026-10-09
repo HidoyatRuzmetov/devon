@@ -1,5 +1,13 @@
 {
   "analytics": {
+    "context": {
+      "title": "Nimani tahlil qilishni tanlang",
+      "adminBody": "Umumiy tahlilda barcha boshqarmalar koʻrsatiladi. Bitta boshqarma uchun «Boshqarmalar» boʻlimida uning koʻrinishini oching.",
+      "memberBody": "Ish tahlilini koʻrish uchun boshqarmaga qoʻshiling yoki boshqarma yarating.",
+      "globalAction": "Umumiy tahlilni ochish",
+      "homeAction": "Asosiy sahifani ochish"
+    },
+    "table": { "person": "Xodim" },
     "title": "Tahlil",
     "eyebrow": "HISOBOTLAR",
     "kpi": {
@@ -44,6 +52,9 @@
       "hideAdvanced": "Qoʻshimchani yashirish"
     },
     "savedFilters": {
+      "saveFailed": "Filtrni saqlab bo‘lmadi. Qayta urinib ko‘ring.",
+      "deleteFailed": "Filtrni o‘chirib bo‘lmadi. Qayta urinib ko‘ring.",
+      "deleteNamed": "“{name}” saqlangan filtrini o‘chirish",
       "title": "Saqlangan filtrlar",
       "new": "Filtrni saqlash",
       "namePlaceholder": "Filtr nomi",
@@ -53,6 +64,7 @@
       "empty": "Hali saqlangan filtr yoʻq"
     },
     "actions": {
+      "exportFailed": "Rasmni yaratib bo‘lmadi. Qayta urinib ko‘ring yoki CSV faylini yuklang.",
       "export": "Yuklab olish",
       "exportCsv": "CSV yuklab olish",
       "exportPng": "PNG yuklab olish",

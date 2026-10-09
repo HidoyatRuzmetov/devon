@@ -88,11 +88,17 @@ export async function deleteAutomationRule(id: string, csrfToken: string): Promi
   await apiClient.delete(`/api/v1/automations/${encodeURIComponent(id)}`, csrfToken)
 }
 
-export type RunsQuery = { ruleId?: string; limit?: number; cursor?: string }
+export type RunsQuery = {
+  ruleId?: string
+  status?: AutomationRun['status']
+  limit?: number
+  cursor?: string
+}
 
 export function fetchAutomationRuns(query: RunsQuery = {}): Promise<AutomationRunList> {
   const params = new URLSearchParams()
   if (query.ruleId) params.set('ruleId', query.ruleId)
+  if (query.status) params.set('status', query.status)
   if (query.limit) params.set('limit', String(query.limit))
   if (query.cursor) params.set('cursor', query.cursor)
   const qs = params.toString()
@@ -104,7 +110,7 @@ export function fetchAutomationRuns(query: RunsQuery = {}): Promise<AutomationRu
 export function pauseAllAutomations(csrfToken: string): Promise<{ changed: number }> {
   return apiClient.post(
     '/api/v1/automations/pause-all',
-    {},
+    { enabled: false },
     z.object({ changed: z.number().int() }),
     csrfToken,
   )

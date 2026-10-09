@@ -1,0 +1,603 @@
+{
+  "schemaVersion": 1,
+  "owner": "root",
+  "date": "2026-10-09",
+  "provenance": "Root actually opened all24 original-size comparison sheets: twelve before and twelve after,96 underlying captures. Artifact generation or this validator alone is not pixel review.",
+  "boundary": "Desktop main/header original pixels excluding the separately tested sidebar; complete mobile full-page original. Light theme, four locales, member/super-admin without membership, Chromium/Firefox/WebKit;1440x900 normal and320x480 doubled text. Fixed bottom navigation appears at the initial viewport position in full-page captures; that alone is not evidence of persistent occlusion.",
+  "review": [
+    {
+      "run": "no-department-locale-reflow",
+      "report": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/summary.json",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "inspectedSheets": [
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/chromium-en.png",
+          "sha256": "53ccc20d507c3e4e5419f48f6408ac7059b6807075c325bb23fc76770ab53654",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-en-1440-text1.png",
+              "sha256": "5f4f2ae993d14da4833dba4d0644831443ece35933746cffec6c6bb13211c1c0"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-en-320-text2.png",
+              "sha256": "e233825f5e0974909e465e895b2b8958446b26de000742d174c8f04cc514be22"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-en-1440-text1.png",
+              "sha256": "d7c9192086f57f943ab56faa05f0a1fc21ddcab6454bbd88e027f414075d161e"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-en-320-text2.png",
+              "sha256": "b12ed1b8db61f67256e8e0767feba59287bdee08a105ee8c6b9eb24e2eaa0253"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/chromium-ru.png",
+          "sha256": "e2da847b72c0f447ba42ce904528e7e5eb3a731322ecfc56e38869a0e504aaea",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-ru-1440-text1.png",
+              "sha256": "c01269824f21f1db4d4a077acb6f689a0c2d541bd198a3b5d727d36e1b64ec78"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-ru-320-text2.png",
+              "sha256": "6cc8e5ed37bb05ede3a64a5d53d97ba21cf05e066d148a19f1c4d4746b78c625"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-ru-1440-text1.png",
+              "sha256": "242d7e5826bf66e13bf556aa6081355583bf7c2bdff659c33ed59d88c0d3fbde"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-ru-320-text2.png",
+              "sha256": "515b4acbc10e1789dcaed5fd43b3c16084df33e6c97809a59c5ce2b9333463ea"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/chromium-uz-Latn.png",
+          "sha256": "20bf796e4bce49b5b30b6e0387b76aa95952876588c2f218e52f6b120a31aba6",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Latn-1440-text1.png",
+              "sha256": "fbe9bd782c551d627ab08e1d17bd37abdfbb590782ee03d8ab6df0c77f9b16d6"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Latn-320-text2.png",
+              "sha256": "543e5c7563a188236a5726881ab336290fc99c7d72a17f3103aeacaca2e819ae"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "f1a2f1ee6d31631440741975ea2d232de0dabeca669e303642489cd741ff36b9"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Latn-320-text2.png",
+              "sha256": "92151af932fb705aa95514a7992c88203a8e6c620efe8e3e9db50409e2bcb16b"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/chromium-uz-Cyrl.png",
+          "sha256": "261825ffc81f35a33db5f6554d7866831476f0d6c65e8daa94876c433ab62125",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Cyrl-1440-text1.png",
+              "sha256": "04287cb6aa98f7e92736938e2c7450153df6b0816063eb763ada10fe521b3c99"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Cyrl-320-text2.png",
+              "sha256": "733416a237dfe8dd4631b842032a235620688f30823862be72d65da092c08786"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "d5c28c47650ea3c91554a327479dd3d05903c85dad9640032bcd583f91998e48"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "ecff4697c4a60970bc881144cee1ade07dfecc01bba29b11d0c84ba97afeced2"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/firefox-en.png",
+          "sha256": "7f584f5d38ba25db7a802b72d36e85389ec90115a0c45301e137089ae5ea5dfe",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-en-1440-text1.png",
+              "sha256": "3bad7d37848c8b4cd6e41dfc44a0728ae5349398e680af733f1cc5bd465397bf"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-en-320-text2.png",
+              "sha256": "8df71c42c77ab1603dc4c2c489c8984afc07d01405144131d77707433227517b"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-en-1440-text1.png",
+              "sha256": "6fc48281325287cc18b856d9a5c07f4a528955fb75e2410ad0460efc13434765"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-en-320-text2.png",
+              "sha256": "bc92f90e15c2f957264f10614372b43782c5183439355f44cded6e07c1c98eac"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/firefox-ru.png",
+          "sha256": "339847ae98776e5ca3afe4e61bc2d22628e416ced176de2faeceec16fdb34014",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-ru-1440-text1.png",
+              "sha256": "aa8edea49f5caa10058331c67caf5f895ca7669dc402f800eb3b6c1181c45082"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-ru-320-text2.png",
+              "sha256": "b2f7bd4d205c8c023a0891bf2d60ce713b9d66f55071a0aa1dad5e27f28b8de5"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-ru-1440-text1.png",
+              "sha256": "60f959343fd3293b0b914de4ff47f336903fba47351fddd86806f85b8eea0330"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-ru-320-text2.png",
+              "sha256": "73f4bb5d903e06d3018d9bd8bcda47eeb798e64c03ac1478f7cff46135694db3"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/firefox-uz-Latn.png",
+          "sha256": "ca6fac62600435211b38d055c65e9ecd9c2d429a329bc2b5b7968819afe44c65",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Latn-1440-text1.png",
+              "sha256": "f61b04cf25a4d5a5a9c07351d560fb20b2d70a6f8c02ac2074849db564a14367"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Latn-320-text2.png",
+              "sha256": "a8fcdb3d6e4768f883765c851424d70234608ec52e03069af7f0cf4c49721445"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "e0ba7c03e2bce8a837a0984027c8fc8e2447e6f44b326aceffdf38db2f730f38"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Latn-320-text2.png",
+              "sha256": "adb5a5d878ec295e5a8ce17e3ad59e0126ad7e24f36596a5663e812fddca0e33"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/firefox-uz-Cyrl.png",
+          "sha256": "8327f3a1809314569e0d450016d1e6bee27a95f51cdf45ba416f8ac70fb1b0fc",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Cyrl-1440-text1.png",
+              "sha256": "fb1b516384826d23be6e368f2f14e07566cc1918a5eccef85dc67cfe61459925"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Cyrl-320-text2.png",
+              "sha256": "a2e0f38fa84b038abcd1585e3e621b00c7ea14226d5aa59a1ea891495de1b346"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "ab6ef67dcda3382530565e2fb7023eaaaf3a0ed7e136d002f7ff42cf233992b6"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "179f304d1dc92cb1bfb90bfb67fe47dbb86cd189ca88330f453d8449540bb105"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/webkit-en.png",
+          "sha256": "e8a2a798202a2fd4a147bb5eae6426b18f32db3bb4d82eae7d14063cb66dc6ff",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-en-1440-text1.png",
+              "sha256": "ce08bf0baab946ac2888671a51fbc46406d7dd5d555756cc1ea175ce56ec23b7"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-en-320-text2.png",
+              "sha256": "cc6ffb0b707f45c5a4096b4560ce9c869fd4a59865981db6f3bc252f90ce018a"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-en-1440-text1.png",
+              "sha256": "b72946de0f36672ec2c2231b29e306e6b78c794b61069af0c47d74a31c6450da"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-en-320-text2.png",
+              "sha256": "feef25546781967044d2a2421ca2fa40cd7c6b9a0f2ea911ae4e9835858b0c75"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/webkit-ru.png",
+          "sha256": "e10dc1ca2a62152c8b8f4a20d5d3698826ab21369b6c360176b12f96dfd59fb7",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-ru-1440-text1.png",
+              "sha256": "01f991f22f13a314a92460c087ae02a8c1a6257ed0362dfd733585f9c01d2ca7"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-ru-320-text2.png",
+              "sha256": "fb9cfb974fe0a273edce799aca51f292b7e828cae977523c0329f7aa8df691fe"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-ru-1440-text1.png",
+              "sha256": "28f779b474ed4a33ccdc093798c613e7ea8a5fab8508efc5b25701bd480ec432"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-ru-320-text2.png",
+              "sha256": "c17c6565ec80574a17112c259ac98855fa406e5bf6a5ba639232bb33e7b81597"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/webkit-uz-Latn.png",
+          "sha256": "9b96b462d139160e3ebe724c32a60b93dbbce2229fde0ae71303c4121cbaca87",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Latn-1440-text1.png",
+              "sha256": "7fb5056677d97d3c6511e4d76d3a60edb32f18b0144aace7bd98b808e34f7c90"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Latn-320-text2.png",
+              "sha256": "66aa487128cd6db044cb6407e8e86cd946747e3761116813837dc59681fbfe1f"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "d2e81e311e6dc667bdf7d39d89d965c636bea53342d363834c7e5a1644c171c9"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Latn-320-text2.png",
+              "sha256": "0011dc67d63f3bbc31072042a5bd1dfde4d713cb91f59c1d147c27b4677978fd"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/pixel-review/webkit-uz-Cyrl.png",
+          "sha256": "438e840fc6bdca993c6685785b2e08025dfc11619ed4e199d39ead6aa27d8110",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Cyrl-1440-text1.png",
+              "sha256": "0129bd8e96b7cd53b4a0337aa637504828353583c2d305d81efa6e620631ec8c"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Cyrl-320-text2.png",
+              "sha256": "99edf0699aa146a1bc7183a389d340ff8be48268228c628e1a1fc924f4b1227e"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "a36ae2ba47f406eccf8252abc5be5700d69b92bcc0f3a2c456c61dfb3639e381"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-locale-reflow/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "75fa372734262731900fd5834327d250c0280f582bf061884aa645b362019f43"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        }
+      ]
+    },
+    {
+      "run": "no-department-containment-after",
+      "report": "artifacts/qa/2026-10/results/platform/no-department-containment-after/summary.json",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "inspectedSheets": [
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/chromium-en.png",
+          "sha256": "7c73a84c97b3845f2285c6c83d2699f940f11c3704c11526da822097b5ff26cf",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-en-1440-text1.png",
+              "sha256": "439d046faea057cfadc2dbec676f85d652538e834eaee909dfa857841064da76"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-en-320-text2.png",
+              "sha256": "4da334a7132ae82485f86a450922462d3b2aac6671563581b78aa3088d2bc550"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-en-1440-text1.png",
+              "sha256": "056f22d34afcbc18cca130a167fd0dc34d01c0074ab18e5c20b6d8d3c56acf36"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-en-320-text2.png",
+              "sha256": "aa09d6b29ebe522c0d0e34432dcdacc8d270ea57eb7d71bc3e49b31758ba1e8e"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/chromium-ru.png",
+          "sha256": "c2870a08abd8284962a833852bb8aebac4c0a9a3f7c00b7d67f134b1a560b5c0",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-ru-1440-text1.png",
+              "sha256": "a239dfb1e17730beef2c5260a38fe4554aaf6296618a6e9fd2bf3c30f5a07d50"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-ru-320-text2.png",
+              "sha256": "aae0f69b02397ab14cafcf9bfa5c9288b5cf1529fc7ddfddf19a5856ccff79ff"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-ru-1440-text1.png",
+              "sha256": "8e6595e007dc2f86d9fbbfd03cab7ae1a6d9fc5c01baf19d213c4e6167736527"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-ru-320-text2.png",
+              "sha256": "8c984ae72e92ada24f20d83c9f6f8c57b55dfe858611af51282ac98a41c4af53"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/chromium-uz-Latn.png",
+          "sha256": "2f29b7062922a33ac9eb931ba1770bdfc30a35830a8e350799898127fa9fc55e",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Latn-1440-text1.png",
+              "sha256": "4523291a5e1cc2632075b4b9db4af5155943b26d5025cfa7a5cb5dd072b35643"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Latn-320-text2.png",
+              "sha256": "23f77e2422005b52dbca691649a21620a53f34ed581c00fe214953425ee15dfd"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "bd23ffccdafe2fbb421244afbe9a91f4bc314d082553183751b8d7d03453f003"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Latn-320-text2.png",
+              "sha256": "dd774b1ab022e7dbdba6ee423b7ddcacdb93090349d8b5c52b991bd5e263c387"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/chromium-uz-Cyrl.png",
+          "sha256": "30f9089908669b07ea3f563ed4c3d903cafebcbd1f6ebdcdbaaab00a98920bba",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Cyrl-1440-text1.png",
+              "sha256": "6853531fc0e06da58ac60aeb209100d96f9c8f278a3fa18f958f38988504baf6"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-chromium/member-uz-Cyrl-320-text2.png",
+              "sha256": "60d44a907caa65e8b398ba2feca7966be8cbe3f81fe26168ff282ede324f6245"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "3e70373162105ae881a8d90b00e575874dcb0c4c1f0cada6a53f6639a3350e43"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-chromium/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "17d6889cb723218f6184fc2d5117dacbba7d059ae545eb178a23936edb9d5b88"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/firefox-en.png",
+          "sha256": "f30562d361b1127f7481f045748ea5b2be6343045139bef6be037e4d9e5ab64d",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-en-1440-text1.png",
+              "sha256": "5578c17a49da1418a4afd01cd455f382768e41812f222093a99bd4d06b338f02"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-en-320-text2.png",
+              "sha256": "204648d234b13ad97c2fc9eebedc23b3455ce37f07cca1b3a73583e40f6e3f62"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-en-1440-text1.png",
+              "sha256": "b7e7f6b7507ef176b7bedfd89de16df9596aae2fe7f1f1a6d97adbcc7be15a30"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-en-320-text2.png",
+              "sha256": "b0fd6baf4a1a470a2d7e761a1a414a8abc788d939797dd56ef2ff2ee7d2202a3"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/firefox-ru.png",
+          "sha256": "819ab4d8bd80073cc9cb7b1a9ff4a484474bf824efef6b8a4073c30cd6e9965c",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-ru-1440-text1.png",
+              "sha256": "12548e15fec6b72f00e4bbaf47157530cbba5854606b00015f26d552284da864"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-ru-320-text2.png",
+              "sha256": "9dab2208239ff4c1dbcabc3ccf1c97b7a85de2db83a4c5d66a6d4ba55beb183c"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-ru-1440-text1.png",
+              "sha256": "7dc028bdb21f77089f847b94da8640a539e7f3d0167865bc36e3b389433679f5"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-ru-320-text2.png",
+              "sha256": "390bf819ce521431310b164316747b75a1db6de753e99216fb3bd3aa272093fe"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/firefox-uz-Latn.png",
+          "sha256": "a23f0569e2afbe39670527859265ee4c7737646ca0a19ecbebc19b61e303f681",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Latn-1440-text1.png",
+              "sha256": "d822eccfbc2562ffdcf646648207083a7cffea309f8cce6804d2e7bf2d1096a0"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Latn-320-text2.png",
+              "sha256": "76872d480f86e2625d6385c1ea0742006d50ccbf2b77846e4e969696f21581a1"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "164cd3503cf9a3400f786f0027642c641687e3ab45b84d245541608b1ec692f1"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Latn-320-text2.png",
+              "sha256": "4c78012eb63eacbbb6688a0f9d76561eed8a3c92facc6f1699312302ef7e36c3"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/firefox-uz-Cyrl.png",
+          "sha256": "070860394b86fa71bfbc295ab9bf58592c4e6e9baa4408042f1ca4a455d2f7d6",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Cyrl-1440-text1.png",
+              "sha256": "72b288bd0b8c18824401e83419ac6af3f6955d53d5350d7d262a1881689c8026"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-firefox/member-uz-Cyrl-320-text2.png",
+              "sha256": "4389ea92b9d573048ce5eed9c567433f143ddd4455ef80d8b0b967d541499a0b"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "707167925cd6eaa79a21708928f52e91014df3ef2aa95f0608ad5d0ac1a25084"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-firefox/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "6bc8914d19838204aa4e17338377233c610f262823d9ae59a114da7a58f51f00"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/webkit-en.png",
+          "sha256": "2d956559aa4328a902edc0c0ceb62e8b52af37e3f952cd65843f209c4c2d353d",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-en-1440-text1.png",
+              "sha256": "09046c28e6ff2237c74d37a5f5ea38cc179ccc8600180d6406a41537809cd7b7"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-en-320-text2.png",
+              "sha256": "aa858a3253fce719a26dee04d5e17f1804a0c9e10e12f99c87cdea50ee6b9883"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-en-1440-text1.png",
+              "sha256": "b376cca1e40c34aa812a7179554c9790ae704df3ee27eed74a49215c3bd374d2"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-en-320-text2.png",
+              "sha256": "9b784d835f5c8b0e461b36d53f9af92024bc807a8756f0fd5fa11e89053a2588"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/webkit-ru.png",
+          "sha256": "b4d8af9688bf5320ea8659981357ffc36471c6ba541b620e95fbc5cd30ae22fe",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-ru-1440-text1.png",
+              "sha256": "bc730244dd91c1e0436ef31ca82ee74fd59ea371b1743a975902c1b8cf99575e"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-ru-320-text2.png",
+              "sha256": "25e24db70d8910c2a46b99c7fb77093a21f9d4ad6cad56b39684baaa576f466c"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-ru-1440-text1.png",
+              "sha256": "a5c6b6bebba7c796fe29f1a34821eb1951c32271820cc5784857d9a5340b215f"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-ru-320-text2.png",
+              "sha256": "3bc5c70ee5bf0bbadec8d8d5f38a1713c0701299190b2db3475fa39ea54edb87"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/webkit-uz-Latn.png",
+          "sha256": "2ea804d2bf6e91fc69c398631c188ddb9eb2cdd1d082eb0d4404865bf339dcf3",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Latn-1440-text1.png",
+              "sha256": "00f6096a692b31fb6a4b1a6a9d6035871fa3364ea48ccfa59da70be25e22f392"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Latn-320-text2.png",
+              "sha256": "6dd84ff3400affe3a37729f0c725744d3fc23f8fd2121d402f92e1fdbc89a4ce"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Latn-1440-text1.png",
+              "sha256": "d1e6eac95d2e398070a82581e67870457628a1d38a82668cc35f8dda1e764e95"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Latn-320-text2.png",
+              "sha256": "ba1a9ed71c1d2082ed0c6027362ff1478b369c6cc0a428b64dc0db66eea27e14"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        },
+        {
+          "sheet": "artifacts/qa/2026-10/results/platform/no-department-containment-after/pixel-review/webkit-uz-Cyrl.png",
+          "sha256": "b34727d9549881ed81c24238e0f447127b199d9b31dc4cb7a1d5e0c54f451a39",
+          "sources": [
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Cyrl-1440-text1.png",
+              "sha256": "6bac5cf835f31055ca28660f3549e457796ac55f474536035c0fbcce07fe80de"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--6d6e6-l-next-step-in-every-locale-webkit/member-uz-Cyrl-320-text2.png",
+              "sha256": "29649d95aa2930f32dfd02cc649f9119c344f2488031b963ce33d38aad775a41"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Cyrl-1440-text1.png",
+              "sha256": "5a533d0b93b85d755ea19038c989b3b480a200418bed430e486c68d096abf96c"
+            },
+            {
+              "path": "artifacts/qa/2026-10/results/platform/no-department-containment-after/platform-no-department.qa--3aa64-l-next-step-in-every-locale-webkit/super_admin-uz-Cyrl-320-text2.png",
+              "sha256": "a96626a1884fe88a752e20ef5f6a49e63c8b26f65a67877fb188f7ef0fa82561"
+            }
+          ],
+          "method": "Unscaled desktop header/main crop excluding sidebar; complete unscaled mobile original. Review not established by this generator."
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "status": "fixed-and-retested",
+      "severity": "medium",
+      "source": "packages/ui/src/states/empty-state.tsx",
+      "before": "Russian enlarged super-admin body and recovery button visibly spilled outside card padding. Page-wide overflow assertion alone had passed. The tightened Chromium regression failed with38.03125px of title-box encroachment; no tolerance was widened.",
+      "beforeReport": "artifacts/qa/2026-10/results/platform/no-department-containment-before/summary.json",
+      "cause": "The centered flex content column retained intrinsic minimum width; its long words/action could exceed the available card content width.",
+      "change": "Constrain the content column to the available width and allow emergency word wrapping; constrain the primary action while retaining text size and card padding.",
+      "after": "All6 actual role/locale/browser journeys passed. Every heading/body/action box and glyph fits card padding; targets are at least24px and the real next-step action opens its loaded destination. All48 after captures were represented in the twelve inspected original-size sheets."
+    },
+    {
+      "status": "pending-reproduction",
+      "source": "packages/ui/src/shell/demo-chip.tsx",
+      "observation": "At320px with doubled text, the Cyrillic demo label reaches the left edge of its secondary row. A dedicated actual box/glyph and popover journey is prepared; no product diagnosis or successful repair is claimed yet."
+    }
+  ],
+  "pending": [
+    "Dark no-membership organic-state pixels beyond other scoped consumer checks",
+    "Physical device and OS zoom",
+    "Full clean/populated inventory sweep"
+  ]
+}

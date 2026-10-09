@@ -43,7 +43,7 @@ function Section({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={id}
-        className="flex w-full items-center gap-2 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
+        className="flex w-full flex-wrap items-center gap-2 text-caption font-medium uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground hover:text-foreground"
       >
         <ChevronDown
           className={cn(
@@ -53,8 +53,8 @@ function Section({
           aria-hidden="true"
         />
         <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-        <span>{title}</span>
-        {summary ? <span className="ml-auto normal-case">{summary}</span> : null}
+        <span className="min-w-0 flex-1 basis-32 text-left [overflow-wrap:anywhere]">{title}</span>
+        {summary ? <span className="ml-auto min-w-0 max-w-full normal-case">{summary}</span> : null}
       </button>
       <Collapsible open={open} id={id}>
         <div className="pt-3">{children}</div>
@@ -69,7 +69,7 @@ export interface CardPlusSectionsProps {
   members: readonly MemberSummary[]
   onOpenCard: (cardId: string) => void
   onEstimateChange: (minutes: number | null) => void
-  onRecurrenceChange: (rule: RecurrenceRule | null) => void
+  onRecurrenceChange: (rule: RecurrenceRule | null) => void | Promise<void>
 }
 
 export function CardPlusSections({

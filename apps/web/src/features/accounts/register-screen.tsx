@@ -12,7 +12,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT, LOCALES, LOCALE_LABEL, type Locale } from '@devon/i18n'
 import { Button, Collapsible, initialsFromName, Input, Shake, toast } from '@devon/ui'
 import { ApiError } from '../../lib/api-client.js'
-import { navigate, Link } from '../../lib/router.js'
+import { navigate, Link, useSearchParams } from '../../lib/router.js'
+import { authEntryPath, authReturnPath } from '../../lib/auth-return.js'
 import { AVATAR_MAX_BYTES, isAvatarContentType, registerAccount, uploadAvatar } from './api.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { PasswordStrengthMeter } from './password-strength.js'
@@ -20,6 +21,8 @@ import { PasswordStrengthMeter } from './password-strength.js'
 export default function RegisterScreen() {
   const t = useT()
   const queryClient = useQueryClient()
+  const params = useSearchParams()
+  const returnTo = authReturnPath(params.get('returnTo'), '/departments')
 
   const [login, setLogin] = React.useState('')
   const [email, setEmail] = React.useState('')
@@ -85,7 +88,7 @@ export default function RegisterScreen() {
     onSuccess: async () => {
       setErrorKey(null)
       await queryClient.invalidateQueries({ queryKey: ['me'] })
-      navigate('/departments')
+      navigate(returnTo)
     },
     onError: (err) => {
       if (err instanceof ApiError && err.code === 'conflict') {
@@ -222,7 +225,10 @@ export default function RegisterScreen() {
 
           <p className="text-center text-small text-muted-foreground">
             {t('accounts.register.loginPrompt')}{' '}
-            <Link to="/login" className="text-foreground underline underline-offset-2">
+            <Link
+              to={returnTo === '/departments' ? '/login' : authEntryPath('/login', returnTo)}
+              className="text-foreground underline underline-offset-2"
+            >
               {t('accounts.register.loginLink')}
             </Link>
           </p>

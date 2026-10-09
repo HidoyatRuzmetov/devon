@@ -18,12 +18,28 @@ const V_GAP = 56
 const MARGIN = 32
 const MIN_SCALE = 0.15
 const MAX_SCALE = 2
-function nameLines(name: string): string[] {
-  if (name.length <= 28) return [name]
-  const space = name.lastIndexOf(' ', 28)
-  const split = space > 10 ? space : 28
-  const rest = name.slice(split).trim()
-  return [name.slice(0, split), rest.length > 28 ? `${rest.slice(0, 27)}…` : rest]
+function wrappedLines(text: string, width: number, measure: (text: string) => number): string[] {
+  const lines: string[] = []
+  let line = ''
+  for (const word of text.trim().split(/\s+/)) {
+    const candidate = line ? `${line} ${word}` : word
+    if (measure(candidate) <= width) {
+      line = candidate
+      continue
+    }
+    if (line) lines.push(line)
+    line = ''
+    // A name can contain a long unbroken word; retain every character in both the chart and PNG.
+    for (const character of Array.from(word)) {
+      if (line && measure(line + character) > width) {
+        lines.push(line)
+        line = ''
+      }
+      line += character
+    }
+  }
+  if (line) lines.push(line)
+  return lines.length ? lines : ['']
 }
 
 interface Positioned extends Omit<TreeNode, 'children'> {
@@ -34,7 +50,11 @@ interface Positioned extends Omit<TreeNode, 'children'> {
   children: Positioned[]
 }
 
-function layout(roots: TreeNode[]): {
+function layout(
+  roots: TreeNode[],
+  textScale: number,
+  logicalNodeHeight: number,
+): {
   nodes: Positioned[]
   width: number
   height: number
@@ -42,12 +62,17 @@ function layout(roots: TreeNode[]): {
 } {
   const flat: Positioned[] = []
   let maxDepth = 0
+  const nodeWidth = NODE_W * textScale
+  const nodeHeight = logicalNodeHeight * textScale
+  const horizontalGap = H_GAP * textScale
+  const verticalGap = V_GAP * textScale
 
   function widthOf(node: TreeNode): number {
-    if (node.children.length === 0) return NODE_W
+    if (node.children.length === 0) return nodeWidth
     const childWidths = node.children.map(widthOf)
-    const total = childWidths.reduce((a, b) => a + b, 0) + H_GAP * (node.children.length - 1)
-    return Math.max(NODE_W, total)
+    const total =
+      childWidths.reduce((a, b) => a + b, 0) + horizontalGap * (node.children.length - 1)
+    return Math.max(nodeWidth, total)
   }
 
   function place(node: TreeNode, depth: number, leftEdge: number): Positioned {
@@ -62,7 +87,7 @@ function layout(roots: TreeNode[]): {
       for (const child of node.children) {
         const placedChild = place(child, depth + 1, cursor)
         children.push(placedChild)
-        cursor += placedChild.width + H_GAP
+        cursor += placedChild.width + horizontalGap
       }
       const first = children[0]!
       const last = children[children.length - 1]!
@@ -72,7 +97,7 @@ function layout(roots: TreeNode[]): {
       ...node,
       children,
       x,
-      y: depth * (NODE_H + V_GAP),
+      y: depth * (nodeHeight + verticalGap),
       width,
       depth,
     }
@@ -83,14 +108,14 @@ function layout(roots: TreeNode[]): {
   let cursor = 0
   for (const root of roots) {
     const placed = place(root, 0, cursor)
-    cursor += placed.width + H_GAP
+    cursor += placed.width + horizontalGap
   }
 
-  const totalWidth = Math.max(cursor - H_GAP, NODE_W)
+  const totalWidth = Math.max(cursor - horizontalGap, nodeWidth)
   return {
     nodes: flat,
     width: totalWidth + MARGIN * 2,
-    height: (maxDepth + 1) * (NODE_H + V_GAP) - V_GAP + MARGIN * 2,
+    height: (maxDepth + 1) * (nodeHeight + verticalGap) - verticalGap + MARGIN * 2,
     maxDepth,
   }
 }
@@ -125,6 +150,45 @@ export function OrgChart({
   const t = useT()
   const svgRef = React.useRef<SVGSVGElement>(null)
   const viewportRef = React.useRef<HTMLDivElement>(null)
+  const fontMetricRef = React.useRef<HTMLSpanElement>(null)
+  const [fontMetrics, setFontMetrics] = React.useState({
+    scale: 1,
+    small: 13,
+    caption: 12,
+    family: 'Arial, sans-serif',
+    glyphWidth: 0,
+  })
+  const textScale = fontMetrics.scale
+  React.useLayoutEffect(() => {
+    const metric = fontMetricRef.current
+    if (!metric) return
+    const measure = () => {
+      const styles = getComputedStyle(metric)
+      const small = Number.parseFloat(styles.fontSize)
+      const caption = Number.parseFloat(getComputedStyle(metric.firstElementChild!).fontSize)
+      const next = {
+        scale: Math.max(1, small / 13, caption / 12),
+        small,
+        caption,
+        family: styles.fontFamily,
+        glyphWidth: metric.getBoundingClientRect().width,
+      }
+      setFontMetrics((current) =>
+        Object.keys(next).every(
+          (key) => current[key as keyof typeof current] === next[key as keyof typeof next],
+        )
+          ? current
+          : next,
+      )
+    }
+    measure()
+    // Independent intrinsic glyphs respond to font-only enlargement without observing chart
+    // geometry, whose own writes must not become a ResizeObserver feedback loop.
+    const observer = new ResizeObserver(measure)
+    observer.observe(metric)
+    observer.observe(metric.firstElementChild!)
+    return () => observer.disconnect()
+  }, [])
   const chartRoots = React.useMemo<TreeNode[]>(
     () => [
       {
@@ -140,7 +204,50 @@ export function OrgChart({
     ],
     [roots, departmentName],
   )
-  const { nodes, width, height } = React.useMemo(() => layout(chartRoots), [chartRoots])
+  const nodeLabels = React.useMemo(() => {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    const measure = (text: string, kind: 'small' | 'caption') => {
+      const size = fontMetrics[kind] / fontMetrics.scale
+      const weight = kind === 'small' ? 600 : 400
+      if (!context) return Array.from(text).length * size
+      context.font = `${weight} ${size}px ${fontMetrics.family}`
+      const actual = context.measureText(text).width
+      // Export uses a portable Arial fallback. Reserve enough width for both rendered fonts.
+      context.font = `${weight} ${size}px Arial, sans-serif`
+      return Math.max(actual, context.measureText(text).width)
+    }
+    const labels = new Map<string, { name: string[]; head: string[] }>()
+    const stack = [...chartRoots]
+    let extraTitleHeight = 0
+    let extraHeadHeight = 0
+    while (stack.length) {
+      const node = stack.pop()!
+      const head = (actions.rolesByUnit.get(node.id) ?? []).find((role) => role.role === 'head')
+      const member =
+        node.id === 'department-root'
+          ? [...actions.membersById.values()].find((member) => member.membershipRole === 'head')
+          : head
+            ? actions.membersById.get(head.userId)
+            : undefined
+      const name = wrappedLines(node.name, NODE_W - 32, (text) => measure(text, 'small'))
+      const headName = member
+        ? wrappedLines(fullName(member), NODE_W - 56, (text) => measure(text, 'caption'))
+        : []
+      extraTitleHeight = Math.max(extraTitleHeight, Math.max(0, name.length - 2) * 18)
+      extraHeadHeight = Math.max(extraHeadHeight, Math.max(0, headName.length - 1) * 18)
+      labels.set(node.id, { name, head: headName })
+      stack.push(...node.children)
+    }
+    return { labels, extraTitleHeight, extraHeadHeight }
+  }, [chartRoots, actions.rolesByUnit, actions.membersById, fontMetrics])
+  const logicalNodeHeight = NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight
+  const { nodes, width, height } = React.useMemo(
+    () => layout(chartRoots, textScale, logicalNodeHeight),
+    [chartRoots, textScale, logicalNodeHeight],
+  )
+  const smallTextStyle = { fontSize: `calc(var(--text-small) / ${textScale})` }
+  const captionTextStyle = { fontSize: `calc(var(--text-caption) / ${textScale})` }
   const [exporting, setExporting] = React.useState(false)
   const [focusedId, setFocusedId] = React.useState<string | null>('department-root')
   const [panelUnitId, setPanelUnitId] = React.useState<string | null>(null)
@@ -303,8 +410,16 @@ export function OrgChart({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1 rounded-md border border-border bg-card p-0.5">
+      <span
+        ref={fontMetricRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed invisible font-semibold text-small"
+        style={{ width: 'max-content', height: 'auto' }}
+      >
+        M<span className="font-normal text-caption">M</span>
+      </span>
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-card p-0.5">
           <IconButton
             aria-label={t('structure.units.chart.zoomOut')}
             onClick={() => zoomBy(1 / 1.2)}
@@ -312,7 +427,7 @@ export function OrgChart({
           >
             <Minus className="size-4" aria-hidden="true" />
           </IconButton>
-          <span className="w-12 text-center text-caption tabular-nums text-muted-foreground">
+          <span className="min-w-[3em] text-center text-caption tabular-nums text-muted-foreground">
             {Math.round(zoom * 100)}%
           </span>
           <IconButton
@@ -389,7 +504,7 @@ export function OrgChart({
               node.children.map((child) => (
                 <path
                   key={`${node.id}-${child.id}`}
-                  d={`M ${node.x + MARGIN} ${node.y + NODE_H + MARGIN} V ${node.y + NODE_H + V_GAP / 2 + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
+                  d={`M ${node.x + MARGIN} ${node.y + logicalNodeHeight * textScale + MARGIN} V ${node.y + (logicalNodeHeight + V_GAP / 2) * textScale + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
                   fill="none"
                   stroke="var(--color-muted-foreground)"
                   strokeWidth={1.5}
@@ -418,7 +533,7 @@ export function OrgChart({
                   aria-selected={isFocused}
                   aria-level={node.depth + 1}
                   tabIndex={isFocused ? 0 : -1}
-                  transform={`translate(${node.x - NODE_W / 2 + MARGIN} ${node.y + MARGIN})`}
+                  transform={`translate(${node.x - (NODE_W * textScale) / 2 + MARGIN} ${node.y + MARGIN}) scale(${textScale})`}
                   onFocus={() => setFocusedId(node.id)}
                   onClick={() => {
                     setFocusedId(node.id)
@@ -432,20 +547,27 @@ export function OrgChart({
                   </title>
                   <rect
                     width={NODE_W}
-                    height={NODE_H}
+                    height={logicalNodeHeight}
                     rx={10}
                     fill="var(--color-card)"
                     stroke={isFocused ? 'var(--color-ring)' : 'var(--color-border)'}
                     strokeWidth={isFocused ? 2 : 1}
                   />
-                  <rect x={0} y={0} width={6} height={NODE_H} rx={3} fill={unitFillVar(node)} />
+                  <rect
+                    x={0}
+                    y={0}
+                    width={6}
+                    height={logicalNodeHeight}
+                    rx={3}
+                    fill={unitFillVar(node)}
+                  />
                   <text
                     x={16}
                     y={24}
                     className="fill-foreground text-small"
-                    style={{ fontWeight: 600 }}
+                    style={{ ...smallTextStyle, fontWeight: 600 }}
                   >
-                    {nameLines(node.name).map((line, index) => (
+                    {nodeLabels.labels.get(node.id)!.name.map((line, index) => (
                       <tspan key={index} x={16} dy={index ? 18 : 0}>
                         {line}
                       </tspan>
@@ -453,18 +575,41 @@ export function OrgChart({
                   </text>
                   {headMember ? (
                     <>
-                      <circle cx={24} cy={70} r={11} fill={unitFillVar(node)} />
-                      <text x={24} y={74} textAnchor="middle" className="fill-white text-caption">
+                      <circle
+                        cx={24}
+                        cy={70 + nodeLabels.extraTitleHeight}
+                        r={11}
+                        fill={unitFillVar(node)}
+                      />
+                      <text
+                        x={24}
+                        y={74 + nodeLabels.extraTitleHeight}
+                        textAnchor="middle"
+                        className="fill-white text-caption"
+                        style={captionTextStyle}
+                      >
                         {headMember
                           ? `${headMember.givenName.charAt(0)}${headMember.familyName.charAt(0)}`.toUpperCase()
                           : '?'}
                       </text>
-                      <text x={40} y={66} className="fill-foreground text-caption">
-                        {fullName(headMember).length > 27
-                          ? `${fullName(headMember).slice(0, 26)}…`
-                          : fullName(headMember)}
+                      <text
+                        x={40}
+                        y={64 + nodeLabels.extraTitleHeight}
+                        className="fill-foreground text-caption"
+                        style={captionTextStyle}
+                      >
+                        {nodeLabels.labels.get(node.id)!.head.map((line, index) => (
+                          <tspan key={index} x={40} dy={index ? 18 : 0}>
+                            {line}
+                          </tspan>
+                        ))}
                       </text>
-                      <text x={40} y={80} className="fill-muted-foreground text-caption">
+                      <text
+                        x={40}
+                        y={82 + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight}
+                        className="fill-muted-foreground text-caption"
+                        style={captionTextStyle}
+                      >
                         {t('structure.units.chart.headBadge')}
                       </text>
                     </>
@@ -475,19 +620,29 @@ export function OrgChart({
                           gap in the org reads at a glance. */}
                       <circle
                         cx={24}
-                        cy={70}
+                        cy={70 + nodeLabels.extraTitleHeight}
                         r={11}
                         fill="none"
                         stroke="var(--color-illustration-muted)"
                         strokeWidth={2}
                         strokeDasharray="3 3"
                       />
-                      <text x={40} y={74} className="fill-muted-foreground text-caption">
+                      <text
+                        x={40}
+                        y={74 + nodeLabels.extraTitleHeight}
+                        className="fill-muted-foreground text-caption"
+                        style={captionTextStyle}
+                      >
                         {t('structure.units.chart.noHead')}
                       </text>
                     </>
                   )}
-                  <text x={16} y={NODE_H - 10} className="fill-muted-foreground text-caption">
+                  <text
+                    x={16}
+                    y={logicalNodeHeight - 10}
+                    className="fill-muted-foreground text-caption"
+                    style={captionTextStyle}
+                  >
                     {t('structure.units.chart.memberCount', {
                       count: isDepartment
                         ? actions.membersById.size
@@ -510,6 +665,10 @@ export function OrgChart({
           title={panelUnit?.name ?? ''}
           side="right"
           className="flex flex-col gap-5 overflow-y-auto p-5"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            nodeRefs.current.get(focusedId ?? 'department-root')?.focus()
+          }}
         >
           {panelUnit ? (
             <>

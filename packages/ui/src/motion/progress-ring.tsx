@@ -103,7 +103,7 @@ export function ProgressRing({
           }
         />
       </svg>
-      {children ? (
+      {children !== null && children !== undefined ? (
         <span className="absolute inset-0 flex items-center justify-center text-caption tabular-nums text-foreground">
           {children}
         </span>

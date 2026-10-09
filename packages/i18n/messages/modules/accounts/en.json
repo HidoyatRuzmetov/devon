@@ -72,6 +72,8 @@
         "recoveryTitle": "Save your recovery codes",
         "recoveryBody": "These are shown once. Use one to sign in if you lose access to your phone.",
         "recoveryCopied": "Codes copied",
+        "copy": "Copy recovery codes",
+        "cancel": "Cancel",
         "done": "Done"
       },
       "disableDialog": {
@@ -83,11 +85,14 @@
     },
     "password": {
       "title": "Change password",
+      "temporary": "You signed in with a temporary password. Enter it as your current password and choose a new one below.",
       "current": "Current password",
       "new": "New password",
       "submit": "Save",
       "success": "Password updated",
-      "error": "Current password is wrong"
+      "error": "Current password is wrong",
+      "validation": "Use at least 12 characters and avoid very common passwords.",
+      "failed": "Could not change the password. Check your connection and try again."
     },
     "delete": {
       "title": "Delete account",
@@ -117,6 +122,7 @@
       "title": "Profile settings",
       "subtitle": "Your profile, language, appearance, Telegram, notifications and security are all here.",
       "subnavAria": "Settings sections",
+      "saveError": "Could not save. Check your connection and try again.",
       "profile": "Profile",
       "security": "Security",
       "dangerZone": "Danger zone",

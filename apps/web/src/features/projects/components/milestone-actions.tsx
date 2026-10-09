@@ -1,6 +1,15 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Dialog, DialogContent, Input, toastWithUndo } from '@devon/ui'
+import { Pencil } from 'lucide-react'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  IconButton,
+  Input,
+  toastWithUndo,
+} from '@devon/ui'
 import type { Milestone } from '../api.js'
 import {
   useAddMilestoneMutation,
@@ -11,9 +20,11 @@ import {
 export function MilestoneActions({
   projectId,
   milestone,
+  onDeleted,
 }: {
   projectId: string
   milestone: Milestone
+  onDeleted?: () => void
 }) {
   const t = useT()
   const [open, setOpen] = React.useState(false)
@@ -22,7 +33,10 @@ export function MilestoneActions({
   const save = usePatchMilestoneMutation(projectId)
   const remove = useDeleteMilestoneMutation(projectId)
   const restore = useAddMilestoneMutation(projectId)
+  const deleting = React.useRef(false)
   async function removeMilestone() {
+    if (save.isPending || remove.isPending) return
+    deleting.current = true
     try {
       await remove.mutateAsync(milestone.id)
       setOpen(false)
@@ -39,69 +53,84 @@ export function MilestoneActions({
       })
     } catch {
       /* The mutation hook reports the error. */
+      deleting.current = false
     }
   }
   return (
-    <>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => {
-          setTitle(milestone.title)
-          setDueOn(milestone.dueOn ?? '')
-          setOpen(true)
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <IconButton
+          onClick={() => {
+            deleting.current = false
+            setTitle(milestone.title)
+            setDueOn(milestone.dueOn ?? '')
+          }}
+          aria-label={t('projectLifecycle.editMilestoneLabel', { title: milestone.title })}
+          tooltip={t('projectLifecycle.editMilestone')}
+        >
+          <Pencil aria-hidden="true" />
+        </IconButton>
+      </DialogTrigger>
+      <DialogContent
+        title={t('projectLifecycle.editMilestone')}
+        onCloseAutoFocus={(event) => {
+          if (deleting.current && onDeleted) {
+            event.preventDefault()
+            onDeleted()
+          }
         }}
-        aria-label={t('projectLifecycle.editMilestoneLabel', { title: milestone.title })}
       >
-        {t('projectLifecycle.editMilestone')}
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent title={t('projectLifecycle.editMilestone')}>
-          <form
-            className="mt-4 flex flex-col gap-4"
-            onSubmit={(e) => {
-              e.preventDefault()
-              save.mutate(
-                { milestoneId: milestone.id, patch: { title: title.trim(), dueOn: dueOn || null } },
-                {
-                  onSuccess: () => setOpen(false),
-                },
-              )
-            }}
-          >
-            <label className="flex flex-col gap-1 text-small">
-              {t('projectLifecycle.milestoneTitle')}
-              <Input
-                required
-                maxLength={200}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-small">
-              {t('projectLifecycle.milestoneDue')}
-              <Input type="date" value={dueOn} onChange={(e) => setDueOn(e.target.value)} />
-            </label>
-            <div className="flex justify-between gap-3">
-              <Button
-                variant="secondary"
-                type="button"
-                disabled={save.isPending || remove.isPending}
-                onClick={() => void removeMilestone()}
-              >
-                {t('projectLifecycle.deleteMilestone')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={!title.trim() || remove.isPending}
-                loading={save.isPending}
-              >
-                {t('work.action.save')}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-    </>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!title.trim() || save.isPending || remove.isPending) return
+            save.mutate(
+              { milestoneId: milestone.id, patch: { title: title.trim(), dueOn: dueOn || null } },
+              {
+                onSuccess: () => setOpen(false),
+              },
+            )
+          }}
+        >
+          <label className="flex flex-col gap-1 text-small">
+            {t('projectLifecycle.milestoneTitle')}
+            <Input
+              required
+              disabled={save.isPending || remove.isPending}
+              maxLength={200}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-small">
+            {t('projectLifecycle.milestoneDue')}
+            <Input
+              type="date"
+              disabled={save.isPending || remove.isPending}
+              value={dueOn}
+              onChange={(e) => setDueOn(e.target.value)}
+            />
+          </label>
+          <div className="flex flex-wrap justify-between gap-3 border-t border-border pt-4">
+            <Button
+              variant="secondary"
+              type="button"
+              disabled={save.isPending || remove.isPending}
+              onClick={() => void removeMilestone()}
+            >
+              {t('projectLifecycle.deleteMilestone')}
+            </Button>
+            <Button
+              type="submit"
+              disabled={!title.trim() || remove.isPending}
+              loading={save.isPending}
+            >
+              {t('work.action.save')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

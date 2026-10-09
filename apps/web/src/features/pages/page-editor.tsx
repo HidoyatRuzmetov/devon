@@ -2,7 +2,7 @@
 // callouts, links with unfurled titles"). Autosaves on a short debounce after the document actually
 // changes; the title is a plain input above the editor, not part of the Tiptap document itself.
 import * as React from 'react'
-import { useEditor, EditorContent, type JSONContent } from '@tiptap/react'
+import { useEditor, useEditorState, EditorContent, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
@@ -56,6 +56,7 @@ function ToolbarButton({
   return (
     <IconButton
       aria-label={t(labelKey)}
+      tooltip={t(labelKey)}
       aria-pressed={active}
       onClick={onClick}
       className={cn(active && 'bg-accent text-accent-foreground')}
@@ -72,6 +73,8 @@ export function PageEditor({
   mentionCandidates,
   onTitleChange,
   onChange,
+  onBlur,
+  titleErrorId,
 }: {
   title: string
   content: TiptapNode
@@ -79,10 +82,14 @@ export function PageEditor({
   mentionCandidates: MentionCandidate[]
   onTitleChange: (title: string) => void
   onChange: (json: TiptapNode) => void
+  onBlur?: () => void
+  titleErrorId?: string | undefined
 }) {
   const t = useT()
   const candidatesRef = React.useRef(mentionCandidates)
   candidatesRef.current = mentionCandidates
+  const tRef = React.useRef(t)
+  tRef.current = t
 
   // The slash menu's item list (UI-OVERHAUL.md §2 "block editor with slash menu"): the same block
   // commands the toolbar already exposes, so typing `/` never offers something a toolbar button
@@ -153,10 +160,29 @@ export function PageEditor({
       Callout,
       Mention.configure({
         HTMLAttributes: { class: 'text-primary font-medium' },
-        suggestion: createMentionSuggestion(() => candidatesRef.current),
+        suggestion: createMentionSuggestion(
+          () => candidatesRef.current,
+          () => ({
+            name: tRef.current('pages.editor.toolbar.mention'),
+            empty: tRef.current('pages.editor.suggestions.empty'),
+          }),
+        ),
       }),
-      createSlashCommandExtension(() => slashItemsRef.current),
+      createSlashCommandExtension(
+        () => slashItemsRef.current,
+        () => ({
+          name: tRef.current('pages.editor.suggestions.commands'),
+          empty: tRef.current('pages.editor.suggestions.empty'),
+        }),
+      ),
     ],
+    editorProps: {
+      attributes: {
+        role: 'textbox',
+        'aria-multiline': 'true',
+        'aria-label': t('pages.editor.contentLabel'),
+      },
+    },
     content: content as JSONContent,
     onCreate: () => {
       setTimeout(() => {
@@ -169,9 +195,47 @@ export function PageEditor({
     },
   })
 
+  // Tiptap does not rerender useEditor for every transaction by default. Formatting and caret
+  // moves must still update the toolbar, even when they do not produce a new parent document.
+  const activeFormats = useEditorState({
+    editor,
+    selector: ({ editor: current }) =>
+      current
+        ? {
+            bold: current.isActive('bold'),
+            italic: current.isActive('italic'),
+            heading1: current.isActive('heading', { level: 1 }),
+            heading2: current.isActive('heading', { level: 2 }),
+            bulletList: current.isActive('bulletList'),
+            orderedList: current.isActive('orderedList'),
+            taskList: current.isActive('taskList'),
+            blockquote: current.isActive('blockquote'),
+            codeBlock: current.isActive('codeBlock'),
+            callout: current.isActive('callout'),
+          }
+        : null,
+  })
+
   React.useEffect(() => {
     editor?.setEditable(editable)
   }, [editable, editor])
+
+  React.useEffect(() => {
+    editor?.setOptions({
+      editorProps: {
+        attributes: {
+          role: 'textbox',
+          'aria-multiline': 'true',
+          'aria-label': t('pages.editor.contentLabel'),
+        },
+      },
+    })
+  }, [editor, t])
+
+  React.useEffect(() => {
+    if (editor && JSON.stringify(editor.getJSON()) !== JSON.stringify(content))
+      editor.commands.setContent(content as JSONContent, { emitUpdate: false })
+  }, [content, editor])
 
   // AI wiring (AI-AUDIT F9): translate the selected text, preview it, and only replace the selection
   // on Accept -- never a whole-document rewrite, so a bad translation never costs more than the
@@ -238,82 +302,86 @@ export function PageEditor({
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder={t('pages.editor.titlePlaceholder')}
         aria-label={t('pages.editor.titlePlaceholder')}
+        maxLength={300}
+        aria-invalid={Boolean(titleErrorId) || undefined}
+        aria-describedby={titleErrorId}
+        onBlur={onBlur}
         disabled={!editable}
-        className="h-auto border-none bg-transparent px-0 font-display text-h1 focus-visible:ring-0"
+        className="h-auto border-none bg-transparent px-0 font-display text-h1"
       />
 
       {editable ? (
         <div
           role="toolbar"
-          aria-label={t('pages.editor.titlePlaceholder')}
+          aria-label={t('pages.editor.suggestions.formatting')}
           className="flex flex-wrap items-center gap-0.5 border-b border-border pb-2"
         >
           <ToolbarButton
             labelKey="pages.editor.toolbar.bold"
-            active={editor.isActive('bold')}
+            active={activeFormats?.bold ?? false}
             onClick={() => editor.chain().focus().toggleBold().run()}
           >
             <Bold className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.italic"
-            active={editor.isActive('italic')}
+            active={activeFormats?.italic ?? false}
             onClick={() => editor.chain().focus().toggleItalic().run()}
           >
             <Italic className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.heading1"
-            active={editor.isActive('heading', { level: 1 })}
+            active={activeFormats?.heading1 ?? false}
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           >
             <Heading1 className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.heading2"
-            active={editor.isActive('heading', { level: 2 })}
+            active={activeFormats?.heading2 ?? false}
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           >
             <Heading2 className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.bulletList"
-            active={editor.isActive('bulletList')}
+            active={activeFormats?.bulletList ?? false}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
           >
             <List className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.orderedList"
-            active={editor.isActive('orderedList')}
+            active={activeFormats?.orderedList ?? false}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
           >
             <ListOrdered className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.taskList"
-            active={editor.isActive('taskList')}
+            active={activeFormats?.taskList ?? false}
             onClick={() => editor.chain().focus().toggleTaskList().run()}
           >
             <ListChecks className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.blockquote"
-            active={editor.isActive('blockquote')}
+            active={activeFormats?.blockquote ?? false}
             onClick={() => editor.chain().focus().toggleBlockquote().run()}
           >
             <MessageSquareQuote className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.codeBlock"
-            active={editor.isActive('codeBlock')}
+            active={activeFormats?.codeBlock ?? false}
             onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           >
             <Code2 className="size-4" aria-hidden="true" />
           </ToolbarButton>
           <ToolbarButton
             labelKey="pages.editor.toolbar.callout"
-            active={editor.isActive('callout')}
+            active={activeFormats?.callout ?? false}
             onClick={() => editor.chain().focus().toggleCallout('info').run()}
           >
             <Megaphone className="size-4" aria-hidden="true" />
@@ -374,16 +442,18 @@ export function PageEditor({
 
       <EditorContent
         editor={editor}
+        onBlur={onBlur}
         className={cn(
           'prose-devon min-h-40 text-body text-foreground focus:outline-none',
           '[&_.is-editor-empty:first-child::before]:pointer-events-none [&_.is-editor-empty:first-child::before]:float-left [&_.is-editor-empty:first-child::before]:h-0 [&_.is-editor-empty:first-child::before]:text-muted-foreground [&_.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
           '[&_h1]:font-display [&_h1]:text-h1 [&_h2]:font-display [&_h2]:text-h2',
           '[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6',
           '[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground',
-          '[&_pre]:rounded-sm [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-small',
+          '[&_pre]:overflow-x-auto [&_pre]:rounded-sm [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:font-mono [&_pre]:text-small',
           '[&_[data-callout]]:rounded-sm [&_[data-callout]]:border [&_[data-callout]]:border-info [&_[data-callout]]:bg-accent [&_[data-callout]]:p-3',
           '[&_ul[data-type=taskList]]:list-none [&_ul[data-type=taskList]]:pl-0',
           '[&_li[data-checked]>label]:mr-2',
+          '[&_.tiptap]:break-words [&_.tiptap]:rounded-sm [&_.tiptap:focus-visible]:outline [&_.tiptap:focus-visible]:outline-2 [&_.tiptap:focus-visible]:outline-ring',
         )}
       />
     </div>

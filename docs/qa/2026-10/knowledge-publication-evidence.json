@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "owner": "root-knowledge-publication",
+  "provenance": "Actual named browser reports, independent persisted reads and inspected restored-page screenshots. The generator checks reports and paths, never establishes visual inspection itself.",
+  "policy": "Only explicitly listed states and fixture scopes are bounded. Unlisted combinations remain pending.",
+  "boundaries": {
+    "db": "devon_flow_e2e_root",
+    "apiPort": 48951,
+    "webPort": 48952,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "gates": {
+    "functional": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "retries": 0,
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "distinctWorkflows": 2
+    },
+    "integration": {
+      "tests": [
+        "apps/api/test/integration/pages-publication.test.ts",
+        "apps/api/test/integration/pages-restore.test.ts"
+      ],
+      "passed": 15
+    }
+  },
+  "evidence": {
+    "lifecycle": {
+      "test": "apps/web/test/e2e/platform-pages-live.qa.spec.ts",
+      "roles": [
+        "department head",
+        "ordinary member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/summary.json",
+      "scenario": "Actual UI page creation, title edit, version restore, delete and Undo; independent reads and real broker receipts update another open member view."
+    },
+    "templatePeer": {
+      "test": "apps/web/test/e2e/platform-pages-live.qa.spec.ts",
+      "roles": [
+        "department head, two legitimate sessions"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "theme": "light",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "report": "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/summary.json",
+      "scenario": "Actual template creation, dirty-name peer conflict, explicit overwrite, enabled refresh and confirmed delete; independent reads and broker receipts."
+    },
+    "historyContrast": {
+      "test": "apps/web/test/e2e/platform-pages-large-history.qa.spec.ts",
+      "scenario": "Accepted 36KB/6000-word snapshot in both themes, native keyboard history selection, complete reconstruction and zero scoped axe violations.",
+      "roles": [
+        "department head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "report": "artifacts/qa/2026-10/results/platform/large-history-contrast-after/summary.json"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PageList",
+        "kind": "motion.button",
+        "childSummaryIncludes": "FileText"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the named lifecycle/peer state in the explicit fixture; no blanket role, locale, mobile, control or state acceptance.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-chromium/live-page-restored.png",
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-firefox/live-page-restored.png",
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-webkit/live-page-restored.png"
+          ]
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-chromium/live-page-restored.png",
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-firefox/live-page-restored.png",
+            "artifacts/qa/2026-10/results/platform/knowledge-publications-valid/platform-pages-live.qa--qa-96ef7-dit-restore-delete-and-undo-webkit/live-page-restored.png"
+          ]
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PageDetail",
+        "kind": "button",
+        "childSummaryIncludes": "pages.backToList"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the named lifecycle/peer state in the explicit fixture; no blanket role, locale, mobile, control or state acceptance.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PageDetail",
+        "kind": "IconButton",
+        "labelIncludes": "pages.moreActions"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the named lifecycle/peer state in the explicit fixture; no blanket role, locale, mobile, control or state acceptance.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PageDetail",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "pages.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the named lifecycle/peer state in the explicit fixture; no blanket role, locale, mobile, control or state acceptance.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PageDetail",
+        "kind": "PageEditor",
+        "labelIncludes": "localTitle"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Title-only autosave, peer update and restore in the named lifecycle; other rich-text commands have separate evidence.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/version-history.tsx",
+        "component": "VersionHistory",
+        "kind": "Button",
+        "childSummaryIncludes": "pages.versions.restore"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the named lifecycle/peer state in the explicit fixture; no blanket role, locale, mobile, control or state acceptance.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "lifecycle",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/version-history.tsx",
+        "component": "VersionHistory",
+        "kind": "button",
+        "childSummaryIncludes": "formatDate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "6000-word selected preview and native keyboard selection in the named large-history case; mobile/other locale boundaries remain pending.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "historyContrast",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "historyContrast",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1457 @@
+{
+  "schemaVersion": 1,
+  "owner": "event_regressions",
+  "provenance": "Bounded actual local browser/API/DB evidence. Source selectors identify controls after inventory regeneration; they do not turn an entire component into a passing surface.",
+  "policy": "Only the explicitly listed states/roles/environments gain evidence. Unlisted control combinations, hover/zoom/keyboard boundaries and responsive states remain pending. External Telegram and application AI calls are excluded.",
+  "entries": [
+    {
+      "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+      "controls": [
+        "wizard Next",
+        "wizard Create",
+        "step title and schedule inputs",
+        "capacity input"
+      ],
+      "states": [
+        "default",
+        "validation",
+        "pending duplicate submission",
+        "failed create with retained draft",
+        "successful persisted create/deep link"
+      ],
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "unitEvidence": "apps/web/test/unit/event-form-dialog.test.tsx",
+      "ledger": "docs/qa/2026-10/event-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every field boundary",
+        "Back/step-jump interaction",
+        "full Escape/focus restoration",
+        "mobile/locale/theme matrix",
+        "external AI draft output"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+      "controls": [
+        "yes/no RSVP",
+        "Update RSVP"
+      ],
+      "states": [
+        "saved answer",
+        "updated answer",
+        "reload",
+        "capacity waitlist/promotion",
+        "independent account view"
+      ],
+      "roles": [
+        "member",
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "browserEnvironment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "unitEvidence": [
+        "apps/web/test/unit/event-rsvp-cache.test.tsx",
+        "apps/web/test/unit/event-rsvp-panel.test.tsx"
+      ],
+      "ledger": "docs/qa/2026-10/event-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "maybe/guests/note controls",
+        "deadline/closed event",
+        "Undo/attendees drawer",
+        "failure/offline/concurrent live delivery"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/automations",
+      "controls": [
+        "rule create",
+        "Pause all",
+        "paused edit",
+        "paused duplicate",
+        "trigger lock",
+        "enable/disable",
+        "rule delete",
+        "selected-field rule builder"
+      ],
+      "states": [
+        "valid persistence/reload",
+        "legacy missing values and repair",
+        "required recipient/action validation",
+        "cross-client rule/run refresh",
+        "due-date skip and priority apply",
+        "checklist audit/outbox"
+      ],
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "transitionEnvironment": {
+        "locale": "en",
+        "theme": "light"
+      },
+      "tests": [
+        "apps/web/test/e2e/management-controls.qa.spec.ts",
+        "apps/api/test/integration/automation-consistency.test.ts",
+        "apps/api/test/integration/automation-engine-consistency.test.ts"
+      ],
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every trigger/action/filter UI combination",
+        "older run history through populated browser pages",
+        "all error/offline/keyboard permutations",
+        "Firefox/WebKit complete role/locale/theme matrix"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/analytics",
+      "controls": [
+        "applied filter/save/delete",
+        "home pin",
+        "CSV and PNG download",
+        "no-department admin guidance action"
+      ],
+      "states": [
+        "actual persistence/reload",
+        "applied vs unsaved advanced filter",
+        "three-column table",
+        "download signature",
+        "superadmin no-lens guidance",
+        "read-only active lens boundary"
+      ],
+      "roles": [
+        "head",
+        "member",
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "tests": [
+        "apps/web/test/e2e/management-controls.qa.spec.ts",
+        "apps/web/test/e2e/management-context-qa.config.ts",
+        "apps/web/test/unit/analytics-filter-bar.test.tsx"
+      ],
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "every chart/date/category/formula boundary",
+        "export menu keyboard permutations",
+        "every missing/empty/error response"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/automations + apps/web/src/features/analytics",
+      "controls": [
+        "loaded routes",
+        "head follow-up dialog",
+        "paused descriptions/run status badges"
+      ],
+      "states": [
+        "populated",
+        "member no-permission",
+        "admin no-department guidance",
+        "narrow contrast/geometry"
+      ],
+      "matrixEvidence": "Chromium72 route +12 follow-up dialog captures:3roles ×4locales ×3themes ×2routes at320. Separate final admin-context36 captures across3engines; final populated automations12 observations across3engines at1440/768/390/320.",
+      "ledger": "docs/qa/2026-10/management-issues.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "full Firefox/WebKit72-route matrix",
+        "200% text zoom",
+        "short landscape",
+        "every responsive breakpoint/dialog configuration"
+      ]
+    },
+    {
+      "source": "apps/web/src/features/admin",
+      "controls": [
+        "settings registration/maintenance/local Sentinel key",
+        "wipe warning/back/cancel",
+        "account/departments pagination/search",
+        "account lock/unlock/password/2FA/anonymize",
+        "department pause/resume/archive/restore/view-as",
+        "AI metering pagination/status filter",
+        "audit verify/filter/export",
+        "health refresh",
+        "overview More departments"
+      ],
+      "states": [
+        "safe synthetic persistence",
+        "503 unavailable reads",
+        "503 failed writes",
+        "cap refusal and recovered actual download",
+        "protected/missing/deleted target refusal",
+        "head/member forbidden boundaries",
+        "signed lens entry/exit",
+        "keyboard search focus"
+      ],
+      "tests": [
+        "apps/web/test/e2e/admin-controls.qa.spec.ts",
+        "apps/api/test/integration/admin-pagination.test.ts",
+        "apps/api/test/unit/admin-export.test.ts",
+        "apps/web/test/unit/admin-view-as-cache.test.ts"
+      ],
+      "ledger": "docs/qa/2026-10/admin-controls.md",
+      "status": "verified-listed-states",
+      "pending": [
+        "all destructive confirmation/error variations",
+        "real wipe/countdown/Sentinel delivery",
+        "external backup restore",
+        "zoom/short-landscape/other widths",
+        "most252 individual pixel reviews; other widths/zoom/short landscape"
+      ]
+    }
+  ],
+  "evidence": {
+    "eventWizard": {
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "unit": "apps/web/test/unit/event-form-dialog.test.tsx",
+      "scenario": "Next sends no POST; explicit publish sends one201, opens saved deep link",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/event-issues.md"
+    },
+    "eventRsvp": {
+      "test": "apps/web/test/e2e/event-wizard-rsvp.flow.spec.ts",
+      "scenario": "member yes→no save/reload and head waitlist promotion through actual persisted API state",
+      "roles": [
+        "member",
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/event-issues.md"
+    },
+    "automationControls": {
+      "test": "apps/web/test/e2e/management-controls.qa.spec.ts",
+      "scenario": "create priority action, pause, paused edit/duplicate, enable/delete, field-specific checklist; independent real local broker client sees rule/run updates",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light"
+      },
+      "ledger": "docs/qa/2026-10/management-issues.md"
+    },
+    "analyticsControls": {
+      "test": "apps/web/test/e2e/management-controls.qa.spec.ts",
+      "scenario": "apply/save/delete status filter; load-per-person table, persisted pin toggle, actual CSV/PNG downloads",
+      "roles": [
+        "head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light"
+      },
+      "ledger": "docs/qa/2026-10/management-issues.md"
+    },
+    "adminSettings": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "reversible registration/maintenance; failed reads/writes; local signing-key generate/rotate; wipe warning/phrase/back/cancel only",
+      "roles": [
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/admin-controls.md",
+      "excluded": [
+        "actual wipe request/execution",
+        "external Sentinel commands"
+      ]
+    },
+    "adminLists": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "all seeded account/department pages, search focus, synthetic ordinary-user lock/unlock/password/2FA/anonymize; department lifecycle and lens entry/exit/refusal",
+      "roles": [
+        "super_admin"
+      ],
+      "negativeRoles": [
+        "head",
+        "member"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/admin-controls.md"
+    },
+    "adminActionsKeyboard": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "Enter open, ArrowDown selection, Escape restores trigger, Tab exits, outside navigation",
+      "roles": [
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/admin-controls.md"
+    },
+    "adminAudit": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "Admin category, sequence pagination, actual verify success/refusal, failed/cap-refused export and recovered CSV download; health refresh and overview more departments",
+      "roles": [
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "environment": {
+        "locale": "en",
+        "theme": "light",
+        "width": 1280,
+        "height": 720
+      },
+      "ledger": "docs/qa/2026-10/admin-controls.md"
+    },
+    "adminMatrix": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "Seven populated admin routes with safe nested overview/account menu/department drawer/wipe-warning states; actual widths and serious/critical axe",
+      "roles": [
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark",
+        "system"
+      ],
+      "widths": [
+        320
+      ],
+      "height": 800,
+      "observations": 252,
+      "report": "artifacts/qa/2026-10/admin-matrix-locale-12-final-results.json",
+      "pixelScope": "Representative images reviewed; most images and every offscreen audit row remain pending individual pixel review"
+    },
+    "localeRecovery": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "Chunk switch/boot refusal with Reload, latest preference503 across reload with held duplicate-protected failed Retry followed by actual200 save; notices readable at320 in four locales and two themes",
+      "roles": [
+        "signed-out visitor",
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "report": "artifacts/qa/2026-10/admin-locale-layout-12-final-results.json",
+      "noticeCaptures": 24,
+      "scopeNote": "Recovery transitions: Uzbek Latin boot/chunk; Russian save retry. Four-locale/two-theme captures inspect save notices, not every menu keyboard state.",
+      "additionalReport": "artifacts/qa/2026-10/admin-backup-lens-6-final-results.json",
+      "additionalScenario": "Exact owner recovery survives signed department lens entry/exit, clears on acknowledged retry; replacement/sign-out guards are boundary units."
+    },
+    "adminBackup": {
+      "test": "apps/web/test/e2e/admin-controls.qa.spec.ts",
+      "scenario": "Readable warning with Configure below text; actual health navigation",
+      "roles": [
+        "super_admin"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "widths": [
+        320
+      ],
+      "captures": 24,
+      "report": "artifacts/qa/2026-10/admin-backup-lens-6-final-results.json"
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "events.form.stepNext"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only create-mode Next, title/schedule/capacity journey; Back/step-jump and edit are pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "events.form.submitCreate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Create branch only; update branch remains pending. Pending/error form behavior is boundary-unit evidence, not an all-browser failure journey.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Input",
+        "labelIncludes": "events.form.titlePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"event-starts\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One valid value, not every date/capacity validation boundary.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"event-ends\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One valid value, not every date/capacity validation boundary.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/event-form-dialog.tsx",
+        "component": "EventFormDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"event-capacity\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "One valid value, not every date/capacity validation boundary.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventWizard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
+        "component": "RsvpPanel",
+        "kind": "Button",
+        "childSummaryIncludes": "events.rsvp.update"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Submit and Update for yes/no only; guests/maybe/note/Undo pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "eventRsvp",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "RuleCard",
+        "kind": "Switch",
+        "labelIncludes": "automations.rule.toggle"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "English/local real persistence and two-client update. Every trigger/action/recipient combination remains pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "RuleCard",
+        "kind": "IconButton",
+        "labelIncludes": "automations.rule.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "English/local real persistence and two-client update. Every trigger/action/recipient combination remains pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "RuleCard",
+        "kind": "IconButton",
+        "labelIncludes": "automations.rule.duplicate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "English/local real persistence and two-client update. Every trigger/action/recipient combination remains pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "RuleCard",
+        "kind": "IconButton",
+        "labelIncludes": "automations.rule.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "English/local real persistence and two-client update. Every trigger/action/recipient combination remains pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "AutomationsScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "automations.pauseAll"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/automations-screen.tsx",
+        "component": "AutomationsScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "automations.create"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/rule-builder.tsx",
+        "component": "RuleBuilder",
+        "kind": "Button",
+        "childSummaryIncludes": "{submitLabel}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Create and paused edit/duplicate with priority and checklist actions; full validation matrix is separate API/contracts/unit evidence.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/rule-builder.tsx",
+        "component": "RuleBuilder",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"rule-trigger\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Disabled edit trigger and selected field-change create trigger only.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/automations/components/rule-builder.tsx",
+        "component": "RuleBuilder",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"rule-field\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "priority selection; not every field.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "automationControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/filter-bar.tsx",
+        "component": "FilterBar",
+        "kind": "Button",
+        "childSummaryIncludes": "analytics.filterBar.apply"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/filter-bar.tsx",
+        "component": "FilterBar",
+        "kind": "Button",
+        "childSummaryIncludes": "analytics.savedFilters.new"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/filter-bar.tsx",
+        "component": "FilterBar",
+        "kind": "Button",
+        "childSummaryIncludes": "analytics.savedFilters.save"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/filter-bar.tsx",
+        "component": "FilterBar",
+        "kind": "Input",
+        "labelIncludes": "analytics.savedFilters.namePlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "IconButton",
+        "labelIncludes": "analytics.actions.viewAsTable"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Load-per-person chart instance only; all other chart instances and export keyboard/error states pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "IconButton",
+        "labelIncludes": "analytics.actions.export"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Load-per-person chart instance only; all other chart instances and export keyboard/error states pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/analytics/chart-card.tsx",
+        "component": "ChartCard",
+        "kind": "IconButton",
+        "labelIncludes": "analytics.actions.pin"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Load-per-person chart instance only; all other chart instances and export keyboard/error states pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "analyticsControls",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "IconButton",
+        "labelIncludes": "admin.console.accounts.actionsMenu"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual Enter/Arrow/Escape/Tab/outside journey; does not prove every hover/zoom state.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminActionsKeyboard",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/admin-final-24-inflight-mount/admin-controls.qa-admin-ro-84f8e-and-theme-preferences-at320-firefox/ru-dark-admin-accounts-320.png"
+          ],
+          "pixelReviewed": true
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "adminActionsKeyboard",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "admin.console.accounts.lock"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only eligible synthetic ordinary targets. Protected/missing/deleted refusals have API DB evidence, not every UI dialog variant.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "admin.console.accounts.unlock"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only eligible synthetic ordinary targets. Protected/missing/deleted refusals have API DB evidence, not every UI dialog variant.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "admin.console.accounts.resetPassword"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only eligible synthetic ordinary targets. Protected/missing/deleted refusals have API DB evidence, not every UI dialog variant.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "admin.console.accounts.forceTwoFactorReset"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only eligible synthetic ordinary targets. Protected/missing/deleted refusals have API DB evidence, not every UI dialog variant.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountActionsMenu",
+        "kind": "DropdownMenuItem",
+        "childSummaryIncludes": "admin.console.accounts.anonymize"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only eligible synthetic ordinary targets. Protected/missing/deleted refusals have API DB evidence, not every UI dialog variant.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountsBody",
+        "kind": "Input",
+        "labelIncludes": "admin.console.accounts.searchPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountsBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.accounts.lockSubmit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/accounts-screen.tsx",
+        "component": "AccountsBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.accounts.anonymizeSubmit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentDrawer",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.departments.viewAs"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Synthetic lifecycle persistence; signed lens preserves actor read-only scope. Arbitrary concurrency/failure UI combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentDrawer",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.departments.pause"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Synthetic lifecycle persistence; signed lens preserves actor read-only scope. Arbitrary concurrency/failure UI combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentDrawer",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.departments.archive"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Synthetic lifecycle persistence; signed lens preserves actor read-only scope. Arbitrary concurrency/failure UI combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentDrawer",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.departments.resume"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Synthetic lifecycle persistence; signed lens preserves actor read-only scope. Arbitrary concurrency/failure UI combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentDrawer",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.departments.restore"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Synthetic lifecycle persistence; signed lens preserves actor read-only scope. Arbitrary concurrency/failure UI combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/departments-screen.tsx",
+        "component": "DepartmentsBody",
+        "kind": "Input",
+        "labelIncludes": "admin.console.departments.searchPlaceholder"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/view-as-banner.tsx",
+        "component": "ViewAsBanner",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.viewAsBanner.exit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "503 stop retains lens; acknowledged start/stop remain navigable while fresh me read503, then Retry. Local HTTP WebKit cookie adaptation only.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "adminLists",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/settings-screen.tsx",
+        "component": "RegistrationCard",
+        "kind": "Switch",
+        "childSummaryIncludes": "admin.console.settings.registrationSwitchLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Reversible actual registration writes; failed write toast and unchanged saved switch.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminSettings",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "adminSettings",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/settings-screen.tsx",
+        "component": "MaintenanceCard",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.settings.maintenanceEnable"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Enable and disable same four-locale persisted message. Other maintenance combinations pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminSettings",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/settings-screen.tsx",
+        "component": "SentinelCard",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.settings.sentinelGenerate"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Generate/rotate local key only. Clipboard copy/external delivery pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminSettings",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/settings-screen.tsx",
+        "component": "renderWipeStatus",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.settings.wipeStartCta"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Warning, phrase gating, Back and Cancel only; no wipe request created.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminSettings",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/audit-screen.tsx",
+        "component": "AuditBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.audit.verifyChain"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminAudit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/audit-screen.tsx",
+        "component": "AuditBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.audit.export"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual export503/422 recovery and CSV contents; cap itself is boundary-mocked, not200001-row performance.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminAudit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/audit-screen.tsx",
+        "component": "AuditBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.audit.previousPage"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminAudit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/audit-screen.tsx",
+        "component": "AuditBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.audit.nextPage"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminAudit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/health-screen.tsx",
+        "component": "HealthBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.health.refresh"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminAudit",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/locale-load-notice.tsx",
+        "component": "LocaleLoadNotice",
+        "kind": "Button",
+        "childSummaryIncludes": "locale.reload"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Recovery transitions: Uzbek Latin boot/chunk; Russian save retry. Four-locale/two-theme captures inspect save notices, not every menu keyboard state.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "localeRecovery",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/admin-locale-layout-12-final/admin-controls.qa-language-74dd9-fers-a-real-reload-recovery-webkit/locale-boot-refusal-320.png"
+          ],
+          "pixelReviewed": true
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "localeRecovery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/locale-preference-notice.tsx",
+        "component": "LocalePreferenceNotice",
+        "kind": "Button",
+        "childSummaryIncludes": "locale.retrySave"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Recovery transitions: Uzbek Latin boot/chunk; Russian save retry. Four-locale/two-theme captures inspect save notices, not every menu keyboard state.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "localeRecovery",
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/admin-locale-layout-12-final/admin-controls.qa-language-fa89a-nable-in-every-locale-at320-chromium/locale-preference-ru-dark-320.png",
+            "artifacts/qa/2026-10/admin-locale-layout-12-final/admin-controls.qa-language-fa89a-nable-in-every-locale-at320-chromium/locale-preference-uz-Cyrl-light-320.png"
+          ],
+          "pixelReviewed": true
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "localeRecovery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "localeRecovery",
+          "pixelReviewedArtifacts": [],
+          "pixelReviewed": false
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/admin/dashboard-screen.tsx",
+        "component": "renderBody",
+        "kind": "Button",
+        "childSummaryIncludes": "admin.console.dashboard.backupsConfigure"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Local fixture with the warning present only; actual health navigation, four locales, light/dark at320. Provider configuration, restore and external backup remain excluded.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "adminBackup",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/admin-backup-lens-6-final/admin-controls.qa-backup-w-10d60--direct-health-action-at320-firefox/backup-warning-ru-dark-320.png",
+            "artifacts/qa/2026-10/admin-backup-lens-6-final/admin-controls.qa-backup-w-10d60--direct-health-action-at320-webkit/backup-warning-uz-Cyrl-light-320.png"
+          ]
+        }
+      }
+    }
+  ]
+}

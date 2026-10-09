@@ -61,6 +61,8 @@ const personLoadSchema = z.object({
   overdueCount: z.number().int(),
 })
 const unitLoadSchema = z.object({
+  scope: z.enum(['department', 'unit', 'unassigned']),
+  unitId: idSchema.nullable(),
   unitName: z.string().nullable(),
   openCount: z.number().int(),
   overdueCount: z.number().int(),

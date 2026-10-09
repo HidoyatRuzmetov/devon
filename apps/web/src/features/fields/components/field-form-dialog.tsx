@@ -33,6 +33,7 @@ import {
 } from '@devon/ui'
 import type { DefDraft, FieldDefDto, FieldOptionDto } from '../api.js'
 import { OPTION_TONE_NAMES, optionTone } from '../format.js'
+import { availableOptionId } from '../option-id.js'
 
 const LOCALES = ['uz-Latn', 'uz-Cyrl', 'ru', 'en'] as const
 type LocaleKey = (typeof LOCALES)[number]
@@ -159,7 +160,10 @@ export function FieldFormDialog({
       options: [
         ...s.options,
         {
-          id: `opt_${s.options.length + 1}`,
+          id: availableOptionId(`opt_${s.options.length + 1}`, [
+            ...s.options.map((option) => option.id),
+            ...(existing?.options.map((option) => option.id) ?? []),
+          ]),
           label: {},
           colorToken: OPTION_TONE_NAMES[s.options.length % OPTION_TONE_NAMES.length] ?? 'slate',
           order: s.options.length,
@@ -281,7 +285,13 @@ export function FieldFormDialog({
                         options[index] = {
                           ...current,
                           label: { ...current.label, [locale]: text, 'uz-Latn': text },
-                          id: suggestFieldKey(text) || current.id,
+                          // Persisted option IDs are the answers' references, not their labels.
+                          id: existing?.options.some((saved) => saved.id === current.id)
+                            ? current.id
+                            : availableOptionId(suggestFieldKey(text) || current.id, [
+                                ...options.filter((_, i) => i !== index).map((option) => option.id),
+                                ...(existing?.options.map((option) => option.id) ?? []),
+                              ]),
                         }
                         return { ...s, options }
                       })

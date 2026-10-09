@@ -12,6 +12,8 @@
 **/playwright-report
 **/test-results
 **/.data
+**/.tmp
+artifacts
 backups
 docs
 agentic/ledger

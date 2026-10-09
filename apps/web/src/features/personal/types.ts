@@ -60,6 +60,7 @@ export const taskListSchema = z.array(taskSchema)
 
 export type CreateTaskInput = {
   title: string
+  afterTaskId?: string
   sprintId?: string | null
   parentId?: string | null
   notes?: string | null

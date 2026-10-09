@@ -50,6 +50,18 @@ export function useCreateFromTemplateMutation() {
   })
 }
 
+export function useCreateFromGalleryMutation() {
+  const qc = useQueryClient()
+  const csrf = useCsrfToken()
+  return useMutation({
+    mutationFn: (input: api.CreateFromGalleryInput) => api.createFromGallery(input, csrf),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: PROJECTS_KEY })
+      void qc.invalidateQueries({ queryKey: ['work'] })
+    },
+  })
+}
+
 export function usePatchProjectMutation(id: string) {
   const t = useT()
   const qc = useQueryClient()

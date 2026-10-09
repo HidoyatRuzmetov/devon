@@ -19,6 +19,18 @@ export function defaultSprintRange(kind: SprintKind): { startsAt: string; endsAt
   return { startsAt: start.toISOString(), endsAt: end.toISOString() }
 }
 
+/** A custom period keeps its chosen time box when unfinished work moves into the next period. */
+export function rolloverSprintRange(
+  sprint: Pick<Sprint, 'kind' | 'startsAt' | 'endsAt'>,
+  now = Date.now(),
+): { startsAt: string; endsAt: string } {
+  const duration =
+    sprint.kind === 'custom'
+      ? Date.parse(sprint.endsAt) - Date.parse(sprint.startsAt)
+      : sprintKindHours(sprint.kind) * 3_600_000
+  return { startsAt: new Date(now).toISOString(), endsAt: new Date(now + duration).toISOString() }
+}
+
 /** 0-100, clamped -- how far a sprint has travelled from `startsAt` to `endsAt` at `now`. Used for
  * the sprint header's progress ring; a sprint whose time is up (>= 100) is what triggers the
  * rollover banner instead of the ring. */

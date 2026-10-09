@@ -1,0 +1,1242 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested",
+  "run": "knowledge-visual-post-caret-final",
+  "date": "2026-10-08",
+  "method": "Explicit view_image pixel inspection; the comparison sheets were rendered and inspected, then selected originals were inspected with detail original. Generated captures alone are not pixel review.",
+  "environments": {
+    "browsers": ["chromium"],
+    "roles": ["head"],
+    "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+    "themes": ["light", "dark"],
+    "viewports": [
+      {
+        "width": 1440,
+        "height": 900,
+        "textScale": 1
+      },
+      {
+        "width": 1366,
+        "height": 768,
+        "textScale": 1
+      },
+      {
+        "width": 768,
+        "height": 800,
+        "textScale": 1
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "textScale": 1
+      },
+      {
+        "width": 320,
+        "height": 480,
+        "textScale": 1
+      },
+      {
+        "width": 768,
+        "height": 600,
+        "textScale": 2
+      },
+      {
+        "width": 360,
+        "height": 225,
+        "textScale": 1
+      }
+    ]
+  },
+  "generatedCaptureCount": 280,
+  "comparisonReviews": [
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-320-480-text100.png",
+      "surface": "editor",
+      "width": 320,
+      "height": 480,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-360-225-text100.png",
+      "surface": "editor",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-390-844-text100.png",
+      "surface": "editor",
+      "width": 390,
+      "height": 844,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-768-600-text200.png",
+      "surface": "editor",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-768-800-text100.png",
+      "surface": "editor",
+      "width": 768,
+      "height": 800,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-1366-768-text100.png",
+      "surface": "editor",
+      "width": 1366,
+      "height": 768,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/editor-1440-900-text100.png",
+      "surface": "editor",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-320-480-text100.png",
+      "surface": "faq",
+      "width": 320,
+      "height": 480,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-360-225-text100.png",
+      "surface": "faq",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-390-844-text100.png",
+      "surface": "faq",
+      "width": 390,
+      "height": 844,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-768-600-text200.png",
+      "surface": "faq",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-768-800-text100.png",
+      "surface": "faq",
+      "width": 768,
+      "height": 800,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-1366-768-text100.png",
+      "surface": "faq",
+      "width": 1366,
+      "height": 768,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/faq-1440-900-text100.png",
+      "surface": "faq",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-320-480-text100.png",
+      "surface": "slash-popup",
+      "width": 320,
+      "height": 480,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-360-225-text100.png",
+      "surface": "slash-popup",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-390-844-text100.png",
+      "surface": "slash-popup",
+      "width": 390,
+      "height": 844,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-768-600-text200.png",
+      "surface": "slash-popup",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-768-800-text100.png",
+      "surface": "slash-popup",
+      "width": 768,
+      "height": 800,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-1366-768-text100.png",
+      "surface": "slash-popup",
+      "width": 1366,
+      "height": 768,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/slash-popup-1440-900-text100.png",
+      "surface": "slash-popup",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-320-480-text100.png",
+      "surface": "template-card",
+      "width": 320,
+      "height": 480,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-360-225-text100.png",
+      "surface": "template-card",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-390-844-text100.png",
+      "surface": "template-card",
+      "width": 390,
+      "height": 844,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-768-600-text200.png",
+      "surface": "template-card",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-768-800-text100.png",
+      "surface": "template-card",
+      "width": 768,
+      "height": 800,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-1366-768-text100.png",
+      "surface": "template-card",
+      "width": 1366,
+      "height": 768,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/template-card-1440-900-text100.png",
+      "surface": "template-card",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-320-480-text100.png",
+      "surface": "templates",
+      "width": 320,
+      "height": 480,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-360-225-text100.png",
+      "surface": "templates",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-390-844-text100.png",
+      "surface": "templates",
+      "width": 390,
+      "height": 844,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-768-600-text200.png",
+      "surface": "templates",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-768-800-text100.png",
+      "surface": "templates",
+      "width": 768,
+      "height": 800,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-1366-768-text100.png",
+      "surface": "templates",
+      "width": 1366,
+      "height": 768,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/pixel-sheets/templates-1440-900-text100.png",
+      "surface": "templates",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Reduced layout comparison of eight locale/theme images; not native text inspection of every pixel."
+    }
+  ],
+  "nativeReviews": [
+    {
+      "surface": "editor",
+      "locale": "en",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-dark-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "en",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-light-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "ru",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-dark-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "ru",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-light-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "uz-Cyrl",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Cyrl-dark-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "uz-Cyrl",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-b80f3-visual-matrix-uz-Cyrl-light-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "uz-Latn",
+      "theme": "dark",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Latn-dark-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "editor",
+      "locale": "uz-Latn",
+      "theme": "light",
+      "width": 390,
+      "height": 844,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-e5bfe-visual-matrix-uz-Latn-light-chromium/editor-390-844-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "en",
+      "theme": "dark",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-dark-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "en",
+      "theme": "light",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-light-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "ru",
+      "theme": "dark",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-dark-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "ru",
+      "theme": "light",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-light-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "uz-Cyrl",
+      "theme": "dark",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Cyrl-dark-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "uz-Cyrl",
+      "theme": "light",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-b80f3-visual-matrix-uz-Cyrl-light-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "uz-Latn",
+      "theme": "dark",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Latn-dark-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "faq",
+      "locale": "uz-Latn",
+      "theme": "light",
+      "width": 320,
+      "height": 480,
+      "scale": 1,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-e5bfe-visual-matrix-uz-Latn-light-chromium/faq-320-480-text100.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability and wrapping; fixed mobile navigation inside long full-page composite is a capture artifact."
+    },
+    {
+      "surface": "template-card",
+      "locale": "en",
+      "theme": "dark",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-dark-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "en",
+      "theme": "light",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-en-light-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "ru",
+      "theme": "dark",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-dark-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "ru",
+      "theme": "light",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-ru-light-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "uz-Cyrl",
+      "theme": "dark",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Cyrl-dark-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "uz-Cyrl",
+      "theme": "light",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-b80f3-visual-matrix-uz-Cyrl-light-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "uz-Latn",
+      "theme": "dark",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-knowledge-visual-matrix-uz-Latn-dark-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    },
+    {
+      "surface": "template-card",
+      "locale": "uz-Latn",
+      "theme": "light",
+      "width": 768,
+      "height": 600,
+      "scale": 2,
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-visual-post-caret-final/knowledge-visual.qa--qa-kn-e5bfe-visual-matrix-uz-Latn-light-chromium/template-card-768-600-text200.png",
+      "status": "tested",
+      "pixelReviewed": true,
+      "scope": "Native-size readability of doubled text and wrapped controls; sticky shell chrome crosses scrollIntoView region capture."
+    }
+  ],
+  "findings": [
+    "Cyrillic200% instructions now have readable preferred width and controls wrap instead of collapsing text to one character per line.",
+    "Templates keep item role/edit/remove context and wrapped long names; editor toolbar wraps and code remains within page; slash lists remain inside short viewport.",
+    "FAQ stays in three groups with native disclosure controls; eight native320 images show readable questions/first answer with wrapping.",
+    "Source template-card screenshot scrollIntoView moves the sticky shell across the crop; full-page screenshots provide layout context. Fixed mobile navigation appears at viewport boundary inside full-page composites.",
+    "200% changes actual typography tokens.360x225 is CSS reflow equivalence for1440x900 at400%, not actual browser zoom.",
+    "Thirty current functional captures have explicit native original/detail review across three engines: create/toggle/delete refusal, incoming dirty draft, peer conflict, saved callout, dismissed mention, short slash, contextual tooltip and template empty state.",
+    "The prior rename Saved toast is still visible in some immediate refusal captures; the scoped current-action alert and independent persisted reads establish the failed attempt. Previously closing Edit tooltip can briefly overlap Remove during crossfade; exact-name assertions passed.",
+    "Full-page short-slash images include fixed-shell compositing effects. Actual popup bounding boxes were asserted before capture; the visual matrix uses viewport popup captures.",
+    "Current 768x600 doubled-text sheets expose shared-sidebar Uzbek Inbox text/count overlap and a final username character on its own line. Reported to parent; outside knowledge ownership and not counted repaired."
+  ],
+  "pending": [
+    "Every native full-page capture at full resolution beyond selected24 originals",
+    "Firefox/WebKit full visual locale/theme matrix",
+    "System theme preference transitions",
+    "Reduced-motion and physical-device rendering",
+    "All interaction states in every locale/theme/environment"
+  ],
+  "functionalReviews": [
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-chromium/create-refused.png",
+      "engine": "chromium",
+      "family": "create-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/create-refused-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 964
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-firefox/create-refused.png",
+      "engine": "firefox",
+      "family": "create-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/create-refused-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 1695
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-webkit/create-refused.png",
+      "engine": "webkit",
+      "family": "create-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/create-refused-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 1695
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-chromium/delete-refused.png",
+      "engine": "chromium",
+      "family": "delete-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/delete-refused-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 1921
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-firefox/delete-refused.png",
+      "engine": "firefox",
+      "family": "delete-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/delete-refused-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2652
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-webkit/delete-refused.png",
+      "engine": "webkit",
+      "family": "delete-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/delete-refused-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2652
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-chromium/incoming-items-draft.png",
+      "engine": "chromium",
+      "family": "incoming-items-draft",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/incoming-items-draft-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 1587
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-firefox/incoming-items-draft.png",
+      "engine": "firefox",
+      "family": "incoming-items-draft",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/incoming-items-draft-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2318
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-webkit/incoming-items-draft.png",
+      "engine": "webkit",
+      "family": "incoming-items-draft",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/incoming-items-draft-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2318
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-chromium/mention-no-results-dismissed.png",
+      "engine": "chromium",
+      "family": "mention-no-results-dismissed",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-firefox/mention-no-results-dismissed.png",
+      "engine": "firefox",
+      "family": "mention-no-results-dismissed",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-webkit/mention-no-results-dismissed.png",
+      "engine": "webkit",
+      "family": "mention-no-results-dismissed",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-chromium/rich-editor-callout.png",
+      "engine": "chromium",
+      "family": "rich-editor-callout",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-firefox/rich-editor-callout.png",
+      "engine": "firefox",
+      "family": "rich-editor-callout",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-webkit/rich-editor-callout.png",
+      "engine": "webkit",
+      "family": "rich-editor-callout",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-chromium/slash-short-mobile.png",
+      "engine": "chromium",
+      "family": "slash-short-mobile",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 320,
+      "originalHeight": 839
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-firefox/slash-short-mobile.png",
+      "engine": "firefox",
+      "family": "slash-short-mobile",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 320,
+      "originalHeight": 864
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-webkit/slash-short-mobile.png",
+      "engine": "webkit",
+      "family": "slash-short-mobile",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 320,
+      "originalHeight": 851
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-chromium/template-conflict.png",
+      "engine": "chromium",
+      "family": "template-conflict",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-conflict-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 8301
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-firefox/template-conflict.png",
+      "engine": "firefox",
+      "family": "template-conflict",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-conflict-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 9032
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-webkit/template-conflict.png",
+      "engine": "webkit",
+      "family": "template-conflict",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-conflict-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 9032
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-chromium/template-context-tooltip.png",
+      "engine": "chromium",
+      "family": "template-context-tooltip",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-context-tooltip-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 8548
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-firefox/template-context-tooltip.png",
+      "engine": "firefox",
+      "family": "template-context-tooltip",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-context-tooltip-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 9279
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-webkit/template-context-tooltip.png",
+      "engine": "webkit",
+      "family": "template-context-tooltip",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-context-tooltip-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 9279
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-chromium/templates-empty.png",
+      "engine": "chromium",
+      "family": "templates-empty",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-firefox/templates-empty.png",
+      "engine": "firefox",
+      "family": "templates-empty",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-webkit/templates-empty.png",
+      "engine": "webkit",
+      "family": "templates-empty",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original pixels inspected with detail original.",
+      "detailCrop": null,
+      "scope": "full",
+      "originalWidth": 1280,
+      "originalHeight": 720
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-chromium/toggle-refused.png",
+      "engine": "chromium",
+      "family": "toggle-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/toggle-refused-chromium-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 1951
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-firefox/toggle-refused.png",
+      "engine": "firefox",
+      "family": "toggle-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/toggle-refused-firefox-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2682
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-webkit/toggle-refused.png",
+      "engine": "webkit",
+      "family": "toggle-refused",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Unmodified bottom detail crop inspected with detail original.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/toggle-refused-webkit-detail.png",
+      "scope": "bottom",
+      "originalWidth": 1280,
+      "originalHeight": 2682
+    }
+  ],
+  "functionalDetailCount": 18,
+  "functionalOriginalCount": 12,
+  "historicalFunctionalReviews": [
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-chromium/rich-editor-callout.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original screenshot inspected with detail original.",
+      "detailCrop": null,
+      "scope": "English/light/head actual saved callout result and toolbar, all3 engines."
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-firefox/template-context-tooltip.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Reduced full-page layout plus unmodified bottom900px crop for readable tooltip context.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-firefox/template-context-tooltip-bottom-detail.png",
+      "scope": "English/light/head contextual Remove item tooltip, all3 engines. Chromium's previously closing Edit tooltip was still fading at capture; functional exact-name assertions pass."
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-webkit/template-context-tooltip.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Reduced full-page layout plus unmodified bottom900px crop for readable tooltip context.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-webkit/template-context-tooltip-bottom-detail.png",
+      "scope": "English/light/head contextual Remove item tooltip, all3 engines. Chromium's previously closing Edit tooltip was still fading at capture; functional exact-name assertions pass."
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-firefox/rich-editor-callout.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original screenshot inspected with detail original.",
+      "detailCrop": null,
+      "scope": "English/light/head actual saved callout result and toolbar, all3 engines."
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-webkit/rich-editor-callout.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Original screenshot inspected with detail original.",
+      "detailCrop": null,
+      "scope": "English/light/head actual saved callout result and toolbar, all3 engines."
+    },
+    {
+      "screenshot": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-chromium/template-context-tooltip.png",
+      "pixelReviewed": true,
+      "status": "tested",
+      "method": "Reduced full-page layout plus unmodified bottom900px crop for readable tooltip context.",
+      "detailCrop": "artifacts/qa/2026-10/results/platform/knowledge-controls-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-chromium/template-context-tooltip-bottom-detail.png",
+      "scope": "English/light/head contextual Remove item tooltip, all3 engines. Chromium's previously closing Edit tooltip was still fading at capture; functional exact-name assertions pass."
+    }
+  ],
+  "functionalRun": "knowledge-controls-post-caret-final",
+  "functionalComparisonSheets": [
+    {
+      "family": "create-refused",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/create-refused.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-chromium/create-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-firefox/create-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--16159-and-offers-visible-recovery-webkit/create-refused.png"
+      ]
+    },
+    {
+      "family": "delete-refused",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/delete-refused.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-chromium/delete-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-firefox/delete-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-webkit/delete-refused.png"
+      ]
+    },
+    {
+      "family": "incoming-items-draft",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/incoming-items-draft.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-chromium/incoming-items-draft.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-firefox/incoming-items-draft.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--e0fbe-ems-retains-the-local-draft-webkit/incoming-items-draft.png"
+      ]
+    },
+    {
+      "family": "mention-no-results-dismissed",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/mention-no-results-dismissed.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-chromium/mention-no-results-dismissed.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-firefox/mention-no-results-dismissed.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--766c7-mpty-results-Escape-and-Tab-webkit/mention-no-results-dismissed.png"
+      ]
+    },
+    {
+      "family": "rich-editor-callout",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/rich-editor-callout.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-chromium/rich-editor-callout.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-firefox/rich-editor-callout.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--70a7b--mark-persists-after-reload-webkit/rich-editor-callout.png"
+      ]
+    },
+    {
+      "family": "slash-short-mobile",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/slash-short-mobile.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-chromium/slash-short-mobile.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-firefox/slash-short-mobile.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--a566d--support-keyboard-selection-webkit/slash-short-mobile.png"
+      ]
+    },
+    {
+      "family": "template-conflict",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-conflict.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-chromium/template-conflict.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-firefox/template-conflict.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--d8022-on-reloads-the-peer-version-webkit/template-conflict.png"
+      ]
+    },
+    {
+      "family": "template-context-tooltip",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/template-context-tooltip.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-chromium/template-context-tooltip.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-firefox/template-context-tooltip.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--acc52-re-discoverable-and-persist-webkit/template-context-tooltip.png"
+      ]
+    },
+    {
+      "family": "templates-empty",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/templates-empty.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-chromium/templates-empty.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-firefox/templates-empty.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--78e94-sh-checklist-can-be-created-webkit/templates-empty.png"
+      ]
+    },
+    {
+      "family": "toggle-refused",
+      "sheet": "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/functional-pixel-sheets/toggle-refused.png",
+      "pixelReviewed": true,
+      "sources": [
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-chromium/toggle-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-firefox/toggle-refused.png",
+        "artifacts/qa/2026-10/results/platform/knowledge-controls-post-caret-final/knowledge-controls.qa--qa--c76f0-persist-the-intended-record-webkit/toggle-refused.png"
+      ]
+    }
+  ],
+  "functionalComparisonSheetsCount": 10,
+  "currentSourceRetest": {
+    "status": "passed",
+    "run": "knowledge-visual-post-caret-final",
+    "passed": 8,
+    "comparisonSheetsReviewed": 35,
+    "nativeOriginalsReviewed": 24
+  },
+  "historicalVisualRun": {
+    "run": "knowledge-visual-wrap-after",
+    "comparisonSheetsReviewed": 35,
+    "nativeOriginalsReviewed": 24,
+    "note": "Prior reviewed source run retained as provenance; not included in current counts."
+  }
+}

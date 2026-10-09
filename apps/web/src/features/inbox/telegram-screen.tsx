@@ -71,7 +71,10 @@ function TelegramPhoneMock({
           </div>
         ) : (
           <>
-            <div className="max-w-[85%] self-end rounded-lg rounded-br-sm bg-primary px-3 py-2 text-caption text-primary-foreground shadow-1">
+            <div
+              translate="no"
+              className="max-w-[85%] self-end rounded-lg rounded-br-sm bg-primary px-3 py-2 text-caption text-primary-foreground shadow-1"
+            >
               /start {code ?? '········'}
             </div>
             <div className="max-w-[85%] self-start rounded-lg rounded-bl-sm bg-card px-3 py-2 text-caption text-foreground shadow-1">
@@ -223,7 +226,10 @@ function PersonalLinkCard() {
                     />
                   ) : null}
                   <div className="flex flex-col gap-2">
-                    <code className="rounded-sm bg-muted px-3 py-2 text-h4 tracking-widest">
+                    <code
+                      translate="no"
+                      className="rounded-sm bg-muted px-3 py-2 text-h4 tracking-widest"
+                    >
                       /start {linkCode.data.code}
                     </code>
                     {linkCode.data.deepLink ? (
@@ -392,7 +398,9 @@ function GroupsCard({ departmentId, canManage }: { departmentId: string; canMana
           <div className="rounded-sm bg-muted p-3">
             <p className="text-small text-muted-foreground">{t('telegram.group.codeBody')}</p>
             <div className="mt-2 flex items-center gap-2">
-              <code className="text-h4 tracking-widest">/connect {connectCode.data.code}</code>
+              <code translate="no" className="text-h4 tracking-widest">
+                /connect {connectCode.data.code}
+              </code>
               <IconButton
                 aria-label={t('telegram.group.copyCode')}
                 onClick={async () => {

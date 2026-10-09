@@ -180,7 +180,10 @@ const aiRoutes: FastifyPluginAsyncZod = async (app) => {
         departmentId,
         req.query.limit ?? 50,
         {
-          onlyUserId: isHeadOf(req.actor, departmentId) ? null : (req.actor?.userId ?? ''),
+          onlyUserId:
+            contextDepartmentRole(req.actor, departmentId) === 'head'
+              ? null
+              : (req.actor?.userId ?? ''),
         },
       )
       return { traces }

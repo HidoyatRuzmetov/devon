@@ -1,0 +1,17 @@
+import { defineConfig } from '@playwright/test'
+import { resolve } from 'node:path'
+import base from './production-loading-qa.config.js'
+
+const root = resolve(import.meta.dirname, '../../../..')
+export default defineConfig({
+  ...base,
+  testMatch: /production-prefetch\.qa\.spec\.ts/,
+  outputDir: resolve(root, 'artifacts/qa/2026-10/results/production-prefetch'),
+  reporter: [
+    ['list'],
+    [
+      'json',
+      { outputFile: resolve(root, 'artifacts/qa/2026-10/production-prefetch-results.json') },
+    ],
+  ],
+})

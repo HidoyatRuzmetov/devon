@@ -1,0 +1,606 @@
+{
+  "schemaVersion": 1,
+  "owner": "event_regressions-goals",
+  "provenance": "Actual local synthetic UI/API persistence and bounded visual matrix; no external integration or production calls.",
+  "policy": "Only exact selectors and named fixture states bound; newly discovered article/progress surfaces remain pending outside these records.",
+  "boundaries": {
+    "db": "devon_flow_e2e_goals",
+    "apiPort": 48961,
+    "webPort": 48962,
+    "seedDemo": false,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "gates": {
+    "functional": "36/36 all3;12 distinct journeys",
+    "visual": "51/51 earlier integrated report includes24 visual journeys and27 original functional executions;216 captured/scanned states"
+  },
+  "evidence": {
+    "functional": {
+      "test": "apps/web/test/e2e/goals.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/goals/final-thirty-six/results.json",
+      "roles": [
+        "department-head",
+        "ordinary-member refused"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locale": "en",
+      "scenario": "12 distinct local UI/API journeys:4 computed metrics, filtered counted-card link, stale edit409/recovery, held actual201/new dialog, required/fractional/zero targets, member/disabled gates, stale scope Undo, refused Undo/retry, refused create/pointer retry, list503/Retry and reload503/draft/retry. Real independent reads establish only the documented writes."
+    },
+    "visual": {
+      "test": "apps/web/test/e2e/goals-visual.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/goals/final-fifty-one/results.json",
+      "roles": [
+        "department-head"
+      ],
+      "browsers": [
+        "chromium",
+        "firefox",
+        "webkit"
+      ],
+      "locales": [
+        "en",
+        "ru",
+        "uz-Latn",
+        "uz-Cyrl"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "scenario": "Populated percentage goal/create/conflict dialog at320×640,768×800 and1280×600/text200%, Escape restores exact Edit opener, focused saved-version action inside viewport, scoped serious/critical axe.216 captures/scans; no full216 pixel-review claim."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "article"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only the real4 metric fixtures and explicit current1/target0 cap cue; other metrics/time/filter boundaries remain pending.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "Progress",
+        "labelIncludes": "work.goals.progressLabel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Zero-cap overflow indicator class is actually destructive; other metric values are independently computed. No all Progress variants/animations pass.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "IconButton",
+        "labelIncludes": "work.goals.edit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Opens actual edit dialog and restores exact opener after Escape in the executed24 locale/theme/browser journeys.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "IconButton",
+        "labelIncludes": "work.goals.delete"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Real delete, independent empty read, failed/recovered Undo recreation; no delete-refusal claim.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "a",
+        "childSummaryIncludes": "work.goals.matchedCards"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "3 counted cards link actually navigates to /work/table?q=label:goal-fixture and shows real matching card.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "Chip",
+        "childSummaryIncludes": "{goal.filter}"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only actual priority:high chip rendered in the percentage fixture; chip is immutable context, not a tested editing control.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalCard",
+        "kind": "Chip",
+        "childSummaryIncludes": "work.goals.noMatchingWork"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only actual no-matching-work percentage fixture; no empty-all-goals inference.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Dialog"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual create/edit, Cancel/reopen with held receipt, stale409 and reload503 retained draft; no other form refusal combinatorics.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "DialogContent"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Explicit create/conflict viewport reflow, axe and Escape focus return; visible image crops have footer/title limitations recorded separately.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "visual",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "form"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual201/204,409/503 with retained draft, empty required target disabled and valid fractional/zero values.",
+      "states": {
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"goal-title\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Name filled/read retained or authoritative reloaded; no maximum-length server-refusal claim.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Textarea",
+        "childSummaryIncludes": "id=\"goal-description\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Create503 retains typed description; actual Undo recreates the held description.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Select",
+        "childSummaryIncludes": "id=\"goal-metric\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All4 documented metrics actually selected/created; no key-by-key native select navigation claim.",
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"goal-target\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Blank disables submit;1.5 native step valid and API persisted;0 cap actual overflow cue checked.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "validation": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "p",
+        "childSummaryIncludes": "goalsControls.conflict"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual409 keeps local draft, names explicit recovery and avoids overwriting newer server version.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "goalsControls.reload"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual503 reload retains draft/conflict/disabled Save, explicit retry loads latest authoritative row; focus visibility independently covered in visual report.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"goal-filter\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Filled label filter narrows real counted cards; failed create/Undo retain exact filter; other grammar boundaries pending.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Input",
+        "childSummaryIncludes": "id=\"goal-due\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual typed due value survives failed create and Undo recreation; no startsOn editor or invalid date-boundary claim.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Button",
+        "childSummaryIncludes": "common.cancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Cancel held actual201 and reopen preserves the later draft; shared Dialog close animation permutations pending.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalDialog",
+        "kind": "Button",
+        "labelIncludes": "type=\"submit\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual201/204 writes,409/503 refusals, required-target/conflict disable, native fast pointer retry dispatches second POST in all3.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalsScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "work.goals.create"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Header Add opens real create dialog; this does not bind separate StateView Add action.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalsScreen",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual GET503 renders Retry and real subsequent200 restores saved goal.",
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "active": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/work/components/goals-screen.tsx",
+        "component": "GoalsScreen",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"empty\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Fresh owned department has no goals; header Add used. Separate empty-action keyboard path remains pending.",
+      "states": {
+        "empty": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/lib/department-feature-screen.tsx",
+        "component": "DepartmentFeatureScreen",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"forbidden\""
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only member Goals/Workload guards: correct department-head explanation and Cards recovery, actual403. Other shared wrapper callers pending.",
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "functional",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "pixelLedger": "docs/qa/2026-10/goals-pixel-review.json",
+  "workflows": [
+    {
+      "route": "/goals",
+      "scope": "Only above12 actual journeys; Undo restores values under new ID, not identity-preserving restore. No all role×locale permutations.",
+      "evidenceId": "functional"
+    },
+    {
+      "routes": [
+        "/goals",
+        "/work/workload"
+      ],
+      "scope": "Actual ordinary-member guard copy/403 and Cards navigation; disabled Goal writes404 leave original row unchanged.",
+      "evidenceId": "functional"
+    }
+  ]
+}

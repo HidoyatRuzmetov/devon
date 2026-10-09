@@ -1,0 +1,11 @@
+{
+  "calendar": {
+    "feeds": {
+      "copyFailed": "Could not copy automatically. The link is selected; copy it with your keyboard or touch menu.",
+      "kind": { "eventsHelp": "Events from your departments." },
+      "create": {
+        "capReached": "You have 20 active subscriptions. Close this dialog and delete an unused subscription before creating another."
+      }
+    }
+  }
+}

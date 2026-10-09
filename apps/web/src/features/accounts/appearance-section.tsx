@@ -13,7 +13,7 @@ export function AppearanceSection() {
   const theme = useThemePreference()
   return (
     <SectionCard id="section-appearance" title={t('accounts.settings.appearance')}>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,14rem),1fr))]">
         <label className="flex flex-col gap-1.5 text-small">
           {t('accounts.register.locale')}
           <select

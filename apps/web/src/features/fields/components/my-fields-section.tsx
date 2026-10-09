@@ -36,6 +36,12 @@ import { fieldDescription, fieldLabel, isMissing } from '../format.js'
 import { FieldValueInput, checkValue } from './field-value-input.js'
 
 type Draft = Record<string, WireFieldValue>
+type SaveCommand = {
+  items: { defId: string; value: WireFieldValue }[]
+  ownerUserId: string | null
+  departmentId: string | null
+  csrfToken: string
+}
 
 export function MyFieldsSection(): React.JSX.Element | null {
   const t = useT()
@@ -55,6 +61,17 @@ export function MyFieldsSection(): React.JSX.Element | null {
   const [draft, setDraft] = React.useState<Draft>({})
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [justSaved, setJustSaved] = React.useState(false)
+  const currentDepartment = React.useRef(departmentId)
+  React.useLayoutEffect(() => {
+    currentDepartment.current = departmentId
+  }, [departmentId])
+  const ownsCommand = (command: SaveCommand) =>
+    Boolean(
+      command.ownerUserId &&
+      queryClient.getQueryData<NonNullable<typeof meQuery.data>>(['me'])?.user.id ===
+        command.ownerUserId &&
+      currentDepartment.current === command.departmentId,
+    )
 
   // The server's answers are the source of truth; the draft only holds what this person has changed
   // since the last load, so a value somebody else edited never silently overwrites theirs.
@@ -76,22 +93,26 @@ export function MyFieldsSection(): React.JSX.Element | null {
   )
 
   const save = useMutation({
-    mutationFn: async () => {
-      const items = fields
-        .filter((f) => dirtyIds.includes(f.def.id))
-        .map((f) => ({ defId: f.def.id, value: valueOf(f) }))
-      return saveMyFields(items, csrfToken)
+    mutationFn: async (command: SaveCommand) => {
+      if (!ownsCommand(command)) throw new Error('The field settings context changed')
+      return saveMyFields(command.items, command.csrfToken)
     },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['fields', 'me', departmentId], data)
-      void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    onSuccess: (data, command) => {
+      if (!ownsCommand(command)) return
+      queryClient.setQueryData(['fields', 'me', command.departmentId], data)
+      void queryClient.invalidateQueries({ queryKey: ['inbox', 'notifications'] })
       void queryClient.invalidateQueries({ queryKey: ['fields', 'defs'] })
-      setDraft({})
-      setErrors({})
+      setDraft((current) => {
+        const next = { ...current }
+        for (const { defId, value } of command.items)
+          if (JSON.stringify(next[defId]) === JSON.stringify(value)) delete next[defId]
+        return next
+      })
       setJustSaved(true)
       toast.success(t('fields.my.saved'))
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, command) => {
+      if (!ownsCommand(command)) return
       if (err instanceof ApiError && err.errors.length > 0) {
         toast.error(t(`fields.error.${err.errors[0]!.code}`))
         return
@@ -113,6 +134,7 @@ export function MyFieldsSection(): React.JSX.Element | null {
 
   function submit(event: React.FormEvent): void {
     event.preventDefault()
+    if (save.isPending) return
     const found: Record<string, string> = {}
     for (const field of fields) {
       if (!field.editable) continue
@@ -124,7 +146,14 @@ export function MyFieldsSection(): React.JSX.Element | null {
       toast.error(t('fields.my.fixErrors'))
       return
     }
-    save.mutate()
+    save.mutate({
+      items: fields
+        .filter((f) => dirtyIds.includes(f.def.id))
+        .map((f) => ({ defId: f.def.id, value: valueOf(f) })),
+      ownerUserId: meQuery.data?.user.id ?? null,
+      departmentId,
+      csrfToken,
+    })
   }
 
   // A person with no department has no department fields; the section simply does not exist for them

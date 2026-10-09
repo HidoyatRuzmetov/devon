@@ -1,0 +1,93 @@
+{
+  "scope": "Shared signed-in header, populated synthetic head account",
+  "status": "fixed-and-retested",
+  "browsers": [
+    "chromium",
+    "firefox",
+    "webkit"
+  ],
+  "locales": [
+    "en",
+    "uz-Latn",
+    "uz-Cyrl",
+    "ru"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "widthsCssPixels": [
+    1920,
+    1440,
+    1280,
+    1024,
+    768,
+    390,
+    320
+  ],
+  "matrixCases": 240,
+  "browserEvidence": "artifacts/qa/2026-10/results/platform/bell-large-history-after/summary.json",
+  "originalScreenshots": "artifacts/qa/2026-10/shell/runs/bell-large-history-after/<browser>/<locale>-<theme>-<width>[-text200-short]-header.png",
+  "pixelInspection": {
+    "status": "reviewed",
+    "method": "Opened all 24 unscaled normal/enlarged inspection sheets with view_image(original), including twelve normal and twelve doubled-text/480px-height sheets. Wide headers retain distinct unscaled left/right crops. Originals and full-position assertions remain the geometry evidence.",
+    "sheets": "artifacts/qa/2026-10/shell/runs/bell-large-history-after/inspection-crops/<browser>-<locale>[-text200-short].png",
+    "observations": "Controls, inline unread count and icon spacing remain readable in both themes. The 320px enlarged header can wrap onto two rows. Crop seams are inspection crops, not UI truncation."
+  },
+  "additionalVerifiedInteractions": [
+    "Locale selection through the actual menu, with independent persisted /me read",
+    "Theme selection through the actual cycle, awaiting persisted preference and completed view transition",
+    "Search Enter, Escape and opener focus at 1440 and 320px with short 600px viewport",
+    "Control/Command+K from the locale control, Escape and original focus at both widths",
+    "Repeated palette shortcut while inside palette and original opener restoration, all three engines"
+  ],
+  "remaining": [
+    "Complete palette search/result/command states",
+    "Role-specific sidebar/navigation and every nested surface",
+    "Full-page home screenshots in all combinations; only Russian dark Chromium 768 home reviewed here",
+    "Physical OS preference transition beyond the separately verified browser media emulation",
+    "Actual browser-managed zoom; doubled text tokens and CSS-width reflow are recorded separately"
+  ],
+  "normalMatrixCases": 168,
+  "enlargedShortMatrixCases": 72,
+  "reportDisposition": {
+    "passed": 9,
+    "failed": 3,
+    "explanation": "Bell and shell slices passed. Three separate long-history invalid fixtures failed and were corrected in a later run; this report is not wholly passing."
+  },
+  "systemThemeBoundary": {
+    "browsers": ["chromium", "firefox", "webkit"],
+    "passedCases": 3,
+    "report": "artifacts/qa/2026-10/results/platform/scope-recovery-after/summary.json",
+    "assertions": "Native keyboard cycle, system light/dark media transitions, reload persistence and explicit override with reduced-motion media emulation",
+    "scope": "Browser media emulation on a fresh account; no physical OS change or complete motion audit claimed",
+    "pixelReview": "Six system-theme-current light/dark originals opened before the subsequent Home guidance repair; current final Home pixels have separate pending locale/reflow evidence"
+  },
+  "additionalCountBoundary": {
+    "observations": 90,
+    "values": [
+      0,
+      1,
+      2,
+      99,
+      1000
+    ],
+    "widths": [
+      320,
+      768,
+      1440
+    ],
+    "textScale": [
+      1,
+      2
+    ],
+    "engines": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "browserCasesPassed": 3,
+    "pixelOriginalsReviewed": 6,
+    "scope": "Unread count response boundary only, not notification-mutation persistence."
+  }
+}

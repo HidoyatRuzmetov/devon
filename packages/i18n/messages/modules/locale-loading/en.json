@@ -1,0 +1,9 @@
+{
+  "locale": {
+    "loadingFailed": "Could not load {locale}. Your current language is still available.",
+    "bootLoadingFailed": "Could not load {locale}. Reload to open the platform.",
+    "reload": "Reload and try again",
+    "preferenceFailed": "Your {locale} choice is kept in this browser, but could not be saved to your profile. Retry to use it on other devices too.",
+    "retrySave": "Retry saving language"
+  }
+}

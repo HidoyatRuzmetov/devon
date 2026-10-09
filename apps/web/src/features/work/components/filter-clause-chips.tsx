@@ -213,7 +213,11 @@ function AddFilterPopover({ onAdd }: { onAdd: (clause: FilterClause) => void }) 
 
   const memberOptions = [
     { value: '@me', label: t('work.filter.me') },
-    ...(board?.members ?? []).map((m) => ({ value: m.givenName, label: fullName(m) })),
+    ...(board?.members ?? []).map((m) => ({
+      value: m.givenName,
+      label:
+        m.role === 'head' ? `${fullName(m)} · ${t('departments.members.roleHead')}` : fullName(m),
+    })),
   ]
   const projectOptions = projects.map((p) => ({ value: p.title, label: p.title }))
   const labelOptions = (board?.labels ?? []).map((l) => ({ value: l.name, label: l.name }))

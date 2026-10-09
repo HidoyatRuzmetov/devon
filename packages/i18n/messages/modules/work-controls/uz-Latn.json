@@ -1,0 +1,20 @@
+{
+  "work": {
+    "recurrence": {
+      "weekdaysEmptyHint": "Kunlar tanlanmasa, takrorlanish boshlangan hafta kuni ishlatiladi."
+    },
+    "templateEditor": {
+      "new": "Yangi kartochka andozasi",
+      "edit": "{name} andozasini tahrirlash",
+      "editTitle": "Kartochka andozasini tahrirlash",
+      "name": "Andoza nomi",
+      "scope": "Kim foydalana oladi",
+      "cardTitle": "Kartochka nomi",
+      "checklist": "Tekshiruv roʻyxati",
+      "checklistHint": "Har bir bandni alohida qatorga yozing. Koʻpi bilan 50 band, har biri 500 belgigacha.",
+      "invalid": "Andoza va kartochka nomini kiriting, roʻyxat cheklovlariga rioya qiling.",
+      "saveFailed": "Andoza saqlanmadi. Kiritganlaringiz saqlanib qoldi. «Saqlash»ni yana bosing.",
+      "saved": "Andoza saqlandi"
+    }
+  }
+}

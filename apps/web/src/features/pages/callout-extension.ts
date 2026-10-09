@@ -61,8 +61,17 @@ export const Callout = Node.create<CalloutOptions>({
           commands.wrapIn(this.name, { variant }),
       toggleCallout:
         (variant: CalloutVariant = 'info') =>
-        ({ commands }) =>
-          commands.toggleWrap(this.name, { variant }),
+        ({ commands, state, tr, dispatch }) => {
+          const range = state.selection.$from.blockRange(
+            state.selection.$to,
+            (node) => node.type.name === this.name,
+          )
+          if (!range) return commands.wrapIn(this.name, { variant })
+          // Isolation protects the callout from accidental boundary edits, but also stops the
+          // standard toggleWrap lift. An explicit toolbar action may lift its paragraphs out.
+          if (dispatch) tr.lift(range, range.depth - 1)
+          return true
+        },
     }
   },
 })

@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
   IconButton,
   cn,
+  toast,
   useReducedMotion,
 } from '@devon/ui'
 import { BarChart3, Download, MoreHorizontal, Pin, PinOff, Table2 } from 'lucide-react'
@@ -156,7 +157,11 @@ export function ChartCard({
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => {
-                  if (bodyRef.current) void downloadPng(bodyRef.current, `${chartKey}.png`)
+                  if (bodyRef.current) {
+                    void downloadPng(bodyRef.current, `${chartKey}.png`).catch(() =>
+                      toast.error(t('analytics.actions.exportFailed')),
+                    )
+                  }
                 }}
               >
                 <Download className="size-3.5" aria-hidden="true" />

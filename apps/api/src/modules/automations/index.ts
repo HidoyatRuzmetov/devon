@@ -9,12 +9,9 @@
 // to add a module (MODULE-GUIDE.md "API modules").
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { PgBoss } from 'pg-boss'
+import { queueDatabaseOptions } from '../../lib/queue-database.js'
 import { z } from 'zod'
-import {
-  AUTOMATION_MAX_RULES,
-  automationRuleBodySchema,
-  isActionAllowedForTrigger,
-} from '@devon/contracts'
+import { automationRuleBodySchema, isActionAllowedForTrigger } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import { contextFromRequest } from './context.js'
@@ -82,20 +79,25 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
-      // A limit stated in the copy beats a rule set nobody can reason about (the same reasoning
-      // `FIELD_CAPS` follows). The client shows the cap and the count; this is the boundary.
-      if ((await repo.countRules(ctx, departmentId)) >= AUTOMATION_MAX_RULES) {
+      let id: string
+      try {
+        id = await repo.createRule(ctx, departmentId, req.actor!.userId, {
+          name: req.body.name,
+          trigger: req.body.trigger,
+          triggerConfig: req.body.triggerConfig,
+          actions: req.body.actions,
+          enabled: req.body.enabled,
+        })
+      } catch (error) {
+        if (error instanceof repo.AutomationTargetError)
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'actions', code: 'action_target_unavailable' }],
+          })
+        if (!(error instanceof repo.AutomationLimitError)) throw error
         return sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'name', code: 'too_many_rules' }],
+          errors: [{ path: 'enabled', code: 'too_many_enabled_rules' }],
         })
       }
-      const id = await repo.createRule(ctx, departmentId, req.actor!.userId, {
-        name: req.body.name,
-        trigger: req.body.trigger,
-        triggerConfig: req.body.triggerConfig,
-        actions: req.body.actions,
-        enabled: req.body.enabled,
-      })
       return reply.code(201).send({ id })
     },
   )
@@ -135,7 +137,19 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
           })
         }
       }
-      const result = await repo.patchRule(ctx, departmentId, req.params.id, patch, version)
+      let result: Awaited<ReturnType<typeof repo.patchRule>>
+      try {
+        result = await repo.patchRule(ctx, departmentId, req.params.id, patch, version)
+      } catch (error) {
+        if (error instanceof repo.AutomationTargetError)
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'actions', code: 'action_target_unavailable' }],
+          })
+        if (!(error instanceof repo.AutomationLimitError)) throw error
+        return sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'enabled', code: 'too_many_enabled_rules' }],
+        })
+      }
       if (result === 'not_found') return sendProblem(reply, 'not_found')
       if (result === 'conflict') return sendProblem(reply, 'conflict')
       return reply.code(204).send()
@@ -182,6 +196,7 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
       return reply.type('application/json').send(
         await repo.listRuns(contextFromRequest(req), departmentId, {
           ruleId: req.query.ruleId,
+          status: req.query.status,
           limit: req.query.limit ?? 50,
           cursor: req.query.cursor,
         }),
@@ -208,11 +223,23 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
-      const changed = await repo.setAllRulesEnabled(
-        contextFromRequest(req),
-        departmentId,
-        req.body.enabled,
-      )
+      let changed: number
+      try {
+        changed = await repo.setAllRulesEnabled(
+          contextFromRequest(req),
+          departmentId,
+          req.body.enabled,
+        )
+      } catch (error) {
+        if (error instanceof repo.AutomationTargetError)
+          return sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'actions', code: 'action_target_unavailable' }],
+          })
+        if (!(error instanceof repo.AutomationLimitError)) throw error
+        return sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'enabled', code: 'too_many_enabled_rules' }],
+        })
+      }
       return reply.send({ changed })
     },
   )
@@ -225,7 +252,7 @@ const automationsRoutes: FastifyPluginAsyncZod = async (app) => {
     if (unsubscribe === null) unsubscribe = registerAutomationSubscriptions(app.log)
     if (scanWorker !== null) return
     try {
-      const boss = new PgBoss(app.devonConfig.DATABASE_URL)
+      const boss = new PgBoss(queueDatabaseOptions(app.devonConfig.DATABASE_URL))
       boss.on('error', (err: unknown) => app.log.error({ err }, 'automations: pg-boss error'))
       await boss.start()
       await boss.createQueue(QUEUE_TIME_TRIGGERS).catch(() => {})

@@ -54,7 +54,7 @@ export function goalProgressTone(
   if (isCeilingMetric(metric)) {
     // Strictly past the cap, not merely at it: a goal that says "no more than 100" is still met at
     // exactly 100.
-    if (targetValue > 0 && currentValue > targetValue) return 'destructive'
+    if (currentValue > targetValue) return 'destructive'
     const used = goalBarFill(metric, currentValue, targetValue)
     if (used >= 0.8) return 'warning'
     return 'success'

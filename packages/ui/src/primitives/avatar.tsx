@@ -58,7 +58,7 @@ export interface AvatarProps extends React.ComponentPropsWithoutRef<typeof Avata
 const SIZE_CLASS = {
   // v1.1: the secondary avatar on a board card (the giver behind the assignee, SPEC 3.3) -- small
   // enough to read as "and also" rather than as a second equal face.
-  xs: 'size-5 text-[0.625rem]',
+  xs: 'size-5 text-[length:calc(var(--text-caption)*0.833333)]',
   sm: 'size-6 text-caption',
   md: 'size-9 text-small',
   lg: 'size-11 text-body',
@@ -72,7 +72,7 @@ export const Avatar = React.forwardRef<
     ref={ref}
     {...(decorative ? { 'aria-hidden': true } : {})}
     className={cn(
-      'inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-medium text-white',
+      'inline-flex min-h-[2em] min-w-[2em] shrink-0 items-center justify-center overflow-hidden rounded-full font-medium leading-none text-white',
       SIZE_CLASS[size],
       hueSeed ? unitHueClass(hueSeed) : 'bg-muted-foreground',
       className,

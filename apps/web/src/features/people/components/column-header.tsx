@@ -115,6 +115,7 @@ export function ColumnHeader({
         <PopoverTrigger asChild>
           <IconButton
             aria-label={t('people.table.filterBy', { name: label })}
+            tooltip={t('people.table.filterBy', { name: label })}
             className={cn('size-7', filter && 'bg-primary/12 text-primary')}
           >
             <Filter aria-hidden="true" className="size-3.5" />

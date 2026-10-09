@@ -21,7 +21,6 @@ import { sql } from 'drizzle-orm'
 import { withContext } from '@devon/db'
 import {
   DEFAULT_WEEKLY_CAPACITY_HOURS,
-  cardTemplatePayloadSchema,
   minutesToHours,
   resolveFeatures,
   type FeatureKey,
@@ -497,30 +496,37 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       // Undo is not a special power: it is the same bulk write with the previous values, so it goes
       // through the identical ownership check. A card that has since been reassigned away from you
       // simply refuses, and the toast says how many came back.
-      const results = await Promise.all(
-        req.body.entries.map((entry) =>
-          plus.bulkPatchCards(
-            ctx,
-            departmentId,
-            [entry.id],
-            {
-              assigneeUserId: entry.assigneeUserId,
-              priority: entry.priority,
-              dueAt: entry.dueAt,
-              status: entry.status,
-              estimateMin: entry.estimateMin,
-            },
-            me,
-            (ownerUserIds) => isHead || ownerUserIds.includes(me),
-          ),
-        ),
-      )
-      return reply.send({
-        updated: results.flatMap((r) => r.updated),
-        forbidden: results.flatMap((r) => r.forbidden),
-        notFound: results.flatMap((r) => r.notFound),
-        undo: [],
+      const result = await withContext(ctx, async (tx) => {
+        const results: plus.BulkResult[] = []
+        // Every entry uses this exact transaction; a later invalid target rolls back earlier ones.
+        for (const entry of req.body.entries) {
+          results.push(
+            // nosemgrep: query-in-loop -- Up to200 entries may repeat a card; its next ownership/version check depends on the preceding restore in this transaction, and any invalid target must stop and roll back all writes.
+            await plus.bulkPatchCardsInTx(
+              tx,
+              departmentId,
+              [entry.id],
+              {
+                assigneeUserId: entry.assigneeUserId,
+                priority: entry.priority,
+                dueAt: entry.dueAt,
+                status: entry.status,
+                estimateMin: entry.estimateMin,
+                restoreLabelIds: entry.labels,
+              },
+              me,
+              (ownerUserIds) => isHead || ownerUserIds.includes(me),
+            ),
+          )
+        }
+        return {
+          updated: results.flatMap((r) => r.updated),
+          forbidden: results.flatMap((r) => r.forbidden),
+          notFound: results.flatMap((r) => r.notFound),
+          undo: [],
+        }
       })
+      return reply.send(result)
     },
   )
 
@@ -551,7 +557,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       return reply.type('application/json').send(
         rows.map((row) => ({
           ...row,
-          canManage: row.ownerUserId === me || (row.scope === 'department' && isHead),
+          canManage: row.scope === 'department' ? isHead : row.ownerUserId === me,
         })),
       )
     },
@@ -622,7 +628,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!existing) return sendProblem(reply, 'not_found')
       const isHead = isHeadOf(req.actor, departmentId)
       const mine = existing.ownerUserId === req.actor!.userId
-      if (!mine && !(existing.scope === 'department' && isHead)) {
+      if (existing.scope === 'department' ? !isHead : !mine) {
         return sendProblem(reply, 'forbidden')
       }
       if (req.body.scope === 'department' && !isHead) return sendProblem(reply, 'forbidden')
@@ -653,10 +659,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       const existing = await plus.getTemplate(ctx, departmentId, req.params.id)
       if (!existing) return sendProblem(reply, 'not_found')
       const isHead = isHeadOf(req.actor, departmentId)
-      if (
-        existing.ownerUserId !== req.actor!.userId &&
-        !(existing.scope === 'department' && isHead)
-      ) {
+      if (existing.scope === 'department' ? !isHead : existing.ownerUserId !== req.actor!.userId) {
         return sendProblem(reply, 'forbidden')
       }
       const ok = await plus.archiveTemplate(ctx, departmentId, req.params.id)
@@ -684,14 +687,6 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
       const ctx = contextFromRequest(req)
-      const template = await plus.getTemplate(ctx, departmentId, req.params.id)
-      if (!template || template.kind !== 'card') return sendProblem(reply, 'not_found')
-      const payload = cardTemplatePayloadSchema.safeParse(template.payload)
-      if (!payload.success) {
-        return sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'payload', code: 'template_payload_invalid' }],
-        })
-      }
       // Same cross-tenant guard the plain card create carries (H1.3): a template cannot smuggle an
       // assignee from another department in through its payload, because the assignee comes from
       // the request and is checked against this department's active memberships.
@@ -702,34 +697,9 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
         const members = await repo.filterDepartmentMemberIds(ctx, departmentId, named)
         if (named.some((id) => !members.has(id))) return sendProblem(reply, 'validation_failed')
       }
-      const dueAt =
-        req.body.dueAt !== undefined
-          ? req.body.dueAt
-          : payload.data.dueInDays != null
-            ? new Date(Date.now() + payload.data.dueInDays * 86_400_000).toISOString()
-            : null
-      const card = await repo.createCard(ctx, {
-        departmentId,
-        title: payload.data.title,
-        description: payload.data.description ?? undefined,
-        kind: req.body.projectId ? 'project_task' : 'task',
-        assigneeUserId: req.body.assigneeUserId ?? null,
-        giverUserId: req.body.giverUserId ?? req.actor!.userId,
-        priority: payload.data.priority ?? 'none',
-        startAt: null,
-        dueAt,
-        labels: payload.data.labels ?? [],
-        links: [],
-        projectId: req.body.projectId ?? null,
-        projectScope: req.body.projectId ? 'objective' : 'none',
-        orderKey: undefined,
-        createdByUserId: req.actor!.userId,
-        estimateMin: payload.data.estimateMin ?? null,
-        source: 'template',
-      })
-      await plus.applyCardTemplateChecklist(ctx, departmentId, card.id, payload.data)
-      await plus.bumpTemplateUse(ctx, departmentId, template.id)
-      return reply.code(201).send({ id: card.id })
+      const result = await plus.createFromCardTemplate(ctx, departmentId, req.params.id, req.body)
+      if (!result.ok) return sendProblem(reply, result.reason)
+      return reply.code(201).send({ id: result.id })
     },
   )
 
@@ -1095,6 +1065,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
       const { version, ...patch } = req.body
+      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
       const result = await plus.patchGoal(
         contextFromRequest(req),
         departmentId,
@@ -1122,6 +1093,7 @@ export async function registerWorkPlusRoutes(app: ZodApp): Promise<void> {
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
       const departmentId = requireDepartmentId(req)!
+      if (!(await requireFeature(req, reply, departmentId, 'goals'))) return
       const ok = await plus.deleteGoal(contextFromRequest(req), departmentId, req.params.id)
       if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()

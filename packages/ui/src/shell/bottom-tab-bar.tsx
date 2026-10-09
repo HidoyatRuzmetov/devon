@@ -47,7 +47,7 @@ export function BottomTabBar({
       aria-label={label}
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 flex h-(--height-tabbar) items-stretch border-t border-border',
-        'bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden',
+        'bg-card pb-[env(safe-area-inset-bottom)] md:hidden',
         className,
       )}
     >

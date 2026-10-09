@@ -37,14 +37,11 @@ import { useNavCan } from '../lib/can.js'
 import { navigate, useRoutePath } from '../lib/router.js'
 import { setThemePreference, type ThemePreference } from '../lib/theme.js'
 import { getFeatureCommandEntries, getFeatureQuickAddEntries } from '../features/registry.js'
-import { fetchCards, type Card } from '../features/work/api.js'
-import { fetchEvents } from '../features/events/api.js'
+import type { Card } from '../features/work/api.js'
 import type { EventDto } from '../features/events/schemas.js'
-import { fetchProjects } from '../features/projects/api.js'
 import type { Project } from '../features/projects/api.js'
-import { fetchPages } from '../features/pages/api.js'
 import type { PageSummary } from '../features/pages/types.js'
-import { fetchMembers, type Member } from '../features/structure/api.js'
+import type { Member } from '../features/structure/api.js'
 import { useDepartmentSearchQuery } from '../features/ai/use-ai.js'
 import { searchHitHref } from '../features/ai/types.js'
 import { NAV_ENTRIES } from './nav.js'
@@ -93,6 +90,7 @@ function useDebounced(value: string, ms: number): string {
 export interface CommandPaletteControllerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onCloseAutoFocus: (event: Event) => void
   isSuperAdmin: boolean
   onChangeLocale: (locale: Locale) => void
   onOpenShortcuts: () => void
@@ -171,25 +169,31 @@ function usePaletteEntities(open: boolean, departmentId: string | null): Palette
 
   const membersQuery = useQuery({
     queryKey: ['palette', 'members', departmentId],
-    queryFn: () => fetchMembers(departmentId!),
+    queryFn: () =>
+      import('../features/structure/api.js').then(({ fetchMembers }) =>
+        fetchMembers(departmentId!),
+      ),
     enabled,
     staleTime: 60_000,
   })
   const cardsQuery = useQuery({
     queryKey: ['palette', 'cards'],
-    queryFn: () => fetchCards({ limit: SOURCE_LIMIT }),
+    queryFn: () =>
+      import('../features/work/api.js').then(({ fetchCards }) =>
+        fetchCards({ limit: SOURCE_LIMIT }),
+      ),
     enabled,
     staleTime: 30_000,
   })
   const eventsQuery = useQuery({
     queryKey: ['palette', 'events'],
-    queryFn: () => fetchEvents({}),
+    queryFn: () => import('../features/events/api.js').then(({ fetchEvents }) => fetchEvents({})),
     enabled,
     staleTime: 30_000,
   })
   const pagesQuery = useQuery({
     queryKey: ['palette', 'pages'],
-    queryFn: () => fetchPages(),
+    queryFn: () => import('../features/pages/api.js').then(({ fetchPages }) => fetchPages()),
     enabled,
     staleTime: 30_000,
   })
@@ -197,7 +201,8 @@ function usePaletteEntities(open: boolean, departmentId: string | null): Palette
   // should have found and did not -- "Yillik hisobot 2026" is a project, not a card.
   const projectsQuery = useQuery({
     queryKey: ['palette', 'projects'],
-    queryFn: () => fetchProjects(),
+    queryFn: () =>
+      import('../features/projects/api.js').then(({ fetchProjects }) => fetchProjects()),
     enabled,
     staleTime: 30_000,
   })
@@ -245,6 +250,7 @@ function dedupeByPath(items: readonly PathedItem[]): Omit<PathedItem, 'path'>[] 
 export function CommandPaletteController({
   open,
   onOpenChange,
+  onCloseAutoFocus,
   isSuperAdmin,
   onChangeLocale,
   onOpenShortcuts,
@@ -572,6 +578,7 @@ export function CommandPaletteController({
     <CommandPalette
       open={open}
       onOpenChange={onOpenChange}
+      onCloseAutoFocus={onCloseAutoFocus}
       title={t('shell.search.aria')}
       placeholder={t('cmd.placeholder')}
       emptyMessage={t('cmd.empty.message')}

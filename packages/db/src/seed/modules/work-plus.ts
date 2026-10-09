@@ -543,20 +543,28 @@ export async function seed(ctx: SeedModuleContext): Promise<number> {
   )
 
   // --- templates
-  const templateValues = sql.join(
-    TEMPLATES.map(
-      (t) =>
-        sql`(${t.id}::uuid, ${DEPARTMENT_ID}::uuid, ${t.kind}::app.work_template_kind, ${t.scope}::app.work_template_scope, ${t.ownerUserId}::uuid, ${t.name}, ${t.description}, ${JSON.stringify(t.payload)}::jsonb)`,
-    ),
-    sql`, `,
-  )
-  written += await insertCount(
-    ctx,
-    sql`insert into app.work_templates (id, department_id, kind, scope, owner_user_id, name, description, payload)
-        values ${templateValues}
-        on conflict do nothing
-        returning id`,
-  )
+  // Personal templates use their creator's scope, just like personal reminders and focus pins.
+  // One bulk statement per owner preserves both the privacy policy and seed idempotence.
+  for (const [userId, rows] of groupByUser(
+    TEMPLATES.map((t) => ({ ...t, userId: t.ownerUserId })),
+  )) {
+    const templateValues = sql.join(
+      rows.map(
+        (t) =>
+          sql`(${t.id}::uuid, ${DEPARTMENT_ID}::uuid, ${t.kind}::app.work_template_kind, ${t.scope}::app.work_template_scope, ${t.ownerUserId}::uuid, ${t.name}, ${t.description}, ${JSON.stringify(t.payload)}::jsonb)`,
+      ),
+      sql`, `,
+    )
+    written += await asUser(tx, userId, () =>
+      insertCount(
+        ctx,
+        sql`insert into app.work_templates (id, department_id, kind, scope, owner_user_id, name, description, payload)
+          values ${templateValues}
+          on conflict do nothing
+          returning id`,
+      ),
+    )
+  }
 
   // --- goals
   const goalValues = sql.join(
@@ -733,10 +741,16 @@ export async function reset(ctx: SeedModuleContext): Promise<number> {
     'app.goals',
     GOALS.map((g) => g.id),
   )
-  deleted += await byIds(
-    'app.work_templates',
-    TEMPLATES.map((t) => t.id),
-  )
+  for (const [userId, rows] of groupByUser(
+    TEMPLATES.map((t) => ({ ...t, userId: t.ownerUserId })),
+  )) {
+    deleted += await asUser(tx, userId, () =>
+      byIds(
+        'app.work_templates',
+        rows.map((t) => t.id),
+      ),
+    )
+  }
   deleted += await byIds(
     'app.card_dependencies',
     DEPENDENCIES.map((d) => d.id),

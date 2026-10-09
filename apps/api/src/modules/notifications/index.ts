@@ -5,8 +5,10 @@
 import type { FastifyRequest } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
+import { problem, problemSchema } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { requestIp, requestUserAgent } from '../../plugins/session.js'
+import { denyForSubject } from '../../plugins/authorize.js'
 import type { AuditCtx } from '../../types.js'
 import {
   archiveNotifications,
@@ -20,6 +22,7 @@ import {
   putDepartmentSettings,
   putPersonalQuietHours,
   putPrefs,
+  restoreNotifications,
   snoozeNotification,
 } from './repo.js'
 import { registerNotificationEventSubscriptions } from './events.js'
@@ -169,6 +172,28 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
   )
 
   app.post(
+    '/notifications/restore',
+    {
+      config: {
+        permission: {
+          action: 'update',
+          subject: (r) => ({ kind: 'personal', ownerUserId: r.actor?.userId ?? '' }),
+        },
+      },
+      schema: { body: markManySchema, response: { 200: z.object({ updated: z.number().int() }) } },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const updated = await restoreNotifications(
+        auditCtxFromReq(req),
+        req.actor!.userId,
+        req.body.ids,
+      )
+      return reply.send({ updated })
+    },
+  )
+
+  app.post(
     '/notifications/:id/snooze',
     {
       config: {
@@ -245,6 +270,14 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const personal = await getPersonalQuietHours(req.actor!.userId)
+      if (
+        req.query.departmentId &&
+        !(await denyForSubject(req, reply, 'read', {
+          kind: 'department_child',
+          departmentId: req.query.departmentId,
+        }))
+      )
+        return
       const departmentDefault = req.query.departmentId
         ? await getDepartmentSettings(req.query.departmentId).then((s) => ({
             startMinute: s.quietStartMinute,
@@ -276,12 +309,20 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
         body: putQuietHoursSchema,
         response: {
           200: quietHoursSchema,
-          422: z.object({ code: z.literal('quiet_hours_too_loud') }),
+          422: problemSchema,
         },
       },
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
+      if (
+        req.query.departmentId &&
+        !(await denyForSubject(req, reply, 'read', {
+          kind: 'department_child',
+          departmentId: req.query.departmentId,
+        }))
+      )
+        return
       const departmentDefault = req.query.departmentId
         ? await getDepartmentSettings(req.query.departmentId).then((s) => ({
             startMinute: s.quietStartMinute,
@@ -304,7 +345,15 @@ const notificationsRoutes: FastifyPluginAsyncZod = async (app) => {
           includeWeekends: req.body.includeWeekends ?? departmentDefault.includeWeekends,
         }
         if (!isQuieterOrEqual(candidate, departmentDefault)) {
-          reply.code(422).send({ code: 'quiet_hours_too_loud' })
+          reply
+            .code(422)
+            .type('application/problem+json')
+            .send(
+              problem('validation_failed', {
+                instance: `urn:devon:request:${req.id}`,
+                errors: [{ path: 'quietHours', code: 'quiet_hours_too_loud' }],
+              }),
+            )
           return
         }
       }

@@ -1,5 +1,6 @@
 {
   "automations": {
+    "runsLoadMore": "Oldingi ishga tushishlarni ko‘rsatish",
     "eyebrow": "AVTOMATLASHTIRISH",
     "title": "Qoidalar",
     "description": "«Shunday boʻlsa — shunday qilinsin». Takrorlanuvchi qoʻl mehnatini qoidaga aylantiring.",
@@ -54,6 +55,11 @@
       "createFollowup": "davomi uchun karta qoʻshish"
     },
     "builder": {
+      "chooseValue": "Qiymatni tanlang",
+      "noDeadlineHint": "Muddatsiz qoldirish uchun boʻsh qoldiring. Nol — bugun.",
+      "requiredInput": "Bu amal uchun qiymatni tanlang yoki kiriting.",
+      "triggerLocked": "Boshqa hodisani tanlash uchun qoidaning nusxasini yarating.",
+      "anyField": "Istalgan maydon",
       "nameLabel": "Qoida nomi",
       "namePlaceholder": "Masalan: muddati oʻtganini boshliqqa bildirish",
       "whenLegend": "Qachon",
@@ -71,7 +77,7 @@
         "estimate": "Baho"
       },
       "filterLabel": "Qaysi kartalarga",
-      "filterHint": "Boʻsh qoldirilsa — barcha kartalarga.",
+      "filterHint": "Boʻsh qoldirilsa — barcha kartalarga. Qoidada @me — qoidani yaratgan odam.",
       "filterPlaceholder": "label:murojaat",
       "actionLabel": "Amal",
       "addAction": "Yana amal qoʻshish",
@@ -96,10 +102,12 @@
         "failed": "Xato"
       },
       "reason": {
+        "targetUnavailable": "Bu qoidadagi xodim yoki yorliq mavjud emas. Qoidani tahrirlab, boshqasini tanlang.",
         "chainDepth": "Zanjir juda uzun — toʻxtatildi",
         "loopGuard": "Halqa aniqlandi — qoida ikkinchi marta ishlamadi",
         "noValidActions": "Bajariladigan amal qolmadi",
         "statusDidNotMatch": "Holat mos kelmadi",
+        "fieldDidNotMatch": "Boshqa maydon oʻzgardi",
         "filterDidNotMatch": "Karta filtrga tushmadi",
         "alreadyAppliedToday": "Bugun allaqachon bajarilgan",
         "other": "Oʻtkazib yuborildi"
@@ -111,6 +119,7 @@
     "saved": "Qoida saqlandi",
     "saveFailed": "Qoidani saqlab boʻlmadi",
     "runsFilter": {
+      "removedRule": "O‘chirilgan qoida",
       "rule": "Qoida",
       "status": "Natija",
       "allRules": "Hamma qoidalar",

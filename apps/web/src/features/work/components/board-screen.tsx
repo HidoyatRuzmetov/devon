@@ -326,28 +326,34 @@ function BoardScreenInner() {
   // SPEC §3.3: grouped by boʻlim, "Boʻlimsiz" last. A department with no units at all collapses to
   // one unnamed group, which renders exactly like the flat board did -- no empty heading.
   type Group = {
+    scope: 'department' | 'unit' | 'unassigned'
     unitId: string | null
     unitName: string | null
     columns: typeof orderedColumns
   }
   const groups: Group[] = []
   for (const col of orderedColumns) {
-    const unitId = col.member.unitId ?? null
-    const existing = groups.find((g) => g.unitId === unitId)
+    const scope =
+      col.member.role === 'head' ? 'department' : col.member.unitId ? 'unit' : 'unassigned'
+    const unitId = scope === 'unit' ? (col.member.unitId ?? null) : null
+    const existing = groups.find((g) => g.scope === scope && g.unitId === unitId)
     if (existing) existing.columns.push(col)
     else
       groups.push({
+        scope,
         unitId,
         unitName: col.member.unitName ?? null,
         columns: [col],
       })
   }
   groups.sort((a, b) => {
+    if (a.scope === 'department') return -1
+    if (b.scope === 'department') return 1
     if (a.unitId === null) return 1
     if (b.unitId === null) return -1
     return (a.unitName ?? '').localeCompare(b.unitName ?? '')
   })
-  const hasNamedGroups = groups.some((g) => g.unitId !== null)
+  const hasNamedGroups = groups.some((g) => g.scope !== 'unassigned')
 
   function setAllCollapsed(collapsed: boolean): void {
     for (const key of columnKeys) {
@@ -479,7 +485,7 @@ function BoardScreenInner() {
         >
           {groups.map((group) => (
             <div
-              key={group.unitId ?? 'no-unit'}
+              key={group.unitId ?? group.scope}
               className="flex h-full min-w-0 shrink-0 flex-col gap-1.5"
             >
               {/* One heading per unit, printed once above its columns instead of a colour the
@@ -494,7 +500,9 @@ function BoardScreenInner() {
                     aria-hidden="true"
                   />
                   <h3 className="truncate text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                    {group.unitName ?? t('work.board.noUnit')}
+                    {group.scope === 'department'
+                      ? t('headScope.leadership')
+                      : (group.unitName ?? t('work.board.noUnit'))}
                   </h3>
                 </div>
               ) : null}

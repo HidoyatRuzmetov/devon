@@ -3,6 +3,19 @@
 // `event-detail-dialog.tsx`) share one conversion instead of drifting apart.
 import type { EventFormValues } from '../components/event-form-dialog.js'
 import type { CreateEventInput, UpdateEventInput } from '../api.js'
+import type { EventDto } from '../schemas.js'
+
+export function toLocalInputValue(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function editedDate(input: string, saved: string | null | undefined): string {
+  // Minute-granularity controls must not silently round an unchanged existing timestamp.
+  return saved && input === toLocalInputValue(saved) ? saved : new Date(input).toISOString()
+}
 
 function reminderOffsets(values: EventFormValues): number[] {
   const offsets: number[] = []
@@ -31,18 +44,21 @@ export function eventFormValuesToCreateInput(values: EventFormValues): CreateEve
 /** Every optional field is sent, `null` where the form is blank -- an edit is a full re-submission of
  * the form, so a field the organiser cleared must clear it on the server too, not silently keep the
  * previous value the way omitting it would (see `UpdateEventInput`'s tri-state contract in `api.ts`). */
-export function eventFormValuesToUpdateInput(values: EventFormValues): UpdateEventInput {
+export function eventFormValuesToUpdateInput(
+  values: EventFormValues,
+  saved?: Pick<EventDto, 'startsAt' | 'endsAt' | 'rsvpDeadline'>,
+): UpdateEventInput {
   return {
     title: values.title.trim(),
     description: values.description.trim() || null,
     category: values.category,
-    startsAt: new Date(values.startsAt).toISOString(),
-    endsAt: new Date(values.endsAt).toISOString(),
+    startsAt: editedDate(values.startsAt, saved?.startsAt),
+    endsAt: editedDate(values.endsAt, saved?.endsAt),
     place: values.place.trim() || null,
     placeUrl: values.placeUrl.trim() || null,
     capacity: values.capacity.trim() ? Number(values.capacity) : null,
     waitlistEnabled: values.waitlistEnabled,
-    rsvpDeadline: values.rsvpDeadline ? new Date(values.rsvpDeadline).toISOString() : null,
+    rsvpDeadline: values.rsvpDeadline ? editedDate(values.rsvpDeadline, saved?.rsvpDeadline) : null,
     costNote: values.costNote.trim() || null,
     reminderOffsetsMinutes: reminderOffsets(values),
   }

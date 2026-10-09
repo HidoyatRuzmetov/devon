@@ -1,5 +1,10 @@
 {
   "home": {
+    "empty": {
+      "admin": {
+        "body": "Boshqaruv sahifasida boshqarmalarni boshqaring va tizim holatini tekshiring."
+      }
+    },
     "dashboard": {
       "dueFromMe": {
         "title": "Mendan kutilmoqda",

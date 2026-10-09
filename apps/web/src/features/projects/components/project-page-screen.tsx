@@ -125,6 +125,7 @@ export default function ProjectPageScreen() {
   const undoDelete = useDeleteProjectMutation(true)
 
   const [newMilestone, setNewMilestone] = React.useState('')
+  const milestoneAddRef = React.useRef<HTMLInputElement>(null)
   const [newObjective, setNewObjective] = React.useState('')
 
   const aiSettings = useAiSettingsQuery()
@@ -360,7 +361,7 @@ export default function ProjectPageScreen() {
               <EditProjectDialog project={project} />
             </div>
           ) : null}
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <ProgressRing
               value={percent}
               size={56}
@@ -371,13 +372,15 @@ export default function ProjectPageScreen() {
               {percent}
             </ProgressRing>
             <div className="flex min-w-0 flex-col gap-1">
+              <h1 className="break-words font-display text-h3 text-foreground sm:text-h2">
+                {project.title}
+              </h1>
               <div className="flex items-center gap-2">
                 <span
                   className="size-3 shrink-0 rounded-full"
                   style={{ backgroundColor: project.colour }}
                   aria-hidden="true"
                 />
-                <h1 className="font-display text-h2 text-foreground">{project.title}</h1>
                 <Badge tone="neutral">{t(`projects.status.${project.status}`)}</Badge>
               </div>
               {project.description ? (
@@ -453,16 +456,17 @@ export default function ProjectPageScreen() {
               .sort((a, b) => (a.dueOn ?? '').localeCompare(b.dueOn ?? ''))
               .map((m) => (
                 <StaggerItem key={m.id} as="li">
-                  <div className="relative flex items-center gap-2">
+                  <div className="relative flex items-start gap-2">
                     <span
                       className={
                         m.doneAt
-                          ? 'absolute -left-[19px] size-2.5 rounded-full bg-success'
-                          : 'absolute -left-[19px] size-2.5 rounded-full bg-border'
+                          ? 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-success max-md:top-4'
+                          : 'absolute -left-[19px] top-1.5 size-2.5 rounded-full bg-border max-md:top-4'
                       }
                       aria-hidden="true"
                     />
                     <Checkbox
+                      id={`project-milestone-${m.id}`}
                       disabled={!canEdit || patchMilestone.isPending}
                       checked={m.doneAt !== null}
                       onCheckedChange={(v) => {
@@ -491,16 +495,33 @@ export default function ProjectPageScreen() {
                       size="sm"
                       aria-label={m.title}
                     />
-                    <CalendarClock className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                    <Strikethrough done={m.doneAt !== null} className="text-small text-foreground">
-                      {m.title}
-                    </Strikethrough>
-                    {m.dueOn ? (
-                      <span className="text-caption text-muted-foreground">
-                        {formatDate(new Date(m.dueOn), locale)}
-                      </span>
+                    <div className="min-w-0 flex-1 py-0.5 max-md:py-3">
+                      <label
+                        htmlFor={`project-milestone-${m.id}`}
+                        className={cn(
+                          'block break-words text-small text-foreground',
+                          canEdit && 'cursor-pointer',
+                        )}
+                      >
+                        <Strikethrough done={m.doneAt !== null}>{m.title}</Strikethrough>
+                      </label>
+                      {m.dueOn ? (
+                        <time
+                          dateTime={m.dueOn}
+                          className="mt-1 flex items-center gap-1 text-caption text-muted-foreground"
+                        >
+                          <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
+                          {formatDate(new Date(m.dueOn), locale)}
+                        </time>
+                      ) : null}
+                    </div>
+                    {canEdit ? (
+                      <MilestoneActions
+                        projectId={project.id}
+                        milestone={m}
+                        onDeleted={() => milestoneAddRef.current?.focus()}
+                      />
                     ) : null}
-                    {canEdit ? <MilestoneActions projectId={project.id} milestone={m} /> : null}
                   </div>
                 </StaggerItem>
               ))}
@@ -508,6 +529,8 @@ export default function ProjectPageScreen() {
           {canEdit ? (
             <div className="flex gap-2 pl-3">
               <Input
+                ref={milestoneAddRef}
+                className="min-w-0"
                 value={newMilestone}
                 onChange={(e) => setNewMilestone(e.target.value)}
                 placeholder={t('projects.milestone.addPlaceholder')}
@@ -691,7 +714,7 @@ export default function ProjectPageScreen() {
           </TabsContent>
         </Tabs>
 
-        <footer className="flex gap-2 border-t border-border pt-4">
+        <footer className="flex flex-col items-start gap-3 border-t border-border pt-4 sm:flex-row">
           {canDelete ? (
             <div className="flex flex-col gap-1">
               <Button

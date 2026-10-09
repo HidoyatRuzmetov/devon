@@ -1,5 +1,13 @@
 {
   "analytics": {
+    "context": {
+      "title": "Choose what to analyse",
+      "adminBody": "Open system analytics for all departments. To see one department, open its view from Departments.",
+      "memberBody": "Join or create a department to see its work analytics.",
+      "globalAction": "Open system analytics",
+      "homeAction": "Open home"
+    },
+    "table": { "person": "Person" },
     "title": "Analytics",
     "eyebrow": "Reports",
     "kpi": {
@@ -44,6 +52,9 @@
       "hideAdvanced": "Hide advanced"
     },
     "savedFilters": {
+      "saveFailed": "Could not save the filter. Try again.",
+      "deleteFailed": "Could not delete the filter. Try again.",
+      "deleteNamed": "Delete the saved filter “{name}”",
       "title": "Saved filters",
       "new": "Save filter",
       "namePlaceholder": "Filter name",
@@ -53,6 +64,7 @@
       "empty": "No saved filters yet"
     },
     "actions": {
+      "exportFailed": "Could not create the image. Try again or download the CSV.",
       "export": "Export",
       "exportCsv": "Download as CSV",
       "exportPng": "Download as image",

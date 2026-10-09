@@ -31,6 +31,8 @@ export type FieldValueInputProps = {
   /** Marks the control invalid and wires `aria-describedby` to the message below it. */
   errorCode?: string | null
   id: string
+  /** A card property's visible term names its inline editor; profile fields use native labels. */
+  labelledBy?: string
 }
 
 export function FieldValueInput({
@@ -40,6 +42,7 @@ export function FieldValueInput({
   disabled = false,
   errorCode = null,
   id,
+  labelledBy,
 }: FieldValueInputProps): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
@@ -48,6 +51,7 @@ export function FieldValueInput({
 
   const common = {
     id,
+    'aria-labelledby': labelledBy,
     'aria-invalid': invalid || undefined,
     'aria-describedby': describedBy,
     disabled,
@@ -56,16 +60,16 @@ export function FieldValueInput({
   switch (def.type) {
     case 'checkbox':
       return (
-        <label className="flex min-h-11 items-center gap-3">
+        <div className="flex min-h-11 items-center">
           <Checkbox
             id={id}
             checked={value === true}
             disabled={disabled}
+            aria-label={fieldLabel(def, locale)}
             aria-describedby={describedBy}
             onCheckedChange={(next) => onChange(next === true)}
           />
-          <span className="text-body text-foreground">{fieldLabel(def, locale)}</span>
-        </label>
+        </div>
       )
 
     case 'number':
@@ -89,8 +93,19 @@ export function FieldValueInput({
           invalid={invalid}
           disabledTrigger={disabled}
           triggerClassName="w-full"
-          selected={typeof value === 'string' && value ? new Date(value) : undefined}
-          onSelect={(date) => onChange(date ? date.toISOString().slice(0, 10) : null)}
+          selected={
+            typeof value === 'string' && value
+              ? // A calendar day has no UTC offset. Both the picker and the wire day use local dates.
+                new Date(`${value}T00:00:00`)
+              : undefined
+          }
+          onSelect={(date) =>
+            onChange(
+              date
+                ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+                : null,
+            )
+          }
         />
       )
 

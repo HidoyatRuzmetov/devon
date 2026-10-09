@@ -11,17 +11,18 @@ import {
   cn,
   Field,
   Input,
+  IconButton,
   Select,
   Skeleton,
   StateView,
   toast,
-  toastWithUndo,
   useCelebrate,
   useReducedMotion,
 } from '@devon/ui'
 import { Plus, X } from 'lucide-react'
 import { useCreatePollMutation, usePollsQuery, useVoteOnPollMutation } from '../hooks.js'
 import type { PollDto } from '../schemas.js'
+import { useEventUndo } from './event-undo.js'
 
 function PollResultBar({
   option,
@@ -54,6 +55,7 @@ function PollResultBar({
 function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
   const t = useT()
   const voteMutation = useVoteOnPollMutation(eventId)
+  const undo = useEventUndo()
   const [selected, setSelected] = React.useState<string[]>(
     poll.options.filter((o) => o.votedByMe).map((o) => o.id),
   )
@@ -87,31 +89,30 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
   const handleVote = async () => {
     if (selected.length === 0) return
     const hadPreviousVote = previousSelected.length > 0
+    const isCurrent = undo.captureScope()
+    undo.clear()
     try {
       await voteMutation.mutateAsync({ pollId: poll.id, optionIds: selected })
+      if (!isCurrent()) return
       setEditing(false)
       if (hadPreviousVote) {
-        toastWithUndo({
+        undo.show({
           message: t('events.polls.voteChangedToast'),
-          undoLabel: t('events.actions.undo'),
-          onUndo: () => {
-            voteMutation.mutate(
-              { pollId: poll.id, optionIds: previousSelected },
-              { onSuccess: () => toast(t('events.polls.voteRevertedToast')) },
-            )
-          },
+          successMessage: t('events.polls.voteRevertedToast'),
+          isCurrent,
+          action: () => voteMutation.mutateAsync({ pollId: poll.id, optionIds: previousSelected }),
         })
       } else {
         voteCelebrate.fire()
         toast(t('events.polls.votedToast'))
       }
     } catch {
-      toast(t('events.error.title'))
+      if (isCurrent()) toast(t('events.error.title'))
     }
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-border p-4">
+    <li className="flex min-w-0 flex-col gap-3 rounded-md border border-border p-4 wrap-anywhere">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-body font-medium text-foreground">{poll.question}</p>
@@ -172,13 +173,23 @@ function PollCard({ eventId, poll }: { eventId: string; poll: PollDto }) {
               {t('events.polls.totalVotes', { count: poll.totalVotes })}
             </p>
             {!closed && hasVoted ? (
-              <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setSelected(
+                    poll.options.filter((option) => option.votedByMe).map((option) => option.id),
+                  )
+                  setEditing(true)
+                }}
+              >
                 {t('events.polls.changeVote')}
               </Button>
             ) : null}
           </div>
         </div>
       )}
+      {undo.feedback}
     </li>
   )
 }
@@ -191,15 +202,41 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
   const [question, setQuestion] = React.useState('')
   const [anonymous, setAnonymous] = React.useState(false)
   const [closesAt, setClosesAt] = React.useState('')
-  const [options, setOptions] = React.useState<string[]>(['', ''])
+  // Single/multiple choices share text; date choices keep their own draft. Switching input types
+  // must not leave invisible incompatible values in the array used to construct the payload.
+  const [optionDrafts, setOptionDrafts] = React.useState({ text: ['', ''], date: ['', ''] })
+  const optionKind = kind === 'date' ? 'date' : 'text'
+  const options = optionDrafts[optionKind]
+  const setOptions = (next: React.SetStateAction<string[]>) => {
+    setOptionDrafts((previous) => ({
+      ...previous,
+      [optionKind]: typeof next === 'function' ? next(previous[optionKind]) : next,
+    }))
+  }
+  const cleanOptions = options.map((option) => option.trim()).filter(Boolean)
+  const canSubmit =
+    Boolean(question.trim()) &&
+    cleanOptions.length >= 2 &&
+    cleanOptions.length <= 10 &&
+    (kind !== 'date' || cleanOptions.every((value) => Number.isFinite(Date.parse(value))))
+  const active = React.useRef(false)
+  const draftRevision = React.useRef(0)
+  React.useEffect(() => {
+    active.current = true
+    return () => {
+      active.current = false
+    }
+  }, [])
 
-  const setOption = (index: number, value: string) =>
+  const setOption = (index: number, value: string) => {
+    draftRevision.current += 1
     setOptions((prev) => prev.map((o, i) => (i === index ? value : o)))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanOptions = options.map((o) => o.trim()).filter(Boolean)
-    if (!question.trim() || cleanOptions.length < 2) return
+    if (!canSubmit) return
+    const submittedRevision = draftRevision.current
     try {
       await createMutation.mutateAsync({
         kind,
@@ -215,9 +252,9 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
           }
         }),
       })
-      onDone()
+      if (active.current && submittedRevision === draftRevision.current) onDone()
     } catch {
-      toast(t('events.error.title'))
+      if (active.current) toast(t('events.error.title'))
     }
   }
 
@@ -230,7 +267,10 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
         <Select
           id="poll-kind"
           value={kind}
-          onChange={(e) => setKind(e.target.value as typeof kind)}
+          onChange={(e) => {
+            draftRevision.current += 1
+            setKind(e.target.value as typeof kind)
+          }}
           options={[
             { value: 'single', label: t('events.polls.kind.single') },
             { value: 'multi', label: t('events.polls.kind.multi') },
@@ -242,7 +282,10 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
         <Input
           id="poll-question"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => {
+            draftRevision.current += 1
+            setQuestion(e.target.value)
+          }}
           placeholder={t('events.polls.questionPlaceholder')}
           maxLength={200}
         />
@@ -253,20 +296,24 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
             <div key={index} className="flex items-center gap-2">
               <Input
                 id={`poll-option-${index}`}
+                aria-label={t('eventsControls.option', { number: index + 1 })}
                 type={kind === 'date' ? 'datetime-local' : 'text'}
                 value={option}
                 onChange={(e) => setOption(index, e.target.value)}
                 placeholder={kind === 'date' ? undefined : t('events.polls.optionPlaceholder')}
+                maxLength={kind === 'date' ? undefined : 200}
               />
               {options.length > 2 ? (
-                <button
+                <IconButton
                   type="button"
-                  aria-label={t('events.polls.removeOption')}
-                  onClick={() => setOptions((prev) => prev.filter((_, i) => i !== index))}
-                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={t('eventsControls.removeOption', { number: index + 1 })}
+                  onClick={() => {
+                    draftRevision.current += 1
+                    setOptions((prev) => prev.filter((_, i) => i !== index))
+                  }}
                 >
                   <X className="size-4" aria-hidden="true" />
-                </button>
+                </IconButton>
               ) : null}
             </div>
           ))}
@@ -274,12 +321,21 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
             type="button"
             variant="secondary"
             size="sm"
-            onClick={() => setOptions((prev) => [...prev, ''])}
+            disabled={options.length >= 10}
+            onClick={() => {
+              draftRevision.current += 1
+              setOptions((prev) => (prev.length < 10 ? [...prev, ''] : prev))
+            }}
             className="w-fit"
           >
             <Plus className="size-3.5" aria-hidden="true" />
             {t('events.polls.addOption')}
           </Button>
+          {options.length >= 10 ? (
+            <p role="status" className="text-caption text-muted-foreground">
+              {t('eventsControls.optionLimit', { count: 10 })}
+            </p>
+          ) : null}
         </div>
       </Field>
       <Field label={t('events.polls.closesAtLabel')} htmlFor="poll-closes-at">
@@ -287,13 +343,19 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
           id="poll-closes-at"
           type="datetime-local"
           value={closesAt}
-          onChange={(e) => setClosesAt(e.target.value)}
+          onChange={(e) => {
+            draftRevision.current += 1
+            setClosesAt(e.target.value)
+          }}
         />
       </Field>
       <div className="flex items-center gap-2">
         <Checkbox
           checked={anonymous}
-          onCheckedChange={(v) => setAnonymous(v === true)}
+          onCheckedChange={(v) => {
+            draftRevision.current += 1
+            setAnonymous(v === true)
+          }}
           id="poll-anonymous"
         />
         <label htmlFor="poll-anonymous" className="text-small text-foreground">
@@ -301,7 +363,7 @@ function CreatePollForm({ eventId, onDone }: { eventId: string; onDone: () => vo
         </label>
       </div>
       <div className="flex justify-end">
-        <Button type="submit" loading={createMutation.isPending}>
+        <Button type="submit" loading={createMutation.isPending} disabled={!canSubmit}>
           {t('events.polls.create')}
         </Button>
       </div>
@@ -331,7 +393,14 @@ export function PollsPanel({ eventId }: { eventId: string }) {
   function renderPollsBody() {
     if (pollsQuery.isPending) return <Skeleton className="h-32 w-full" />
     if (pollsQuery.isError) {
-      return <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      return (
+        <StateView
+          kind="error"
+          titleKey="events.error.title"
+          bodyKey="events.error.body"
+          action={{ labelKey: 'events.actions.retry', onAction: () => void pollsQuery.refetch() }}
+        />
+      )
     }
     if (pollsQuery.data.items.length === 0) {
       return <p className="text-small text-muted-foreground">{t('events.polls.empty')}</p>

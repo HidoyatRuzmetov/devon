@@ -1,5 +1,10 @@
 {
   "home": {
+    "empty": {
+      "admin": {
+        "body": "Manage departments and check system status from the administration page."
+      }
+    },
     "dashboard": {
       "dueFromMe": {
         "title": "Due from me",

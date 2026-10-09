@@ -40,10 +40,12 @@ export type AdminDepartmentDetail = z.infer<typeof adminDepartmentDetailSchema>
 export function fetchAdminDepartments(params: {
   query?: string | undefined
   status?: string | undefined
+  cursor?: string | undefined
 }) {
   const qs = new URLSearchParams()
   if (params.query) qs.set('query', params.query)
   if (params.status) qs.set('status', params.status)
+  if (params.cursor) qs.set('cursor', params.cursor)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return apiClient.get(`/api/v1/admin/departments${suffix}`, adminDepartmentListSchema)
 }
@@ -110,11 +112,13 @@ export function fetchAdminUsers(params: {
   query?: string | undefined
   status?: string | undefined
   role?: string | undefined
+  cursor?: string | undefined
 }) {
   const qs = new URLSearchParams()
   if (params.query) qs.set('query', params.query)
   if (params.status) qs.set('status', params.status)
   if (params.role) qs.set('role', params.role)
+  if (params.cursor) qs.set('cursor', params.cursor)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return apiClient.get(`/api/v1/admin/accounts${suffix}`, adminUserListSchema)
 }
@@ -208,17 +212,32 @@ const auditEventListSchema = z.object({
 export function fetchAuditEvents(params: {
   category?: string | undefined
   cursor?: number | undefined
+  from?: string | undefined
+  to?: string | undefined
 }) {
   const qs = new URLSearchParams()
   if (params.category) qs.set('category', params.category)
   if (params.cursor) qs.set('cursor', String(params.cursor))
+  if (params.from) qs.set('from', params.from)
+  if (params.to) qs.set('to', params.to)
   const suffix = qs.toString() ? `?${qs.toString()}` : ''
   return apiClient.get(`/api/v1/admin/audit/events${suffix}`, auditEventListSchema)
 }
-export function auditExportUrl(category?: string): string {
-  return category
-    ? `/api/v1/admin/audit/export?category=${encodeURIComponent(category)}`
-    : '/api/v1/admin/audit/export'
+export function auditExportUrl(
+  category?: string,
+  range?: { from?: string | undefined; to?: string | undefined },
+): string {
+  const qs = new URLSearchParams()
+  if (category) qs.set('category', category)
+  if (range?.from) qs.set('from', range.from)
+  if (range?.to) qs.set('to', range.to)
+  return `/api/v1/admin/audit/export${qs.size ? `?${qs.toString()}` : ''}`
+}
+export function fetchAuditExport(
+  category?: string,
+  range?: { from?: string | undefined; to?: string | undefined },
+) {
+  return apiClient.getBlob(auditExportUrl(category, range))
 }
 
 const chainVerificationSchema = z.object({

@@ -1,0 +1,15 @@
+# Current source and bounded evidence reconciliation
+
+On2026-10-09 the TypeScript census discovered48 routes,412 source files and2,050 JSX/composed surfaces. The current14 authored overlays reconcile355 exact records and716 state bindings with **zero selector/cardinality/evidence issues**. They provide some bounded evidence on334 source surfaces and704 distinct named states. Other source states remain explicitly pending; these counts do not certify the entire platform, every role or every environment combination.
+
+`inventory.json`, `traceability.csv` and `evidence-reconciliation.json` retain the exact source, component, state, author, report and scope. Workflow-only descriptions remain separate rather than automatically granting coverage to nested controls. The merger removes withdrawn author bindings and refuses ambiguous source matches. The12 inventory/applicability guard regressions pass.
+
+Exactly100 Storybook-only surface records are inapplicable to ordinary colleague application routes. Each record has an applicability reason and references the source-boundary proof. The proof parses actual TypeScript imports, the feature-manifest glob, UI package exports and the separate Storybook entry; hashes identify those entry sources. Their real shared components remain separately in the census. This classification establishes no Storybook behavior or pixel pass and withdraws if an incoming story import, broader runtime glob or package export is discovered.
+
+The latest user steering prioritizes normal-use release closure and defers tiny-screen/enlarged-text release cases. Their historical failures remain failures; no new pass or fix is inferred from the changed acceptance scope. No new optional matrix is opened. Already completed environmental evidence remains bounded to its report.
+
+The latest Events overlay adds67 exact records/112 states from the actual **101/101** unretried candidate:93 functional/motion executions across Chromium, Firefox and WebKit plus eight already-running Chromium visual journeys. The archived report is `artifacts/qa/2026-10/events-nested/complete-anchored/results.json`. Its separate pixel ledger identifies21 actually opened current images/56 native viewport regions with explicit crop limits. The original failed reports remain preserved. There is no remaining required Events blocker in the executed normal-use scope.
+
+Run `node tools/qa/inventory.mjs`, then `node tools/qa/merge-inventory-evidence.mjs` after source/author overlays stabilize. Run `node --test tools/qa/test/merge-inventory-evidence.test.mjs tools/qa/test/source-applicability.test.mjs` for the conservative matching/applicability guards. A successful generation is source reconciliation, not another browser or pixel inspection.
+
+All work in this reconciliation is local. External Telegram/application AI calls and walkthroughs remain excluded; no production, commit, push, deployment or video action is performed by this agent. The root owns required release gates and release operations. Video work awaits explicit user approval after the release handoff.

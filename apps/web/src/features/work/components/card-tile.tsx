@@ -383,6 +383,15 @@ export function CardTile({
   const PriorityIcon = priorityIconName ? PRIORITY_ICON[priorityIconName] : null
   const project = card.projectId ? projects.find((p) => p.id === card.projectId) : undefined
   const locale = useLocale()
+  const hasMetadata = Boolean(
+    card.assigneeUnavailable ||
+    showPriority ||
+    card.dueAt ||
+    (card.blockedByOpenCount ?? 0) > 0 ||
+    card.recurrence ||
+    card.estimateMin ||
+    card.focusPinned,
+  )
 
   const cardBody = (
     <div
@@ -403,31 +412,6 @@ export function CardTile({
         selected ? 'border-primary ring-1 ring-primary' : 'border-border',
       )}
     >
-      {onSelectedChange ? (
-        <span
-          className={cn(
-            'absolute right-2 top-2 z-10 transition-opacity duration-(--dur-micro)',
-            selected || selectionActive
-              ? 'opacity-100'
-              : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
-          )}
-        >
-          <Checkbox
-            checked={selected}
-            size="sm"
-            aria-label={t('work.bulk.selectCard', { title: card.title })}
-            // The handlers live on the checkbox itself (a real button) rather than on a wrapping
-            // span, so the tile behind it never also opens, and no non-interactive element carries
-            // a click handler.
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onPointerDown={(e) => {
-              shiftRef.current = e.shiftKey
-            }}
-            onCheckedChange={(v) => onSelectedChange(v === true, shiftRef.current)}
-          />
-        </span>
-      ) : null}
       {activeLabels.length > 0 ? (
         <div className="flex flex-wrap gap-1">
           {activeLabels.map((l) => (
@@ -442,10 +426,33 @@ export function CardTile({
       ) : null}
 
       <div className="flex items-start justify-between gap-2">
+        {onSelectedChange ? (
+          <span
+            className={cn(
+              'relative z-10 shrink-0 transition-opacity duration-(--dur-micro)',
+              selected || selectionActive
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100',
+            )}
+          >
+            <Checkbox
+              checked={selected}
+              size="sm"
+              aria-label={t('work.bulk.selectCard', { title: card.title })}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              onPointerDown={(event) => {
+                event.stopPropagation()
+                shiftRef.current = event.shiftKey
+              }}
+              onCheckedChange={(value) => onSelectedChange(value === true, shiftRef.current)}
+            />
+          </span>
+        ) : null}
         <button
           type="button"
           onClick={() => onOpen(card.id)}
-          className="text-left text-small font-medium leading-snug text-foreground after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+          className="min-w-0 flex-1 break-words text-left text-small font-medium leading-snug text-foreground after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
         >
           {card.title}
         </button>
@@ -465,71 +472,77 @@ export function CardTile({
       <LiveSignalStrip cardId={card.id} />
 
       {project ? (
-        <Chip tone="outline">
-          <span
-            className="size-2 shrink-0 rounded-full"
-            style={{ backgroundColor: project.colour }}
-            aria-hidden="true"
-          />
+        <Chip
+          tone="outline"
+          leading={
+            <span className="size-2 rounded-full" style={{ backgroundColor: project.colour }} />
+          }
+        >
           {project.title}
         </Chip>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        {card.assigneeUnavailable ? (
-          <Chip tone="attention" leading={<MoveRight className="size-3" />}>
-            {t('work.card.assigneeUnavailable')}
-          </Chip>
-        ) : null}
-        {showPriority ? (
-          <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
-            {PriorityIcon ? <PriorityIcon className="size-3" aria-hidden="true" /> : null}
-            {t(priorityKey)}
-          </Badge>
-        ) : null}
-        {card.dueAt ? (
-          <Chip
-            tone={DUE_CHIP_TONE[card.risk]}
-            title={card.risk !== 'none' ? t(RISK_LABEL_KEY[card.risk]) : undefined}
-          >
-            <CalendarClock className="size-3" aria-hidden="true" />
-            {formatDate(new Date(card.dueAt), locale)}
-          </Chip>
-        ) : null}
-        {/* v1.1 SPEC §7. Each chip is a *fact the tile could not otherwise show*: this card is
+      {hasMetadata ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {card.assigneeUnavailable ? (
+            <Chip tone="attention" leading={<MoveRight className="size-3" />}>
+              {t('work.card.assigneeUnavailable')}
+            </Chip>
+          ) : null}
+          {showPriority ? (
+            <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
+              {PriorityIcon ? <PriorityIcon className="size-3" aria-hidden="true" /> : null}
+              {t(priorityKey)}
+            </Badge>
+          ) : null}
+          {card.dueAt ? (
+            <Chip
+              tone={DUE_CHIP_TONE[card.risk]}
+              leading={<CalendarClock className="size-3" />}
+              title={card.risk !== 'none' ? t(RISK_LABEL_KEY[card.risk]) : undefined}
+            >
+              {formatDate(new Date(card.dueAt), locale)}
+            </Chip>
+          ) : null}
+          {/* v1.1 SPEC §7. Each chip is a *fact the tile could not otherwise show*: this card is
             waiting on other work (A10), it comes back on a schedule (A7), somebody sized it (A3),
             it is one of my five (A9). All four are server-computed, so none of them is a guess. */}
-        {(card.blockedByOpenCount ?? 0) > 0 ? (
-          <Chip
-            tone="destructive"
-            leading={<Lock className="size-3" />}
-            title={t('work.chip.blockedBy', {
-              count: card.blockedByOpenCount ?? 0,
-            })}
-          >
-            {t('work.chip.blocked')}
-          </Chip>
-        ) : null}
-        {card.recurrence ? (
-          <Chip tone="info" leading={<Repeat className="size-3" />} title={t('work.chip.repeats')}>
-            {t('work.chip.repeats')}
-          </Chip>
-        ) : null}
-        {card.estimateMin ? (
-          <Chip
-            tone="outline"
-            leading={<Timer className="size-3" />}
-            title={t('work.estimate.label')}
-          >
-            {formatDurationShort(card.estimateMin, t)}
-          </Chip>
-        ) : null}
-        {card.focusPinned ? (
-          <Chip tone="primary" leading={<Pin className="size-3" />} title={t('work.focus.title')}>
-            {t('work.focus.chip')}
-          </Chip>
-        ) : null}
-      </div>
+          {(card.blockedByOpenCount ?? 0) > 0 ? (
+            <Chip
+              tone="destructive"
+              leading={<Lock className="size-3" />}
+              title={t('work.chip.blockedBy', {
+                count: card.blockedByOpenCount ?? 0,
+              })}
+            >
+              {t('work.chip.blocked')}
+            </Chip>
+          ) : null}
+          {card.recurrence ? (
+            <Chip
+              tone="info"
+              leading={<Repeat className="size-3" />}
+              title={t('work.chip.repeats')}
+            >
+              {t('work.chip.repeats')}
+            </Chip>
+          ) : null}
+          {card.estimateMin ? (
+            <Chip
+              tone="outline"
+              leading={<Timer className="size-3" />}
+              title={t('work.estimate.label')}
+            >
+              {formatDurationShort(card.estimateMin, t)}
+            </Chip>
+          ) : null}
+          {card.focusPinned ? (
+            <Chip tone="primary" leading={<Pin className="size-3" />} title={t('work.focus.title')}>
+              {t('work.focus.chip')}
+            </Chip>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between text-caption text-muted-foreground">
         <div className="flex items-center gap-2.5">
@@ -573,7 +586,7 @@ export function CardTile({
             <span className="flex shrink-0 items-center">
               {showGiver ? (
                 <span
-                  className="relative z-0 -mr-1.5 opacity-80"
+                  className="relative z-0 -mr-1.5"
                   title={t('work.card.byGiver', { name: fullName(giver) })}
                 >
                   <Avatar
@@ -621,7 +634,9 @@ export function CardTile({
       layout="position"
       layoutId={`work-card-${card.id}`}
       transition={reducedMotion ? { duration: 0 } : springSettle}
-      className="relative"
+      // Keep controls below the sticky column header both before and during press transforms.
+      // Without a permanent context their z-index escapes at rest, then changes on pointerdown.
+      className="relative isolate [scroll-margin-top:var(--work-column-scroll-margin,0px)] [&_:focus]:[scroll-margin-top:var(--work-column-scroll-margin,0px)]"
     >
       {closestEdge === 'top' ? (
         <div
@@ -661,8 +676,13 @@ function MoveToMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <IconButton aria-label={t('work.card.moveTo')} onClick={(e) => e.stopPropagation()}>
-          <ChevronDown className="size-4" />
+        <IconButton
+          aria-label={t('work.card.moveTo')}
+          tooltip={t('work.card.moveTo')}
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <MoveRight className="size-4" aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent

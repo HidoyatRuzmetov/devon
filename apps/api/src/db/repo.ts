@@ -185,7 +185,19 @@ export function createRepo(): Deps {
           .from(schema.users)
           .where(and(eq(schema.users.login, login), isNull(schema.users.deletedAt)))
           .limit(1)
-        return rows[0] ? toUserRecord(rows[0]) : null
+        if (rows[0]) return toUserRecord(rows[0])
+        const email = login.trim().toLowerCase()
+        if (!email || !email.includes('@')) return null
+        // Optional email is not unique in historical data. An alias must identify exactly one
+        // account; two matches refuse authentication rather than picking an arbitrary password.
+        const byEmail = await tx.drizzle
+          .select()
+          .from(schema.users)
+          .where(
+            and(sql`lower(trim(${schema.users.email})) = ${email}`, isNull(schema.users.deletedAt)),
+          )
+          .limit(2)
+        return byEmail.length === 1 ? toUserRecord(byEmail[0]!) : null
       })
     },
 

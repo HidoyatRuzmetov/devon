@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
+import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { FLOW_API_PORT, FLOW_WEB_BASE_URL, FLOW_WEB_PORT } from './flow-env.js'
+import { flowTestIgnore, flowWebCommand, type ProductionBuildReceipt } from './flow-production.js'
 
 // `pnpm --filter @devon/web test:e2e -- --grep @smoke` is `agentic/gates.json`'s `e2e-smoke` command
 // (used as every item's `item`-profile gate, per this item's handoff to EPIC-000.9). The full
@@ -15,9 +20,39 @@ import { FLOW_API_PORT, FLOW_WEB_BASE_URL, FLOW_WEB_PORT } from './flow-env.js'
 // up behind the proxy; running the whole file under one shared web+api pair keeps `test:e2e` a single
 // gate command rather than two.
 const port = FLOW_WEB_PORT
+const production = process.env['FLOW_PRODUCTION_BUILD'] === '1'
+let receipt: ProductionBuildReceipt | undefined
+let currentInputs: string | undefined
+if (production) {
+  const root = resolve(import.meta.dirname, '../../../..')
+  receipt = JSON.parse(
+    readFileSync(resolve(root, 'tools/perf/lighthouse/out/production-build.json'), 'utf8'),
+  ) as ProductionBuildReceipt
+  // Use the release builder's actual source manifest rather than a second approximation. This
+  // child executes a fixed local module without a shell and emits only the public source hash.
+  const hash = spawnSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `import { productionBuildInputs } from ${JSON.stringify(pathToFileURL(resolve(root, 'tools/perf/web-build.mjs')).href)}; process.stdout.write(productionBuildInputs(${JSON.stringify(root)}).sha256)`,
+    ],
+    { cwd: root, encoding: 'utf8', timeout: 30_000, maxBuffer: 64 * 1024 },
+  )
+  if (hash.error || hash.status !== 0)
+    throw new Error('Could not verify current production browser inputs')
+  currentInputs = hash.stdout.trim()
+}
+const webCommand = flowWebCommand(production, receipt, currentInputs)
 
 export default defineConfig({
   testDir: '.',
+  // Dedicated *.qa.spec.ts suites have their own seeded database/broker and serial fixture
+  // contracts. Keep the ordinary CI flows and smoke tests on this fresh, unseeded stack; their
+  // explicit QA configs still select and run every dedicated case independently.
+  testMatch: ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'],
+  // Vite-only TSX component fixtures run in the full default dev gate, never through preview.
+  testIgnore: flowTestIgnore(production),
   timeout: 45_000,
   fullyParallel: true,
   forbidOnly: Boolean(process.env['CI']),
@@ -44,14 +79,20 @@ export default defineConfig({
     locale: 'uz-UZ',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
-  // The dev server (not `build && preview`) so a real `/api/*` proxy target is available -- `@flow`
-  // specs need `apps/api` running (`global-setup.ts` brings that up, on `FLOW_API_PORT`); `API_PORT`
-  // here is what `src/vite.config.ts`'s proxy reads to pick the same target.
+  // Ordinary CI uses dev; explicit built verification uses the current stable production artifact.
+  // Both proxy to the owned local API started by globalSetup at FLOW_API_PORT.
   webServer: {
-    command: 'pnpm --filter @devon/web dev --mode test',
+    command: webCommand,
     url: FLOW_WEB_BASE_URL,
-    reuseExistingServer: !process.env['CI'],
+    // A loopback URL alone does not identify our fixture server; an existing developer proxy
+    // could point elsewhere. Refuse a port collision instead of attaching destructive tests.
+    reuseExistingServer: false,
     timeout: 60_000,
-    env: { ...process.env, WEB_PORT: String(FLOW_WEB_PORT), API_PORT: String(FLOW_API_PORT) },
+    env: {
+      ...process.env,
+      WEB_PORT: String(FLOW_WEB_PORT),
+      API_PORT: String(FLOW_API_PORT),
+      ...(production ? { DEVON_E2E: '0' } : {}),
+    },
   },
 })

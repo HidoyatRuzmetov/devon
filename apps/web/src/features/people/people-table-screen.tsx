@@ -524,16 +524,10 @@ export default function PeopleTableScreen(): React.JSX.Element {
           { onSuccess: () => toast.success(t('people.table.views.saved', { name: view.name })) },
         )
       }}
-      onSaveAs={(input) => {
-        createView.mutate(
-          { ...input, config },
-          {
-            onSuccess: (view) => {
-              setActiveViewId(view.id)
-              toast.success(t('people.table.views.saved', { name: view.name }))
-            },
-          },
-        )
+      onSaveAs={async (input) => {
+        const view = await createView.mutateAsync({ ...input, config })
+        setActiveViewId(view.id)
+        toast.success(t('people.table.views.saved', { name: view.name }))
       }}
       onMakeDefault={(view) =>
         patchView.mutate({
@@ -595,7 +589,11 @@ type PeopleTableProps = {
   onSelectView: (view: PeopleView | null) => void
   onRevert: () => void
   onSaveOver: (view: PeopleView) => void
-  onSaveAs: (input: { name: string; shared: boolean; makeDepartmentDefault: boolean }) => void
+  onSaveAs: (input: {
+    name: string
+    shared: boolean
+    makeDepartmentDefault: boolean
+  }) => Promise<void>
   onMakeDefault: (view: PeopleView) => void
   onToggleShared: (view: PeopleView) => void
   onDelete: (view: PeopleView) => void
@@ -681,6 +679,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
         fullName(row.original.member),
         row.original.member.title ?? '',
         String(row.original.values['unit'] ?? ''),
+        row.original.member.membershipRole === 'head' ? t('headScope.departmentWide') : '',
       ].join(' ')
       return normalizeForSearch(haystack).includes(query)
     },
@@ -705,10 +704,11 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       return people.map((row) => ({ kind: 'person' as const, key: row.member.userId, row }))
     }
     const keyOf = (row: PersonRow): string => {
-      const raw =
-        config.groupBy === 'unit'
-          ? (row.values['unit'] as string | null)
-          : (row.values['unitRole'] as string | null)
+      if (config.groupBy === 'unit') {
+        if (row.member.membershipRole === 'head') return 'department-head'
+        return row.member.unitId ? `unit:${row.member.unitId}` : ''
+      }
+      const raw = row.values['unitRole'] as string | null
       return raw && String(raw).length > 0 ? String(raw) : ''
     }
     const groups = new Map<string, PersonRow[]>()
@@ -717,9 +717,13 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       groups.set(key, [...(groups.get(key) ?? []), row])
     }
     const ordered = [...groups.entries()].sort((a, b) => {
+      if (a[0] === 'department-head') return -1
+      if (b[0] === 'department-head') return 1
       if (a[0] === '') return 1
       if (b[0] === '') return -1
-      return a[0].localeCompare(b[0])
+      const label = (entry: [string, PersonRow[]]) =>
+        config.groupBy === 'unit' ? String(entry[1][0]?.values['unit'] ?? '') : entry[0]
+      return label(a).localeCompare(label(b)) || a[0].localeCompare(b[0])
     })
     const out: RenderRow[] = []
     for (const [key, people2] of ordered) {
@@ -727,11 +731,13 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
         kind: 'group',
         key: `group:${key}`,
         label:
-          key === ''
-            ? t('people.table.group.none')
-            : config.groupBy === 'unitRole'
-              ? t(`people.table.unitRole.${key}`)
-              : key,
+          config.groupBy === 'unit' && key === 'department-head'
+            ? t('headScope.leadership')
+            : key === ''
+              ? t('people.table.group.none')
+              : config.groupBy === 'unitRole'
+                ? t(`people.table.unitRole.${key}`)
+                : String(people2[0]?.values['unit'] ?? ''),
         count: people2.length,
       })
       for (const row of people2) out.push({ kind: 'person', key: row.member.userId, row })
@@ -740,15 +746,23 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
   }, [modelRows, config.groupBy, t])
 
   const rowHeight = config.density === 'compact' ? 36 : 44
+  // The mobile cards scroll with the page, not the desktop table's absent scroll element.
+  const virtualise = !narrow && renderRows.length > 60
   const virtualizer = useVirtualizer({
     count: renderRows.length,
     getScrollElement: () => scrollRef.current,
+    enabled: virtualise,
+    getItemKey: (index) => renderRows[index]!.key,
+    // Measured row heights update spacer geometry; schedule the write after the observer delivery.
+    useAnimationFrameWithResizeObserver: true,
+    // Enabling/measuring rows during a React layout pass must not synchronously flush React
+    // again. Normal scheduled updates retain the measured range without lifecycle warnings.
+    useFlushSync: false,
     estimateSize: (index) => (renderRows[index]?.kind === 'group' ? 32 : rowHeight),
     overscan: 12,
   })
   // Virtualise only when it earns its keep: below this a plain table renders faster than the
   // measurement pass, keeps Ctrl+F working and prints correctly.
-  const virtualise = renderRows.length > 60
   const virtualItems = virtualizer.getVirtualItems()
   const paddingTop = virtualise && virtualItems.length > 0 ? (virtualItems[0]?.start ?? 0) : 0
   const paddingBottom =
@@ -808,7 +822,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
   }
 
   const actions = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
       {/* SEV2 #19: the search moved up here from its own full-width row. That row plus the page
           header plus the saved-view tab strip were the 22 rem the table was being asked to survive
           under, which left four and a half rows visible on a 900 px screen. */}
@@ -912,6 +926,8 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
       // strip and the search row existed. `useViewportBoundedHeight` measures the element's own top
       // instead, so the table takes whatever is actually left, at any window size, with any number
       // of view tabs.
+      // The named scroll region needs focus for native arrow-key scrolling; it stays a region,
+      // rather than pretending to be an ARIA grid with a different cell-navigation contract.
       <div
         // Two refs on one node: the virtualizer needs the element (`scrollRef`) and the height hook
         // needs to observe it (`heightRef`).
@@ -920,7 +936,10 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
           heightRef(node)
         }}
         style={{ maxHeight: scrollerHeight }}
-        className="overflow-auto rounded-lg border border-border"
+        role="region"
+        aria-label={t('people.table.caption')}
+        tabIndex={0 /* eslint-disable-line jsx-a11y/no-noninteractive-tabindex */}
+        className="w-full min-w-0 overflow-auto rounded-lg border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <table className="w-full min-w-[44rem] border-collapse text-left text-small">
           <caption className="sr-only">{t('people.table.caption')}</caption>
@@ -942,7 +961,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
               </th>
               <th
                 scope="col"
-                className="sticky left-10 z-20 border-r border-border bg-surface-2 px-3 py-2 font-medium"
+                className="sticky left-10 z-20 min-w-56 border-r border-border bg-surface-2 px-3 py-2 font-medium"
               >
                 <button
                   type="button"
@@ -952,7 +971,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                   {t('people.table.column.name')}
                 </button>
               </th>
-              <th scope="col" className="px-3 py-2 font-medium">
+              <th scope="col" className="min-w-40 px-3 py-2 font-medium">
                 <button
                   type="button"
                   onClick={() => toggleSort(TASKS_COLUMN)}
@@ -965,7 +984,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                 <th
                   key={spec.id}
                   scope="col"
-                  className="relative px-3 py-2 font-medium"
+                  className="relative pl-3 pr-8 py-2 font-medium"
                   style={config.widths[spec.id] ? { width: config.widths[spec.id] } : undefined}
                 >
                   <ColumnHeader
@@ -1013,9 +1032,15 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                 <td colSpan={specs.length + 3} />
               </tr>
             ) : null}
-            {visible.map((entry) => {
+            {visible.map((entry, visibleIndex) => {
+              const measuredRow = virtualise
+                ? {
+                    ref: virtualizer.measureElement,
+                    'data-index': virtualItems[visibleIndex]!.index,
+                  }
+                : {}
               return entry.kind === 'group' ? (
-                <tr key={entry.key} className="bg-muted/60">
+                <tr key={entry.key} className="bg-muted/60" {...measuredRow}>
                   <th
                     scope="colgroup"
                     colSpan={specs.length + 3}
@@ -1029,6 +1054,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                 <StaggerItem
                   as="tr"
                   key={entry.key}
+                  {...measuredRow}
                   className={cn(
                     'border-b border-border last:border-0',
                     'transition-colors duration-(--dur-micro) ease-out hover:bg-accent/50',
@@ -1053,13 +1079,13 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                   <th
                     scope="row"
                     className={cn(
-                      'sticky left-10 z-10 border-r border-border px-3 font-normal',
+                      'sticky left-10 z-10 min-w-56 border-r border-border px-3 font-normal',
                       selection.includes(entry.row.member.userId) ? 'bg-accent/40' : 'bg-card',
                     )}
                   >
                     <PersonCell row={entry.row} t={t} />
                   </th>
-                  <td className="px-3">
+                  <td className="min-w-40 px-3">
                     <TaskChips cards={entry.row.cards} t={t} />
                   </td>
                   {specs.map((spec) => (
@@ -1071,7 +1097,11 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
                         />
                       ) : (
                         <span className="tabular-nums">
-                          {formatIndicator(spec, entry.row.values[spec.id] ?? null, t, locale)}
+                          {spec.id === 'unit' &&
+                          entry.row.member.membershipRole === 'head' &&
+                          entry.row.values['unit'] == null
+                            ? t('headScope.departmentWide')
+                            : formatIndicator(spec, entry.row.values[spec.id] ?? null, t, locale)}
                         </span>
                       )}
                     </td>
@@ -1158,7 +1188,7 @@ function PeopleTable(props: PeopleTableProps): React.JSX.Element {
         actions={actions}
       />
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="mt-4 flex min-w-0 flex-col gap-3">
         <ViewTabs
           views={props.views}
           activeViewId={props.activeViewId}
@@ -1257,7 +1287,7 @@ function PersonCell({ row, t }: { row: PersonRow; t: Translate }): React.JSX.Ele
         event.preventDefault()
         navigate(personPath(row.member.userId))
       }}
-      className="flex items-center gap-2.5 rounded-sm py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-1 rounded-sm py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {/* Decorative: the link's own text already says the name, and `Avatar` always renders an
           `sr-only` copy of `alt` -- so passing the name here made every row announce it twice. */}
@@ -1269,13 +1299,13 @@ function PersonCell({ row, t }: { row: PersonRow; t: Translate }): React.JSX.Ele
         src={avatarUrl(row.member.avatarKey, 64)}
       />
       <span className="flex min-w-0 flex-col">
-        <span className="truncate font-medium">{name}</span>
+        <span className="break-words font-medium">{name}</span>
         {row.member.title ? (
-          <span className="truncate text-caption text-muted-foreground">{row.member.title}</span>
+          <span className="break-words text-caption text-muted-foreground">{row.member.title}</span>
         ) : null}
       </span>
       {row.member.membershipRole === 'head' ? (
-        <Badge tone="primary" variant="subtle">
+        <Badge tone="primary" variant="subtle" className="col-start-2 justify-self-start">
           {t('shell.department.role.head')}
         </Badge>
       ) : null}
@@ -1302,14 +1332,14 @@ function TaskChips({ cards, t }: { cards: Card[]; t: Translate }): React.JSX.Ele
           }}
           title={card.title}
           className={cn(
-            'inline-flex max-w-40 items-center rounded-sm border border-border px-1.5 py-0.5',
+            'inline-flex min-h-6 max-md:min-h-11 max-w-40 max-md:max-w-full items-center rounded-sm border border-border px-1.5 py-0.5',
             'text-caption transition-colors duration-(--dur-micro) hover:bg-accent',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             card.risk === 'overdue' && 'border-destructive/40 text-destructive',
             card.risk === 'at_risk' && 'border-warning/50 text-warning',
           )}
         >
-          <span className="truncate">{card.title}</span>
+          <span className="min-w-0 break-words">{card.title}</span>
         </a>
       ))}
       {rest > 0 ? (
@@ -1326,7 +1356,7 @@ function TaskChips({ cards, t }: { cards: Card[]; t: Translate }): React.JSX.Ele
  * saved view's `widths` map, so a head who widened "Vazifalar" once gets that table back tomorrow and
  * in the link they paste to a colleague.
  *
- * Pointer *and* keyboard: this is a `separator` with an aria-valuenow, arrow keys move it 16 px at a
+ * Pointer *and* keyboard: this is a width slider with an aria-valuenow, arrow keys move it 16 px at a
  * time and Home resets the column to its natural width -- a resize handle reachable only by drag is a
  * setting a keyboard user simply cannot have (DESIGN.md §6).
  */
@@ -1345,8 +1375,20 @@ function ColumnResizer({
   const MAX = 640
   const clamp = (px: number): number => Math.min(MAX, Math.max(MIN, Math.round(px)))
   const ref = React.useRef<HTMLButtonElement>(null)
+  const [naturalWidth, setNaturalWidth] = React.useState(MIN)
+  React.useLayoutEffect(() => {
+    const cell = ref.current?.closest('th')
+    if (!cell) return undefined
+    // Reading the width changes only the announced value, never the table's layout.
+    const measure = () => setNaturalWidth(Math.round(cell.getBoundingClientRect().width))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(cell)
+    return () => observer.disconnect()
+  }, [])
 
   function start(event: React.PointerEvent<HTMLButtonElement>): void {
+    if (event.button !== 0) return
     event.preventDefault()
     const th = ref.current?.closest('th')
     if (!th) return
@@ -1368,15 +1410,18 @@ function ColumnResizer({
 
   function key(event: React.KeyboardEvent<HTMLButtonElement>): void {
     const current = width ?? ref.current?.closest('th')?.getBoundingClientRect().width ?? 160
-    if (event.key === 'ArrowLeft') {
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
       event.preventDefault()
       onResize(clamp(current - 16))
-    } else if (event.key === 'ArrowRight') {
+    } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
       event.preventDefault()
       onResize(clamp(current + 16))
     } else if (event.key === 'Home') {
       event.preventDefault()
       onReset()
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      onResize(MAX)
     }
   }
 
@@ -1384,20 +1429,25 @@ function ColumnResizer({
     <button
       ref={ref}
       type="button"
-      // The ARIA pattern for a resize grip: a vertical slider whose value is the column width.
+      // The value changes the horizontal column width, including the standard slider arrow keys.
       // A real <button> (not a bare div with a tabIndex) so it is in the tab order by construction
       // and the pointer handlers sit on something a keyboard user can already reach.
       role="slider"
-      aria-orientation="vertical"
+      aria-orientation="horizontal"
       aria-label={label}
-      aria-valuenow={width ?? MIN}
+      aria-valuenow={width ?? naturalWidth}
       aria-valuemin={MIN}
       aria-valuemax={MAX}
       onPointerDown={start}
       onKeyDown={key}
       onDoubleClick={onReset}
-      className="absolute inset-y-1 right-0 w-2 cursor-col-resize touch-none rounded-full hover:bg-primary/40 focus-visible:bg-primary/60 focus-visible:outline-none"
-    />
+      className="group absolute inset-y-1 right-0 flex w-6 cursor-col-resize touch-none items-center justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span
+        aria-hidden="true"
+        className="h-6 w-1 rounded-full bg-border group-hover:bg-primary/60 group-focus-visible:bg-primary"
+      />
+    </button>
   )
 }
 
@@ -1529,7 +1579,7 @@ function PeopleCards({
               <TaskChips cards={entry.row.cards} t={t} />
               <dl className="flex flex-wrap gap-x-4 gap-y-1">
                 {shown.map((spec) => (
-                  <span key={spec.id} className="flex flex-col">
+                  <div key={spec.id} className="flex flex-col">
                     <dt className="text-caption text-muted-foreground">{columnLabel(spec, t)}</dt>
                     <dd className="text-small tabular-nums">
                       {spec.id === 'workloadPct' ? (
@@ -1537,11 +1587,15 @@ function PeopleCards({
                           pct={Number(entry.row.values['workloadPct'] ?? 0)}
                           label={workloadLabel(entry.row.values, capacity, t, locale)}
                         />
+                      ) : spec.id === 'unit' &&
+                        entry.row.member.membershipRole === 'head' &&
+                        entry.row.values['unit'] == null ? (
+                        t('headScope.departmentWide')
                       ) : (
                         formatIndicator(spec, entry.row.values[spec.id] ?? null, t, locale)
                       )}
                     </dd>
-                  </span>
+                  </div>
                 ))}
               </dl>
               {canAssign ? (

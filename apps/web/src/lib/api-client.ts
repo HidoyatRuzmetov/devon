@@ -105,6 +105,12 @@ async function get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
   if (!res.ok) await parseErrorAndThrow(res)
   return schema.parse(await res.json())
 }
+/** Same authentication and Problem handling for downloads as for JSON reads. */
+async function getBlob(path: string): Promise<Blob> {
+  const res = await raw(path, { method: 'GET' })
+  if (!res.ok) await parseErrorAndThrow(res)
+  return res.blob()
+}
 
 /** No feature needed a DELETE call until structure's bo'lim/unit-role removal (EPIC-003) -- added
  * here, next to `get`/`send`, rather than reinventing it per-feature, the same "one place `fetch` is
@@ -161,7 +167,7 @@ async function send<T>(
  */
 async function uploadFile(
   url: string,
-  init: { method: 'PUT'; headers: Record<string, string>; body: Blob },
+  init: { method: 'PUT'; headers: Record<string, string>; body: Blob; signal?: AbortSignal },
 ): Promise<void> {
   const sameOrigin = url.startsWith('/') || url.startsWith(`${window.location.origin}/`)
   let res: Response
@@ -170,9 +176,11 @@ async function uploadFile(
       method: init.method,
       headers: init.headers,
       body: init.body,
+      ...(init.signal ? { signal: init.signal } : {}),
       credentials: sameOrigin ? 'include' : 'omit',
     })
   } catch (cause) {
+    if (init.signal?.aborted) throw init.signal.reason
     throw new NetworkError(cause)
   }
   if (!res.ok) await parseErrorAndThrow(res)
@@ -192,6 +200,7 @@ async function uploadFile(
  */
 export const apiClient = {
   get,
+  getBlob,
   post: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>
     send(path, 'POST', body, schema, csrfToken),
   patch: <T>(path: string, body: unknown, schema: z.ZodType<T>, csrfToken?: string) =>

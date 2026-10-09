@@ -26,6 +26,7 @@ export type FieldRefusalCode =
   /** SPEC §5 caps: 20 card fields, 10 person fields. */
   | 'cap_reached'
   | 'duplicate_key'
+  | 'duplicate_option'
   | 'archived'
   | 'not_self_editable'
   | 'unknown_subject'

@@ -105,6 +105,14 @@ describe('unfurlLink against a real server (H1.6, H2.7)', () => {
         res.end('</body></html>')
         return
       }
+      if (req.url === '/drip') {
+        res.writeHead(200, { 'content-type': 'text/html' })
+        res.write('<html><head>')
+        // Real bytes keep the socket active: an inactivity timeout alone never bounds this call.
+        const drip = setInterval(() => res.write(' '), 10)
+        res.on('close', () => clearInterval(drip))
+        return
+      }
       res.writeHead(200, { 'content-type': 'text/html' })
       res.end(
         '<html><head><title>  Oylik   hisobot &amp; reja </title></head><body>hi</body></html>',
@@ -139,5 +147,12 @@ describe('unfurlLink against a real server (H1.6, H2.7)', () => {
     const html = await fetchHtmlHead(url, [{ address: '127.0.0.1', family: 4 }])
     expect(html).not.toBeNull()
     expect(html!.length).toBeLessThan(400_000)
+  })
+
+  it('bounds a continuously active response by the whole-call deadline', async () => {
+    const url = new URL(`http://example.invalid:${port}/drip`)
+    const started = Date.now()
+    await expect(fetchHtmlHead(url, [{ address: '127.0.0.1', family: 4 }], 100)).resolves.toBeNull()
+    expect(Date.now() - started).toBeLessThan(2000)
   })
 })

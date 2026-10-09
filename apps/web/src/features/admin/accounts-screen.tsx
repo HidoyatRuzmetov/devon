@@ -2,7 +2,7 @@
 // table with actions menu"), instead of four buttons per row: search, lock/unlock, reset password,
 // force 2FA reset, anonymise/delete.
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
 import {
   Badge,
@@ -61,16 +61,39 @@ function AccountActionsMenu({
   busy: boolean
 }) {
   const t = useT()
+  const [open, setOpen] = React.useState(false)
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const tabExit = React.useRef(false)
   if (user.status === 'deleted' || user.role === 'super_admin') return null
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <IconButton aria-label={t('admin.console.accounts.actionsMenu')} disabled={busy}>
+        <IconButton
+          ref={triggerRef}
+          aria-label={t('admin.console.accounts.actionsMenu')}
+          disabled={busy}
+        >
           <MoreHorizontal className="size-4" aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        onKeyDownCapture={(event) => {
+          if (event.key !== 'Tab') return
+          // A row menu is not a modal focus trap. Bypass Radix's menu Tab suppression and let the
+          // browser continue its ordinary tab order from the trigger, in either direction.
+          event.stopPropagation()
+          tabExit.current = true
+          setOpen(false)
+          triggerRef.current?.focus()
+        }}
+        onCloseAutoFocus={(event) => {
+          if (!tabExit.current) return
+          event.preventDefault()
+          tabExit.current = false
+        }}
+      >
         {user.status === 'active' ? (
           <DropdownMenuItem onSelect={onLock}>
             <Lock className="size-3.5" aria-hidden="true" />
@@ -109,6 +132,8 @@ function AccountsBody() {
   const queryClient = useQueryClient()
   const [query, setQuery] = React.useState('')
   const [status, setStatus] = React.useState('')
+  const [cursors, setCursors] = React.useState<string[]>([])
+  const cursor = cursors.at(-1)
   const [lockTarget, setLockTarget] = React.useState<AdminUserRow | null>(null)
   const [reason, setReason] = React.useState('')
   const [temporaryPassword, setTemporaryPassword] = React.useState<{
@@ -118,8 +143,10 @@ function AccountsBody() {
   const [anonymizeTarget, setAnonymizeTarget] = React.useState<AdminUserRow | null>(null)
 
   const listQuery = useQuery({
-    queryKey: ['admin', 'accounts', query, status],
-    queryFn: () => fetchAdminUsers({ query: query || undefined, status: status || undefined }),
+    queryKey: ['admin', 'accounts', query, status, cursor],
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      fetchAdminUsers({ query: query || undefined, status: status || undefined, cursor }),
   })
 
   const csrfToken = meQuery.data?.csrfToken ?? ''
@@ -133,6 +160,7 @@ function AccountsBody() {
       setReason('')
       invalidate()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const unlock = useMutation({
     mutationFn: (id: string) => unlockUser(id, csrfToken),
@@ -140,15 +168,18 @@ function AccountsBody() {
       toast(t('admin.console.accounts.unlockedToast'))
       invalidate()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const forceReset2fa = useMutation({
     mutationFn: (id: string) => forceTwoFactorReset(id, csrfToken),
     onSuccess: () => toast(t('admin.console.accounts.twoFactorResetToast')),
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const resetPassword = useMutation({
     mutationFn: (id: string) => resetUserPassword(id, csrfToken),
     onSuccess: (result, id) =>
       setTemporaryPassword({ userId: id, password: result.temporaryPassword }),
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const anonymize = useMutation({
     mutationFn: () => anonymizeUser(anonymizeTarget!.id, csrfToken),
@@ -157,6 +188,7 @@ function AccountsBody() {
       setAnonymizeTarget(null)
       invalidate()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -183,14 +215,20 @@ function AccountsBody() {
       <div className="flex flex-wrap items-center gap-3">
         <Input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setCursors([])
+          }}
           placeholder={t('admin.console.accounts.searchPlaceholder')}
           aria-label={t('admin.console.accounts.searchPlaceholder')}
           className="max-w-80"
         />
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setCursors([])
+          }}
           aria-label={t('admin.console.accounts.statusFilter')}
           className="h-11 rounded-sm border border-border bg-card px-3 text-body text-foreground"
         >
@@ -254,7 +292,10 @@ function AccountsBody() {
                       <AccountActionsMenu
                         user={u}
                         busy={rowBusy}
-                        onLock={() => setLockTarget(u)}
+                        onLock={() => {
+                          setReason('')
+                          setLockTarget(u)
+                        }}
                         onUnlock={() => unlock.mutate(u.id)}
                         onResetPassword={() => resetPassword.mutate(u.id)}
                         onForceTwoFactorReset={() => forceReset2fa.mutate(u.id)}
@@ -269,6 +310,27 @@ function AccountsBody() {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={!cursors.length}
+          onClick={() => setCursors((current) => current.slice(0, -1))}
+        >
+          {t('admin.console.audit.previousPage')}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={!listQuery.data.nextCursor}
+          onClick={() => {
+            if (listQuery.data.nextCursor)
+              setCursors((current) => [...current, listQuery.data.nextCursor!])
+          }}
+        >
+          {t('admin.console.audit.nextPage')}
+        </Button>
+      </div>
       <Dialog open={lockTarget !== null} onOpenChange={(open) => !open && setLockTarget(null)}>
         <DialogContent title={t('admin.console.accounts.lockDialogTitle')}>
           <div className="flex flex-col gap-3 pt-4">

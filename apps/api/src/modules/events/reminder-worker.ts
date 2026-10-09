@@ -1,7 +1,7 @@
 // Reminder scheduler (TECH-SPEC §3.4: "default 1 day and 1 hour before, organizer editable, via inbox
-// and Telegram"). This module only emits the domain event (`events.event.reminder_due`) -- delivery is
-// the inbox module's job (MODULE-GUIDE.md "Domain events": "there is no shared payload-types package,
-// and there never should be").
+// and Telegram"). Reminders emit the domain event (`events.event.reminder_due`) for the inbox;
+// the same timer also drains the event module's durable shared-group Telegram delivery receipts.
+// Neither an event request nor an outbox subscriber performs an external send.
 //
 // `app.event_reminder_jobs` carries no RLS (see `packages/db/src/tenancy.ts`'s `GLOBAL_ALLOWLIST`), so
 // the initial due-jobs scan can run under any (or no) department GUC and still see every department's
@@ -17,6 +17,7 @@
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext } from '@devon/db'
 import { getEventRow } from './repo.js'
+import { processEventGroupDeliveries } from './telegram-delivery.js'
 
 function systemContext(departmentId: string | null): RequestContext {
   return {
@@ -106,6 +107,7 @@ export function startEventReminderWorker(
     if (running) return
     running = true
     processDueReminders(opts.limit)
+      .then(() => processEventGroupDeliveries())
       .catch((err: unknown) => opts.onError?.(err))
       .finally(() => {
         running = false

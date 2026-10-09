@@ -48,25 +48,32 @@ import {
 // matching", not "the page I'm looking at") and yields CSV lines lazily, one page at a time, so
 // `Readable.from()` in the route below can start streaming the response before the whole export has
 // even been read from Postgres, and peak memory never holds more than one page of rows regardless of
-// how many years of audit history match. `AUDIT_EXPORT_MAX_ROWS` is a sanity cap, not a silent
-// truncation: past it the generator stops (the client still gets a complete, valid CSV of everything
-// up to the cap) rather than the process holding an unbounded row count in flight forever.
+// how many years of audit history match. The bounded preflight refuses oversized exports before
+// streaming starts; a pinned upper sequence excludes later appends, so no partial CSV masquerades
+// as a complete download.
 const AUDIT_EXPORT_PAGE_SIZE = 1000
 const AUDIT_EXPORT_MAX_ROWS = 200_000
 
 function csvEscape(v: string): string {
-  return `"${v.replace(/"/g, '""')}"`
+  // Quoting is CSV syntax, not spreadsheet formula protection. User-controlled names can
+  // start with a formula marker (including after whitespace); export them as literal cells.
+  const literal = /^[\s]*[=+@-]/u.test(v) || /^[\t\r\n]/u.test(v) ? `'${v}` : v
+  return `"${literal.replace(/"/g, '""')}"`
 }
 
-async function* auditExportRows(query: {
-  action?: string | undefined
-  category?: string | undefined
-  actorUserId?: string | undefined
-  departmentId?: string | undefined
-  from?: string | undefined
-  to?: string | undefined
-}): AsyncGenerator<string> {
+async function* auditExportRows(
+  query: {
+    action?: string | undefined
+    category?: string | undefined
+    actorUserId?: string | undefined
+    departmentId?: string | undefined
+    from?: string | undefined
+    to?: string | undefined
+  },
+  throughSeq: number | null,
+): AsyncGenerator<string> {
   yield 'seq,at,actor_user_id,actor_name,actor_role,department_id,action,subject_type,subject_id\n'
+  if (throughSeq === null) return
   const filters = {
     action: query.action,
     category: query.category,
@@ -76,11 +83,11 @@ async function* auditExportRows(query: {
     to: query.to,
   }
   let cursor: number | undefined
-  let emitted = 0
   for (;;) {
     // nosemgrep: query-in-loop -- the next page requires this page's cursor; streaming bounds memory.
     const { rows, nextCursor } = await repo.listAuditEvents({
       ...filters,
+      throughSeq,
       cursor,
       limit: AUDIT_EXPORT_PAGE_SIZE,
     })
@@ -99,8 +106,6 @@ async function* auditExportRows(query: {
       ]
         .map((v) => csvEscape(String(v)))
         .join(',') + '\n'
-      emitted += 1
-      if (emitted >= AUDIT_EXPORT_MAX_ROWS) return
     }
     if (nextCursor === null) return
     cursor = nextCursor
@@ -447,7 +452,8 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       if (!checkCsrf(req, reply)) return
-      await repo.forceTwoFactorReset(req.params.id, auditCtx(req))
+      const ok = await repo.forceTwoFactorReset(req.params.id, auditCtx(req))
+      if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
     },
   )
@@ -519,17 +525,24 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       await repo.recordAuditExport(auditCtx(req))
-      reply
-        .header('content-type', 'text/csv; charset=utf-8')
-        .header('content-disposition', 'attachment; filename="audit-export.csv"')
-        // H2.8 "streaming for exports": the audit log can hold years of history, so this used to
-        // fetch a hardcoded `limit: 1000` (silently truncating any export past that, with no signal
-        // to the caller that it happened) and join every row into one in-memory string before
-        // sending. `auditExportRows` below pages through the whole matching range with the same
-        // cursor `repo.listAuditEvents` already exposes to `GET /audit/events`, yielding CSV lines as
-        // it goes -- memory use stays flat (one page at a time) however many rows match, and nothing
-        // is silently dropped short of `AUDIT_EXPORT_MAX_ROWS`.
-        .send(Readable.from(auditExportRows(req.query)))
+      const snapshot = await repo.getAuditExportSnapshot(req.query, AUDIT_EXPORT_MAX_ROWS)
+      if (snapshot.count > AUDIT_EXPORT_MAX_ROWS)
+        return sendProblem(reply, 'validation_failed', {
+          errors: [{ path: 'export', code: 'too_many_events' }],
+        })
+      return (
+        reply
+          .header('content-type', 'text/csv; charset=utf-8')
+          .header('content-disposition', 'attachment; filename="audit-export.csv"')
+          // H2.8 "streaming for exports": the audit log can hold years of history, so this used to
+          // fetch a hardcoded `limit: 1000` (silently truncating any export past that, with no signal
+          // to the caller that it happened) and join every row into one in-memory string before
+          // sending. `auditExportRows` below pages through the whole matching range with the same
+          // cursor `repo.listAuditEvents` already exposes to `GET /audit/events`, yielding CSV lines as
+          // it goes -- memory use stays flat (one page at a time) however many rows match, and nothing
+          // is silently dropped; exports beyond the retained cap are explicitly refused above.
+          .send(Readable.from(auditExportRows(req.query, snapshot.throughSeq)))
+      )
     },
   )
 

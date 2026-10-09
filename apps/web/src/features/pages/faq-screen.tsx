@@ -38,7 +38,7 @@ export default function FaqScreen() {
     ),
   })).filter((group) => group.items.length > 0)
   return (
-    <div className="mx-auto flex w-full max-w-200 flex-col gap-6 pb-8">
+    <div className="mx-auto flex w-full max-w-200 flex-col gap-6 pb-8 [overflow-wrap:anywhere]">
       <PageHeader title={t('help.title')} description={t('help.description')} />
       <Input
         type="search"

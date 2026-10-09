@@ -49,24 +49,33 @@ function CopyRow({
   const t = useT()
   const [copied, setCopied] = React.useState(false)
   const timer = React.useRef<number | null>(null)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const mounted = React.useRef(true)
+  const copySequence = React.useRef(0)
 
-  React.useEffect(
-    () => () => {
+  React.useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
       if (timer.current !== null) window.clearTimeout(timer.current)
-    },
-    [],
-  )
+    }
+  }, [])
 
   async function copy(): Promise<void> {
+    const sequence = ++copySequence.current
     try {
       await navigator.clipboard.writeText(value)
+      if (!mounted.current || sequence !== copySequence.current) return
       setCopied(true)
       toast.success(t('calendar.feeds.copyToast'))
       if (timer.current !== null) window.clearTimeout(timer.current)
       timer.current = window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      // A clipboard a browser policy refuses is not an error worth a toast -- the input below is
-      // selectable, which is the fallback every person already knows.
+      if (!mounted.current || sequence !== copySequence.current) return
+      setCopied(false)
+      inputRef.current?.focus()
+      inputRef.current?.select()
+      toast.error(t('calendar.feeds.copyFailed'))
     }
   }
 
@@ -80,6 +89,7 @@ function CopyRow({
       </label>
       <div className="flex items-center gap-2">
         <input
+          ref={inputRef}
           id={inputId}
           readOnly
           value={value}
@@ -138,9 +148,11 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-danger"
+              disabled={revoke.isPending || rotate.isPending}
               onSelect={() =>
                 revoke.mutate(feed.id, {
                   onSuccess: () => toast.success(t('calendar.feeds.revoke.toast')),
+                  onError: () => toast.error(t('toast.saveError')),
                 })
               }
             >
@@ -153,16 +165,19 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
     >
       <div className="flex flex-col gap-3 pt-2">
         <CopyRow
+          key={feed.url}
           label={t('calendar.feeds.url.https')}
           help={t('calendar.feeds.url.httpsHelp')}
           value={feed.url}
         />
         <CopyRow
+          key={feed.webcalUrl}
           label={t('calendar.feeds.url.webcal')}
           help={t('calendar.feeds.url.webcalHelp')}
           value={feed.webcalUrl}
         />
         <CopyRow
+          key={feed.caldavUrl}
           label={t('calendar.feeds.url.caldav')}
           help={t('calendar.feeds.url.caldavHelp')}
           value={feed.caldavUrl}
@@ -186,6 +201,11 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
           <p className="text-body text-muted-foreground">
             {t('calendar.feeds.rotate.confirmBody')}
           </p>
+          {rotate.isError ? (
+            <p role="alert" className="text-small text-destructive">
+              {t('toast.saveError')}
+            </p>
+          ) : null}
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setConfirmRotate(false)}>
               {t('calendar.feeds.rotate.cancel')}
@@ -214,9 +234,11 @@ function FeedCard({ feed }: { feed: FeedDto }): React.JSX.Element {
 function CreateFeedDialog({
   open,
   onOpenChange,
+  restoreFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  restoreFocus: () => void
 }): React.JSX.Element {
   const t = useT()
   const create = useCreateFeed()
@@ -224,13 +246,26 @@ function CreateFeedDialog({
   const [label, setLabel] = React.useState('')
   const labelInputId = React.useId()
   const kindGroupId = React.useId()
+  const dialogSession = React.useRef(0)
+  const resetCreate = create.reset
+  React.useEffect(() => {
+    dialogSession.current += 1
+    resetCreate()
+  }, [open, resetCreate])
+  const capReached =
+    create.error instanceof ApiError &&
+    create.error.code === 'validation_failed' &&
+    create.error.errors.some((error) => error.path === 'feeds' && error.code === 'too_many_feeds')
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
+    if (create.isPending) return
+    const submittedSession = dialogSession.current
     create.mutate(
       { kind, label: label.trim() },
       {
         onSuccess: () => {
+          if (submittedSession !== dialogSession.current) return
           onOpenChange(false)
           setLabel('')
           setKind('all')
@@ -241,7 +276,14 @@ function CreateFeedDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent title={t('calendar.feeds.create.title')} className="max-w-md">
+      <DialogContent
+        title={t('calendar.feeds.create.title')}
+        className="max-w-md"
+        onCloseAutoFocus={(event) => {
+          event.preventDefault()
+          if (!open) restoreFocus()
+        }}
+      >
         <form onSubmit={submit} className="flex flex-col gap-5">
           <Field label={t('calendar.feeds.create.label')} htmlFor={labelInputId}>
             <Input
@@ -273,6 +315,12 @@ function CreateFeedDialog({
             </RadioGroup>
           </fieldset>
 
+          {create.isError ? (
+            <p role="alert" className="text-small text-destructive">
+              {t(capReached ? 'calendar.feeds.create.capReached' : 'toast.saveError')}
+            </p>
+          ) : null}
+
           <div className="flex justify-end">
             <Button type="submit" variant="primary" loading={create.isPending}>
               {create.isPending
@@ -291,6 +339,21 @@ export function FeedsPanel(): React.JSX.Element {
   const online = useOnline()
   const query = useFeedsQuery()
   const [creating, setCreating] = React.useState(false)
+  const createTrigger = React.useRef<HTMLButtonElement | null>(null)
+  const headerTrigger = React.useRef<HTMLButtonElement | null>(null)
+
+  function rememberTrigger(event: React.MouseEvent<HTMLDivElement>): void {
+    if (creating || !(event.target instanceof Element)) return
+    const button = event.target.closest('button')
+    // Dialog content uses a React portal: its clicks must not replace the invoking page action.
+    if (button && event.currentTarget.contains(button)) createTrigger.current = button
+  }
+
+  function restoreCreateFocus(): void {
+    const trigger = createTrigger.current
+    if (trigger?.isConnected && !trigger.disabled) trigger.focus({ preventScroll: true })
+    else headerTrigger.current?.focus({ preventScroll: true })
+  }
 
   function body(): React.JSX.Element {
     if (!online && query.data === undefined) {
@@ -352,13 +415,13 @@ export function FeedsPanel(): React.JSX.Element {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5" onClickCapture={rememberTrigger}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1">
           <h2 className="text-h3 text-foreground">{t('calendar.feeds.title')}</h2>
           <p className="text-body text-muted-foreground">{t('calendar.feeds.description')}</p>
         </div>
-        <Button variant="primary" onClick={() => setCreating(true)}>
+        <Button ref={headerTrigger} variant="primary" onClick={() => setCreating(true)}>
           <Plus className="size-4" aria-hidden="true" />
           {t('calendar.feeds.create.submit')}
         </Button>
@@ -373,7 +436,11 @@ export function FeedsPanel(): React.JSX.Element {
 
       {body()}
 
-      <CreateFeedDialog open={creating} onOpenChange={setCreating} />
+      <CreateFeedDialog
+        open={creating}
+        onOpenChange={setCreating}
+        restoreFocus={restoreCreateFocus}
+      />
     </div>
   )
 }

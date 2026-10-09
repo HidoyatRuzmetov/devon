@@ -93,7 +93,8 @@
       "label": "New"
     },
     "inbox": {
-      "aria": "Notifications"
+      "aria": "Notifications",
+      "unreadAria": "Notifications: {count} unread"
     },
     "breadcrumb": {
       "aria": "Breadcrumb"
@@ -146,7 +147,7 @@
       "action": "Open search",
       "admin": {
         "title": "The system is running",
-        "body": "No departments yet. You can check system status on the administration page.",
+        "body": "Manage departments and check system status from the administration page.",
         "action": "Go to Administration"
       },
       "demo": {
@@ -378,6 +379,7 @@
       "refresh": "Refresh"
     },
     "console": {
+      "operationFailed": "The change could not be saved. Try again.",
       "eyebrow": "Administration",
       "title": "Super admin console",
       "tabs": {
@@ -395,6 +397,7 @@
         "exit": "Exit view-as"
       },
       "dashboard": {
+        "moreDepartments": "More departments",
         "userCount": "User count",
         "registration": "Registration",
         "registrationOpen": "Open",
@@ -532,6 +535,9 @@
         "aiSpendUnavailable": "The AI module is not connected yet."
       },
       "audit": {
+        "fromDate": "From date",
+        "toDate": "To date",
+        "exportTooLarge": "This export has too many events. Choose a category or a shorter date range, then try again.",
         "verifyChain": "Verify chain",
         "export": "Export CSV",
         "verifyOkToast": "Audit chain is intact",
@@ -695,8 +701,80 @@
           "work.checklist_item_added": "added a checklist item",
           "work.comment_added": "commented on a card",
           "work.label_created": "created a label",
+          "accounts.password_reset_by_head": "reset a colleague's password",
+          "accounts.password_reset_requested": "requested a password reset",
+          "accounts.profile_updated": "updated a profile",
+          "ai.feature.blocked": "recorded an unavailable AI request",
+          "automations.rule_created": "created a rule",
+          "automations.rule_removed": "removed a rule",
+          "automations.rule_updated": "updated a rule",
+          "automations.all_paused": "paused all rules",
+          "automations.all_resumed": "resumed all rules",
+          "calendar.feed_created": "created a calendar subscription",
+          "calendar.feed_revoked": "revoked a calendar subscription",
+          "calendar.feed_rotated": "renewed a calendar subscription link",
+          "departments.features_updated": "changed department features",
+          "departments.join_decision_undone": "undid a membership decision",
+          "admin.department.paused": "paused a department",
+          "admin.department.resumed": "resumed a department",
+          "admin.department.archived": "archived a department",
+          "admin.department.restored": "restored a department",
+          "events.telegram_group_delivery": "recorded a Telegram group delivery result",
+          "events.telegram_group_queued": "queued an event announcement for Telegram",
+          "fields.definition_created": "created an information field",
+          "fields.definition_updated": "updated an information field",
+          "fields.definitions_reordered": "reordered information fields",
+          "fields.definition_archived": "archived an information field",
+          "fields.definition_restored": "restored an information field",
+          "fields.fill_reminded": "sent an information reminder",
+          "fields.fill_requested": "requested information",
+          "fields.value_set": "updated an information value",
+          "notifications.restored": "restored a notification",
+          "pages.page.restored": "restored a knowledge page",
+          "people.table.exported": "exported the people table",
+          "people.view.created": "created a people view",
+          "people.view.deleted": "removed a people view",
+          "people.view.updated": "updated a people view",
+          "personal.canvas.restored": "restored a personal canvas",
+          "personal.item.restored": "restored a personal to-do",
+          "personal.note.restored": "restored a personal note",
+          "projects.created_from_card": "created a project from a card",
+          "projects.milestone_deleted": "removed a milestone",
+          "projects.milestones_updated": "updated milestones",
+          "projects.project_deleted": "deleted a project",
+          "projects.project_restored": "restored a project",
+          "push.subscription_added": "enabled browser notifications",
+          "push.subscription_removed": "disabled browser notifications",
+          "realtime.canvas_share_revoked": "revoked canvas sharing",
+          "realtime.canvas_shared": "shared a canvas",
+          "work.attachment_added": "attached a file or link",
+          "work.attachment_removed": "removed an attachment",
+          "work.attachment_restored": "restored an attachment",
+          "work.attachment_upload_requested": "requested a file upload",
+          "work.capacity_set": "changed available work time",
+          "work.card_delete_undone": "undid card deletion",
           "work.card_deleted": "deleted a card",
-          "work.card_delete_undone": "undid card deletion"
+          "work.card_moved": "moved a card",
+          "work.card_order_rebalanced": "adjusted card ordering",
+          "work.cards_bulk_updated": "updated several cards",
+          "work.checklist_item_deleted": "removed a checklist item",
+          "work.checklist_item_updated": "updated a checklist item",
+          "work.dependency_added": "linked dependent cards",
+          "work.dependency_removed": "removed a card dependency",
+          "work.focus_added": "added a card to focus",
+          "work.focus_removed": "removed a card from focus",
+          "work.focus_reordered": "reordered focused cards",
+          "work.goal_created": "created a goal",
+          "work.goal_removed": "removed a goal",
+          "work.goal_updated": "updated a goal",
+          "work.reminder_cleared": "removed a reminder",
+          "work.reminder_set": "set a reminder",
+          "work.template_created": "created a template",
+          "work.template_removed": "removed a template",
+          "work.template_updated": "updated a template",
+          "work.template_used": "used a template",
+          "work.time_log_removed": "removed a time entry",
+          "work.time_logged": "recorded work time"
         },
         "subjectType": {
           "session": "Session",
@@ -888,6 +966,8 @@
         "recoveryTitle": "Save your recovery codes",
         "recoveryBody": "These are shown once. Use one to sign in if you lose access to your phone.",
         "recoveryCopied": "Codes copied",
+        "copy": "Copy recovery codes",
+        "cancel": "Cancel",
         "done": "Done"
       },
       "disableDialog": {
@@ -899,11 +979,14 @@
     },
     "password": {
       "title": "Change password",
+      "temporary": "You signed in with a temporary password. Enter it as your current password and choose a new one below.",
       "current": "Current password",
       "new": "New password",
       "submit": "Save",
       "success": "Password updated",
-      "error": "Current password is wrong"
+      "error": "Current password is wrong",
+      "validation": "Use at least 12 characters and avoid very common passwords.",
+      "failed": "Could not change the password. Check your connection and try again."
     },
     "delete": {
       "title": "Delete account",
@@ -933,6 +1016,7 @@
       "title": "Profile settings",
       "subtitle": "Your profile, language, appearance, Telegram, notifications and security are all here.",
       "subnavAria": "Settings sections",
+      "saveError": "Could not save. Check your connection and try again.",
       "profile": "Profile",
       "security": "Security",
       "dangerZone": "Danger zone",
@@ -1356,6 +1440,16 @@
     }
   },
   "analytics": {
+    "context": {
+      "title": "Choose what to analyse",
+      "adminBody": "Open system analytics for all departments. To see one department, open its view from Departments.",
+      "memberBody": "Join or create a department to see its work analytics.",
+      "globalAction": "Open system analytics",
+      "homeAction": "Open home"
+    },
+    "table": {
+      "person": "Person"
+    },
     "title": "Analytics",
     "eyebrow": "Reports",
     "kpi": {
@@ -1400,6 +1494,9 @@
       "hideAdvanced": "Hide advanced"
     },
     "savedFilters": {
+      "saveFailed": "Could not save the filter. Try again.",
+      "deleteFailed": "Could not delete the filter. Try again.",
+      "deleteNamed": "Delete the saved filter “{name}”",
       "title": "Saved filters",
       "new": "Save filter",
       "namePlaceholder": "Filter name",
@@ -1409,6 +1506,7 @@
       "empty": "No saved filters yet"
     },
     "actions": {
+      "exportFailed": "Could not create the image. Try again or download the CSV.",
       "export": "Export",
       "exportCsv": "Download as CSV",
       "exportPng": "Download as image",
@@ -1504,6 +1602,8 @@
     "removed": "File removed",
     "removeName": "Remove {name}",
     "uploading": "Uploading file…",
+    "cancel": "Cancel upload",
+    "cancelled": "Upload cancelled. The file was not attached.",
     "scanning": "Checking file…",
     "scanUnavailable": "The file check is temporarily unavailable. Try again to finish this upload.",
     "tooLarge": "This file exceeds the server's upload limit. Choose a smaller file.",
@@ -1511,6 +1611,7 @@
     "error": "Could not complete the file action. Check the file type and try again."
   },
   "automations": {
+    "runsLoadMore": "Load older runs",
     "eyebrow": "AUTOMATION",
     "title": "Rules",
     "description": "“When this happens, do that.” Turn repeated manual work into a rule.",
@@ -1565,6 +1666,11 @@
       "createFollowup": "create a follow-up card"
     },
     "builder": {
+      "chooseValue": "Choose a value",
+      "noDeadlineHint": "Leave empty for no deadline. Zero means today.",
+      "requiredInput": "Choose or fill in the value for this action.",
+      "triggerLocked": "Duplicate this rule to choose a different event.",
+      "anyField": "Any field",
       "nameLabel": "Rule name",
       "namePlaceholder": "For example: tell the head about overdue work",
       "whenLegend": "When",
@@ -1582,7 +1688,7 @@
         "estimate": "Estimate"
       },
       "filterLabel": "Which cards",
-      "filterHint": "Leave empty to match every card.",
+      "filterHint": "Leave empty to match every card. In rules, @me means the person who created the rule.",
       "filterPlaceholder": "label:request",
       "actionLabel": "Action",
       "addAction": "Add another action",
@@ -1607,10 +1713,12 @@
         "failed": "Failed"
       },
       "reason": {
+        "targetUnavailable": "A colleague or label used by this rule is unavailable. Edit the rule to choose another.",
         "chainDepth": "The chain went too deep — stopped",
         "loopGuard": "A loop was detected — the rule did not run twice",
         "noValidActions": "No action was left to apply",
         "statusDidNotMatch": "The status did not match",
+        "fieldDidNotMatch": "A different field changed",
         "filterDidNotMatch": "The card did not match the filter",
         "alreadyAppliedToday": "Already applied today",
         "other": "Skipped"
@@ -1622,6 +1730,7 @@
     "saved": "Rule saved",
     "saveFailed": "Could not save the rule",
     "runsFilter": {
+      "removedRule": "Removed rule",
       "rule": "Rule",
       "status": "Outcome",
       "allRules": "All rules",
@@ -1704,14 +1813,15 @@
         "labelPlaceholder": "For example: iPhone calendar",
         "kind": "What to include",
         "submit": "Create subscription",
-        "creating": "Creating…"
+        "creating": "Creating…",
+        "capReached": "You have 20 active subscriptions. Close this dialog and delete an unused subscription before creating another."
       },
       "kind": {
         "all": "Everything",
         "events": "Events only",
         "tasks": "Card due dates only",
         "allHelp": "Both events and cards that have a due date.",
-        "eventsHelp": "Only the events you take part in.",
+        "eventsHelp": "Events from your departments.",
         "tasksHelp": "Only cards assigned to you that have a due date."
       },
       "url": {
@@ -1753,7 +1863,8 @@
       "error": {
         "title": "Couldn't open your subscriptions",
         "body": "Something went wrong with the connection. Try again."
-      }
+      },
+      "copyFailed": "Could not copy automatically. The link is selected; copy it with your keyboard or touch menu."
     },
     "push": {
       "title": "Browser reminders",
@@ -1818,11 +1929,332 @@
       "error": "Couldn't prepare the links"
     }
   },
+  "personal": {
+    "canvas": {
+      "controls": {
+        "pan": "Pan canvas",
+        "finishDrawing": "Finish drawing",
+        "cancelDrawing": "Cancel drawing",
+        "addObject": "Add object",
+        "object": "Selected object",
+        "none": "No selection",
+        "x": "Horizontal",
+        "y": "Vertical",
+        "editText": "Edit text",
+        "deleteObject": "Delete selected object",
+        "moveSticky": "Move sticky note",
+        "hint": "Choose a tool, then drag or use Add object. Select an object to move it with the arrow keys (Shift: 10 steps). Delete removes it; Ctrl/Cmd+Z undoes.",
+        "penHint": "Draw with the arrow keys (Shift: 10 steps). Enter finishes; Escape cancels.",
+        "type": {
+          "freehand": "Drawing",
+          "rectangle": "Rectangle",
+          "ellipse": "Ellipse",
+          "line": "Line",
+          "arrow": "Arrow",
+          "text": "Text",
+          "sticky": "Sticky note"
+        },
+        "color": {
+          "ink": "Ink",
+          "blue": "Blue",
+          "green": "Green",
+          "orange": "Orange",
+          "red": "Red",
+          "purple": "Purple",
+          "yellow": "Yellow",
+          "pink": "Pink",
+          "mint": "Mint",
+          "sky": "Light blue"
+        }
+      },
+      "title": "Canvas title",
+      "create": "New canvas",
+      "newTitle": "New canvas",
+      "open": "Open",
+      "back": "Back to canvases",
+      "delete": "Delete canvas",
+      "deleted": {
+        "toast": "Canvas deleted"
+      },
+      "autosave": {
+        "saving": "Saving…",
+        "saved": "Saved"
+      },
+      "empty": {
+        "title": "No canvases yet",
+        "body": "A canvas is a free-form board for sketches and sticky notes."
+      },
+      "addSticky": "Add sticky note",
+      "deleteSticky": "Delete sticky note",
+      "stickyText": "Sticky note text",
+      "drawingText": "Drawing text",
+      "drawingSurface": "Drawing canvas",
+      "undo": "Undo",
+      "redo": "Redo",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "strokeWidth": "Stroke width",
+      "emptyText": "Text",
+      "tool": {
+        "select": "Select",
+        "pen": "Pen",
+        "rectangle": "Rectangle",
+        "ellipse": "Ellipse",
+        "arrow": "Arrow",
+        "text": "Text",
+        "eraser": "Eraser"
+      }
+    },
+    "save": {
+      "titleRequired": "Enter a title.",
+      "error": "Could not save. Your draft is still here.",
+      "conflict": "This item changed elsewhere. Your draft is still here; retry to save your changes.",
+      "retry": "Retry save"
+    },
+    "title": "Personal",
+    "eyebrow": "JUST FOR YOU",
+    "description": "Your private space for periods, to-dos, notes, a canvas and focus time.",
+    "tabs": {
+      "today": "Today",
+      "sprints": "Periods",
+      "tasks": "To-dos",
+      "notes": "Notes",
+      "canvas": "Canvas",
+      "pomodoro": "Pomodoro"
+    },
+    "privacy": {
+      "note": "Only you can see what's in this workspace — not your department head, not anyone else.",
+      "dismiss": "Dismiss"
+    },
+    "duration": {
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
+    },
+    "today": {
+      "tasks": {
+        "title": "Today's to-dos",
+        "remaining": "{count} left",
+        "completedToast": "Marked done"
+      },
+      "empty": {
+        "title": "Nothing planned for today",
+        "body": "Add a to-do or start a period to see it here."
+      },
+      "allDone": {
+        "title": "All done for now",
+        "body": "Nothing left in your active periods or inbox. Enjoy the quiet."
+      },
+      "addPlaceholder": "Add a to-do for today",
+      "focus": "Focus",
+      "period": {
+        "progressAria": "Period progress",
+        "timeLeft": "{value} left",
+        "noGoal": "No goal set for this period yet"
+      },
+      "rollover": {
+        "banner": "This period's time is up. Roll the unfinished to-dos into a new one?",
+        "bannerGoal": "Time is up for “{goal}”. Roll the unfinished to-dos into a new period?"
+      }
+    },
+    "sprints": {
+      "active": {
+        "title": "Active periods"
+      },
+      "empty": {
+        "title": "No periods yet",
+        "body": "Start a period to give your work a goal and a time box."
+      },
+      "create": {
+        "action": "New period",
+        "title": "New period",
+        "submit": "Create period"
+      },
+      "goal": "Goal",
+      "edit": "Edit period",
+      "save": "Save",
+      "starts": "Starts",
+      "ends": "Ends",
+      "invalidRange": "Choose an end time later than the start time.",
+      "goalPlaceholder": "What are you trying to get done?",
+      "history": {
+        "title": "History ({count})"
+      },
+      "rollover": {
+        "action": "Roll over",
+        "toast": "Moved {count} unfinished to-dos to a new period"
+      },
+      "complete": {
+        "action": "Mark complete",
+        "toast": "Period completed"
+      },
+      "ended": "Time's up",
+      "kind": {
+        "threeHour": "3 hours",
+        "day": "Day",
+        "week": "Week",
+        "custom": "Custom"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "archived": "Archived"
+      }
+    },
+    "tasks": {
+      "title": "To-do title",
+      "newTitle": "New to-do",
+      "indentHint": "Make a sub-item (Alt + →)",
+      "outdentHint": "Move out one level (Alt + ←)",
+      "inbox": "Inbox",
+      "addPlaceholder": "Add a to-do",
+      "openCount": "{count} open",
+      "toggleDone": "Mark done",
+      "delete": "Delete to-do",
+      "deleted": {
+        "toast": "To-do deleted"
+      },
+      "dragHandle": "Drag to reorder",
+      "indent": "Indent (make sub-item)",
+      "outdent": "Outdent",
+      "empty": {
+        "section": "No to-dos here yet."
+      }
+    },
+    "notes": {
+      "title": "Note title",
+      "body": "Note body",
+      "create": "New note",
+      "newTitle": "New note",
+      "bodyPlaceholder": "Write something...",
+      "delete": "Delete note",
+      "deleted": {
+        "toast": "Note deleted"
+      },
+      "pin": "Pin",
+      "unpin": "Unpin",
+      "autosave": {
+        "saving": "Saving…",
+        "saved": "Saved"
+      },
+      "empty": {
+        "title": "No notes yet",
+        "body": "Notes are just for you — jot down anything."
+      }
+    },
+    "pomodoro": {
+      "widget": {
+        "label": "Pomodoro",
+        "aria": "Pomodoro timer"
+      },
+      "phase": {
+        "idle": "Ready",
+        "focus": "Focus",
+        "shortBreak": "Short break",
+        "longBreak": "Long break"
+      },
+      "action": {
+        "startFocus": "Start focus",
+        "startShortBreak": "Start break",
+        "pause": "Pause",
+        "resume": "Resume",
+        "skip": "Skip",
+        "stop": "Stop"
+      },
+      "notification": {
+        "body": "Time's up"
+      },
+      "sound": {
+        "chime": "Chime",
+        "bell": "Bell",
+        "digital": "Digital",
+        "none": "Silent",
+        "muteOn": "Mute",
+        "muteOff": "Unmute"
+      },
+      "notifications": {
+        "on": "Notifications on",
+        "off": "Notifications off"
+      },
+      "settings": {
+        "title": "Pomodoro settings",
+        "revert": "Revert to saved settings",
+        "invalidRange": "Enter a whole number from {min} to {max}.",
+        "focusMin": "Focus (minutes)",
+        "shortBreakMin": "Short break (minutes)",
+        "longBreakMin": "Long break (minutes)",
+        "cyclesBeforeLong": "Focus sessions before a long break",
+        "sound": "Sound",
+        "notifications": "Browser notifications",
+        "autoStart": "Start the next phase automatically"
+      },
+      "stats": {
+        "todayFocus": "Focus today",
+        "todaySessions": "Sessions today",
+        "weekFocus": "Focus this week",
+        "weekSessions": "Sessions this week",
+        "minutesShort": "min"
+      },
+      "log": {
+        "title": "Session log",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "completed": "Completed",
+        "skipped": "Skipped",
+        "ongoing": "In progress",
+        "showMore": "Show {count} more days",
+        "empty": {
+          "title": "No sessions yet",
+          "body": "Start a focus session to see it here."
+        }
+      }
+    },
+    "ai": {
+      "pending": "Preparing…",
+      "accept": "Accept",
+      "edit": "Edit",
+      "discard": "Discard",
+      "disclaimer": "AI suggestions can be wrong — always reviewed before anything is added.",
+      "quickAdd": {
+        "action": "Clean up with AI",
+        "title": "AI clean-up"
+      },
+      "subtasks": {
+        "action": "Break into subtasks",
+        "title": "Suggested subtasks",
+        "editAria": "Edit the suggested subtasks, one per line"
+      },
+      "planSprint": {
+        "action": "Plan with AI",
+        "title": "AI period plan",
+        "editAria": "Edit the suggested order, one to-do per line",
+        "focusBadge": "Start here",
+        "emptyBucket": "Add a to-do to this period first",
+        "appliedToast": "The plan has been applied"
+      },
+      "translate": {
+        "action": "Translate to {locale}",
+        "title": "Translation to {locale}"
+      },
+      "catchUp": {
+        "subjectSelf": "You",
+        "noteTitle": "The week in review",
+        "savedToast": "Saved to your notes",
+        "action": "What did I miss",
+        "title": "The past week",
+        "acceptLabel": "Save to notes",
+        "editAria": "Edit the summary text"
+      }
+    }
+  },
   "departments": {
     "title": "Departments",
     "subtitle": "Your departments, and ways to join more",
     "common": {
       "cancel": "Cancel",
+      "close": "Close",
+      "waitForAction": "Wait for the current department action to finish, then try again.",
+      "pendingAction": "This action is still running. You can close this window; closing does not cancel it.",
       "undo": "Undo"
     },
     "landing": {
@@ -1899,6 +2331,8 @@
       "title": "Invite",
       "link": "Link",
       "copyLink": "Copy link",
+      "copyKey": "Copy key",
+      "copiedKey": "Key copied",
       "qrLabel": "QR code",
       "keyLabel": "Key",
       "passwordLabel": "Password",
@@ -1912,6 +2346,7 @@
       "rotatePasswordConfirm": "The old password will stop working. Rotate the password?",
       "setPassword": "Set my own password",
       "setPasswordSubmit": "Save",
+      "passwordRequirements": "Use 8–128 characters for the invitation password.",
       "approvalToggleLabel": "Require approval to join",
       "approvalToggleBody": "When on, new members wait for the head's approval.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
@@ -1932,10 +2367,12 @@
         "passwordLabel": "Password"
       },
       "submit": "Join",
+      "keyHint": "Paste the key after key=, or the complete invitation link. Enter the invitation password provided by your head.",
       "success": "You've joined the department",
       "pendingApproval": "Your request is waiting for the head's approval",
       "invalidKeyOrPassword": "Invalid key or password",
       "rateLimited": "Too many attempts. Try again in a moment.",
+      "failed": "Could not complete the request. Check your connection and try again.",
       "pendingApprovalBody": "The department head has been notified. You will get a notification once they approve, and can start work then.",
       "approvalNotice": "Joining this department needs the head’s approval.",
       "successBody": "The department’s work is open to you now."
@@ -2355,6 +2792,12 @@
       "to": "To"
     }
   },
+  "eventsControls": {
+    "option": "Option {number}",
+    "removeOption": "Remove option {number}",
+    "optionLimit": "Polls can have up to {count} options.",
+    "exportFailed": "Could not download the calendar file. Try again."
+  },
   "featureState": {
     "off": "This feature is turned off",
     "headHelp": "Your department has not enabled this feature yet. Open Features in department settings to turn it on.",
@@ -2534,13 +2977,24 @@
       "needs_options": "Add at least one option.",
       "archived": "This field is archived.",
       "unknown_subject": "It is not clear who this belongs to.",
-      "invalid_value": "That value is not valid."
+      "invalid_value": "That value is not valid.",
+      "duplicate_option": "Each option needs a different internal ID. Reload the field and add the options again."
     },
     "filter": {
       "chip": "{key}: {value}",
       "chipEmpty": "{key}: empty",
       "hint": "Filter by a field: field:{key}:value"
     }
+  },
+  "goalsControls": {
+    "conflict": "This goal changed elsewhere. Your draft is still here. Load the saved version before editing again.",
+    "reload": "Load saved version",
+    "reloadFailed": "Could not load the saved goal. Your draft is still here; try again.",
+    "workloadDenied": "The department workload overview is for the department head. You can see your own workload on Home."
+  },
+  "headScope": {
+    "leadership": "Department leadership",
+    "departmentWide": "Department-wide"
   },
   "help": {
     "title": "Quick help",
@@ -2715,6 +3169,7 @@
       "estimate": "Estimate"
     },
     "card": {
+      "titleRequired": "Enter a card title.",
       "peekTitle": "Card details",
       "markDone": "Mark done",
       "archive": "Archive",
@@ -2728,6 +3183,8 @@
       "newLabel": "New label",
       "descriptionPlaceholder": "Add a description",
       "addLinkPlaceholder": "Paste a link",
+      "addLink": "Add link",
+      "removeLink": "Remove link: {title}",
       "unfurlError": "Could not load that link",
       "addChecklistItem": "Add an item",
       "addCommentPlaceholder": "Write a comment, @ to mention someone",
@@ -2965,7 +3422,7 @@
         "monthly": "month(s)"
       },
       "weekdaysLabel": "Days of the week",
-      "weekdaysEmptyHint": "Pick at least one day.",
+      "weekdaysEmptyHint": "With no days selected, use the weekday the series started on.",
       "weekday": {
         "mon": "Mon",
         "tue": "Tue",
@@ -3077,7 +3534,7 @@
       "cardCount": "{count} cards",
       "emptyTitle": "No templates yet",
       "emptyBody": "Nobody has prepared a template for this department yet.",
-      "emptyBodyHead": "Open a card and save it as a template."
+      "emptyBodyHead": "Choose New card template to prepare a personal or department template."
     },
     "workload": {
       "title": "Workload",
@@ -3176,6 +3633,19 @@
       "capUsed": "{pct}% of the cap",
       "overCap": "{over} over the cap",
       "forbiddenAction": "Open the board"
+    },
+    "templateEditor": {
+      "new": "New card template",
+      "edit": "Edit {name}",
+      "editTitle": "Edit card template",
+      "name": "Template name",
+      "scope": "Who can use it",
+      "cardTitle": "Card title",
+      "checklist": "Checklist",
+      "checklistHint": "One instruction per line. Up to 50 instructions, 500 characters each.",
+      "invalid": "Add a name and card title, and keep the checklist within its limits.",
+      "saveFailed": "Could not save this template. Your draft is kept. Try Save again.",
+      "saved": "Template saved"
     }
   },
   "inbox": {
@@ -3287,6 +3757,129 @@
     "group": "For a department group: add the bot to your group, get a group connection code below, then paste the full /connect command into the group.",
     "progress": "Connected: {linked} of {total} people · {groups} groups",
     "telegramUnavailable": "The bot cannot be reached right now. Your inbox still works. Try again shortly or contact your administrator."
+  },
+  "pages": {
+    "onboarding": {
+      "ownerLabel": "Responsible role",
+      "deleteTemplate": "Delete checklist",
+      "deleteTitle": "Delete this checklist?",
+      "deleteBody": "This removes the checklist for future newcomers. Tasks already added to personal lists stay there.",
+      "createFailed": "Could not create the checklist. Your name is kept; try again.",
+      "saveFailed": "Could not save the checklist. Your changes are kept; try again.",
+      "deleteFailed": "Could not delete the checklist. Try again.",
+      "changedElsewhere": "This checklist changed in another session. Your draft is kept. Cancel changes to load the latest items, or save to replace them with your draft.",
+      "cancelChanges": "Cancel changes",
+      "itemLimit": "A checklist can contain up to 100 items.",
+      "editTemplate": "Edit checklist name",
+      "editItem": "Edit item",
+      "itemLabel": "Checklist item",
+      "nameRequired": "Enter a checklist name.",
+      "itemRequired": "Enter an item.",
+      "title": "Onboarding checklist",
+      "subtitle": "When a newcomer joins the department, the items below are added to their own personal to-do list automatically.",
+      "enable": "Enable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "newTemplate": "New checklist",
+      "namePlaceholder": "Checklist name",
+      "addItem": "Add item",
+      "itemPlaceholder": "What needs to happen?",
+      "ownerRole": {
+        "newcomer": "Newcomer",
+        "head": "Department head",
+        "buddy": "Buddy"
+      },
+      "empty": "No onboarding checklist yet",
+      "save": "Save",
+      "saved": "Saved",
+      "removeItem": "Remove item"
+    },
+    "editor": {
+      "contentLabel": "Page content",
+      "suggestions": {
+        "commands": "Block commands",
+        "empty": "No matching options",
+        "formatting": "Text formatting"
+      },
+      "titlePlaceholder": "Title",
+      "save": "Save",
+      "saved": "Saved",
+      "autosaving": "Saving...",
+      "toolbar": {
+        "bold": "Bold",
+        "italic": "Italic",
+        "heading1": "Heading 1",
+        "heading2": "Heading 2",
+        "bulletList": "Bullet list",
+        "orderedList": "Numbered list",
+        "taskList": "Checklist",
+        "callout": "Callout",
+        "mention": "Mention someone",
+        "blockquote": "Quote",
+        "codeBlock": "Code block",
+        "translate": "Translate selection"
+      },
+      "contentPlaceholder": "Write something, or type \"/\" for commands…",
+      "translate": {
+        "selectFirst": "Select some text first, then translate it",
+        "title": "Translate selection",
+        "pending": "Translating…",
+        "accept": "Replace selection",
+        "edit": "Edit",
+        "discard": "Discard",
+        "retry": "Retry",
+        "errors": {
+          "invalid": "Check the selected text and try again",
+          "forbidden": "Translate is off or the AI budget is used up",
+          "failed": "The AI could not translate this time"
+        }
+      }
+    },
+    "title": "Pages",
+    "eyebrow": "Knowledge",
+    "create": "New page",
+    "untitled": "Untitled page",
+    "newTitlePlaceholder": "Page title",
+    "kind": {
+      "how_we_work": "How we work",
+      "onboarding": "Onboarding",
+      "brief": "Brief",
+      "note": "Note"
+    },
+    "empty": {
+      "title": "No pages yet",
+      "body": "Create your department's first page — for example, \"How we work\"."
+    },
+    "backToList": "Back to pages",
+    "delete": "Delete page",
+    "deleted": "Page deleted",
+    "versions": {
+      "title": "Version history",
+      "empty": "No versions yet",
+      "restore": "Restore this version",
+      "restored": "Version restored",
+      "viewDiff": "View diff",
+      "current": "Current",
+      "by": "By {name}"
+    },
+    "diff": {
+      "added": "Added",
+      "removed": "Removed",
+      "noChanges": "No changes between these versions"
+    },
+    "conflict": {
+      "title": "This page was already updated",
+      "body": "Someone else changed it in the meantime. Reload the page and re-enter your changes."
+    },
+    "moreActions": "More actions",
+    "undo": "Undo"
+  },
+  "locale": {
+    "loadingFailed": "Could not load {locale}. Your current language is still available.",
+    "bootLoadingFailed": "Could not load {locale}. Reload to open the platform.",
+    "reload": "Reload and try again",
+    "preferenceFailed": "Your {locale} choice is kept in this browser, but could not be saved to your profile. Retry to use it on other devices too.",
+    "retrySave": "Retry saving language"
   },
   "miniapp": {
     "title": "WorkPortal",
@@ -3564,101 +4157,6 @@
       }
     }
   },
-  "pages": {
-    "title": "Pages",
-    "eyebrow": "Knowledge",
-    "create": "New page",
-    "untitled": "Untitled page",
-    "newTitlePlaceholder": "Page title",
-    "kind": {
-      "how_we_work": "How we work",
-      "onboarding": "Onboarding",
-      "brief": "Brief",
-      "note": "Note"
-    },
-    "empty": {
-      "title": "No pages yet",
-      "body": "Create your department's first page — for example, \"How we work\"."
-    },
-    "backToList": "Back to pages",
-    "delete": "Delete page",
-    "deleted": "Page deleted",
-    "editor": {
-      "titlePlaceholder": "Title",
-      "save": "Save",
-      "saved": "Saved",
-      "autosaving": "Saving...",
-      "toolbar": {
-        "bold": "Bold",
-        "italic": "Italic",
-        "heading1": "Heading 1",
-        "heading2": "Heading 2",
-        "bulletList": "Bullet list",
-        "orderedList": "Numbered list",
-        "taskList": "Checklist",
-        "callout": "Callout",
-        "mention": "Mention someone",
-        "blockquote": "Quote",
-        "codeBlock": "Code block",
-        "translate": "Translate selection"
-      },
-      "contentPlaceholder": "Write something, or type \"/\" for commands…",
-      "translate": {
-        "selectFirst": "Select some text first, then translate it",
-        "title": "Translate selection",
-        "pending": "Translating…",
-        "accept": "Replace selection",
-        "edit": "Edit",
-        "discard": "Discard",
-        "retry": "Retry",
-        "errors": {
-          "invalid": "Check the selected text and try again",
-          "forbidden": "Translate is off or the AI budget is used up",
-          "failed": "The AI could not translate this time"
-        }
-      }
-    },
-    "versions": {
-      "title": "Version history",
-      "empty": "No versions yet",
-      "restore": "Restore this version",
-      "restored": "Version restored",
-      "viewDiff": "View diff",
-      "current": "Current",
-      "by": "By {name}"
-    },
-    "diff": {
-      "added": "Added",
-      "removed": "Removed",
-      "noChanges": "No changes between these versions"
-    },
-    "conflict": {
-      "title": "This page was already updated",
-      "body": "Someone else changed it in the meantime. Reload the page and re-enter your changes."
-    },
-    "onboarding": {
-      "title": "Onboarding checklist",
-      "subtitle": "When a newcomer joins the department, the items below are added to their own personal to-do list automatically.",
-      "enable": "Enable",
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "newTemplate": "New checklist",
-      "namePlaceholder": "Checklist name",
-      "addItem": "Add item",
-      "itemPlaceholder": "What needs to happen?",
-      "ownerRole": {
-        "newcomer": "Newcomer",
-        "head": "Department head",
-        "buddy": "Buddy"
-      },
-      "empty": "No onboarding checklist yet",
-      "save": "Save",
-      "saved": "Saved",
-      "removeItem": "Remove item"
-    },
-    "moreActions": "More actions",
-    "undo": "Undo"
-  },
   "people": {
     "table": {
       "title": "People table",
@@ -3787,6 +4285,7 @@
         "revert": "Put it back",
         "saveOver": "Save",
         "saved": "{name} saved",
+        "saveError": "Could not save this view. Your changes are kept. Try again.",
         "deleted": "{name} deleted"
       },
       "noResults": {
@@ -4097,263 +4596,6 @@
       }
     }
   },
-  "personal": {
-    "title": "Personal",
-    "eyebrow": "JUST FOR YOU",
-    "description": "Your private space for periods, to-dos, notes, a canvas and focus time.",
-    "tabs": {
-      "today": "Today",
-      "sprints": "Periods",
-      "tasks": "To-dos",
-      "notes": "Notes",
-      "canvas": "Canvas",
-      "pomodoro": "Pomodoro"
-    },
-    "privacy": {
-      "note": "Only you can see what's in this workspace — not your department head, not anyone else.",
-      "dismiss": "Dismiss"
-    },
-    "duration": {
-      "daysShort": "d",
-      "hoursShort": "h",
-      "minutesShort": "m"
-    },
-    "today": {
-      "tasks": {
-        "title": "Today's to-dos",
-        "remaining": "{count} left",
-        "completedToast": "Marked done"
-      },
-      "empty": {
-        "title": "Nothing planned for today",
-        "body": "Add a to-do or start a period to see it here."
-      },
-      "allDone": {
-        "title": "All done for now",
-        "body": "Nothing left in your active periods or inbox. Enjoy the quiet."
-      },
-      "addPlaceholder": "Add a to-do for today",
-      "focus": "Focus",
-      "period": {
-        "progressAria": "Period progress",
-        "timeLeft": "{value} left",
-        "noGoal": "No goal set for this period yet"
-      },
-      "rollover": {
-        "banner": "This period's time is up. Roll the unfinished to-dos into a new one?",
-        "bannerGoal": "Time is up for “{goal}”. Roll the unfinished to-dos into a new period?"
-      }
-    },
-    "sprints": {
-      "active": {
-        "title": "Active periods"
-      },
-      "empty": {
-        "title": "No periods yet",
-        "body": "Start a period to give your work a goal and a time box."
-      },
-      "create": {
-        "action": "New period",
-        "title": "New period",
-        "submit": "Create period"
-      },
-      "goal": "Goal",
-      "goalPlaceholder": "What are you trying to get done?",
-      "history": {
-        "title": "History ({count})"
-      },
-      "rollover": {
-        "action": "Roll over",
-        "toast": "Moved {count} unfinished to-dos to a new period"
-      },
-      "complete": {
-        "action": "Mark complete",
-        "toast": "Period completed"
-      },
-      "ended": "Time's up",
-      "kind": {
-        "threeHour": "3 hours",
-        "day": "Day",
-        "week": "Week",
-        "custom": "Custom"
-      },
-      "status": {
-        "active": "Active",
-        "completed": "Completed",
-        "archived": "Archived"
-      }
-    },
-    "tasks": {
-      "inbox": "Inbox",
-      "addPlaceholder": "Add a to-do",
-      "openCount": "{count} open",
-      "toggleDone": "Mark done",
-      "delete": "Delete to-do",
-      "deleted": {
-        "toast": "To-do deleted"
-      },
-      "dragHandle": "Drag to reorder",
-      "indent": "Indent (make sub-item)",
-      "outdent": "Outdent",
-      "empty": {
-        "section": "No to-dos here yet."
-      }
-    },
-    "notes": {
-      "create": "New note",
-      "newTitle": "New note",
-      "bodyPlaceholder": "Write something...",
-      "delete": "Delete note",
-      "deleted": {
-        "toast": "Note deleted"
-      },
-      "pin": "Pin",
-      "unpin": "Unpin",
-      "autosave": {
-        "saving": "Saving…",
-        "saved": "Saved"
-      },
-      "empty": {
-        "title": "No notes yet",
-        "body": "Notes are just for you — jot down anything."
-      }
-    },
-    "canvas": {
-      "create": "New canvas",
-      "newTitle": "New canvas",
-      "open": "Open",
-      "back": "Back to canvases",
-      "delete": "Delete canvas",
-      "deleted": {
-        "toast": "Canvas deleted"
-      },
-      "autosave": {
-        "saving": "Saving…",
-        "saved": "Saved"
-      },
-      "empty": {
-        "title": "No canvases yet",
-        "body": "A canvas is a free-form board for sketches and sticky notes."
-      },
-      "addSticky": "Add sticky note",
-      "undo": "Undo",
-      "redo": "Redo",
-      "zoomIn": "Zoom in",
-      "zoomOut": "Zoom out",
-      "strokeWidth": "Stroke width",
-      "emptyText": "Text",
-      "tool": {
-        "select": "Select",
-        "pen": "Pen",
-        "rectangle": "Rectangle",
-        "ellipse": "Ellipse",
-        "arrow": "Arrow",
-        "text": "Text",
-        "eraser": "Eraser"
-      }
-    },
-    "pomodoro": {
-      "widget": {
-        "label": "Pomodoro",
-        "aria": "Pomodoro timer"
-      },
-      "phase": {
-        "idle": "Ready",
-        "focus": "Focus",
-        "shortBreak": "Short break",
-        "longBreak": "Long break"
-      },
-      "action": {
-        "startFocus": "Start focus",
-        "startShortBreak": "Start break",
-        "pause": "Pause",
-        "resume": "Resume",
-        "skip": "Skip",
-        "stop": "Stop"
-      },
-      "notification": {
-        "body": "Time's up"
-      },
-      "sound": {
-        "chime": "Chime",
-        "bell": "Bell",
-        "digital": "Digital",
-        "none": "Silent",
-        "muteOn": "Mute",
-        "muteOff": "Unmute"
-      },
-      "notifications": {
-        "on": "Notifications on",
-        "off": "Notifications off"
-      },
-      "settings": {
-        "title": "Pomodoro settings",
-        "focusMin": "Focus (minutes)",
-        "shortBreakMin": "Short break (minutes)",
-        "longBreakMin": "Long break (minutes)",
-        "cyclesBeforeLong": "Focus sessions before a long break",
-        "sound": "Sound",
-        "notifications": "Browser notifications",
-        "autoStart": "Start the next phase automatically"
-      },
-      "stats": {
-        "todayFocus": "Focus today",
-        "todaySessions": "Sessions today",
-        "weekFocus": "Focus this week",
-        "weekSessions": "Sessions this week",
-        "minutesShort": "min"
-      },
-      "log": {
-        "title": "Session log",
-        "today": "Today",
-        "yesterday": "Yesterday",
-        "completed": "Completed",
-        "skipped": "Skipped",
-        "showMore": "Show {count} more days",
-        "empty": {
-          "title": "No sessions yet",
-          "body": "Start a focus session to see it here."
-        }
-      }
-    },
-    "ai": {
-      "pending": "Preparing…",
-      "accept": "Accept",
-      "edit": "Edit",
-      "discard": "Discard",
-      "disclaimer": "AI suggestions can be wrong — always reviewed before anything is added.",
-      "quickAdd": {
-        "action": "Clean up with AI",
-        "title": "AI clean-up"
-      },
-      "subtasks": {
-        "action": "Break into subtasks",
-        "title": "Suggested subtasks",
-        "editAria": "Edit the suggested subtasks, one per line"
-      },
-      "planSprint": {
-        "action": "Plan with AI",
-        "title": "AI period plan",
-        "editAria": "Edit the suggested order, one to-do per line",
-        "focusBadge": "Start here",
-        "emptyBucket": "Add a to-do to this period first",
-        "appliedToast": "The plan has been applied"
-      },
-      "translate": {
-        "action": "Translate to {locale}",
-        "title": "Translation to {locale}"
-      },
-      "catchUp": {
-        "subjectSelf": "You",
-        "noteTitle": "The week in review",
-        "savedToast": "Saved to your notes",
-        "action": "What did I miss",
-        "title": "The past week",
-        "acceptLabel": "Save to notes",
-        "editAria": "Edit the summary text"
-      }
-    }
-  },
   "profileEdit": {
     "heading": "Profile",
     "title": "Position",
@@ -4380,7 +4622,7 @@
     "saved": "Project saved",
     "conflict": "Someone updated this project. Close this window, refresh and try again.",
     "error": "Could not save. Check the selected people and try again.",
-    "convert": "Add people · make a group project",
+    "convert": "Create group",
     "convertHint": "Choose your teammates. This card becomes the first shared card in a new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
     "converted": "Group project created"
   },

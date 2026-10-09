@@ -1,0 +1,9 @@
+{
+  "locale": {
+    "loadingFailed": "{locale} tilini yuklab bo‘lmadi. Hozirgi til mavjudligicha qoladi.",
+    "bootLoadingFailed": "{locale} tilini yuklab bo‘lmadi. Platformani ochish uchun sahifani qayta yuklang.",
+    "reload": "Sahifani qayta yuklash",
+    "preferenceFailed": "{locale} tanlovingiz shu brauzerda saqlandi, lekin profilingizga saqlanmadi. Boshqa qurilmalarda ham ishlatish uchun qayta saqlang.",
+    "retrySave": "Tilni qayta saqlash"
+  }
+}

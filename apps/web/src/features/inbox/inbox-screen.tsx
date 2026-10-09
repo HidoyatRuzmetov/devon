@@ -28,6 +28,10 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
   cn,
   toast,
   toastWithUndo,
@@ -43,7 +47,6 @@ import { navigate } from '../../lib/router.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import { fetchIcsUrl, REASONS, type InboxStatus, type NotificationDto } from './api.js'
 import {
-  useArchiveMutation,
   useMarkAllReadMutation,
   useMarkReadMutation,
   useNotificationsQuery,
@@ -56,6 +59,7 @@ import { NotificationSheet } from './notification-sheet.js'
 import { REASON_TONE, ReasonIcon } from './reason-icon.js'
 
 const TABS: readonly InboxStatus[] = ['inbox', 'unread', 'archived']
+type OpenNotification = (notification: NotificationDto, index: number, opener?: HTMLElement) => void
 
 /** Which row the j/k cursor is on, by id.
  *
@@ -68,37 +72,17 @@ const TABS: readonly InboxStatus[] = ['inbox', 'unread', 'archived']
  * re-renders the rows, which is the only thing that actually changed. */
 const SelectedNotificationContext = React.createContext<string | null>(null)
 
-function InboxTabs({
-  status,
-  onChange,
-  unreadCount,
-}: {
-  status: InboxStatus
-  onChange: (status: InboxStatus) => void
-  unreadCount: number
-}) {
+function InboxTabs({ unreadCount }: { unreadCount: number }) {
   const t = useT()
   return (
-    <div role="tablist" aria-label={t('inbox.title')} className="flex gap-1 border-b border-border">
+    <TabsList aria-label={t('inbox.title')}>
       {TABS.map((tab) => (
-        <button
-          key={tab}
-          type="button"
-          role="tab"
-          aria-selected={status === tab}
-          onClick={() => onChange(tab)}
-          className={cn(
-            'flex items-center gap-2 border-b-2 px-3 py-2 text-body transition-colors duration-(--dur-micro)',
-            status === tab
-              ? 'border-primary text-foreground'
-              : 'border-transparent text-muted-foreground hover:text-foreground',
-          )}
-        >
+        <TabsTrigger key={tab} value={tab}>
           {t(`inbox.tabs.${tab}`)}
           {tab === 'unread' && unreadCount > 0 ? <Badge tone="info">{unreadCount}</Badge> : null}
-        </button>
+        </TabsTrigger>
       ))}
-    </div>
+    </TabsList>
   )
 }
 
@@ -107,14 +91,14 @@ function InboxTabs({
  * eats a keystroke a person meant to type. */
 function useListKeyboardNav({
   items,
-  selectedIndex,
-  setSelectedIndex,
+  selectedId,
+  onSelect,
   onOpen,
   onArchive,
 }: {
   items: readonly NotificationDto[]
-  selectedIndex: number
-  setSelectedIndex: (i: number) => void
+  selectedId: string | null
+  onSelect: (notification: NotificationDto) => void
   onOpen: (notification: NotificationDto) => void
   onArchive: (id: string) => void
 }) {
@@ -123,22 +107,33 @@ function useListKeyboardNav({
       const target = e.target as HTMLElement | null
       if (target && /^(input|textarea|select)$/i.test(target.tagName)) return
       if (target?.isContentEditable) return
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if (target?.closest('[role="dialog"], [role="menu"], [role="combobox"]')) return
+      const focusedRow = target?.closest<HTMLElement>('[data-inbox-opener]')
+      // Other controls own their keys. A row keeps native Enter activation while j/k/e work
+      // on that actual focused row, including after Tab navigation or closing its detail sheet.
+      if (target?.closest('button, a, [role="button"], [role="tab"]') && !focusedRow) return
+      if (focusedRow && e.key === 'Enter') return
       if (items.length === 0) return
+      const currentId = focusedRow?.dataset['inboxOpener'] ?? selectedId
+      const currentIndex = items.findIndex((item) => item.id === currentId)
 
       if (e.key === 'j') {
         e.preventDefault()
-        setSelectedIndex(Math.min(items.length - 1, selectedIndex + 1))
+        const next = items[Math.min(items.length - 1, currentIndex + 1)]
+        if (next) onSelect(next)
       } else if (e.key === 'k') {
         e.preventDefault()
-        setSelectedIndex(Math.max(0, selectedIndex - 1))
+        const previous = items[Math.max(0, currentIndex - 1)]
+        if (previous) onSelect(previous)
       } else if (e.key === 'Enter') {
-        const current = items[selectedIndex]
+        const current = items[currentIndex]
         if (current) {
           e.preventDefault()
           onOpen(current)
         }
       } else if (e.key === 'e') {
-        const current = items[selectedIndex]
+        const current = items[currentIndex]
         if (current) {
           e.preventDefault()
           onArchive(current.id)
@@ -147,7 +142,7 @@ function useListKeyboardNav({
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [items, selectedIndex, setSelectedIndex, onOpen, onArchive])
+  }, [items, selectedId, onSelect, onOpen, onArchive])
 }
 
 /** Motion verdict F5. A tab click cost a 499 ms long task followed by a 238 ms one, and the
@@ -174,7 +169,7 @@ const InboxRow = React.memo(function InboxRow({
   notification: NotificationDto
   index: number
   showReasonChip?: boolean
-  onOpen: (notification: NotificationDto, index: number) => void
+  onOpen: OpenNotification
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
@@ -199,7 +194,7 @@ const InboxRow = React.memo(function InboxRow({
           notification={notification}
           selected={selected}
           {...(showReasonChip === undefined ? {} : { showReasonChip })}
-          onOpen={() => onOpen(notification, index)}
+          onOpen={(opener) => onOpen(notification, index, opener)}
           onQuickAction={() => onQuickAction(notification)}
           onArchive={() => onArchive(notification.id)}
           onSnooze={(minutes) => onSnooze(notification.id, minutes)}
@@ -230,7 +225,7 @@ function InboxList({
 }: {
   items: readonly NotificationDto[]
   listKey: string
-  onOpen: (notification: NotificationDto, index: number) => void
+  onOpen: OpenNotification
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
@@ -271,7 +266,7 @@ function GroupedInboxList({
 }: {
   items: readonly NotificationDto[]
   listKey: string
-  onOpen: (notification: NotificationDto, index: number) => void
+  onOpen: OpenNotification
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
@@ -350,7 +345,7 @@ const InboxTabPanel = React.memo(function InboxTabPanel({
   isError: boolean
   onRetry: () => void
   grouped: boolean
-  onOpen: (notification: NotificationDto, index: number) => void
+  onOpen: OpenNotification
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
@@ -392,7 +387,7 @@ function InboxBody({
   onRetry: () => void
   status: InboxStatus
   grouped: boolean
-  onOpen: (notification: NotificationDto, index: number) => void
+  onOpen: OpenNotification
   onArchive: (id: string) => void
   onQuickAction: (notification: NotificationDto) => void
   onSnooze: (id: string, minutes: number) => void
@@ -458,12 +453,15 @@ export default function InboxScreen() {
   const [status, setStatus] = React.useState<InboxStatus>('inbox')
   const [openId, setOpenId] = React.useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = React.useState(0)
+  const inboxRef = React.useRef<HTMLDivElement>(null)
+  const openerRef = React.useRef<HTMLElement | null>(null)
+  const openerNotificationId = React.useRef<string | null>(null)
   // UI-OVERHAUL.md §8: grouped by reason is the default view, not an opt-in someone has to find --
   // the toggle moved into a "View" menu (below) rather than staying its own header button.
   const [grouped, setGrouped] = React.useState(true)
-  // The split becomes a stack below this width (UI-OVERHAUL.md "stack at 390") -- Tailwind's own
-  // `md` breakpoint, so this hook's threshold and the `md:` classes below never drift apart.
-  const isDesktop = useMediaQuery('(min-width: 768px)')
+  // The sidebar consumes 264px: a tablet-sized viewport cannot fit two readable panes.
+  // Keep the list and open its detail sheet until both panes have useful working space.
+  const hasSplitView = useMediaQuery('(min-width: 1280px)')
 
   const settled = !meQuery.isPending
 
@@ -495,10 +493,21 @@ export default function InboxScreen() {
   const markRead = useMarkReadMutation()
   const markAllRead = useMarkAllReadMutation()
   const snooze = useSnoozeMutation()
-  const archiveNow = useArchiveMutation()
   const archiveUndoable = useUndoableArchive()
 
-  const items = notificationsQuery.data?.items ?? []
+  const items = React.useMemo(
+    () => notificationsQuery.data?.items ?? [],
+    [notificationsQuery.data?.items],
+  )
+  const navigationItems = grouped
+    ? REASONS.flatMap((reason) => items.filter((item) => item.reason === reason))
+    : items
+  // A conditional sheet unmount keeps its last close callback. Read current rows through a ref,
+  // so that callback does not restore focus to a row still animating out after a successful archive.
+  const currentItems = React.useRef(items)
+  React.useLayoutEffect(() => {
+    currentItems.current = items
+  }, [items])
   // The j/k cursor as an id, for `SelectedNotificationContext` (see its own note): the panels stay
   // memoised and only the rows re-render when the selection moves.
   const selectedId = items[selectedIndex]?.id ?? null
@@ -540,7 +549,10 @@ export default function InboxScreen() {
   const { mutate: markReadMutate } = markRead
   const { mutate: snoozeMutate } = snooze
   const handleOpen = React.useCallback(
-    (notification: NotificationDto, index: number) => {
+    (notification: NotificationDto, index: number, opener?: HTMLElement) => {
+      openerNotificationId.current = notification.id
+      openerRef.current =
+        opener ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
       setOpenId(notification.id)
       setSelectedIndex(index)
       if (notification.readAt === null) markReadMutate([notification.id])
@@ -557,28 +569,57 @@ export default function InboxScreen() {
   )
 
   const handleArchive = React.useCallback(
-    (id: string) => {
-      setOpenId((current) => (current === id ? null : current))
-      const { cancel } = archiveUndoable([id])
-      toastWithUndo({
-        message: t('inbox.row.archived'),
-        undoLabel: t('action.undo'),
-        onUndo: cancel,
-      })
+    async (id: string) => {
+      const focusedRow = document.activeElement?.closest<HTMLElement>('[data-inbox-row]')
+      const restoreRowFocus = focusedRow?.dataset['inboxRow'] === id
+      const visibleRows = Array.from(
+        inboxRef.current?.querySelectorAll<HTMLButtonElement>(
+          '[role="tabpanel"][data-state="active"] [data-inbox-opener]',
+        ) ?? [],
+      )
+      const rowIndex = visibleRows.findIndex((row) => row.dataset['inboxOpener'] === id)
+      const nextRow = visibleRows[rowIndex + 1] ?? visibleRows[rowIndex - 1]
+      try {
+        const { cancel } = await archiveUndoable(id)
+        setOpenId((current) => (current === id ? null : current))
+        if (restoreRowFocus) {
+          if (nextRow?.isConnected) nextRow.focus()
+          else
+            inboxRef.current
+              ?.querySelector<HTMLButtonElement>('[role="tab"][aria-selected="true"]')
+              ?.focus()
+        }
+        if (cancel)
+          toastWithUndo({
+            message: t('inbox.row.archived'),
+            undoLabel: t('action.undo'),
+            onUndo: () => {
+              void cancel().catch(() => toast(t('toast.saveError')))
+            },
+          })
+        else toast(t('inbox.row.archived'))
+      } catch {
+        toast(t('toast.saveError'))
+      }
     },
     [archiveUndoable, t],
   )
 
   const handleSnooze = React.useCallback(
     (id: string, minutes: number) => {
-      snoozeMutate({ id, minutes })
-      toast(t('inbox.row.snoozed'))
+      snoozeMutate(
+        { id, minutes },
+        {
+          onSuccess: () => toast(t('inbox.row.snoozed')),
+          onError: () => toast(t('toast.saveError')),
+        },
+      )
     },
     [snoozeMutate, t],
   )
 
   function handleArchiveNow(id: string) {
-    archiveNow.mutate([id])
+    void handleArchive(id)
   }
 
   async function handleCopyCalendar() {
@@ -592,12 +633,16 @@ export default function InboxScreen() {
   }
 
   useListKeyboardNav({
-    items,
-    selectedIndex,
-    setSelectedIndex: (i) => {
-      setSelectedIndex(i)
-      const n = items[i]
-      if (n) setOpenId(n.id)
+    items: navigationItems,
+    selectedId,
+    onSelect: (notification) => {
+      setSelectedIndex(items.findIndex((item) => item.id === notification.id))
+      inboxRef.current
+        ?.querySelector<HTMLButtonElement>(
+          `[role="tabpanel"][data-state="active"] [data-inbox-opener="${CSS.escape(notification.id)}"]`,
+        )
+        ?.focus()
+      if (hasSplitView) setOpenId(notification.id)
     },
     onOpen: (n) =>
       handleOpen(
@@ -627,20 +672,33 @@ export default function InboxScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <Tabs
+      ref={inboxRef}
+      value={status}
+      onValueChange={(value) => {
+        if (TABS.includes(value as InboxStatus)) setStatus(value as InboxStatus)
+      }}
+      className="flex flex-col gap-6"
+    >
       <PageHeader
         eyebrow={t('inbox.eyebrow')}
         title={t('inbox.title')}
         actions={
           <>
-            {/* The one primary action in the row (UI-OVERHAUL.md §2): the most consequential single
-                thing to do from this screen, whenever there is anything to do it to. */}
-            {unreadCount > 0 ? (
-              <Button variant="primary" size="sm" onClick={() => markAllRead.mutate()}>
-                <CheckCheck className="size-4" aria-hidden="true" />
-                {t('inbox.markAllRead')}
-              </Button>
-            ) : null}
+            {/* Keep this action's space while the count loads or reaches zero, so the list
+                does not move when data arrives. It becomes usable only with unread data. */}
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={
+                unreadCount <= 0 || notificationsQuery.isPending || notificationsQuery.isError
+              }
+              loading={markAllRead.isPending}
+              onClick={() => markAllRead.mutate()}
+            >
+              <CheckCheck className="size-4" aria-hidden="true" />
+              {t('inbox.markAllRead')}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -656,34 +714,32 @@ export default function InboxScreen() {
                   {t('inbox.groupByReason')}
                   {grouped ? <Check className="size-3.5" aria-hidden="true" /> : null}
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleCopyCalendar}>
+                  <CalendarDays className="size-4" aria-hidden="true" />
+                  {t('inbox.calendarLink')}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="sm" onClick={handleCopyCalendar}>
-              <CalendarDays className="size-4" aria-hidden="true" />
-              {t('inbox.calendarLink')}
-            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate('/account/notifications')}>
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               {t('inbox.preferences.title')}
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => navigate('/account/telegram')}>
-              {t('telegram.title')}
-            </Button>
           </>
         }
-        tabs={<InboxTabs status={status} onChange={setStatus} unreadCount={unreadCount} />}
+        tabs={<InboxTabs unreadCount={unreadCount} />}
       />
 
       {/* `minmax(0,440px)`: the list was ~420px of a 1,144px content column with the detail pane
           only an 80px bordered box below it (item handoff) -- widening the list a little and letting
           the detail pane take the rest evens that out. */}
-      <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-[minmax(0,440px)_1fr]">
+      <div className="grid grid-cols-1 items-stretch gap-6 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         <SelectedNotificationContext.Provider value={selectedId}>
           <div className="min-w-0">
             {TABS.map((tab) => (
-              <div
+              <TabsContent
                 key={tab}
-                hidden={tab !== status}
+                value={tab}
+                forceMount
                 // Everything a tab switch changes lives here, outside `InboxTabPanel`'s memo. The list
                 // no longer re-staggers on a switch (it never unmounts), so the "a different tab is a
                 // different list" arrival DESIGN.md §10 asks for is carried by one composited entrance
@@ -691,6 +747,7 @@ export default function InboxScreen() {
                 // keyframe, and the reduced-motion backstop collapses it to an instant state change.
                 className={cn(
                   'min-w-0',
+                  tab !== status && 'hidden',
                   tab === status && 'animate-[devon-rise-in_220ms_var(--ease-out)]',
                 )}
               >
@@ -707,15 +764,15 @@ export default function InboxScreen() {
                   onSnooze={handleSnooze}
                   {...(tab === 'inbox' ? { zeroCelebrate: zeroCelebrateProp } : {})}
                 />
-              </div>
+              </TabsContent>
             ))}
           </div>
         </SelectedNotificationContext.Provider>
 
-        {/* The right pane of the split at >=768; a bottom sheet carries the same content below that
-            (UI-OVERHAUL.md "stack at 390") -- `isDesktop` decides which one is actually mounted, so
+        {/* The right pane of the split at >=1280; a sheet carries the same content below that
+            -- `hasSplitView` decides which one is actually mounted, so
             the two never both claim the same open notification at once. */}
-        {isDesktop ? (
+        {hasSplitView ? (
           <div className="sticky top-4 h-full min-h-100 self-stretch overflow-hidden rounded-md border border-border bg-card p-6">
             {/* round2 SEV2 "switching selection swaps the detail pane with no crossfade": keyed on
                 the open notification's id (or the empty-selection state) so picking a different row
@@ -752,12 +809,25 @@ export default function InboxScreen() {
       </div>
 
       <NotificationSheet
-        notification={isDesktop ? null : openNotification}
+        notification={hasSplitView ? null : openNotification}
         onOpenChange={(open) => {
           if (!open) setOpenId(null)
         }}
         onArchive={handleArchiveNow}
+        onRestoreFocus={() => {
+          if (
+            openerRef.current?.isConnected &&
+            currentItems.current.some((item) => item.id === openerNotificationId.current)
+          )
+            openerRef.current.focus()
+          else
+            inboxRef.current
+              ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+              ?.focus()
+          openerRef.current = null
+          openerNotificationId.current = null
+        }}
       />
-    </div>
+    </Tabs>
   )
 }

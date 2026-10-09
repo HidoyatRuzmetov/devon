@@ -1,0 +1,350 @@
+{
+  "owner": "knowledge_nested-session-expiry",
+  "date": "2026-10-09",
+  "scope": "Two local ordinary board requests after exact synthetic session expiry; realtime-off polling fallback",
+  "environment": {
+    "database": "devon_flow_e2e_knowledge_nested",
+    "apiPort": 48921,
+    "webPort": 48922,
+    "browser": "chromium",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "locale": "en",
+    "theme": "light",
+    "textScale": 1,
+    "role": "head"
+  },
+  "source": {
+    "baseCommit": "73b4bc855aa147779d9f536e1efd499d42c39b42",
+    "file": "apps/web/src/lib/query-client.ts",
+    "sha256": "0d2a9d0101c7fbc2fb9e5c6781a7d6f0b82b81074adfd5353a81f33e32b76dc8"
+  },
+  "before": {
+    "report": "artifacts/qa/2026-10/results/platform/session-expiry-before/summary.json",
+    "passed": 0,
+    "failed": 2,
+    "observations": [
+      {
+        "operation": "read",
+        "url": "/work",
+        "meReadsAfterExpiry": [],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          }
+        ],
+        "genericRecovery": 1,
+        "createError": 0,
+        "reloadRecovered": true
+      },
+      {
+        "operation": "mutation",
+        "url": "/work",
+        "meReadsAfterExpiry": [],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/cards",
+            "method": "POST",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          }
+        ],
+        "genericRecovery": 0,
+        "createError": 1,
+        "reloadRecovered": true
+      }
+    ]
+  },
+  "afterDevelopment": {
+    "report": "artifacts/qa/2026-10/results/platform/session-expiry-after/summary.json",
+    "passed": 2,
+    "failed": 0,
+    "observations": [
+      {
+        "operation": "read",
+        "url": "/work",
+        "meReadsAfterExpiry": [
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "genericRecovery": 0,
+        "createError": 0,
+        "reloadRecovered": true,
+        "signedInAgain": true
+      },
+      {
+        "operation": "mutation",
+        "url": "/work",
+        "meReadsAfterExpiry": [
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/cards",
+            "method": "POST",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "genericRecovery": 0,
+        "createError": 0,
+        "reloadRecovered": true,
+        "signedInAgain": true
+      }
+    ]
+  },
+  "checks": {
+    "focusedAuth": 21,
+    "adjacentSettings": 22,
+    "fullSupportedWebUnit": {
+      "passed": 306,
+      "files": 58
+    },
+    "webTypes": "passed",
+    "scopedLint": "passed",
+    "format": "passed",
+    "diffCheck": "passed",
+    "performanceConfigurationGuards": {
+      "passed": 11,
+      "failed": 0,
+      "actualQaDefaultForcedState": "1",
+      "actualQaProductionForcedState": "0"
+    }
+  },
+  "pixels": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-before/platform-session-expiry.qa-4f929-rs-from-ordinary-board-read-chromium/expired-read.png",
+      "inspected": true,
+      "sha256": "a1ca71c79605ff12d89758ea55724ebef61697d0d5cc0752bebb7d7780bc0f3f"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-before/platform-session-expiry.qa-57b74-rom-ordinary-board-mutation-chromium/expired-mutation.png",
+      "inspected": true,
+      "sha256": "544cf2cfa56daafc038eda428fbfbb356113e55a5251c8d63ee5067cc8e7e18e"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-after/platform-session-expiry.qa-4f929-rs-from-ordinary-board-read-chromium/recovered-sign-in.png",
+      "inspected": true,
+      "sha256": "cb845f6a0a5f911a98e41137e643c43d6f8cd87035389722ed9a8cc1d9fae24c"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-after/platform-session-expiry.qa-57b74-rom-ordinary-board-mutation-chromium/recovered-sign-in.png",
+      "inspected": true,
+      "sha256": "fdd825f5a21e937456282dbe0947682522379a4a8020f89e6f81e3e16d288010"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-after/platform-session-expiry.qa-4f929-rs-from-ordinary-board-read-chromium/expired-read.png",
+      "inspected": true,
+      "sha256": "9835561a65981e6cf234ba140ae271985ac138ff7c3c64c6d88c3e18f28d04dd"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-after/platform-session-expiry.qa-57b74-rom-ordinary-board-mutation-chromium/expired-mutation.png",
+      "inspected": true,
+      "sha256": "9835561a65981e6cf234ba140ae271985ac138ff7c3c64c6d88c3e18f28d04dd"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-compiled/platform-session-expiry.qa-4f929-rs-from-ordinary-board-read-chromium/recovered-sign-in.png",
+      "inspected": true,
+      "sha256": "bc25729dea37e1a11a344102137c9ee8af3299191105208e8651dce460149c94"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-compiled/platform-session-expiry.qa-4f929-rs-from-ordinary-board-read-chromium/expired-read.png",
+      "inspected": true,
+      "sha256": "519fe095d2a5bd39b9563d468c362c4efd5ab1c3837fc74d04894b4b2e4dd075"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-compiled/platform-session-expiry.qa-57b74-rom-ordinary-board-mutation-chromium/recovered-sign-in.png",
+      "inspected": true,
+      "sha256": "926042d51e659e6c436ce2f94a9668666ac7662ae91e1f3f620c2eeca91b6eb3"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/session-expiry-compiled/platform-session-expiry.qa-57b74-rom-ordinary-board-mutation-chromium/expired-mutation.png",
+      "inspected": true,
+      "sha256": "b3565cc2c21e8085f824519f9b20f84b4ec9fe628065cf0e48b6fa88e154185c"
+    }
+  ],
+  "compiledReplay": {
+    "report": "artifacts/qa/2026-10/results/platform/session-expiry-compiled/summary.json",
+    "passed": 2,
+    "failed": 0,
+    "observations": [
+      {
+        "operation": "read",
+        "url": "/work",
+        "meReadsAfterExpiry": [
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "genericRecovery": 0,
+        "createError": 0,
+        "reloadRecovered": true,
+        "signedInAgain": true
+      },
+      {
+        "operation": "mutation",
+        "url": "/work",
+        "meReadsAfterExpiry": [
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "responsesAfterExpiry": [
+          {
+            "path": "/api/v1/cards",
+            "method": "POST",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 401
+          },
+          {
+            "path": "/api/v1/me",
+            "method": "GET",
+            "status": 200
+          },
+          {
+            "path": "/api/v1/board",
+            "method": "GET",
+            "status": 200
+          }
+        ],
+        "genericRecovery": 0,
+        "createError": 0,
+        "reloadRecovered": true,
+        "signedInAgain": true
+      }
+    ],
+    "receipt": "tools/perf/lighthouse/out/production-build.json",
+    "inputsBefore": "cc486d1dd63b18e07bb1db9fd29e53254f5f2cb891892b9f4ad79416f127ebfb",
+    "inputsAfter": "cc486d1dd63b18e07bb1db9fd29e53254f5f2cb891892b9f4ad79416f127ebfb",
+    "reactRuntime": "production",
+    "forcedStateBuildFlag": false,
+    "serverDEVONE2E": "0"
+  },
+  "limits": [
+    "No production request or mutation",
+    "No live broker disconnection probe",
+    "No locale/theme/browser matrix",
+    "Try again click not separately exercised"
+  ]
+}

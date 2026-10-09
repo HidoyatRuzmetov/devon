@@ -7,6 +7,7 @@
 // `analytics/aggregate.ts` already use, for the same reasons.
 import type { FastifyBaseLogger } from 'fastify'
 import { PgBoss } from 'pg-boss'
+import { queueDatabaseOptions } from '../../lib/queue-database.js'
 import { nextOccurrence, recurrenceRuleSchema, type RecurrenceRule } from '@devon/contracts'
 import type { RequestContext } from '@devon/db'
 import { notifyUser } from '../notifications/notify.js'
@@ -223,7 +224,7 @@ export async function startWorkJobs(
   log: FastifyBaseLogger,
 ): Promise<WorkJobsHandle | null> {
   try {
-    const boss = new PgBoss(databaseUrl)
+    const boss = new PgBoss(queueDatabaseOptions(databaseUrl))
     boss.on('error', (err: unknown) => log.error({ err }, 'work: pg-boss reported an error'))
     await boss.start()
     await boss.createQueue(QUEUE_RECURRENCE).catch(() => {})

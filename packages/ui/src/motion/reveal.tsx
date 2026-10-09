@@ -28,6 +28,7 @@ export function Reveal({
   if (onView) {
     return (
       <motion.div
+        data-devon-entrance
         className={className}
         initial={from}
         whileInView={to}
@@ -39,7 +40,13 @@ export function Reveal({
     )
   }
   return (
-    <motion.div className={className} initial={from} animate={to} transition={transition}>
+    <motion.div
+      data-devon-entrance
+      className={className}
+      initial={from}
+      animate={to}
+      transition={transition}
+    >
       {children}
     </motion.div>
   )
@@ -68,6 +75,7 @@ export function BlurFade({
   if (onView) {
     return (
       <motion.div
+        data-devon-entrance
         className={className}
         initial={from}
         whileInView={to}
@@ -79,7 +87,13 @@ export function BlurFade({
     )
   }
   return (
-    <motion.div className={className} initial={from} animate={to} transition={transition}>
+    <motion.div
+      data-devon-entrance
+      className={className}
+      initial={from}
+      animate={to}
+      transition={transition}
+    >
       {children}
     </motion.div>
   )

@@ -47,7 +47,7 @@ import { useDepartment } from '../../../lib/session.js'
 import { useLabelsQuery, useMembers } from '../../work/hooks.js'
 import {
   useAutomationRulesQuery,
-  useAutomationRunsQuery,
+  useAutomationRunHistoryQuery,
   useCreateRuleMutation,
   useDeleteRuleMutation,
   usePatchRuleMutation,
@@ -75,9 +75,9 @@ const RUN_STATUS_ICON = {
  * green reads as decoration rather than as information. Colour is never the only signal here either:
  * every row carries its own glyph and its status word. */
 const RUN_STATUS_CLASS: Record<AutomationRun['status'], string> = {
-  applied: 'bg-success/10 text-success',
+  applied: 'bg-success/15 text-foreground',
   skipped: 'bg-muted text-muted-foreground',
-  failed: 'bg-destructive/10 text-destructive',
+  failed: 'bg-destructive/15 text-foreground',
 }
 
 /** Every reason `engine.ts` can skip a run for, mapped to a sentence. Enumerated rather than
@@ -95,6 +95,7 @@ const RUN_REASON_KEY: Record<string, string> = {
   loop_guard: 'automations.run.reason.loopGuard',
   no_valid_actions: 'automations.run.reason.noValidActions',
   status_did_not_match: 'automations.run.reason.statusDidNotMatch',
+  field_did_not_match: 'automations.run.reason.fieldDidNotMatch',
   filter_did_not_match: 'automations.run.reason.filterDidNotMatch',
   already_applied_today: 'automations.run.reason.alreadyAppliedToday',
 }
@@ -139,59 +140,63 @@ function RuleCard({
     <article
       className={cn(
         'relative flex flex-col gap-3 rounded-md border bg-card p-4',
-        rule.enabled ? 'border-border' : 'border-dashed border-border opacity-70',
+        rule.enabled ? 'border-border' : 'border-dashed border-border',
       )}
     >
       <Celebrate
         play={celebrate ?? false}
         {...(onCelebrateDone ? { onDone: onCelebrateDone } : {})}
       />
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            'inline-flex size-8 shrink-0 items-center justify-center rounded-md',
-            rule.enabled ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground',
-          )}
-        >
-          <Zap className="size-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-body font-medium text-foreground">{rule.name}</h3>
-          <p className="text-caption text-muted-foreground">
-            {t('automations.rule.sentence', {
-              trigger: t(TRIGGER_LABEL_KEY[rule.trigger]),
-              actions: rule.actions.map((a) => t(ACTION_LABEL_KEY[a.kind])).join(', '),
-            })}
-          </p>
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="flex min-w-0 basis-48 grow items-start gap-3">
+          <span
+            aria-hidden="true"
+            className={cn(
+              'inline-flex size-8 shrink-0 items-center justify-center rounded-md',
+              rule.enabled ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground',
+            )}
+          >
+            <Zap className="size-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="break-words text-body font-medium text-foreground">{rule.name}</h3>
+            <p className="text-caption text-muted-foreground">
+              {t('automations.rule.sentence', {
+                trigger: t(TRIGGER_LABEL_KEY[rule.trigger]),
+                actions: rule.actions.map((a) => t(ACTION_LABEL_KEY[a.kind])).join(', '),
+              })}
+            </p>
+          </div>
         </div>
-        <Switch
-          checked={rule.enabled}
-          onCheckedChange={onToggle}
-          disabled={busy}
-          aria-label={t('automations.rule.toggle', { name: rule.name })}
-        />
-        <IconButton
-          aria-label={t('automations.rule.edit', { name: rule.name })}
-          onClick={onEdit}
-          disabled={busy}
-        >
-          <Pencil className="size-4" aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          aria-label={t('automations.rule.duplicate', { name: rule.name })}
-          onClick={onDuplicate}
-          disabled={busy}
-        >
-          <Copy className="size-4" aria-hidden="true" />
-        </IconButton>
-        <IconButton
-          aria-label={t('automations.rule.delete', { name: rule.name })}
-          onClick={onDelete}
-          disabled={busy}
-        >
-          <Trash2 className="size-4" aria-hidden="true" />
-        </IconButton>
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <Switch
+            checked={rule.enabled}
+            onCheckedChange={onToggle}
+            disabled={busy}
+            aria-label={t('automations.rule.toggle', { name: rule.name })}
+          />
+          <IconButton
+            aria-label={t('automations.rule.edit', { name: rule.name })}
+            onClick={onEdit}
+            disabled={busy}
+          >
+            <Pencil className="size-4" aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            aria-label={t('automations.rule.duplicate', { name: rule.name })}
+            onClick={onDuplicate}
+            disabled={busy}
+          >
+            <Copy className="size-4" aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            aria-label={t('automations.rule.delete', { name: rule.name })}
+            onClick={onDelete}
+            disabled={busy}
+          >
+            <Trash2 className="size-4" aria-hidden="true" />
+          </IconButton>
+        </div>
       </div>
 
       {/* SEV2 #9: the log and the switch, reconciled. A rule that is off but has a history is not a
@@ -208,7 +213,12 @@ function RuleCard({
       {rule.lastError ? (
         <p className="flex items-start gap-1.5 rounded-sm bg-destructive/10 px-2 py-1.5 text-caption text-destructive">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-          {t('automations.rule.lastError', { error: rule.lastError })}
+          {t('automations.rule.lastError', {
+            error:
+              rule.lastError === 'action_target_unavailable'
+                ? t('automations.run.reason.targetUnavailable')
+                : rule.lastError,
+          })}
         </p>
       ) : null}
 
@@ -251,25 +261,28 @@ type RunGroup = {
   runs: AutomationRun[]
 }
 
-function groupRuns(runs: readonly AutomationRun[]): RunGroup[] {
+export function groupRuns(runs: readonly AutomationRun[]): RunGroup[] {
   const groups: RunGroup[] = []
+  const byKey = new Map<string, RunGroup>()
   for (const run of runs) {
     // `YYYY-MM-DDTHH:MM` -- the minute the engine's sweep ran.
     const minute = run.at.slice(0, 16)
     const key = `${run.ruleId}|${run.status}|${minute}`
-    const last = groups[groups.length - 1]
-    if (last && last.key === key) {
-      last.runs.push(run)
+    const existing = byKey.get(key)
+    if (existing) {
+      existing.runs.push(run)
       continue
     }
-    groups.push({
+    const group = {
       key,
       ruleId: run.ruleId,
       ruleName: run.ruleName,
       status: run.status,
       at: run.at,
       runs: [run],
-    })
+    }
+    groups.push(group)
+    byKey.set(key, group)
   }
   return groups
 }
@@ -290,7 +303,7 @@ function RunGroupRow({ group }: { group: RunGroup }): React.JSX.Element {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-small transition-colors duration-(--dur-micro) hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="grid w-full grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-2 rounded-md px-2 py-1.5 text-left text-small transition-colors duration-(--dur-micro) hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
       >
         <ChevronRight
           aria-hidden="true"
@@ -304,11 +317,13 @@ function RunGroupRow({ group }: { group: RunGroup }): React.JSX.Element {
           {t(RUN_STATUS_LABEL_KEY[group.status])}
         </Badge>
         <span className="min-w-0 flex-1 truncate text-foreground">{group.ruleName}</span>
-        <span className="shrink-0 text-caption text-muted-foreground">
-          {t('automations.run.batch', { count: group.runs.length })}
-        </span>
-        <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
-          {formatDateTime(new Date(group.at), locale)}
+        <span className="col-span-2 col-start-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 sm:contents">
+          <span className="shrink-0 text-caption text-muted-foreground">
+            {t('automations.run.batch', { count: group.runs.length })}
+          </span>
+          <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+            {formatDateTime(new Date(group.at), locale)}
+          </span>
         </span>
       </button>
       {open ? (
@@ -327,13 +342,13 @@ function RunRow({ run }: { run: AutomationRun }): React.JSX.Element {
   const locale = useLocale()
   const Icon = RUN_STATUS_ICON[run.status]
   return (
-    <div className="flex items-start gap-2 rounded-md px-2 py-1.5 text-small hover:bg-muted/60">
+    <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-2 gap-y-1 rounded-md px-2 py-1.5 text-small hover:bg-muted/60 sm:flex">
       <Badge tone="neutral" className={cn('shrink-0', RUN_STATUS_CLASS[run.status])}>
         <Icon className="size-3" aria-hidden="true" />
         {t(RUN_STATUS_LABEL_KEY[run.status])}
       </Badge>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-foreground">
+        <p className="break-words text-foreground">
           {run.ruleName}
           {run.cardTitle ? (
             <>
@@ -342,7 +357,7 @@ function RunRow({ run }: { run: AutomationRun }): React.JSX.Element {
                 <button
                   type="button"
                   onClick={() => replaceSearchParam('card', run.cardId!)}
-                  className="hover:underline"
+                  className="text-left underline underline-offset-2"
                 >
                   {run.cardTitle}
                 </button>
@@ -354,9 +369,11 @@ function RunRow({ run }: { run: AutomationRun }): React.JSX.Element {
         </p>
         {/* The detail arrives machine-readable (action keys, a reason key) and is translated here --
             never prose the server wrote in one language. */}
-        <p className="truncate text-caption text-muted-foreground">
+        <p className="break-words text-caption text-muted-foreground">
           {run.detail.error
-            ? run.detail.error
+            ? run.detail.error === 'action_target_unavailable'
+              ? t('automations.run.reason.targetUnavailable')
+              : run.detail.error
             : run.detail.reason
               ? t(RUN_REASON_KEY[run.detail.reason] ?? 'automations.run.reason.other')
               : (run.detail.actions ?? [])
@@ -367,7 +384,7 @@ function RunRow({ run }: { run: AutomationRun }): React.JSX.Element {
                   .join(', ')}
         </p>
       </div>
-      <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+      <span className="col-start-2 shrink-0 text-caption tabular-nums text-muted-foreground">
         {formatDateTime(new Date(run.at), locale)}
       </span>
     </div>
@@ -380,7 +397,6 @@ export default function AutomationsScreen(): React.JSX.Element {
   const isHead = department?.role === 'head'
 
   const rulesQuery = useAutomationRulesQuery(isHead)
-  const runsQuery = useAutomationRunsQuery({ limit: 50 }, isHead)
   const members = useMembers()
   const labels = useLabelsQuery().data ?? []
   const createRule = useCreateRuleMutation()
@@ -401,6 +417,14 @@ export default function AutomationsScreen(): React.JSX.Element {
     'all',
   )
   const [runPage, setRunPage] = React.useState(0)
+  const runsQuery = useAutomationRunHistoryQuery(
+    {
+      limit: 50,
+      ...(runRuleFilter !== 'all' ? { ruleId: runRuleFilter } : {}),
+      ...(runStatusFilter !== 'all' ? { status: runStatusFilter } : {}),
+    },
+    isHead,
+  )
   React.useEffect(() => setRunPage(0), [runRuleFilter, runStatusFilter])
 
   // SPEC §2.2: a member has no business here, and the server agrees -- so they get the designed
@@ -562,9 +586,14 @@ export default function AutomationsScreen(): React.JSX.Element {
     )
   }
 
-  const runs = runsQuery.data?.items ?? []
+  const runs = runsQuery.data?.pages.flatMap((page) => page.items) ?? []
+  const runRuleOptions = new Map(rules.map((rule) => [rule.id, rule.name]))
+  for (const run of runs)
+    if (!runRuleOptions.has(run.ruleId)) runRuleOptions.set(run.ruleId, run.ruleName)
+  if (runRuleFilter !== 'all' && !runRuleOptions.has(runRuleFilter))
+    runRuleOptions.set(runRuleFilter, t('automations.runsFilter.removedRule'))
   // The filter's real total, from the server -- see the count line below.
-  const runTotal = runsQuery.data?.total ?? runs.length
+  const runTotal = runsQuery.data?.pages[0]?.total ?? runs.length
   // SEV2 #9: filter, then group, then page. Grouping after filtering is what makes "show me only the
   // failures" collapse to the handful of batches that actually failed instead of to nothing.
   const filteredRuns = runs.filter((run) => {
@@ -604,7 +633,7 @@ export default function AutomationsScreen(): React.JSX.Element {
         action={{ labelKey: 'state.error.action', onAction: () => void runsQuery.refetch() }}
       />
     )
-  } else if (runs.length === 0) {
+  } else if (runs.length === 0 && runRuleFilter === 'all' && runStatusFilter === 'all') {
     runsBody = (
       <StateView
         kind="empty"
@@ -694,24 +723,22 @@ export default function AutomationsScreen(): React.JSX.Element {
         description={t('automations.runsDescription')}
       >
         <div className="flex flex-col gap-3">
-          {/* SEV2 #9: filters by rule and by outcome, above the list. Client-side over the loaded
-              window -- the endpoint already returns the department's recent runs, and narrowing them
-              here is instant and costs no request. */}
+          {/* Filter at the server before paging so older matching runs remain reachable. */}
           <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
+            <div className="flex min-w-0 max-w-full flex-col gap-1">
               <label htmlFor="runs-rule" className="text-caption text-muted-foreground">
                 {t('automations.runsFilter.rule')}
               </label>
               <select
                 id="runs-rule"
-                className={RUN_FILTER_CLASS}
+                className={cn(RUN_FILTER_CLASS, 'max-w-full')}
                 value={runRuleFilter}
                 onChange={(e) => setRunRuleFilter(e.target.value)}
               >
                 <option value="all">{t('automations.runsFilter.allRules')}</option>
-                {rules.map((rule) => (
-                  <option key={rule.id} value={rule.id}>
-                    {rule.name}
+                {[...runRuleOptions].map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
                   </option>
                 ))}
               </select>
@@ -746,9 +773,7 @@ export default function AutomationsScreen(): React.JSX.Element {
                   says how much of it is on screen when that is less than all of it, and says the
                   plain count when the whole log fits. A number a head can check against the card
                   above it, either way. */}
-              {runTotal > filteredRuns.length &&
-              runRuleFilter === 'all' &&
-              runStatusFilter === 'all'
+              {runTotal > filteredRuns.length
                 ? t('automations.runsFilter.countOf', {
                     groups: runGroups.length,
                     runs: filteredRuns.length,
@@ -762,6 +787,15 @@ export default function AutomationsScreen(): React.JSX.Element {
           </div>
 
           {runsBody}
+          {runsQuery.hasNextPage ? (
+            <Button
+              variant="secondary"
+              loading={runsQuery.isFetchingNextPage}
+              onClick={() => void runsQuery.fetchNextPage()}
+            >
+              {t('automations.runsLoadMore')}
+            </Button>
+          ) : null}
 
           {runPageCount > 1 ? (
             <div className="flex items-center justify-between gap-3">
@@ -795,13 +829,14 @@ export default function AutomationsScreen(): React.JSX.Element {
       <Dialog
         open={builderOpen}
         onOpenChange={(next) => {
+          if (patchRule.isPending || createRule.isPending) return
           if (next) setBuilderOpen(true)
           else closeBuilder()
         }}
       >
         <DialogContent
           title={builderRule ? t('automations.editTitle') : t('automations.newTitle')}
-          className="max-w-2xl"
+          className="max-w-2xl max-h-[85vh] overflow-y-auto"
         >
           <RuleBuilder
             // Remounts when the rule being edited changes, so the form is seeded from that rule
@@ -824,6 +859,7 @@ export default function AutomationsScreen(): React.JSX.Element {
                 : {})}
             submitLabel={builderRule ? t('automations.save') : t('automations.create')}
             busy={builderRule ? patchRule.isPending : createRule.isPending}
+            triggerLocked={builderRule !== null}
             onSubmit={submitRule}
             onCancel={closeBuilder}
           />

@@ -6,7 +6,7 @@
 // person's own shortcut, visible to nobody else. `canManage` comes from the server per row, so the
 // gallery never guesses which of the two a given viewer may edit.
 import * as React from 'react'
-import { Building2, Loader2, Plus, Trash2, User } from 'lucide-react'
+import { Building2, Loader2, Pencil, Plus, Trash2, User } from 'lucide-react'
 import { useT } from '@devon/i18n'
 import {
   Button,
@@ -29,6 +29,7 @@ import {
   useWorkTemplatesQuery,
 } from '../hooks-plus.js'
 import { TemplatePreview } from './template-preview.js'
+import { CardTemplateEditor } from './card-template-editor.js'
 import type { WorkTemplate } from '../api-plus.js'
 
 type KindFilter = 'card' | 'project'
@@ -37,11 +38,13 @@ function TemplateCard({
   template,
   onUse,
   onDelete,
+  onEdit,
   busy,
 }: {
   template: WorkTemplate
   onUse: () => void
   onDelete: () => void
+  onEdit: (opener: HTMLButtonElement) => void
   busy: boolean
 }): React.JSX.Element {
   const t = useT()
@@ -60,13 +63,26 @@ function TemplateCard({
             {isDepartment ? <Building2 className="size-4" /> : <User className="size-4" />}
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate text-body font-medium text-foreground">{template.name}</h3>
+            <h3 className="text-body font-medium text-foreground [overflow-wrap:anywhere]">
+              {template.name}
+            </h3>
             <p className="text-caption text-muted-foreground">
               {isDepartment
                 ? t('work.templates.scopeDepartment')
                 : t('work.templates.scopePersonal')}
             </p>
           </div>
+          {template.canManage && template.kind === 'card' ? (
+            <IconButton
+              aria-label={t('work.templateEditor.edit', { name: template.name })}
+              tooltip={t('work.templateEditor.edit', { name: template.name })}
+              onClick={(event) => onEdit(event.currentTarget)}
+              disabled={busy}
+              className="shrink-0"
+            >
+              <Pencil className="size-4" aria-hidden="true" />
+            </IconButton>
+          ) : null}
           {template.canManage ? (
             <IconButton
               aria-label={t('work.templates.delete', { name: template.name })}
@@ -80,16 +96,23 @@ function TemplateCard({
         </div>
 
         {template.description ? (
-          <p className="line-clamp-2 text-small text-muted-foreground">{template.description}</p>
+          <p className="text-small text-muted-foreground [overflow-wrap:anywhere]">
+            {template.description}
+          </p>
         ) : null}
 
         <TemplatePreview template={template} />
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
           <span className="text-caption text-muted-foreground">
             {t('work.templates.useCount', { count: template.useCount })}
           </span>
-          <Button size="sm" onClick={onUse} disabled={busy}>
+          <Button
+            size="sm"
+            onClick={onUse}
+            disabled={busy}
+            className="h-auto min-h-8 max-w-full whitespace-normal"
+          >
             {busy ? (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             ) : (
@@ -115,6 +138,9 @@ export default function TemplatesScreen(): React.JSX.Element {
   const createFromTemplate = useCreateCardFromTemplateMutation()
   const deleteTemplate = useDeleteTemplateMutation()
   const [pending, setPending] = React.useState<string | null>(null)
+  const [editor, setEditor] = React.useState<{ template: WorkTemplate | null } | null>(null)
+  const editorOpener = React.useRef<HTMLButtonElement | null>(null)
+  const newButton = React.useRef<HTMLButtonElement | null>(null)
 
   const templates = query.data ?? []
   const departmentTemplates = templates.filter((tpl) => tpl.scope === 'department')
@@ -150,7 +176,7 @@ export default function TemplatesScreen(): React.JSX.Element {
     })
   }
 
-  function Group({
+  function renderGroup({
     title,
     description,
     list,
@@ -168,7 +194,7 @@ export default function TemplatesScreen(): React.JSX.Element {
         </div>
         <Stagger
           presence
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))]"
           animateKey={`${kind}-${list.length}`}
         >
           {list.map((template) => (
@@ -178,6 +204,10 @@ export default function TemplatesScreen(): React.JSX.Element {
                 busy={pending === template.id}
                 onUse={() => use(template)}
                 onDelete={() => remove(template)}
+                onEdit={(opener) => {
+                  editorOpener.current = opener
+                  setEditor({ template })
+                }}
               />
             </StaggerItem>
           ))}
@@ -215,16 +245,16 @@ export default function TemplatesScreen(): React.JSX.Element {
   } else {
     body = (
       <div className="flex flex-col gap-6">
-        <Group
-          title={t('work.templates.departmentTitle')}
-          description={t('work.templates.departmentDescription')}
-          list={departmentTemplates}
-        />
-        <Group
-          title={t('work.templates.personalTitle')}
-          description={t('work.templates.personalDescription')}
-          list={personalTemplates}
-        />
+        {renderGroup({
+          title: t('work.templates.departmentTitle'),
+          description: t('work.templates.departmentDescription'),
+          list: departmentTemplates,
+        })}
+        {renderGroup({
+          title: t('work.templates.personalTitle'),
+          description: t('work.templates.personalDescription'),
+          list: personalTemplates,
+        })}
       </div>
     )
   }
@@ -235,11 +265,26 @@ export default function TemplatesScreen(): React.JSX.Element {
         eyebrow={t('work.eyebrow')}
         title={t('work.templates.title')}
         description={t('work.templates.description')}
+        actions={
+          kind === 'card' ? (
+            <Button
+              ref={newButton}
+              onClick={() => {
+                editorOpener.current = newButton.current
+                setEditor({ template: null })
+              }}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              {t('work.templateEditor.new')}
+            </Button>
+          ) : null
+        }
         tabs={
           <SegmentedControl
             value={kind}
             onValueChange={(v) => setKind(v)}
             label={t('work.templates.kindLabel')}
+            className="max-w-full flex-wrap"
             options={[
               { value: 'card', label: t('work.templates.kindCard') },
               { value: 'project', label: t('work.templates.kindProject') },
@@ -248,6 +293,20 @@ export default function TemplatesScreen(): React.JSX.Element {
         }
       />
       {body}
+      {editor ? (
+        <CardTemplateEditor
+          key={editor.template?.id ?? 'new'}
+          template={
+            templates.find((template) => template.id === editor.template?.id) ?? editor.template
+          }
+          isHead={isHead}
+          onClose={() => setEditor(null)}
+          onCloseAutoFocus={(event) => {
+            event.preventDefault()
+            ;(editorOpener.current?.isConnected ? editorOpener.current : newButton.current)?.focus()
+          }}
+        />
+      ) : null}
     </div>
   )
 }

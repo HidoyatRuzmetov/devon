@@ -18,11 +18,12 @@ import {
   Stagger,
   StaggerItem,
   StateView,
+  toast,
   toastWithUndo,
   tweenPage,
   useReducedMotion,
 } from '@devon/ui'
-import { ApiError } from '../../lib/api-client.js'
+import { useQueuedSave } from '../../lib/use-queued-save.js'
 import { useMeQuery } from '../../lib/session.js'
 import { useSearchParams, navigate, RouterLink } from '../../lib/router.js'
 import { fetchMembers } from '../structure/api.js'
@@ -48,7 +49,7 @@ import { PageEditor } from './page-editor.js'
 import { VersionHistory } from './version-history.js'
 import { OnboardingTemplatesPanel } from './onboarding-templates.js'
 import { Can, useCan } from '../../lib/can.js'
-import type { PageKind, TiptapNode } from './types.js'
+import type { Page, PageKind, PatchPageInput, TiptapNode } from './types.js'
 import type { MentionCandidate } from './mention-suggestion.js'
 
 const PAGE_KINDS: PageKind[] = ['how_we_work', 'brief', 'note', 'onboarding']
@@ -69,27 +70,22 @@ const KIND_ICON: Record<PageKind, React.ComponentType<React.SVGProps<SVGSVGEleme
   onboarding: Notebook,
 }
 
-function useDebouncedCallback<A extends unknown[]>(fn: (...args: A) => void, delayMs: number) {
-  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  return React.useCallback(
-    (...args: A) => {
-      if (timer.current) clearTimeout(timer.current)
-      timer.current = setTimeout(() => fn(...args), delayMs)
-    },
-    [fn, delayMs],
-  )
-}
-
 function useMentionCandidates(): MentionCandidate[] {
   const { departmentId } = useDepartment()
   const [candidates, setCandidates] = React.useState<MentionCandidate[]>([])
   React.useEffect(() => {
     if (!departmentId) return
     let cancelled = false
-    fetchMembers(departmentId).then((members) => {
-      if (cancelled) return
-      setCandidates(members.map((m) => ({ id: m.userId, label: `${m.givenName} ${m.familyName}` })))
-    })
+    fetchMembers(departmentId)
+      .then((members) => {
+        if (cancelled) return
+        setCandidates(
+          members.map((m) => ({ id: m.userId, label: `${m.givenName} ${m.familyName}` })),
+        )
+      })
+      .catch(() => {
+        if (!cancelled) setCandidates([])
+      })
     return () => {
       cancelled = true
     }
@@ -102,11 +98,24 @@ function CreatePageForm({ onCreated }: { onCreated: (id: string) => void }) {
   const [open, setOpen] = React.useState(false)
   const [kind, setKind] = React.useState<PageKind>('note')
   const [title, setTitle] = React.useState('')
+  const [invalid, setInvalid] = React.useState(false)
+  const trigger = React.useRef<HTMLButtonElement>(null)
+  const titleInput = React.useRef<HTMLInputElement>(null)
   const createPage = useCreatePageMutation()
+  React.useEffect(() => {
+    if (open) titleInput.current?.focus()
+  }, [open])
+  function cancel() {
+    if (createPage.isPending) return
+    setOpen(false)
+    createPage.reset()
+    setInvalid(false)
+    requestAnimationFrame(() => trigger.current?.focus())
+  }
 
   if (!open) {
     return (
-      <Button size="sm" onClick={() => setOpen(true)}>
+      <Button ref={trigger} size="sm" onClick={() => setOpen(true)}>
         <Plus className="mr-1.5 size-4" aria-hidden="true" />
         {t('pages.create')}
       </Button>
@@ -114,11 +123,23 @@ function CreatePageForm({ onCreated }: { onCreated: (id: string) => void }) {
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape bubbles from native form controls to cancel this edit and restore its opener; the form remains a form.
     <form
       className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card p-3"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          cancel()
+        }
+      }}
       onSubmit={(e) => {
         e.preventDefault()
-        if (!title.trim()) return
+        if (createPage.isPending) return
+        if (!title.trim()) {
+          setInvalid(true)
+          titleInput.current?.focus()
+          return
+        }
         createPage.mutate(
           { kind, title: title.trim() },
           { onSuccess: (page) => onCreated(page.id) },
@@ -127,6 +148,7 @@ function CreatePageForm({ onCreated }: { onCreated: (id: string) => void }) {
     >
       <select
         value={kind}
+        disabled={createPage.isPending}
         onChange={(e) => setKind(e.target.value as PageKind)}
         aria-label={t('pages.create')}
         className="h-9 rounded-sm border border-border bg-card px-2 text-small text-foreground"
@@ -138,16 +160,41 @@ function CreatePageForm({ onCreated }: { onCreated: (id: string) => void }) {
         ))}
       </select>
       <Input
+        ref={titleInput}
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => {
+          setTitle(e.target.value)
+          setInvalid(false)
+          createPage.reset()
+        }}
+        maxLength={300}
+        invalid={invalid}
+        aria-describedby={invalid ? 'page-create-required' : undefined}
+        disabled={createPage.isPending}
         placeholder={t('pages.newTitlePlaceholder')}
         aria-label={t('pages.newTitlePlaceholder')}
-        autoFocus
         className="max-w-64"
       />
       <Button type="submit" size="sm" loading={createPage.isPending}>
         {t('pages.create')}
       </Button>
+      <Button variant="ghost" size="sm" disabled={createPage.isPending} onClick={cancel}>
+        {t('common.cancel')}
+      </Button>
+      {invalid ? (
+        <p
+          id="page-create-required"
+          role="alert"
+          className="basis-full text-small text-destructive"
+        >
+          {t('personal.save.titleRequired')}
+        </p>
+      ) : null}
+      {createPage.isError ? (
+        <p role="alert" className="basis-full text-small text-destructive">
+          {t('personal.save.error')}
+        </p>
+      ) : null}
     </form>
   )
 }
@@ -293,24 +340,78 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
   const deletePage = useDeletePageMutation()
   const restorePage = useRestorePageMutation()
   const mentionCandidates = useMentionCandidates()
-  const [conflict, setConflict] = React.useState(false)
   const [localTitle, setLocalTitle] = React.useState('')
+  const [localBlocks, setLocalBlocks] = React.useState<TiptapNode | null>(null)
+  const draft = React.useRef<Omit<PatchPageInput, 'version'>>({})
+  const draftVersion = React.useRef<number | null>(null)
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mounted = React.useRef(true)
+  const [hasDraft, setHasDraft] = React.useState(false)
+  const [titleError, setTitleError] = React.useState(false)
+  const queuedSave = useQueuedSave<Page, PatchPageInput>(
+    pageQuery.data ?? null,
+    (input) => patchPage.mutateAsync(input),
+    (_updated, saved) => {
+      for (const key of ['title', 'blocks'] as const) {
+        const desired = key === 'title' ? draft.current.title?.trim() : draft.current.blocks
+        if (saved[key] !== undefined && JSON.stringify(desired) === JSON.stringify(saved[key]))
+          delete draft.current[key]
+      }
+      const remains = Object.keys(draft.current).length > 0
+      if (!remains) draftVersion.current = null
+      if (mounted.current) setHasDraft(remains)
+    },
+  )
+  const canDelete = useCan('pages.delete', {
+    ownerUserIds: pageQuery.data ? [pageQuery.data.createdByUserId] : [],
+  }).allowed
+  const canRestoreVersion = useCan('pages.version.restore', {
+    ownerUserIds: pageQuery.data ? [pageQuery.data.createdByUserId] : [],
+  }).allowed
 
   React.useEffect(() => {
-    if (pageQuery.data) setLocalTitle(pageQuery.data.title)
-  }, [pageQuery.data?.id]) // eslint-disable-line react-hooks/exhaustive-deps -- reset only when the page identity changes, not on every refetch
-
-  const debouncedPatch = useDebouncedCallback((patch: { title?: string; blocks?: TiptapNode }) => {
     if (!pageQuery.data) return
-    patchPage.mutate(
-      { ...patch, version: pageQuery.data.version },
-      {
-        onError: (err) => {
-          if (err instanceof ApiError && err.code === 'conflict') setConflict(true)
-        },
-      },
-    )
-  }, 800)
+    if (draft.current.title === undefined) setLocalTitle(pageQuery.data.title)
+    if (draft.current.blocks === undefined) setLocalBlocks(pageQuery.data.blocks)
+  }, [pageQuery.data, hasDraft])
+
+  function flush(retry = false) {
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = null
+    if (!pageQuery.data) return Promise.resolve(false)
+    const fields = { ...draft.current }
+    if (fields.title !== undefined) {
+      if (!fields.title.trim()) {
+        if (mounted.current) setTitleError(true)
+        return Promise.resolve(false)
+      }
+      fields.title = fields.title.trim()
+    }
+    if (retry) draftVersion.current = pageQuery.data.version
+    return retry
+      ? queuedSave.retry(fields)
+      : queuedSave.enqueue(fields, draftVersion.current ?? pageQuery.data.version)
+  }
+  const flushRef = React.useRef(flush)
+  React.useLayoutEffect(() => {
+    flushRef.current = flush
+  })
+  React.useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      if (timer.current) clearTimeout(timer.current)
+      if (Object.keys(draft.current).length) void flushRef.current()
+    }
+  }, [])
+
+  function edit(patch: Omit<PatchPageInput, 'version'>) {
+    if (draftVersion.current === null) draftVersion.current = pageQuery.data?.version ?? null
+    draft.current = { ...draft.current, ...patch }
+    setHasDraft(true)
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = setTimeout(() => void flushRef.current(), 800)
+  }
 
   if (pageQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (pageQuery.isError) {
@@ -335,74 +436,97 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
         <button
           type="button"
           onClick={onBack}
-          className="text-small text-muted-foreground hover:text-foreground hover:underline"
+          className="min-h-9 text-small text-muted-foreground hover:text-foreground hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
         >
           ← {t('pages.backToList')}
         </button>
-        <div className="flex items-center gap-2">
-          <AutosaveIndicator saving={patchPage.isPending} />
+        <div className="flex flex-wrap items-center gap-2">
+          {!titleError && queuedSave.state !== 'error' && queuedSave.state !== 'conflict' ? (
+            <AutosaveIndicator saving={queuedSave.isPending || hasDraft} />
+          ) : null}
           {/* WALKTHROUGH-FINDINGS 6: "Sahifani oʻchirish" was the largest, reddest control on the
               knowledge-base editor -- louder than the page's own title. Deleting a page is a rare,
               deliberate act, so it moves where rare deliberate acts live: an overflow menu. And it
               is undoable now (soft delete + a 10-minute restore window), so it takes an undo toast
               rather than a confirm dialog, exactly as DESIGN.md prescribes. */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <IconButton aria-label={t('pages.moreActions')}>
-                <MoreHorizontal className="size-4" aria-hidden="true" />
-              </IconButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onSelect={() =>
-                  deletePage.mutate(page.id, {
-                    onSuccess: () => {
-                      toastWithUndo({
-                        message: t('pages.deleted'),
-                        undoLabel: t('pages.undo'),
-                        onUndo: () => restorePage.mutate(page.id),
-                      })
-                      onBack()
-                    },
-                  })
-                }
-              >
-                {t('pages.delete')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {canDelete ? (
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <IconButton aria-label={t('pages.moreActions')}>
+                  <MoreHorizontal className="size-4" aria-hidden="true" />
+                </IconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  disabled={deletePage.isPending || queuedSave.isPending || hasDraft}
+                  onSelect={() =>
+                    deletePage.mutate(page.id, {
+                      onSuccess: () => {
+                        toastWithUndo({
+                          message: t('pages.deleted'),
+                          undoLabel: t('pages.undo'),
+                          onUndo: () =>
+                            restorePage.mutate(page.id, {
+                              onError: () => toast.error(t('toast.saveError')),
+                            }),
+                        })
+                        onBack()
+                      },
+                      onError: () => toast.error(t('toast.saveError')),
+                    })
+                  }
+                >
+                  {t('pages.delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
       </div>
 
-      {conflict ? (
-        <StateView
-          kind="error"
-          titleKey="pages.conflict.title"
-          bodyKey="pages.conflict.body"
-          action={{ labelKey: 'state.error.action', onAction: () => window.location.reload() }}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
-          <div className="rounded-md border border-border bg-card p-6 shadow-1">
-            <PageEditor
-              title={localTitle}
-              content={page.blocks}
-              editable
-              mentionCandidates={mentionCandidates}
-              onTitleChange={(title) => {
-                setLocalTitle(title)
-                debouncedPatch({ title })
-              }}
-              onChange={(blocks) => debouncedPatch({ blocks })}
-            />
-          </div>
-          <VersionHistory
-            page={page}
-            onRestored={() => pageQuery.refetch()}
-            authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
+      {titleError ? (
+        <p id={`page-title-error-${id}`} role="alert" className="text-small text-destructive">
+          {t('personal.save.titleRequired')}
+        </p>
+      ) : null}
+      {queuedSave.state === 'error' || queuedSave.state === 'conflict' ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert" className="text-small text-destructive">
+            {t(queuedSave.state === 'conflict' ? 'personal.save.conflict' : 'personal.save.error')}
+          </p>
+          <Button variant="secondary" size="sm" onClick={() => void flush(true)}>
+            {t('personal.save.retry')}
+          </Button>
+        </div>
+      ) : null}
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="min-w-0 rounded-md border border-border bg-card p-4 shadow-1 sm:p-6">
+          <PageEditor
+            title={localTitle}
+            content={localBlocks ?? page.blocks}
+            editable
+            titleErrorId={titleError ? `page-title-error-${id}` : undefined}
+            onBlur={() => void flush()}
+            mentionCandidates={mentionCandidates}
+            onTitleChange={(title) => {
+              setLocalTitle(title)
+              if (title.trim()) setTitleError(false)
+              edit({ title })
+            }}
+            onChange={(blocks) => {
+              setLocalBlocks(blocks)
+              edit({ blocks })
+            }}
           />
         </div>
-      )}
+        <VersionHistory
+          page={page}
+          canRestore={canRestoreVersion}
+          restoreDisabled={hasDraft || queuedSave.isPending}
+          onRestored={() => pageQuery.refetch()}
+          authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
+        />
+      </div>
     </motion.div>
   )
 }
@@ -410,6 +534,7 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
 export default function PagesScreen() {
   const t = useT()
   const meQuery = useMeQuery()
+  const { departmentId } = useDepartment()
   const search = useSearchParams()
   const pageId = search.get('page')
   const tab = search.get('tab')
@@ -427,7 +552,7 @@ export default function PagesScreen() {
   function createBlankPage() {
     createPage.mutate(
       { kind: 'note', title: t('pages.untitled') },
-      { onSuccess: (page) => openPage(page.id) },
+      { onSuccess: (page) => openPage(page.id), onError: () => toast.error(t('toast.saveError')) },
     )
   }
 
@@ -435,10 +560,24 @@ export default function PagesScreen() {
   if (!meQuery.data) {
     return <StateView kind="forbidden" titleKey="state.denied.title" bodyKey="state.denied.body" />
   }
+  if (!departmentId) {
+    return (
+      <StateView
+        kind="empty"
+        titleKey="departments.detail.noDepartment.title"
+        bodyKey="departments.detail.noDepartment.body"
+        action={{
+          labelKey: 'departments.detail.noDepartment.action',
+          onAction: () => navigate('/departments'),
+        }}
+      />
+    )
+  }
 
   if (pageId) {
     return (
       <PageDetail
+        key={pageId}
         id={pageId}
         onBack={() => {
           const url = new URL(window.location.href)

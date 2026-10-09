@@ -6,9 +6,10 @@
 // to a foreign server. Override with `FLOW_API_PORT`/`FLOW_WEB_PORT` if these ever collide.
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { assertLocalTestDatabase, assertTestPort } from './flow-safety.js'
 
 export const E2E_DIR = dirname(fileURLToPath(import.meta.url))
-export const FLOW_TMP_DIR = join(E2E_DIR, '.tmp')
+export const FLOW_TMP_DIR = join(E2E_DIR, '.tmp', process.env['FLOW_DB_NAME'] ?? 'devon_flow_e2e')
 
 export const FLOW_API_PORT = Number(process.env['FLOW_API_PORT'] ?? 48901)
 export const FLOW_WEB_PORT = Number(process.env['FLOW_WEB_PORT'] ?? 48902)
@@ -25,12 +26,22 @@ export const FLOW_DB_HOST = process.env['FLOW_DB_HOST'] ?? '127.0.0.1'
 export const FLOW_DB_PORT = Number(process.env['FLOW_DB_PORT'] ?? 55432)
 export const FLOW_DB_CONTAINER = process.env['FLOW_DB_CONTAINER'] ?? 'devon-postgres'
 
+assertTestPort(FLOW_API_PORT)
+assertTestPort(FLOW_WEB_PORT)
+if (FLOW_API_PORT === FLOW_WEB_PORT) throw new Error('Browser test API and web ports must differ')
+assertLocalTestDatabase({
+  host: FLOW_DB_HOST,
+  database: FLOW_DB_NAME,
+  container: FLOW_DB_CONTAINER,
+  port: FLOW_DB_PORT,
+})
+
 /** Suffixed so this suite's own migration run never touches the cluster-wide `devon_app`/
  * `devon_migrator` login roles a concurrently-running `pnpm start` elsewhere depends on (Postgres
  * roles are cluster-global, not per-database -- resetting the plain-named roles' passwords here would
  * silently break every other database's connections on the same shared container). */
-export const FLOW_APP_ROLE = 'devon_app_flowe2e'
-export const FLOW_MIGRATOR_ROLE = 'devon_migrator_flowe2e'
+export const FLOW_APP_ROLE = `app_${FLOW_DB_NAME}`
+export const FLOW_MIGRATOR_ROLE = `migrator_${FLOW_DB_NAME}`
 
 export const FLOW_SUPERADMIN_FILE = join(FLOW_TMP_DIR, 'superadmin.json')
 /** `apps/api dev`'s full stdout/stderr for this run, refreshed at the start of every `globalSetup` --

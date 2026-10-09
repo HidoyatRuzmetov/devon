@@ -556,9 +556,12 @@ export async function addComment(
 export async function deleteComment(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   commentId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_comments', commentId)))
+      throw new EventNotFoundError()
     const authorUserId = await repo.getCommentAuthor(tx, commentId)
     if (!authorUserId) throw new EventNotFoundError()
     // SEV2 #10: a comment's owner set is its author.
@@ -663,10 +666,13 @@ export async function createCarpool(
 export async function claimCarpoolSeat(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   carpoolId: string,
   seats: number,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
+      throw new EventNotFoundError()
     // Same aggregate invariant as RSVP capacity ("confirmed seats may not exceed `carpool.seats`"),
     // same remedy: serialise every seat decision for this one carpool so the read below cannot see a
     // count another in-flight claim is about to invalidate (the `concurrency-races` probe).
@@ -715,9 +721,12 @@ export async function claimCarpoolSeat(
 export async function releaseCarpoolSeat(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   carpoolId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
+      throw new EventNotFoundError()
     // Releasing frees units and promotes from the waitlist -- the same aggregate the claim path
     // guards, so it takes the same lock (a release racing a claim would otherwise over-promote).
     await repo.lockCarpoolForSeats(tx, carpoolId)
@@ -811,9 +820,12 @@ export async function addItem(
 export async function claimItem(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_items', itemId)))
+      throw new EventNotFoundError()
     const claimed = await repo.claimItem(tx, itemId, actor.userId)
     if (claimed) {
       tx.audit({ action: 'events.item_claimed', subjectType: 'event_item', subjectId: itemId })
@@ -825,9 +837,12 @@ export async function claimItem(
 export async function releaseItem(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   itemId: string,
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_items', itemId)))
+      throw new EventNotFoundError()
     const released = await repo.releaseItem(tx, itemId, actor.userId)
     if (released) {
       tx.audit({ action: 'events.item_unclaimed', subjectType: 'event_item', subjectId: itemId })
@@ -958,10 +973,13 @@ export async function createPoll(
 export async function voteOnPoll(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   pollId: string,
   optionIds: readonly string[],
 ): Promise<PollDto> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'polls', pollId)))
+      throw new EventNotFoundError()
     const poll = await repo.getPoll(tx, pollId)
     if (!poll) throw new EventNotFoundError()
     if (poll.status === 'closed' || (poll.closes_at && poll.closes_at.getTime() < Date.now())) {
@@ -1046,9 +1064,12 @@ export async function addPhoto(
 export async function deletePhoto(
   ctx: RequestContext,
   actor: Actor,
+  eventId: string,
   photoId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    if (!(await repo.eventChildBelongsTo(tx, eventId, 'event_photos', photoId)))
+      throw new EventNotFoundError()
     const ownerId = await repo.getPhotoOwner(tx, photoId)
     if (!ownerId) throw new EventNotFoundError()
     // SEV2 #10: a photo's owner set is whoever uploaded it.

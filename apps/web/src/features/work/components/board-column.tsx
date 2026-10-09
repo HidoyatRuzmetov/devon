@@ -112,11 +112,30 @@ export function BoardColumn({
   // to `uz-Cyrl`, which groups the way DESIGN.md §5 asks for. Same shim KpiTile's call sites use.
   const locale = numberFlowLocale(useLocale())
   const listRef = React.useRef<HTMLDivElement | null>(null)
+  const columnRef = React.useRef<HTMLDivElement | null>(null)
+  const headerRef = React.useRef<HTMLDivElement | null>(null)
   const [isDropTarget, setIsDropTarget] = React.useState(false)
   const userId = member?.userId ?? null
   const columnKey = userId ?? 'unassigned'
   const [collapsed, setCollapsed] = useColumnCollapsed(columnKey)
   const touchOver = useIsTouchDropTarget(columnKey)
+
+  React.useLayoutEffect(() => {
+    const column = columnRef.current
+    const header = headerRef.current
+    if (!column || !header) return
+    // Native focus/scroll-into-view must reserve this sticky header's actual height,
+    // including translated text and density changes, plus room for the focus ring.
+    const measure = () =>
+      column.style.setProperty(
+        '--work-column-scroll-margin',
+        `calc(${Math.ceil(header.getBoundingClientRect().height)}px + var(--space-2))`,
+      )
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [collapsed])
 
   React.useEffect(() => {
     onCollapsedChange?.(columnKey, collapsed)
@@ -182,8 +201,12 @@ export function BoardColumn({
   return (
     // SEV2 #18: `h-fit`, not a stretched flex child -- the column is as tall as its cards and the
     // board row is the one thing that scrolls.
-    <div className={cn('flex h-fit shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}>
+    <div
+      ref={columnRef}
+      className={cn('flex h-fit shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}
+    >
       <div
+        ref={headerRef}
         className={cn(
           'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 shadow-1',
           compact ? 'py-1' : 'py-2',

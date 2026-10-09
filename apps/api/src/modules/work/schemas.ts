@@ -2,7 +2,7 @@
 // file -- `apps/api/src/schemas.ts` is the foundation module's file, never edited to add a module
 // (MODULE-GUIDE.md "API modules").
 import { z } from 'zod'
-import { MAX_ESTIMATE_MINUTES, recurrenceRuleSchema } from '@devon/contracts'
+import { isPlainHttpUrl, MAX_ESTIMATE_MINUTES, recurrenceRuleSchema } from '@devon/contracts'
 import { validOrderKey } from './ordering.js'
 
 const orderKeySchema = z.string().max(100).refine(validOrderKey, 'invalid order key')
@@ -21,6 +21,13 @@ export const linkSchema = z.object({
   url: z.string().url(),
   title: z.string().max(300),
   favicon: z.string().url().nullable(),
+})
+
+// Keep legacy DTOs readable while preventing new active/custom URLs or embedded credentials.
+const httpLinkUrlSchema = z.string().url().refine(isPlainHttpUrl, 'only plain http/https links')
+export const linkInputSchema = linkSchema.extend({
+  url: httpLinkUrlSchema,
+  favicon: httpLinkUrlSchema.nullable(),
 })
 
 export const memberSummarySchema = z.object({
@@ -162,7 +169,7 @@ export const createCardBodySchema = z.object({
   startAt: z.string().datetime().nullable().optional(),
   dueAt: z.string().datetime().nullable().optional(),
   labels: z.array(z.string().uuid()).optional(),
-  links: z.array(linkSchema).optional(),
+  links: z.array(linkInputSchema).optional(),
   projectId: z.string().uuid().nullable().optional(),
   projectScope: cardProjectScopeSchema.optional(),
   orderKey: orderKeySchema.optional(),
@@ -184,7 +191,7 @@ export const patchCardBodySchema = z
     startAt: z.string().datetime().nullable(),
     dueAt: z.string().datetime().nullable(),
     labels: z.array(z.string().uuid()),
-    links: z.array(linkSchema),
+    links: z.array(linkInputSchema),
     watchers: z.array(z.string().uuid()),
     orderKey: orderKeySchema,
     version: z.number().int(),

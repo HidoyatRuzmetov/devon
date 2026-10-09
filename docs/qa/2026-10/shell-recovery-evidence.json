@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "owner": "root-shared-recovery",
+  "provenance": "Actual named browser reports, persisted membership/theme reads, box/glyph checks and actual opened rendered pixels. This generator validates existing artifacts, never visually inspects them.",
+  "policy": "Only the named states and environments are bounded; other controls, roles and combinations remain pending.",
+  "boundaries": {
+    "db": "devon_flow_e2e_root",
+    "apiPort": 48951,
+    "webPort": 48952,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "evidence": {
+    "onboarding": {
+      "test": "apps/web/test/e2e/platform-no-department.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/summary.json",
+      "scenario": "12 executions: organic no-membership member/admin, four locales/two themes, actual next-step CTA, loaded destination, independent membership/admin reads, box/glyph containment and minimum24px target."
+    },
+    "pagesNoMembership": {
+      "test": "apps/web/test/e2e/platform-realtime-scope.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/scope-recovery-after/summary.json",
+      "scenario": "Three account-replacement journeys: the old private-page read is403, no old title/editor remains, explicit Departments guide and actual navigation. English/light/1280x720 only."
+    },
+    "demo": {
+      "test": "apps/web/test/e2e/platform-demo-chip.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/summary.json",
+      "scenario": "Six executions: mobile full label inside row padding,24px target, actual explanation opens within320px, Escape restores focus, four locales/two themes/all3engines."
+    },
+    "systemTheme": {
+      "test": "apps/web/test/e2e/platform-theme-system.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/scope-recovery-after/summary.json",
+      "scenario": "Three executions: native Enter/Space cycle, actual browser-media changes, persisted System follows them, explicit light survives changed media and reload. English/light/dark resolved state. Browser media emulation, not physical OS changes."
+    },
+    "designedRecovery": {
+      "test": "apps/web/test/e2e/platform-state-card.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/summary.json",
+      "scenario": "Six executions: forced error/forbidden/offline at320x480/text200 in four locales/two themes, box/glyph containment and native Tab focus with center+edge hit tests after natural settle, zero72 scoped axe violations. Primary actions are focused, not executed; these are not actual API faults."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/home/home-screen.tsx",
+        "component": "HomeScreen",
+        "kind": "StateView",
+        "labelIncludes": "titleKey={empty.titleKey}"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "empty": {
+          "status": "verified",
+          "evidenceId": "onboarding",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/onboarding-webkit-dark-uz-Cyrl.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/pages/pages-screen.tsx",
+        "component": "PagesScreen",
+        "kind": "StateView",
+        "labelIncludes": "departments.detail.noDepartment.title"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "empty": {
+          "status": "verified",
+          "evidenceId": "pagesNoMembership",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/scope-recovery-after/platform-realtime-scope.qa-c0226-ot-inherit-its-private-page-chromium/replacement-denied-old-page.png",
+            "artifacts/qa/2026-10/results/platform/scope-recovery-after/platform-realtime-scope.qa-c0226-ot-inherit-its-private-page-firefox/replacement-denied-old-page.png",
+            "artifacts/qa/2026-10/results/platform/scope-recovery-after/platform-realtime-scope.qa-c0226-ot-inherit-its-private-page-webkit/replacement-denied-old-page.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/app-shell.tsx",
+        "component": "AppShell",
+        "kind": "DemoChip",
+        "labelIncludes": "label={t('shell.demo.chip.label')}"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "demo",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-dark.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-dark.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-dark.png"
+          ]
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "demo",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-chromium-dark.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-firefox-dark.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-light.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/demo-webkit-dark.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/app-shell.tsx",
+        "component": "AppShell",
+        "kind": "ThemeToggle"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "systemTheme",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "systemTheme",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "systemTheme",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "systemTheme",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/forced-state-block.tsx",
+        "component": "ForcedStateBlock",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"error\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending. Designed forced-state geometry and native unobscured focus only; no real failure/retry or permission acceptance is inferred."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/forced-state-block.tsx",
+        "component": "ForcedStateBlock",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"forbidden\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending. Designed forced-state geometry and native unobscured focus only; no real failure/retry or permission acceptance is inferred."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/shell/forced-state-block.tsx",
+        "component": "ForcedStateBlock",
+        "kind": "StateView",
+        "labelIncludes": "kind=\"offline\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "default": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        },
+        "focus": {
+          "status": "verified",
+          "evidenceId": "designedRecovery",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-chromium-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-firefox-dark-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-light-uz-Cyrl.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-en.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-ru.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Latn.png",
+            "artifacts/qa/2026-10/results/platform/shared-recovery-all-themes/pixel-review/states-webkit-dark-uz-Cyrl.png"
+          ]
+        }
+      },
+      "scopeNote": "Only the named states and environments are bounded; other controls, roles and combinations remain pending. Designed forced-state geometry and native unobscured focus only; no real failure/retry or permission acceptance is inferred."
+    }
+  ]
+}

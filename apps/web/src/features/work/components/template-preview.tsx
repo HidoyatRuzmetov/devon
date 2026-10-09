@@ -43,7 +43,7 @@ export function TemplatePreview({
     if (!payload) return null
     return (
       <div className="flex flex-col gap-2">
-        <p className="truncate text-small text-foreground">{payload.title}</p>
+        <p className="text-small text-foreground [overflow-wrap:anywhere]">{payload.title}</p>
         <div className="flex flex-wrap gap-1.5">
           {payload.priority && payload.priority !== 'none' ? (
             <Chip tone="outline">{t(PRIORITY_LABEL_KEY[payload.priority])}</Chip>
@@ -72,7 +72,7 @@ export function TemplatePreview({
   if (!payload) return null
   return (
     <div className="flex flex-col gap-2">
-      <p className="truncate text-small text-foreground">{payload.title}</p>
+      <p className="text-small text-foreground [overflow-wrap:anywhere]">{payload.title}</p>
       <div className="flex flex-wrap gap-1.5">
         {payload.milestones && payload.milestones.length > 0 ? (
           <Chip tone="outline" leading={<CalendarDays className="size-3" />}>

@@ -50,6 +50,15 @@ export type NewNotification = {
   body?: LocalizedText | null
   deepLink?: string | null
   eventAt?: Date | null
+  /** Automation recipients must still belong to the department when their inbox row commits. */
+  requireActiveDepartmentMembership?: boolean
+}
+
+export class NotificationRecipientUnavailableError extends Error {
+  constructor() {
+    super('action_target_unavailable')
+    this.name = 'NotificationRecipientUnavailableError'
+  }
 }
 
 export type PrefRow = { reason: Reason; channel: Channel; enabled: boolean; digestMode: DigestMode }
@@ -150,8 +159,25 @@ export async function insertNotification(
   ctx: AuditCtx,
   input: NewNotification,
 ): Promise<NotificationRow> {
-  return withContext(toRequestContext(ctx, { userId: input.userId }), async (tx) => {
-    const rows = await tx.raw<NotificationSqlRow>(sql`
+  return withContext(
+    toRequestContext(ctx, {
+      userId: input.userId,
+      ...(input.requireActiveDepartmentMembership
+        ? { departmentId: input.departmentId ?? null }
+        : {}),
+    }),
+    async (tx) => {
+      if (input.requireActiveDepartmentMembership) {
+        if (!input.departmentId) throw new NotificationRecipientUnavailableError()
+        const recipients = await tx.raw<{ id: string }>(sql`
+        select m.user_id as id from app.memberships m join app.users u on u.id = m.user_id
+        where m.department_id = ${input.departmentId} and m.user_id = ${input.userId}
+          and m.status = 'active' and m.deleted_at is null
+          and u.status = 'active' and u.deleted_at is null for share of m, u
+      `)
+        if (!recipients[0]) throw new NotificationRecipientUnavailableError()
+      }
+      const rows = await tx.raw<NotificationSqlRow>(sql`
       insert into app.notifications
         (user_id, type, reason, subject_type, subject_id, department_id, title, body, deep_link, event_at)
       values (${input.userId}, ${input.type}, ${input.reason}, ${input.subjectType},
@@ -161,20 +187,21 @@ export async function insertNotification(
       returning id, type, reason, subject_type, subject_id, department_id, title, body, deep_link,
                 event_at, read_at, archived_at, snoozed_until, created_at
     `)
-    const row = rows[0]
-    if (!row) throw new Error('notifications: insert returned no row')
-    tx.audit({
-      action: 'notifications.created',
-      subjectType: 'notification',
-      subjectId: row.id,
-      after: { reason: row.reason, type: row.type },
-    })
-    tx.emit({
-      type: 'notifications.notification.created',
-      payload: { notificationId: row.id, userId: input.userId, reason: input.reason },
-    })
-    return fromSqlRow(row)
-  })
+      const row = rows[0]
+      if (!row) throw new Error('notifications: insert returned no row')
+      tx.audit({
+        action: 'notifications.created',
+        subjectType: 'notification',
+        subjectId: row.id,
+        after: { reason: row.reason, type: row.type },
+      })
+      tx.emit({
+        type: 'notifications.notification.created',
+        payload: { notificationId: row.id, userId: input.userId, reason: input.reason },
+      })
+      return fromSqlRow(row)
+    },
+  )
 }
 
 export type ListOpts = {
@@ -245,6 +272,8 @@ export async function markRead(ctx: AuditCtx, userId: string, ids: string[]): Pr
         subjectId: null,
         after: { ids: rows.map((r) => r.id) },
       })
+    if (rows.length > 0)
+      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
     return rows.length
   })
 }
@@ -263,6 +292,8 @@ export async function markAllRead(ctx: AuditCtx, userId: string): Promise<number
         subjectId: null,
         after: { count: rows.length },
       })
+    if (rows.length > 0)
+      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
     return rows.length
   })
 }
@@ -286,6 +317,34 @@ export async function archiveNotifications(
         subjectId: null,
         after: { ids: rows.map((r) => r.id) },
       })
+    if (rows.length > 0)
+      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+    return rows.length
+  })
+}
+
+/** Restore an owner's archived inbox item. Read state is retained, as with archive itself. */
+export async function restoreNotifications(
+  ctx: AuditCtx,
+  userId: string,
+  ids: string[],
+): Promise<number> {
+  if (ids.length === 0) return 0
+  return withContext(toRequestContext(ctx, { userId }), async (tx) => {
+    const rows = await tx.raw<{ id: string }>(sql`
+      update app.notifications set archived_at = null
+      where id in ${ids} and archived_at is not null
+      returning id
+    `)
+    if (rows.length > 0) {
+      tx.audit({
+        action: 'notifications.restored',
+        subjectType: 'notification',
+        subjectId: null,
+        after: { ids: rows.map((r) => r.id) },
+      })
+      tx.emit({ type: 'notifications.notification.updated', payload: { userId } })
+    }
     return rows.length
   })
 }

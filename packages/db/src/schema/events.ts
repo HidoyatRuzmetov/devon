@@ -197,3 +197,23 @@ export const eventReminderJobs = appSchema.table('event_reminder_jobs', {
   firedAt: timestamp('fired_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const eventTelegramDeliveries = appSchema.table('event_telegram_deliveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  departmentId: uuid('department_id').notNull(),
+  sourceEventId: uuid('source_event_id').notNull(),
+  eventId: uuid('event_id').notNull(),
+  pollId: uuid('poll_id'),
+  groupId: uuid('group_id').notNull(),
+  eventType: text('event_type').notNull(),
+  groupKind: text('group_kind').notNull(),
+  status: text('status').notNull().default('pending'),
+  attempts: integer('attempts').notNull().default(0),
+  nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+  leaseToken: uuid('lease_token'),
+  leasedUntil: timestamp('leased_until', { withTimezone: true }),
+  messageId: integer('message_id'),
+  lastError: text('last_error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+})

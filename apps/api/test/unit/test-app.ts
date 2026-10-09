@@ -18,9 +18,11 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     TELEGRAM_POLLING_ENABLED: false,
     TELEGRAM_TRANSPORT: 'webhook',
     API_PORT: 0,
+    API_HOST: '127.0.0.1',
     DEVON_PUBLIC_URL: 'http://localhost:5173',
     DEVON_ALLOWED_ORIGINS: '',
     DATABASE_URL: 'postgres://example:example@127.0.0.1:5432/example', // example, unused (fake deps)
+    QUEUE_DB_POOL_MAX: 10,
     SESSION_COOKIE_NAME: 'devon_sid',
     SESSION_IDLE_MINUTES: 720,
     SESSION_ABSOLUTE_DAYS: 30,

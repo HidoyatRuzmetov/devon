@@ -917,7 +917,7 @@ export function HeadDashboard(): React.JSX.Element {
   }
 
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className="@container flex w-full flex-col gap-8">
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
@@ -932,7 +932,7 @@ export function HeadDashboard(): React.JSX.Element {
           />
         </div>
 
-        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Stagger className="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
           {/* SPEC §3.2: "An arrangeable layout (drag tiles, hide tiles; persisted per head)."
               Each tile is an entry in this map, and `layout` decides the order and what is on
               screen -- so the head's arrangement is data, not a hard-coded sequence of JSX. */}

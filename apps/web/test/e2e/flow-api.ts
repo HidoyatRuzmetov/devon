@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs'
 import { randomBytes, randomUUID } from 'node:crypto'
 import { test, type APIResponse, type Browser, type BrowserContext } from '@playwright/test'
 import { FLOW_SUPERADMIN_FILE, FLOW_WEB_BASE_URL, type FlowSuperAdmin } from './flow-env.js'
+import { localResponseCookie } from './flow-cookie-options.js'
 
 let clientSequence = 0
 
@@ -53,33 +54,10 @@ export function examplePassword(): string {
  * problem the same way: parse the raw `Set-Cookie` headers by hand and inject them into the context
  * directly via `addCookies`, which is not subject to the scheme check a network response is.
  */
-async function applySetCookies(context: BrowserContext, res: APIResponse): Promise<void> {
+export async function applySetCookies(context: BrowserContext, res: APIResponse): Promise<void> {
   const raw = res.headersArray().filter((h) => h.name.toLowerCase() === 'set-cookie')
   if (raw.length === 0) return
-  const url = new URL(res.url())
-  const cookies = raw.map((h) => {
-    const parts = h.value.split(';').map((p) => p.trim())
-    const first = parts[0]!
-    const eq = first.indexOf('=')
-    const name = first.slice(0, eq)
-    const value = first.slice(eq + 1)
-    let path = '/'
-    let sameSite: 'Strict' | 'Lax' | 'None' = 'Lax'
-    let httpOnly = false
-    for (const attr of parts.slice(1)) {
-      const [rawKey, rawVal] = attr.split('=')
-      const key = rawKey?.trim().toLowerCase()
-      if (key === 'path' && rawVal) path = rawVal.trim()
-      else if (key === 'samesite' && rawVal) {
-        const v = rawVal.trim().toLowerCase()
-        sameSite = v === 'strict' ? 'Strict' : v === 'none' ? 'None' : 'Lax'
-      } else if (key === 'httponly') httpOnly = true
-    }
-    // `secure: false` here is the deliberate part of the workaround described above -- this suite's
-    // whole point for this cookie is "the browser sends it back on the next same-origin request",
-    // which `addCookies` honours regardless of scheme once the flag no longer blocks it.
-    return { name, value, domain: url.hostname, path, httpOnly, secure: false, sameSite }
-  })
+  const cookies = raw.map((h) => localResponseCookie(h.value, res.url()))
   await context.addCookies(cookies)
 }
 

@@ -16,17 +16,17 @@ import {
   StateView,
   cn,
   toast,
-  toastWithUndo,
 } from '@devon/ui'
 import { useSharesOfCanvas } from '../../lib/realtime/canvas-hooks.js'
 import { CanvasShareDialog } from '../calendar/components/canvas-share-dialog.js'
 import { SharedCanvasPanel } from '../calendar/components/shared-canvas-panel.js'
 import { CanvasEditor } from './canvas-editor.js'
+import { useQueuedSave } from './lib/use-queued-save.js'
+import type { Canvas, PatchCanvasInput } from './types.js'
 import {
   useCanvasQuery,
   useCanvasesQuery,
   useCreateCanvasMutation,
-  useDelayedDelete,
   useDeleteCanvasMutation,
   usePatchCanvasMutation,
 } from './use-personal.js'
@@ -38,12 +38,11 @@ export function CanvasView() {
   const canvasesQuery = useCanvasesQuery()
   const createCanvas = useCreateCanvasMutation()
   const deleteCanvasMutation = useDeleteCanvasMutation()
-  const { schedule, cancel } = useDelayedDelete((id) => deleteCanvasMutation.mutateAsync(id))
-  const [hiddenIds, setHiddenIds] = React.useState<Set<string>>(new Set())
 
   if (selectedId) {
     return (
       <CanvasDetail
+        key={selectedId}
         id={selectedId}
         onBack={() => setSelectedId(null)}
         onDeleted={() => setSelectedId(null)}
@@ -63,23 +62,10 @@ export function CanvasView() {
     )
   }
 
-  const canvases = canvasesQuery.data.filter((c) => !hiddenIds.has(c.id))
+  const canvases = canvasesQuery.data
 
   function scheduleDelete(id: string) {
-    setHiddenIds((prev) => new Set(prev).add(id))
-    schedule(id)
-    toastWithUndo({
-      message: t('personal.canvas.deleted.toast'),
-      undoLabel: t('action.undo'),
-      onUndo: () => {
-        cancel(id)
-        setHiddenIds((prev) => {
-          const next = new Set(prev)
-          next.delete(id)
-          return next
-        })
-      },
-    })
+    if (!deleteCanvasMutation.isPending) deleteCanvasMutation.mutate(id)
   }
 
   return (
@@ -136,6 +122,8 @@ export function CanvasView() {
                   </span>
                   <IconButton
                     aria-label={t('personal.canvas.delete')}
+                    disabled={deleteCanvasMutation.isPending}
+                    aria-busy={deleteCanvasMutation.isPending}
                     onClick={() => scheduleDelete(canvas.id)}
                   >
                     <Trash2 className="size-4" aria-hidden="true" />
@@ -167,12 +155,22 @@ function CanvasDetail({
   const patchCanvas = usePatchCanvasMutation(id)
   const deleteCanvasMutation = useDeleteCanvasMutation()
   const [title, setTitle] = React.useState('')
-  // Tracks the latest known `version` outside the render closure so a rapid sequence of autosaves
-  // (each already debounced 800ms inside `CanvasEditor`) sends the version the *previous* save
-  // actually produced, not a stale one captured when this component last rendered -- avoiding a
-  // spurious 409 from the API's optimistic-concurrency check on fast successive edits. Declared
-  // (and its effects run) unconditionally, above every early return, per the rules of hooks.
-  const versionRef = React.useRef(0)
+  // Title and drawing edits share one versioned queue; an older response cannot clear a newer title draft.
+  const titleDraft = React.useRef('')
+  const titleDirty = React.useRef(false)
+  const titleVersion = React.useRef(0)
+  const sceneVersion = React.useRef<number | null>(null)
+  const [titleError, setTitleError] = React.useState(false)
+  const queuedSave = useQueuedSave<Canvas, PatchCanvasInput>(
+    canvasQuery.data ?? null,
+    (input) => patchCanvas.mutateAsync(input),
+    (updated, patch) => {
+      if (patch.title !== undefined && titleDraft.current.trim() === patch.title)
+        titleDirty.current = false
+      if (patch.scene !== undefined || patch.stickies !== undefined)
+        sceneVersion.current = updated.version
+    },
+  )
 
   // v1.1 EPIC-018. The canvas itself stays owner-only for ever; *sharing* publishes a revocable copy
   // into one project or event (`lib/realtime/canvas-api.ts` states the rule in full). So this screen
@@ -182,15 +180,29 @@ function CanvasDetail({
   const { shares } = useSharesOfCanvas(id)
 
   React.useEffect(() => {
-    if (canvasQuery.data) setTitle(canvasQuery.data.title)
+    if (canvasQuery.data && !titleDirty.current) {
+      titleVersion.current = canvasQuery.data.version
+      if (sceneVersion.current === null) sceneVersion.current = canvasQuery.data.version
+      titleDraft.current = canvasQuery.data.title
+      setTitle(canvasQuery.data.title)
+    }
     // Keyed on the one field each effect actually reacts to, not the whole (frequently-refetched) query object.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvasQuery.data?.title])
 
-  React.useEffect(() => {
-    if (canvasQuery.data) versionRef.current = canvasQuery.data.version
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasQuery.data?.version])
+  function saveTitle(retry = false) {
+    if (retry && canvasQuery.data) {
+      titleVersion.current = canvasQuery.data.version
+      sceneVersion.current = canvasQuery.data.version
+    }
+    if (!titleDirty.current) return retry ? queuedSave.retry({}) : Promise.resolve(true)
+    if (!titleDraft.current.trim()) {
+      setTitleError(true)
+      return Promise.resolve(false)
+    }
+    const patch = { title: titleDraft.current.trim() }
+    return retry ? queuedSave.retry(patch) : queuedSave.enqueue(patch, titleVersion.current)
+  }
 
   if (canvasQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (canvasQuery.isError || !canvasQuery.data) {
@@ -208,33 +220,37 @@ function CanvasDetail({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <IconButton aria-label={t('personal.canvas.back')} onClick={onBack}>
           <ArrowLeft className="size-4" aria-hidden="true" />
         </IconButton>
         <Input
+          aria-label={t('personal.canvas.title')}
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => {
-            if (title.trim() && title !== canvas.title) {
-              patchCanvas.mutate({ title: title.trim(), version: canvas.version })
-            }
+          maxLength={300}
+          aria-invalid={titleError || undefined}
+          aria-describedby={titleError ? `canvas-title-error-${id}` : undefined}
+          onChange={(e) => {
+            if (!titleDirty.current) titleVersion.current = canvas.version
+            titleDraft.current = e.target.value
+            titleDirty.current = true
+            setTitle(e.target.value)
+            if (e.target.value.trim()) setTitleError(false)
           }}
-          className="h-9 max-w-80 flex-1 border-none bg-transparent px-1 text-h3 font-medium shadow-none focus-visible:ring-0"
+          onBlur={() => void saveTitle()}
+          className="h-auto min-h-9 min-w-24 max-w-80 flex-1 border-none bg-transparent px-1 text-h3 font-medium shadow-none focus-visible:ring-0"
         />
         <span
           aria-live="polite"
-          className={cn(
-            'hidden shrink-0 items-center gap-1 text-caption text-muted-foreground sm:flex',
-          )}
+          className={cn('flex shrink-0 items-center gap-1 text-caption text-muted-foreground')}
         >
-          {patchCanvas.isPending && (
+          {queuedSave.isPending && (
             <>
               <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
               {t('personal.canvas.autosave.saving')}
             </>
           )}
-          {!patchCanvas.isPending && patchCanvas.isSuccess && (
+          {queuedSave.state === 'saved' && (
             <>
               <Check className="size-3.5 text-success" aria-hidden="true" />
               {t('personal.canvas.autosave.saved')}
@@ -246,11 +262,29 @@ function CanvasDetail({
         </IconButton>
         <IconButton
           aria-label={t('personal.canvas.delete')}
+          disabled={deleteCanvasMutation.isPending}
+          aria-busy={deleteCanvasMutation.isPending}
           onClick={() => deleteCanvasMutation.mutate(canvas.id, { onSuccess: onDeleted })}
         >
           <Trash2 className="size-4" aria-hidden="true" />
         </IconButton>
       </div>
+
+      {titleError ? (
+        <p id={`canvas-title-error-${id}`} role="alert" className="text-small text-destructive">
+          {t('personal.save.titleRequired')}
+        </p>
+      ) : null}
+      {queuedSave.state === 'error' || queuedSave.state === 'conflict' ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert" className="text-small text-destructive">
+            {t(queuedSave.state === 'conflict' ? 'personal.save.conflict' : 'personal.save.error')}
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => void saveTitle(true)}>
+            {t('personal.save.retry')}
+          </Button>
+        </div>
+      ) : null}
 
       {shares.map((share) => (
         <SharedCanvasPanel key={share.id} share={share} />
@@ -259,14 +293,12 @@ function CanvasDetail({
       <CanvasShareDialog open={sharing} onOpenChange={setSharing} canvasId={canvas.id} />
 
       <CanvasEditor
+        key={id}
         scene={canvas.scene}
         stickies={canvas.stickies}
-        onChange={({ scene, stickies }) =>
-          patchCanvas.mutate(
-            { scene, stickies, version: versionRef.current },
-            { onSuccess: (updated) => (versionRef.current = updated.version) },
-          )
-        }
+        onChange={({ scene, stickies }) => {
+          void queuedSave.enqueue({ scene, stickies }, sceneVersion.current ?? canvas.version)
+        }}
       />
     </div>
   )

@@ -72,6 +72,8 @@
         "recoveryTitle": "Zaxira kodlarni saqlab qoʻying",
         "recoveryBody": "Bu kodlar faqat shu yerda koʻrsatiladi. Telefoningiz yoʻqolsa, shulardan biri bilan kirasiz.",
         "recoveryCopied": "Kodlardan nusxa olindi",
+        "copy": "Tiklash kodlarini nusxalash",
+        "cancel": "Bekor qilish",
         "done": "Tayyor"
       },
       "disableDialog": {
@@ -83,11 +85,14 @@
     },
     "password": {
       "title": "Parolni oʻzgartirish",
+      "temporary": "Vaqtinchalik parol bilan kirdingiz. Uni hozirgi parol sifatida kiriting va quyida yangi parol tanlang.",
       "current": "Hozirgi parol",
       "new": "Yangi parol",
       "submit": "Saqlash",
       "success": "Parol oʻzgartirildi",
-      "error": "Hozirgi parol notoʻgʻri"
+      "error": "Hozirgi parol notoʻgʻri",
+      "validation": "Kamida 12 ta belgi kiriting va juda keng tarqalgan parollardan foydalanmang.",
+      "failed": "Parolni oʻzgartirib boʻlmadi. Ulanishni tekshirib, qayta urinib koʻring."
     },
     "delete": {
       "title": "Hisobni oʻchirish",
@@ -117,6 +122,7 @@
       "title": "Profil sozlamalari",
       "subtitle": "Profil, til, koʻrinish, Telegram, bildirishnomalar va xavfsizlik shu yerda.",
       "subnavAria": "Sozlamalar boʻlimlari",
+      "saveError": "Saqlab boʻlmadi. Ulanishni tekshirib, qayta urinib koʻring.",
       "profile": "Profil",
       "security": "Xavfsizlik",
       "dangerZone": "Xavfli amallar",

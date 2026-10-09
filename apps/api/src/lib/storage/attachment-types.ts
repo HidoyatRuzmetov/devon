@@ -23,6 +23,20 @@ export function safeAttachmentName(name: string): string {
     .slice(0, 180)
 }
 
+/** Older download implementations use the quoted ASCII name rather than RFC 5987 filename*. */
+export function attachmentDisposition(name: string): string {
+  const fallback =
+    Array.from(safeAttachmentName(name), (char) => {
+      const code = char.charCodeAt(0)
+      return code >= 32 && code <= 126 ? char : '_'
+    }).join('') || 'download'
+  const encoded = encodeURIComponent(name).replace(
+    /['()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  )
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encoded}`
+}
+
 export function attachmentMime(name: string): string | null {
   const extension = name.split('.').at(-1)?.toLowerCase() ?? ''
   return ATTACHMENT_TYPES[extension as keyof typeof ATTACHMENT_TYPES] ?? null

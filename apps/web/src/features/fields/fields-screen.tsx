@@ -67,6 +67,7 @@ import {
 } from './api.js'
 import { fieldDescription, fieldLabel } from './format.js'
 import { FieldFormDialog } from './components/field-form-dialog.js'
+import { fieldErrorKey } from './error-key.js'
 
 type Entity = 'person' | 'card'
 
@@ -95,6 +96,13 @@ export default function FieldsScreen(): React.JSX.Element {
   const [showArchived, setShowArchived] = React.useState(false)
   const [dialogOpen, setDialogOpen] = React.useState(false)
   const [editing, setEditing] = React.useState<FieldDefDto | null>(null)
+  const dialogSession = React.useRef(0)
+
+  function openForm(def: FieldDefDto | null = null): void {
+    dialogSession.current += 1
+    setEditing(def)
+    setDialogOpen(true)
+  }
 
   const query = useQuery({
     queryKey: ['fields', 'defs', 'all', departmentId],
@@ -108,8 +116,11 @@ export default function FieldsScreen(): React.JSX.Element {
 
   function reportError(err: unknown, fallbackKey: string): void {
     if (err instanceof ApiError && err.errors.length > 0) {
-      toast.error(t(`fields.error.${err.errors[0]!.code}`))
-      return
+      const key = fieldErrorKey(err.errors[0]!.code)
+      if (key) {
+        toast.error(t(key))
+        return
+      }
     }
     toast.error(t(fallbackKey))
   }
@@ -118,7 +129,6 @@ export default function FieldsScreen(): React.JSX.Element {
     mutationFn: (draft: DefDraft) => createDef(draft, csrfToken),
     onSuccess: (data) => {
       refresh()
-      setDialogOpen(false)
       toast.success(t('fields.manager.created', { name: fieldLabel(data.def, locale) }))
     },
     onError: (err) => reportError(err, 'fields.manager.createFailed'),
@@ -129,7 +139,6 @@ export default function FieldsScreen(): React.JSX.Element {
       updateDef(input.id, input.patch, csrfToken),
     onSuccess: () => {
       refresh()
-      setDialogOpen(false)
       toast.success(t('fields.manager.saved'))
     },
     onError: (err) => reportError(err, 'fields.manager.saveFailed'),
@@ -186,7 +195,7 @@ export default function FieldsScreen(): React.JSX.Element {
     onError: (err) => reportError(err, 'fields.manager.askFailed'),
   })
 
-  const allDefs = query.data?.defs ?? []
+  const allDefs = React.useMemo(() => query.data?.defs ?? [], [query.data?.defs])
   const defs = React.useMemo(
     () =>
       allDefs
@@ -197,12 +206,14 @@ export default function FieldsScreen(): React.JSX.Element {
   )
   const liveCount = allDefs.filter((d) => d.appliesTo === entity && d.archivedAt === null).length
   const cap = query.data?.caps[entity] ?? FIELD_CAPS[entity]
+  const liveDefs = React.useMemo(() => defs.filter((d) => d.archivedAt === null), [defs])
 
-  function move(index: number, delta: number): void {
-    const live = defs.filter((d) => d.archivedAt === null)
+  function move(id: string, delta: number): void {
+    const index = liveDefs.findIndex((def) => def.id === id)
+    if (index < 0) return
     const target = index + delta
-    if (target < 0 || target >= live.length) return
-    const ids = live.map((d) => d.id)
+    if (target < 0 || target >= liveDefs.length) return
+    const ids = liveDefs.map((d) => d.id)
     const moved = ids[index]!
     ids.splice(index, 1)
     ids.splice(target, 0, moved)
@@ -267,13 +278,7 @@ export default function FieldsScreen(): React.JSX.Element {
         />
         {t('fields.manager.showArchived')}
       </label>
-      <Button
-        onClick={() => {
-          setEditing(null)
-          setDialogOpen(true)
-        }}
-        disabled={liveCount >= cap}
-      >
+      <Button onClick={() => openForm()} disabled={liveCount >= cap}>
         <Plus aria-hidden="true" className="size-4" />
         {t('fields.manager.create')}
       </Button>
@@ -329,17 +334,15 @@ export default function FieldsScreen(): React.JSX.Element {
             }
             action={{
               labelKey: 'fields.manager.create',
-              onAction: () => {
-                setEditing(null)
-                setDialogOpen(true)
-              },
+              onAction: () => openForm(),
             }}
           />
         </div>
       ) : (
         <Stagger className="mt-6 flex flex-col gap-3">
-          {defs.map((def, index) => {
+          {defs.map((def) => {
             const archived = def.archivedAt !== null
+            const liveIndex = liveDefs.findIndex((live) => live.id === def.id)
             const progress = def.progress
             const pct =
               progress && progress.total > 0
@@ -370,7 +373,9 @@ export default function FieldsScreen(): React.JSX.Element {
                         ) : null}
                       </h2>
                       <p className="mt-1 text-small text-muted-foreground">
-                        <code className="rounded-sm bg-muted px-1 py-0.5">field:{def.key}</code>
+                        <code translate="no" className="rounded-sm bg-muted px-1 py-0.5">
+                          field:{def.key}
+                        </code>
                         {fieldDescription(def, locale) ? ` — ${fieldDescription(def, locale)}` : ''}
                       </p>
                     </div>
@@ -380,24 +385,21 @@ export default function FieldsScreen(): React.JSX.Element {
                         <>
                           <IconButton
                             aria-label={t('fields.manager.moveUp')}
-                            disabled={index === 0 || reorder.isPending}
-                            onClick={() => move(index, -1)}
+                            disabled={liveIndex === 0 || reorder.isPending}
+                            onClick={() => move(def.id, -1)}
                           >
                             <ArrowUp aria-hidden="true" className="size-4" />
                           </IconButton>
                           <IconButton
                             aria-label={t('fields.manager.moveDown')}
-                            disabled={index === defs.length - 1 || reorder.isPending}
-                            onClick={() => move(index, 1)}
+                            disabled={liveIndex === liveDefs.length - 1 || reorder.isPending}
+                            onClick={() => move(def.id, 1)}
                           >
                             <ArrowDown aria-hidden="true" className="size-4" />
                           </IconButton>
                           <IconButton
                             aria-label={t('fields.manager.edit')}
-                            onClick={() => {
-                              setEditing(def)
-                              setDialogOpen(true)
-                            }}
+                            onClick={() => openForm(def)}
                           >
                             <Pencil aria-hidden="true" className="size-4" />
                           </IconButton>
@@ -476,11 +478,15 @@ export default function FieldsScreen(): React.JSX.Element {
         cap={cap}
         saving={create.isPending || edit.isPending}
         onSubmit={(draft) => {
+          const submittedSession = dialogSession.current
+          const closeSubmittedForm = () => {
+            if (submittedSession === dialogSession.current) setDialogOpen(false)
+          }
           if (editing) {
             const { appliesTo: _appliesTo, key: _key, ...patch } = draft
-            edit.mutate({ id: editing.id, patch })
+            edit.mutate({ id: editing.id, patch }, { onSuccess: closeSubmittedForm })
           } else {
-            create.mutate(draft)
+            create.mutate(draft, { onSuccess: closeSubmittedForm })
           }
         }}
       />

@@ -210,8 +210,15 @@ function assertAllowedLabel(label: Record<string, string>, key: string): void {
   if (locale !== null) throw new FieldRefusedError('personal_data', 'label')
 }
 
+function assertDistinctOptions(options: readonly FieldOption[]): void {
+  if (new Set(options.map((option) => option.id)).size !== options.length) {
+    throw new FieldRefusedError('duplicate_option', 'options')
+  }
+}
+
 export async function createDef(ctx: RequestContext, input: CreateDefInput): Promise<FieldDefDto> {
   assertAllowedLabel(input.label, input.key)
+  assertDistinctOptions(input.options)
 
   return withContext(ctx, async (tx) => {
     const live = await repo.countLiveDefs(tx, input.departmentId, input.appliesTo)
@@ -285,6 +292,7 @@ export async function updateDef(
 
     const label = input.patch.label ?? before.label ?? {}
     assertAllowedLabel(label, before.key)
+    if (input.patch.options) assertDistinctOptions(input.patch.options)
 
     // `exactOptionalPropertyTypes` is on, so an absent key and a key set to `undefined` are different
     // things here -- the patch is built from the keys the caller actually sent.

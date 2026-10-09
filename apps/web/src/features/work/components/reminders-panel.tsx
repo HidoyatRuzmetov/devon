@@ -71,8 +71,8 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
       { remindAt: iso, ...(note.trim() ? { note: note.trim() } : {}) },
       {
         onSuccess: () => {
-          setNote('')
-          setWhen(defaultRemindAt())
+          setNote((current) => (current === note ? '' : current))
+          setWhen((current) => (current === when ? defaultRemindAt() : current))
           toast.success(t('work.reminders.added'))
         },
         onError: () => toast.error(t('work.reminders.addFailed')),
@@ -105,7 +105,7 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
   return (
     <div className="flex flex-col gap-3">
       <form onSubmit={submit} className="flex flex-wrap items-end gap-2">
-        <div className="flex min-w-[12rem] flex-col gap-1">
+        <div className="flex min-w-0 grow basis-[12rem] flex-col gap-1">
           <label
             htmlFor={`reminder-when-${cardId}`}
             className="text-caption font-medium text-foreground"
@@ -120,7 +120,7 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
             onChange={(e) => setWhen(e.target.value)}
           />
         </div>
-        <div className="flex min-w-[10rem] flex-1 flex-col gap-1">
+        <div className="flex min-w-0 grow basis-[10rem] flex-col gap-1">
           <label
             htmlFor={`reminder-note-${cardId}`}
             className="text-caption font-medium text-foreground"
@@ -158,29 +158,24 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
         >
           {reminders.map((reminder) => (
             <StaggerItem key={reminder.id} exit="hidden" layout>
-              <div className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+              <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 rounded-md border border-border bg-card px-3 py-2">
                 <BellRing className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                <span className="shrink-0 text-small tabular-nums text-foreground">
-                  {formatDateTime(new Date(reminder.remindAt), locale)}
-                </span>
-                {reminder.note ? (
-                  <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
-                    {reminder.note}
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="min-w-0 text-small tabular-nums text-foreground [overflow-wrap:anywhere]">
+                    {formatDateTime(new Date(reminder.remindAt), locale)}
                   </span>
-                ) : (
-                  <span className="flex-1" />
-                )}
-                {reminder.sentAt ? (
-                  <Chip
-                    tone="neutral"
-                    leading={<Check className="size-3" />}
-                    className="text-muted-foreground"
-                  >
-                    {t('work.reminders.sent')}
-                  </Chip>
-                ) : (
-                  <Chip tone="outline">{t('work.reminders.pending')}</Chip>
-                )}
+                  {reminder.sentAt ? (
+                    <Chip
+                      tone="neutral"
+                      leading={<Check className="size-3" />}
+                      className="text-muted-foreground"
+                    >
+                      {t('work.reminders.sent')}
+                    </Chip>
+                  ) : (
+                    <Chip tone="outline">{t('work.reminders.pending')}</Chip>
+                  )}
+                </div>
                 <IconButton
                   aria-label={t('work.reminders.delete')}
                   disabled={pendingDelete === reminder.id}
@@ -199,6 +194,11 @@ export function RemindersPanel({ cardId }: RemindersPanelProps): React.JSX.Eleme
                     <Trash2 className="size-4" aria-hidden="true" />
                   )}
                 </IconButton>
+                {reminder.note ? (
+                  <span className="col-start-2 min-w-0 text-caption text-muted-foreground [overflow-wrap:anywhere]">
+                    {reminder.note}
+                  </span>
+                ) : null}
               </div>
             </StaggerItem>
           ))}

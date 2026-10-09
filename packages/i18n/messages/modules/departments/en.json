@@ -4,6 +4,9 @@
     "subtitle": "Your departments, and ways to join more",
     "common": {
       "cancel": "Cancel",
+      "close": "Close",
+      "waitForAction": "Wait for the current department action to finish, then try again.",
+      "pendingAction": "This action is still running. You can close this window; closing does not cancel it.",
       "undo": "Undo"
     },
     "landing": {
@@ -80,6 +83,8 @@
       "title": "Invite",
       "link": "Link",
       "copyLink": "Copy link",
+      "copyKey": "Copy key",
+      "copiedKey": "Key copied",
       "qrLabel": "QR code",
       "keyLabel": "Key",
       "passwordLabel": "Password",
@@ -93,6 +98,7 @@
       "rotatePasswordConfirm": "The old password will stop working. Rotate the password?",
       "setPassword": "Set my own password",
       "setPasswordSubmit": "Save",
+      "passwordRequirements": "Use 8–128 characters for the invitation password.",
       "approvalToggleLabel": "Require approval to join",
       "approvalToggleBody": "When on, new members wait for the head's approval.",
       "passwordHiddenNotice": "For security, the password is shown only right after it's created or rotated.",
@@ -113,10 +119,12 @@
         "passwordLabel": "Password"
       },
       "submit": "Join",
+      "keyHint": "Paste the key after key=, or the complete invitation link. Enter the invitation password provided by your head.",
       "success": "You've joined the department",
       "pendingApproval": "Your request is waiting for the head's approval",
       "invalidKeyOrPassword": "Invalid key or password",
       "rateLimited": "Too many attempts. Try again in a moment.",
+      "failed": "Could not complete the request. Check your connection and try again.",
       "pendingApprovalBody": "The department head has been notified. You will get a notification once they approve, and can start work then.",
       "approvalNotice": "Joining this department needs the head’s approval.",
       "successBody": "The department’s work is open to you now."

@@ -418,10 +418,10 @@ const LoadPerPersonSectionImpl = function LoadPerPersonSection({
       ]}
       table={{
         headers: [
-          t('analytics.filterBar.since'),
+          t('analytics.table.person'),
           t('analytics.legend.open'),
           t('analytics.legend.overdue'),
-        ].slice(1),
+        ],
         rows: summary.loadPerPerson.map((p) => [p.name, p.openCount, p.overdueCount]),
       }}
       isEmpty={data.length === 0}
@@ -483,7 +483,11 @@ const LoadPerUnitSectionImpl = function LoadPerUnitSection({
     () =>
       summary.loadPerUnit.map((u: UnitLoad) => ({
         ...u,
-        name: u.unitName ?? t('analytics.legend.unassigned'),
+        scopeId: u.scope === 'unit' ? `unit:${u.unitId}` : u.scope,
+        name:
+          u.scope === 'department'
+            ? t('headScope.leadership')
+            : (u.unitName ?? t('analytics.legend.unassigned')),
       })),
     [summary.loadPerUnit, t],
   )
@@ -502,7 +506,11 @@ const LoadPerUnitSectionImpl = function LoadPerUnitSection({
         { label: t('analytics.legend.overdue'), colorVar: COLOR_DESTRUCTIVE },
       ]}
       table={{
-        headers: ['', t('analytics.legend.open'), t('analytics.legend.overdue')],
+        headers: [
+          t('structure.people.table.unit'),
+          t('analytics.legend.open'),
+          t('analytics.legend.overdue'),
+        ],
         rows: data.map((u) => [u.name, u.openCount, u.overdueCount]),
       }}
       isEmpty={data.length === 0}
@@ -520,12 +528,18 @@ const LoadPerUnitSectionImpl = function LoadPerUnitSection({
           />
           <YAxis
             type="category"
-            dataKey="name"
+            dataKey="scopeId"
             width={110}
+            tickFormatter={(value: string) =>
+              data.find((unit) => unit.scopeId === value)?.name ?? ''
+            }
             tick={{ fontSize: 11, fill: COLOR_MUTED }}
             tickLine={false}
           />
           <Tooltip
+            labelFormatter={(value) =>
+              data.find((unit) => unit.scopeId === String(value))?.name ?? ''
+            }
             contentStyle={tooltipStyle}
             cursor={barCursor}
             formatter={(v) => (typeof v === 'number' ? formatNumber(v, locale) : String(v ?? ''))}

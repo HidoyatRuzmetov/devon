@@ -15,7 +15,7 @@ import {
   StaggerItem,
   StateView,
   cn,
-  toastWithUndo,
+  toast,
 } from '@devon/ui'
 import { useRunAiFeatureMutation } from '../ai/use-ai.js'
 import { AiResultPanel } from '../ai/components/ai-result-panel.js'
@@ -26,23 +26,12 @@ import type { RunMeta } from '../ai/types.js'
 import { aiErrorMessageKey } from './lib/ai-helpers.js'
 import {
   useCreateNoteMutation,
-  useDelayedDelete,
   useDeleteNoteMutation,
   useNotesQuery,
   usePatchNoteMutation,
 } from './use-personal.js'
-import type { Note } from './types.js'
-
-function useDebouncedCallback<A extends unknown[]>(fn: (...args: A) => void, delayMs: number) {
-  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-  return React.useCallback(
-    (...args: A) => {
-      if (timer.current) clearTimeout(timer.current)
-      timer.current = setTimeout(() => fn(...args), delayMs)
-    },
-    [fn, delayMs],
-  )
-}
+import type { Note, PatchNoteInput } from './types.js'
+import { useQueuedSave } from './lib/use-queued-save.js'
 
 /** The "other" locale to offer a one-click translation into -- Uzbek notes translate to Russian and
  * vice-versa, since that is the pairing a civil servant in this instance actually needs; a full
@@ -52,14 +41,39 @@ type TranslateAiState =
   | { status: 'ready'; output: TranslateOutput; meta: RunMeta | null; targetLocale: Locale }
   | { status: 'error'; message: string }
 
-function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
+function NoteCard({
+  note,
+  onDelete,
+  deletePending,
+}: {
+  note: Note
+  onDelete: () => void
+  deletePending: boolean
+}) {
   const t = useT()
   const locale = useLocale()
   const patchNote = usePatchNoteMutation()
   const translate = useRunAiFeatureMutation('translate')
   const [title, setTitle] = React.useState(note.title)
   const [text, setText] = React.useState(note.body.text)
-  const [saveState, setSaveState] = React.useState<'idle' | 'saving' | 'saved'>('idle')
+  const titleDraft = React.useRef(note.title)
+  const bodyDraft = React.useRef(note.body.text)
+  const titleDirty = React.useRef(false)
+  const bodyDirty = React.useRef(false)
+  const titleVersion = React.useRef(note.version)
+  const bodyVersion = React.useRef(note.version)
+  const bodyTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [titleError, setTitleError] = React.useState(false)
+  const queuedSave = useQueuedSave<Note, PatchNoteInput>(
+    note,
+    (input) => patchNote.mutateAsync({ id: note.id, input }),
+    (_updated, patch) => {
+      if (patch.title !== undefined && titleDraft.current.trim() === patch.title)
+        titleDirty.current = false
+      if (patch.body !== undefined && bodyDraft.current === patch.body.text)
+        bodyDirty.current = false
+    },
+  )
   const [translateAi, setTranslateAi] = React.useState<TranslateAiState | null>(null)
   // AI-AUDIT §5 fix 1: the target language is asked, not assumed. v1.0's notes screen was the one
   // caller that got this even roughly right, via a hard-coded "from Uzbek always to Russian" map --
@@ -67,25 +81,63 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   const [targetLocale, setTargetLocale] = React.useState<Locale>(() =>
     defaultTranslateTarget(locale),
   )
-  React.useEffect(() => setTitle(note.title), [note.title])
-  React.useEffect(() => setText(note.body.text), [note.body.text])
+  React.useEffect(() => {
+    if (!titleDirty.current) {
+      titleDraft.current = note.title
+      setTitle(note.title)
+    }
+  }, [note.title])
+  React.useEffect(() => {
+    if (!bodyDirty.current) {
+      bodyDraft.current = note.body.text
+      setText(note.body.text)
+    }
+  }, [note.body.text])
 
-  function saveBody(value: string) {
-    if (value === note.body.text) return
-    setSaveState('saving')
-    patchNote.mutate(
-      { id: note.id, input: { body: { text: value }, version: note.version } },
-      {
-        onSuccess: () => {
-          setSaveState('saved')
-          setTimeout(() => setSaveState((s) => (s === 'saved' ? 'idle' : s)), 2000)
-        },
-        onError: () => setSaveState('idle'),
-      },
-    )
+  function saveDraft(extra: Omit<PatchNoteInput, 'version'> = {}, retry = false) {
+    if (bodyTimer.current) clearTimeout(bodyTimer.current)
+    bodyTimer.current = null
+    const input: Omit<PatchNoteInput, 'version'> = { ...extra }
+    if (titleDirty.current) {
+      if (!titleDraft.current.trim()) {
+        setTitleError(true)
+        return Promise.resolve(false)
+      }
+      input.title = titleDraft.current.trim()
+    }
+    if (bodyDirty.current) input.body = { text: bodyDraft.current }
+    if (retry) {
+      titleVersion.current = note.version
+      bodyVersion.current = note.version
+    }
+    const versions = [note.version]
+    if (titleDirty.current) versions.push(titleVersion.current)
+    if (bodyDirty.current) versions.push(bodyVersion.current)
+    return retry ? queuedSave.retry(input) : queuedSave.enqueue(input, Math.min(...versions))
   }
+  const saveDraftRef = React.useRef(saveDraft)
+  React.useLayoutEffect(() => {
+    saveDraftRef.current = saveDraft
+  })
+  React.useEffect(
+    () => () => {
+      if (bodyTimer.current) clearTimeout(bodyTimer.current)
+      if (titleDirty.current || bodyDirty.current) void saveDraftRef.current()
+    },
+    [],
+  )
 
-  const debouncedSaveText = useDebouncedCallback(saveBody, 600)
+  function updateBody(value: string, debounce = true) {
+    if (!bodyDirty.current) bodyVersion.current = note.version
+    bodyDraft.current = value
+    bodyDirty.current = true
+    setText(value)
+    if (bodyTimer.current) clearTimeout(bodyTimer.current)
+    if (debounce)
+      bodyTimer.current = setTimeout(() => {
+        void saveDraftRef.current()
+      }, 600)
+  }
 
   function runTranslate() {
     if (!text.trim()) return
@@ -119,30 +171,31 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
   return (
     <Card
       padding="md"
+      data-personal-note-id={note.id}
       className={cn('flex flex-col gap-2', note.pinned && 'border-attention/40 bg-attention/5')}
     >
       <div className="flex items-start justify-between gap-2">
         <Input
+          aria-label={t('personal.notes.title')}
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => {
-            if (title.trim() && title !== note.title)
-              patchNote.mutate({
-                id: note.id,
-                input: { title: title.trim(), version: note.version },
-              })
+          maxLength={300}
+          aria-invalid={titleError || undefined}
+          aria-describedby={titleError ? `note-title-error-${note.id}` : undefined}
+          onChange={(e) => {
+            if (!titleDirty.current) titleVersion.current = note.version
+            titleDraft.current = e.target.value
+            titleDirty.current = true
+            setTitle(e.target.value)
+            if (e.target.value.trim()) setTitleError(false)
           }}
-          className="h-8 flex-1 border-none bg-transparent px-1 font-medium shadow-none focus-visible:ring-0"
+          onBlur={() => void saveDraft()}
+          className="h-auto min-h-8 min-w-0 flex-1 border-none bg-transparent px-1 py-1 font-medium shadow-none focus-visible:ring-0"
         />
         <div className="flex shrink-0 items-center gap-1">
           <IconButton
             aria-label={t(note.pinned ? 'personal.notes.unpin' : 'personal.notes.pin')}
-            onClick={() =>
-              patchNote.mutate({
-                id: note.id,
-                input: { pinned: !note.pinned, version: note.version },
-              })
-            }
+            disabled={queuedSave.isPending}
+            onClick={() => void saveDraft({ pinned: !note.pinned })}
           >
             {note.pinned ? (
               <PinOff className="size-4 text-attention" aria-hidden="true" />
@@ -150,24 +203,32 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
               <Pin className="size-4" aria-hidden="true" />
             )}
           </IconButton>
-          <IconButton aria-label={t('personal.notes.delete')} onClick={onDelete}>
+          <IconButton
+            aria-label={t('personal.notes.delete')}
+            disabled={deletePending}
+            aria-busy={deletePending}
+            onClick={onDelete}
+          >
             <Trash2 className="size-4" aria-hidden="true" />
           </IconButton>
         </div>
       </div>
+      {titleError ? (
+        <p id={`note-title-error-${note.id}`} role="alert" className="text-small text-destructive">
+          {t('personal.save.titleRequired')}
+        </p>
+      ) : null}
       <textarea
+        aria-label={t('personal.notes.body')}
         value={text}
-        onChange={(e) => {
-          setText(e.target.value)
-          debouncedSaveText(e.target.value)
-        }}
-        onBlur={() => saveBody(text)}
+        onChange={(e) => updateBody(e.target.value)}
+        onBlur={() => void saveDraft()}
         rows={5}
         placeholder={t('personal.notes.bodyPlaceholder')}
         className="min-h-24 w-full resize-y rounded-sm border border-transparent bg-transparent px-1 py-1 text-body text-foreground placeholder:text-muted-foreground focus-visible:border-border focus-visible:outline-none"
       />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <TranslateTargetPicker
             id={`note-translate-target-${note.id}`}
             value={targetLocale}
@@ -181,14 +242,22 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
             loading={translateAi?.status === 'pending'}
             disabled={!text.trim()}
             onClick={runTranslate}
+            className="h-auto min-h-9 max-w-full whitespace-normal py-2 [&>span]:whitespace-normal [&>span]:text-left"
           />
         </div>
         <span
           aria-live="polite"
           className="flex items-center gap-1 text-caption text-muted-foreground transition-opacity duration-(--dur-standard)"
-          style={{ opacity: saveState === 'idle' ? 0 : 1 }}
+          style={{
+            opacity:
+              queuedSave.state === 'idle' ||
+              queuedSave.state === 'error' ||
+              queuedSave.state === 'conflict'
+                ? 0
+                : 1,
+          }}
         >
-          {saveState === 'saving' ? (
+          {queuedSave.isPending ? (
             t('personal.notes.autosave.saving')
           ) : (
             <>
@@ -198,6 +267,16 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
           )}
         </span>
       </div>
+      {queuedSave.state === 'error' || queuedSave.state === 'conflict' ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert" className="text-small text-destructive">
+            {t(queuedSave.state === 'conflict' ? 'personal.save.conflict' : 'personal.save.error')}
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => void saveDraft({}, true)}>
+            {t('personal.save.retry')}
+          </Button>
+        </div>
+      ) : null}
 
       {translateAi ? (
         <Reveal>
@@ -212,15 +291,15 @@ function NoteCard({ note, onDelete }: { note: Note; onDelete: () => void }) {
             editLabel={t('personal.ai.edit')}
             onAccept={() => {
               if (translateAi.status !== 'ready') return
-              setText(translateAi.output.translatedText)
-              saveBody(translateAi.output.translatedText)
-              setTranslateAi(null)
+              updateBody(translateAi.output.translatedText, false)
+              void saveDraft().then((saved) => {
+                if (saved) setTranslateAi(null)
+              })
             }}
             onDiscard={() => setTranslateAi(null)}
             onEdit={() => {
               if (translateAi.status === 'ready') {
-                setText(translateAi.output.translatedText)
-                debouncedSaveText(translateAi.output.translatedText)
+                updateBody(translateAi.output.translatedText)
               }
               setTranslateAi(null)
             }}
@@ -240,8 +319,6 @@ export function NotesView() {
   const notesQuery = useNotesQuery()
   const createNote = useCreateNoteMutation()
   const deleteNoteMutation = useDeleteNoteMutation()
-  const { schedule, cancel } = useDelayedDelete((id) => deleteNoteMutation.mutateAsync(id))
-  const [hiddenIds, setHiddenIds] = React.useState<Set<string>>(new Set())
 
   if (notesQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
   if (notesQuery.isError) {
@@ -255,25 +332,10 @@ export function NotesView() {
     )
   }
 
-  const notes = [...notesQuery.data]
-    .filter((n) => !hiddenIds.has(n.id))
-    .sort((a, b) => Number(b.pinned) - Number(a.pinned))
+  const notes = [...notesQuery.data].sort((a, b) => Number(b.pinned) - Number(a.pinned))
 
   function scheduleDelete(note: Note) {
-    setHiddenIds((prev) => new Set(prev).add(note.id))
-    schedule(note.id)
-    toastWithUndo({
-      message: t('personal.notes.deleted.toast'),
-      undoLabel: t('action.undo'),
-      onUndo: () => {
-        cancel(note.id)
-        setHiddenIds((prev) => {
-          const next = new Set(prev)
-          next.delete(note.id)
-          return next
-        })
-      },
-    })
+    if (!deleteNoteMutation.isPending) deleteNoteMutation.mutate(note.id)
   }
 
   return (
@@ -281,7 +343,12 @@ export function NotesView() {
       <div className="flex justify-end">
         <Button
           size="sm"
-          onClick={() => createNote.mutate({ title: t('personal.notes.newTitle') })}
+          onClick={() =>
+            createNote.mutate(
+              { title: t('personal.notes.newTitle') },
+              { onError: () => toast.error(t('toast.saveError')) },
+            )
+          }
           loading={createNote.isPending}
         >
           <Plus className="size-4" aria-hidden="true" />
@@ -297,14 +364,22 @@ export function NotesView() {
           illustration={<EmptyPersonalIllustration />}
           action={{
             labelKey: 'personal.notes.create',
-            onAction: () => createNote.mutate({ title: t('personal.notes.newTitle') }),
+            onAction: () =>
+              createNote.mutate(
+                { title: t('personal.notes.newTitle') },
+                { onError: () => toast.error(t('toast.saveError')) },
+              ),
           }}
         />
       ) : (
         <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2" animateKey={notes.length}>
           {notes.map((note) => (
             <StaggerItem key={note.id}>
-              <NoteCard note={note} onDelete={() => scheduleDelete(note)} />
+              <NoteCard
+                note={note}
+                onDelete={() => scheduleDelete(note)}
+                deletePending={deleteNoteMutation.isPending}
+              />
             </StaggerItem>
           ))}
         </Stagger>

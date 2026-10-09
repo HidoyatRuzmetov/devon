@@ -41,7 +41,12 @@ import {
 } from '../people/components/quick-assign-sheet.js'
 import { createCard } from '../work/api.js'
 
-type Group = { unit: Unit | null; label: string; members: Member[] }
+type Group = {
+  scope: 'department' | 'unit' | 'unassigned'
+  unit: Unit | null
+  label: string
+  members: Member[]
+}
 
 /** Depth-first order matching the tree list (`structure-screen.tsx`), so a bo'lim's members always
  * appear directly after the bo'lim itself and before its sub-bo'lim's members. */
@@ -68,15 +73,25 @@ function orderedUnits(units: Unit[]): Unit[] {
 
 function groupByUnit(units: Unit[], members: Member[]): Group[] {
   const byUnit = new Map<string, Member[]>()
+  const leadership: Member[] = []
   const unassigned: Member[] = []
   for (const m of members) {
-    if (m.unitId) byUnit.set(m.unitId, [...(byUnit.get(m.unitId) ?? []), m])
+    if (m.membershipRole === 'head') leadership.push(m)
+    else if (m.unitId) byUnit.set(m.unitId, [...(byUnit.get(m.unitId) ?? []), m])
     else unassigned.push(m)
   }
   const groups: Group[] = orderedUnits(units)
-    .map((unit) => ({ unit, label: unit.name, members: byUnit.get(unit.id) ?? [] }))
+    .map((unit) => ({
+      scope: 'unit' as const,
+      unit,
+      label: unit.name,
+      members: byUnit.get(unit.id) ?? [],
+    }))
     .filter((g) => g.members.length > 0)
-  if (unassigned.length > 0) groups.push({ unit: null, label: '', members: unassigned })
+  if (leadership.length > 0)
+    groups.unshift({ scope: 'department', unit: null, label: '', members: leadership })
+  if (unassigned.length > 0)
+    groups.push({ scope: 'unassigned', unit: null, label: '', members: unassigned })
   return groups
 }
 
@@ -348,7 +363,14 @@ export default function PeopleScreen() {
                   <th scope="row" className="px-3 py-2 font-normal">
                     <DirectoryName member={m} href={href} />
                   </th>
-                  <td className="px-3 py-2">{unitName ?? t('structure.people.unassignedGroup')}</td>
+                  <td className="px-3 py-2">
+                    {unitName ??
+                      t(
+                        m.membershipRole === 'head'
+                          ? 'headScope.departmentWide'
+                          : 'structure.people.unassignedGroup',
+                      )}
+                  </td>
                   <td className="px-3 py-2">
                     {m.unitRole ? (
                       <Badge tone={m.unitRole === 'head' ? 'info' : 'neutral'}>
@@ -408,10 +430,16 @@ export default function PeopleScreen() {
     body = (
       <div className="flex flex-col gap-8">
         {groups.map((group) => (
-          <section key={group.unit?.id ?? 'unassigned'} className="flex flex-col gap-3">
+          <section key={group.unit?.id ?? group.scope} className="flex flex-col gap-3">
             <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-              {group.unit ? group.label : t('structure.people.unassignedGroup')}
-              <span className="ml-1.5 normal-case tracking-normal text-muted-foreground/70">
+              {group.unit
+                ? group.label
+                : t(
+                    group.scope === 'department'
+                      ? 'headScope.leadership'
+                      : 'structure.people.unassignedGroup',
+                  )}
+              <span className="ml-1.5 normal-case tracking-normal text-muted-foreground">
                 ({group.members.length})
               </span>
             </h2>
@@ -431,8 +459,8 @@ export default function PeopleScreen() {
                   >
                     <MemberCard
                       member={m}
-                      unit={group.unit}
-                      onFilterByUnit={group.unit ? setUnitFilter : undefined}
+                      unit={m.unitId ? (unitsById.get(m.unitId) ?? null) : null}
+                      onFilterByUnit={m.unitId ? setUnitFilter : undefined}
                       profileHref={profileHrefFor(m.userId)}
                       onAssign={
                         m.userId === session.user?.id ? undefined : () => setAssignTarget(m)

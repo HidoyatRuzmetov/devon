@@ -13,26 +13,26 @@ export interface TopBarProps {
   className?: string
 }
 
-/** design.md §3 TopBar / spec.md §3.1-§3.4: sticky, 56 px, a 1 px `--color-official` bottom hairline
+/** design.md §3 TopBar / spec.md §3.1-§3.4: sticky, at least 56 px, with a 1 px official hairline
  * -- one of the two touchpoints where the ministry navy is used verbatim (DESIGN.md §2.1).
  *
- * Overhaul polish: the fill is a translucent card colour over a blur, so content scrolling under the
- * bar stays faintly visible instead of vanishing at a hard edge (the Linear/Vercel/Notion treatment
- * -- Jakob's Law). Purely a layout shell otherwise: it renders whatever the caller composes and has
- * no opinion about auth, locale state or routing. */
+ * The opaque card fill keeps controls readable when enlarged page text scrolls behind the bar,
+ * including browsers that do not blur the backdrop. The caller supplies auth, locale and routing. */
 export function TopBar({ leading, title, search, trailing, className }: TopBarProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-40 flex h-(--height-topbar) items-center gap-2 border-b border-official/70',
-        'bg-card/85 px-3 backdrop-blur-md sm:px-4',
+        'sticky top-0 z-40 flex min-h-(--height-topbar) flex-wrap items-center gap-1 border-b border-official/70 sm:gap-2',
+        'bg-card px-2 py-1.5 sm:px-4',
         className,
       )}
     >
       {leading}
       {title ? <div className="min-w-0 flex-none">{title}</div> : null}
-      <div className="flex min-w-0 flex-1 justify-center">{search}</div>
-      <div className="flex flex-none items-center gap-1 sm:gap-1.5">{trailing}</div>
+      <div className="flex min-w-9 flex-1 justify-center">{search}</div>
+      <div className="flex max-w-full flex-none flex-wrap items-center justify-end gap-1 sm:gap-1.5">
+        {trailing}
+      </div>
     </header>
   )
 }

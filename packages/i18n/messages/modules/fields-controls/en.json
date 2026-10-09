@@ -1,0 +1,7 @@
+{
+  "fields": {
+    "error": {
+      "duplicate_option": "Each option needs a different internal ID. Reload the field and add the options again."
+    }
+  }
+}

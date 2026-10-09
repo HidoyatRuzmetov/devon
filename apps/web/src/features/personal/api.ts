@@ -3,8 +3,12 @@
 // itself (`src/lib/api-client.ts`) only wires up GET/POST/PATCH -- this module's `DELETE` routes need
 // one more small, same-shaped helper, built locally rather than by editing that shared file.
 import { z } from 'zod'
-import { problemSchema } from '@devon/contracts'
-import { ApiError, NetworkError, apiClient } from '../../lib/api-client.js'
+import {
+  personalDeleteReceiptSchema,
+  personalTaskVersionChangeSchema,
+  type PersonalDeleteReceipt,
+} from '@devon/contracts'
+import { apiClient } from '../../lib/api-client.js'
 import {
   canvasSchema,
   canvasSummaryListSchema,
@@ -43,29 +47,6 @@ import {
 
 const BASE = '/api/v1/personal'
 
-async function del(path: string, csrfToken: string): Promise<void> {
-  let res: Response
-  try {
-    res = await fetch(path, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: { accept: 'application/json', 'x-csrf-token': csrfToken },
-    })
-  } catch (cause) {
-    throw new NetworkError(cause)
-  }
-  if (res.ok) return
-  const requestId = res.headers.get('x-request-id')
-  let code = 'internal'
-  try {
-    const parsed = problemSchema.safeParse(await res.json())
-    if (parsed.success) code = parsed.data.code
-  } catch {
-    // Not a Problem body -- fall back to 'internal', same as `api-client.ts`.
-  }
-  throw new ApiError(res.status, code, requestId)
-}
-
 // -- Sprints ------------------------------------------------------------------------------------------
 
 export const fetchSprints = (): Promise<Sprint[]> =>
@@ -93,19 +74,29 @@ export const fetchTasks = (): Promise<Task[]> => apiClient.get(`${BASE}/tasks`, 
 export const createTask = (input: CreateTaskInput, csrf: string): Promise<Task> =>
   apiClient.post(`${BASE}/tasks`, input, taskSchema, csrf)
 
-export const patchTask = (id: string, input: PatchTaskInput, csrf: string): Promise<Task> =>
-  apiClient.patch(`${BASE}/tasks/${id}`, input, taskSchema, csrf)
+const taskWriteResultSchema = z.object({
+  task: taskSchema,
+  affectedVersions: z.array(personalTaskVersionChangeSchema),
+})
+export const patchTask = (id: string, input: PatchTaskInput, csrf: string) =>
+  apiClient.patch(`${BASE}/tasks/${id}?versions=true`, input, taskWriteResultSchema, csrf)
 
-export const deleteTask = (id: string, csrf: string): Promise<void> =>
-  del(`${BASE}/tasks/${id}`, csrf)
+export const deleteTask = (id: string, csrf: string): Promise<PersonalDeleteReceipt> =>
+  apiClient.delete(`${BASE}/tasks/${id}?receipt=true`, personalDeleteReceiptSchema, csrf)
 
-const reorderResultSchema = z.object({ updated: z.number().int() })
-
-export const reorderTasks = (
-  input: ReorderTasksInput,
+export const restoreTask = (
+  id: string,
+  receipt: PersonalDeleteReceipt,
   csrf: string,
-): Promise<{ updated: number }> =>
-  apiClient.post(`${BASE}/tasks/reorder`, input, reorderResultSchema, csrf)
+): Promise<Task> => apiClient.post(`${BASE}/tasks/${id}/restore`, receipt, taskSchema, csrf)
+
+const reorderResultSchema = z.object({
+  updated: z.number().int(),
+  affectedVersions: z.array(personalTaskVersionChangeSchema),
+})
+
+export const reorderTasks = (input: ReorderTasksInput, csrf: string) =>
+  apiClient.post(`${BASE}/tasks/reorder?versions=true`, input, reorderResultSchema, csrf)
 
 // -- Notes --------------------------------------------------------------------------------------------
 
@@ -117,8 +108,14 @@ export const createNote = (input: CreateNoteInput, csrf: string): Promise<Note> 
 export const patchNote = (id: string, input: PatchNoteInput, csrf: string): Promise<Note> =>
   apiClient.patch(`${BASE}/notes/${id}`, input, noteSchema, csrf)
 
-export const deleteNote = (id: string, csrf: string): Promise<void> =>
-  del(`${BASE}/notes/${id}`, csrf)
+export const deleteNote = (id: string, csrf: string): Promise<PersonalDeleteReceipt> =>
+  apiClient.delete(`${BASE}/notes/${id}?receipt=true`, personalDeleteReceiptSchema, csrf)
+
+export const restoreNote = (
+  id: string,
+  receipt: PersonalDeleteReceipt,
+  csrf: string,
+): Promise<Note> => apiClient.post(`${BASE}/notes/${id}/restore`, receipt, noteSchema, csrf)
 
 // -- Canvases -----------------------------------------------------------------------------------------
 
@@ -134,8 +131,14 @@ export const createCanvas = (input: CreateCanvasInput, csrf: string): Promise<Ca
 export const patchCanvas = (id: string, input: PatchCanvasInput, csrf: string): Promise<Canvas> =>
   apiClient.patch(`${BASE}/canvases/${id}`, input, canvasSchema, csrf)
 
-export const deleteCanvas = (id: string, csrf: string): Promise<void> =>
-  del(`${BASE}/canvases/${id}`, csrf)
+export const deleteCanvas = (id: string, csrf: string): Promise<PersonalDeleteReceipt> =>
+  apiClient.delete(`${BASE}/canvases/${id}?receipt=true`, personalDeleteReceiptSchema, csrf)
+
+export const restoreCanvas = (
+  id: string,
+  receipt: PersonalDeleteReceipt,
+  csrf: string,
+): Promise<Canvas> => apiClient.post(`${BASE}/canvases/${id}/restore`, receipt, canvasSchema, csrf)
 
 // -- Pomodoro -----------------------------------------------------------------------------------------
 

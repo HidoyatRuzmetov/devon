@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { setLocale } from '@devon/i18n'
 import { ChecklistRow } from '../../src/features/work/components/checklist-row.js'
+import { TooltipProvider } from '@devon/ui'
 
 describe('checklist rows', () => {
   it('associates each text label with its own checkbox and edits without toggling completion', async () => {
@@ -27,6 +28,7 @@ describe('checklist rows', () => {
           onDelete={vi.fn()}
         />
       </>,
+      { wrapper: TooltipProvider },
     )
     fireEvent.click(screen.getByText('Second item'))
     expect(secondToggle).toHaveBeenCalledWith(true)
@@ -50,6 +52,7 @@ describe('checklist rows', () => {
         onSave={vi.fn()}
         onDelete={vi.fn()}
       />,
+      { wrapper: TooltipProvider },
     )
     expect(screen.getByRole('checkbox')).toBeDisabled()
     expect(screen.queryByRole('button')).not.toBeInTheDocument()

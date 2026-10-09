@@ -53,9 +53,11 @@ function useInvalidateEvent(eventId: string) {
   const queryClient = useQueryClient()
   return React.useCallback(
     (...extra: (readonly unknown[])[]) => {
-      void queryClient.invalidateQueries({ queryKey: ['events', 'list'] })
-      void queryClient.invalidateQueries({ queryKey: keys.detail(eventId) })
-      for (const key of extra) void queryClient.invalidateQueries({ queryKey: key })
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['events', 'list'] }),
+        queryClient.invalidateQueries({ queryKey: keys.detail(eventId) }),
+        ...extra.map((key) => queryClient.invalidateQueries({ queryKey: key })),
+      ])
     },
     [queryClient, eventId],
   )
@@ -113,10 +115,18 @@ function patchMyRsvpInCaches(
   return { prevDetail, prevLists }
 }
 
+function applyEventInCaches(qc: QueryClient, event: EventDto) {
+  qc.setQueryData(keys.detail(event.id), event)
+  qc.setQueriesData<{ items: EventDto[] }>({ queryKey: ['events', 'list'] }, (data) =>
+    data ? { ...data, items: data.items.map((row) => (row.id === event.id ? event : row)) } : data,
+  )
+}
+
 /** H5.1 "optimistic updates for ... RSVP; rollback on failure with toast" -- `myRsvp` updates the
  * instant "Going"/"Not going" is submitted, everywhere it is shown (the detail panel, the card grid,
- * the calendar), rather than only after the round trip; a failure restores every patched cache
- * exactly (`onError`), and `onSettled` re-syncs with the server regardless of outcome so a
+ * the calendar), rather than only after the round trip; a failure restores the patched answer
+ * while retaining independent refreshed fields (`onError`), and the final `onSettled` re-syncs
+ * with the server regardless of outcome so a
  * concurrent RSVP change (a capacity limit flipping "yes" to "waitlist" server-side, say) is never
  * masked by a stale optimistic value -- same reasoning `work/hooks.ts`'s own mutations document. */
 export function useRsvpMutation(eventId: string) {
@@ -124,20 +134,49 @@ export function useRsvpMutation(eventId: string) {
   const qc = useQueryClient()
   const invalidate = useInvalidateEvent(eventId)
   return useMutation({
+    mutationKey: ['events', 'rsvp', eventId],
+    scope: { id: `events-rsvp:${eventId}` },
     mutationFn: (input: { status: string; guests: number; note?: string | undefined }) =>
       api.submitRsvp(eventId, input, csrfToken),
-    onMutate: (input) =>
-      patchMyRsvpInCaches(qc, eventId, {
+    onMutate: async (input) => {
+      // An older list/detail request must not overwrite the pending answer as it arrives. The
+      // response to this mutation carries actual capacity/waitlist results, applied below.
+      await Promise.all([
+        qc.cancelQueries({ queryKey: ['events', 'list'] }),
+        qc.cancelQueries({ queryKey: keys.detail(eventId) }),
+      ])
+      return patchMyRsvpInCaches(qc, eventId, {
         status: input.status as RsvpStatus,
         guests: input.guests,
         note: input.note ?? null,
-      }),
-    onError: (_err, _input, context) => {
-      if (context?.prevDetail) qc.setQueryData(keys.detail(eventId), context.prevDetail)
-      if (context?.prevLists)
-        for (const [key, data] of context.prevLists) qc.setQueryData(key, data)
+      })
     },
-    onSettled: () => invalidate(keys.rsvps(eventId)),
+    onSuccess: (updated) => applyEventInCaches(qc, updated),
+    onError: (_err, _input, context) => {
+      if (context?.prevDetail)
+        qc.setQueryData<EventDto>(keys.detail(eventId), (data) =>
+          data ? { ...data, myRsvp: context.prevDetail!.myRsvp } : data,
+        )
+      if (context?.prevLists)
+        for (const [key, previous] of context.prevLists) {
+          const oldRsvp = previous?.items.find((row) => row.id === eventId)?.myRsvp ?? null
+          qc.setQueryData<{ items: EventDto[] }>(key, (data) =>
+            data
+              ? {
+                  ...data,
+                  items: data.items.map((row) =>
+                    row.id === eventId ? { ...row, myRsvp: oldRsvp } : row,
+                  ),
+                }
+              : data,
+          )
+        }
+    },
+    onSettled: () => {
+      if (qc.isMutating({ mutationKey: ['events', 'rsvp', eventId] }) === 1)
+        return invalidate(keys.rsvps(eventId))
+      return undefined
+    },
   })
 }
 

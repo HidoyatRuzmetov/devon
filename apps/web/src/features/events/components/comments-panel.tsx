@@ -150,13 +150,15 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
   const addMutation = useAddCommentMutation(eventId)
   const deleteMutation = useDeleteCommentMutation(eventId)
   const [body, setBody] = React.useState('')
+  const draftRevision = React.useRef(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!body.trim()) return
+    const submittedRevision = draftRevision.current
     try {
       await addMutation.mutateAsync(body.trim())
-      setBody('')
+      if (submittedRevision === draftRevision.current) setBody('')
     } catch {
       toast(t('events.error.title'))
     }
@@ -176,7 +178,12 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
     commentsBody = null
   } else if (commentsQuery.isError) {
     commentsBody = (
-      <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      <StateView
+        kind="error"
+        titleKey="events.error.title"
+        bodyKey="events.error.body"
+        action={{ labelKey: 'events.actions.retry', onAction: () => void commentsQuery.refetch() }}
+      />
     )
   } else if (commentsQuery.data.items.length === 0) {
     commentsBody = <p className="text-small text-muted-foreground">{t('events.comments.empty')}</p>
@@ -205,7 +212,9 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
                   </IconButton>
                 ) : null}
               </div>
-              <p className="whitespace-pre-wrap text-body text-foreground">{comment.body}</p>
+              <p className="whitespace-pre-wrap wrap-anywhere text-body text-foreground">
+                {comment.body}
+              </p>
             </div>
           </li>
         ))}
@@ -226,13 +235,19 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
             body: c.body,
             createdAt: c.createdAt,
           }))}
-          onInsert={(text) => setBody((prev) => (prev ? `${prev}\n\n${text}` : text))}
+          onInsert={(text) => {
+            draftRevision.current += 1
+            setBody((prev) => (prev ? `${prev}\n\n${text}` : text))
+          }}
         />
       ) : null}
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <Textarea
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={(e) => {
+            draftRevision.current += 1
+            setBody(e.target.value)
+          }}
           placeholder={t('events.comments.placeholder')}
           rows={2}
           maxLength={2000}

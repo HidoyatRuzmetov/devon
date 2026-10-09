@@ -7,7 +7,6 @@ import type { Bot, Context } from 'grammy'
 import { z } from 'zod'
 import {
   archiveNotifications,
-  emitActionRequested,
   getNotificationById,
   isMaintenanceActive,
   listNotifications,
@@ -27,6 +26,8 @@ import {
 import { DEFAULT_BOT_LOCALE, isBotLocale, tb, type BotLocale } from './templates.js'
 import { miniappMenuKeyboard } from './miniapp-buttons.js'
 import { muteBodySchema } from './schemas.js'
+import { recordTelegramRsvp } from '../events/telegram-rsvp.js'
+import { EventConflictError, EventForbiddenError, EventNotFoundError } from '../events/errors.js'
 
 const callbackId = z.string().uuid()
 
@@ -273,22 +274,54 @@ export function registerBotHandlers(bot: Bot): void {
     ) {
       const choice = a as 'yes' | 'no' | 'maybe'
       const notification = await getNotificationById(userId, b)
-      if (notification) {
-        await emitActionRequested(
+      if (
+        !notification ||
+        notification.subjectType !== 'event' ||
+        !notification.departmentId ||
+        !callbackId.safeParse(notification.subjectId).success
+      ) {
+        await ctx.answerCallbackQuery({
+          text: tb(locale, 'action.rsvp_unavailable'),
+          show_alert: true,
+        })
+        return
+      }
+      let recorded: 'yes' | 'no' | 'maybe' | 'waitlist'
+      try {
+        const updated = await recordTelegramRsvp(
           userId,
-          `rsvp_${choice}`,
-          notification.subjectType,
-          notification.subjectId ?? b,
+          notification.departmentId,
+          notification.subjectId!,
+          choice,
         )
+        recorded = updated.myRsvp!.status
         await markRead(auditCtx, userId, [b])
+      } catch (error) {
+        const message =
+          error instanceof EventConflictError
+            ? error.message === 'event_full'
+              ? 'action.rsvp_full'
+              : error.message === 'rsvp_deadline_passed'
+                ? 'action.rsvp_deadline'
+                : 'action.rsvp_unavailable'
+            : error instanceof EventForbiddenError || error instanceof EventNotFoundError
+              ? 'action.rsvp_unavailable'
+              : 'action.rsvp_failed'
+        await ctx.answerCallbackQuery({ text: tb(locale, message), show_alert: true })
+        // Infrastructure failures remain retryable by the update consumer; never acknowledge an
+        // uncommitted answer as recorded. Business refusals are terminal, actionable replies.
+        if (message === 'action.rsvp_failed') throw error
+        return
       }
       const choiceLabel = tb(
         locale,
-        choice === 'yes'
-          ? 'button.rsvp_yes'
-          : choice === 'no'
-            ? 'button.rsvp_no'
-            : 'button.rsvp_maybe',
+        recorded === 'waitlist'
+          ? 'button.rsvp_waitlist'
+          : recorded === 'yes'
+            ? 'button.rsvp_yes'
+            : recorded === 'no'
+              ? 'button.rsvp_no'
+              : 'button.rsvp_maybe',
       )
       await ctx.answerCallbackQuery({
         text: tb(locale, 'action.rsvp_recorded', { choice: choiceLabel }),

@@ -1,14 +1,13 @@
-// `/join` (optionally `?key=<key>`) -- join by link or by form (TECH-SPEC §2.2). A logged-out visitor
-// following `/join?key=...` is intercepted by the shell's own auth check today (feature routes always
-// render inside `AppShell`, `app.tsx`'s `RouteOutlet`) -- signing in first, then returning here with
-// the same query string, satisfies "if logged out, register/login first, then the password prompt"
-// without this screen needing its own redirect logic. `/join` is one of `app.tsx`'s `AUTH_ROUTES`, so
+// `/join` (optionally `?key=<key>`) -- join by link or by form (TECH-SPEC §2.2). Anonymous visitors
+// sign in or register before joining; the invitation key survives both paths, but never its password.
+// `/join` is one of `app.tsx`'s `AUTH_ROUTES`, so
 // this renders inside `AuthShell` -- the ambient gradient and the centred-card treatment
 // (UI-OVERHAUL.md's Jakob row "Auth: Linear, Vercel, Notion") already come from there; this file only
 // supplies the card itself, styled to match (`bg-card/90` + blur so the wash still reads through it).
 import * as React from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@devon/i18n'
+import { normalizeInvitationKey } from '@devon/contracts'
 import {
   BlurFade,
   Button,
@@ -21,6 +20,7 @@ import {
 import { ApiError } from '../../lib/api-client.js'
 import { useMeQuery, useSession } from '../../lib/session.js'
 import { navigate, useSearchParams } from '../../lib/router.js'
+import { authEntryPath } from '../../lib/auth-return.js'
 import { fetchJoinPreview, joinDepartment } from './api.js'
 
 export default function JoinScreen() {
@@ -29,12 +29,15 @@ export default function JoinScreen() {
   const meQuery = useMeQuery()
   const queryClient = useQueryClient()
   const params = useSearchParams()
-  const [key, setKey] = React.useState(params.get('key') ?? '')
+  const [key, setKey] = React.useState(normalizeInvitationKey(params.get('key') ?? ''))
+  const hintId = React.useId()
   const [password, setPassword] = React.useState('')
   const [outcome, setOutcome] = React.useState<'success' | 'pending' | null>(null)
   const [shake, setShake] = React.useState(false)
 
-  const keyFromLink = params.get('key')
+  const keyFromLink = params.get('key') ? normalizeInvitationKey(params.get('key')!) : null
+  const normalizedKey = normalizeInvitationKey(key)
+  const returnTo = normalizedKey ? `/join?key=${encodeURIComponent(normalizedKey)}` : '/join'
   const previewQuery = useQuery({
     queryKey: ['departments', 'join-preview', keyFromLink],
     queryFn: () => fetchJoinPreview(keyFromLink!),
@@ -42,7 +45,7 @@ export default function JoinScreen() {
   })
 
   const mutation = useMutation({
-    mutationFn: () => joinDepartment(key, password, meQuery.data?.csrfToken ?? ''),
+    mutationFn: () => joinDepartment(normalizedKey, password, meQuery.data?.csrfToken ?? ''),
     onSuccess: (result) => {
       setOutcome(result.status === 'active' ? 'success' : 'pending')
       void queryClient.invalidateQueries({ queryKey: ['departments', 'mine'] })
@@ -94,7 +97,9 @@ export default function JoinScreen() {
       ? mutation.error.code === 'rate_limited'
         ? 'departments.join.rateLimited'
         : 'departments.join.invalidKeyOrPassword'
-      : null
+      : mutation.isError
+        ? 'departments.join.failed'
+        : null
 
   return (
     <BlurFade className="mx-auto flex w-full max-w-105 flex-col gap-6 rounded-lg border border-border bg-card/90 p-8 shadow-2 backdrop-blur-sm">
@@ -138,10 +143,17 @@ export default function JoinScreen() {
               <Input
                 required
                 value={key}
-                onChange={(e) => setKey(e.target.value.toUpperCase())}
-                className="font-mono uppercase"
+                onChange={(e) => setKey(e.target.value)}
+                maxLength={2048}
+                aria-describedby={hintId}
+                className="font-mono"
               />
             </label>
+          ) : null}
+          {!keyFromLink ? (
+            <p id={hintId} className="text-small text-muted-foreground">
+              {t('departments.join.keyHint')}
+            </p>
           ) : null}
 
           <label className="flex flex-col gap-1.5">
@@ -167,8 +179,18 @@ export default function JoinScreen() {
           {!session.isAuthenticated ? (
             <p className="text-small text-muted-foreground">
               {t('accounts.login.registerPrompt')}{' '}
-              <a href={`/login`} className="text-foreground underline underline-offset-2">
+              <a
+                href={authEntryPath('/login', returnTo)}
+                className="text-foreground underline underline-offset-2"
+              >
                 {t('accounts.register.loginLink')}
+              </a>
+              {' · '}
+              <a
+                href={authEntryPath('/register', returnTo)}
+                className="text-foreground underline underline-offset-2"
+              >
+                {t('accounts.login.registerLink')}
               </a>
             </p>
           ) : (

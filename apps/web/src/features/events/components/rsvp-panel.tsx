@@ -14,11 +14,11 @@ import {
   cn,
   initialsFromName,
   toast,
-  toastWithUndo,
   useCelebrate,
 } from '@devon/ui'
 import type { EventDto, RsvpDto, RsvpStatus } from '../schemas.js'
 import { useRsvpMutation, useRsvpsQuery } from '../hooks.js'
+import { useEventUndo } from './event-undo.js'
 
 const STATUS_ORDER: RsvpStatus[] = ['yes', 'maybe', 'waitlist']
 
@@ -51,6 +51,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
   const rsvpQuery = useRsvpsQuery(eventId, true)
   const mutation = useRsvpMutation(eventId)
   const celebrate = useCelebrate()
+  const undo = useEventUndo()
 
   const [status, setStatus] = React.useState<RsvpStatus>(event.myRsvp?.status ?? 'yes')
   const [guests, setGuests] = React.useState(event.myRsvp?.guests ?? 0)
@@ -60,7 +61,9 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
     setStatus(event.myRsvp?.status ?? 'yes')
     setGuests(event.myRsvp?.guests ?? 0)
     setNote(event.myRsvp?.note ?? '')
-  }, [event.myRsvp])
+    // Refetching attendee counts creates a new DTO object even when this answer is unchanged.
+    // Keep unsaved form input until the actual saved answer or the event being viewed changes.
+  }, [eventId, event.myRsvp?.status, event.myRsvp?.guests, event.myRsvp?.note])
 
   const deadlinePassed = event.rsvpDeadline !== null && new Date(event.rsvpDeadline) < new Date()
   const eventClosed = event.status === 'cancelled' || event.status === 'done'
@@ -72,12 +75,15 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
     // captured before the mutation fires. A first-ever RSVP has nothing to revert to, so it keeps the
     // plain toast; a genuine change or cancellation offers undo back to what it was.
     const previous = event.myRsvp
+    const isCurrent = undo.captureScope()
+    undo.clear()
     try {
       const updated = await mutation.mutateAsync({
         status,
         guests: status === 'yes' ? guests : 0,
         note: note.trim() ? note.trim() : undefined,
       })
+      if (!isCurrent()) return
       const toastKey =
         updated.myRsvp?.status === 'no'
           ? 'events.rsvp.cancelledToast'
@@ -85,23 +91,23 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
             ? 'events.rsvp.waitlistedToast'
             : 'events.rsvp.confirmedToast'
       if (previous) {
-        toastWithUndo({
+        undo.show({
           message: t(toastKey),
-          undoLabel: t('events.actions.undo'),
-          onUndo: () => {
-            void mutation.mutateAsync({
+          successMessage: t('events.rsvp.confirmedToast'),
+          isCurrent,
+          action: () =>
+            mutation.mutateAsync({
               status: previous.status,
               guests: previous.guests,
               note: previous.note ?? undefined,
-            })
-          },
+            }),
         })
       } else {
         toast(t(toastKey))
       }
       if (updated.myRsvp?.status === 'yes') celebrate.fire()
     } catch {
-      toast(t('events.error.title'))
+      if (isCurrent()) toast(t('events.error.title'))
     }
   }
 
@@ -127,7 +133,12 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
     )
   } else if (rsvpQuery.isError) {
     attendeesBody = (
-      <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      <StateView
+        kind="error"
+        titleKey="events.error.title"
+        bodyKey="events.error.body"
+        action={{ labelKey: 'events.actions.retry', onAction: () => void rsvpQuery.refetch() }}
+      />
     )
   } else if (totalAttendees === 0) {
     attendeesBody = (
@@ -219,6 +230,7 @@ export function RsvpPanel({ event, eventId }: { event: EventDto; eventId: string
           </div>
         </form>
       ) : null}
+      {undo.feedback}
 
       <div>
         <p className="mb-2 text-small font-medium text-foreground">

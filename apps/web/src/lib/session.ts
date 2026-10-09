@@ -8,6 +8,7 @@ import {
   useQueryClient,
   type QueryClient,
   type UseQueryResult,
+  type MutateOptions,
 } from '@tanstack/react-query'
 import { setLocale, type Locale } from '@devon/i18n'
 import {
@@ -22,6 +23,12 @@ import {
 import type { InstancePublic, Me, Readyz } from './api-schemas.js'
 import { persistLocale } from './locale-boot.js'
 import { ACTIVE_DEPARTMENT_STORAGE_KEY } from './constants.js'
+import {
+  LOCALE_PREFERENCE_RECOVERY_KEY,
+  readLocalePreferenceRecovery,
+  persistLocalePreferenceRecovery,
+  type LocalePreferenceRecovery,
+} from './locale-preference-recovery.js'
 
 export function useInstanceQuery(): UseQueryResult<InstancePublic, Error> {
   return useQuery({ queryKey: ['instance'], queryFn: fetchInstance })
@@ -52,31 +59,148 @@ export function useMeQuery(): UseQueryResult<Me | null, Error> {
   })
 }
 
+type LocalePreferenceInput = { locale: Locale; ownerUserId: string | null }
+type LocalePreferenceContext = { version: number }
+type LocalePreferenceOptions = MutateOptions<Me | null, Error, Locale, LocalePreferenceContext>
+const localePreferenceVersions = new WeakMap<QueryClient, number>()
+
+function setLocalePreferenceRecovery(
+  queryClient: QueryClient,
+  recovery: LocalePreferenceRecovery | null,
+): void {
+  queryClient.setQueryData(LOCALE_PREFERENCE_RECOVERY_KEY, recovery)
+  persistLocalePreferenceRecovery(recovery)
+}
+
+/** Only the exact owner can see or retry a saved local intent. A replacement session never inherits
+ * another account's write command, even if its document was reloaded before a response arrived. */
+export function useLocalePreferenceRecovery(me: Me | null | undefined) {
+  const queryClient = useQueryClient()
+  const { data } = useQuery({
+    queryKey: LOCALE_PREFERENCE_RECOVERY_KEY,
+    queryFn: readLocalePreferenceRecovery,
+    initialData: readLocalePreferenceRecovery,
+    enabled: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  })
+  React.useEffect(() => {
+    if (me === undefined || !data || data.ownerUserId === me?.user.id) return
+    if (queryClient.getQueryData(LOCALE_PREFERENCE_RECOVERY_KEY) === data)
+      setLocalePreferenceRecovery(queryClient, null)
+  }, [data, me, queryClient])
+  return data?.ownerUserId === me?.user.id ? data : null
+}
+
+function localePreferenceOptions(
+  options?: LocalePreferenceOptions,
+): MutateOptions<Me | null, Error, LocalePreferenceInput, LocalePreferenceContext> | undefined {
+  if (!options) return undefined
+  return {
+    ...(options.onSuccess
+      ? {
+          onSuccess: (data, input, result, context) =>
+            options.onSuccess!(data, input.locale, result, context),
+        }
+      : {}),
+    ...(options.onError
+      ? {
+          onError: (error, input, result, context) =>
+            options.onError!(error, input.locale, result, context),
+        }
+      : {}),
+    ...(options.onSettled
+      ? {
+          onSettled: (data, error, input, result, context) =>
+            options.onSettled!(data, error, input.locale, result, context),
+        }
+      : {}),
+  }
+}
+
 export function useLocaleMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (locale: Locale) => {
+  const mutation = useMutation({
+    scope: { id: 'locale-preference' },
+    mutationFn: async ({ locale, ownerUserId }: LocalePreferenceInput) => {
       const me = queryClient.getQueryData<Me | null>(['me'])
-      if (!me) return null
+      if (!me || me.user.id !== ownerUserId) return null
       return patchMe({ locale }, me.csrfToken)
     },
-    onMutate: async (locale: Locale) => {
+    onMutate: ({ locale, ownerUserId }: LocalePreferenceInput): LocalePreferenceContext => {
+      const version = (localePreferenceVersions.get(queryClient) ?? 0) + 1
+      localePreferenceVersions.set(queryClient, version)
+      if ((queryClient.getQueryData<Me | null>(['me'])?.user.id ?? null) !== ownerUserId)
+        return { version }
       // Optimistic: the visible language changes instantly (design.md §4.3: "the change is its own
-      // feedback, ... no page reload"); the PATCH below is a best-effort sync of the server-side
-      // preference, not a precondition for the switch to have happened.
+      // feedback, ... no page reload"). The server acknowledgement is tracked separately so a
+      // failed save retains the choice and offers an explicit retry, including after reload.
       setLocale(locale)
       persistLocale(locale)
+      const previous = queryClient.getQueryData<LocalePreferenceRecovery | null>(
+        LOCALE_PREFERENCE_RECOVERY_KEY,
+      )
+      if (ownerUserId)
+        setLocalePreferenceRecovery(queryClient, {
+          locale,
+          ownerUserId,
+          status: 'pending',
+          showNotice: Boolean(
+            previous?.ownerUserId === ownerUserId &&
+            previous.locale === locale &&
+            previous.showNotice,
+          ),
+        })
+      return { version }
     },
-    onSuccess: (updated) => {
-      if (updated) queryClient.setQueryData(['me'], updated)
+    onError: (_error, input, context) => {
+      if (
+        context?.version !== localePreferenceVersions.get(queryClient) ||
+        !input.ownerUserId ||
+        queryClient.getQueryData<Me | null>(['me'])?.user.id !== input.ownerUserId
+      )
+        return
+      setLocalePreferenceRecovery(queryClient, {
+        locale: input.locale,
+        ownerUserId: input.ownerUserId,
+        status: 'failed',
+        showNotice: true,
+      })
+    },
+    onSuccess: (updated, input, context) => {
+      if (!updated || context.version !== localePreferenceVersions.get(queryClient)) return
+      if (
+        queryClient.getQueryData<Me | null>(['me'])?.user.id !== input.ownerUserId ||
+        updated.user.id !== input.ownerUserId
+      )
+        return
+      queryClient.setQueryData<Me | null>(['me'], (current) =>
+        current?.user.id === input.ownerUserId && updated.user.id === input.ownerUserId
+          ? { ...current, user: { ...current.user, locale: updated.user.locale } }
+          : current,
+      )
+      setLocalePreferenceRecovery(queryClient, null)
     },
   })
+  const input = (locale: Locale): LocalePreferenceInput => ({
+    locale,
+    ownerUserId: queryClient.getQueryData<Me | null>(['me'])?.user.id ?? null,
+  })
+  return {
+    ...mutation,
+    variables: mutation.variables?.locale,
+    mutate: (locale: Locale, options?: LocalePreferenceOptions) =>
+      mutation.mutate(input(locale), localePreferenceOptions(options)),
+    mutateAsync: (locale: Locale, options?: LocalePreferenceOptions) =>
+      mutation.mutateAsync(input(locale), localePreferenceOptions(options)),
+  }
 }
 
 /** Cancel in-flight reads before dropping every private cache, including mutation results. */
 export async function clearSessionCache(queryClient: QueryClient): Promise<void> {
   await queryClient.cancelQueries()
+  setLocalePreferenceRecovery(queryClient, null)
   queryClient.clear()
   queryClient.setQueryData(['me'], null)
   storeDepartmentId(null)

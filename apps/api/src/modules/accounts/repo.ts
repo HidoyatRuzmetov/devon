@@ -437,10 +437,24 @@ export async function changePassword(
 
 /** Super-admin-only password reset (TECH-SPEC §2.1: "temporary password, forced change at next
  * login"). The caller (`index.ts`) has already checked `{kind:'instance'}` before this runs. */
-export async function adminResetPassword(userId: string, ctx: AuditCtx): Promise<string> {
+export async function adminResetPassword(userId: string, ctx: AuditCtx): Promise<string | null> {
   const temporaryPassword = `${generateToken().slice(0, 16)}Aa1!`
   const passwordHash = await hashPassword(temporaryPassword)
-  await withContext(toDbContext(ctx), async (tx) => {
+  return withContext(toDbContext(ctx), async (tx) => {
+    const target = await tx.drizzle
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(
+        and(
+          eq(schema.users.id, userId),
+          sql`${schema.users.role} <> 'super_admin'`,
+          sql`${schema.users.status} <> 'deleted'`,
+          isNull(schema.users.deletedAt),
+        ),
+      )
+      .limit(1)
+      .for('update')
+    if (!target[0]) return null
     await tx.drizzle
       .update(schema.users)
       .set({ passwordHash, mustChangePassword: true, updatedAt: new Date() })
@@ -456,8 +470,8 @@ export async function adminResetPassword(userId: string, ctx: AuditCtx): Promise
       subjectType: 'user',
       subjectId: userId,
     })
+    return temporaryPassword
   })
-  return temporaryPassword
 }
 
 export async function requestAccountDeletion(userId: string, ctx: AuditCtx): Promise<Date> {

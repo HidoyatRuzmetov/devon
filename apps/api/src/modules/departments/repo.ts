@@ -777,7 +777,8 @@ export async function joinByKeyAndPassword(
       sql`insert into app.memberships (department_id, user_id, role, status)
           values (${dept.id}, ${userId}, 'member', ${status})
           on conflict (department_id, user_id) where deleted_at is null
-          do update set status = excluded.status, left_at = null`,
+          do update set status = excluded.status, left_at = null,
+                        version = app.memberships.version + 1, updated_at = now()`,
     )
     tx.audit({
       action: 'departments.joined',
@@ -862,7 +863,12 @@ export async function removeMember(
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
     const rows = await tx.drizzle
       .update(schema.memberships)
-      .set({ status: 'removed', leftAt: new Date(), updatedAt: new Date() })
+      .set({
+        status: 'removed',
+        leftAt: new Date(),
+        updatedAt: new Date(),
+        version: sql`${schema.memberships.version} + 1`,
+      })
       .where(
         and(
           eq(schema.memberships.departmentId, departmentId),
@@ -876,6 +882,11 @@ export async function removeMember(
       subjectType: 'membership',
       subjectId: targetUserId,
       departmentId,
+    })
+    tx.emit({
+      type: 'departments.membership.changed',
+      departmentId,
+      payload: { userId: targetUserId, actorUserId: ctx.userId },
     })
     return true
   })
@@ -900,20 +911,34 @@ export async function leaveDepartment(
     if (own[0]?.role === 'head') {
       return { ok: false, reason: 'is_only_head' as const }
     }
-    await tx.drizzle
+    const left = await tx.drizzle
       .update(schema.memberships)
-      .set({ status: 'removed', leftAt: new Date(), updatedAt: new Date() })
+      .set({
+        status: 'removed',
+        leftAt: new Date(),
+        updatedAt: new Date(),
+        version: sql`${schema.memberships.version} + 1`,
+      })
       .where(
         and(
           eq(schema.memberships.departmentId, departmentId),
           eq(schema.memberships.userId, userId),
+          eq(schema.memberships.status, 'active'),
+          isNull(schema.memberships.deletedAt),
         ),
       )
+      .returning({ id: schema.memberships.id })
+    if (!left.length) return { ok: true }
     tx.audit({
       action: 'departments.left',
       subjectType: 'membership',
       subjectId: userId,
       departmentId,
+    })
+    tx.emit({
+      type: 'departments.membership.changed',
+      departmentId,
+      payload: { userId, actorUserId: ctx.userId },
     })
     return { ok: true }
   })
@@ -925,22 +950,48 @@ export async function transferHeadship(
   toUserId: string,
   ctx: AuditCtx,
 ): Promise<boolean> {
+  if (fromUserId !== ctx.userId || fromUserId === toUserId) return false
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    const target = await tx.drizzle
-      .select({ status: schema.memberships.status })
-      .from(schema.memberships)
-      .where(
-        and(
-          eq(schema.memberships.departmentId, departmentId),
-          eq(schema.memberships.userId, toUserId),
-        ),
-      )
-      .limit(1)
-    if (!target[0] || target[0].status !== 'active') return false
+    // Account locks precede membership locks in the same sorted order as password reset and
+    // account administration. Every eligibility check belongs to this writing transaction.
+    const users = await tx.raw<{ id: string; status: string; role: string; deleted: boolean }>(sql`
+      select id, status, role, deleted_at is not null as deleted from app.users
+      where id in (${fromUserId}, ${toUserId}) order by id for share`)
+    const actor = users.find((user) => user.id === fromUserId)
+    const target = users.find((user) => user.id === toUserId)
+    if (
+      !actor ||
+      actor.status !== 'active' ||
+      actor.deleted ||
+      !target ||
+      target.status !== 'active' ||
+      target.deleted ||
+      target.role === 'super_admin'
+    )
+      return false
+    const memberships = await tx.raw<{ user_id: string; role: string; status: string }>(sql`
+      select user_id, role, status from app.memberships
+      where department_id=${departmentId} and user_id in (${fromUserId}, ${toUserId})
+        and deleted_at is null order by user_id for update`)
+    const actingMembership = memberships.find((member) => member.user_id === fromUserId)
+    const targetMembership = memberships.find((member) => member.user_id === toUserId)
+    if (
+      !actingMembership ||
+      actingMembership.role !== 'head' ||
+      actingMembership.status !== 'active' ||
+      !targetMembership ||
+      targetMembership.role !== 'member' ||
+      targetMembership.status !== 'active'
+    )
+      return false
 
     await tx.drizzle
       .update(schema.memberships)
-      .set({ role: 'member', updatedAt: new Date() })
+      .set({
+        role: 'member',
+        updatedAt: new Date(),
+        version: sql`${schema.memberships.version} + 1`,
+      })
       .where(
         and(
           eq(schema.memberships.departmentId, departmentId),
@@ -949,7 +1000,7 @@ export async function transferHeadship(
       )
     await tx.drizzle
       .update(schema.memberships)
-      .set({ role: 'head', updatedAt: new Date() })
+      .set({ role: 'head', updatedAt: new Date(), version: sql`${schema.memberships.version} + 1` })
       .where(
         and(
           eq(schema.memberships.departmentId, departmentId),
@@ -962,6 +1013,11 @@ export async function transferHeadship(
       subjectId: departmentId,
       departmentId,
       after: { from: fromUserId, to: toUserId },
+    })
+    tx.emit({
+      type: 'departments.membership.changed',
+      departmentId,
+      payload: { userIds: [fromUserId, toUserId], actorUserId: ctx.userId },
     })
     return true
   })
@@ -978,6 +1034,7 @@ export async function transferHeadship(
 
 export type JoinRequestRow = {
   userId: string
+  version: number
   givenName: string
   familyName: string
   patronymic: string | null
@@ -999,9 +1056,10 @@ export async function listJoinRequests(
       title: string | null
       avatar_key: string | null
       joined_at: Date | string
+      version: number
     }>(
       sql`select m.user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key,
-                 m.joined_at
+                 m.joined_at, m.version
           from app.memberships m join app.users u on u.id = m.user_id
           where m.department_id = ${departmentId} and m.status = 'pending_approval'
             and m.deleted_at is null and u.deleted_at is null
@@ -1009,6 +1067,7 @@ export async function listJoinRequests(
     )
     return rows.map((r) => ({
       userId: r.user_id,
+      version: r.version,
       givenName: r.given_name,
       familyName: r.family_name,
       patronymic: r.patronymic,
@@ -1022,31 +1081,64 @@ export async function listJoinRequests(
 export type JoinDecision = 'approved' | 'rejected' | 'pending'
 
 /**
- * Approve, reject, or put a decision back (the undo). One function rather than three because the
- * three differ only in the status they move to and the audit verb, and because the guard -- "the
- * membership must currently be in the status this transition expects" -- has to be identical in all
- * three or an undo could resurrect a membership the head removed for a different reason.
+ * Approve, reject, or undo the exact approval/rejection named by its membership version.
+ * User locks precede membership locks, matching account administration. The locked actor must
+ * still be an active head, and the target must still be an eligible ordinary member.
  *
- * The status move is a single `UPDATE ... WHERE status in (<expected>)` so two heads clicking at
- * once cannot both "win" (the same check-then-act lesson as `concurrency-races.test.ts`); the loser
- * gets `false` and the client simply re-reads the list.
+ * A conditional status/version update gives concurrent decisions one winner. Undo also requires
+ * the original decision and resulting version, so a later removal, rejoin or role change cannot
+ * be undone by an older toast. Membership, audit and outbox changes commit together.
  */
 export async function decideJoinRequest(
   departmentId: string,
   targetUserId: string,
   decision: JoinDecision,
   ctx: AuditCtx,
+  receipt: {
+    expectedVersion?: number | undefined
+    originalDecision?: 'approve' | 'reject' | undefined
+  } = {},
 ): Promise<boolean> {
   const next =
     decision === 'approved' ? 'active' : decision === 'rejected' ? 'removed' : 'pending_approval'
-  const expected = decision === 'pending' ? ['active', 'removed'] : ['pending_approval']
+  const expected =
+    decision === 'pending'
+      ? receipt.originalDecision === 'approve'
+        ? 'active'
+        : 'removed'
+      : 'pending_approval'
+  if (decision === 'pending' && (!receipt.expectedVersion || !receipt.originalDecision))
+    return false
   return withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
+    // Keep both authorization and target eligibility true until the committed transition.
+    const actorUser = await tx.raw(sql`select id from app.users where id = ${ctx.userId}
+      and status = 'active' and deleted_at is null for share`)
+    if (!actorUser.length) return false
+    const actorMembership = await tx.raw(sql`select id from app.memberships
+      where department_id = ${departmentId} and user_id = ${ctx.userId}
+        and role = 'head' and status = 'active' and deleted_at is null for share`)
+    if (!actorMembership.length || targetUserId === ctx.userId) return false
+    const targetUser = await tx.raw(sql`select id from app.users where id = ${targetUserId}
+      and status = 'active' and role <> 'super_admin' and deleted_at is null for share`)
+    if (!targetUser.length) return false
+    const current = await tx.raw<{ status: string; version: number }>(sql`
+      select status, version from app.memberships
+      where department_id = ${departmentId} and user_id = ${targetUserId}
+        and role = 'member' and deleted_at is null for update`)
+    const row = current[0]
+    if (
+      !row ||
+      row.status !== expected ||
+      (receipt.expectedVersion !== undefined && row.version !== receipt.expectedVersion)
+    )
+      return false
     const rows = await tx.raw<{ user_id: string }>(
       sql`update app.memberships
           set status = ${next}, updated_at = now(),
+              version = version + 1,
               left_at = ${decision === 'rejected' ? sql`now()` : null}
           where department_id = ${departmentId} and user_id = ${targetUserId}
-            and deleted_at is null and status in ${expected}
+            and deleted_at is null and status = ${expected} and version = ${row.version}
           returning user_id`,
     )
     if (rows.length === 0) return false
@@ -1060,7 +1152,8 @@ export async function decideJoinRequest(
       subjectType: 'membership',
       subjectId: targetUserId,
       departmentId,
-      after: { status: next },
+      before: { status: row.status, version: row.version },
+      after: { status: next, version: row.version + 1 },
     })
     // The joiner learns the outcome in their inbox and (if linked) in Telegram -- the registry
     // resolves `target_user` from this payload (`notifications/registry.ts`).
@@ -1069,6 +1162,12 @@ export async function decideJoinRequest(
         type: 'departments.join_request.decided',
         departmentId,
         payload: { userId: targetUserId, decision, actorUserId: ctx.userId },
+      })
+    } else {
+      tx.emit({
+        type: 'departments.membership.changed',
+        departmentId,
+        payload: { userId: targetUserId, actorUserId: ctx.userId },
       })
     }
     return true
@@ -1124,6 +1223,7 @@ export async function resetMemberPassword(
   ctx: AuditCtx,
 ): Promise<ResetMemberPasswordOutcome> {
   if (targetUserId === actorUserId) return { ok: false, reason: 'is_self' }
+  if (actorUserId !== ctx.userId) return { ok: false, reason: 'not_a_member' }
 
   const membership = await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) =>
     tx.raw<{ role: 'head' | 'member'; status: string }>(
@@ -1141,30 +1241,70 @@ export async function resetMemberPassword(
   const temporaryPassword = `${randomFromAlphabet(12)}aA1!`
   const passwordHash = await hashPassword(temporaryPassword)
 
-  await withContext(deptCtx(ctx, departmentId, 'head'), async (tx) => {
-    await tx.raw(
-      sql`update app.users
+  return withContext(
+    deptCtx(ctx, departmentId, 'head'),
+    async (tx): Promise<ResetMemberPasswordOutcome> => {
+      // Hashing deliberately happens outside the transaction. Admission can change during that
+      // work, so lock and recheck the real actor and target before any credential/session write.
+      // Sorted user locks precede membership locks, matching account administration.
+      const users = await tx.raw<{
+        id: string
+        status: string
+        role: string
+        deleted: boolean
+      }>(sql`
+      select id, status, role, deleted_at is not null as deleted from app.users
+      where id in (${actorUserId}, ${targetUserId}) order by id for update`)
+      const actor = users.find((user) => user.id === actorUserId)
+      const target = users.find((user) => user.id === targetUserId)
+      if (
+        !actor ||
+        actor.status !== 'active' ||
+        actor.deleted ||
+        !target ||
+        target.status !== 'active' ||
+        target.deleted ||
+        target.role === 'super_admin'
+      )
+        return { ok: false, reason: 'not_a_member' }
+      const memberships = await tx.raw<{ user_id: string; role: string; status: string }>(sql`
+      select user_id, role, status from app.memberships where department_id=${departmentId}
+        and user_id in (${actorUserId}, ${targetUserId}) and deleted_at is null
+      order by user_id for share`)
+      const actingMembership = memberships.find((member) => member.user_id === actorUserId)
+      const targetMembership = memberships.find((member) => member.user_id === targetUserId)
+      if (
+        !actingMembership ||
+        actingMembership.role !== 'head' ||
+        actingMembership.status !== 'active' ||
+        !targetMembership ||
+        targetMembership.status !== 'active'
+      )
+        return { ok: false, reason: 'not_a_member' }
+      if (targetMembership.role === 'head') return { ok: false, reason: 'is_head' }
+      await tx.raw(
+        sql`update app.users
           set password_hash = ${passwordHash}, must_change_password = true, updated_at = now()
           where id = ${targetUserId} and deleted_at is null`,
-    )
-    // Same rule as the super admin's reset: a deliberate credential reset revokes every live session.
-    await tx.raw(
-      sql`update app.sessions set revoked_at = now(), revoked_reason = 'password_reset'
+      )
+      // Same rule as the super admin's reset: a deliberate credential reset revokes every live session.
+      await tx.raw(
+        sql`update app.sessions set revoked_at = now(), revoked_reason = 'password_reset'
           where user_id = ${targetUserId} and revoked_at is null`,
-    )
-    tx.audit({
-      action: 'accounts.password_reset_by_head',
-      subjectType: 'user',
-      subjectId: targetUserId,
-      departmentId,
-      after: { mustChangePassword: true },
-    })
-    tx.emit({
-      type: 'accounts.password.reset_by_head',
-      departmentId,
-      payload: { userId: targetUserId, actorUserId },
-    })
-  })
-
-  return { ok: true, temporaryPassword }
+      )
+      tx.audit({
+        action: 'accounts.password_reset_by_head',
+        subjectType: 'user',
+        subjectId: targetUserId,
+        departmentId,
+        after: { mustChangePassword: true },
+      })
+      tx.emit({
+        type: 'accounts.password.reset_by_head',
+        departmentId,
+        payload: { userId: targetUserId, actorUserId },
+      })
+      return { ok: true, temporaryPassword }
+    },
+  )
 }

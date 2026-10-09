@@ -127,6 +127,7 @@
         "revert": "Put it back",
         "saveOver": "Save",
         "saved": "{name} saved",
+        "saveError": "Could not save this view. Your changes are kept. Try again.",
         "deleted": "{name} deleted"
       },
       "noResults": {

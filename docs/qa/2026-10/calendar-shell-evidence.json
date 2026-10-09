@@ -1,0 +1,319 @@
+{
+  "schemaVersion": 1,
+  "owner": "root-calendar-shell",
+  "provenance": "Exact real-service browser receipts and independent reads; named already-opened pixel artifacts with explicit capture limits.",
+  "policy": "Only named states and scopes receive bounded evidence; a child action cannot establish its whole parent.",
+  "boundaries": {
+    "db": "devon_flow_e2e_root",
+    "apiPort": 48952,
+    "webPort": 48951,
+    "externalCalls": "blocked",
+    "production": "not exercised"
+  },
+  "evidence": {
+    "agenda": {
+      "test": "apps/web/test/e2e/platform-calendar-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-copy-current/summary.json",
+      "scenario": "Three range/scope journeys: actual7/30/90 radios, own head/member tasks, department events without RSVP, independent reads, task/event deep links and visible cancelled cue. English/light/1280x720/all3."
+    },
+    "recovery": {
+      "test": "apps/web/test/e2e/platform-calendar-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-copy-current/summary.json",
+      "scenario": "Three organic empty + actual agenda/feed503 Retry200 journeys. English/light/1280x720/all3; offline not covered."
+    },
+    "cap": {
+      "test": "apps/web/test/e2e/platform-calendar-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-copy-current/summary.json",
+      "scenario": "Three real21st-subscription structured422 refusals, specific remedy, retained draft and independent20-record read. English/light/1280x720/all3."
+    },
+    "lateCreate": {
+      "test": "apps/web/test/e2e/platform-calendar-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-copy-current/summary.json",
+      "scenario": "Three actual committed200 held receipts, Escape/reopen/later draft, delivery/refetch without discarding later dialog. English/light/1280x720/all3."
+    },
+    "clipboard": {
+      "test": "apps/web/test/e2e/platform-calendar-deep.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-copy-current/summary.json",
+      "scenario": "Nine controlled clipboard boundary journeys: denial selects/focuses actual URL with truthful remedy; held old success/denial after real renewal gives no stale feedback or focus theft. Real independent reads and old404/new200. No operating-system clipboard write claim. English/light/1280x720/all3."
+    },
+    "inbox": {
+      "test": "apps/web/test/e2e/platform-inbox-header.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/summary.json",
+      "scenario": "Three read-only seeded head journeys: held actual unread response, disabled action before data and enabled afterward, existing All-tab list position changes≤1px. English/light/390x844/all3; no Mark-all-read mutation claim."
+    },
+    "navigation": {
+      "test": "apps/web/test/e2e/platform-sticky-chrome.qa.spec.ts",
+      "report": "artifacts/qa/2026-10/results/platform/sticky-navigation-current/summary.json",
+      "scenario": "Six executed cases/four locales each, actual native wheel overlap, opaque header/footer geometry and24 scoped axe scans. All3 engines/two themes/320x600/text200. All24 native captures opened through6 unscaled sheets."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/agenda-panel.tsx",
+        "component": "AgendaPanel",
+        "kind": "SegmentedControl"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "selected": {
+          "status": "verified",
+          "evidenceId": "agenda",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Actual range selection only. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/agenda-panel.tsx",
+        "component": "body",
+        "kind": "button"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "agenda",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-chromium/cancelled-agenda.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-firefox/cancelled-agenda.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--c6f8e-atus-and-working-deep-links-webkit/cancelled-agenda.png"
+          ]
+        }
+      },
+      "scopeNote": "Actual rendered task/event entries, cancelled label and navigation; no hover/keyboard claim. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/agenda-panel.tsx",
+        "component": "body",
+        "kind": "StateView",
+        "labelIncludes": "calendar.agenda.empty.title"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "empty": {
+          "status": "verified",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Organic empty guide and actual Go-to-events action. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/agenda-panel.tsx",
+        "component": "body",
+        "kind": "StateView",
+        "labelIncludes": "calendar.agenda.error.title"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Controlled503 and actual Retry/read recovery. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "body",
+        "kind": "StateView",
+        "labelIncludes": "calendar.feeds.error.title"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Controlled503 and actual Retry/read recovery. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "body",
+        "kind": "StateView",
+        "labelIncludes": "calendar.feeds.empty.title"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "empty": {
+          "status": "verified",
+          "evidenceId": "recovery",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Organic empty subscription guide only; create action is separately exercised. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CreateFeedDialog",
+        "kind": "Input"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "lateCreate",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-chromium/held-create-draft.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-firefox/held-create-draft.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--22462-iscard-a-later-dialog-draft-webkit/held-create-draft.png"
+          ]
+        }
+      },
+      "scopeNote": "Later typed draft remains after older receipt; image includes pointer text-edit focus, no Tab claim. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CreateFeedDialog",
+        "kind": "p",
+        "labelIncludes": "role=\"alert\""
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "cap",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-chromium/subscription-cap.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-firefox/subscription-cap.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--95f97-e-keeping-the-refused-draft-webkit/subscription-cap.png"
+          ]
+        }
+      },
+      "scopeNote": "Actual structured cap refusal remedy; other errors remain separately scoped. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CopyRow",
+        "kind": "input"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "focus": {
+          "status": "verified",
+          "evidenceId": "clipboard",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-chromium/clipboard-fallback.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-firefox/clipboard-fallback.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-calendar-deep.qa--4d1c1-ts-the-usable-link-fallback-webkit/clipboard-fallback.png"
+          ]
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "clipboard",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Denial fallback focus/selection measured; masked images cannot show secret or selected glyphs. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
+        "component": "CopyRow",
+        "kind": "IconButton"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "error": {
+          "status": "verified",
+          "evidenceId": "clipboard",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      },
+      "scopeNote": "Controlled denied/stale clipboard receipt behavior, no tooltip/state-color pixel claim. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/inbox/inbox-screen.tsx",
+        "component": "InboxScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "t('inbox.markAllRead')"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "disabled": {
+          "status": "verified",
+          "evidenceId": "inbox",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-before-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-before-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-before-data.png"
+          ]
+        },
+        "default": {
+          "status": "verified",
+          "evidenceId": "inbox",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-after-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-after-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-after-data.png"
+          ]
+        }
+      },
+      "scopeNote": "Action availability/layout only; no mutation. Other actions, states, roles and combinations remain pending."
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/inbox/inbox-screen.tsx",
+        "component": "InboxScreen",
+        "kind": "TabsContent"
+      },
+      "expectedMatches": 1,
+      "states": {
+        "loading": {
+          "status": "verified",
+          "evidenceId": "inbox",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-before-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-before-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-before-data.png"
+          ]
+        },
+        "populated": {
+          "status": "verified",
+          "evidenceId": "inbox",
+          "pixelReviewed": true,
+          "pixelReviewedArtifacts": [
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-chromium/unread-header-after-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-firefox/unread-header-after-data.png",
+            "artifacts/qa/2026-10/results/platform/calendar-shell-inbox-current/platform-inbox-header.qa---bae21-tion-list-below-its-actions-webkit/unread-header-after-data.png"
+          ]
+        }
+      },
+      "scopeNote": "Only selected All/inbox panel is exercised; other tabs are not inferred. Other actions, states, roles and combinations remain pending."
+    }
+  ],
+  "entries": [
+    {
+      "surface": "Shared sticky TopBar and mobile BottomTabBar",
+      "evidenceId": "navigation",
+      "note": "Rendered shared navigation has no standalone exact JSX surface in the current scanner. This workflow stays explicit and does not bind child controls as blanket passes."
+    }
+  ]
+}

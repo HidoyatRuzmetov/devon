@@ -10,7 +10,7 @@
 // a stand-in for it.
 import { randomBytes, randomUUID } from 'node:crypto'
 import { probeStorage, probeAi, probeTelegram, probeBackups } from './health-probes.js'
-import { and, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, ilike, isNull, or, sql } from 'drizzle-orm'
 import { normalizeUz, schema, withContext, type Tx } from '@devon/db'
 import { verifyPassword } from '../../lib/password.js'
 import { verifyTotp } from '../accounts/totp.js'
@@ -21,6 +21,7 @@ import { encryptSecret, decryptSecret } from './crypto.js'
 import { generateSentinelKeypair } from './sentinel-protocol.js'
 import { sendWipeCommand } from './sentinel-client.js'
 import { invalidateDepartmentStatusCache, invalidateMaintenanceCache } from './availability-gate.js'
+import { parseAdminListCursor } from './list-cursor.js'
 
 function adminCtx(ctx: AuditCtx, departmentId: string | null = null) {
   return {
@@ -104,12 +105,10 @@ export async function listDepartments(input: {
     if (input.status) conditions.push(sql`d.status = ${input.status}`)
     if (input.query) conditions.push(sql`d.name ilike ${`%${input.query}%`}`)
     if (input.cursor) {
-      const [cursorCreatedAt, cursorId] = input.cursor.split('|')
-      if (cursorCreatedAt && cursorId) {
-        conditions.push(
-          sql`(d.created_at, d.id) < (${new Date(cursorCreatedAt).toISOString()}::timestamptz, ${cursorId}::uuid)`,
-        )
-      }
+      const cursor = parseAdminListCursor(input.cursor)
+      conditions.push(
+        sql`(d.created_at, d.id) < (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`,
+      )
     }
 
     const rows = await tx.raw<{
@@ -118,10 +117,12 @@ export async function listDepartments(input: {
       slug: string
       status: AdminDepartmentRow['status']
       created_at: string
+      cursor_created_at: string
       member_count: string
       head_name: string | null
     }>(sql`
       select d.id, d.name, d.slug, d.status, d.created_at,
+        to_char(d.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_created_at,
         (select count(*) from app.memberships m where m.department_id = d.id and m.status = 'active' and m.deleted_at is null) as member_count,
         (select u.given_name || ' ' || u.family_name from app.memberships hm
            join app.users u on u.id = hm.user_id
@@ -148,7 +149,7 @@ export async function listDepartments(input: {
           headName: r.head_name,
         }),
       ),
-      nextCursor: hasMore && last ? `${new Date(last.created_at).toISOString()}|${last.id}` : null,
+      nextCursor: hasMore && last ? `${last.cursor_created_at}|${last.id}` : null,
     }
   })
 }
@@ -211,6 +212,7 @@ async function setDepartmentStatus(
       .from(schema.departments)
       .where(and(eq(schema.departments.id, id), isNull(schema.departments.deletedAt)))
       .limit(1)
+      .for('update')
     if (!before[0]) return false
     await tx.drizzle
       .update(schema.departments)
@@ -313,17 +315,18 @@ export async function searchUsers(input: {
       )
     }
     if (input.cursor) {
-      const [cursorCreatedAt, cursorId] = input.cursor.split('|')
-      if (cursorCreatedAt && cursorId) {
-        conditions.push(
-          sql`(${schema.users.createdAt}, ${schema.users.id}) < (${new Date(cursorCreatedAt).toISOString()}::timestamptz, ${cursorId}::uuid)`,
-        )
-      }
+      const cursor = parseAdminListCursor(input.cursor)
+      conditions.push(
+        sql`(${schema.users.createdAt}, ${schema.users.id}) < (${cursor.createdAt}::timestamptz, ${cursor.id}::uuid)`,
+      )
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined
 
     const rows = await tx.drizzle
-      .select()
+      .select({
+        ...getTableColumns(schema.users),
+        cursorCreatedAt: sql<string>`to_char(${schema.users.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+      })
       .from(schema.users)
       .where(where)
       .orderBy(desc(schema.users.createdAt), desc(schema.users.id))
@@ -344,7 +347,7 @@ export async function searchUsers(input: {
         lastLoginAt: r.lastLoginAt,
         createdAt: r.createdAt,
       })),
-      nextCursor: hasMore && last ? `${last.createdAt.toISOString()}|${last.id}` : null,
+      nextCursor: hasMore && last ? `${last.cursorCreatedAt}|${last.id}` : null,
     }
   })
 }
@@ -399,14 +402,39 @@ export async function getUserDetail(id: string): Promise<AdminUserDetail | null>
 
 const LOCK_FAR_FUTURE_YEARS = 100
 
+/** Account admission changes invalidate join-decision Undo receipts in each affected scope.
+ * Membership UPDATE remains department-scoped even for the instance admin. The caller already
+ * holds the target user lock; join decisions use the same user → membership lock order. */
+async function advanceMembershipRevisions(tx: Tx, userId: string): Promise<void> {
+  const departments = await tx.raw<{ department_id: string }>(sql`
+    select distinct department_id from app.memberships
+    where user_id=${userId} and deleted_at is null order by department_id
+  `)
+  /* eslint-disable no-restricted-syntax -- Each scoped UPDATE depends on the preceding transaction-local GUC on this single connection. */
+  // nosemgrep: devon-query-in-loop -- RLS requires each UPDATE to use its preceding department GUC on this single transaction connection; a cross-department batch would bypass that boundary.
+  for (const row of departments) {
+    // nosemgrep: query-in-loop -- This changes the transaction-local department before its dependent membership UPDATE; parallel scopes would race on one connection.
+    await tx.raw(sql`select set_config('app.department_id',${row.department_id},true)`)
+    // nosemgrep: query-in-loop -- Must execute after its own department GUC and before the next scope; these tenant writes are not independent.
+    await tx.raw(sql`
+      update app.memberships set version=version+1,updated_at=now()
+      where user_id=${userId} and department_id=${row.department_id} and deleted_at is null
+    `)
+  }
+  /* eslint-enable no-restricted-syntax */
+  await tx.raw(sql`select set_config('app.department_id','',true)`)
+}
+
 export async function lockUser(id: string, reason: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
     const before = await tx.drizzle
-      .select({ status: schema.users.status })
+      .select({ status: schema.users.status, role: schema.users.role })
       .from(schema.users)
       .where(eq(schema.users.id, id))
       .limit(1)
-    if (!before[0] || before[0].status === 'deleted') return false
+      .for('update')
+    if (!before[0] || before[0].status === 'deleted' || before[0].role === 'super_admin')
+      return false
 
     const lockedUntil = new Date()
     lockedUntil.setFullYear(lockedUntil.getFullYear() + LOCK_FAR_FUTURE_YEARS)
@@ -414,6 +442,7 @@ export async function lockUser(id: string, reason: string, ctx: AuditCtx): Promi
       .update(schema.users)
       .set({ status: 'locked', updatedAt: new Date() })
       .where(eq(schema.users.id, id))
+    await advanceMembershipRevisions(tx, id)
     await tx.raw(sql`
       insert into app.user_security (user_id, locked_until)
       values (${id}, ${lockedUntil.toISOString()}::timestamptz)
@@ -437,15 +466,18 @@ export async function lockUser(id: string, reason: string, ctx: AuditCtx): Promi
 export async function unlockUser(id: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
     const before = await tx.drizzle
-      .select({ status: schema.users.status })
+      .select({ status: schema.users.status, role: schema.users.role })
       .from(schema.users)
       .where(eq(schema.users.id, id))
       .limit(1)
-    if (!before[0] || before[0].status !== 'locked') return false
+      .for('update')
+    if (!before[0] || before[0].status !== 'locked' || before[0].role === 'super_admin')
+      return false
     await tx.drizzle
       .update(schema.users)
       .set({ status: 'active', updatedAt: new Date() })
       .where(eq(schema.users.id, id))
+    await advanceMembershipRevisions(tx, id)
     await tx.raw(sql`
       insert into app.user_security (user_id, locked_until, failed_login_count)
       values (${id}, null, 0)
@@ -462,14 +494,29 @@ export async function unlockUser(id: string, ctx: AuditCtx): Promise<boolean> {
   })
 }
 
-export async function forceTwoFactorReset(id: string, ctx: AuditCtx): Promise<void> {
-  await withContext(adminCtx(ctx), async (tx) => {
+export async function forceTwoFactorReset(id: string, ctx: AuditCtx): Promise<boolean> {
+  return withContext(adminCtx(ctx), async (tx) => {
+    const target = await tx.drizzle
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(
+        and(
+          eq(schema.users.id, id),
+          sql`${schema.users.role} <> 'super_admin'`,
+          sql`${schema.users.status} <> 'deleted'`,
+          isNull(schema.users.deletedAt),
+        ),
+      )
+      .limit(1)
+      .for('update')
+    if (!target[0]) return false
     await tx.raw(sql`
       insert into app.user_security (user_id, totp_enabled, totp_secret_enc, recovery_codes_hash)
       values (${id}, false, null, '{}')
       on conflict (user_id) do update set totp_enabled = false, totp_secret_enc = null, recovery_codes_hash = '{}', updated_at = now()
     `)
     tx.audit({ action: 'admin.user.two_factor_reset', subjectType: 'user', subjectId: id })
+    return true
   })
 }
 
@@ -479,11 +526,13 @@ const ANONYMISED_FAMILY_NAME = 'foydalanuvchi'
 export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
     const before = await tx.drizzle
-      .select({ status: schema.users.status, login: schema.users.login })
+      .select({ status: schema.users.status, login: schema.users.login, role: schema.users.role })
       .from(schema.users)
       .where(eq(schema.users.id, id))
       .limit(1)
-    if (!before[0] || before[0].status === 'deleted') return false
+      .for('update')
+    if (!before[0] || before[0].status === 'deleted' || before[0].role === 'super_admin')
+      return false
 
     const randomSuffix = randomBytes(4).toString('hex')
     await tx.drizzle
@@ -502,6 +551,7 @@ export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean>
         updatedAt: new Date(),
       })
       .where(eq(schema.users.id, id))
+    await advanceMembershipRevisions(tx, id)
     await tx.raw(sql`
       insert into app.user_security (user_id, totp_enabled, totp_secret_enc, recovery_codes_hash, locked_until)
       values (${id}, false, null, '{}', null)
@@ -690,7 +740,7 @@ export type AuditEventRow = {
   subjectTitle: string | null
 }
 
-export async function listAuditEvents(input: {
+export type AuditEventFilters = {
   action?: string | undefined
   /** One of `AUDIT_CATEGORIES` (the action's leading dot-segment, e.g. `'session'` for
    * `'session.created'`) or `OTHER_CATEGORY` for "none of the named ones" -- round2 SEV2's chip
@@ -700,24 +750,52 @@ export async function listAuditEvents(input: {
   departmentId?: string | undefined
   from?: string | undefined
   to?: string | undefined
-  cursor?: number | undefined
-  limit: number
-}): Promise<{ rows: AuditEventRow[]; nextCursor: number | null }> {
+}
+function auditEventConditions(
+  input: AuditEventFilters & { cursor?: number | undefined; throughSeq?: number | undefined },
+) {
+  const conditions = [sql`1 = 1`]
+  if (input.action) conditions.push(sql`action = ${input.action}`)
+  if (input.category === '__other__') {
+    conditions.push(
+      sql`action not like 'session.%' and action not like 'accounts.%' and action not like 'admin.%' and action not like 'departments.%'`,
+    )
+  } else if (input.category) conditions.push(sql`action like ${input.category + '.%'}`)
+  if (input.actorUserId) conditions.push(sql`actor_user_id = ${input.actorUserId}::uuid`)
+  if (input.departmentId) conditions.push(sql`department_id = ${input.departmentId}::uuid`)
+  if (input.from) conditions.push(sql`at >= ${input.from}::timestamptz`)
+  if (input.to) conditions.push(sql`at <= ${input.to}::timestamptz`)
+  if (input.cursor) conditions.push(sql`seq < ${input.cursor}`)
+  if (input.throughSeq !== undefined) conditions.push(sql`seq <= ${input.throughSeq}`)
+  return conditions
+}
+/** Bound the count and freeze an immutable audit high-water mark before starting a download. */
+export async function getAuditExportSnapshot(
+  input: AuditEventFilters,
+  cap: number,
+): Promise<{ count: number; throughSeq: number | null }> {
   return withContext(anonymousAdminCtx(), async (tx) => {
-    const conditions = [sql`1 = 1`]
-    if (input.action) conditions.push(sql`action = ${input.action}`)
-    if (input.category === '__other__') {
-      conditions.push(
-        sql`action not like 'session.%' and action not like 'accounts.%' and action not like 'admin.%' and action not like 'departments.%'`,
-      )
-    } else if (input.category) {
-      conditions.push(sql`action like ${input.category + '.%'}`)
+    const rows = await tx.raw<{
+      count: number
+      through_seq: string | null
+    }>(sql`select count(*)::int as count,max(seq) as through_seq from (
+    select seq from audit.events where ${sql.join(auditEventConditions(input), sql` and `)} order by seq desc limit ${cap + 1}
+  ) bounded`)
+    return {
+      count: rows[0]!.count,
+      throughSeq: rows[0]!.through_seq === null ? null : Number(rows[0]!.through_seq),
     }
-    if (input.actorUserId) conditions.push(sql`actor_user_id = ${input.actorUserId}::uuid`)
-    if (input.departmentId) conditions.push(sql`department_id = ${input.departmentId}::uuid`)
-    if (input.from) conditions.push(sql`at >= ${input.from}::timestamptz`)
-    if (input.to) conditions.push(sql`at <= ${input.to}::timestamptz`)
-    if (input.cursor) conditions.push(sql`seq < ${input.cursor}`)
+  })
+}
+export async function listAuditEvents(
+  input: AuditEventFilters & {
+    cursor?: number | undefined
+    throughSeq?: number | undefined
+    limit: number
+  },
+): Promise<{ rows: AuditEventRow[]; nextCursor: number | null }> {
+  return withContext(anonymousAdminCtx(), async (tx) => {
+    const conditions = auditEventConditions(input)
 
     // Blitz integration fix: `audit.events.seq` is `bigint identity` (packages/db migrations,
     // `audit.verify_chain()`'s own `seq bigint`) -- `node-postgres` returns every `bigint` column as a

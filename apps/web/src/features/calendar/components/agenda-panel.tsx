@@ -163,6 +163,11 @@ export function AgendaPanel(): React.JSX.Element {
                                   : 'calendar.agenda.kind.card',
                               )}
                             </span>
+                            {item.kind === 'event' && item.status === 'cancelled' ? (
+                              <span className="text-caption font-medium text-muted-foreground">
+                                {t('events.status.cancelled')}
+                              </span>
+                            ) : null}
                           </span>
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-muted-foreground">
                             <span>{formatTime(new Date(item.startsAt), locale)}</span>

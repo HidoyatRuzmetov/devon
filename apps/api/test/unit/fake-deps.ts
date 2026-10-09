@@ -106,7 +106,12 @@ export function createFakeDeps(state: FakeState): Deps {
     },
 
     async findUserByLogin(login) {
-      return state.users.find((u) => u.login === login) ?? null
+      const exact = state.users.find((u) => u.login === login)
+      if (exact) return exact
+      const email = login.trim().toLowerCase()
+      if (!email || !email.includes('@')) return null
+      const matches = state.users.filter((u) => u.email?.trim().toLowerCase() === email)
+      return matches.length === 1 ? matches[0]! : null
     },
 
     async findUserById(id) {

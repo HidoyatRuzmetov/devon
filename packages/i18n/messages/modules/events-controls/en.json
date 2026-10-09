@@ -1,0 +1,8 @@
+{
+  "eventsControls": {
+    "option": "Option {number}",
+    "removeOption": "Remove option {number}",
+    "optionLimit": "Polls can have up to {count} options.",
+    "exportFailed": "Could not download the calendar file. Try again."
+  }
+}

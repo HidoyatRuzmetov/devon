@@ -16,7 +16,10 @@ export type AccountProfile = z.infer<typeof profileSchema>
 export function fetchProfile(): Promise<AccountProfile> {
   return apiClient.get('/api/v1/accounts/profile', profileSchema)
 }
-export function saveProfile(profile: AccountProfile, csrfToken: string): Promise<AccountProfile> {
+export function saveProfile(
+  profile: Partial<AccountProfile>,
+  csrfToken: string,
+): Promise<AccountProfile> {
   return apiClient.patch('/api/v1/accounts/profile', profile, profileSchema, csrfToken)
 }
 

@@ -295,7 +295,14 @@ function PersonHeaderCard({
           </div>
           <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.unit')}</dt>
-            <dd>{header.unit ?? t('people.person.meta.noUnit')}</dd>
+            <dd>
+              {header.unit ??
+                t(
+                  header.membershipRole === 'head'
+                    ? 'headScope.departmentWide'
+                    : 'people.person.meta.noUnit',
+                )}
+            </dd>
           </div>
           <div className="flex gap-1">
             <dt className="text-muted-foreground">{t('people.person.meta.unitRole')}</dt>

@@ -77,6 +77,15 @@ jobs:
           semgrep --version
           trivy --version
 
+      - name: Verify compiled production browser journeys
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
+
       - name: Run the integration gate profile
         run: node agentic/scripts/gate.mjs --profile integration
 
@@ -155,6 +164,18 @@ jobs:
           tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
           sudo install -m 0755 trivy /usr/local/bin/trivy
           rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
+
+      - name: Install pinned performance tools
+        run: bash scripts/install-perf-tools.sh
+
+      - name: Verify compiled production browser journeys
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
+          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
 
       - name: Run the release gate profile
         run: node agentic/scripts/gate.mjs --profile release

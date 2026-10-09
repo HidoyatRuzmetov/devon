@@ -86,6 +86,31 @@ export default defineConfig(({ command, mode }) => {
       outDir: '../dist',
       emptyOutDir: true,
       sourcemap: command === 'build',
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            // The initial shell has no reason to make serial requests for shared primitive
+            // fragments. Lazy route entries keep their own automatic chunks.
+            groups: [
+              {
+                name: 'shell',
+                tags: ['$initial'],
+                priority: 100,
+              },
+              {
+                name: 'shared-controls',
+                // DatePicker owns a lazy calendar implementation. It must never merge into
+                // a common Card/motion fragment requested by Home.
+                test: /(?:packages[\\/]ui[\\/]src[\\/](?:motion[\\/]|primitives[\\/](?:card|checkbox|chip|progress|badge|stat-number|kpi-tile|sparkle-button|textarea|field|data-list|page-header|segmented-control|select|switch|radio-group)\.tsx$)|lucide-react[\\/]dist[\\/]esm[\\/]icons[\\/])/,
+                minShareCount: 2,
+                maxModuleSize: 8192,
+                entriesAware: true,
+                entriesAwareMergeThreshold: 8192,
+              },
+            ],
+          },
+        },
+      },
     },
     server: {
       port: webPort,

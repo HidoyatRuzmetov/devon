@@ -31,6 +31,7 @@ import { AiResultPanel } from '../../ai/components/ai-result-panel.js'
 import { EventDraftPreview } from '../../ai/components/previews.js'
 import { parseFeatureOutput, type DraftEventOutput } from '../../ai/outputs.js'
 import { EVENT_CATEGORIES, type EventDto } from '../schemas.js'
+import { toLocalInputValue } from '../lib/event-form-mapping.js'
 
 export type EventFormValues = {
   title: string
@@ -50,13 +51,6 @@ export type EventFormValues = {
 
 const STEPS = ['basics', 'schedule', 'capacity'] as const
 type Step = (typeof STEPS)[number]
-
-function toLocalInputValue(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
 
 function defaultsFromEvent(event: EventDto | null): EventFormValues {
   const offsets = event?.reminderOffsetsMinutes ?? [1440, 60]
@@ -339,13 +333,24 @@ export function EventFormDialog({
   const [values, setValues] = React.useState<EventFormValues>(() => defaultsFromEvent(event))
   const [error, setError] = React.useState<string | null>(null)
   const [step, setStep] = React.useState(0)
+  const [saving, setSaving] = React.useState(false)
+  const saveInFlight = React.useRef(false)
+  const session = React.useRef<{ eventId: string | null } | null>(null)
+  const formRef = React.useRef<HTMLFormElement>(null)
 
   React.useEffect(() => {
-    if (open) {
-      setValues(defaultsFromEvent(event))
-      setError(null)
-      setStep(0)
+    if (!open) {
+      session.current = null
+      return
     }
+    const eventId = event?.id ?? null
+    // A live refetch of the same event must not replace an organiser's unsaved edits. A new
+    // opening, or a different event, starts a fresh form session.
+    if (session.current?.eventId === eventId) return
+    session.current = { eventId }
+    setValues(defaultsFromEvent(event))
+    setError(null)
+    setStep(0)
   }, [open, event])
 
   const set = <K extends keyof EventFormValues>(key: K, value: EventFormValues[K]) =>
@@ -358,6 +363,11 @@ export function EventFormDialog({
   }
   const currentStep = STEPS[step]!
   const lastStep = step === STEPS.length - 1
+  const busy = submitting || saving
+
+  React.useEffect(() => {
+    if (open && step > 0) formRef.current?.querySelector<HTMLInputElement>('input')?.focus()
+  }, [open, step])
 
   function canAdvance(): boolean {
     if (currentStep === 'basics') return values.title.trim().length > 0
@@ -365,8 +375,26 @@ export function EventFormDialog({
     return true
   }
 
+  function advance() {
+    if (busy || !canAdvance()) return
+    setError(null)
+    if (
+      currentStep === 'schedule' &&
+      new Date(values.endsAt).getTime() <= new Date(values.startsAt).getTime()
+    ) {
+      setError(t('events.form.validation.endsBeforeStarts'))
+      return
+    }
+    setStep((s) => Math.min(STEPS.length - 1, s + 1))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!lastStep) {
+      advance()
+      return
+    }
+    if (busy || saveInFlight.current) return
     setError(null)
     if (!values.title.trim() || !values.startsAt || !values.endsAt) return
     if (new Date(values.endsAt).getTime() <= new Date(values.startsAt).getTime()) {
@@ -374,26 +402,59 @@ export function EventFormDialog({
       setStep(STEPS.indexOf('schedule'))
       return
     }
+    saveInFlight.current = true
+    setSaving(true)
     try {
       await onSubmit(values)
       onOpenChange(false)
       toast(t(event ? 'events.actions.save' : 'events.actions.create'))
     } catch {
       setError(t('events.error.title'))
+    } finally {
+      saveInFlight.current = false
+      setSaving(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!busy) onOpenChange(next)
+      }}
+    >
       <DialogContent
         title={t(event ? 'events.actions.edit' : 'events.actions.create')}
         className="max-w-140 max-h-[85vh] overflow-y-auto"
       >
         <div className="mt-4">
-          <StepIndicator step={step} labels={STEPS.map((s) => stepLabels[s])} onJump={setStep} />
+          <StepIndicator
+            step={step}
+            labels={STEPS.map((s) => stepLabels[s])}
+            onJump={(next) => {
+              if (!busy) setStep(next)
+            }}
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+        {/* Native form delegates Enter from its inputs to the current wizard step; it keeps form semantics. */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (
+              !lastStep &&
+              e.key === 'Enter' &&
+              e.target instanceof HTMLInputElement &&
+              !e.nativeEvent.isComposing
+            ) {
+              e.preventDefault()
+              advance()
+            }
+          }}
+          className="mt-5 flex flex-col gap-4"
+        >
           {currentStep === 'basics' ? (
             <>
               {!event ? (
@@ -554,11 +615,20 @@ export function EventFormDialog({
             </>
           ) : null}
 
-          {error ? <p className="text-small text-destructive">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="text-small text-destructive">
+              {error}
+            </p>
+          ) : null}
 
           <div className="flex justify-between gap-2 pt-2">
             {step > 0 ? (
-              <Button type="button" variant="secondary" onClick={() => setStep((s) => s - 1)}>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={busy}
+                onClick={() => setStep((s) => s - 1)}
+              >
                 {t('events.form.stepBack')}
               </Button>
             ) : (
@@ -569,11 +639,11 @@ export function EventFormDialog({
               </DialogClose>
             )}
             {lastStep ? (
-              <Button type="submit" loading={submitting}>
+              <Button key="publish" type="submit" loading={busy}>
                 {t(event ? 'events.form.submitUpdate' : 'events.form.submitCreate')}
               </Button>
             ) : (
-              <Button type="button" disabled={!canAdvance()} onClick={() => setStep((s) => s + 1)}>
+              <Button key="next" type="button" disabled={!canAdvance() || busy} onClick={advance}>
                 {t('events.form.stepNext')}
               </Button>
             )}

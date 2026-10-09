@@ -1,6 +1,8 @@
 // Public API of @devon/contracts. This is the only module other packages may import from (mirrors the
 // @devon/db and @devon/i18n convention) -- `@devon/api` (EPIC-000.6) and `@devon/web` (EPIC-000.7)
 // import only from here, never from `./permissions.js` or any other `src/*` path directly.
+export { isPlainHttpUrl } from './http-url.js'
+export { normalizeInvitationKey } from './invitation-key.js'
 export {
   can,
   type Role,
@@ -190,6 +192,7 @@ export {
   MAX_TIME_LOG_MINUTES,
   automationActionKindSchema,
   automationActionSchema,
+  automationWritableActionSchema,
   automationRuleBodySchema,
   automationRunStatusSchema,
   automationTriggerConfigSchema,
@@ -226,3 +229,12 @@ export {
   type WorkTemplateKind,
   type WorkTemplateScope,
 } from './work-plus.js'
+export {
+  personalDeleteReceiptSchema,
+  personalRestoreBodySchema,
+  personalTaskVersionChangeSchema,
+  personalTaskVersionsQuerySchema,
+  type PersonalDeleteReceipt,
+  type PersonalRestoreBody,
+  type PersonalTaskVersionChange,
+} from './personal.js'

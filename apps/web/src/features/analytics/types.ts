@@ -43,6 +43,8 @@ const personLoadSchema = z.object({
 export type PersonLoad = z.infer<typeof personLoadSchema>
 
 const unitLoadSchema = z.object({
+  scope: z.enum(['department', 'unit', 'unassigned']),
+  unitId: z.string().nullable(),
   unitName: z.string().nullable(),
   openCount: z.number(),
   overdueCount: z.number(),

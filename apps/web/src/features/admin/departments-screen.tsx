@@ -2,7 +2,7 @@
 // archive/restore) instead of a wall of inline buttons per row (UI-OVERHAUL.md §2 "Admin console ...
 // departments table with status pills and row drawer").
 import * as React from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useT, formatDate, useLocale, LOCALE_LABEL } from '@devon/i18n'
 import {
   Badge,
@@ -32,6 +32,7 @@ import {
   type AdminDepartmentRow,
 } from './api.js'
 import { AdminScreen } from './admin-screen.js'
+import { refreshViewAsContext } from './view-as-cache.js'
 
 // DESIGN.md §2.1: green stays reserved for success/approved/on-track (round2 SEV2 "Faol").
 const STATUS_TONE: Record<AdminDepartmentRow['status'], 'info' | 'warning' | 'neutral'> = {
@@ -68,6 +69,7 @@ function DepartmentDrawer({
       invalidate()
       onClose()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const archive = useMutation({
     mutationFn: () => archiveDepartment(id, csrfToken),
@@ -76,6 +78,7 @@ function DepartmentDrawer({
       invalidate()
       onClose()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const restore = useMutation({
     mutationFn: () => restoreDepartment(id, csrfToken),
@@ -84,13 +87,23 @@ function DepartmentDrawer({
       invalidate()
       onClose()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
   const viewAs = useMutation({
     mutationFn: () => startViewAs(id, csrfToken),
-    onSuccess: () => {
+    onMutate: () => ({ ownerUserId: meQuery.data?.user.id }),
+    onSuccess: async (_result, _variables, context) => {
+      const changed = await refreshViewAsContext(
+        queryClient,
+        () => meQuery.refetch(),
+        id,
+        context.ownerUserId,
+      )
+      if (!changed) return
       toast(t('admin.console.departments.viewAsStartedToast'))
       navigate('/')
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   const d = detailQuery.data
@@ -231,6 +244,7 @@ function PauseReasonSheet({
       void queryClient.invalidateQueries({ queryKey: ['admin', 'departments'] })
       onDone()
     },
+    onError: () => toast(t('admin.console.operationFailed')),
   })
 
   return (
@@ -282,13 +296,16 @@ function DepartmentsBody() {
   const meQuery = useMeQuery()
   const [query, setQuery] = React.useState('')
   const [status, setStatus] = React.useState<string>('')
+  const [cursors, setCursors] = React.useState<string[]>([])
+  const cursor = cursors.at(-1)
   const [openId, setOpenId] = React.useState<string | null>(null)
   const [pauseTarget, setPauseTarget] = React.useState<AdminDepartmentDetail | null>(null)
 
   const listQuery = useQuery({
-    queryKey: ['admin', 'departments', query, status],
+    placeholderData: keepPreviousData,
+    queryKey: ['admin', 'departments', query, status, cursor],
     queryFn: () =>
-      fetchAdminDepartments({ query: query || undefined, status: status || undefined }),
+      fetchAdminDepartments({ query: query || undefined, status: status || undefined, cursor }),
   })
 
   if (listQuery.isPending) return <StateView kind="loading" titleKey="state.loading" />
@@ -315,14 +332,20 @@ function DepartmentsBody() {
       <div className="flex flex-wrap items-center gap-3">
         <Input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setCursors([])
+          }}
           placeholder={t('admin.console.departments.searchPlaceholder')}
           aria-label={t('admin.console.departments.searchPlaceholder')}
           className="max-w-80"
         />
         <select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => {
+            setStatus(e.target.value)
+            setCursors([])
+          }}
           aria-label={t('admin.console.departments.statusFilter')}
           className="h-11 rounded-sm border border-border bg-card px-3 text-body text-foreground"
         >
@@ -385,6 +408,27 @@ function DepartmentsBody() {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={!cursors.length}
+          onClick={() => setCursors((current) => current.slice(0, -1))}
+        >
+          {t('admin.console.audit.previousPage')}
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={!listQuery.data.nextCursor}
+          onClick={() => {
+            if (listQuery.data.nextCursor)
+              setCursors((current) => [...current, listQuery.data.nextCursor!])
+          }}
+        >
+          {t('admin.console.audit.nextPage')}
+        </Button>
+      </div>
       {openId ? (
         <DepartmentDrawer
           id={openId}

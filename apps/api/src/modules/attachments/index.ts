@@ -6,6 +6,7 @@ import { can } from '@devon/contracts'
 import { checkCsrf } from '../../lib/csrf.js'
 import { sendProblem } from '../../lib/problem-reply.js'
 import {
+  attachmentDisposition,
   attachmentMime,
   safeAttachmentName,
   validAttachmentBytes,
@@ -221,10 +222,7 @@ const attachmentRoutes: FastifyPluginAsyncZod = async (app) => {
         .header('content-type', 'application/octet-stream')
         .header('x-content-type-options', 'nosniff')
         .header('cache-control', 'private, no-store')
-        .header(
-          'content-disposition',
-          `attachment; filename="download"; filename*=UTF-8''${encodeURIComponent(row.name).replace(/['()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`)}`,
-        )
+        .header('content-disposition', attachmentDisposition(row.name))
         .send(bytes)
     },
   )

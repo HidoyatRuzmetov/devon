@@ -44,7 +44,11 @@ export function summaryChartToCsv(chartKey: AnalyticsChartKey, summary: SummaryR
     case 'loadPerUnit':
       return csvRows(
         ['unit_name', 'open_count', 'overdue_count'],
-        summary.loadPerUnit.map((p) => [p.unitName ?? '(unassigned)', p.openCount, p.overdueCount]),
+        summary.loadPerUnit.map((p) => [
+          p.scope === 'department' ? '(department leadership)' : (p.unitName ?? '(unassigned)'),
+          p.openCount,
+          p.overdueCount,
+        ]),
       )
     case 'projectProgress':
       return csvRows(

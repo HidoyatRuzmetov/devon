@@ -13,14 +13,16 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
   const deleteMutation = useDeletePhotoMutation(eventId)
   const [url, setUrl] = React.useState('')
   const [caption, setCaption] = React.useState('')
+  const draftRevision = React.useRef({ url: 0, caption: 0 })
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!url.trim()) return
+    const submittedRevision = { ...draftRevision.current }
     try {
       await addMutation.mutateAsync({ url: url.trim(), caption: caption.trim() || undefined })
-      setUrl('')
-      setCaption('')
+      if (submittedRevision.url === draftRevision.current.url) setUrl('')
+      if (submittedRevision.caption === draftRevision.current.caption) setCaption('')
     } catch {
       toast(t('events.error.title'))
     }
@@ -45,7 +47,14 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
       )
     }
     if (photosQuery.isError) {
-      return <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      return (
+        <StateView
+          kind="error"
+          titleKey="events.error.title"
+          bodyKey="events.error.body"
+          action={{ labelKey: 'events.actions.retry', onAction: () => void photosQuery.refetch() }}
+        />
+      )
     }
     if (photosQuery.data.items.length === 0) {
       return <p className="text-small text-muted-foreground">{t('events.photos.empty')}</p>
@@ -64,7 +73,7 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
               loading="lazy"
             />
             {photo.caption ? (
-              <figcaption className="truncate bg-card/90 px-2 py-1 text-caption text-foreground">
+              <figcaption className="bg-card/90 px-2 py-1 wrap-anywhere text-caption text-foreground">
                 {photo.caption}
               </figcaption>
             ) : null}
@@ -72,7 +81,7 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
               <IconButton
                 aria-label={t('events.photos.delete')}
                 onClick={() => handleDelete(photo.id)}
-                className="absolute right-1 top-1 bg-card/80 opacity-0 group-hover:opacity-100"
+                className="absolute right-1 top-1 bg-card/80 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               >
                 <Trash2 aria-hidden="true" />
               </IconButton>
@@ -94,7 +103,10 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
             id="photo-url"
             type="url"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              draftRevision.current.url += 1
+              setUrl(e.target.value)
+            }}
             placeholder="https://…"
           />
         </Field>
@@ -103,7 +115,10 @@ export function PhotosPanel({ eventId }: { eventId: string }) {
             id="photo-caption"
             rows={2}
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={(e) => {
+              draftRevision.current.caption += 1
+              setCaption(e.target.value)
+            }}
           />
         </Field>
         <div className="flex justify-end">

@@ -98,6 +98,20 @@ export function createFromTemplate(
   return apiClient.post('/api/v1/projects/from-template', input, projectSchema, csrfToken)
 }
 
+export type CreateFromGalleryInput = {
+  templateId: string
+  title?: string
+  ownerUserId: string
+  members: string[]
+}
+
+export function createFromGallery(
+  input: CreateFromGalleryInput,
+  csrfToken: string,
+): Promise<Project> {
+  return apiClient.post('/api/v1/projects/from-gallery', input, projectSchema, csrfToken)
+}
+
 export type PatchProjectInput = Partial<{
   title: string
   description: string | null

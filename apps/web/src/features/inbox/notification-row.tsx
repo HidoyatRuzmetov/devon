@@ -54,7 +54,7 @@ export function NotificationRow({
   /** The grouped list's section head already states the reason (UI-OVERHAUL.md §8) -- repeating it
    * on every row in the group is noise, so `GroupedInboxList` passes `false` here. */
   showReasonChip?: boolean
-  onOpen: () => void
+  onOpen: (opener: HTMLButtonElement) => void
   /** Jumps straight to `deepLink` without opening the detail panel first. */
   onQuickAction: () => void
   onArchive: () => void
@@ -72,6 +72,7 @@ export function NotificationRow({
     // item, invalid HTML that threw a React hydration warning (found clicking through Inbox, 2026-09).
     // The list-item semantics belong to that one wrapper; this row is a plain div.
     <div
+      data-inbox-row={notification.id}
       className={cn(
         'group relative flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0',
         unread && 'bg-accent/40',
@@ -96,7 +97,8 @@ export function NotificationRow({
       </AnimatePresence>
       <button
         type="button"
-        onClick={onOpen}
+        data-inbox-opener={notification.id}
+        onClick={(event) => onOpen(event.currentTarget)}
         className={cn(
           // `min-w-0`: a flex item's default `min-width: auto` refuses to shrink below its content's
           // natural width, so without it this button (and the `truncate` title inside it) never

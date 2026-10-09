@@ -15,7 +15,6 @@ import {
   Textarea,
   initialsFromName,
   toast,
-  toastWithUndo,
   useCelebrate,
 } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
@@ -26,6 +25,7 @@ import {
   useReleaseCarpoolSeatMutation,
 } from '../hooks.js'
 import type { CarpoolDto } from '../schemas.js'
+import { useEventUndo } from './event-undo.js'
 
 function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDto }) {
   const t = useT()
@@ -33,6 +33,7 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
   const { user } = useSession()
   const claimMutation = useClaimCarpoolSeatMutation(eventId)
   const releaseMutation = useReleaseCarpoolSeatMutation(eventId)
+  const undo = useEventUndo()
 
   const isDriver = user?.id === carpool.driver.id
   const myShare = carpool.passengers.find((p) => p.userId === user?.id)
@@ -41,11 +42,14 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
   const celebrate = useCelebrate()
 
   const handleClaim = async () => {
+    const isCurrent = undo.captureScope()
+    undo.clear()
     try {
       await claimMutation.mutateAsync({ carpoolId: carpool.id, seats: 1 })
+      if (!isCurrent()) return
       if (!full) celebrate.fire()
     } catch {
-      toast(t('events.error.title'))
+      if (isCurrent()) toast(t('events.error.title'))
     }
   }
 
@@ -53,27 +57,25 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
     // §11: "carpool claim release ... use toastWithUndo" -- keep the seat count this person held so
     // "Undo" can re-claim exactly that many, not just one.
     const heldSeats = myShare?.seatsClaimed ?? 1
+    const isCurrent = undo.captureScope()
+    undo.clear()
     try {
       await releaseMutation.mutateAsync(carpool.id)
-      toastWithUndo({
+      undo.show({
         message: t('events.carpool.releasedToast'),
-        undoLabel: t('events.actions.undo'),
-        onUndo: () => {
-          claimMutation.mutate(
-            { carpoolId: carpool.id, seats: heldSeats },
-            { onSuccess: () => toast(t('events.carpool.reclaimedToast')) },
-          )
-        },
+        successMessage: t('events.carpool.reclaimedToast'),
+        isCurrent,
+        action: () => claimMutation.mutateAsync({ carpoolId: carpool.id, seats: heldSeats }),
       })
     } catch {
-      toast(t('events.error.title'))
+      if (isCurrent()) toast(t('events.error.title'))
     }
   }
 
   return (
-    <li className="flex flex-col gap-3 rounded-md border border-border p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
+    <li className="flex min-w-0 flex-col gap-3 rounded-md border border-border p-4 wrap-anywhere">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-[1_1_10rem] items-center gap-2">
           <Avatar
             alt={`${carpool.driver.givenName} ${carpool.driver.familyName}`}
             initials={initialsFromName(carpool.driver.givenName, carpool.driver.familyName)}
@@ -133,6 +135,7 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
         </div>
       ) : null}
       {!cancelled ? renderActionArea() : null}
+      {undo.feedback}
     </li>
   )
 
@@ -190,9 +193,19 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
   const [departurePlace, setDeparturePlace] = React.useState('')
   const [departureAt, setDepartureAt] = React.useState('')
   const [note, setNote] = React.useState('')
+  const formGeneration = React.useRef(0)
+  const draftRevision = React.useRef(0)
+  React.useEffect(
+    () => () => {
+      formGeneration.current += 1
+    },
+    [],
+  )
 
   const handleOffer = async (e: React.FormEvent) => {
     e.preventDefault()
+    const submittedGeneration = formGeneration.current
+    const submittedRevision = draftRevision.current
     try {
       await createMutation.mutateAsync({
         seats: Number(seats) || 1,
@@ -200,20 +213,32 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
         departureAt: departureAt ? new Date(departureAt).toISOString() : undefined,
         note: note.trim() || undefined,
       })
+      if (
+        submittedGeneration !== formGeneration.current ||
+        submittedRevision !== draftRevision.current
+      )
+        return
       setShowForm(false)
       setSeats('3')
       setDeparturePlace('')
       setDepartureAt('')
       setNote('')
     } catch {
-      toast(t('events.error.title'))
+      if (submittedGeneration === formGeneration.current) toast(t('events.error.title'))
     }
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
-        <Button variant="secondary" size="sm" onClick={() => setShowForm((v) => !v)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            formGeneration.current += 1
+            setShowForm((v) => !v)
+          }}
+        >
           {t('events.carpool.offer')}
         </Button>
       </div>
@@ -230,7 +255,10 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
                 type="number"
                 min={1}
                 value={seats}
-                onChange={(e) => setSeats(e.target.value)}
+                onChange={(e) => {
+                  draftRevision.current += 1
+                  setSeats(e.target.value)
+                }}
               />
             </Field>
             <Field label={t('events.carpool.departureAtLabel')} htmlFor="carpool-departure-at">
@@ -238,7 +266,10 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
                 id="carpool-departure-at"
                 type="datetime-local"
                 value={departureAt}
-                onChange={(e) => setDepartureAt(e.target.value)}
+                onChange={(e) => {
+                  draftRevision.current += 1
+                  setDepartureAt(e.target.value)
+                }}
               />
             </Field>
           </div>
@@ -246,7 +277,10 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
             <Input
               id="carpool-departure-place"
               value={departurePlace}
-              onChange={(e) => setDeparturePlace(e.target.value)}
+              onChange={(e) => {
+                draftRevision.current += 1
+                setDeparturePlace(e.target.value)
+              }}
             />
           </Field>
           <Field label={t('events.carpool.noteLabel')} htmlFor="carpool-note">
@@ -254,7 +288,10 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
               id="carpool-note"
               rows={2}
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={(e) => {
+                draftRevision.current += 1
+                setNote(e.target.value)
+              }}
             />
           </Field>
           <div className="flex justify-end">
@@ -272,7 +309,17 @@ export function CarpoolPanel({ eventId }: { eventId: string }) {
   function renderCarpoolsBody() {
     if (carpoolsQuery.isPending) return <Skeleton className="h-32 w-full" />
     if (carpoolsQuery.isError) {
-      return <StateView kind="error" titleKey="events.error.title" bodyKey="events.error.body" />
+      return (
+        <StateView
+          kind="error"
+          titleKey="events.error.title"
+          bodyKey="events.error.body"
+          action={{
+            labelKey: 'events.actions.retry',
+            onAction: () => void carpoolsQuery.refetch(),
+          }}
+        />
+      )
     }
     if (carpoolsQuery.data.items.length === 0) {
       return <p className="text-small text-muted-foreground">{t('events.carpool.empty')}</p>

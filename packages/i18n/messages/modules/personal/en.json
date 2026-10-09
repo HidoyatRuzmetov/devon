@@ -1,5 +1,11 @@
 {
   "personal": {
+    "save": {
+      "titleRequired": "Enter a title.",
+      "error": "Could not save. Your draft is still here.",
+      "conflict": "This item changed elsewhere. Your draft is still here; retry to save your changes.",
+      "retry": "Retry save"
+    },
     "title": "Personal",
     "eyebrow": "JUST FOR YOU",
     "description": "Your private space for periods, to-dos, notes, a canvas and focus time.",
@@ -60,6 +66,11 @@
         "submit": "Create period"
       },
       "goal": "Goal",
+      "edit": "Edit period",
+      "save": "Save",
+      "starts": "Starts",
+      "ends": "Ends",
+      "invalidRange": "Choose an end time later than the start time.",
       "goalPlaceholder": "What are you trying to get done?",
       "history": {
         "title": "History ({count})"
@@ -86,6 +97,10 @@
       }
     },
     "tasks": {
+      "title": "To-do title",
+      "newTitle": "New to-do",
+      "indentHint": "Make a sub-item (Alt + →)",
+      "outdentHint": "Move out one level (Alt + ←)",
       "inbox": "Inbox",
       "addPlaceholder": "Add a to-do",
       "openCount": "{count} open",
@@ -102,6 +117,8 @@
       }
     },
     "notes": {
+      "title": "Note title",
+      "body": "Note body",
       "create": "New note",
       "newTitle": "New note",
       "bodyPlaceholder": "Write something...",
@@ -121,6 +138,7 @@
       }
     },
     "canvas": {
+      "title": "Canvas title",
       "create": "New canvas",
       "newTitle": "New canvas",
       "open": "Open",
@@ -138,6 +156,10 @@
         "body": "A canvas is a free-form board for sketches and sticky notes."
       },
       "addSticky": "Add sticky note",
+      "deleteSticky": "Delete sticky note",
+      "stickyText": "Sticky note text",
+      "drawingText": "Drawing text",
+      "drawingSurface": "Drawing canvas",
       "undo": "Undo",
       "redo": "Redo",
       "zoomIn": "Zoom in",
@@ -190,6 +212,8 @@
       },
       "settings": {
         "title": "Pomodoro settings",
+        "revert": "Revert to saved settings",
+        "invalidRange": "Enter a whole number from {min} to {max}.",
         "focusMin": "Focus (minutes)",
         "shortBreakMin": "Short break (minutes)",
         "longBreakMin": "Long break (minutes)",
@@ -211,6 +235,7 @@
         "yesterday": "Yesterday",
         "completed": "Completed",
         "skipped": "Skipped",
+        "ongoing": "In progress",
         "showMore": "Show {count} more days",
         "empty": {
           "title": "No sessions yet",

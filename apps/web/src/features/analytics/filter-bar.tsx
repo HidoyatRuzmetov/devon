@@ -9,7 +9,7 @@
 // a native `<input>`/`<button>`, tabbable in document order.
 import * as React from 'react'
 import { useT, useLocale } from '@devon/i18n'
-import { Button, chipVariants, cn, DatePicker, FilterChip, Input } from '@devon/ui'
+import { Button, chipVariants, cn, DatePicker, FilterChip, Input, toast } from '@devon/ui'
 import { Filter as FilterIcon, Save } from 'lucide-react'
 import { FilterClauseChips } from '../work/components/filter-clause-chips.js'
 import {
@@ -87,7 +87,7 @@ export function FilterBar({
           size="sm"
           disabled={value.filter.trim().length === 0}
           onClick={() => {
-            setSaveName(draft)
+            setSaveName(value.filter)
             setSaveOpen((v) => !v)
           }}
         >
@@ -176,7 +176,7 @@ export function FilterBar({
           className="flex flex-wrap items-center gap-2 border-t border-border pt-3"
           onSubmit={(e) => {
             e.preventDefault()
-            if (!saveName.trim()) return
+            if (!saveName.trim() || createSavedFilter.isPending) return
             const sinceDays = Math.max(
               1,
               Math.round(
@@ -185,8 +185,11 @@ export function FilterBar({
               ),
             )
             createSavedFilter.mutate(
-              { name: saveName.trim(), query: draft, sinceDays },
-              { onSuccess: () => setSaveOpen(false) },
+              { name: saveName.trim(), query: value.filter, sinceDays },
+              {
+                onSuccess: () => setSaveOpen(false),
+                onError: () => toast.error(t('analytics.savedFilters.saveFailed')),
+              },
             )
           }}
         >
@@ -234,9 +237,14 @@ export function FilterBar({
               </button>
               <button
                 type="button"
-                aria-label={t('analytics.savedFilters.delete')}
-                className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-                onClick={() => deleteSavedFilter.mutate(sf.id)}
+                aria-label={t('analytics.savedFilters.deleteNamed', { name: sf.name })}
+                className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={deleteSavedFilter.isPending}
+                onClick={() =>
+                  deleteSavedFilter.mutate(sf.id, {
+                    onError: () => toast.error(t('analytics.savedFilters.deleteFailed')),
+                  })
+                }
               >
                 ×
               </button>

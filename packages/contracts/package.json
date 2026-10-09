@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "description": "The single can() permission function, the RFC 9457 Problem shape, and the field-tier vocabulary shared by every Devon package. No runtime dependency beyond zod (design.md §1.1/§1.2).",
   "license": "UNLICENSED",
   "exports": {

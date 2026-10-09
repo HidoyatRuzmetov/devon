@@ -8,6 +8,7 @@ import { request as httpsRequest } from 'node:https'
 import { isIPv4, isIPv6, type LookupFunction } from 'node:net'
 
 const FETCH_TIMEOUT_MS = 4000
+const DNS_TIMEOUT_MS = 1000
 const MAX_BODY_BYTES = 200_000
 
 export class UnsafeUrlError extends Error {}
@@ -52,6 +53,20 @@ function isPrivateIPv6(ip: string): boolean {
 
 export type ResolvedAddress = { address: string; family: 4 | 6 }
 
+async function lookupWithinBudget(hostname: string) {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      lookup(hostname, { all: true }),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error('link preview DNS timed out')), DNS_TIMEOUT_MS)
+      }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /**
  * Throws `UnsafeUrlError` unless `url` is a plain http(s) URL that resolves only to public
  * addresses, and returns the addresses it approved so the connection can be pinned to exactly those
@@ -79,9 +94,9 @@ export async function assertPublicUrl(url: URL): Promise<ResolvedAddress[]> {
     ? [{ address: hostname, family: 4 as const }]
     : isIPv6(hostname)
       ? [{ address: hostname, family: 6 as const }]
-      : await lookup(hostname, { all: true })
+      : await lookupWithinBudget(hostname)
 
-  if (addresses.length === 0) throw new UnsafeUrlError('hostname did not resolve')
+  if (addresses.length === 0) throw new Error('hostname did not resolve')
   for (const addr of addresses) {
     if (addr.family === 4 && isPrivateIPv4(addr.address)) {
       throw new UnsafeUrlError('resolves to a private/reserved IP address')
@@ -157,13 +172,19 @@ export type UnfurlResult = { url: string; title: string; favicon: string | null 
  * against it. (Following it would have to re-run them, hop by hop, and a link chip is not worth that
  * surface; the caller falls back to the URL as its own title.)
  */
-export function fetchHtmlHead(url: URL, addresses: ResolvedAddress[]): Promise<string | null> {
+export function fetchHtmlHead(
+  url: URL,
+  addresses: ResolvedAddress[],
+  timeoutMs = FETCH_TIMEOUT_MS,
+): Promise<string | null> {
   return new Promise((resolve) => {
     const send = url.protocol === 'https:' ? httpsRequest : httpRequest
     let settled = false
+    const deadline: { handle?: ReturnType<typeof setTimeout> } = {}
     const finish = (value: string | null) => {
       if (settled) return
       settled = true
+      clearTimeout(deadline.handle)
       resolve(value)
     }
 
@@ -176,7 +197,7 @@ export function fetchHtmlHead(url: URL, addresses: ResolvedAddress[]): Promise<s
         // TLS is still negotiated for the hostname, so an IP-pinned socket does not weaken
         // certificate validation.
         servername: url.hostname,
-        timeout: FETCH_TIMEOUT_MS,
+        timeout: timeoutMs,
       },
       (res: IncomingMessage) => {
         if (!res.statusCode || res.statusCode < 200 || res.statusCode >= 300) {
@@ -201,7 +222,11 @@ export function fetchHtmlHead(url: URL, addresses: ResolvedAddress[]): Promise<s
     )
     // A server that accepts the connection and then says nothing must not hold a handler's worth of
     // resources open for longer than the budget (H2.7: timeouts on every outbound call).
-    req.setTimeout(FETCH_TIMEOUT_MS, () => {
+    deadline.handle = setTimeout(() => {
+      req.destroy()
+      finish(null)
+    }, timeoutMs)
+    req.setTimeout(timeoutMs, () => {
       req.destroy()
       finish(null)
     })
@@ -216,15 +241,22 @@ export function fetchHtmlHead(url: URL, addresses: ResolvedAddress[]): Promise<s
  * unsafe URL (`UnsafeUrlError`) is the caller's problem to turn into a 422. */
 export async function unfurlLink(rawUrl: string): Promise<UnfurlResult> {
   const url = new URL(rawUrl)
-  const addresses = await assertPublicUrl(url)
-
+  const startedAt = Date.now()
+  const fallback = { url: rawUrl, title: rawUrl.slice(0, 300), favicon: null }
   try {
-    const html = await fetchHtmlHead(url, addresses)
-    if (html === null) return { url: rawUrl, title: rawUrl, favicon: null }
-    const title = extractTitle(html) ?? rawUrl
+    // A DNS outage is the same unavailable-preview state as an HTTP outage. Safety refusals
+    // still propagate; a failed or timed-out lookup never reaches the HTTP transport.
+    const addresses = await assertPublicUrl(url)
+    const html = await fetchHtmlHead(
+      url,
+      addresses,
+      Math.max(1, FETCH_TIMEOUT_MS - (Date.now() - startedAt)),
+    )
+    if (html === null) return fallback
+    const title = extractTitle(html) ?? fallback.title
     return { url: rawUrl, title, favicon: `${url.origin}/favicon.ico` }
   } catch (err) {
     if (err instanceof UnsafeUrlError) throw err
-    return { url: rawUrl, title: rawUrl, favicon: null }
+    return fallback
   }
 }

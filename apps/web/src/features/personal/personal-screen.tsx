@@ -91,7 +91,7 @@ export default function PersonalScreen() {
         <CanvasView />
       </TabsContent>
       <TabsContent value="pomodoro">
-        <PomodoroPanel />
+        <PomodoroPanel activeTaskId={focusedTaskId} />
       </TabsContent>
     </Tabs>
   )

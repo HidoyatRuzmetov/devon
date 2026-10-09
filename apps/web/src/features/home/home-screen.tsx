@@ -41,37 +41,43 @@ import { useOnline } from '../../lib/use-online.js'
 import { navigate } from '../../lib/router.js'
 import { formatHomeDateLine, greetingKey, greetingName, tashkentHour } from '../../lib/greeting.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
-import { useOpenPalette } from '../../shell/palette-context.js'
 import {
   usePersonalOverviewQuery,
   usePinnedChartsQuery,
   useSummaryQuery,
   useUnpinChartMutation,
 } from '../analytics/use-analytics.js'
-import {
-  EventsParticipationSection,
-  LoadPerPersonSection,
-  LoadPerUnitSection,
-  OnTimeRateSection,
-  OpenVsOverdueSection,
-  PersonalStatsSection,
-  PollTurnoutSection,
-  ProjectProgressSection,
-  ThroughputSection,
-  type SectionProps,
-} from '../analytics/sections.js'
+import type { SectionProps } from '../analytics/sections.js'
 import type { AnalyticsChartKey } from '../analytics/types.js'
 
 const SECTION_BY_KEY: Record<AnalyticsChartKey, React.ComponentType<SectionProps>> = {
-  throughput: ThroughputSection,
-  onTimeRate: OnTimeRateSection,
-  openVsOverdue: OpenVsOverdueSection,
-  loadPerPerson: LoadPerPersonSection,
-  loadPerUnit: LoadPerUnitSection,
-  projectProgress: ProjectProgressSection,
-  eventsParticipation: EventsParticipationSection,
-  pollTurnout: PollTurnoutSection,
-  personal: PersonalStatsSection,
+  throughput: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.ThroughputSection })),
+  ),
+  onTimeRate: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.OnTimeRateSection })),
+  ),
+  openVsOverdue: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.OpenVsOverdueSection })),
+  ),
+  loadPerPerson: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.LoadPerPersonSection })),
+  ),
+  loadPerUnit: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.LoadPerUnitSection })),
+  ),
+  projectProgress: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.ProjectProgressSection })),
+  ),
+  eventsParticipation: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.EventsParticipationSection })),
+  ),
+  pollTurnout: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.PollTurnoutSection })),
+  ),
+  personal: React.lazy(() =>
+    import('../analytics/sections.js').then((m) => ({ default: m.PersonalStatsSection })),
+  ),
 }
 
 /** One of the three "what is being asked of me" tiles. A tile that has nothing to say still renders
@@ -312,7 +318,13 @@ function PinnedCharts() {
           const Section = SECTION_BY_KEY[pin.chartKey]
           return (
             <StaggerItem key={pin.id}>
-              <Section {...sectionProps} />
+              <React.Suspense
+                fallback={
+                  <Skeleton className="h-72 w-full rounded-md" aria-label={t('state.loading')} />
+                }
+              >
+                <Section {...sectionProps} />
+              </React.Suspense>
             </StaggerItem>
           )
         })}
@@ -451,12 +463,12 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
   ]
 
   return (
-    <div className="flex w-full flex-col gap-8">
+    <div className="@container flex w-full flex-col gap-8">
       <section className="flex flex-col gap-3">
         <h2 className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {t('home.dashboard.sectionTiles')}
         </h2>
-        <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Stagger className="grid grid-cols-1 gap-4 @2xl:grid-cols-2 @5xl:grid-cols-3">
           <StaggerItem className="h-full">
             <DashboardTile
               icon={ListTodo}
@@ -520,7 +532,7 @@ function Dashboard({ hasAvatar }: { hasAvatar: boolean }) {
         </Stagger>
       </section>
 
-      <Stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Stagger className="grid grid-cols-1 gap-4 @2xl:grid-cols-2">
         <StaggerItem>
           <KpiTile
             label={t('home.dashboard.personal.onTimeRate')}
@@ -563,7 +575,6 @@ export default function HomeScreen() {
   const online = useOnline()
   const meQuery = useMeQuery()
   const instanceQuery = useInstanceQuery()
-  const openPalette = useOpenPalette()
   const { departmentId } = useDepartment()
   const isHead = useIsHead()
 
@@ -599,7 +610,6 @@ export default function HomeScreen() {
 
   if (!user) return null // redirecting to /login (effect above)
 
-  const isDemo = instanceQuery.data?.isDemo ?? false
   const now = new Date()
 
   const header = (
@@ -607,7 +617,7 @@ export default function HomeScreen() {
       <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
         {t('home.eyebrow')}
       </p>
-      <h1 className="font-display text-hero text-foreground">
+      <h1 className="min-w-0 font-display text-hero text-foreground [overflow-wrap:anywhere]">
         {t(greetingKey(tashkentHour(now)), { name: greetingName(user) })}
       </h1>
       <p className="text-lead text-muted-foreground">{formatHomeDateLine(now, locale)}</p>
@@ -619,14 +629,8 @@ export default function HomeScreen() {
   // apply exactly as EPIC-000 shipped them; this module's dashboard has nothing to query without a
   // department context.
   if (!departmentId) {
-    const empty = isDemo
-      ? {
-          titleKey: 'home.empty.demo.title',
-          bodyKey: undefined,
-          actionKey: 'home.empty.action',
-          onAction: openPalette,
-        }
-      : user.role === 'super_admin'
+    const empty =
+      user.role === 'super_admin'
         ? {
             titleKey: 'home.empty.admin.title',
             bodyKey: 'home.empty.admin.body',
@@ -634,10 +638,10 @@ export default function HomeScreen() {
             onAction: () => navigate('/admin'),
           }
         : {
-            titleKey: 'home.empty.member.title',
-            bodyKey: 'home.empty.member.body',
-            actionKey: 'home.empty.action',
-            onAction: openPalette,
+            titleKey: 'departments.detail.noDepartment.title',
+            bodyKey: 'departments.detail.noDepartment.body',
+            actionKey: 'departments.detail.noDepartment.action',
+            onAction: () => navigate('/departments'),
           }
 
     return (

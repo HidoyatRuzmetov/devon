@@ -3,27 +3,18 @@
 // two separate dialogs, since they share every field except which endpoint ends up called.
 import * as React from 'react'
 import { useT } from '@devon/i18n'
-import { Button, Dialog, DialogContent, DialogTrigger, Input, toast } from '@devon/ui'
+import { Button, Checkbox, Dialog, DialogContent, DialogTrigger, Input, toast } from '@devon/ui'
 import { replaceSearchParam, useSearchParams } from '../../../lib/router.js'
-import { useCreateCardMutation, useMembers } from '../../work/hooks.js'
+import { useMembers } from '../../work/hooks.js'
 import { useWorkTemplatesQuery } from '../../work/hooks-plus.js'
-import { readProjectPayload } from '../../work/components/template-preview.js'
 import { fullName } from '../../work/lib/format.js'
 import { useActor } from '../../../lib/can.js'
 import {
   useCreateFromTemplateMutation,
+  useCreateFromGalleryMutation,
   useCreateProjectMutation,
   useTemplatesQuery,
 } from '../hooks.js'
-
-/** `offsetDays` from "create from template" to a real date. A template says "the kick-off note is
- * due three days in", never a calendar date, because the same template is used again next quarter. */
-function offsetToIso(days: number | undefined): string | undefined {
-  if (days === undefined) return undefined
-  const date = new Date()
-  date.setDate(date.getDate() + days)
-  return date.toISOString().slice(0, 10)
-}
 
 export function CreateProjectDialog() {
   const t = useT()
@@ -46,7 +37,8 @@ export function CreateProjectDialog() {
   const templates = templatesData ?? []
   const createProject = useCreateProjectMutation()
   const createFromTemplate = useCreateFromTemplateMutation()
-  const createCard = useCreateCardMutation()
+  const createFromGallery = useCreateFromGalleryMutation()
+  const submitting = React.useRef(false)
   const galleryData = useWorkTemplatesQuery('project').data
   const galleryTemplates = React.useMemo(() => galleryData ?? [], [galleryData])
   const search = useSearchParams()
@@ -87,46 +79,16 @@ export function CreateProjectDialog() {
   }
 
   async function submit() {
-    if (!ownerUserId) return
+    if (!ownerUserId || submitting.current) return
+    submitting.current = true
     try {
       if (mode === 'gallery') {
-        const template = galleryTemplates.find((tpl) => tpl.id === galleryId)
-        const payload = template ? readProjectPayload(template.payload) : null
-        if (!payload) {
-          toast(t('projects.create.templateUnreadable'))
-          return
-        }
-        const project = await createProject.mutateAsync({
-          title: title.trim() || payload.title,
+        await createFromGallery.mutateAsync({
+          templateId: galleryId,
+          ...(title.trim() ? { title: title.trim() } : {}),
           ownerUserId,
           members: Array.from(new Set([ownerUserId, ...memberIds])),
-          ...(payload.description ? { description: payload.description } : {}),
-          ...(payload.colour ? { colour: payload.colour } : {}),
-          ...(payload.milestones && payload.milestones.length > 0
-            ? {
-                milestones: payload.milestones.map((m) => ({
-                  title: m.title,
-                  dueOn: offsetToIso(m.offsetDays) ?? null,
-                })),
-              }
-            : {}),
         })
-        // The template's objective cards. Independent of each other, so one `Promise.all` rather
-        // than an awaited loop (TECH-SPEC §16: no query in a loop).
-        await Promise.all(
-          (payload.cards ?? []).map((card) =>
-            createCard.mutateAsync({
-              title: card.title,
-              projectId: project.id,
-              projectScope: 'objective',
-              assigneeUserId: ownerUserId,
-              ...(card.estimateMin ? { estimateMin: card.estimateMin } : {}),
-              ...(offsetToIso(card.offsetDays)
-                ? { dueAt: new Date(`${offsetToIso(card.offsetDays)}T09:00:00.000Z`).toISOString() }
-                : {}),
-            }),
-          ),
-        )
       } else if (mode === 'template') {
         await createFromTemplate.mutateAsync({
           templateKey,
@@ -147,19 +109,27 @@ export function CreateProjectDialog() {
       setOpen(false)
     } catch {
       toast(t('projects.create.error'))
+    } finally {
+      submitting.current = false
     }
   }
 
-  const pending = createProject.isPending || createFromTemplate.isPending
+  const pending =
+    createProject.isPending || createFromTemplate.isPending || createFromGallery.isPending
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!submitting.current) setOpen(next)
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">{t('projects.create.button')}</Button>
       </DialogTrigger>
       <DialogContent title={t('projects.create.title')} className="max-w-140">
-        <div className="mt-4 flex flex-col gap-4">
-          <div className="flex gap-2">
+        <fieldset disabled={pending} className="mt-4 flex min-w-0 flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant={mode === 'template' ? 'primary' : 'secondary'}
@@ -231,6 +201,7 @@ export function CreateProjectDialog() {
               {t('projects.field.title')}
             </span>
             <Input
+              maxLength={200}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('projects.field.titlePlaceholder')}
@@ -264,12 +235,11 @@ export function CreateProjectDialog() {
             </span>
             <div className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-sm border border-border p-2">
               {members.map((m) => (
-                <label key={m.userId} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
+                <label key={m.userId} className="flex min-h-11 items-center gap-2">
+                  <Checkbox
                     checked={m.userId === ownerUserId || memberIds.includes(m.userId)}
                     disabled={m.userId === ownerUserId}
-                    onChange={() => toggleMember(m.userId)}
+                    onCheckedChange={() => toggleMember(m.userId)}
                   />
                   {fullName(m)}
                 </label>
@@ -284,7 +254,7 @@ export function CreateProjectDialog() {
           >
             {t('projects.create.submit')}
           </Button>
-        </div>
+        </fieldset>
       </DialogContent>
     </Dialog>
   )

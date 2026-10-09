@@ -1,0 +1,1740 @@
+{
+  "schemaVersion": 1,
+  "owner": "knowledge_nested",
+  "date": "2026-10-09",
+  "reviewBoundary": "Actual visible pixels reviewed through original-size sheets; account-menu comparison region left264px, not entire background. Captures outside these exact references remain unreviewed.",
+  "inspectedMatrixSheets": 36,
+  "matrixSourceImages": 288,
+  "matrix": [
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-320-480-text200.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-320-480-text200.png",
+          "sha256": "21a2df7b630ad4ae6813a13b4359834934efe9f41bb3c03db13cd41e1a9c213e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-320-480-text200.png",
+          "sha256": "26742aaacef66ca384e36fe23a6beeef43296bd447c1e530cedbc1773bb03aae"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-320-480-text200.png",
+          "sha256": "9aef2ab05a6844425e370d326843c809532fbcf6b60890d5089fa165368082c9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-320-480-text200.png",
+          "sha256": "5dea9506fba078124f09ac93908d05b6247a73e99986b74987e601587abe5244"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-320-480-text200.png",
+          "sha256": "650d50a7c32092a1e7adfa2e69600ee06e85c71264d992fa3b2de9f351f2425c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-320-480-text200.png",
+          "sha256": "525f344cd643aae6ae30aee49931e63fb8a1006a0c0ce13bb7e475a1b34b0993"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-320-480-text200.png",
+          "sha256": "b7282a8f7294b622a0163343e5994d565ecefe2004016f1e3b04644fd4f31c62"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-320-480-text200.png",
+          "sha256": "2af49662e6e5500b2f503b9d992e56d61b9b9b0ccbd0f956dc5fb51a28be76fb"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "4649b8f10ccfc44da9665bf3584883c6381652b1f41874e7ffc32317d72efd86"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-360-225-text100.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-360-225-text100.png",
+          "sha256": "225e9f87bf17811d8428bc0f847079f2943c76fb65bface2af279cc536aeb105"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-360-225-text100.png",
+          "sha256": "68bd4acf854f2397ce4ad206d2fadf2a453e05ece146a7b5096bcef432e6e028"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-360-225-text100.png",
+          "sha256": "20ad3dbe841041aeba234f99d96f0514b8c445063d0ac22b9304d3f217824d23"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-360-225-text100.png",
+          "sha256": "eccfa9564f4ee2eaf5fe5b1704f061ff6650020a21391719ba5e5a65824b6107"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-360-225-text100.png",
+          "sha256": "a783761fbe2320fa89982ba037ae5edb5f771419362b9f55fda355e48c114692"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-360-225-text100.png",
+          "sha256": "eee3fad46cccff63123d9ab5d61419decd7dad8c36ba3e7d8f932bedce1854e6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-360-225-text100.png",
+          "sha256": "9a4469b8626a10832296dd40b927831d0d2f0ff688159273dc3346a84cdf696b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-360-225-text100.png",
+          "sha256": "84986b8e90d21887cdedf088ddba0214be4a1e6407516e05a86142125b7bf7af"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "66ffe38535a1bc0aae16c7d15204fdc37a2331c202c1c96a552792fccb92f8d6"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-390-480-text200.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-390-480-text200.png",
+          "sha256": "43b81b9a488a4a0479854ddce552c22831b7197a3e7567418e3aa8494f767269"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-390-480-text200.png",
+          "sha256": "8e10e7a8a71c38264a581b7907e84951c0288d6c80a42f07e0f0c6741cb8c1f2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-390-480-text200.png",
+          "sha256": "0bf845209e85c740b9265bdb48e565facb4f05d66ce1143849533011b6f47d7e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-390-480-text200.png",
+          "sha256": "13a670d7917c6ae022a0b0ea3c432d85b6cf02a163af564d3ae8d8959c1729dc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-390-480-text200.png",
+          "sha256": "bf23a3c4ea485bc3293bef452ebe9ce789b3289f6a9a7d15a7c3793b46f01e23"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-390-480-text200.png",
+          "sha256": "2b44726549d78b6880609fd56f475f9e82c4efcceba076231ee5fe7e364fa3dd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-390-480-text200.png",
+          "sha256": "fa4891552a2f7d632ca348670597d764b19c7e0ae74ceac61f3990282fd2b401"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-390-480-text200.png",
+          "sha256": "7b3707cafe05005768132646466bea542e700974a705d35599dae6b611cb7cca"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "e727431c3a22e6ce267f8e958bcd7d628dafc81fb34e6617ee3b5e7ef6537890"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-768-480-text200.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-768-480-text200.png",
+          "sha256": "882100ceff6826ff3e255f270b686d0a783289326789e6151461f9787e81dad5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-768-480-text200.png",
+          "sha256": "6532008df835d0565a2e610432d3456d29fd9c54338ccdbe6951a496c619311a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-768-480-text200.png",
+          "sha256": "45abf4a40cbdb73fbf4fe2e54c0d6a14b728594ead93ee85b4d7130b78ad2f82"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-768-480-text200.png",
+          "sha256": "4e32894113df93b98823b3e9b8995c323e442f419d307569b9dc99ed272e4702"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-768-480-text200.png",
+          "sha256": "082c289a2e76b80d30958c6b36be6adc43e66442016dc485dd6448d30762d376"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-768-480-text200.png",
+          "sha256": "de98f55662b94aaf3c538ce06aab434197a78bb97466888c2306fa93ba2d58dd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-768-480-text200.png",
+          "sha256": "4b7a10653986ccabb3353ab25016acb831b738fdff5f5d38c8b46dd77941fd3b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-768-480-text200.png",
+          "sha256": "dbfcee00636f96c7881d40f872610fce0b78128bdce21525e426247287b71f70"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "066c82378347f1728941247e6cba26da6fa036fb0afcc625e9b7e509dbe4c0e7"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-768-600-text200.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-768-600-text200.png",
+          "sha256": "5b36de256e914b53a9b21a9f73fb2bf08591094a6f591d4f40e919a5a527705a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-768-600-text200.png",
+          "sha256": "6df5ad868e49ce45c82e8119a4f9daf68455030d5cd317fb58e4cb5d14eafcfd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-768-600-text200.png",
+          "sha256": "7df4accad91e46216874e6a67cd93b93da4aed96883706cbd19f21758c8d81d6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-768-600-text200.png",
+          "sha256": "4a2a63dcd7636d7fd703b632aa60c9bf438001dbf217502fcdc8f572c85b6241"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-768-600-text200.png",
+          "sha256": "4157009ca6f2bd4cea8c90a01cc29fba841594b50c780effc79b311466302d8b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-768-600-text200.png",
+          "sha256": "ae8a4d6dbabbea671724a67c257c3c1830866012015f68b457bca928114b02de"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-768-600-text200.png",
+          "sha256": "6270b3b7c43554770b7a5bcfb45a6c37e254fad682cee477f4a03149d43fefea"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-768-600-text200.png",
+          "sha256": "1bb2ee3a60ec8cb7e18312775f40e40a9d9e7521f3ecede416e45eb793959bf1"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "efecf2890cd67692aa93b3ddbcdb4de8826fadb26b1d5792d5402f019d7d4eef"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-account-menu-1440-900-text100.png",
+      "browser": "chromium",
+      "surface": "account-menu",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/account-menu-1440-900-text100.png",
+          "sha256": "2fd2e5a39b4660387fcaec2e4842c3a4daf8140cd053f670b8dae750c2e26138"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/account-menu-1440-900-text100.png",
+          "sha256": "002d3029876cc82ad1518f11b7fa7be856fa321e14fda8a8bfb70b22ebfd2451"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/account-menu-1440-900-text100.png",
+          "sha256": "4e427350bd64de088ad62888dd603f2aa103604d8297f2087d3de0e3efda56ce"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/account-menu-1440-900-text100.png",
+          "sha256": "65ac9d590aaecef1d30b8bc137cbe4c8e52e362f21f4e1f63310e1f92169a3ed"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/account-menu-1440-900-text100.png",
+          "sha256": "dcf0c868fbf71c67f05d310fdf2fd0b67bf381863daaa81e8297f116b3f8e7e5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/account-menu-1440-900-text100.png",
+          "sha256": "5034df6f4b309d56e9656db762cf0ddf429f4f0aa25650604512e2f9ed93da4c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/account-menu-1440-900-text100.png",
+          "sha256": "0138b172d9ada8d8faf01ddafbbf0dfb9bb4d87710ca4f4c889a7da66da338c6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/account-menu-1440-900-text100.png",
+          "sha256": "34b335f62c160495d074caf84cee95268c81ebb7759ca194e206f62e2d0e3758"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "e55527c74057386c2815cc52b51132fc0aae8138485d37c782cc98e8efa47c7e"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-320-480-text200.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-320-480-text200.png",
+          "sha256": "dd02127aeee2f2b63f95a5499b163b6a9b19fe5b4867fb6e44bd892210178f6a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-320-480-text200.png",
+          "sha256": "794fd4823438e7fb4dfa075154254fa8910a785e2fd743284948c63264126cb0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-320-480-text200.png",
+          "sha256": "f235e62e403a79e4d26709447f57569888e001c996e3e22ae479b5264d9e25ce"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-320-480-text200.png",
+          "sha256": "7ac09c8d8ab8c1f1f16d197e45b5a3cc24ed9da2aad1d2e127e466ce1ba48dfb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-320-480-text200.png",
+          "sha256": "aa540d2e1cdf3e97e612478a547e3eb9f04da2c7bd36e76a87dd73ff240a9e3c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-320-480-text200.png",
+          "sha256": "af0d08c546f4b60c9e86b8a6f55222456d72c5c56f06b11fd51c00e1accda734"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-320-480-text200.png",
+          "sha256": "f301d0fe45334c8d5840f9949d97423d343c30149bc77b3c7bc112dd2a13e209"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-320-480-text200.png",
+          "sha256": "ab75de6bc4efaf45be59186afe18d642f60b6232b71b3c4845e08eac1e4fcaa9"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "9addce098ceb781a0f318c09762416ee47e5d32bb68c6f5621d3f189ae1cbaa9"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-360-225-text100.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-360-225-text100.png",
+          "sha256": "d2f33d0f40830a5c8637e45de74cc3d1e5f0cb9c69ac974eb7cddd2593b28618"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-360-225-text100.png",
+          "sha256": "f866fcc4b952529a102e22b62ccc96a81a99594c4afb8eb52e66cb2f3f848b76"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-360-225-text100.png",
+          "sha256": "d3a639bbf18af36d99e647012917f094eedd7cf9e854a186be16a3cc48345fc6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-360-225-text100.png",
+          "sha256": "0b1b15b456b3a7007f9136e7986411ea6de555de3aa81f3e1b13662f95650636"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-360-225-text100.png",
+          "sha256": "63b1341fcc9e0e553a609dce7631987fce49a064c3237afe3fab628c164d358b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-360-225-text100.png",
+          "sha256": "3c038b59c218f512518cf76257db625b6fb8bd69ec57369ebe0d63fa33098adc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-360-225-text100.png",
+          "sha256": "99dbefcf2866d14dbc9cbebeb4d7727cfa466eb8ebab469c30d06670416140a6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-360-225-text100.png",
+          "sha256": "642636432314d759409e6c9b6aafea164a2ccdf20d499d81ff030fd4e5f6f0a1"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "dd54040093cb742be93d2f1f189c385c28ca3e47677657bcdf601aa8741bd70f"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-390-480-text200.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-390-480-text200.png",
+          "sha256": "dd02127aeee2f2b63f95a5499b163b6a9b19fe5b4867fb6e44bd892210178f6a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-390-480-text200.png",
+          "sha256": "794fd4823438e7fb4dfa075154254fa8910a785e2fd743284948c63264126cb0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-390-480-text200.png",
+          "sha256": "f235e62e403a79e4d26709447f57569888e001c996e3e22ae479b5264d9e25ce"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-390-480-text200.png",
+          "sha256": "7ac09c8d8ab8c1f1f16d197e45b5a3cc24ed9da2aad1d2e127e466ce1ba48dfb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-390-480-text200.png",
+          "sha256": "aa540d2e1cdf3e97e612478a547e3eb9f04da2c7bd36e76a87dd73ff240a9e3c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-390-480-text200.png",
+          "sha256": "af0d08c546f4b60c9e86b8a6f55222456d72c5c56f06b11fd51c00e1accda734"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-390-480-text200.png",
+          "sha256": "f301d0fe45334c8d5840f9949d97423d343c30149bc77b3c7bc112dd2a13e209"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-390-480-text200.png",
+          "sha256": "ab75de6bc4efaf45be59186afe18d642f60b6232b71b3c4845e08eac1e4fcaa9"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "3873368a26ee9998191c082b9686516805af9c2a79c405954076a11f5f0e590b"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-768-480-text200.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-768-480-text200.png",
+          "sha256": "a989f5d7c68de06519a3ea727e654781db302f0559e1083a7a4a2f03f7918748"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-768-480-text200.png",
+          "sha256": "793fc589609cc49fbbccb66de414d6f2dad9331d89bb339a48943e0351fb7f6f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-768-480-text200.png",
+          "sha256": "a56c02a221749796f9862fedf4a1c8e7298b8153187b8e9466cf277e4f4f2238"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-768-480-text200.png",
+          "sha256": "d36439331e594b5724bcbfc31ed3dd9a67409c12589254c3367d275b00bf1cd2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-768-480-text200.png",
+          "sha256": "b2e57b1e6615307fabd438760874f8fba9c098961ea89e4396b58c248e9f0294"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-768-480-text200.png",
+          "sha256": "930c427a6e1a481ffdab3ba9c2c00f43f6b04155edab5613745ebc8252ba001e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-768-480-text200.png",
+          "sha256": "e931c0507e276dbf69b45fa7fc05acbec9a604bfaf0be5d9d7357cadf922cff2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-768-480-text200.png",
+          "sha256": "8f2ac4bbe1e4019d664e3db4e6f0d0843718590c05995d606e05616486ec7ef2"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "6b0774edfb342b68166330537d6bb11d887da9567c6d60e01905a75d9ece118f"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-768-600-text200.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-768-600-text200.png",
+          "sha256": "65c6db01fc57b2200b23f2d0825e8723deabdd1974522fbec1510ba5c687e0a8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-768-600-text200.png",
+          "sha256": "5d02d3db9c9cd4353458e0c3eb1f70124ac7ea64dec497a20e70796598f22b48"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-768-600-text200.png",
+          "sha256": "04cc259d36e165e700b1a471a1d45c821af5d880b3adbfcc6fd1fe8f3ff0d4fe"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-768-600-text200.png",
+          "sha256": "48728ef55715d626b2e96dfce3125f1ebf5bfde59c0f8219b12d358192c1dd66"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-768-600-text200.png",
+          "sha256": "335986504b6e077565f88029eac121ea41440bfbfd7942ecdcca36650002d242"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-768-600-text200.png",
+          "sha256": "1164188b0a0daa08f79256b4fc51ebb0dcc05d708cd28a89dc3808faa884af03"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-768-600-text200.png",
+          "sha256": "05ec89f28102e8dc7a331b4c0266f8f8097491bab63675501d9b3c9ff37de79d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-768-600-text200.png",
+          "sha256": "b98ae506ad7ce8746740bd4fcb973612057aabf8bdbd25a98161d7a684cff748"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "c47323f0e315d71cde0501acb670a3e93bbe225b8622cf03c5a55bcafa6d69f3"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/chromium-sidebar-1440-900-text100.png",
+      "browser": "chromium",
+      "surface": "sidebar",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-chromium/sidebar-1440-900-text100.png",
+          "sha256": "09d46be24f0a26bb1508eda279b016ee75ff5aebf0d43eb638f520e7cb96d527"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-chromium/sidebar-1440-900-text100.png",
+          "sha256": "97e9cdae440684cebc481b981e6f20cdb9b6a6355b9789fda90f19243e2859b8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-chromium/sidebar-1440-900-text100.png",
+          "sha256": "1adc878b686dd3841e610c53792d77cf767a3342c6ecf6758f3e27e0b097986f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-chromium/sidebar-1440-900-text100.png",
+          "sha256": "50c189eac26c05154abf96f295d0b71cc518778c55f6ffa6adff6f82d0e91b0b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-chromium/sidebar-1440-900-text100.png",
+          "sha256": "f4ead89e855e3af079a1c269dbddd7a6a6186a08e488842b4475a6b88f82bfc1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-chromium/sidebar-1440-900-text100.png",
+          "sha256": "9175e386e355ff04f09175ca9adc1a2561a7e68497438e59c2fc1136d1851fa7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-chromium/sidebar-1440-900-text100.png",
+          "sha256": "b22f00b7d9c702673e5b2708e8fe58542fcff1839f51529e998860ec4165e7ac"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-chromium/sidebar-1440-900-text100.png",
+          "sha256": "7741b29b3c3c629dcf46c62b2c9585c6e109ebb2c2bae223e04e69e0733d8124"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "f37a4fff719fc51c72ca2cf239693bff285e8c43f71f15641394d356bba2c2e1"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-320-480-text200.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-320-480-text200.png",
+          "sha256": "7b977c40c5c087653653a6a8a64d8c3dd7b973cbf3c3e4aba74bcfbe2e4f8038"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-320-480-text200.png",
+          "sha256": "2c8e9312d7f8bff0ea0ce5cf995db832c05428f8020f894ae92173bba0f808a2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-320-480-text200.png",
+          "sha256": "105a68b44901a2640e8409210f5343aaccd0e8371ff552d6a3d363e04d875ca7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-320-480-text200.png",
+          "sha256": "5d08f3aadf6eb53b72c817712b575afad43dbbc9c48b3794e56d2d77f471a43e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-320-480-text200.png",
+          "sha256": "3657aefd41f090b3571dbc578ef685346430e8726d276f747b83c891ca686dbc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-320-480-text200.png",
+          "sha256": "d5c636da785274c5817a70c2eec12fe09df191a33f09659187dad37762a2cbfd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-320-480-text200.png",
+          "sha256": "e35c4f3ebe522ca83c0a681e9f35529d375a9d15ee71b949e0c3faceb88849c6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-320-480-text200.png",
+          "sha256": "739fb8b562bcb97affb5877009c4f071513550330a1e3654414348d1ff8b0299"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "d629b0e6b1235d58fc99ae21290759b69a0cdbdab0bf5d29a8def8494ec413d8"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-360-225-text100.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-360-225-text100.png",
+          "sha256": "37e202381d1132a7b5dc48e40bc36a96e27b47d800363efa4cf79937305c3e38"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-360-225-text100.png",
+          "sha256": "fa21160e865161419db0765f4e7641cd140524f1115fd04081d7b799c9f523c7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-360-225-text100.png",
+          "sha256": "16ec34c00c6bc7e15fc6aead3d16da37f97233d16a110df2bda9f53d43952aee"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-360-225-text100.png",
+          "sha256": "b7990ae3262d011cdb82cc6f6dd34ac129dd0de08af937d92319a34fd9d2c38e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-360-225-text100.png",
+          "sha256": "bd74a0550bf550670dbe0c2e5f64fe22474651ee52cf2c53543620fe37a84ee3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-360-225-text100.png",
+          "sha256": "cc6711ec3457123d40717f3c5cb488cf6d0fa2ea794f556c506efec190187588"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-360-225-text100.png",
+          "sha256": "211a46da66814120e348f80ae6f6851217f519d6dae1e48ad1427419d18aa458"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-360-225-text100.png",
+          "sha256": "20b72ba90d80a1b50912775b6f27c6d6a7ab6f6c3552466b736054ef03c49b5d"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "db3ce864f51f0a48e7c7360bab0fb5e0b139c50940f73b70b82834b38fffdd53"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-390-480-text200.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-390-480-text200.png",
+          "sha256": "4de1250708e4d4882925ce23c643290283b24985ab429f008f9422a00a9e1c77"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-390-480-text200.png",
+          "sha256": "cb732241fd6d77fdce337b7a5a83faf35ab1f59a82111ee92d22cce51c2a421c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-390-480-text200.png",
+          "sha256": "4a8e14606581836dacf471bc4d3506adf0c44cb2e429e41085bed28c06de3086"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-390-480-text200.png",
+          "sha256": "47032e1e203dc84f1d3a588f9fe3f707ba52322d20018a900f538997077f9973"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-390-480-text200.png",
+          "sha256": "eba03eef8ccfcd214e5a3fa34ea8a0d29ae7a1bd25df216439d8d7bb03758891"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-390-480-text200.png",
+          "sha256": "d8eeaac263ce06d25eae4933750592e84fc06859a5dececa4fe2556862532a30"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-390-480-text200.png",
+          "sha256": "c44dfb4b842385ee203726c0aa64710bbcec778fb57801d6947a61e01e62af38"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-390-480-text200.png",
+          "sha256": "e8dd8e00dd8fd1ac07d3e79f5764a41dfa6fceed416c07da9e2df084453c59be"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "628f389b2a6b9ecc7567279b5ff1dca07c92e4da77d390b533ab6193a392de20"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-768-480-text200.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-768-480-text200.png",
+          "sha256": "cd86f18be6939ea52155ad399ec8f3ea4a0af0894a945001ac281001d475dbc9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-768-480-text200.png",
+          "sha256": "f57807faaa9e76eacf0dc0af401b8e996754f0a66ac5479c8c13f1f6752c3208"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-768-480-text200.png",
+          "sha256": "8c3211ac9189745fb5ccec6847b9416ca0111a8b56cd8491d40cc14b85e7eacf"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-768-480-text200.png",
+          "sha256": "a6944621e4370633be12efb5274e5a56d51539b7ad7521859eee34c99371d48f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-768-480-text200.png",
+          "sha256": "719d24ded3e9a756786eefa49fe6dae482c847a102e6b746f4bbc3b2f4631419"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-768-480-text200.png",
+          "sha256": "dd2d87b08145f1a884b486d3bd2c7bd93765df681a5eb52bd02db865a7189edc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-768-480-text200.png",
+          "sha256": "7db46e79d2375c99a4ad3218e87c35c18fde8818c15678a66d742c9bd6c306a2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-768-480-text200.png",
+          "sha256": "548d49138adf233b14ed9137ebedba397ca81a74ffe404b18a97a26325db63a0"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "9b3103997c89b861f553a201cb91d29211ac8b684bc748fb8e840a06f1601186"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-768-600-text200.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-768-600-text200.png",
+          "sha256": "5a444f22824a3c3138ec59b6e743e3e1dc567840f6bee7aa42ab38db2ef08b0e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-768-600-text200.png",
+          "sha256": "1169d8dd5ee7ea4a3635b7528ba5cdf1f5075cfcdc8ded0ce0fd8121adcb2c5c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-768-600-text200.png",
+          "sha256": "dd9d427c2d79bc4de9f8561015a76ebe748ef28272f84611d94b202f54d457e3"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-768-600-text200.png",
+          "sha256": "c5017c164665f8299d2fbfa94d17a25ac901c175fa0d00e3c69c17f1eda9fef0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-768-600-text200.png",
+          "sha256": "031fd17517c3ec8d96e822d0f617204c05de01c420935953a34facbb95fc5348"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-768-600-text200.png",
+          "sha256": "bef1eed36214db5ef95c9302b9b2789d6325688516b5d40021f0d5f0740d8b22"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-768-600-text200.png",
+          "sha256": "38eacefb1e255581c31bebf271ec7acfe4a78f713df3c86906d85cec9dee0b8d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-768-600-text200.png",
+          "sha256": "f0993ca661ca9cc60165a7d6260795a25a505841bd60f7da8ee3cfe8818eda2a"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "1f5659ad95feabd582816ee5f13053092ab671d8e3a6b414668a508242a612f2"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-account-menu-1440-900-text100.png",
+      "browser": "firefox",
+      "surface": "account-menu",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/account-menu-1440-900-text100.png",
+          "sha256": "8d14fcd0bb8624babafb58cc3cad2c06e90cf3cf3292aa336c2d7da2d9673f42"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/account-menu-1440-900-text100.png",
+          "sha256": "ddc6333ea597684f1af9b4d532a2aff68ad92c3ffb1d8d800449321873a6a9e1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/account-menu-1440-900-text100.png",
+          "sha256": "154365a1e34b101756f5ab3b33394abe0ef8d64687ecaebb987590322f135aab"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/account-menu-1440-900-text100.png",
+          "sha256": "30d9fa4115a2d71e51764f59839e400f80ce8212f2aa21c4fc6169d14a69a200"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/account-menu-1440-900-text100.png",
+          "sha256": "44b22adf84c1727b572ede5f1c06b8676399e97cd7748a671509dcde0c748c62"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/account-menu-1440-900-text100.png",
+          "sha256": "ce846add9b38d23f99ea7c6665013095758f8f6201fff95167dcf12f84ab9e62"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/account-menu-1440-900-text100.png",
+          "sha256": "55a93224109b4d1e2ccf4c7ffada1d5be8fd6785ccc98cb7207c24ad24a76dfb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/account-menu-1440-900-text100.png",
+          "sha256": "ab38c470ab5fbe1eed2efde350476d07ca70500a5d048a19c65f260d58ba8e73"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "dc925e16cb665a3f9b012a89ca09e7701b1d6c661ec0e730daa238d1d2355af0"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-320-480-text200.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-320-480-text200.png",
+          "sha256": "64065b8d1817e663897f2ebb7b5b953a7f95fc89e6a770e837063595114e74f5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-320-480-text200.png",
+          "sha256": "346a62b7fd8b9f88f656c11a153520bb562115a7823391afbea58b72c9852ed1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-320-480-text200.png",
+          "sha256": "a7d6872b284c65e6267417a3c651c454a9d36f42cecd139d3c5a6990b704e669"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-320-480-text200.png",
+          "sha256": "2fffb08a583029bb2f63d49919ff730938e5a5a2a2f3d36085f2eae0c53a1010"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-320-480-text200.png",
+          "sha256": "33f9ad7689ad3d1766d7d8e4d9040520018d166bea9f51176d8fab672a6c2729"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-320-480-text200.png",
+          "sha256": "003366ffdc08044546161f418c9af8bc28df7ec779ca8098f9a7b014173b7979"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-320-480-text200.png",
+          "sha256": "5908eec1dcc0e38240a0061613e9d748e8124233a81da7567676b83d545e8020"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-320-480-text200.png",
+          "sha256": "986f7d030812f2b3a80b114806216774c91612deb61cb62ef3e6e41ce25e4f9e"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "1754ba75da42bae67820b46c45d4bcbdd58fc593b2b02a36ad464cf8cd17a85c"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-360-225-text100.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-360-225-text100.png",
+          "sha256": "3a6875b4ec487a757afa922ebbf1bf3c10ccff32b2f24f48671aad71f72b33df"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-360-225-text100.png",
+          "sha256": "8a1064194028bb1e1d418d1ef3aff84cfc6fe7f1f7e591dea7dc555eedf4b46e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-360-225-text100.png",
+          "sha256": "268056f4cd8ece1da286fe4e61661cc9739f14b8ad19d3bfac9513266320dbd0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-360-225-text100.png",
+          "sha256": "0843a17d4b4456c01fbe4020e94da7fcc2a4eaf57832ede0260c644494608616"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-360-225-text100.png",
+          "sha256": "fed6b79afa82485ca2662347f76c7520a08af37569801b0a3a1115e45427de5d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-360-225-text100.png",
+          "sha256": "8100758a41ec971e19f3887582ddd3ea22d5c5ce97039eeaadddc04472d54cbf"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-360-225-text100.png",
+          "sha256": "a03b52a428f71bb366da076f9f345b40e009dfcb261da294ca9cdb129150c4a7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-360-225-text100.png",
+          "sha256": "007c82cc9cd5e89ff308afa26d2f0f8401b20e17f133e4ba179770ea9460ebc2"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "d68e122bd1e425337c99cac9c44852a3d7ac338150a1bd7da3079911bf5b98e1"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-390-480-text200.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-390-480-text200.png",
+          "sha256": "64065b8d1817e663897f2ebb7b5b953a7f95fc89e6a770e837063595114e74f5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-390-480-text200.png",
+          "sha256": "346a62b7fd8b9f88f656c11a153520bb562115a7823391afbea58b72c9852ed1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-390-480-text200.png",
+          "sha256": "0269ec0bf590c3050a4912c723bb4a29c53a0a98f0ac579f670b3c3dfe33333c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-390-480-text200.png",
+          "sha256": "2fffb08a583029bb2f63d49919ff730938e5a5a2a2f3d36085f2eae0c53a1010"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-390-480-text200.png",
+          "sha256": "33f9ad7689ad3d1766d7d8e4d9040520018d166bea9f51176d8fab672a6c2729"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-390-480-text200.png",
+          "sha256": "b2bd016e5874bd256cab9d3d56b66fcab775e50152594dfa133efe1a238013d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-390-480-text200.png",
+          "sha256": "5908eec1dcc0e38240a0061613e9d748e8124233a81da7567676b83d545e8020"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-390-480-text200.png",
+          "sha256": "986f7d030812f2b3a80b114806216774c91612deb61cb62ef3e6e41ce25e4f9e"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "e1f38d185e42b41da0cf1cc262a6fb907b1c803b0b2b0af4d49d88e9a5901920"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-768-480-text200.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-768-480-text200.png",
+          "sha256": "32025e8f4411a40f24a6103bc9e7bd85cb8711fdf8c1fef61fe6f14c02d5c2a4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-768-480-text200.png",
+          "sha256": "346a62b7fd8b9f88f656c11a153520bb562115a7823391afbea58b72c9852ed1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-768-480-text200.png",
+          "sha256": "0269ec0bf590c3050a4912c723bb4a29c53a0a98f0ac579f670b3c3dfe33333c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-768-480-text200.png",
+          "sha256": "0603e4fe07735a6dd0f24a0d96fd96b792388cd34c2be79bf90fb5e4af4ed1ea"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-768-480-text200.png",
+          "sha256": "7aff5ac630982502d3ecbd3e3e3604467f1abe91bccd86bf149d45473e5942d0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-768-480-text200.png",
+          "sha256": "b2bd016e5874bd256cab9d3d56b66fcab775e50152594dfa133efe1a238013d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-768-480-text200.png",
+          "sha256": "9bde1d5ba99f2a08dbfcb2ecfb8fd7d165d8c9be0c28f88664d65386a707d147"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-768-480-text200.png",
+          "sha256": "9e74b95e5f44062c9a5a3a4aabbb5bf18608a4e2b566437d4d484c233354f2b1"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "4db9d0bcbbf08edc5e7c720e352fc316cfa1027b39df0074a8244146a902bb00"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-768-600-text200.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-768-600-text200.png",
+          "sha256": "018d5e4100798d765ceb24f24b6cb1680c3b618b0b8551ce16536ed3193238b4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-768-600-text200.png",
+          "sha256": "5d0c4f0610a3ae017d75f9f000b829a15e6ee339ef00f3f5ef96f31f22965d09"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-768-600-text200.png",
+          "sha256": "8e30cf4d2b728832d9ce48d4d1f50b6480fe5f5760540276e45129bc0f4aa03e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-768-600-text200.png",
+          "sha256": "f630643de4fb2e10dfaf5594bfdd41409ecfab4b12dd2f58885ad6f91a03dc36"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-768-600-text200.png",
+          "sha256": "2b68c8a0828a98380ce6a541dadf65900815c90d1190c65b023376c72bb3a8c7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-768-600-text200.png",
+          "sha256": "2f5aed23db1af546c2a37b0592bb4030c19547758f2beb45e50817d8f6f1b99f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-768-600-text200.png",
+          "sha256": "fafed8cbdb549bd6e9ba7686158119966c49f23e2c19ed343d33d0bca8bbb9d9"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-768-600-text200.png",
+          "sha256": "9539176390ed59d6c18ed6ff334ece1eae272056a971dbdb9a8eb3ea7eb33055"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "9e84d5431bb1243888705f94d5abdc1d1fc6aefefd3596b8ca06f5b568d670c4"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/firefox-sidebar-1440-900-text100.png",
+      "browser": "firefox",
+      "surface": "sidebar",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-dark-firefox/sidebar-1440-900-text100.png",
+          "sha256": "bfb31e4b955f46aea3135614e5dd950951ec73b4e8c4bd224197397106d96f61"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-firefox/sidebar-1440-900-text100.png",
+          "sha256": "571f48807b9907a0bb6fd339a0bb9e3abdfdbd9f2228ce86b6d0d817ddd917bd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-firefox/sidebar-1440-900-text100.png",
+          "sha256": "2f8045780e83daef026de25e310b547246b3e2fa8d2b42ba5a0c06697c662233"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-firefox/sidebar-1440-900-text100.png",
+          "sha256": "0931e46a64395d45f9b926dd5cbee85d8ab51d64cc74f30db2ce957779dc0ff5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-en-light-firefox/sidebar-1440-900-text100.png",
+          "sha256": "c1d70979bf998ac53da5c84564ade36cf8c448a3df6facd7a8d371713bcbe61c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-ru-light-firefox/sidebar-1440-900-text100.png",
+          "sha256": "3791bf3ddee4c5c2594fd21ae307cdee7c81bc91723ac6fb599a14147d3d6874"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-firefox/sidebar-1440-900-text100.png",
+          "sha256": "c441c911d1a48fef357804b599748781fff2ce4982be130c10a650de3caaf1ad"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-reflow-final/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-firefox/sidebar-1440-900-text100.png",
+          "sha256": "69f5088ffb5063d858047b07fceee4c8e0e24bf555bc95543b0a46203ada3733"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "53451171d1311ff36113269de268d9532cb09cae9c441234fd68812869e4b0ce"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-320-480-text200.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-320-480-text200.png",
+          "sha256": "eb65dcabecbefc912492460204a65e35d962b75c07c2aad4bf8eb78294444ae0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-320-480-text200.png",
+          "sha256": "eb105cd5c92f9443bdbbfff302b9a99f1d0391cc346ec4cf2ffe281180edcd6f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-320-480-text200.png",
+          "sha256": "e9b2325840f999830775a56e8c181fa305e3e3210f87f8d3b4c2191079ab9462"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-320-480-text200.png",
+          "sha256": "7e54f81df143fc0152ef7c98e6511af3c9ae2cac78fda3899ccc7dc51640bac7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-320-480-text200.png",
+          "sha256": "b1bbd51c60c283684cfcd5182184e2f9af0a3301668b4d5a9641578aebe43332"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-320-480-text200.png",
+          "sha256": "9f2d344bb65ba274f0cdac8d0bff7fccd7b1b2b0eaac47558c082c38e41c3d84"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-320-480-text200.png",
+          "sha256": "a40b32157926420dde8fc3d8b3b7e02d7892e0d78bc365de87696c972eda408b"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-320-480-text200.png",
+          "sha256": "871f505051f6f9034460d9e763910877b9559580cad0983f85038b8dee59943c"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "edfdb6b7ca93591b6b91ca5af176324fc880f2392413dba6f9bdbc0e8d687a36"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-360-225-text100.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-360-225-text100.png",
+          "sha256": "305ab6929d6561f010ee61ab3fd3b174bc2146819b70f6d349981511cb8d2598"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-360-225-text100.png",
+          "sha256": "39190ef9f4e1c185ee71ad5c133abd938c0879be71405f1a1fda836696ddbefb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-360-225-text100.png",
+          "sha256": "54335adce8faeeef830232b2920da4259e2b2dbafd9a9ecef3ab0d26a1fc08c1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-360-225-text100.png",
+          "sha256": "a9b8209a54cafb09175f9a04c6cbc0484d3384aca90922b51b4786e1251ada64"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-360-225-text100.png",
+          "sha256": "9f5548540371b7354b60675f62d6a3999530594eb8c4448c0791335d685a06c7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-360-225-text100.png",
+          "sha256": "d47067c2d5cbb701269eb6f1faef56edc15507a34516d4e386634ca263b7eb80"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-360-225-text100.png",
+          "sha256": "60d67bb8c147346879454cd7f0231d4070249ed80c7c788599dfc9442cc0b3f7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-360-225-text100.png",
+          "sha256": "b4ff8184fa989fcf170c8b3f7eead71933724ee3c4da2a9b74d5104413239c51"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "4ee76cde64e4caf980d468fce25f51fa7329dad950c0a33381aeb9ec801faec8"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-390-480-text200.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-390-480-text200.png",
+          "sha256": "39dbeb58a0e760afe4872f0c19df63800e6f738ca8d886dcf58e25e3fa6aba57"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-390-480-text200.png",
+          "sha256": "ec50194a85d8586b3c61312d70805d2b5fbad0be01b048030b4fb6c2176e66cc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-390-480-text200.png",
+          "sha256": "60541217e9c998e6066a66a4a0e1560f157d24eb12049273406b2cddd2f7ce88"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-390-480-text200.png",
+          "sha256": "4ec462db3947fe783df3700c4bfa99f59cf9ec2678e86af555f44c201c702506"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-390-480-text200.png",
+          "sha256": "3e084ca2868caf99b699d087ca17050ee716aa3496101aa5bb553df242e7ba99"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-390-480-text200.png",
+          "sha256": "9adda1b926d65449192cf90b11048aa1f933d6eae1c186eaa561ae8e84c08308"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-390-480-text200.png",
+          "sha256": "80951a964dc8698b59d66e0941475a24c43574f585a4d2509de8fc0e88b3ba67"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-390-480-text200.png",
+          "sha256": "62455084def21bb72cb6b9304f01f68224fe725da29b7ab8255e1155196cdc74"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "0891142153afbd0a51a188dfd0844b2ef1f654a84d5cca2735b1401529b8aebd"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-768-480-text200.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-768-480-text200.png",
+          "sha256": "54248f2e3bb0d8982829012f191c0104500b8068575779f3c6f8643808afc05a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-768-480-text200.png",
+          "sha256": "6193eaa37f7fb8f28b4cb34a3b7a3748b7a56f329cdbc37f8d0b1828053920e5"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-768-480-text200.png",
+          "sha256": "072ee56b4a0e36ea8b30605fc8752f4c0efb45d7aaf7badddc723d59665a514d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-768-480-text200.png",
+          "sha256": "50a005ca56543522bcfbf9c59ea0cb938232ac194839df43226b46d5430284ea"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-768-480-text200.png",
+          "sha256": "65abc64b35b676db579cc20c9ae15b2eea7589e3349edfb0cd72b9a4ff117a52"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-768-480-text200.png",
+          "sha256": "7001fd1dd40a87023f3da80c62d386da23575af6e27b81b29c4e9e883c8a69e7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-768-480-text200.png",
+          "sha256": "fb9bfe0b3884d7c69ff0b3a96bcef5a04770870b00e437b4476aa12b247927e7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-768-480-text200.png",
+          "sha256": "34892bce5e0871f891db96735989480349363c523d7a98e0356af2a9a1e54f29"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "02a608b19d3adc05372887a209a9ebfa9ea1eb2c86721ef485923b6226e0ca53"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-768-600-text200.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-768-600-text200.png",
+          "sha256": "2c58631f0c89c9a38e4034d9f26c5e4b93c56c1afd0438368d62b54ac48cb62e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-768-600-text200.png",
+          "sha256": "cb2776415c1bcd0e8940a8268b5d869d96d61a924ffcbf98621e8b0266aae9ef"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-768-600-text200.png",
+          "sha256": "1d0a044508150c0ac79c1d442044da14ec8edd589b7ff31cc2ef627751499b30"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-768-600-text200.png",
+          "sha256": "ed9620c07b37321c3192332cc842515dea529023dffbddfda2f9bc44581cf762"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-768-600-text200.png",
+          "sha256": "2009be457a54ac5f998307e540f042ba0cda98e6e1d3efcaf36e4199aab9752d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-768-600-text200.png",
+          "sha256": "1932b08285dd4d630fb1407194aee3bbffef36d9e85e2d540cf56161f12e5bde"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-768-600-text200.png",
+          "sha256": "720b3017cd7165efbbaba7ab832ccdf56e6954d8f6bfab10fec5a0123a293a3e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-768-600-text200.png",
+          "sha256": "bfce6a28cede4d56f4b932dd9f4c8b188a3b6941ab852dd4e6118ccecdd55eeb"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "495891a524c33209d63629a2f3a1ca13ad69f8c634c6baddf4260eb647f335fa"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-account-menu-1440-900-text100.png",
+      "browser": "webkit",
+      "surface": "account-menu",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/account-menu-1440-900-text100.png",
+          "sha256": "22c54efbb24bde39afcc0793faf20653b9b636959f23611d60ce5b04fe8155bc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/account-menu-1440-900-text100.png",
+          "sha256": "9bb1497d5b311bfae8ed57aea8dd2453ed2853f4c17203f0bf8268cf9cbe7954"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/account-menu-1440-900-text100.png",
+          "sha256": "e19c3e9d5102970e19812e1039f9a7c34bf51f732f4eee478792a210c354d7fb"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/account-menu-1440-900-text100.png",
+          "sha256": "d490ae6d31ca453fb70c40805345497b63fd91bc5e5419700cbc76336f2889b2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/account-menu-1440-900-text100.png",
+          "sha256": "7b383d08086b00ce6d0f86c6bfd0c7252722fde9aa6676fb4f59d8ca7c012420"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/account-menu-1440-900-text100.png",
+          "sha256": "df6a78182cec4cc7317052f4d502610bdea1172339b9e5ba865df7b2de3768f8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/account-menu-1440-900-text100.png",
+          "sha256": "fb0a1d757495ae2ac4552e018c451efc858f9bff590f7f55ceb4176b0446081c"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/account-menu-1440-900-text100.png",
+          "sha256": "f8254b5ca7691e47f5ca784bcfeaf8c8fdf21ad4655ff7b33bb9155ea097f7b2"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "808880a01f70c734197627c99dd71a096c4bfafe2ab221fba8d6b1b738acea15"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-320-480-text200.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 320,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-320-480-text200.png",
+          "sha256": "5d0424234b14ec06a9f2e9e9091129f035ce1fe07dfa12d3fa2d65c314b68426"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-320-480-text200.png",
+          "sha256": "e54bcfb3b784ab2ea6b0134119116cfd3a12b5156e887f561943095c7b18a34e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-320-480-text200.png",
+          "sha256": "28ba78f004d1f7de26605b18527eea3ad847e5e835fb678910fa36671d1da248"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-320-480-text200.png",
+          "sha256": "a10e837361771761bc7c24c5a1f8748175a2c8ea555589e5aa06275b42e6f282"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-320-480-text200.png",
+          "sha256": "02c729ba11d98fc3a5c3637afb59fab403367b751a60c478095317da5144e8ae"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-320-480-text200.png",
+          "sha256": "cfcb6ce9a8bd14b0ce6c89f478cc2f54a04feb3421e64ef7f4181bb24c9d9698"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-320-480-text200.png",
+          "sha256": "5b4c24748896baecba2691c7cc967c8153fcc700c61c4fec2b498fd963f8ea1a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-320-480-text200.png",
+          "sha256": "5fcd4a0aa8975fd0e83639c2d9b5a72d612bc438b4b9f25936244b9a8d5b7bc8"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "44a68dbeeec6d1d78f17067ea322e8a9ef2b4eb4f764294dd381df8455fda166"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-360-225-text100.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 360,
+      "height": 225,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-360-225-text100.png",
+          "sha256": "a88b6b950afaa6e4fcbad7ba34e898fce899fbf3e68630e29c03498549fff815"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-360-225-text100.png",
+          "sha256": "38c6921767d70a5f0d1de601fdc4efe979b06d07f19f2f9edf04de0af2823208"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-360-225-text100.png",
+          "sha256": "696b9bda8736375cee7da6ab5e402d1b76ded5bb687e35187e01108b1deea7a0"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-360-225-text100.png",
+          "sha256": "7d597c90f8fa8268acfe714a07d1a45fcec25eaadf01056aa4fe9ad140dce80e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-360-225-text100.png",
+          "sha256": "4e9e2ffef95c56494402200ceed05d28c2b4a8c9ff4f3e20d2af6996ae97cba4"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-360-225-text100.png",
+          "sha256": "19c2661eb8e3c6e283e124318e352c768ccf300ec02dad6ba51b9230e4178007"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-360-225-text100.png",
+          "sha256": "9fdfcf7370ce116a14c6ae44fc925179578779d777c9357e82da708ce07a807d"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-360-225-text100.png",
+          "sha256": "48ed19d53dc98f6aaaf08ed317474c225e500d2b784840db61705b0afbd01ca8"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "d1ddf845c4ba7d69f3ead2ed74e4cb6ab1469cf2d05760dedf28dfbcdaa80d55"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-390-480-text200.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 390,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-390-480-text200.png",
+          "sha256": "5d0424234b14ec06a9f2e9e9091129f035ce1fe07dfa12d3fa2d65c314b68426"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-390-480-text200.png",
+          "sha256": "e54bcfb3b784ab2ea6b0134119116cfd3a12b5156e887f561943095c7b18a34e"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-390-480-text200.png",
+          "sha256": "28ba78f004d1f7de26605b18527eea3ad847e5e835fb678910fa36671d1da248"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-390-480-text200.png",
+          "sha256": "a10e837361771761bc7c24c5a1f8748175a2c8ea555589e5aa06275b42e6f282"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-390-480-text200.png",
+          "sha256": "02c729ba11d98fc3a5c3637afb59fab403367b751a60c478095317da5144e8ae"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-390-480-text200.png",
+          "sha256": "cfcb6ce9a8bd14b0ce6c89f478cc2f54a04feb3421e64ef7f4181bb24c9d9698"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-390-480-text200.png",
+          "sha256": "5b4c24748896baecba2691c7cc967c8153fcc700c61c4fec2b498fd963f8ea1a"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-390-480-text200.png",
+          "sha256": "5fcd4a0aa8975fd0e83639c2d9b5a72d612bc438b4b9f25936244b9a8d5b7bc8"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "4072f601f50282c15c8ea946149b9fc6ecccd439118582033bd03e82caa1d229"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-768-480-text200.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 480,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-768-480-text200.png",
+          "sha256": "e54f0d3b94660db4cba64d98fc7959f705d3d0aaa22a5527086be781629580fd"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-768-480-text200.png",
+          "sha256": "cfaa6dd4b02d5db0e2d1f6a8c8b267e7ab7f1f7112f0fe94cd25882742aaac50"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-768-480-text200.png",
+          "sha256": "97d2c2ac91b85b929a06f61dcdd1914f5998781e3a58e49eb82a95134ba14591"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-768-480-text200.png",
+          "sha256": "1c8ad24116d19559da4a681bdeb54a706b66f755df833b5254f7a8a8f0783ec8"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-768-480-text200.png",
+          "sha256": "df5ac53cd937b119489b8e32258ee5930ce0f25fbfdcf00ec23961841b219740"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-768-480-text200.png",
+          "sha256": "fd7e0d2a3653ccc8db6fa15fde776d48be993237acf3b8a0fce1425a1ce2116f"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-768-480-text200.png",
+          "sha256": "401ca02c316c93a8ec4f490cd17ea4cb56d850616c33e1b908579bb70524a6a6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-768-480-text200.png",
+          "sha256": "683179da3a97b9f9f56195ed1461d359e5b3b3ec05f5b679ff5fe50bdfbc00f9"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "f47b9ee132aba9632470ec704eb44d430f24cb2b0cb370f40136cf7aba298ade"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-768-600-text200.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 768,
+      "height": 600,
+      "textScale": 2,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-768-600-text200.png",
+          "sha256": "b7c93c9fd704c09502c7522a5da0858223944ff7204370b1d1c938587241d8af"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-768-600-text200.png",
+          "sha256": "700b371cd8b9732a553a626d96e9feae5406710f6278c41c53caba0d7d2316db"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-768-600-text200.png",
+          "sha256": "a1ae3f93528c15a854c2d60724eb7b6d6330c32367229b301ac6d0de87d626d6"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-768-600-text200.png",
+          "sha256": "63e60b2fb539138ac79f2bda155fd120d91a3a494074de056a6c23e1f7daf424"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-768-600-text200.png",
+          "sha256": "81b48df8ae71df2e8e8381ae8056d3e9a1e0ca22dd720800c7c3edeb1f538258"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-768-600-text200.png",
+          "sha256": "05b0e224d9a8435e984aea233899d02297d480143c14704544875545556491bc"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-768-600-text200.png",
+          "sha256": "e6f219e44aa1ce788d32b2aae304ff0c43f881f1a5006e97f39f2bca8e792fb7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-768-600-text200.png",
+          "sha256": "a0c015ed4815c64b51b67936a36a0f86c7128757f6ee1534ff255318473d0dda"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "7c636f101f02fb86fe0b2f25a11453ab2f54ca48f3a8c72225fcbaa65bb3b7d5"
+    },
+    {
+      "sheet": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/pixel-sheets/webkit-sidebar-1440-900-text100.png",
+      "browser": "webkit",
+      "surface": "sidebar",
+      "width": 1440,
+      "height": 900,
+      "textScale": 1,
+      "sources": [
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-dark-webkit/sidebar-1440-900-text100.png",
+          "sha256": "4c3c078acde6509fcc0423f7704889e35e86a1463041b19e759d23bc17989bc1"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-dark-webkit/sidebar-1440-900-text100.png",
+          "sha256": "b83c3ebec538dd30d2703d2f726f75c50d6615cff42f519a400f9f68cea7dcc7"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-dark-webkit/sidebar-1440-900-text100.png",
+          "sha256": "1b393b9f1f0b60657819625113e265ee8c0b6ff973b841dc4fb02b61249c11b2"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-dark-webkit/sidebar-1440-900-text100.png",
+          "sha256": "73d7ea7f64152fde6ac397b5a18576e6a9b72efd0e7dc638882fdd950d2b8b13"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-en-light-webkit/sidebar-1440-900-text100.png",
+          "sha256": "219d5fd45a799ed6be7716d3624ce78206b45b4eaba5cb696f1af2a5cd8495ad"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-ru-light-webkit/sidebar-1440-900-text100.png",
+          "sha256": "6df9f09640cbf76f6bf47e83db2357653923ddad9eb98bc238de41d7e6f33e51"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Cyrl-light-webkit/sidebar-1440-900-text100.png",
+          "sha256": "cba52c725990be79f8279c66b9f89a05f7190bcac406f0674cc84a5313c99544"
+        },
+        {
+          "path": "artifacts/qa/2026-10/results/platform/sidebar-explicit-focus-webkit/platform-sidebar.qa--qa-sidebar-matrix-uz-Latn-light-webkit/sidebar-1440-900-text100.png",
+          "sha256": "29dd16f49776691b87cc18c449e1d7d31cac854ccf9b37496144512db00ad421"
+        }
+      ],
+      "method": "unscaled paste; full sidebar or left264px native account-menu region",
+      "pixelInspected": true,
+      "reviewedBy": "knowledge_nested",
+      "reviewDate": "2026-10-09",
+      "sheetSha256": "363f82b54879a487febec9bb6264b30ca8c84fa7c421e69542f1875eb8831684"
+    }
+  ],
+  "supplemental": [
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-chromium/account-menu-end-comparison.png",
+      "sha256": "4c4a6db2b318f1a355d022b216ac92210f4049ea78c70bdc0fef4c50bc26a938",
+      "method": "four full360x225 native screenshots pasted without scaling, all4 locales/light, focusedEnd Signout",
+      "pixelInspected": true
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-firefox/account-menu-end-comparison.png",
+      "sha256": "bde9d978236828fe4c48443ba7e26b5baf3f667608c485bfe0f463fc59514908",
+      "method": "four full360x225 native screenshots pasted without scaling, all4 locales/light, focusedEnd Signout",
+      "pixelInspected": true
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-webkit/account-menu-end-comparison.png",
+      "sha256": "b4bca4d1cf7aa2fb95b6f413f3258124ebcbc26ee63d0b6b970362c35621c1d1",
+      "method": "four full360x225 native screenshots pasted without scaling, all4 locales/light, focusedEnd Signout",
+      "pixelInspected": true
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-chromium/faq-russian-320-text200.png",
+      "sha256": "5d8a7eddc1b7a12d377227f5adbb4875580da5adc761a8bf49efa777e1911130",
+      "method": "native320x480 after PNG; Russian FAQ heading at200% text, no drawer obscuring heading",
+      "pixelInspected": true
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-firefox/faq-russian-320-text200.png",
+      "sha256": "120ffdd3a9c5f630db0a4fd45c165c8b9acbacb47f5d426a9503521a27482b69",
+      "method": "native320x480 after PNG; Russian FAQ heading at200% text, no drawer obscuring heading",
+      "pixelInspected": true
+    },
+    {
+      "artifact": "artifacts/qa/2026-10/results/platform/sidebar-focused-curation-after/platform-sidebar.qa--qa-si-7a8c6-pixels-and-shortcut-console-webkit/faq-russian-320-text200.png",
+      "sha256": "df657e3c47b3ae85b04329426dea219da0f91903186a199d4d9e63342bb11f32",
+      "method": "native320x480 after PNG; Russian FAQ heading at200% text, no drawer obscuring heading",
+      "pixelInspected": true
+    }
+  ]
+}

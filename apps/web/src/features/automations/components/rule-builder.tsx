@@ -81,6 +81,7 @@ function ActionRow({
   onChange,
   onRemove,
   canRemove,
+  invalidFields,
 }: {
   action: AutomationAction
   trigger: AutomationTrigger
@@ -89,10 +90,13 @@ function ActionRow({
   onChange: (next: AutomationAction) => void
   onRemove: () => void
   canRemove: boolean
+  invalidFields: readonly string[]
 }): React.JSX.Element {
   const t = useT()
   const id = React.useId()
   const allowed = ACTIONS_FOR_TRIGGER[trigger]
+  const error = (field: string) =>
+    invalidFields.includes(field) ? { error: t('automations.builder.requiredInput') } : {}
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border bg-muted/30 p-3">
@@ -119,7 +123,11 @@ function ActionRow({
       </div>
 
       {action.kind === 'assign' || action.kind === 'notify_user' ? (
-        <Field label={t('automations.builder.whoLabel')} htmlFor={`${id}-user`}>
+        <Field
+          label={t('automations.builder.whoLabel')}
+          htmlFor={`${id}-user`}
+          {...error('userId')}
+        >
           <Select
             id={`${id}-user`}
             value={action.userId ?? ''}
@@ -136,20 +144,34 @@ function ActionRow({
       ) : null}
 
       {action.kind === 'set_priority' ? (
-        <Field label={t('automations.builder.priorityLabel')} htmlFor={`${id}-priority`}>
+        <Field
+          label={t('automations.builder.priorityLabel')}
+          htmlFor={`${id}-priority`}
+          {...error('priority')}
+        >
           <Select
             id={`${id}-priority`}
-            value={action.priority ?? 'high'}
+            value={action.priority ?? ''}
             onChange={(e) =>
-              onChange({ ...action, priority: e.target.value as (typeof PRIORITIES)[number] })
+              onChange({
+                ...action,
+                priority: e.target.value ? (e.target.value as (typeof PRIORITIES)[number]) : null,
+              })
             }
-            options={PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) }))}
+            options={[
+              { value: '', label: t('automations.builder.chooseValue') },
+              ...PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL_KEY[p]) })),
+            ]}
           />
         </Field>
       ) : null}
 
       {action.kind === 'add_label' ? (
-        <Field label={t('automations.builder.labelLabel')} htmlFor={`${id}-label`}>
+        <Field
+          label={t('automations.builder.labelLabel')}
+          htmlFor={`${id}-label`}
+          {...error('labelId')}
+        >
           <Select
             id={`${id}-label`}
             value={action.labelId ?? ''}
@@ -163,14 +185,24 @@ function ActionRow({
       ) : null}
 
       {action.kind === 'set_status' ? (
-        <Field label={t('automations.builder.statusLabel')} htmlFor={`${id}-status`}>
+        <Field
+          label={t('automations.builder.statusLabel')}
+          htmlFor={`${id}-status`}
+          {...error('status')}
+        >
           <Select
             id={`${id}-status`}
-            value={action.status ?? 'done'}
+            value={action.status ?? ''}
             onChange={(e) =>
-              onChange({ ...action, status: e.target.value as (typeof STATUSES)[number] })
+              onChange({
+                ...action,
+                status: e.target.value ? (e.target.value as (typeof STATUSES)[number]) : null,
+              })
             }
-            options={STATUSES.map((s) => ({ value: s, label: t(STATUS_LABEL_KEY[s]) }))}
+            options={[
+              { value: '', label: t('automations.builder.chooseValue') },
+              ...STATUSES.map((s) => ({ value: s, label: t(STATUS_LABEL_KEY[s]) })),
+            ]}
           />
         </Field>
       ) : null}
@@ -180,6 +212,7 @@ function ActionRow({
           label={t('automations.builder.checklistLabel')}
           htmlFor={`${id}-checklist`}
           hint={t('automations.builder.checklistHint')}
+          {...error('checklist')}
         >
           <Textarea
             id={`${id}-checklist`}
@@ -200,7 +233,8 @@ function ActionRow({
           <Field
             label={t('automations.builder.followupTitle')}
             htmlFor={`${id}-title`}
-            className="min-w-[12rem] flex-1"
+            className="min-w-0 basis-48 flex-1"
+            {...error('title')}
           >
             <Input
               id={`${id}-title`}
@@ -209,7 +243,11 @@ function ActionRow({
               onChange={(e) => onChange({ ...action, title: e.target.value })}
             />
           </Field>
-          <Field label={t('automations.builder.followupDueInDays')} htmlFor={`${id}-due`}>
+          <Field
+            label={t('automations.builder.followupDueInDays')}
+            htmlFor={`${id}-due`}
+            hint={t('automations.builder.noDeadlineHint')}
+          >
             <Input
               id={`${id}-due`}
               type="number"
@@ -217,8 +255,13 @@ function ActionRow({
               max={365}
               inputMode="numeric"
               className="w-24"
-              value={action.dueInDays ?? 7}
-              onChange={(e) => onChange({ ...action, dueInDays: Number(e.target.value) || 0 })}
+              value={action.dueInDays ?? ''}
+              onChange={(e) =>
+                onChange({
+                  ...action,
+                  dueInDays: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
             />
           </Field>
         </div>
@@ -234,6 +277,8 @@ export interface RuleBuilderProps {
   initial?: AutomationRuleBody
   submitLabel: string
   busy?: boolean
+  /** Existing rule triggers are immutable in the API; duplicate a rule to choose a new trigger. */
+  triggerLocked?: boolean
   onSubmit: (body: AutomationRuleBody) => void
   onCancel: () => void
 }
@@ -244,6 +289,7 @@ export function RuleBuilder({
   initial,
   submitLabel,
   busy = false,
+  triggerLocked = false,
   onSubmit,
   onCancel,
 }: RuleBuilderProps): React.JSX.Element {
@@ -253,16 +299,21 @@ export function RuleBuilder({
     initial?.trigger ?? 'card_created',
   )
   const [config, setConfig] = React.useState<AutomationTriggerConfig>(initial?.triggerConfig ?? {})
+  const [errors, setErrors] = React.useState<{ path: string; message: string }[]>([])
   const [actions, setActions] = React.useState<AutomationAction[]>(
     initial?.actions ? [...initial.actions] : [defaultAction('assign')],
   )
+  const submitInFlight = React.useRef(false)
+  React.useEffect(() => {
+    if (!busy) submitInFlight.current = false
+  }, [busy])
 
   /** Changing the trigger can make an already-chosen action illegal, so the list is filtered the
    * moment the trigger changes rather than at submit time -- the form never sits in a state the
    * server would refuse. */
   function changeTrigger(next: AutomationTrigger): void {
     setTrigger(next)
-    setConfig({})
+    setConfig((previous) => (previous.filter ? { filter: previous.filter } : {}))
     setActions((prev) => {
       const kept = prev.filter((a) => ACTIONS_FOR_TRIGGER[next].includes(a.kind))
       return kept.length > 0 ? kept : [defaultAction(ACTIONS_FOR_TRIGGER[next][0]!)]
@@ -271,9 +322,13 @@ export function RuleBuilder({
 
   function submit(e: React.FormEvent): void {
     e.preventDefault()
+    if (busy || submitInFlight.current) return
     const cleaned = actions.map((action) =>
       action.kind === 'add_checklist'
-        ? { ...action, checklist: (action.checklist ?? []).filter((line) => line.length > 0) }
+        ? {
+            ...action,
+            checklist: (action.checklist ?? []).map((line) => line.trim()).filter(Boolean),
+          }
         : action,
     )
     const parsed = automationRuleBodySchema.safeParse({
@@ -281,36 +336,58 @@ export function RuleBuilder({
       trigger,
       triggerConfig: config,
       actions: cleaned,
-      enabled: true,
+      enabled: initial?.enabled ?? true,
     })
     if (!parsed.success) {
+      setErrors(
+        parsed.error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      )
       toast.error(t('automations.builder.invalid'))
       return
     }
+    setErrors([])
+    submitInFlight.current = true
     onSubmit(parsed.data)
   }
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
+      {errors.length > 0 ? (
+        <p role="alert" className="text-small text-destructive">
+          {t('automations.builder.invalid')}
+        </p>
+      ) : null}
       <Field label={t('automations.builder.nameLabel')} htmlFor="rule-name">
         <Input
           id="rule-name"
           value={name}
           maxLength={120}
           required
+          disabled={busy}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('automations.builder.namePlaceholder')}
         />
       </Field>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <fieldset
+        disabled={busy}
+        className="flex min-w-0 flex-col gap-3 rounded-md border border-border p-3"
+      >
         <legend className="px-1 text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {t('automations.builder.whenLegend')}
         </legend>
-        <Field label={t('automations.builder.triggerLabel')} htmlFor="rule-trigger">
+        <Field
+          label={t('automations.builder.triggerLabel')}
+          htmlFor="rule-trigger"
+          {...(triggerLocked ? { hint: t('automations.builder.triggerLocked') } : {})}
+        >
           <Select
             id="rule-trigger"
             value={trigger}
+            disabled={triggerLocked}
             onChange={(e) => changeTrigger(e.target.value as AutomationTrigger)}
             options={AUTOMATION_TRIGGERS.map((tr) => ({
               value: tr,
@@ -366,14 +443,17 @@ export function RuleBuilder({
           <Field label={t('automations.builder.fieldLabel')} htmlFor="rule-field">
             <Select
               id="rule-field"
-              value={config.field ?? 'priority'}
+              value={config.field ?? ''}
               onChange={(e) =>
                 setConfig((c) => ({
                   ...c,
-                  field: e.target.value as (typeof FIELDS)[number],
+                  field: (e.target.value || null) as AutomationTriggerConfig['field'],
                 }))
               }
-              options={FIELDS.map((f) => ({ value: f, label: t(FIELD_LABEL_KEY[f]) }))}
+              options={[
+                { value: '', label: t('automations.builder.anyField') },
+                ...FIELDS.map((f) => ({ value: f, label: t(FIELD_LABEL_KEY[f]) })),
+              ]}
             />
           </Field>
         ) : null}
@@ -393,7 +473,10 @@ export function RuleBuilder({
         </Field>
       </fieldset>
 
-      <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <fieldset
+        disabled={busy}
+        className="flex min-w-0 flex-col gap-3 rounded-md border border-border p-3"
+      >
         <legend className="px-1 text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
           {t('automations.builder.thenLegend')}
         </legend>
@@ -405,6 +488,9 @@ export function RuleBuilder({
             members={members}
             labels={labels}
             canRemove={actions.length > 1}
+            invalidFields={errors
+              .filter((error) => error.path.startsWith(`actions.${index}.`))
+              .map((error) => error.path.split('.')[2]!)}
             onChange={(next) => setActions((prev) => prev.map((a, i) => (i === index ? next : a)))}
             onRemove={() => setActions((prev) => prev.filter((_, i) => i !== index))}
           />
@@ -428,8 +514,8 @@ export function RuleBuilder({
         </Button>
       </fieldset>
 
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={busy}>
           {t('common.cancel')}
         </Button>
         <Button type="submit" loading={busy} disabled={name.trim().length === 0}>

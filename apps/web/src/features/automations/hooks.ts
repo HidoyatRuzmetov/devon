@@ -3,7 +3,13 @@
 // Every rule write invalidates the run log too: a rule that was just enabled, disabled or edited
 // changes what the log is *about*, and a stale log beside a fresh rule is how a head convinces
 // themselves an automation is broken when it is not.
-import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseQueryResult,
+} from '@tanstack/react-query'
 import type { AutomationRuleBody } from '@devon/contracts'
 import { useMeQuery } from '../../lib/session.js'
 import * as api from './api.js'
@@ -39,11 +45,24 @@ export function useAutomationRunsQuery(
   })
 }
 
+export function useAutomationRunHistoryQuery(query: Omit<api.RunsQuery, 'cursor'>, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: ['automations', 'runs', 'history', query],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      api.fetchAutomationRuns({ ...query, ...(pageParam ? { cursor: pageParam } : {}) }),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+    enabled,
+  })
+}
+
 function useInvalidateAutomations() {
   const qc = useQueryClient()
   return () => {
-    void qc.invalidateQueries({ queryKey: RULES_KEY })
-    void qc.invalidateQueries({ queryKey: ['automations', 'runs'] })
+    return Promise.all([
+      qc.invalidateQueries({ queryKey: RULES_KEY }),
+      qc.invalidateQueries({ queryKey: ['automations', 'runs'] }),
+    ])
   }
 }
 

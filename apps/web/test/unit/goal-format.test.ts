@@ -45,7 +45,8 @@ describe('SEV2 #8 -- a cap fills towards the limit and is green while there is r
   })
 
   it('a cap of zero is exceeded by anything at all', () => {
-    expect(goalProgressTone('open_cards_max', 1, 0)).toBe('warning')
+    expect(goalProgressTone('open_cards_max', 1, 0)).toBe('destructive')
+    expect(goalProgressTone('open_cards_max', 0, 0)).toBe('success')
     expect(goalBarFill('open_cards_max', 1, 0)).toBe(1)
     expect(goalBarFill('open_cards_max', 0, 0)).toBe(0)
   })
