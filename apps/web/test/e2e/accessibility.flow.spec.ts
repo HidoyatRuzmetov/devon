@@ -24,6 +24,22 @@ async function inspect(page: Page, path: string, info: TestInfo) {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
   await expect(page.locator('main')).toBeVisible()
+  if (path === '/404') {
+    // The lazy recovery panel can mount after the shell is visible and networkidle resolves.
+    // Scan its rendered colours after the actual panel's entrance, rather than a faded frame.
+    const heading = page.getByRole('heading', { name: /^(Page not found|Sahifa topilmadi)$/ })
+    await expect(heading).toBeVisible()
+    await expect
+      .poll(() =>
+        heading.evaluate((element) => {
+          for (let node: Element | null = element; node; node = node.parentElement) {
+            if (getComputedStyle(node).opacity !== '1') return false
+          }
+          return true
+        }),
+      )
+      .toBe(true)
+  }
   await expect
     .soft(
       page.getByRole('heading', { name: /^(Could not load the data|Yuklab boʻlmadi)$/ }),
