@@ -120,9 +120,24 @@ export function PendingRequestView({
         >
           {t(`departments.pending.status.${status}`)}
         </Badge>
-        <h1 className="font-display text-h2 text-foreground">{t('departments.pending.title')}</h1>
+        <h1 className="font-display text-h2 text-foreground">
+          {t(
+            status === 'rejected'
+              ? 'departments.pending.rejectedTitle'
+              : status === 'approved'
+                ? 'departments.pending.approvedTitle'
+                : 'departments.pending.title',
+          )}
+        </h1>
         <p className="text-body text-muted-foreground">
-          &quot;{name}&quot; — {t('departments.pending.body')}
+          &quot;{name}&quot; —{' '}
+          {t(
+            status === 'rejected'
+              ? 'departments.pending.rejectedBody'
+              : status === 'approved'
+                ? 'departments.pending.approvedBody'
+                : 'departments.pending.body',
+          )}
         </p>
       </div>
       <div className="w-full">

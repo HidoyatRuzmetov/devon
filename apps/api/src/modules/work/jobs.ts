@@ -21,6 +21,10 @@ export const QUEUE_REMINDERS = 'work.reminders'
 /** One tick claims at most this many reminders, so a backlog drains over several minutes instead of
  * holding one transaction open across hundreds of Telegram sends. */
 const REMINDER_BATCH = 100
+const REMINDER_OWNER_BATCH = 200
+// Continue past the last owner examined, including when a large owner's backlog consumes the
+// send budget. Starting at the first membership every minute would starve everyone after it.
+let reminderOwnerCursor: plus.ReminderOwner | null = null
 
 /** Instance-level, department-less: both jobs' first question is "across every department, what is
  * due?", which no single department's lens can answer. Mirrors `analytics/aggregate.ts`'s own
@@ -73,6 +77,7 @@ export function nextInstanceDueAt(
     status: 'active' | 'done' | 'archived'
     dueAt: string | null
     doneAt: string | null
+    archivedAt: string | null
     seriesCount: number
     hasNewerInstance: boolean
   },
@@ -82,7 +87,9 @@ export function nextInstanceDueAt(
   if (rule.mode === 'after_done' && card.status === 'active') return null
 
   const anchorIso =
-    rule.mode === 'after_done' ? (card.doneAt ?? card.dueAt) : (card.dueAt ?? card.doneAt)
+    rule.mode === 'after_done'
+      ? (card.doneAt ?? card.archivedAt)
+      : (card.dueAt ?? card.doneAt ?? card.archivedAt)
   if (!anchorIso) return null
   const next = nextOccurrence(rule, new Date(anchorIso), card.seriesCount)
   if (next === null) return null
@@ -145,7 +152,10 @@ export async function runRecurrenceScan(log: FastifyBaseLogger): Promise<number>
         giverUserId: card.giverUserId,
         priority: card.priority,
         startAt: null,
-        dueAt: withTimeOfDay(due, card.dueAt),
+        dueAt: withTimeOfDay(
+          due,
+          parsed.data.mode === 'after_done' ? (card.doneAt ?? card.archivedAt) : card.dueAt,
+        ),
         labels: card.labels,
         links: [],
         projectId: card.projectId,
@@ -171,7 +181,28 @@ export async function runRecurrenceScan(log: FastifyBaseLogger): Promise<number>
 }
 
 export async function runReminderScan(log: FastifyBaseLogger): Promise<number> {
-  const due = await plus.claimDueReminders(scanContext(), REMINDER_BATCH)
+  let owners = await plus.listReminderOwners(
+    scanContext(),
+    reminderOwnerCursor,
+    REMINDER_OWNER_BATCH,
+  )
+  if (owners.length === 0 && reminderOwnerCursor !== null) {
+    reminderOwnerCursor = null
+    owners = await plus.listReminderOwners(scanContext(), null, REMINDER_OWNER_BATCH)
+  }
+  const due: Awaited<ReturnType<typeof plus.claimDueReminders>> = []
+  for (let i = 0; i < owners.length && due.length < REMINDER_BATCH; i += 1) {
+    const owner = owners[i]!
+    // Private reminders have FORCE RLS with both owner and department predicates. The system
+    // context only enumerates eligible memberships; it never reads or updates reminder contents.
+    // nosemgrep: query-in-loop -- each owner needs its own transaction-local private RLS context.
+    const claimed = await plus.claimDueReminders(
+      { ...departmentContext(owner.departmentId, owner.userId), departmentRole: owner.role },
+      REMINDER_BATCH - due.length,
+    )
+    reminderOwnerCursor = owner
+    due.push(...claimed)
+  }
   if (due.length === 0) return 0
   // Independent sends: one slow Telegram call must not hold up the other ninety-nine, and
   // `notifyUser` is already the one place channel fan-out and quiet hours are decided.

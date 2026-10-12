@@ -20,6 +20,7 @@ import { hashPassword, verifyPassword } from '../../lib/password.js'
 import type { AuditCtx } from '../../types.js'
 import type { Locale } from '../../schemas.js'
 import type { CreateDepartmentRequestBody } from './schemas.js'
+import { requestedUnitColour } from './unit-colour.js'
 
 export type DepartmentUnit = { name: string; colour?: string }
 
@@ -230,9 +231,10 @@ export async function approveDepartmentRequest(
       requester_user_id: string
       name: string
       description: string | null
+      units: DepartmentUnit[]
       locale: string
       status: string
-    }>(sql`select id, requester_user_id, name, description, locale, status
+    }>(sql`select id, requester_user_id, name, description, units, locale, status
            from app.department_requests where id = ${requestId} for update`)
     const request = requestRows[0]
     if (!request || request.status !== 'pending') return null
@@ -258,6 +260,40 @@ export async function approveDepartmentRequest(
       userId: request.requester_user_id,
       role: 'head',
     })
+    // The request wizard's unit rows are part of the approved workspace, not review-only metadata.
+    // Create them in this same transaction so approval cannot leave a partially initialised team.
+    const units = (request.units ?? []).map((draft, sort) => ({
+      id: randomUUID(),
+      name: draft.name,
+      colour: requestedUnitColour(draft.colour),
+      sort,
+    }))
+    if (units.length > 0) {
+      await tx.raw(sql`
+        insert into app.units (id, department_id, parent_unit_id, name, colour, sort, path, created_by)
+        values ${sql.join(
+          units.map(
+            (unit) =>
+              sql`(${unit.id}, ${departmentId}, null, ${unit.name}, ${unit.colour}, ${unit.sort}, ${`/${unit.id}/`}, ${ctx.userId})`,
+          ),
+          sql`, `,
+        )}
+      `)
+    }
+    for (const unit of units) {
+      tx.audit({
+        action: 'structure.unit_created',
+        subjectType: 'unit',
+        subjectId: unit.id,
+        departmentId,
+        after: { name: unit.name, parentUnitId: null },
+      })
+      tx.emit({
+        type: 'structure.unit.created',
+        departmentId,
+        payload: { unitId: unit.id, name: unit.name, parentUnitId: null },
+      })
+    }
     await tx.raw(
       sql`update app.department_requests
           set status = 'approved', reviewed_by = ${ctx.userId}, reviewed_at = now(),

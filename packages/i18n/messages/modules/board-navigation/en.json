@@ -1,0 +1,14 @@
+{
+  "work": {
+    "board": {
+      "navigationLabel": "Board navigation",
+      "regionLabel": "People board",
+      "jumpToPerson": "Jump to a person",
+      "searchPeople": "Search people…",
+      "noPeople": "No matching people",
+      "myColumn": "My column",
+      "previousColumns": "Previous columns",
+      "nextColumns": "Next columns"
+    }
+  }
+}

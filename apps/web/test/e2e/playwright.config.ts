@@ -89,7 +89,8 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 60_000,
     env: {
-      ...process.env,
+      // Playwright's launcher already inherits process.env. Keep only these overrides in the
+      // report-visible config so JSON reporters cannot serialize ambient credentials.
       WEB_PORT: String(FLOW_WEB_PORT),
       API_PORT: String(FLOW_API_PORT),
       ...(production ? { DEVON_E2E: '0' } : {}),

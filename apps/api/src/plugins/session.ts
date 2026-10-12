@@ -101,7 +101,10 @@ export default fp(async function sessionPlugin(app: FastifyInstance) {
     // Sliding idle window (TECH-SPEC §2.1: 12h idle / 30d absolute). Fire-and-forget: a slightly stale
     // `last_seen_at` under concurrent requests is cosmetic, never a security boundary (the absolute
     // `expires_at` and `revoked_at` columns are, and both are already checked inside
-    // `findSessionByToken`).
-    void app.devon.touchSession(loaded.session.id)
+    // `findSessionByToken`). A transient write failure must not become an unhandled rejection
+    // that terminates the API. Log only the operation, without database error/credential details.
+    void app.devon.touchSession(loaded.session.id).catch(() => {
+      req.log.warn('Session activity refresh failed')
+    })
   })
 })

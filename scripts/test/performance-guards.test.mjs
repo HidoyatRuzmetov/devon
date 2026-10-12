@@ -92,7 +92,9 @@ test('release CI explicitly selects production performance without altering ordi
   }
   // Execute the actual configuration and receipt verifier in an owned fixture. Neither browser
   // nor API services start; the copied source has the same relative layout and dependency lookup.
-  const scratch = resolve(fileURLToPath(new URL('apps/web/test/e2e/.tmp/', root)))
+  // Keep transient copied configs outside Playwright's recursively scanned test directory.
+  // Another discovery guard may be listing tests while this fixture is removed.
+  const scratch = resolve(fileURLToPath(new URL('apps/web/.tmp/', root)))
   mkdirSync(scratch, { recursive: true })
   const fixture = mkdtempSync(join(scratch, 'flow-config-'))
   try {
@@ -134,7 +136,7 @@ test('release CI explicitly selects production performance without altering ordi
           'tsx',
           '--input-type=module',
           '-e',
-          `const config = (await import(${JSON.stringify(pathToFileURL(join(fixture, 'apps/web/test/e2e', configName)).href)})).default; process.stdout.write(JSON.stringify({ command: config.webServer.command, forcedState: config.webServer.env.DEVON_E2E, reuseExistingServer: config.webServer.reuseExistingServer, testMatch: config.testMatch, testIgnore: config.testIgnore }));`,
+          `const config = (await import(${JSON.stringify(pathToFileURL(join(fixture, 'apps/web/test/e2e', configName)).href)})).default; process.stdout.write(JSON.stringify({ command: config.webServer.command, forcedState: config.webServer.env.DEVON_E2E ?? process.env.DEVON_E2E, reportIncludesAmbientFlag: Object.hasOwn(config.webServer.env, 'FLOW_DB_NAME'), reuseExistingServer: config.webServer.reuseExistingServer, testMatch: config.testMatch, testIgnore: config.testIgnore }));`,
         ],
         {
           cwd: fileURLToPath(new URL('apps/api/', root)),
@@ -151,6 +153,11 @@ test('release CI explicitly selects production performance without altering ordi
       const config = JSON.parse(ordinary.stdout)
       assert.equal(config.command, 'pnpm --filter @devon/web dev --mode test')
       assert.equal(config.forcedState, '1')
+      assert.equal(
+        config.reportIncludesAmbientFlag,
+        false,
+        'report-visible config excludes ambient environment',
+      )
       assert.equal(config.reuseExistingServer, false)
       assert.deepEqual(config.testMatch, ['**/*.flow.spec.ts', '**/*.smoke.spec.ts'])
       assert.deepEqual(config.testIgnore, [])

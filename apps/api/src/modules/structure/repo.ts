@@ -322,7 +322,7 @@ export async function updateUnit(
             colour = case when id = ${unitId} then ${colour} else colour end,
             parent_unit_id = case when id = ${unitId} then ${newParentId} else parent_unit_id end,
             sort = case when id = ${unitId} then ${newSort} else sort end,
-            path = ${newOwnPath} || substring(path from ${before.path.length + 1}),
+            path = ${newOwnPath} || substring(path from ${before.path.length + 1}::integer),
             version = case when id = ${unitId} then version + 1 else version end,
             updated_at = now()
         where department_id = ${departmentId} and deleted_at is null

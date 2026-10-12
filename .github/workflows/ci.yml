@@ -86,6 +86,20 @@ jobs:
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
 
+      - name: Verify everyday workflow and real upload-scanning regressions
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          docker pull centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
+          docker pull clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
+          FLOW_DB_NAME=devon_flow_e2e_worker FLOW_API_PORT=48971 FLOW_WEB_PORT=48972 FLOW_CENTRIFUGO_PORT=48973 FLOW_REALTIME=1 FLOW_SEED_DEMO=1 FLOW_CLAMAV=0 QA_RUN_ID=ci-work-workers pnpm --filter @devon/web exec playwright test --config test/e2e/work-worker-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_structure_author FLOW_API_PORT=48991 FLOW_WEB_PORT=48992 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 STRUCTURE_QA_RUN=ci-structure pnpm --filter @devon/web exec playwright test --config test/e2e/structure-author-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_board_navigation FLOW_API_PORT=49021 FLOW_WEB_PORT=49022 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 BOARD_NAV_QA_RUN=ci-board-navigation pnpm --filter @devon/web exec playwright test --config test/e2e/board-navigation-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_invite_password FLOW_API_PORT=48981 FLOW_WEB_PORT=48982 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-invite-password pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-invite-password.qa.spec.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_dept_decision FLOW_API_PORT=49011 FLOW_WEB_PORT=49012 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-department-decision pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-department-decision.qa.spec.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_scanner FLOW_API_PORT=49001 FLOW_WEB_PORT=49002 FLOW_CLAMAV_PORT=49003 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=1 QA_RUN_ID=ci-scanner pnpm --filter @devon/web exec playwright test --config test/e2e/scanner-qa.config.ts --project chromium
+
       - name: Run the integration gate profile
         run: node agentic/scripts/gate.mjs --profile integration
 
@@ -109,6 +123,10 @@ jobs:
             e2e/playwright-report/**
             e2e/test-results/**
             apps/web/test-results/**
+            artifacts/qa/2026-10/results/**
+            artifacts/qa/2026-10/scanner/**
+            artifacts/qa/2026-10/structure-author/**
+            artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
           if-no-files-found: ignore
           retention-days: 30
 
@@ -177,6 +195,20 @@ jobs:
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
 
+      - name: Verify everyday workflow and real upload-scanning regressions
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          docker pull centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
+          docker pull clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
+          FLOW_DB_NAME=devon_flow_e2e_worker FLOW_API_PORT=48971 FLOW_WEB_PORT=48972 FLOW_CENTRIFUGO_PORT=48973 FLOW_REALTIME=1 FLOW_SEED_DEMO=1 FLOW_CLAMAV=0 QA_RUN_ID=ci-work-workers pnpm --filter @devon/web exec playwright test --config test/e2e/work-worker-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_structure_author FLOW_API_PORT=48991 FLOW_WEB_PORT=48992 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 STRUCTURE_QA_RUN=ci-structure pnpm --filter @devon/web exec playwright test --config test/e2e/structure-author-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_board_navigation FLOW_API_PORT=49021 FLOW_WEB_PORT=49022 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 BOARD_NAV_QA_RUN=ci-board-navigation pnpm --filter @devon/web exec playwright test --config test/e2e/board-navigation-qa.config.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_invite_password FLOW_API_PORT=48981 FLOW_WEB_PORT=48982 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-invite-password pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-invite-password.qa.spec.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_dept_decision FLOW_API_PORT=49011 FLOW_WEB_PORT=49012 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-department-decision pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-department-decision.qa.spec.ts --project chromium
+          FLOW_DB_NAME=devon_flow_e2e_scanner FLOW_API_PORT=49001 FLOW_WEB_PORT=49002 FLOW_CLAMAV_PORT=49003 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=1 QA_RUN_ID=ci-scanner pnpm --filter @devon/web exec playwright test --config test/e2e/scanner-qa.config.ts --project chromium
+
       - name: Run the release gate profile
         run: node agentic/scripts/gate.mjs --profile release
 
@@ -200,6 +232,10 @@ jobs:
             e2e/playwright-report/**
             e2e/test-results/**
             apps/web/test-results/**
+            artifacts/qa/2026-10/results/**
+            artifacts/qa/2026-10/scanner/**
+            artifacts/qa/2026-10/structure-author/**
+            artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
           if-no-files-found: ignore
           retention-days: 90
 

@@ -47,6 +47,10 @@
     "pending": {
       "title": "Soʻrovingiz koʻrib chiqilmoqda",
       "body": "Tizim administratori soʻrovingizni tez orada koʻrib chiqadi.",
+      "rejectedTitle": "Soʻrovingiz rad etildi",
+      "rejectedBody": "Quyidagi sababni koʻrib chiqing va tayyor boʻlgach yangi soʻrov yuboring.",
+      "approvedTitle": "Soʻrovingiz tasdiqlandi",
+      "approvedBody": "Boshqarmangiz tayyor. Uni Boshqarmalar boʻlimidan oching.",
       "status": {
         "pending": "Kutilmoqda",
         "approved": "Tasdiqlandi",

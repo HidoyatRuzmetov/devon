@@ -43,6 +43,12 @@ export default function ApprovalQueueScreen() {
   const [rejecting, setRejecting] = React.useState(false)
   const [reason, setReason] = React.useState('')
 
+  const closeRequest = () => {
+    setOpenRequest(null)
+    setRejecting(false)
+    setReason('')
+  }
+
   const query = useQuery({
     queryKey: ['departments', 'requests', 'all', filter],
     queryFn: () => fetchAllRequests(filter === 'pending' ? 'pending' : undefined),
@@ -57,7 +63,7 @@ export default function ApprovalQueueScreen() {
     mutationFn: (id: string) => approveRequest(id, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
       toast(t('departments.approvalQueue.approvedToast'))
-      setOpenRequest(null)
+      closeRequest()
       void invalidate()
     },
   })
@@ -65,9 +71,7 @@ export default function ApprovalQueueScreen() {
     mutationFn: () => rejectRequest(openRequest!.id, reason, meQuery.data?.csrfToken ?? ''),
     onSuccess: () => {
       toast(t('departments.approvalQueue.rejectedToast'))
-      setOpenRequest(null)
-      setRejecting(false)
-      setReason('')
+      closeRequest()
       void invalidate()
     },
   })
@@ -152,9 +156,7 @@ export default function ApprovalQueueScreen() {
         open={openRequest !== null}
         onOpenChange={(open) => {
           if (!open) {
-            setOpenRequest(null)
-            setRejecting(false)
-            setReason('')
+            closeRequest()
           }
         }}
       >
@@ -174,7 +176,7 @@ export default function ApprovalQueueScreen() {
                 </div>
                 <IconButton
                   aria-label={t('structure.units.chart.closePanel')}
-                  onClick={() => setOpenRequest(null)}
+                  onClick={closeRequest}
                 >
                   <X className="size-4" aria-hidden="true" />
                 </IconButton>

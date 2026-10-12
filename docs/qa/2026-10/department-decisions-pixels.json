@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "owner": "close_decision",
+  "date": "2026-10-12",
+  "locale": "en",
+  "theme": "light",
+  "textScale": 1,
+  "qualification": "All nine original compiled PNGs were opened. Only visible pixels and stated capture limitations are reviewed; no additional locales, themes or touch-device proof.",
+  "images": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-chromium/closed-draft-discarded.png",
+      "browser": "chromium",
+      "scenario": "closed-draft-discarded",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 580,
+        "height": 800
+      },
+      "capture": "native sheet crop",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native sheet crop shows request/unit, normal Approve/Reject and visible Close; no abandoned reason form remains."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-chromium/requester-rejection.png",
+      "browser": "chromium",
+      "scenario": "requester-rejection",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop capture shows status-correct rejected title, revised-request guidance, exact reason and Send another request, with readable spacing."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-chromium/approved-head-department.png",
+      "browser": "chromium",
+      "scenario": "approved-head-department",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop shows the resulting department name, Head, requester and one-member summary, plus loaded invitation subsection. No invitation action is established by this screenshot alone."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-firefox/closed-draft-discarded.png",
+      "browser": "firefox",
+      "scenario": "closed-draft-discarded",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 580,
+        "height": 800
+      },
+      "capture": "native sheet crop",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native sheet crop shows request/unit, normal Approve/Reject and visible Close; no abandoned reason form remains."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-firefox/requester-rejection.png",
+      "browser": "firefox",
+      "scenario": "requester-rejection",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop capture shows status-correct rejected title, revised-request guidance, exact reason and Send another request, with readable spacing."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-firefox/approved-head-department.png",
+      "browser": "firefox",
+      "scenario": "approved-head-department",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop shows the resulting department name, Head, requester and one-member summary. Invite subsection is still a loading skeleton; this capture does not establish loaded invitation pixels."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-webkit/closed-draft-discarded.png",
+      "browser": "webkit",
+      "scenario": "closed-draft-discarded",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 580,
+        "height": 800
+      },
+      "capture": "native sheet crop",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native sheet crop shows request/unit, normal Approve/Reject and visible Close; no abandoned reason form remains."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-webkit/requester-rejection.png",
+      "browser": "webkit",
+      "scenario": "requester-rejection",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop capture shows status-correct rejected title, revised-request guidance, exact reason and Send another request, with readable spacing."
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/platform-department-decisi-573c6--and-approved-with-its-unit-webkit/approved-head-department.png",
+      "browser": "webkit",
+      "scenario": "approved-head-department",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "pixels": {
+        "width": 1280,
+        "height": 800
+      },
+      "capture": "native viewport",
+      "reviewed": true,
+      "method": "view_image original",
+      "observation": "Native desktop shows the resulting department name, Head, requester and one-member summary, plus loaded invitation subsection. No invitation action is established by this screenshot alone."
+    }
+  ]
+}

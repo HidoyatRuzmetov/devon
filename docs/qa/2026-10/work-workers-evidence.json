@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "owner": "work-workers",
+  "date": "2026-10-12T06:05:07.168Z",
+  "source": {
+    "baseCommit": "af078d3a7c369d0f664dcbb43356fb87428388d6",
+    "productionBuildReceipt": "tools/perf/lighthouse/out/production-build.json",
+    "build": {
+      "startedAt": "2026-10-12T05:50:50.671Z",
+      "finishedAt": "2026-10-12T05:51:12.695Z",
+      "inputsBefore": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+      "inputsAfter": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+      "stable": true,
+      "reactRuntime": [
+        {
+          "asset": "BarChart-LL5InVxy.js",
+          "source": "../../../../node_modules/.pnpm/react-is@17.0.2/node_modules/react-is/cjs/react-is.production.min.js"
+        },
+        {
+          "asset": "compiler-runtime-C9EW-Cth.js",
+          "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react-compiler-runtime.production.js"
+        },
+        {
+          "asset": "index-C_3XXNfL.js",
+          "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react.production.js"
+        },
+        {
+          "asset": "index-C_3XXNfL.js",
+          "source": "../../../../node_modules/.pnpm/react-dom@19.2.8_react@19.2.8/node_modules/react-dom/cjs/react-dom.production.js"
+        },
+        {
+          "asset": "index-C_3XXNfL.js",
+          "source": "../../../../node_modules/.pnpm/react-dom@19.2.8_react@19.2.8/node_modules/react-dom/cjs/react-dom-client.production.js"
+        },
+        {
+          "asset": "index-C_3XXNfL.js",
+          "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react-jsx-runtime.production.js"
+        }
+      ],
+      "forcedStateBuildFlag": false
+    },
+    "hashes": {
+      "apps/api/src/modules/work/jobs.ts": "b19b8633543182dde67a7bbe4fb07597450619de6802e7282455440b43b2f0e3",
+      "apps/api/src/modules/work/plus-repo.ts": "33b937042dc5367d84bb4f22d368cbda876646eee40db4dcb0eb60be2f5a15ad",
+      "apps/api/test/unit/work.jobs.test.ts": "533fd862740222b8be4f5aa29596392c2d0b9dcae1a0bebc3217788c407e608c",
+      "apps/api/test/integration/work-reminder-privacy.test.ts": "11f1a41719b9fb743a99e53edd219b529c8204d98c4c7eecafe945314bd1ca74",
+      "apps/web/src/features/work/components/recurrence-field.tsx": "6406c413e9cc72157b7d722272eb9d74c4b503d2d69cbdf2fabc89935b6addfb",
+      "apps/web/src/features/work/components/card-plus-sections.tsx": "ae5c5cddaae45a7bbeb04b3295bd409da8ba2e1d84fe9409bbb332dd1177948a",
+      "apps/web/src/lib/realtime/hooks.ts": "de9c522e41d64a4d210d94dede2b25a29ff2ab4fe7d5c5d7f13d6097351cf935",
+      "apps/web/test/e2e/platform-work-workers.qa.spec.ts": "fc7df0ee5767faaa00806924b6605c4074ab2130b3f92676959c9d46d3ded9d0",
+      "apps/web/test/e2e/flow-work-queue.ts": "2cb7ae4d34f39009071f919e555b0ee989e97268ca21b9eafd1702a0a2cd9b7e",
+      "apps/web/test/e2e/work-worker-qa.config.ts": "3b44d656a5cab497d0a9989379c0ad8dd51bc7ffe9f2f5cacb3717cbe7b88534"
+    }
+  },
+  "boundaries": {
+    "database": "devon_flow_e2e_worker",
+    "apiPort": 48971,
+    "webPort": 48972,
+    "brokerPort": 48973,
+    "services": "Actual migrated PostgreSQL, actual PgBoss workers, owned Valkey and Centrifugo",
+    "api": "Actual API source in development mode; compiled API is not claimed by this harness",
+    "web": "Fresh genuine compiled production React UI with DEVON_E2E=0",
+    "role": "Synthetic seeded department head; separate owner/privacy proof is API PostgreSQL regression",
+    "locale": "en",
+    "theme": "light",
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "externalIntegrations": "AI, Telegram, SMTP and external destinations disabled/blocked",
+    "production": "Not used by these mutation tests"
+  },
+  "finalBrowser": {
+    "original": {
+      "report": "artifacts/qa/2026-10/results/platform/work-workers-compiled-final/summary.json",
+      "reportSha256": "2fa8e4dd4f5ed7584a81fd15900d35f0c9604b916847da16495d36222530b3a7",
+      "startTime": "2026-10-12T05:52:03.586Z",
+      "duration": 623556.603,
+      "expected": 11,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "preciseReplay": {
+      "report": "artifacts/qa/2026-10/results/platform/work-workers-after-done-replay/summary.json",
+      "reportSha256": "5690591492cee3684258ba107d592ef6e97ccc41f0b1b20c10a3121a9f727777",
+      "startTime": "2026-10-12T06:02:56.771Z",
+      "duration": 118607.845,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "coveredDistinctCases": 12,
+    "executions": 13,
+    "successfulExecutions": 12,
+    "historicalFixtureFailures": 1,
+    "browsers": [
+      "chromium",
+      "firefox",
+      "webkit"
+    ],
+    "retries": 0,
+    "qualification": "11 initial passes plus the one exact fixture-startup failure replayed successfully with fresh fixtures. The initial report stays 11 passed / 1 failed; this is not a single all-green 12-case run. Seven simultaneous local API scopes exhausted the shared PG100 limit; CI runs these scopes serially and final local coordination kept at most four."
+  },
+  "focusedWebUnit": {
+    "report": "artifacts/qa/2026-10/release-gates/workers-web-unit-after.log",
+    "passed": 18
+  },
+  "workflows": [
+    "UI daily schedule persists; actual queue creates one successor; due time/count independently read; live board, reload and no extra successor on redelivery",
+    "UI stop-date persists; actual queue creates no expired successor before or after redelivery; rule independently read through reload",
+    "UI after-done preview waits; actual queue creates no successor before completion; actual UI completion creates one successor at the completion interval; independent due read and redelivery duplicate guard",
+    "UI personal reminder persists; actual real-time due instant and queue; sent stamp and exactly one Inbox notification independently read; open editor updates to Sent; live Inbox, redelivery, reload and working card deep link"
+  ],
+  "historicalFailures": [
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-workers-before",
+      "qualification": "Actual reminder worker failure; initial standalone status done expectation was a test mistake, not a product defect"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-workers-completion-before",
+      "qualification": "Actual after-done successor was overdue; exact completion and successor JSON retained"
+    },
+    {
+      "path": "artifacts/qa/2026-10/release-gates/recurrence-preview-before.log",
+      "qualification": "4 failing focused old-preview assertions before the repair"
+    },
+    {
+      "path": "artifacts/qa/2026-10/release-gates/reminder-live-before.log",
+      "qualification": "1 failing active reminder-query assertion before personal delivery invalidation repair"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-workers-fixed",
+      "qualification": "Interrupted without summary; three Chromium recurrence passes, then global reminder row locator matched hidden Inbox tabs; not a notification product failure or final passing run"
+    },
+    {
+      "path": "artifacts/qa/2026-10/results/platform/work-workers-compiled-final/summary.json",
+      "qualification": "11 passed and one verified local shared-connection-capacity fixture producer startup failure before UI assertions; recovered only through the separate precise replay"
+    }
+  ],
+  "limitations": [
+    "Sent claim is stamped before later notification persistence; a failure between those steps is untested, so exactly-once crash recovery is not proved",
+    "Only the four named ordinary workflows; no whole-platform, all-theme, all-locale, tiny-screen or physical-device claim",
+    "No external AI/Telegram/email delivery, production mutation, commit, push, deployment or tutorial recording performed by this agent"
+  ]
+}

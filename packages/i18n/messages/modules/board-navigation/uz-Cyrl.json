@@ -1,0 +1,14 @@
+{
+  "work": {
+    "board": {
+      "navigationLabel": "Доскада ҳаракатланиш",
+      "regionLabel": "Ходимлар доскаси",
+      "jumpToPerson": "Ходим устунига ўтиш",
+      "searchPeople": "Ходимни қидириш…",
+      "noPeople": "Мос ходим топилмади",
+      "myColumn": "Менинг устуним",
+      "previousColumns": "Олдинги устунлар",
+      "nextColumns": "Кейинги устунлар"
+    }
+  }
+}
