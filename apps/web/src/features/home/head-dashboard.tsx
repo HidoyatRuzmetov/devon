@@ -74,6 +74,7 @@ import { useBriefingQuery, useRefreshBriefingMutation } from '../ai/use-ai.js'
 import { CatchUpPreview } from '../ai/components/previews.js'
 import { parseFeatureOutput, type CatchUpOutput } from '../ai/outputs.js'
 import { usePersonalOverviewQuery, useSummaryQuery } from '../analytics/use-analytics.js'
+import { fetchEvents } from '../events/api.js'
 
 /** The indicator keys this dashboard asks for. Narrow on purpose: the service runs one query per
  * source it is actually asked about, so a six-tile dashboard costs three statements. */
@@ -358,6 +359,25 @@ export function HeadDashboard(): React.JSX.Element {
   })
   const summaryQuery = useSummaryQuery({})
   const overviewQuery = usePersonalOverviewQuery()
+  // Analytics describes a historical date range ending today. "Coming up" needs its own future
+  // events read; filtering that historical summary silently hid every event after today.
+  // Keep one range through ordinary rerenders instead of creating a new millisecond query key.
+  const eventRange = React.useMemo(() => {
+    if (departmentId === null) return null
+    const from = new Date()
+    return { from, to: new Date(from.getTime() + 7 * 86_400_000) }
+  }, [departmentId])
+  const eventsQuery = useQuery({
+    queryKey: [
+      'events',
+      'list',
+      departmentId,
+      eventRange?.from.toISOString(),
+      eventRange?.to.toISOString(),
+    ],
+    queryFn: () => fetchEvents(eventRange ?? {}),
+    enabled: departmentId !== null,
+  })
   // SPEC §3.2's last two tiles. Goals are a plain query -- they are computed from the cards the
   // department already has and cost one statement. The briefing is *not*: an AI call costs money, so
   // it runs when the head asks for it and never on page load (AI-AUDIT §5, "no feature spends a
@@ -445,14 +465,17 @@ export function HeadDashboard(): React.JSX.Element {
 
   const now = Date.now()
   const SEVEN_DAYS_MS = 7 * 86_400_000
-  const upcomingEvents: NonNullable<typeof summary>['eventsParticipation'] = []
-  for (const event of summary?.eventsParticipation ?? []) {
-    const startsIn = new Date(event.startsAt).getTime() - now
-    if (startsIn < 0) continue
-    if (startsIn > SEVEN_DAYS_MS) continue
-    upcomingEvents.push(event)
-    if (upcomingEvents.length === 4) break
-  }
+  const upcomingEvents = (eventsQuery.data?.items ?? [])
+    .filter((event) => {
+      const startsIn = new Date(event.startsAt).getTime() - now
+      return (
+        (event.status === 'open' || event.status === 'full') &&
+        startsIn >= 0 &&
+        startsIn <= SEVEN_DAYS_MS
+      )
+    })
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
+    .slice(0, 4)
 
   // "Qaror kutmoqda": work this head gave out that has run past its date. The head is the only
   // person who can move it, extend it or take it back -- which is exactly what a decision is.
@@ -708,7 +731,18 @@ export function HeadDashboard(): React.JSX.Element {
             onOpen: () => navigate('/events'),
           }}
         >
-          {upcomingEvents.length === 0 ? (
+          {eventsQuery.isPending ? (
+            <StateView kind="loading" titleKey="state.loading" />
+          ) : eventsQuery.isError ? (
+            <StateView
+              kind="error"
+              titleKey="state.error.title"
+              action={{
+                labelKey: 'state.error.action',
+                onAction: () => eventsQuery.refetch(),
+              }}
+            />
+          ) : upcomingEvents.length === 0 ? (
             <p className="text-small text-muted-foreground">{t('home.head.events.empty')}</p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -716,7 +750,7 @@ export function HeadDashboard(): React.JSX.Element {
                 <li key={event.id} className="flex items-baseline justify-between gap-2">
                   <span className="min-w-0 truncate text-small">{event.title}</span>
                   <span className="tabular-nums text-caption text-muted-foreground">
-                    {formatNumber(event.yes, locale)}
+                    {formatNumber(event.goingCount, locale)}
                   </span>
                 </li>
               ))}
