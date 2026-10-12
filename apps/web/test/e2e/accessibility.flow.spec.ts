@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import AxeBuilder from '@axe-core/playwright'
 import { FEATURE_KEYS } from '@devon/contracts'
+import '@devon/i18n/catalogues'
+import { isLocale, translate } from '@devon/i18n'
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import {
   authedPatch,
@@ -18,22 +20,32 @@ import {
 // scanning login redirects or missing-ID error screens and reporting those as successful coverage.
 const inventory = JSON.parse(
   readFileSync(new URL('../../../../e2e/routes.json', import.meta.url), 'utf8'),
-) as { routes: { path: string; auth: string }[] }
+) as { routes: { path: string; auth: string; heading: string }[] }
 
-async function inspect(page: Page, path: string, info: TestInfo) {
+async function inspect(page: Page, path: string, info: TestInfo, publicHeadingKey?: string) {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
   await expect(page.locator('main')).toBeVisible()
-  if (path === '/404') {
-    // The lazy recovery panel can mount after the shell is visible and networkidle resolves.
-    // Scan its rendered colours after the actual panel's entrance, rather than a faded frame.
-    const heading = page.getByRole('heading', { name: /^(Page not found|Sahifa topilmadi)$/ })
+  if (publicHeadingKey) {
+    // AuthShell's wordmark and loading fallback can appear before the lazy public route does.
+    // Require the real route heading, then settle every public entrance (including the header)
+    // before the whole-page contrast scan. These routes have no scroll-triggered entrances.
+    const locale = await page.locator('html').getAttribute('lang')
+    if (!isLocale(locale)) throw new Error(`${path}: the rendered locale must be recognized`)
+    const heading = page.locator('main').getByRole('heading', {
+      name: translate(locale, publicHeadingKey),
+      exact: true,
+    })
     await expect(heading).toBeVisible()
     await expect
       .poll(() =>
         heading.evaluate((element) => {
-          for (let node: Element | null = element; node; node = node.parentElement) {
-            if (getComputedStyle(node).opacity !== '1') return false
+          const entrances = document.querySelectorAll('[data-devon-entrance]')
+          if (!entrances.length) return false
+          for (const renderedElement of [element, ...entrances]) {
+            for (let node: Element | null = renderedElement; node; node = node.parentElement) {
+              if (getComputedStyle(node).opacity !== '1') return false
+            }
           }
           return true
         }),
@@ -179,9 +191,11 @@ test('@a11y @flow public: entry points and unauthenticated restrictions', async 
   try {
     const page = await context.newPage()
     for (const route of inventory.routes.filter((r) => r.auth === 'public')) {
+      // The no-key /join entry renders the invitation-key form, not the generic route title.
+      const headingKey = route.path === '/join' ? 'departments.join.byForm.title' : route.heading
       // Routes share one browser page; navigation and inspection must be sequential.
       // eslint-disable-next-line no-restricted-syntax
-      await test.step(route.path, () => inspect(page, route.path, info))
+      await test.step(route.path, () => inspect(page, route.path, info, headingKey))
     }
     await page.goto('/admin')
     await expect(page).toHaveURL(/\/login/)
