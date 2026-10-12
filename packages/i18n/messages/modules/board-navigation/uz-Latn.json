@@ -1,0 +1,14 @@
+{
+  "work": {
+    "board": {
+      "navigationLabel": "Doskada harakatlanish",
+      "regionLabel": "Xodimlar doskasi",
+      "jumpToPerson": "Xodim ustuniga oʻtish",
+      "searchPeople": "Xodimni qidirish…",
+      "noPeople": "Mos xodim topilmadi",
+      "myColumn": "Mening ustunim",
+      "previousColumns": "Oldingi ustunlar",
+      "nextColumns": "Keyingi ustunlar"
+    }
+  }
+}

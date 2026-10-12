@@ -153,6 +153,7 @@ export function CardPlusSections({
           value={card.recurrence ?? null}
           onCommit={onRecurrenceChange}
           anchorIso={card.dueAt}
+          completionIso={card.status === 'active' ? null : (card.doneAt ?? card.archivedAt)}
           disabled={!canEdit}
         />
       </Section>

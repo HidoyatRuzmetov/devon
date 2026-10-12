@@ -523,6 +523,9 @@ function UnitRow({
           onDragLeave={() => setDropHint('none')}
           onDrop={(e) => {
             e.preventDefault()
+            // A row drop has already chosen its parent or sibling position. Do not also let the
+            // surrounding list process it as a second, conflicting move to the root.
+            e.stopPropagation()
             const id = e.dataTransfer.getData('text/plain')
             if (id && id !== node.id) {
               if (dropHint === 'before' || dropHint === 'after') reorderTo(dropHint)

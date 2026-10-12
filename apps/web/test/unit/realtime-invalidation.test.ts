@@ -3,6 +3,35 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it('updates a still-open personal reminder from pending to sent when its Inbox delivery arrives', async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { staleTime: Infinity, retry: false } },
+    })
+    const key = ['work', 'reminders', 'card-a']
+    let sentAt: string | null = null
+    const read = vi.fn(async () => [{ id: 'reminder-a', sentAt }])
+    await client.fetchQuery({ queryKey: key, queryFn: read })
+    const observer = new QueryObserver(client, {
+      queryKey: key,
+      queryFn: read,
+      staleTime: Infinity,
+    })
+    const stop = observer.subscribe(() => {})
+    const bridge = createRealtimeInvalidator(client)
+    try {
+      expect(client.getQueryData(key)).toEqual([{ id: 'reminder-a', sentAt: null }])
+      sentAt = '2026-10-12T05:20:00.000Z'
+      bridge.receive('inbox.notification.created')
+      await vi.waitFor(() =>
+        expect(client.getQueryData(key)).toEqual([{ id: 'reminder-a', sentAt }]),
+      )
+      expect(read).toHaveBeenCalledTimes(2)
+    } finally {
+      bridge.dispose()
+      stop()
+      client.clear()
+    }
+  })
   it('catches up unprotected reads immediately after reconnect and protected reads after the failed write settles', async () => {
     const client = new QueryClient({
       defaultOptions: { queries: { staleTime: Infinity, retry: false } },

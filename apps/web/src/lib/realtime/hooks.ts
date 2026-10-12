@@ -214,7 +214,14 @@ const INVALIDATIONS: ReadonlyArray<{
     keys: [['departments'], ['people']],
   },
   { match: /^realtime\.canvas\./, keys: [['realtime', 'canvas-shares']] },
-  { match: /^inbox\.notification\./, keys: [['inbox', 'notifications']] },
+  // A personal reminder's delivery also changes its Sent chip on an already-open card.
+  {
+    match: /^inbox\.notification\./,
+    keys: [
+      ['inbox', 'notifications'],
+      ['work', 'reminders'],
+    ],
+  },
 ]
 
 /** Keep live updates received during optimistic writes and refresh after the last write settles.

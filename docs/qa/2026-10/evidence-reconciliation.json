@@ -1,6 +1,6 @@
 {
-  "exactRecordsApplied": 355,
-  "stateBindingsApplied": 716,
+  "exactRecordsApplied": 374,
+  "stateBindingsApplied": 746,
   "issues": [],
   "owners": [
     "event_regressions",
@@ -16,7 +16,10 @@
     "root-shared-recovery",
     "event_regressions-goals",
     "knowledge_nested-work",
-    "event_regressions-events-nested"
+    "event_regressions-events-nested",
+    "knowledge_nested-invitation-password",
+    "close_decision",
+    "work-workers"
   ],
   "workflowEntries": [
     {
@@ -35,14 +38,8 @@
         "failed create with retained draft",
         "successful persisted create/deep link"
       ],
-      "roles": [
-        "head"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "browserEnvironment": {
         "locale": "en",
         "theme": "light",
@@ -65,10 +62,7 @@
     {
       "owner": "event_regressions",
       "source": "apps/web/src/features/events/components/rsvp-panel.tsx",
-      "controls": [
-        "yes/no RSVP",
-        "Update RSVP"
-      ],
+      "controls": ["yes/no RSVP", "Update RSVP"],
       "states": [
         "saved answer",
         "updated answer",
@@ -76,15 +70,8 @@
         "capacity waitlist/promotion",
         "independent account view"
       ],
-      "roles": [
-        "member",
-        "head"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member", "head"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "browserEnvironment": {
         "locale": "en",
         "theme": "light",
@@ -127,14 +114,8 @@
         "due-date skip and priority apply",
         "checklist audit/outbox"
       ],
-      "roles": [
-        "head"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "transitionEnvironment": {
         "locale": "en",
         "theme": "light"
@@ -171,16 +152,8 @@
         "superadmin no-lens guidance",
         "read-only active lens boundary"
       ],
-      "roles": [
-        "head",
-        "member",
-        "super_admin"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["head", "member", "super_admin"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "tests": [
         "apps/web/test/e2e/management-controls.qa.spec.ts",
         "apps/web/test/e2e/management-context-qa.config.ts",
@@ -283,14 +256,8 @@
         "native uppercase/space/@ refusal with zero PATCH and valid dotted/dashed username persistence",
         "observed interrupted transport and retry"
       ],
-      "roles": [
-        "member"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "browserEnvironment": {
         "locale": "en",
         "theme": "light",
@@ -332,14 +299,8 @@
         "actual prefs read interruption/retry",
         "all ten switches visible without horizontal scrolling and full reason labels in the render matrix"
       ],
-      "roles": [
-        "member"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "browserEnvironment": {
         "locale": "en",
         "theme": "light",
@@ -355,10 +316,7 @@
         "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json"
       ],
       "status": "verified-listed-states",
-      "pending": [
-        "every preference reason/failure type",
-        "external delivery"
-      ],
+      "pending": ["every preference reason/failure type", "external delivery"],
       "surfaceBinding": "not inferred"
     },
     {
@@ -378,14 +336,8 @@
         "standard too-short refusal and retained draft",
         "valid retry and reload"
       ],
-      "roles": [
-        "member"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "test": [
         "apps/web/test/e2e/settings-boundary.qa.spec.ts",
         "apps/web/test/e2e/settings-nested.qa.spec.ts"
@@ -406,11 +358,7 @@
     {
       "owner": "local_services",
       "source": "apps/web/src/features/accounts/appearance-section.tsx",
-      "controls": [
-        "Language",
-        "Appearance light",
-        "Appearance dark"
-      ],
+      "controls": ["Language", "Appearance light", "Appearance dark"],
       "states": [
         "actual selected locale/theme",
         "reload persistence",
@@ -418,24 +366,10 @@
         "768px short viewport with200% typography",
         "selected native option text fits beside its native arrow"
       ],
-      "roles": [
-        "member"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
-      "locales": [
-        "en",
-        "ru",
-        "uz-Latn",
-        "uz-Cyrl"
-      ],
-      "themes": [
-        "light",
-        "dark"
-      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
+      "locales": ["en", "ru", "uz-Latn", "uz-Cyrl"],
+      "themes": ["light", "dark"],
       "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
       "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
       "status": "verified-listed-render-and-selection-states",
@@ -450,25 +384,17 @@
     {
       "owner": "local_services",
       "source": "apps/web/src/features/accounts/settings-navigation.tsx",
-      "controls": [
-        "Profile settings",
-        "Telegram",
-        "Notification preferences"
-      ],
+      "controls": ["Profile settings", "Telegram", "Notification preferences"],
       "states": [
         "actual route transitions",
         "translated current-page navigation",
         "narrow/enlarged wrapping"
       ],
-      "roles": [
-        "member"
-      ],
+      "roles": ["member"],
       "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
       "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
       "status": "verified-listed-render-and-route-states",
-      "pending": [
-        "all keyboard route/focus restoration combinations"
-      ],
+      "pending": ["all keyboard route/focus restoration combinations"],
       "surfaceBinding": "not inferred"
     },
     {
@@ -485,14 +411,8 @@
         "actual interrupted GET then successful retry",
         "translated narrow/enlarged default state"
       ],
-      "roles": [
-        "member"
-      ],
-      "browsers": [
-        "chromium",
-        "firefox",
-        "webkit"
-      ],
+      "roles": ["member"],
+      "browsers": ["chromium", "firefox", "webkit"],
       "test": "apps/web/test/e2e/settings-nested.qa.spec.ts",
       "report": "artifacts/qa/2026-10/settings/final-responsive-thirty-three/results.json",
       "status": "verified-listed-read-refusal-and-render-states",
@@ -507,12 +427,8 @@
     {
       "owner": "event_regressions-calendar-fields",
       "source": "apps/web/src/features/calendar/components/feeds-panel.tsx",
-      "controls": [
-        "subscription cap"
-      ],
-      "states": [
-        "concurrent last-slot acceptance/refusal"
-      ],
+      "controls": ["subscription cap"],
+      "states": ["concurrent last-slot acceptance/refusal"],
       "status": "verified-listed-states",
       "evidenceId": "cap",
       "surfaceBinding": "not inferred"

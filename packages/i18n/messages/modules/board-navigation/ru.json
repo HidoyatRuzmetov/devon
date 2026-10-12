@@ -1,0 +1,14 @@
+{
+  "work": {
+    "board": {
+      "navigationLabel": "Навигация по доске",
+      "regionLabel": "Доска сотрудников",
+      "jumpToPerson": "Перейти к сотруднику",
+      "searchPeople": "Найти сотрудника…",
+      "noPeople": "Сотрудник не найден",
+      "myColumn": "Моя колонка",
+      "previousColumns": "Предыдущие колонки",
+      "nextColumns": "Следующие колонки"
+    }
+  }
+}

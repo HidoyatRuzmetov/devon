@@ -60,6 +60,46 @@ describe('POST /api/v1/auth/login', () => {
 })
 
 describe('cookie replay after logout (AC-13)', () => {
+  it('a failed background activity refresh preserves reads and still enforces revocation', async () => {
+    const state = createFakeState()
+    const user = await seedUser(state, { login: 'activity-refresh', password: PASSWORD })
+    const { app, deps } = await buildTestApp(state)
+    try {
+      const login = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        payload: { login: user.login, password: PASSWORD },
+      })
+      const cookies = parseSetCookies(login.headers['set-cookie'])
+      const cookie = cookieHeader(cookies)
+      let touches = 0
+      // Use an actual rejecting promise: Vitest spies observe promise settlement themselves and
+      // would hide an otherwise unhandled rejection from this background operation.
+      deps.touchSession = async () => {
+        touches += 1
+        throw new Error('Database pool unavailable')
+      }
+      for (let i = 0; i < 2; i += 1) {
+        const read = await app.inject({ method: 'GET', url: '/api/v1/me', headers: { cookie } })
+        expect(read.statusCode).toBe(200)
+        expect(read.json().user.id).toBe(user.id)
+        // Flush the real fire-and-forget promise: an unhandled rejection fails this regression.
+        await new Promise<void>((resolve) => setImmediate(resolve))
+      }
+      expect(touches).toBe(2)
+      const logout = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/logout',
+        headers: { cookie, 'x-csrf-token': cookies['devon_csrf']! },
+      })
+      expect(logout.statusCode).toBe(204)
+      const revoked = await app.inject({ method: 'GET', url: '/api/v1/me', headers: { cookie } })
+      expect(revoked.statusCode).toBe(401)
+    } finally {
+      await app.close()
+    }
+  })
+
   it('a captured session cookie authenticates GET /me before logout and gets 401 after', async () => {
     const state = createFakeState()
     const user = await seedUser(state, { login: 'aziz', password: PASSWORD })

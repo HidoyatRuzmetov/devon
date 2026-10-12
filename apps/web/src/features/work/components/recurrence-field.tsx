@@ -47,9 +47,10 @@ export const DEFAULT_RECURRENCE: RecurrenceRule = {
 export interface RecurrenceFieldProps {
   value: RecurrenceRule | null
   onCommit: (rule: RecurrenceRule | null) => void | Promise<void>
-  /** The card's own due date -- the preview counts the next occurrence from it, exactly as the job
-   * does, so "keyingi: 19.09.2026" on screen is the date that will actually be created. */
+  /** Scheduled repeats count from the card's own due date. */
   anchorIso: string | null
+  /** After-done repeats count from actual completion. An unfinished card has no fixed next date. */
+  completionIso?: string | null
   disabled?: boolean
 }
 
@@ -57,6 +58,7 @@ export function RecurrenceField({
   value,
   onCommit,
   anchorIso,
+  completionIso = null,
   disabled: readOnly = false,
 }: RecurrenceFieldProps): React.JSX.Element {
   const t = useT()
@@ -110,10 +112,12 @@ export function RecurrenceField({
     if (draft === null) return null
     const parsed = recurrenceRuleSchema.safeParse(draft)
     if (!parsed.success) return null
-    const from = anchorIso ? new Date(anchorIso) : new Date()
+    const sourceIso = parsed.data.mode === 'after_done' ? completionIso : anchorIso
+    if (parsed.data.mode === 'after_done' && !sourceIso) return null
+    const from = sourceIso ? new Date(sourceIso) : new Date()
     if (Number.isNaN(from.getTime())) return null
     return nextOccurrence(parsed.data, from)
-  }, [draft, anchorIso])
+  }, [draft, anchorIso, completionIso])
 
   if (!editing) {
     return (
@@ -302,7 +306,11 @@ export function RecurrenceField({
       <p aria-live="polite" className="text-caption text-muted-foreground">
         {preview
           ? t('work.recurrence.nextPreview', { date: formatDate(preview, locale) })
-          : t('work.recurrence.noNext')}
+          : t(
+              rule.mode === 'after_done' && !completionIso
+                ? 'work.recurrence.mode.afterDone'
+                : 'work.recurrence.noNext',
+            )}
       </p>
 
       <div className="flex flex-wrap gap-2">

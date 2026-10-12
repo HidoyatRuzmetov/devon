@@ -18,6 +18,7 @@ import { bootstrapFlowDatabase } from './flow-db.js'
 import { spawnManaged, waitForHttp, type ManagedProcess } from './flow-process.js'
 import { localFlowEnvironment } from './flow-safety.js'
 import { startFlowServices, type FlowServices } from './flow-services.js'
+import { startFlowScanner } from './flow-scanner.js'
 import { safeFlowDiagnostics } from './flow-diagnostics.js'
 import {
   FLOW_API_BASE_URL,
@@ -44,6 +45,7 @@ function extractSetupToken(lines: readonly string[]): string | null {
 
 let apiProcess: ManagedProcess | null = null
 let services: FlowServices | null = null
+let scanner: Awaited<ReturnType<typeof startFlowScanner>> | null = null
 
 export default async function globalSetup(): Promise<() => Promise<void>> {
   await mkdir(FLOW_TMP_DIR, { recursive: true })
@@ -54,6 +56,11 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
   services = await startFlowServices()
 
   try {
+    scanner = await startFlowScanner(
+      services.env['CENTRIFUGO_API_URL']
+        ? Number(new URL(services.env['CENTRIFUGO_API_URL']).port)
+        : undefined,
+    )
     console.log(
       `[flow global-setup] starting apps/api on ${FLOW_API_BASE_URL} (log: ${FLOW_API_LOG_FILE})`,
     )
@@ -61,27 +68,32 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     apiProcess = spawnManaged('pnpm', ['--filter', '@devon/api', 'exec', 'tsx', 'src/server.ts'], {
       cwd: REPO_ROOT,
       logFile: FLOW_API_LOG_FILE,
-      env: localFlowEnvironment(
-        process.env,
-        {
-          API_PORT: String(FLOW_API_PORT),
-          API_HOST: '127.0.0.1',
-          DATABASE_URL: db.appUrl,
-          CSRF_SECRET: randomBytes(24).toString('base64url'),
-          DEVON_PUBLIC_URL: FLOW_WEB_BASE_URL,
-          NODE_ENV: 'development',
-          ...services.env,
-          FLOW_NETWORK_GUARD: '1',
-          FLOW_ALLOWED_TCP_PORTS: JSON.stringify([
-            FLOW_DB_PORT,
-            ...(services.env['CENTRIFUGO_API_URL']
-              ? [Number(new URL(services.env['CENTRIFUGO_API_URL']).port)]
-              : []),
-          ]),
-          NODE_OPTIONS: `--import=${pathToFileURL(join(import.meta.dirname, 'flow-network-guard.mjs')).href}`,
-        },
-        join(FLOW_TMP_DIR, 'storage'),
-      ),
+      env: {
+        ...localFlowEnvironment(
+          process.env,
+          {
+            API_PORT: String(FLOW_API_PORT),
+            API_HOST: '127.0.0.1',
+            DATABASE_URL: db.appUrl,
+            CSRF_SECRET: randomBytes(24).toString('base64url'),
+            DEVON_PUBLIC_URL: FLOW_WEB_BASE_URL,
+            NODE_ENV: 'development',
+            ...services.env,
+            FLOW_NETWORK_GUARD: '1',
+            FLOW_ALLOWED_TCP_PORTS: JSON.stringify([
+              FLOW_DB_PORT,
+              ...(scanner.port ? [scanner.port] : []),
+              ...(services.env['CENTRIFUGO_API_URL']
+                ? [Number(new URL(services.env['CENTRIFUGO_API_URL']).port)]
+                : []),
+            ]),
+            NODE_OPTIONS: `--import=${pathToFileURL(join(import.meta.dirname, 'flow-network-guard.mjs')).href}`,
+          },
+          join(FLOW_TMP_DIR, 'storage'),
+        ),
+        // Only the owned, ready scanner above may override the sanitizer's default scanning-off.
+        ...scanner.env,
+      },
     })
 
     const up = await waitForHttp(`${FLOW_API_BASE_URL}/healthz`, 90_000)
@@ -144,12 +156,14 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
     // Playwright cannot call a teardown that globalSetup never returned. Stop our own child on
     // startup/bootstrap failure, too, so retries cannot attach to a stale API/database connection.
     await apiProcess?.stop()
+    await scanner?.stop()
     await services.stop()
     throw error
   }
 
   return async function globalTeardown() {
     await apiProcess?.stop()
+    await scanner?.stop()
     await services?.stop()
   }
 }

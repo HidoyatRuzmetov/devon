@@ -1,0 +1,72 @@
+{
+  "reviewedAt": "2026-10-12",
+  "method": "Opened native PNG pixels with view_image; no optional viewport or text-size matrix.",
+  "captures": [
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/production-before.png",
+      "review": "Actual read-only production board has an abrupt right column cut, long card columns and buried Add card."
+    },
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/development/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/board-navigation-start.png",
+      "review": "1366x900 initial board has compact member navigation and visible per-column quick add; the right edge is faded."
+    },
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/development/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/sticky-quick-add.png",
+      "review": "After native vertical wheel scrolling the member headers and quick-add inputs remain visible above the cards."
+    },
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/development/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/own-column-created.png",
+      "review": "My column reveals the distant member, its actual created card and quick-add input; left fade and boundary navigation are visible."
+    },
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/development/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-chromium/phone-own-column.png",
+      "review": "390x844 touch-emulated view places the complete own-column quick-add field within the board viewport, with compact wrapped toolbar."
+    },
+    {
+      "path": "artifacts/qa/2026-10/board-navigation/development/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-chromium/phone-person-search.png",
+      "review": "Searching from Mine restores Everyone and positions the chosen colleague, including the visible quick-add input."
+    }
+  ],
+  "compiledReceipt": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+  "reviewedCounts": {
+    "production": 1,
+    "development": 5,
+    "compiled": 15
+  },
+  "compiledCaptures": [
+    {
+      "engine": "chromium",
+      "captures": [
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/board-navigation-start.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/sticky-quick-add.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-chromium/own-column-created.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-chromium/phone-own-column.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-chromium/phone-person-search.png"
+      ],
+      "review": "Opened all five native captures. The desktop toolbar fits its ordinary viewport, edge fades indicate additional columns, quick-add remains visible after native wheel scrolling, own-column creation is visible, and both normal phone destinations keep quick add within the board without page overflow."
+    },
+    {
+      "engine": "firefox",
+      "captures": [
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-firefox/board-navigation-start.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-firefox/sticky-quick-add.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-firefox/own-column-created.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-firefox/phone-own-column.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-firefox/phone-person-search.png"
+      ],
+      "review": "Opened all five native captures. The desktop toolbar fits its ordinary viewport, edge fades indicate additional columns, quick-add remains visible after native wheel scrolling, own-column creation is visible, and both normal phone destinations keep quick add within the board without page overflow."
+    },
+    {
+      "engine": "webkit",
+      "captures": [
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-webkit/board-navigation-start.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-webkit/sticky-quick-add.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-f31cb-ive-card-moves-retain-order-webkit/own-column-created.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-webkit/phone-own-column.png",
+        "artifacts/qa/2026-10/board-navigation/compiled/board-navigation.qa-normal-42a67-s-native-keyboard-scrolling-webkit/phone-person-search.png"
+      ],
+      "review": "Opened all five native captures. The desktop toolbar fits its ordinary viewport, edge fades indicate additional columns, quick-add remains visible after native wheel scrolling, own-column creation is visible, and both normal phone destinations keep quick add within the board without page overflow."
+    }
+  ],
+  "limitations": "Only listed captures and their associated actual journeys are claimed. Physical swipe devices, every filter, all locales, both themes and external integrations are not established."
+}

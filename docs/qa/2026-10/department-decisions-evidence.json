@@ -1,0 +1,440 @@
+{
+  "schemaVersion": 1,
+  "owner": "close_decision",
+  "date": "2026-10-12",
+  "scope": "One ordinary requester and super-admin department request/reject/resubmit/approve journey; two real PostgreSQL persistence regressions. No whole-platform or all-environment claim.",
+  "boundaries": {
+    "database": "devon_flow_e2e_dept_decision",
+    "apiPort": 49011,
+    "webPort": 49012,
+    "locale": "en",
+    "theme": "light",
+    "textScale": 1,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "roles": ["requester", "super_admin", "approved department head"],
+    "apiMode": "actual development source and PostgreSQL",
+    "realtime": false,
+    "seedDemo": false,
+    "scanner": false,
+    "externalCalls": "refused by local API/browser transport guards",
+    "productionMutations": false
+  },
+  "sourceHashes": {
+    "apps/api/src/modules/departments/repo.ts": "659fc6d135feb6221079d6610bc48107709ec6386bdfdd0100c8393a3a775b72",
+    "apps/api/src/modules/departments/unit-colour.ts": "90a3d54367c5e3973d3d2be2cadcf555a0b060129d4274881f33e88e3bdd97bb",
+    "apps/api/test/integration/department-request-units.test.ts": "e86be10f3430071c888ad4b585f4415a1a08b8d8dc431ec3b79703eccfb71912",
+    "apps/web/src/features/departments/approval-queue-screen.tsx": "a4e00683a9c02586c70558384a1a854f6a56b3c8a86e74db3aa60f3d9ab8cb2c",
+    "apps/web/src/features/departments/components/pending-request-view.tsx": "def93309bdd46af860c602b842702a027af95d806d21bc4f626a5e063b18ebd6",
+    "apps/web/test/e2e/platform-department-decision.qa.spec.ts": "933d0132f23291391f058ca945e545efb4a35668b94f4192b571fafdee191263",
+    "packages/i18n/messages/modules/departments/en.json": "1fec2d869d73d0427fb117b1fcded659a63005e76a2e82295559482de16d3fad",
+    "packages/i18n/messages/modules/departments/ru.json": "ac132a1a99da08508108eeafa86a1b10cc3f61c74e47abaef62aec278caf0b99",
+    "packages/i18n/messages/modules/departments/uz-Latn.json": "82b0deb147cfc2fdb76a3dbc2d25445e35f49068446d028d6bb529f8d306ee50",
+    "packages/i18n/messages/modules/departments/uz-Cyrl.json": "285a494e808b6e88f271ef3f95941d097c4034fe45a3efa7990c6d4b4925d3ae"
+  },
+  "evidence": {
+    "ordinary-decision": {
+      "artifact": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/summary.json",
+      "browsers": ["chromium", "firefox", "webkit"],
+      "locale": "en",
+      "theme": "light",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "scope": "Only the named normal requester/admin reject-close-reopen-cancel-reject-resubmit-approve journey, actual local API and independent persisted reads. No other faults, states, roles or environments."
+    }
+  },
+  "records": [
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "IconButton",
+        "labelIncludes": "structure.units.chart.closePanel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Visible Close discards the current rejection draft, then the same request reopens normally.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "textarea"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only normal rejection-reason typing and cleared value after visible Close/reopen.",
+      "states": {
+        "populated": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "departments.approvalQueue.rejectCancel"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only idle rejection Cancel returns to choices with no decision write.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "departments.approvalQueue.rejectSubmit"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual rejection204 once, independent requester reason and reload.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "departments.approvalQueue.approve"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Actual approval200 once, independent head/units persistence and department reload.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "Button",
+        "childSummaryIncludes": "departments.approvalQueue.reject')"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Only normal Reject opens the reason form.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "TabsTrigger",
+        "childSummaryIncludes": "departments.approvalQueue.filterAll"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "All shows the rejected request after the real decision.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/approval-queue-screen.tsx",
+        "component": "ApprovalQueueScreen",
+        "kind": "TabsTrigger",
+        "childSummaryIncludes": "departments.approvalQueue.filterPending"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Pending shows the actual revised pending request.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "selected": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    },
+    {
+      "match": {
+        "source": "apps/web/src/features/departments/components/pending-request-view.tsx",
+        "component": "PendingRequestView",
+        "kind": "Button",
+        "childSummaryIncludes": "departments.pending.createAnother"
+      },
+      "expectedMatches": 1,
+      "scopeNote": "Rejected requester starts another request, gets an empty name field and submits a new distinct request.",
+      "states": {
+        "active": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        },
+        "success": {
+          "status": "verified",
+          "evidenceId": "ordinary-decision",
+          "pixelReviewed": false,
+          "pixelReviewedArtifacts": []
+        }
+      }
+    }
+  ],
+  "defects": [
+    {
+      "issue": "Visible Close retained rejection mode and abandoned reason.",
+      "baseline": {
+        "report": "artifacts/qa/2026-10/results/platform/dept-decision-baseline/summary.json",
+        "stats": {
+          "startTime": "2026-10-12T05:15:00.272Z",
+          "duration": 81800.675,
+          "expected": 0,
+          "skipped": 0,
+          "unexpected": 1,
+          "flaky": 0
+        },
+        "cases": [
+          {
+            "browser": "chromium",
+            "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+            "status": "failed",
+            "durationMs": 20277,
+            "retry": 0
+          }
+        ]
+      },
+      "beforePixelOpened": "artifacts/qa/2026-10/results/platform/dept-decision-baseline/platform-department-decisi-573c6--and-approved-with-its-unit-chromium/test-failed-1.png"
+    },
+    {
+      "issue": "Approval created the department/head but discarded requested units.",
+      "baseline": {
+        "report": "artifacts/qa/2026-10/results/platform/dept-decision-dev-corrected/summary.json",
+        "stats": {
+          "startTime": "2026-10-12T05:30:41.216Z",
+          "duration": 124515.64199999999,
+          "expected": 0,
+          "skipped": 0,
+          "unexpected": 3,
+          "flaky": 0
+        },
+        "cases": [
+          {
+            "browser": "chromium",
+            "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+            "status": "failed",
+            "durationMs": 22700,
+            "retry": 0
+          },
+          {
+            "browser": "firefox",
+            "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+            "status": "failed",
+            "durationMs": 15022,
+            "retry": 0
+          },
+          {
+            "browser": "webkit",
+            "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+            "status": "failed",
+            "durationMs": 16899,
+            "retry": 0
+          }
+        ]
+      },
+      "expectedActual": "Independent units GET expected submitted Reporting unit, actual units=[] in all three engines."
+    },
+    {
+      "issue": "Rejected request retained pending-review title and promise.",
+      "beforePixelOpened": "artifacts/qa/2026-10/results/platform/dept-decision-dev-units-fixed/platform-department-decisi-573c6--and-approved-with-its-unit-chromium/requester-rejection.png",
+      "finalCopyAssertion": "Rejected heading visible and upcoming-review promise absent after requester reload."
+    }
+  ],
+  "gates": {
+    "developmentBeforeFinalCopy": {
+      "report": "artifacts/qa/2026-10/results/platform/dept-decision-dev-units-fixed/summary.json",
+      "stats": {
+        "startTime": "2026-10-12T05:38:13.364Z",
+        "duration": 156914.592,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "browser": "chromium",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 28470,
+          "retry": 0
+        },
+        {
+          "browser": "firefox",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 27233,
+          "retry": 0
+        },
+        {
+          "browser": "webkit",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 31612,
+          "retry": 0
+        }
+      ]
+    },
+    "realPostgres": {
+      "command": "pnpm --filter @devon/api exec vitest run --config test/vitest.config.ts test/integration/department-request-units.test.ts",
+      "passed": 2,
+      "failed": 0,
+      "durationMs": 18640,
+      "evidence": "Observed successful command output, no saved raw reporter file.",
+      "assertions": [
+        "ordered coloured/uncoloured unit names and paths",
+        "head membership",
+        "duplicate approval409 and unchanged unit/audit/outbox counts",
+        "empty-unit request approval"
+      ]
+    },
+    "apiTypecheck": "passed after final bulk-insert repair",
+    "scopedApiLint": "passed after final bulk-insert repair",
+    "scopedWebLint": "passed after final status-copy repair",
+    "compiledWeb": {
+      "report": "artifacts/qa/2026-10/results/platform/dept-decision-compiled-final/summary.json",
+      "stats": {
+        "startTime": "2026-10-12T05:52:33.572Z",
+        "duration": 202930.64599999998,
+        "expected": 3,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "cases": [
+        {
+          "browser": "chromium",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 23726,
+          "retry": 0
+        },
+        {
+          "browser": "firefox",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 22338,
+          "retry": 0
+        },
+        {
+          "browser": "webkit",
+          "title": "@qa admin request sheet discards closed rejection drafts and rejection can be resubmitted and approved with its unit",
+          "status": "passed",
+          "durationMs": 22850,
+          "retry": 0
+        }
+      ],
+      "productionReceipt": {
+        "startedAt": "2026-10-12T05:50:50.671Z",
+        "finishedAt": "2026-10-12T05:51:12.695Z",
+        "inputsBefore": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+        "inputsAfter": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+        "stable": true,
+        "reactRuntime": [
+          {
+            "asset": "BarChart-LL5InVxy.js",
+            "source": "../../../../node_modules/.pnpm/react-is@17.0.2/node_modules/react-is/cjs/react-is.production.min.js"
+          },
+          {
+            "asset": "compiler-runtime-C9EW-Cth.js",
+            "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react-compiler-runtime.production.js"
+          },
+          {
+            "asset": "index-C_3XXNfL.js",
+            "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react.production.js"
+          },
+          {
+            "asset": "index-C_3XXNfL.js",
+            "source": "../../../../node_modules/.pnpm/react-dom@19.2.8_react@19.2.8/node_modules/react-dom/cjs/react-dom.production.js"
+          },
+          {
+            "asset": "index-C_3XXNfL.js",
+            "source": "../../../../node_modules/.pnpm/react-dom@19.2.8_react@19.2.8/node_modules/react-dom/cjs/react-dom-client.production.js"
+          },
+          {
+            "asset": "index-C_3XXNfL.js",
+            "source": "../../../../node_modules/.pnpm/react@19.2.8/node_modules/react/cjs/react-jsx-runtime.production.js"
+          }
+        ],
+        "forcedStateBuildFlag": false
+      }
+    }
+  },
+  "qualifications": [
+    "Compiled replay uses genuine compiled web with actual development API; no compiled API image claim.",
+    "Development browser pass predates final status-copy change and its heading assertion.",
+    "Request hex colours retain nearest existing categorical hue, not exact arbitrary hex.",
+    "Historical locator/duplicate-name and empty-JSON fixture failures do not establish additional product defects.",
+    "No boundary/concurrency/locale/theme/keyboard matrix or production changes in this stream.",
+    "Old already-approved departments are not retrospectively repopulated with units, which could resurrect deliberately deleted units."
+  ]
+}

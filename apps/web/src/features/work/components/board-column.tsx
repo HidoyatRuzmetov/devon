@@ -166,7 +166,10 @@ export function BoardColumn({
 
   if (collapsed) {
     return (
-      <div className="flex w-11 shrink-0 flex-col items-center gap-2 rounded-md border border-border bg-card py-2">
+      <div
+        data-board-column={columnKey}
+        className="flex w-11 shrink-0 flex-col items-center gap-2 rounded-md border border-border bg-card py-2"
+      >
         <IconButton aria-label={t('work.board.expandColumn')} onClick={() => setCollapsed(false)}>
           <ChevronsLeftRight className="size-4" />
         </IconButton>
@@ -199,68 +202,75 @@ export function BoardColumn({
   const compact = density === 'compact'
 
   return (
-    // SEV2 #18: `h-fit`, not a stretched flex child -- the column is as tall as its cards and the
-    // board row is the one thing that scrolls.
+    // Columns stretch with the board's content canvas, so every sticky member/add header keeps its
+    // full scrolling range even when a different colleague has the longest card list.
     <div
       ref={columnRef}
-      className={cn('flex h-fit shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}
+      data-board-column={columnKey}
+      className={cn('flex shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}
     >
       <div
         ref={headerRef}
         className={cn(
-          'sticky top-0 z-10 flex items-center gap-2 rounded-md bg-surface-2 px-2 shadow-1',
-          compact ? 'py-1' : 'py-2',
+          'sticky top-0 z-10 flex flex-col gap-2 rounded-md bg-surface-2 px-2 pb-2 shadow-1',
+          compact ? 'pt-1' : 'pt-2',
         )}
       >
-        <span
-          className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(userId ?? 'unassigned'))}
-          aria-hidden="true"
-        />
-        {member ? (
-          <>
-            <Avatar
-              size="sm"
-              src={null}
-              alt={fullName(member)}
-              initials={initialsFromName(member.givenName, member.familyName)}
-              hueSeed={member.userId}
-            />
-            <div className="min-w-0">
-              <p className="truncate text-small font-semibold text-foreground">
-                {fullName(member)}
-              </p>
-              {/* The job title is the first thing to go at compact density -- the name and the two
+        <div className="flex items-center gap-2">
+          <span
+            className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(userId ?? 'unassigned'))}
+            aria-hidden="true"
+          />
+          {member ? (
+            <>
+              <Avatar
+                size="sm"
+                src={null}
+                alt={fullName(member)}
+                initials={initialsFromName(member.givenName, member.familyName)}
+                hueSeed={member.userId}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-small font-semibold text-foreground">
+                  {fullName(member)}
+                </p>
+                {/* The job title is the first thing to go at compact density -- the name and the two
                   counts are what a head is scanning for. */}
-              {member.title && !compact ? (
-                <p className="truncate text-caption text-muted-foreground">{member.title}</p>
-              ) : null}
-            </div>
-          </>
-        ) : (
-          <p className="text-small font-semibold text-muted-foreground">
-            {t('work.board.unassigned')}
-          </p>
-        )}
-        {/* The two counts are the direct consequence of the card somebody just dragged in or ticked
+                {member.title && !compact ? (
+                  <p className="truncate text-caption text-muted-foreground">{member.title}</p>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <p className="text-small font-semibold text-muted-foreground">
+              {t('work.board.unassigned')}
+            </p>
+          )}
+          {/* The two counts are the direct consequence of the card somebody just dragged in or ticked
             off, so they tick rather than cut (DESIGN.md §10 "Counters"). Tabular figures come with
             `CountFlow`, so 9 -> 10 never nudges the collapse button. */}
-        <span
-          className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
-          title={t('work.board.loadCount', { count: cards.length })}
-        >
-          <CountFlow value={cards.length} locale={locale} />
-        </span>
-        {overdueCount > 0 ? (
           <span
-            className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption text-destructive"
-            title={t('work.risk.overdue')}
+            className="ml-auto shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-caption text-muted-foreground"
+            title={t('work.board.loadCount', { count: cards.length })}
           >
-            <CountFlow value={overdueCount} locale={locale} />
+            <CountFlow value={cards.length} locale={locale} />
           </span>
-        ) : null}
-        <IconButton aria-label={t('work.board.collapseColumn')} onClick={() => setCollapsed(true)}>
-          <ChevronsRightLeft className="size-4" />
-        </IconButton>
+          {overdueCount > 0 ? (
+            <span
+              className="shrink-0 rounded-full bg-destructive/15 px-1.5 py-0.5 text-caption text-destructive"
+              title={t('work.risk.overdue')}
+            >
+              <CountFlow value={overdueCount} locale={locale} />
+            </span>
+          ) : null}
+          <IconButton
+            aria-label={t('work.board.collapseColumn')}
+            onClick={() => setCollapsed(true)}
+          >
+            <ChevronsRightLeft className="size-4" />
+          </IconButton>
+        </div>
+        <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
       </div>
 
       {/* v1.1 critique SEV2 #18: "the board still repeats a project card in the first slot of every
@@ -289,12 +299,8 @@ export function BoardColumn({
           ))}
         </div>
       ) : null}
-      {/* SEV2 #18: "the board still nests three scroll regions (page, horizontal board, per-column
-          vertical)". This list used to be the third. It is now a plain block: the board row above is
-          a single two-axis scroller, so a column simply grows and the one scroller moves in both
-          directions. The column *header* is `sticky top-0` inside that scroller, so scrolling down a
-          long column never loses whose column it is -- which was the only thing the per-column
-          scroller was buying. */}
+      {/* One shared two-axis region owns scrolling. Card lists remain plain blocks; the sticky
+          member and quick-add header gives every column the same direct action at any depth. */}
       <div
         ref={listRef}
         data-dnd-column={columnKey}
@@ -339,10 +345,6 @@ export function BoardColumn({
             </p>
           ) : null}
         </div>
-      </div>
-      {/* The add-card row as the column's footer: outside the scrolling list, always in view. */}
-      <div className="px-1">
-        <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
       </div>
     </div>
   )

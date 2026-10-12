@@ -46,6 +46,8 @@ import { parseFeatureOutput, type BoardRiskDigestOutput } from '../../ai/outputs
 import type { RunMeta } from '../../ai/types.js'
 import { SparkleButton } from '@devon/ui'
 import { BoardColumn } from './board-column.js'
+import { BoardNavigation } from './board-navigation.js'
+import './board-scroller.css'
 import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { NewCardDialog } from './new-card-dialog.js'
@@ -126,20 +128,33 @@ function BoardScreenInner() {
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
   const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
-  const [showRightFade, setShowRightFade] = React.useState(false)
+  const edgeObserverRef = React.useRef<ResizeObserver | null>(null)
+  const [edges, setEdges] = React.useState({ left: false, right: false })
   const updateEdgeFade = React.useCallback((e: React.UIEvent<HTMLDivElement> | undefined) => {
     const el = e ? e.currentTarget : scrollerElRef.current
     if (!el) return
-    setShowRightFade(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+    const left = el.scrollLeft > 1
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+    setEdges((previous) =>
+      previous.left === left && previous.right === right ? previous : { left, right },
+    )
   }, [])
   const setScrollerRefs = React.useCallback(
     (el: HTMLDivElement | null) => {
+      edgeObserverRef.current?.disconnect()
+      edgeObserverRef.current = null
       scrollerElRef.current = el
       heightRef(el)
       // Re-check once the columns have actually rendered/resized (member count, filter results),
       // not just on scroll -- a department that grows past the visible width should show the fade
       // immediately, before anyone has touched the scrollbar.
-      if (el) requestAnimationFrame(() => updateEdgeFade(undefined))
+      if (el) {
+        const observer = new ResizeObserver(() => updateEdgeFade(undefined))
+        observer.observe(el)
+        if (el.firstElementChild) observer.observe(el.firstElementChild)
+        edgeObserverRef.current = observer
+        requestAnimationFrame(() => updateEdgeFade(undefined))
+      }
     },
     [heightRef, updateEdgeFade],
   )
@@ -396,6 +411,15 @@ function BoardScreenInner() {
             {department?.name ?? t('work.board.department')}
           </h2>
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            <BoardNavigation
+              scroller={scrollerElRef}
+              members={board.members}
+              currentUserId={user?.id}
+              canScrollLeft={edges.left}
+              canScrollRight={edges.right}
+              layoutKey={`${scope}:${density}:${expandAllNonce}`}
+              showEveryone={() => setScope('all')}
+            />
             {/* SPEC 3.3: a visible segmented control, not a secondary pill -- "Hammasi" is the
                 default and both options are readable before either is chosen. Hidden entirely for a
                 viewer with no column of their own, for whom "Mening" would be an empty board. */}
@@ -455,64 +479,87 @@ function BoardScreenInner() {
             ) : null}
           </div>
         </div>
-        <div
-          ref={setScrollerRefs}
-          onScroll={updateEdgeFade}
-          // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
-          // an inline `height` for sizing along the flex container's main axis, so as long as this
-          // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
-          // to its content size regardless -- found live, in the browser, the whole reason this file
-          // has a viewport-bounded-height hook instead of a CSS-only fix. `min-h-80` is only the
-          // instant-before-first-measurement fallback (`useViewportBoundedHeight`'s own floor).
-          // SEV2 #18: `overflow-auto`, not `overflow-x-auto overflow-y-hidden`. One scroller that
-          // moves in both directions replaces the per-column vertical scrollers, so the board has
-          // two scroll regions (the page, and this) instead of three. Each column's header is
-          // `sticky top-0` inside it, so scrolling down never loses whose column you are in.
-          className="flex flex-none items-start gap-4 overflow-auto pb-2 min-h-80"
-          style={{
-            ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
-            // A five-person department already overflows the board horizontally with no scrollbar
-            // affordance visible until you try -- a right-edge fade signals "more columns" the same
-            // way the filter bar and command palette already fade their own overflow, and disappears
-            // once you've scrolled to the last column so it never looks like clipped content.
-            maskImage: showRightFade
-              ? 'linear-gradient(to right, black calc(100% - 40px), transparent)'
-              : undefined,
-            WebkitMaskImage: showRightFade
-              ? 'linear-gradient(to right, black calc(100% - 40px), transparent)'
-              : undefined,
-          }}
-        >
-          {groups.map((group) => (
-            <div
-              key={group.unitId ?? group.scope}
-              className="flex h-full min-w-0 shrink-0 flex-col gap-1.5"
-            >
-              {/* One heading per unit, printed once above its columns instead of a colour the
+        <div className="relative min-w-0">
+          <div
+            ref={setScrollerRefs}
+            onScroll={updateEdgeFade}
+            // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
+            // an inline `height` for sizing along the flex container's main axis, so as long as this
+            // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
+            // to its content size regardless -- found live, in the browser, the whole reason this file
+            // has a viewport-bounded-height hook instead of a CSS-only fix. `min-h-80` is only the
+            // instant-before-first-measurement fallback (`useViewportBoundedHeight`'s own floor).
+            // SEV2 #18: `overflow-auto`, not `overflow-x-auto overflow-y-hidden`. One scroller that
+            // moves in both directions replaces the per-column vertical scrollers, so the board has
+            // two scroll regions (the page, and this) instead of three. Each column's header is
+            // `sticky top-0` inside it, so scrolling down never loses whose column you are in.
+            role="region"
+            aria-label={t('work.board.regionLabel')}
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- This named overflow region needs focus for native arrow-key scrolling.
+            tabIndex={0}
+            className="devon-board-scroller flex-none overflow-auto pb-2 min-h-80 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            style={{
+              ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
+            }}
+          >
+            <div className="flex min-h-full w-max min-w-full items-stretch gap-4">
+              {groups.map((group) => (
+                <div
+                  key={group.unitId ?? group.scope}
+                  className="flex min-w-0 shrink-0 flex-col gap-1.5"
+                >
+                  {/* One heading per unit, printed once above its columns instead of a colour the
                   reader has to decode. A department with no units at all shows no heading. */}
-              {hasNamedGroups ? (
-                <div className="flex items-center gap-1.5 px-1">
-                  <span
-                    className={cn(
-                      'size-1.5 shrink-0 rounded-full',
-                      unitHueClass(group.unitId ?? 'unassigned'),
-                    )}
-                    aria-hidden="true"
-                  />
-                  <h3 className="truncate text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                    {group.scope === 'department'
-                      ? t('headScope.leadership')
-                      : (group.unitName ?? t('work.board.noUnit'))}
-                  </h3>
+                  {hasNamedGroups ? (
+                    <div className="flex items-center gap-1.5 px-1">
+                      <span
+                        className={cn(
+                          'size-1.5 shrink-0 rounded-full',
+                          unitHueClass(group.unitId ?? 'unassigned'),
+                        )}
+                        aria-hidden="true"
+                      />
+                      <h3 className="truncate text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+                        {group.scope === 'department'
+                          ? t('headScope.leadership')
+                          : (group.unitName ?? t('work.board.noUnit'))}
+                      </h3>
+                    </div>
+                  ) : null}
+                  <div className="flex min-h-0 flex-1 gap-4">
+                    {group.columns.map((col) => (
+                      <BoardColumn
+                        key={`${col.member.userId}:${expandAllNonce}`}
+                        member={col.member}
+                        cards={col.cards.filter(filterCard)}
+                        projects={projects.filter((p) => p.members.includes(col.member.userId))}
+                        allProjects={projects}
+                        members={board.members}
+                        labels={board.labels}
+                        filterKey={q}
+                        density={density}
+                        onOpenCard={openCardPeek}
+                        onDropped={handleDropped}
+                        onMoveTo={handleMoveTo}
+                        onCollapsedChange={handleCollapsedChange}
+                        selectedIds={selectedCardIds}
+                        onCardSelectedChange={handleCardSelectedChange}
+                        selectionActive={selectedCardIds.size > 0}
+                        rejectedCardId={rejectedCardId}
+                        onRejectionShown={clearRejection}
+                      />
+                    ))}
+                  </div>
                 </div>
-              ) : null}
-              <div className="flex min-h-0 flex-1 gap-4">
-                {group.columns.map((col) => (
+              ))}
+              <div className="flex min-w-0 shrink-0 flex-col gap-1.5">
+                {hasNamedGroups ? <div className="h-4.5" aria-hidden="true" /> : null}
+                <div className="flex min-h-0 flex-1">
                   <BoardColumn
-                    key={`${col.member.userId}:${expandAllNonce}`}
-                    member={col.member}
-                    cards={col.cards.filter(filterCard)}
-                    projects={projects.filter((p) => p.members.includes(col.member.userId))}
+                    key={`unassigned:${expandAllNonce}`}
+                    member={null}
+                    cards={board.unassigned.filter(filterCard)}
+                    projects={[]}
                     allProjects={projects}
                     members={board.members}
                     labels={board.labels}
@@ -528,35 +575,22 @@ function BoardScreenInner() {
                     rejectedCardId={rejectedCardId}
                     onRejectionShown={clearRejection}
                   />
-                ))}
+                </div>
               </div>
             </div>
-          ))}
-          <div className="flex h-full min-w-0 shrink-0 flex-col gap-1.5">
-            {hasNamedGroups ? <div className="h-4.5" aria-hidden="true" /> : null}
-            <div className="flex min-h-0 flex-1">
-              <BoardColumn
-                key={`unassigned:${expandAllNonce}`}
-                member={null}
-                cards={board.unassigned.filter(filterCard)}
-                projects={[]}
-                allProjects={projects}
-                members={board.members}
-                labels={board.labels}
-                filterKey={q}
-                density={density}
-                onOpenCard={openCardPeek}
-                onDropped={handleDropped}
-                onMoveTo={handleMoveTo}
-                onCollapsedChange={handleCollapsedChange}
-                selectedIds={selectedCardIds}
-                onCardSelectedChange={handleCardSelectedChange}
-                selectionActive={selectedCardIds.size > 0}
-                rejectedCardId={rejectedCardId}
-                onRejectionShown={clearRejection}
-              />
-            </div>
           </div>
+          {edges.left ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 left-0 z-20 w-5 bg-linear-to-r from-background to-transparent"
+            />
+          ) : null}
+          {edges.right ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 z-20 w-5 bg-linear-to-l from-background to-transparent"
+            />
+          ) : null}
         </div>
       </section>
     </div>

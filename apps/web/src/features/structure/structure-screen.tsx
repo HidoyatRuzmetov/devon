@@ -97,6 +97,7 @@ export default function StructureScreen() {
   const invalidateAll = () => {
     void queryClient.invalidateQueries({ queryKey: keys.overview })
     void queryClient.invalidateQueries({ queryKey: keys.roles })
+    void queryClient.invalidateQueries({ queryKey: keys.members })
   }
 
   const createMutation = useMutation({
@@ -338,10 +339,14 @@ export default function StructureScreen() {
         open={addParentId !== undefined}
         parentUnitId={addParentId ?? null}
         units={units}
-        onClose={() => setAddParentId(undefined)}
-        onCreate={(body) => {
-          createMutation.mutate(body)
+        pending={createMutation.isPending}
+        failed={createMutation.isError}
+        onClose={() => {
           setAddParentId(undefined)
+          createMutation.reset()
+        }}
+        onCreate={(body) => {
+          createMutation.mutate(body, { onSuccess: () => setAddParentId(undefined) })
         }}
       />
 
@@ -417,12 +422,16 @@ function AddUnitDialog({
   open,
   parentUnitId,
   units,
+  pending,
+  failed,
   onClose,
   onCreate,
 }: {
   open: boolean
   parentUnitId: string | null
   units: Unit[]
+  pending: boolean
+  failed: boolean
   onClose: () => void
   onCreate: (body: { name: string; parentUnitId: string | null }) => void
 }) {
@@ -440,13 +449,14 @@ function AddUnitDialog({
   }, [open, parentUnitId])
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
+    <Dialog open={open} onOpenChange={(next) => !next && !pending && onClose()}>
       <DialogContent title={t('structure.units.addDialog.title')}>
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="text-small text-foreground">{t('structure.units.renameLabel')}</span>
             <Input
               autoFocus
+              disabled={pending}
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => setTouched(true)}
@@ -464,6 +474,7 @@ function AddUnitDialog({
               {t('structure.units.addDialog.parentLabel')}
             </span>
             <Combobox
+              disabled={pending}
               value={parent}
               onValueChange={(v) => setParent(v || null)}
               label={t('structure.units.addDialog.parentLabel')}
@@ -476,12 +487,20 @@ function AddUnitDialog({
               ]}
             />
           </div>
+          {failed ? (
+            <p role="alert" className="text-small text-destructive">
+              {t('state.error.title')}
+            </p>
+          ) : null}
           <div className="mt-2 flex justify-end gap-2">
             <DialogClose asChild>
-              <Button variant="secondary">{t('structure.units.addDialog.cancel')}</Button>
+              <Button variant="secondary" disabled={pending}>
+                {t('structure.units.addDialog.cancel')}
+              </Button>
             </DialogClose>
             <Button
-              disabled={name.trim().length === 0}
+              disabled={name.trim().length === 0 || pending}
+              loading={pending}
               onClick={() => onCreate({ name: name.trim(), parentUnitId: parent })}
             >
               {t('structure.units.addDialog.create')}

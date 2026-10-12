@@ -1,0 +1,68 @@
+{
+  "reviewedAt": "2026-10-12",
+  "method": "Native 1366x900 PNGs opened with view_image, not inferred from capture count.",
+  "captures": [
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-before/structure-author.qa-interr-29841-d-draft-for-an-actual-retry-chromium/test-failed-1.png",
+      "review": "Failed create has closed the named draft dialog and left an empty Structure page."
+    },
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-unblocked/structure-author.qa-head-a-54ddf-nd-retains-management-scope-chromium/test-failed-1.png",
+      "review": "Assigned member avatar is shown while the child unit count remains zero."
+    },
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-unblocked/structure-author.qa-native-ac220-ersists-its-descendant-path-chromium/test-failed-1.png",
+      "review": "Native reparent retains the old hierarchy and shows the failed-mutation toast."
+    },
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-completed/structure-author.qa-head-a-54ddf-nd-retains-management-scope-chromium/assigned-unit.png",
+      "review": "After repair the assigned child unit shows the member and count one."
+    },
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-completed/structure-author.qa-native-ac220-ersists-its-descendant-path-chromium/reparented-subtree.png",
+      "review": "The moved child and grandchild are visible under the second parent after reload."
+    },
+    {
+      "path": "artifacts/qa/2026-10/structure-author/development-completed/structure-author.qa-interr-29841-d-draft-for-an-actual-retry-chromium/retained-unit-draft.png",
+      "review": "The interrupted create retains the name, inline error and available retry action."
+    }
+  ],
+  "compiledReceipt": "10d8dae2264c70cbaa2b7decce2eadf956360702c6161967c8b9f63169806524",
+  "reviewedCounts": {
+    "development": 6,
+    "compiled": 12
+  },
+  "compiledCaptures": [
+    {
+      "engine": "chromium",
+      "captures": [
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-chromium/assigned-unit.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-chromium/leadership-retained.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-native-ac220-ersists-its-descendant-path-chromium/reparented-subtree.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-interr-29841-d-draft-for-an-actual-retry-chromium/retained-unit-draft.png"
+      ],
+      "review": "Opened all four native captures. Assigned child count is one, head retains Department-wide scope after removal/delete/Undo, the moved child and grandchild render under the second parent after reload, and an interrupted create retains its named draft with inline error and retry."
+    },
+    {
+      "engine": "firefox",
+      "captures": [
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-firefox/assigned-unit.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-firefox/leadership-retained.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-native-ac220-ersists-its-descendant-path-firefox/reparented-subtree.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-interr-29841-d-draft-for-an-actual-retry-firefox/retained-unit-draft.png"
+      ],
+      "review": "Opened all four native captures. Assigned child count is one, head retains Department-wide scope after removal/delete/Undo, the moved child and grandchild render under the second parent after reload, and an interrupted create retains its named draft with inline error and retry."
+    },
+    {
+      "engine": "webkit",
+      "captures": [
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-webkit/assigned-unit.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-head-a-54ddf-nd-retains-management-scope-webkit/leadership-retained.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-native-ac220-ersists-its-descendant-path-webkit/reparented-subtree.png",
+        "artifacts/qa/2026-10/structure-author/compiled/structure-author.qa-interr-29841-d-draft-for-an-actual-retry-webkit/retained-unit-draft.png"
+      ],
+      "review": "Opened all four native captures. Assigned child count is one, head retains Department-wide scope after removal/delete/Undo, the moved child and grandchild render under the second parent after reload, and an interrupted create retains its named draft with inline error and retry."
+    }
+  ],
+  "limitations": "Only listed captures and their associated actual journeys are claimed. Every role, theme, locale, keyboard alternative, concurrent edit or chart export state is not established."
+}

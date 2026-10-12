@@ -1,0 +1,28 @@
+/* One native scroll region, with the same understated token colours in both themes. Navigation
+   buttons and the member jump are alternatives, not replacements for wheel, keyboard or touch. */
+.devon-board-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-muted-foreground) 55%, transparent) transparent;
+  overscroll-behavior: contain;
+  scroll-padding-inline: 16px;
+}
+
+.devon-board-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 10px;
+}
+
+.devon-board-scroller::-webkit-scrollbar-track,
+.devon-board-scroller::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.devon-board-scroller::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--color-muted-foreground) 55%, transparent);
+  border: 2px solid var(--color-background);
+  border-radius: 999px;
+}
+
+.devon-board-scroller::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}

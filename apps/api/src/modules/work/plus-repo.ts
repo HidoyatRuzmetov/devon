@@ -1486,6 +1486,7 @@ export type RecurringCardRow = {
   dueAt: string | null
   status: CardDTO['status']
   doneAt: string | null
+  archivedAt: string | null
   recurrence: unknown
   recurrenceSeriesId: string | null
   recurrenceIndex: number | null
@@ -1515,6 +1516,7 @@ export async function listRecurringCards(ctx: RequestContext): Promise<Recurring
       due_at: Date | null
       status: CardDTO['status']
       done_at: Date | null
+      archived_at: Date | null
       recurrence: unknown
       recurrence_series_id: string | null
       recurrence_index: number | null
@@ -1524,7 +1526,7 @@ export async function listRecurringCards(ctx: RequestContext): Promise<Recurring
     }>(
       sql`select c.id, c.department_id, c.title, c.description, c.kind, c.assignee_user_id,
                  c.giver_user_id, c.project_id, c.project_scope, c.priority, c.labels,
-                 c.estimate_min, c.due_at, c.status, c.done_at, c.recurrence,
+                 c.estimate_min, c.due_at, c.status, c.done_at, c.archived_at, c.recurrence,
                  c.recurrence_series_id, c.recurrence_index, c.created_by_user_id,
                  coalesce(s.total, 1) as series_count, coalesce(s.newer, 0) as newer_count
           from app.cards c
@@ -1557,12 +1559,45 @@ export async function listRecurringCards(ctx: RequestContext): Promise<Recurring
       dueAt: r.due_at ? new Date(r.due_at).toISOString() : null,
       status: r.status,
       doneAt: r.done_at ? new Date(r.done_at).toISOString() : null,
+      archivedAt: r.archived_at ? new Date(r.archived_at).toISOString() : null,
       recurrence: r.recurrence,
       recurrenceSeriesId: r.recurrence_series_id,
       recurrenceIndex: r.recurrence_index === null ? null : Number(r.recurrence_index),
       createdByUserId: r.created_by_user_id,
       seriesCount: Number(r.series_count),
       hasNewerInstance: Number(r.newer_count) > 0,
+    }))
+  })
+}
+
+export type ReminderOwner = { departmentId: string; userId: string; role: 'head' | 'member' }
+
+/** Only identity and membership eligibility are enumerated globally. Reminder contents remain
+ * private and are claimed separately under the exact owner's department context. */
+export async function listReminderOwners(
+  ctx: RequestContext,
+  after: ReminderOwner | null,
+  limit: number,
+): Promise<ReminderOwner[]> {
+  return withContext(ctx, async (tx) => {
+    const cursor = after
+      ? sql` and (m.department_id, m.user_id) > (${after.departmentId}::uuid, ${after.userId}::uuid)`
+      : sql``
+    const rows = await tx.raw<{
+      department_id: string
+      user_id: string
+      role: 'head' | 'member'
+    }>(
+      sql`select m.department_id, m.user_id, m.role from app.memberships m
+          join app.users u on u.id = m.user_id and u.deleted_at is null and u.status = 'active'
+          join app.departments d on d.id = m.department_id and d.deleted_at is null and d.status = 'active'
+          where m.deleted_at is null and m.status = 'active'${cursor}
+          order by m.department_id, m.user_id limit ${limit}`,
+    )
+    return rows.map((row) => ({
+      departmentId: row.department_id,
+      userId: row.user_id,
+      role: row.role,
     }))
   })
 }
@@ -1595,7 +1630,7 @@ export async function claimDueReminders(
             select r.id from app.card_reminders r
             join app.cards c on c.id = r.card_id and c.deleted_at is null
             where r.sent_at is null and r.deleted_at is null and r.remind_at <= now()
-            order by remind_at asc
+            order by r.remind_at asc, r.id asc
             limit ${limit}
             for update of r skip locked
           )

@@ -47,6 +47,10 @@
     "pending": {
       "title": "Your request is under review",
       "body": "The super admin will review your request soon.",
+      "rejectedTitle": "Your request was rejected",
+      "rejectedBody": "Review the reason below and send a revised request when ready.",
+      "approvedTitle": "Your request was approved",
+      "approvedBody": "Your department is ready. Open it from Departments.",
       "status": {
         "pending": "Pending",
         "approved": "Approved",
