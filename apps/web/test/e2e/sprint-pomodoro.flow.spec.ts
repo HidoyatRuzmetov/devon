@@ -69,7 +69,20 @@ test('@flow personal workspace: a sprint with a goal, then a completed Pomodoro 
   // Real UI: the Pomodoro panel's own stats tiles pick up the new session on reload.
   await page.reload()
   await page.getByRole('tab', { name: 'Pomodoro' }).click()
-  await expect(page.getByText(String(after.today.focusSessions)).first()).toBeVisible()
+  const pomodoroPanel = page.getByRole('tabpanel', { name: 'Pomodoro' })
+  const todaySessions = pomodoroPanel.getByText('Bugungi seanslar', { exact: true }).locator('..')
+  await expect(todaySessions).toBeVisible()
+  // NumberFlow keeps inert animation digits in its shadow DOM. Assert the labelled tile's
+  // accessible value, rather than an arbitrary matching digit elsewhere in the page.
+  await expect(todaySessions).toMatchAriaSnapshot(
+    `- text: Bugungi seanslar ${after.today.focusSessions}`,
+  )
+  const completedFocusSession = pomodoroPanel
+    .getByRole('listitem')
+    .filter({ has: page.getByText('Diqqat', { exact: true }) })
+    .filter({ has: page.getByText('Yakunlangan', { exact: true }) })
+  await expect(completedFocusSession).toHaveCount(1)
+  await expect(completedFocusSession.getByText('25 daq', { exact: true })).toBeVisible()
 
   await context.close()
 })
