@@ -9,6 +9,12 @@ import { withContext, type RequestContext, type Tx } from '@devon/db'
 import type { ProjectDTO } from './schemas.js'
 import { projectTemplatePayloadSchema } from '@devon/contracts'
 import { createCardInTx } from '../work/repo.js'
+import {
+  EMPTY_PROJECT_PROGRESS,
+  getProjectProgressBatch,
+  projectCompletion,
+  type ProjectProgressRow,
+} from '../../lib/project-progress.js'
 
 export class InvalidProjectMembers extends Error {}
 export class InvalidProjectTemplate extends Error {}
@@ -169,27 +175,8 @@ type ProjectRow = {
   version: number
 }
 
-type ProgressRow = {
-  objective_total: number
-  objective_done: number
-  subjective_total: number
-  subjective_done: number
-  completion: number
-}
-
-function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
-  const total = Number(progress.objective_total) + Number(progress.subjective_total)
+function toProjectDTO(row: ProjectRow, progress: ProjectProgressRow): ProjectDTO {
   const milestones = row.milestones ?? []
-  // Milestone-only projects are real work too. Once tasks exist, keep their measured completion
-  // authoritative instead of double-counting checkpoints that describe the same work.
-  const completion =
-    total > 0
-      ? Number(progress.completion) / total
-      : milestones.length > 0
-        ? milestones.filter((milestone) => Boolean(milestone.doneAt)).length / milestones.length
-        : row.status === 'done'
-          ? 1
-          : 0
   return {
     id: row.id,
     title: row.title,
@@ -202,7 +189,7 @@ function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
     startOn: row.start_on,
     targetOn: row.target_on,
     milestones,
-    progress: completion,
+    progress: projectCompletion(progress, row),
     objectiveTotal: Number(progress.objective_total),
     objectiveDone: Number(progress.objective_done),
     subjectiveTotal: Number(progress.subjective_total),
@@ -216,54 +203,8 @@ function toProjectDTO(row: ProjectRow, progress: ProgressRow): ProjectDTO {
 async function getProgress(
   tx: { raw<R>(q: SQL): Promise<R[]> },
   projectId: string,
-): Promise<ProgressRow> {
-  return (await getProgressBatch(tx, [projectId])).get(projectId) ?? EMPTY_PROGRESS
-}
-
-const EMPTY_PROGRESS: ProgressRow = {
-  objective_total: 0,
-  objective_done: 0,
-  subjective_total: 0,
-  subjective_done: 0,
-  completion: 0,
-}
-
-/** H3.1: the batched form of `getProgress` for a whole page of projects -- one `group by project_id`
- * query instead of one query per project (the N+1 `listProjects` used to run). Projects with zero
- * cards simply have no row in the result and fall back to `EMPTY_PROGRESS`. */
-async function getProgressBatch(
-  tx: { raw<R>(q: SQL): Promise<R[]> },
-  projectIds: readonly string[],
-): Promise<Map<string, ProgressRow>> {
-  if (projectIds.length === 0) return new Map()
-  // Parameterised `in (...)` list (H1.7: never string-concatenated SQL), not one query per project.
-  const idList = sql.join(
-    projectIds.map((id) => sql`${id}`),
-    sql`, `,
-  )
-  const rows = await tx.raw<ProgressRow & { project_id: string }>(
-    sql`select
-          c.project_id,
-          count(*) filter (where c.project_scope <> 'subjective') as objective_total,
-          count(*) filter (where c.project_scope <> 'subjective' and (c.status = 'done' or c.done_at is not null)) as objective_done,
-          count(*) filter (where c.project_scope = 'subjective') as subjective_total,
-          count(*) filter (where c.project_scope = 'subjective' and (c.status = 'done' or c.done_at is not null)) as subjective_done,
-          sum(case when c.status = 'done' or c.done_at is not null then 1.0
-            when coalesce(checklist.total, 0) > 0 then checklist.done::numeric / checklist.total
-            else 0 end) as completion
-        from app.cards c
-        left join (
-          select item.card_id, count(*) as total, count(*) filter (where item.done_at is not null) as done
-          from app.card_checklist_items item
-          join app.cards parent on parent.id = item.card_id
-          where parent.project_id in (${idList}) and parent.deleted_at is null and item.deleted_at is null
-          group by item.card_id
-        ) checklist on checklist.card_id = c.id
-        where c.project_id in (${idList}) and c.deleted_at is null
-          and (c.status <> 'archived' or c.done_at is not null)
-        group by c.project_id`,
-  )
-  return new Map(rows.map((r) => [r.project_id, r]))
+): Promise<ProjectProgressRow> {
+  return (await getProjectProgressBatch(tx, [projectId])).get(projectId) ?? EMPTY_PROJECT_PROGRESS
 }
 
 export async function listProjects(
@@ -280,11 +221,13 @@ export async function listProjects(
     )
     // H3.1: one batched `group by project_id` query for every project's progress instead of an
     // N+1 `getProgress` per row.
-    const progressByProject = await getProgressBatch(
+    const progressByProject = await getProjectProgressBatch(
       tx,
       rows.map((r) => r.id),
     )
-    return rows.map((row) => toProjectDTO(row, progressByProject.get(row.id) ?? EMPTY_PROGRESS))
+    return rows.map((row) =>
+      toProjectDTO(row, progressByProject.get(row.id) ?? EMPTY_PROJECT_PROGRESS),
+    )
   })
 }
 
@@ -374,7 +317,7 @@ async function createProjectInTx(tx: Tx, input: CreateProjectInput): Promise<Pro
                  start_on, target_on, milestones, created_at, updated_at, version
           from app.projects where id = ${id}`,
   )
-  return toProjectDTO(rows[0]!, EMPTY_PROGRESS)
+  return toProjectDTO(rows[0]!, EMPTY_PROJECT_PROGRESS)
 }
 
 type PatchProjectInput = {

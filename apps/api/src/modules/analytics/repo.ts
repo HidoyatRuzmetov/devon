@@ -23,6 +23,11 @@ import {
 import { addDaysToDateString, tashkentDateString } from './aggregate.js'
 import type { DailyMetrics } from './aggregate.js'
 import type { AnalyticsChartKey } from './schemas.js'
+import {
+  EMPTY_PROJECT_PROGRESS,
+  getProjectProgressBatch,
+  projectCompletion,
+} from '../../lib/project-progress.js'
 
 function toRequestContext(ctx: AuditCtx, departmentId: string): RequestContext {
   return {
@@ -353,38 +358,36 @@ async function projectProgress(
   // Project progress is inherently project-scoped, not person-scoped -- a `project:`/`status:` clause
   // still narrows which projects/tasks count, but an `assignee:`/`giver:`/`unit:` clause would make
   // "this project is 40% done" mean something different per viewer, so it is deliberately not applied
-  // here (`cardsFilterSql` is not called against the task-count subquery below).
+  // here. Projects and Analytics/Home share the same measured completion rollup.
   const projectFilter =
     filter.projectIds !== null
       ? sql`and p.id = any(${sql.param(filter.projectIds)}::uuid[])`
       : sql``
-  const statusFilter = filter.status !== null ? sql`and c.status = ${filter.status}` : sql``
   const rows = await tx.raw<{
     id: string
     title: string
     status: string
-    total_tasks: string
-    done_tasks: string
+    milestones: Array<{ doneAt: string | null }> | null
   }>(sql`
-    select p.id, p.title, p.status,
-      count(c.id) as total_tasks,
-      count(c.id) filter (where c.status = 'done') as done_tasks
+    select p.id, p.title, p.status, p.milestones
     from app.projects p
-    left join app.cards c on c.project_id = p.id and c.deleted_at is null ${statusFilter}
     where p.department_id = ${departmentId} and p.deleted_at is null ${projectFilter}
-    group by p.id, p.title, p.status
     order by p.created_at desc
   `)
+  const progressByProject = await getProjectProgressBatch(
+    tx,
+    rows.map((row) => row.id),
+    filter.status,
+  )
   return rows.map((r) => {
-    const total = Number(r.total_tasks)
-    const done = Number(r.done_tasks)
+    const progress = progressByProject.get(r.id) ?? EMPTY_PROJECT_PROGRESS
     return {
       id: r.id,
       title: r.title,
       status: r.status,
-      totalTasks: total,
-      doneTasks: done,
-      progress: total > 0 ? done / total : 0,
+      totalTasks: Number(progress.objective_total) + Number(progress.subjective_total),
+      doneTasks: Number(progress.objective_done) + Number(progress.subjective_done),
+      progress: projectCompletion(progress, r),
     }
   })
 }

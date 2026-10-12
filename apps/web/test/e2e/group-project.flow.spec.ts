@@ -129,6 +129,63 @@ test('@flow group project: objective + subjective tasks complete and progress re
   await headPage.reload()
   await expect(headPage.getByText('25', { exact: true })).toBeVisible()
 
+  // Ordinary head Home must use the same partial-task progress and an actual future-events read,
+  // rather than filtering the historical analytics window (which intentionally ends today).
+  expect((await authedPatch(headContext, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
+  const futureTitle = `Upcoming project review ${Date.now()}`
+  const outsideTitle = `Later project review ${Date.now()}`
+  const startsAt = new Date(Date.now() + 3 * 86_400_000)
+  const futureResponse = await authedPost(headContext, '/api/v1/events', {
+    title: futureTitle,
+    startsAt: startsAt.toISOString(),
+    endsAt: new Date(startsAt.getTime() + 3_600_000).toISOString(),
+    reminderOffsetsMinutes: [],
+  })
+  expect(futureResponse.status()).toBe(201)
+  const futureEvent = (await futureResponse.json()) as { id: string; status: string }
+  expect(futureEvent.status).toBe('open')
+  const laterAt = new Date(Date.now() + 9 * 86_400_000)
+  expect(
+    (
+      await authedPost(headContext, '/api/v1/events', {
+        title: outsideTitle,
+        startsAt: laterAt.toISOString(),
+        endsAt: new Date(laterAt.getTime() + 3_600_000).toISOString(),
+        reminderOffsetsMinutes: [],
+      })
+    ).status(),
+  ).toBe(201)
+  expect(
+    (
+      await authedPost(headContext, `/api/v1/events/${futureEvent.id}/rsvp`, {
+        status: 'yes',
+        guests: 0,
+      })
+    ).status(),
+  ).toBe(200)
+  const partialProject = (await (
+    await headContext.request.get(`/api/v1/projects/${project.id}`)
+  ).json()) as { progress: number }
+  expect(partialProject.progress).toBe(0.25)
+  await headPage.goto('/')
+  await expect(headPage.getByRole('heading', { name: 'Coming up', exact: true })).toBeVisible()
+  const upcomingRow = headPage.getByRole('listitem').filter({
+    has: headPage.getByText(futureTitle, { exact: true }),
+  })
+  await expect(upcomingRow).toHaveText(`${futureTitle}1`)
+  await expect(headPage.getByText(outsideTitle, { exact: true })).toHaveCount(0)
+  const dashboardProject = headPage.getByRole('listitem').filter({
+    has: headPage.getByRole('link', { name: `${projectTitle} 25%`, exact: true }),
+  })
+  await expect(dashboardProject).toBeVisible()
+  await expect(dashboardProject.getByText('25%', { exact: true })).toBeVisible()
+  await headPage.screenshot({
+    path: test.info().outputPath('head-home-upcoming-and-partial-project.png'),
+    fullPage: true,
+  })
+  expect((await authedPatch(headContext, '/api/v1/me', { locale: 'uz-Latn' })).status()).toBe(200)
+  await headPage.goto(`/projects/view?id=${project.id}`)
+
   // Complete both tasks -- the real `PATCH /cards/:id` state transition.
   const latestObjective = (await (
     await headContext.request.get(`/api/v1/cards/${objective.id}`)
