@@ -1,4 +1,16 @@
 node_modules/
+# Local dependency stores, task caches and generated build metadata.
+.pnpm-store/
+.turbo/
+.cache/
+.output/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 dist/
 # H6.3: apps/web/scripts/move-sourcemaps.mjs moves the production build's `.map` files here, out of
 # `dist/` (what a static server actually serves) -- kept only long enough to hand to an error
@@ -27,6 +39,16 @@ tools/gate-mutation/.tmp/
 tools/gate-mutation/.tmp-evidence.*
 .claude/worktrees/
 .data/
+# Local scripts, browser profiles, credentials and runtime backup archives.
+.tmp/
+.scratch/
+/backups/
+# Python helpers and operating-system metadata are regenerated locally.
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+Thumbs.db
 # Regenerated evidence from tools/perf/ measurement scripts (agentic/HARDENING.md baseline/after
 # passes) -- reproducible via the commands in agentic/ledger/hardening/*/baseline.md; not durable
 # evidence itself (that lives in the committed baseline.md's tables), same treatment as

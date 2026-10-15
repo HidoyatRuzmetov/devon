@@ -291,14 +291,15 @@ export function registerRealtimeEventSubscriptions(
         return
       }
 
-      if (!event.departmentId) return
+      const personalChannels = membershipPersonalChannels(event.type, event.payload)
+      if (!event.departmentId && personalChannels.length === 0) return
       const projected = projectPayload(event.payload)
       const actorUserId =
         typeof projected['actorUserId'] === 'string' ? projected['actorUserId'] : null
       await broadcast(
         [
-          departmentChannel(event.departmentId),
-          ...membershipPersonalChannels(event.type, event.payload),
+          ...(event.departmentId ? [departmentChannel(event.departmentId)] : []),
+          ...personalChannels,
         ],
         {
           type: event.type,

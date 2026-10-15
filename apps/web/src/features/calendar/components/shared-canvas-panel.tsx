@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // The shared copy of a canvas, with live cursors (v1.1 SPEC §10, EPIC-018).
 //
 // SHARED PRIMITIVE (see this package's notes): rendered from `features/personal`'s canvas detail,
@@ -136,7 +137,12 @@ export function SharedCanvasPanel({ share }: { share: SharedCanvasSummary }): Re
           </Badge>
         </div>
         <div className="flex items-center gap-2">
-          <PresenceAvatars members={watchers} />
+          <PresenceAvatars
+            members={watchers.map((member) => ({
+              ...member,
+              src: avatarUrl(member.avatarKey, 64),
+            }))}
+          />
           {share.canManage ? (
             <Button variant="ghost" size="sm" onClick={() => setConfirming(true)}>
               <Undo2 aria-hidden="true" className="size-4" />

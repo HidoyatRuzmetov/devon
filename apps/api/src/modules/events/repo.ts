@@ -40,6 +40,7 @@ export type EventRow = {
   version: number
   organizer_given_name: string
   organizer_family_name: string
+  organizer_avatar_key?: string | null
 }
 
 // What `EVENT_SELECT` actually comes back as over `Tx.raw()`: a plain, un-schema'd SQL query, so none
@@ -78,7 +79,7 @@ const EVENT_SELECT = sql`
          e.starts_at, e.ends_at, e.timezone, e.place, e.place_url, e.capacity, e.waitlist_enabled,
          e.rsvp_deadline, e.cost_note, e.reminder_offsets_minutes, e.organizer_user_id, e.status,
          e.updated_summary, e.cancelled_at, e.cancelled_reason, e.created_at, e.updated_at, e.version,
-         u.given_name as organizer_given_name, u.family_name as organizer_family_name
+         u.given_name as organizer_given_name, u.family_name as organizer_family_name, u.avatar_key as organizer_avatar_key
   from app.events e
   join app.users u on u.id = e.organizer_user_id
 `
@@ -355,6 +356,7 @@ export type RsvpListRow = {
   user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   status: string
   guests: number
   note: string | null
@@ -363,7 +365,7 @@ export type RsvpListRow = {
 
 export async function listRsvps(tx: Tx, eventId: string): Promise<RsvpListRow[]> {
   return tx.raw<RsvpListRow>(sql`
-    select r.user_id, u.given_name, u.family_name, r.status, r.guests, r.note, r.changed_at
+    select r.user_id, u.given_name, u.family_name, u.avatar_key, r.status, r.guests, r.note, r.changed_at
     from app.event_rsvps r join app.users u on u.id = r.user_id
     where r.event_id = ${eventId}
     order by (case r.status when 'yes' then 0 when 'maybe' then 1 when 'waitlist' then 2 else 3 end), r.changed_at asc
@@ -396,13 +398,14 @@ export type CommentRow = {
   author_user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   body: string
   created_at: Date
 }
 
 export async function listComments(tx: Tx, eventId: string): Promise<CommentRow[]> {
   return tx.raw<CommentRow>(sql`
-    select c.id, c.author_user_id, u.given_name, u.family_name, c.body, c.created_at
+    select c.id, c.author_user_id, u.given_name, u.family_name, u.avatar_key, c.body, c.created_at
     from app.event_comments c join app.users u on u.id = c.author_user_id
     where c.event_id = ${eventId} and c.deleted_at is null
     order by c.created_at asc
@@ -437,6 +440,7 @@ export type CarpoolRow = {
   driver_user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   seats: number
   departure_place: string | null
   departure_at: Date | null
@@ -446,7 +450,7 @@ export type CarpoolRow = {
 
 export async function listCarpools(tx: Tx, eventId: string): Promise<CarpoolRow[]> {
   return tx.raw<CarpoolRow>(sql`
-    select c.id, c.driver_user_id, u.given_name, u.family_name, c.seats, c.departure_place,
+    select c.id, c.driver_user_id, u.given_name, u.family_name, u.avatar_key, c.seats, c.departure_place,
            c.departure_at, c.note, c.status
     from app.carpools c join app.users u on u.id = c.driver_user_id
     where c.event_id = ${eventId}
@@ -485,7 +489,7 @@ export type CarpoolFullRow = CarpoolRow & { department_id: string; event_id: str
 
 export async function getCarpool(tx: Tx, carpoolId: string): Promise<CarpoolFullRow | null> {
   const rows = await tx.raw<CarpoolFullRow>(sql`
-    select c.id, c.department_id, c.event_id, c.driver_user_id, u.given_name, u.family_name, c.seats,
+    select c.id, c.department_id, c.event_id, c.driver_user_id, u.given_name, u.family_name, u.avatar_key, c.seats,
            c.departure_place, c.departure_at, c.note, c.status
     from app.carpools c join app.users u on u.id = c.driver_user_id
     where c.id = ${carpoolId}
@@ -497,13 +501,14 @@ export type CarpoolSeatRow = {
   user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   seats_claimed: number
   status: string
 }
 
 export async function listCarpoolSeats(tx: Tx, carpoolId: string): Promise<CarpoolSeatRow[]> {
   return tx.raw<CarpoolSeatRow>(sql`
-    select s.user_id, u.given_name, u.family_name, s.seats_claimed, s.status
+    select s.user_id, u.given_name, u.family_name, u.avatar_key, s.seats_claimed, s.status
     from app.carpool_seats s join app.users u on u.id = s.user_id
     where s.carpool_id = ${carpoolId}
     order by (case s.status when 'confirmed' then 0 else 1 end), s.claimed_at asc
@@ -588,12 +593,13 @@ export type ItemRow = {
   claimed_by_user_id: string | null
   claimed_given_name: string | null
   claimed_family_name: string | null
+  claimed_avatar_key?: string | null
 }
 
 export async function listItems(tx: Tx, eventId: string): Promise<ItemRow[]> {
   return tx.raw<ItemRow>(sql`
     select i.id, i.label, i.quantity, i.claimed_by_user_id,
-           u.given_name as claimed_given_name, u.family_name as claimed_family_name
+           u.given_name as claimed_given_name, u.family_name as claimed_family_name, u.avatar_key as claimed_avatar_key
     from app.event_items i left join app.users u on u.id = i.claimed_by_user_id
     where i.event_id = ${eventId}
     order by i.created_at asc
@@ -644,12 +650,13 @@ export type PollRow = {
   created_by_user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
 }
 
 export async function listPolls(tx: Tx, eventId: string): Promise<PollRow[]> {
   return tx.raw<PollRow>(sql`
     select p.id, p.event_id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
-           p.created_by_user_id, u.given_name, u.family_name
+           p.created_by_user_id, u.given_name, u.family_name, u.avatar_key
     from app.polls p join app.users u on u.id = p.created_by_user_id
     where p.event_id = ${eventId}
     order by p.created_at asc
@@ -659,7 +666,7 @@ export async function listPolls(tx: Tx, eventId: string): Promise<PollRow[]> {
 export async function getPoll(tx: Tx, pollId: string): Promise<PollRow | null> {
   const rows = await tx.raw<PollRow>(sql`
     select p.id, p.event_id, p.department_id, p.kind, p.question, p.anonymous, p.closes_at, p.status,
-           p.created_by_user_id, u.given_name, u.family_name
+           p.created_by_user_id, u.given_name, u.family_name, u.avatar_key
     from app.polls p join app.users u on u.id = p.created_by_user_id
     where p.id = ${pollId}
   `)
@@ -804,12 +811,13 @@ export type PhotoRow = {
   added_by_user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   created_at: Date
 }
 
 export async function listPhotos(tx: Tx, eventId: string): Promise<PhotoRow[]> {
   return tx.raw<PhotoRow>(sql`
-    select p.id, p.url, p.caption, p.added_by_user_id, u.given_name, u.family_name, p.created_at
+    select p.id, p.url, p.caption, p.added_by_user_id, u.given_name, u.family_name, u.avatar_key, p.created_at
     from app.event_photos p join app.users u on u.id = p.added_by_user_id
     where p.event_id = ${eventId}
     order by p.created_at asc
@@ -851,6 +859,7 @@ export type FeedbackRow = {
   user_id: string
   given_name: string
   family_name: string
+  avatar_key?: string | null
   rating: number
   comment: string | null
   anonymous: boolean
@@ -859,7 +868,7 @@ export type FeedbackRow = {
 
 export async function listFeedback(tx: Tx, eventId: string): Promise<FeedbackRow[]> {
   return tx.raw<FeedbackRow>(sql`
-    select f.id, f.user_id, u.given_name, u.family_name, f.rating, f.comment, f.anonymous, f.created_at
+    select f.id, f.user_id, u.given_name, u.family_name, u.avatar_key, f.rating, f.comment, f.anonymous, f.created_at
     from app.event_feedback f join app.users u on u.id = f.user_id
     where f.event_id = ${eventId}
     order by f.created_at asc

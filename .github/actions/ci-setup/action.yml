@@ -1,0 +1,56 @@
+name: Set up isolated CI runner
+description: Pinned workspace tooling; install browsers and scanners only on jobs that use them.
+inputs:
+  browser:
+    description: Install the unchanged browser tooling for this runner
+    default: 'false'
+  security:
+    description: Install pinned security scanners for this runner
+    default: 'false'
+  performance:
+    description: Install pinned release performance tools for this runner
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - name: Set up pnpm (version read from package.json#packageManager)
+      uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+
+    - name: Set up Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version: '22.23.3'
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
+
+    - name: Install workspace dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Install browser test dependencies
+      if: inputs.browser == 'true'
+      shell: bash
+      run: |
+        npm ci --prefix e2e --ignore-scripts
+        pnpm --filter @devon/web exec playwright install --with-deps chromium
+
+    # Keep scanner versions, checksums and rules unchanged. Never cache scan results or the
+    # vulnerability DB: fresh findings remain release blocking.
+    - name: Install security scanners (Semgrep, Trivy)
+      if: inputs.security == 'true'
+      shell: bash
+      run: |
+        python3 -m pip install --quiet --disable-pip-version-check semgrep==1.176.1
+        curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_checksums.txt
+        curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
+        sha256sum --ignore-missing -c trivy_0.74.0_checksums.txt
+        tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
+        sudo install -m 0755 trivy /usr/local/bin/trivy
+        rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
+        semgrep --version
+        trivy --version
+
+    - name: Install pinned performance tools
+      if: inputs.performance == 'true'
+      shell: bash
+      run: bash scripts/install-perf-tools.sh

@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // One People-board card (TECH-SPEC §5). Drag source AND drop target at once (a card is both
 // "the thing you pick up" and "the thing you drop next to"). Two drag adapters, chosen by input
 // type: mouse/pen keeps `@atlaskit/pragmatic-drag-and-drop`'s native HTML5 adapter (enhanced with a
@@ -586,12 +587,12 @@ export function CardTile({
             <span className="flex shrink-0 items-center">
               {showGiver ? (
                 <span
-                  className="relative z-0 -mr-1.5"
+                  className="devon-avatar-stack-item -mr-1.5"
                   title={t('work.card.byGiver', { name: fullName(giver) })}
                 >
                   <Avatar
                     size="xs"
-                    src={null}
+                    src={avatarUrl(giver.avatarKey, 64)}
                     alt={t('work.card.byGiver', { name: fullName(giver) })}
                     initials={initialsFromName(giver.givenName, giver.familyName)}
                     hueSeed={giver.userId}
@@ -600,14 +601,14 @@ export function CardTile({
               ) : null}
               {assignee ? (
                 <span
-                  className="relative z-10 rounded-full ring-2 ring-card"
+                  className="devon-avatar-stack-item rounded-full ring-2 ring-card"
                   title={t('work.card.assignedTo', {
                     name: fullName(assignee),
                   })}
                 >
                   <Avatar
                     size="sm"
-                    src={null}
+                    src={avatarUrl(assignee.avatarKey, 64)}
                     alt={t('work.card.assignedTo', {
                       name: fullName(assignee),
                     })}
@@ -707,7 +708,7 @@ function MoveToMenu({
           >
             <Avatar
               size="sm"
-              src={null}
+              src={avatarUrl(m.avatarKey, 64)}
               alt={fullName(m)}
               initials={initialsFromName(m.givenName, m.familyName)}
               hueSeed={m.userId}

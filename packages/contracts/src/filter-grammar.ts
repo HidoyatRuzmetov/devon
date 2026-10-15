@@ -196,18 +196,18 @@ export function serializeFilterQuery(clauses: readonly FilterClause[]): string {
     .join(' ')
 }
 
-// --- Relative date words (uz-Latn / ru / en; TECH-SPEC §4 "rules for uz/ru/en dates") -------------
+// --- Relative date words and weekday names (Uzbek, Russian and English; TECH-SPEC §4) -----------
 
 const WEEKDAY_WORDS: ReadonlyArray<{ dow: number; words: readonly string[] }> = [
-  { dow: 1, words: ['monday', 'mon', 'dushanba', 'du', 'понедельник', 'пн'] },
-  { dow: 2, words: ['tuesday', 'tue', 'seshanba', 'se', 'вторник', 'вт'] },
-  { dow: 3, words: ['wednesday', 'wed', 'chorshanba', 'ch', 'среда', 'ср'] },
-  { dow: 4, words: ['thursday', 'thu', 'payshanba', 'pa', 'четверг', 'чт'] },
-  { dow: 5, words: ['friday', 'fri', 'juma', 'ju', 'пятница', 'пт'] },
-  { dow: 6, words: ['saturday', 'sat', 'shanba', 'sh', 'суббота', 'сб'] },
+  { dow: 1, words: ['monday', 'mon', 'dushanba', 'du', 'душанба', 'понедельник', 'пн'] },
+  { dow: 2, words: ['tuesday', 'tue', 'seshanba', 'se', 'сешанба', 'вторник', 'вт'] },
+  { dow: 3, words: ['wednesday', 'wed', 'chorshanba', 'ch', 'чоршанба', 'среда', 'ср'] },
+  { dow: 4, words: ['thursday', 'thu', 'payshanba', 'pa', 'пайшанба', 'четверг', 'чт'] },
+  { dow: 5, words: ['friday', 'fri', 'juma', 'ju', 'жума', 'пятница', 'пт'] },
+  { dow: 6, words: ['saturday', 'sat', 'shanba', 'sh', 'шанба', 'суббота', 'сб'] },
   {
     dow: 0,
-    words: ['sunday', 'sun', 'yakshanba', 'ya', 'воскресенье', 'вс'],
+    words: ['sunday', 'sun', 'yakshanba', 'ya', 'якшанба', 'воскресенье', 'вс'],
   },
 ]
 
@@ -227,7 +227,7 @@ function addDays(d: Date, days: number): Date {
 }
 
 /**
- * Resolves one date word -- `today`/`bugun`/`сегодня`, `tomorrow`, a weekday name in any of the three
+ * Resolves one date word -- `today`/`bugun`/`сегодня`, `tomorrow`, a weekday name in any of the four
  * locales, or a literal `YYYY-MM-DD` -- to a concrete calendar date (midnight, local time), relative
  * to `now`. A weekday name means "the next occurrence, counting today" (Linear's convention): asking
  * for `friday` on a Friday means today. Returns `null` for anything unrecognised -- callers decide

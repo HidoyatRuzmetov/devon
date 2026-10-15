@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // The event detail overlay -- opened via `?event=<id>` from `events-screen.tsx`. A `Dialog` rather
 // than the mobile-only fixed-width `Sheet` (MODULE-GUIDE.md's own reasoning for `calendar-month.tsx`
 // skipping FullCalendar applies here too: this needs to be wide and tall on desktop, which `Sheet`'s
@@ -110,24 +111,25 @@ function AttendeesPeek({ eventId }: { eventId: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-sm text-small text-foreground transition-opacity duration-(--dur-micro) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
+      <div className="flex items-center gap-2">
         <AvatarStack
           people={attendees.map((r) => ({
             id: r.userId,
             name: `${r.givenName} ${r.familyName}`,
             initials: initialsFromName(r.givenName, r.familyName),
+            src: avatarUrl(r.avatarKey, 64),
           }))}
           label={t('events.attendees.titleCount', { count: attendees.length })}
         />
-        <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1 rounded-sm text-small text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           <Users className="size-3.5" aria-hidden="true" />
           {t('events.attendees.titleCount', { count: attendees.length })}
-        </span>
-      </button>
+        </button>
+      </div>
 
       <Sheet direction="right" open={open} onOpenChange={setOpen}>
         {open ? (
@@ -147,6 +149,7 @@ function AttendeesPeek({ eventId }: { eventId: string }) {
                           id: rsvp.userId,
                           name: `${rsvp.givenName} ${rsvp.familyName}`,
                           initials: initialsFromName(rsvp.givenName, rsvp.familyName),
+                          src: avatarUrl(rsvp.avatarKey, 64),
                         },
                       ]}
                       label={`${rsvp.givenName} ${rsvp.familyName}`}

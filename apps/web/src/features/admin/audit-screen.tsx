@@ -30,6 +30,7 @@ import { AlertTriangle } from 'lucide-react'
 import { RouterLink } from '../../lib/router.js'
 import { fetchAuditExport, fetchAuditEvents, fetchAuditVerify, type AuditEventRow } from './api.js'
 import { ApiError } from '../../lib/api-client.js'
+import { avatarUrl } from '../../lib/avatar.js'
 import { AdminScreen } from './admin-screen.js'
 
 /** UI-OVERHAUL.md §2 "Admin console ... audit viewer with chain-verify badge animation": the check
@@ -121,7 +122,7 @@ function subjectLabel(t: ReturnType<typeof useT>, subjectType: string): string {
 }
 
 function actorInitials(actorName: string | null): string {
-  if (!actorName) return '?'
+  if (!actorName) return ''
   const [given, ...rest] = actorName.split(' ')
   return initialsFromName(given ?? '', rest.join(' '))
 }
@@ -142,19 +143,26 @@ function AuditRow({ event }: { event: AuditEventRow }) {
   )
 
   return (
-    <div className="flex items-center gap-3 border-b border-border/60 px-3 py-2.5 last:border-b-0">
+    <div
+      className={`flex items-center gap-3 border-b border-border/60 px-3 py-2.5 last:border-b-0${event.actorStatus === 'deleted' ? ' bg-destructive/5' : ''}`}
+    >
       <span className="w-14 shrink-0 text-caption tabular-nums text-muted-foreground">
         {formatTime(new Date(event.at), locale)}
       </span>
       <Avatar
         size="sm"
-        src={null}
+        src={avatarUrl(event.actorAvatarKey, 64)}
         alt={actorLabel}
-        initials={actorInitials(event.actorName)}
+        initials={actorInitials(actorLabel)}
         hueSeed={event.actorUserId ?? 'system'}
       />
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="font-medium text-foreground">{actorLabel}</span>
+        {event.actorStatus === 'deleted' ? (
+          <Badge tone="neutral" className="h-5 px-1.5">
+            {t('admin.console.accounts.status.deleted')}
+          </Badge>
+        ) : null}
         {roleKey ? (
           <Badge tone="neutral" className="h-5 px-1.5">
             {t(roleKey)}

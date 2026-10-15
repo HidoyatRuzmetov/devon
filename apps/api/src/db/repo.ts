@@ -8,6 +8,7 @@ import { schema, withContext, type RequestContext, type Tx } from '@devon/db'
 import type { Role } from '@devon/contracts'
 import { hashPassword } from '../lib/password.js'
 import { generateToken, sha256Hex } from '../lib/tokens.js'
+import { emitIdentityUpdated } from '../modules/accounts/identity-events.js'
 import {
   createLoginChallenge as accountsCreateLoginChallenge,
   getTwoFactorStatus as accountsGetTwoFactorStatus,
@@ -530,11 +531,7 @@ export function createRepo(): Deps {
           before: { avatarKey: before.avatarKey },
           after: { avatarKey: after.avatarKey },
         })
-        tx.emit({
-          type: 'accounts.user.avatar_updated',
-          departmentId: null,
-          payload: { userId, avatarKey: after.avatarKey },
-        })
+        await emitIdentityUpdated(tx, userId, 'accounts.user.avatar_updated')
         return after
       })
     },

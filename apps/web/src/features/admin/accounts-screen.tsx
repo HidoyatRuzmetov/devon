@@ -21,7 +21,7 @@ import {
   StateView,
   toast,
 } from '@devon/ui'
-import { KeyRound, Lock, MoreHorizontal, ShieldOff, Trash2, Unlock } from 'lucide-react'
+import { KeyRound, Lock, MoreHorizontal, Pencil, ShieldOff, Trash2, Unlock } from 'lucide-react'
 import { useMeQuery } from '../../lib/session.js'
 import { ApiError } from '../../lib/api-client.js'
 import {
@@ -30,6 +30,7 @@ import {
   forceTwoFactorReset,
   lockUser,
   resetUserPassword,
+  restoreDeletedIdentity,
   unlockUser,
   type AdminUserRow,
 } from './api.js'
@@ -141,6 +142,10 @@ function AccountsBody() {
     password: string
   } | null>(null)
   const [anonymizeTarget, setAnonymizeTarget] = React.useState<AdminUserRow | null>(null)
+  const [identityTarget, setIdentityTarget] = React.useState<AdminUserRow | null>(null)
+  const [identityGivenName, setIdentityGivenName] = React.useState('')
+  const [identityFamilyName, setIdentityFamilyName] = React.useState('')
+  const [identityReason, setIdentityReason] = React.useState('')
 
   const listQuery = useQuery({
     queryKey: ['admin', 'accounts', query, status, cursor],
@@ -150,7 +155,7 @@ function AccountsBody() {
   })
 
   const csrfToken = meQuery.data?.csrfToken ?? ''
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin', 'accounts'] })
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin'] })
 
   const lock = useMutation({
     mutationFn: () => lockUser(lockTarget!.id, reason, csrfToken),
@@ -186,6 +191,24 @@ function AccountsBody() {
     onSuccess: () => {
       toast(t('admin.console.accounts.anonymizedToast'))
       setAnonymizeTarget(null)
+      invalidate()
+    },
+    onError: () => toast(t('admin.console.operationFailed')),
+  })
+  const correctIdentity = useMutation({
+    mutationFn: () =>
+      restoreDeletedIdentity(
+        identityTarget!.id,
+        {
+          givenName: identityGivenName.trim(),
+          familyName: identityFamilyName.trim(),
+          reason: identityReason.trim(),
+        },
+        csrfToken,
+      ),
+    onSuccess: () => {
+      toast(t('admin.console.accounts.identityCorrected'))
+      setIdentityTarget(null)
       invalidate()
     },
     onError: () => toast(t('admin.console.operationFailed')),
@@ -265,7 +288,12 @@ function AccountsBody() {
                   (resetPassword.isPending && resetPassword.variables === u.id) ||
                   (forceReset2fa.isPending && forceReset2fa.variables === u.id)
                 return (
-                  <StaggerItem as="tr" key={u.id} className="bg-card">
+                  <StaggerItem
+                    as="tr"
+                    key={u.id}
+                    data-user-id={u.id}
+                    className={u.status === 'deleted' ? 'bg-destructive/5' : 'bg-card'}
+                  >
                     <td className="px-3 py-2.5 font-medium text-foreground">
                       {u.givenName} {u.familyName}
                     </td>
@@ -289,6 +317,19 @@ function AccountsBody() {
                       )}
                     </td>
                     <td className="px-3 py-2.5 text-right">
+                      {u.status === 'deleted' && u.identityNeedsCorrection ? (
+                        <IconButton
+                          aria-label={t('admin.console.accounts.correctIdentity')}
+                          onClick={() => {
+                            setIdentityGivenName('')
+                            setIdentityFamilyName('')
+                            setIdentityReason('')
+                            setIdentityTarget(u)
+                          }}
+                        >
+                          <Pencil className="size-4" aria-hidden="true" />
+                        </IconButton>
+                      ) : null}
                       <AccountActionsMenu
                         user={u}
                         busy={rowBusy}
@@ -381,6 +422,10 @@ function AccountsBody() {
       >
         <DialogContent title={t('admin.console.accounts.anonymizeDialogTitle')}>
           <div className="flex flex-col gap-3 pt-4">
+            <p className="font-medium text-foreground">
+              {anonymizeTarget?.givenName} {anonymizeTarget?.familyName}
+              {anonymizeTarget ? ` (@${anonymizeTarget.login})` : ''}
+            </p>
             <p className="text-body text-muted-foreground">
               {t('admin.console.accounts.anonymizeDialogBody')}
             </p>
@@ -392,6 +437,70 @@ function AccountsBody() {
               {t('admin.console.accounts.anonymizeSubmit')}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={identityTarget !== null}
+        onOpenChange={(open) => !open && !correctIdentity.isPending && setIdentityTarget(null)}
+      >
+        <DialogContent title={t('admin.console.accounts.correctIdentity')}>
+          <form
+            className="flex flex-col gap-4 pt-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (
+                identityGivenName.trim() &&
+                identityFamilyName.trim() &&
+                identityReason.trim() &&
+                !correctIdentity.isPending
+              )
+                correctIdentity.mutate()
+            }}
+          >
+            <p className="text-body text-muted-foreground">
+              {t('admin.console.accounts.identityCorrectionBody')}
+            </p>
+            <p className="break-all text-small text-muted-foreground">@{identityTarget?.login}</p>
+            <label className="flex flex-col gap-1.5 text-small">
+              {t('admin.console.accounts.identityGivenName')}
+              <Input
+                required
+                maxLength={100}
+                value={identityGivenName}
+                onChange={(e) => setIdentityGivenName(e.target.value)}
+                disabled={correctIdentity.isPending}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-small">
+              {t('admin.console.accounts.identityFamilyName')}
+              <Input
+                required
+                maxLength={100}
+                value={identityFamilyName}
+                onChange={(e) => setIdentityFamilyName(e.target.value)}
+                disabled={correctIdentity.isPending}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-small">
+              {t('admin.console.accounts.identityReason')}
+              <Input
+                required
+                maxLength={500}
+                value={identityReason}
+                onChange={(e) => setIdentityReason(e.target.value)}
+                disabled={correctIdentity.isPending}
+              />
+            </label>
+            <Button
+              type="submit"
+              loading={correctIdentity.isPending}
+              disabled={
+                !identityGivenName.trim() || !identityFamilyName.trim() || !identityReason.trim()
+              }
+            >
+              {t('admin.console.accounts.identitySave')}
+            </Button>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

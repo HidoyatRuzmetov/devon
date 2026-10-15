@@ -35,6 +35,7 @@ const summaryUser = z.object({
   id: z.string().uuid(),
   givenName: z.string(),
   familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
 })
 
 /** One field an organiser's edit changed (`service.ts`'s `diffEvent`). Stored as JSON text in
@@ -146,6 +147,7 @@ export const rsvpDto = z.object({
   userId: z.string().uuid(),
   givenName: z.string(),
   familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
   status: rsvpStatusSchema,
   guests: z.number().int(),
   note: z.string().nullable(),
@@ -180,6 +182,7 @@ export const carpoolSeatDto = z.object({
   userId: z.string().uuid(),
   givenName: z.string(),
   familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
   seatsClaimed: z.number().int(),
   status: z.enum(['confirmed', 'waitlist']),
 })

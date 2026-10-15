@@ -19,6 +19,13 @@ describe('unitHueClass', () => {
 })
 
 describe('Avatar', () => {
+  it.each([
+    ['Tizim', 'T'],
+    ['System', 'S'],
+  ])('uses %s initials when a system actor has no person name', async (alt, expected) => {
+    render(<Avatar alt={alt} initials="?" />)
+    expect(await screen.findByText(expected)).toBeInTheDocument()
+  })
   it('renders an accessible name and the initials fallback without an image', async () => {
     render(<Avatar alt="Yusupov Aziz" initials="AY" hueSeed="dept-1" />)
     expect(screen.getByText('Yusupov Aziz')).toBeInTheDocument()

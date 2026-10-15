@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // Shared assignee/giver picker (TECH-SPEC §5's "giver -> assignee (member pickers)"). One dropdown of
 // the department's roster, an optional "unassigned" entry, and a live filter for departments large
 // enough that scrolling a flat list stops being fast -- the same list `useMembers()` already gives
@@ -63,7 +64,7 @@ export function MemberPicker({
             <span className="flex min-w-0 items-center gap-2">
               <Avatar
                 size="sm"
-                src={null}
+                src={avatarUrl(selected.avatarKey, 64)}
                 alt={fullName(selected)}
                 initials={initialsFromName(selected.givenName, selected.familyName)}
                 hueSeed={selected.userId}
@@ -90,7 +91,7 @@ export function MemberPicker({
           <DropdownMenuItem key={m.userId} onSelect={() => onChange(m.userId)}>
             <Avatar
               size="sm"
-              src={null}
+              src={avatarUrl(m.avatarKey, 64)}
               alt={fullName(m)}
               initials={initialsFromName(m.givenName, m.familyName)}
               hueSeed={m.userId}

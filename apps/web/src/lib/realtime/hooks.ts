@@ -191,6 +191,14 @@ const INVALIDATIONS: ReadonlyArray<{
   },
   { match: /^events\./, keys: [['events']], mutationKeys: [['events', 'rsvp']] },
   { match: /^structure\./, keys: [['structure']] },
+  {
+    match: /^accounts\.(profile\.updated|user\.avatar_updated)$/,
+    keys: [['me'], ['work'], ['structure'], ['people'], ['departments'], ['events'], ['admin']],
+    mutationKeys: [
+      ['work', 'checklist'],
+      ['work', 'card-write'],
+    ],
+  },
   { match: /^automations\./, keys: [['automations']] },
   {
     match: /^pages\./,
@@ -296,6 +304,11 @@ export function useRealtimeBridge(): void {
   const signedIn = meQuery.data != null
   const userId = meQuery.data?.user.id ?? null
   const departmentId = meQuery.data?.activeDepartmentId ?? null
+  // Presence names/photos are signed into connection info. Refresh that connection when the
+  // account changes, otherwise colleagues keep seeing the photo from the previous login.
+  const avatarKey = meQuery.data?.user.avatarKey ?? null
+  const givenName = meQuery.data?.user.givenName ?? ''
+  const familyName = meQuery.data?.user.familyName ?? ''
   const status = useRealtimeStatus()
   const channels = React.useMemo(() => realtimeChannels(), [status])
   const invalidator = React.useRef<ReturnType<typeof createRealtimeInvalidator> | null>(null)
@@ -349,7 +362,7 @@ export function useRealtimeBridge(): void {
       window.removeEventListener('online', reconnect)
       resetRealtime()
     }
-  }, [userId, departmentId])
+  }, [userId, departmentId, avatarKey, givenName, familyName])
 
   // A failed initial config/token request must recover without requiring a page reload. The
   // WebSocket library handles normal transport reconnects; this also retries bootstrap failures.

@@ -3,6 +3,32 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it.each(['accounts.user.avatar_updated', 'accounts.profile.updated'])(
+    'refreshes photo/name summaries when %s arrives',
+    async (type) => {
+      const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
+      const keys = [
+        ['me'],
+        ['work', 'board'],
+        ['structure', 'members'],
+        ['events', 'rsvps', 'event-a'],
+        ['departments', 'members'],
+        ['people', 'table'],
+        ['admin', 'audit'],
+      ]
+      for (const key of keys) client.setQueryData(key, { avatarKey: 'old' })
+      client.setQueryData(['personal', 'notes'], 'private unchanged')
+      const bridge = createRealtimeInvalidator(client)
+      try {
+        bridge.receive(type)
+        for (const key of keys) expect(client.getQueryState(key)?.isInvalidated).toBe(true)
+        expect(client.getQueryState(['personal', 'notes'])?.isInvalidated).toBe(false)
+      } finally {
+        bridge.dispose()
+        client.clear()
+      }
+    },
+  )
   it('updates a still-open personal reminder from pending to sent when its Inbox delivery arrives', async () => {
     const client = new QueryClient({
       defaultOptions: { queries: { staleTime: Infinity, retry: false } },

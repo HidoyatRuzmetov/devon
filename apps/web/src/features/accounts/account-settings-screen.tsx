@@ -87,7 +87,11 @@ function PhotoSection() {
     mutationFn: (file: File) => uploadAvatar(file, csrfToken, setStage),
     onSuccess: async () => {
       setErrorKey(null)
-      await queryClient.invalidateQueries({ queryKey: ['me'] })
+      await Promise.all(
+        ['me', 'work', 'structure', 'people', 'departments', 'events', 'admin'].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      )
       toast(t('accounts.photo.savedToast'))
     },
     onError: (err) => setErrorKey(avatarErrorKey(err)),
@@ -97,7 +101,11 @@ function PhotoSection() {
     mutationFn: () => removeAvatar(csrfToken),
     onSuccess: async () => {
       setErrorKey(null)
-      await queryClient.invalidateQueries({ queryKey: ['me'] })
+      await Promise.all(
+        ['me', 'work', 'structure', 'people', 'departments', 'events', 'admin'].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
+      )
       toast(t('accounts.photo.removedToast'))
     },
     onError: () => setErrorKey('accounts.photo.error.generic'),

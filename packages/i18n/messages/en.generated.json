@@ -507,17 +507,24 @@
         "temporaryPasswordBody": "Deliver this password to the user through a secure channel. They will be asked to set a new one on first sign-in.",
         "temporaryPasswordClose": "Close",
         "anonymizeDialogTitle": "Delete account",
-        "anonymizeDialogBody": "The user's data will be anonymised and the account permanently deleted. This cannot be undone.",
+        "anonymizeDialogBody": "Sign-in will be disabled and all sessions ended. The name and work history remain in the audit log. The original username becomes available for reuse.",
         "anonymizeSubmit": "Delete",
-        "anonymizedToast": "Account deleted"
+        "anonymizedToast": "Account deleted",
+        "correctIdentity": "Correct historical name",
+        "identityCorrectionBody": "Use a verified original name. This corrects the history display only; the account stays deleted and cannot sign in.",
+        "identityGivenName": "Given name",
+        "identityFamilyName": "Family name",
+        "identityReason": "Source or reason for correction",
+        "identitySave": "Save historical name",
+        "identityCorrected": "Historical name corrected"
       },
       "analytics": {
-        "totalDepartments": "Total departments",
-        "totalPeople": "Total people",
+        "totalDepartments": "Live departments",
+        "totalPeople": "Active accounts",
         "cardsCreated30d": "Cards (30d)",
         "logins7d": "Logins (7d)",
-        "departmentsTitle": "Departments by status",
-        "peopleTitle": "People by role",
+        "departmentsTitle": "All departments by status",
+        "peopleTitle": "Active accounts by role",
         "activityTitle": "Activity",
         "aiSpendTitle": "AI spend",
         "active": "Active",
@@ -532,7 +539,8 @@
         "tokensThisMonth": "Tokens this month",
         "costThisMonth": "Cost this month",
         "uzs": "UZS",
-        "aiSpendUnavailable": "The AI module is not connected yet."
+        "aiSpendUnavailable": "AI usage totals are unavailable right now.",
+        "activeScope": "Active accounts in active departments, plus super admins. Archived, locked and deleted accounts are excluded."
       },
       "audit": {
         "fromDate": "From date",
@@ -774,7 +782,9 @@
           "work.template_updated": "updated a template",
           "work.template_used": "used a template",
           "work.time_log_removed": "removed a time entry",
-          "work.time_logged": "recorded work time"
+          "work.time_logged": "recorded work time",
+          "admin.user.deleted_identity_restored": "corrected a deleted account’s historical identity",
+          "admin.user.deleted": "deleted an account"
         },
         "subjectType": {
           "session": "Session",
@@ -1804,7 +1814,7 @@
       "archive": "Archive"
     },
     "quickAdd": {
-      "placeholder": "Quick add: \"Nodira: prepare the monthly report by friday\"",
+      "placeholder": "Quick add: \"Nodira: prepare the monthly report, friday\"",
       "created": "\"{title}\" created",
       "error": "Could not create the card",
       "unknownAssignee": "No member matches \"{name}\"",

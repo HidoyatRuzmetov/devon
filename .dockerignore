@@ -1,18 +1,29 @@
 # Devon (WorkPortal) -- H17.1/H18.1: keep Docker build contexts small and reproducible. Applies to
 # every Dockerfile in this repo (root-context builds for apps/api, apps/web, apps/api/Dockerfile.worker).
-# Secrets are never in the repo (H1.1) so there is nothing to exclude on that account; this file is
-# purely about build-context size and cache-hit rate.
+# Keep local secrets and runtime data out of build contexts even when they exist in a developer's
+# checkout; image inputs remain the tracked workspace source, manifests and deployment config.
 
 .git
 .claude
 **/node_modules
 **/dist
+**/dist-sourcemaps
 **/.turbo
+**/.pnpm-store
+**/.cache
+**/.output
+**/*.tsbuildinfo
 **/coverage
 **/playwright-report
 **/test-results
 **/.data
 **/.tmp
+**/.scratch
+**/.playwright-mcp
+**/__pycache__
+**/.venv
+**/*.pyc
+**/*.pyo
 artifacts
 backups
 docs
@@ -28,3 +39,7 @@ deploy-secrets
 **/*.p12
 **/*.pfx
 **/*.ppk
+**/*.ovpn
+**/*.kubeconfig
+infra/certs
+infra/telegram-tls

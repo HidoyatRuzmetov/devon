@@ -70,6 +70,7 @@ export const adminUserRowSchema = z.object({
   patronymic: z.string().nullable(),
   role: userRoleSchema,
   status: userStatusSchema,
+  identityNeedsCorrection: z.boolean(),
   lastLoginAt: z.string().nullable(),
   createdAt: z.string(),
 })
@@ -94,6 +95,15 @@ export const adminUserDetailSchema = adminUserRowSchema.extend({
 })
 
 export const lockUserBodySchema = z.object({ reason: z.string().trim().min(1).max(500) }).strict()
+
+export const restoreDeletedIdentityBodySchema = z
+  .object({
+    givenName: z.string().trim().min(1).max(100),
+    familyName: z.string().trim().min(1).max(100),
+    patronymic: z.string().trim().min(1).max(100).nullable().optional(),
+    reason: z.string().trim().min(1).max(500),
+  })
+  .strict()
 
 export const adminAnalyticsSchema = z.object({
   generatedAt: z.string(),
@@ -160,6 +170,8 @@ export const auditEventRowSchema = z.object({
   actorUserId: z.string().uuid().nullable(),
   actorRole: z.string().nullable(),
   actorName: z.string().nullable(),
+  actorStatus: userStatusSchema.nullable(),
+  actorAvatarKey: z.string().nullable(),
   departmentId: z.string().uuid().nullable(),
   action: z.string(),
   subjectType: z.string(),

@@ -15,12 +15,10 @@
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Radio, WifiOff } from 'lucide-react'
-import { Avatar, initialsFromName } from '../primitives/avatar.js'
+import { initialsFromName } from '../primitives/avatar.js'
+import { AvatarStack } from '../primitives/avatar-stack.js'
 import { Badge } from '../primitives/badge.js'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../primitives/tooltip.js'
-import { AnimatePresence, motion } from 'motion/react'
-import { useReducedMotion } from '../lib/use-reduced-motion.js'
-import { tweenOut, tweenIn, crossfade } from '../motion/tokens.js'
 
 /** Mirrors `apps/web/src/lib/realtime`'s `RealtimeStatus`; declared here so the package stays
  *  transport-free. The app passes its own value straight in, and the two are held together by a
@@ -31,7 +29,7 @@ export type LiveStatus = 'idle' | 'off' | 'connecting' | 'connected' | 'error'
 
 /** The shape `PresenceAvatars` needs off a presence member; the app's own `PresenceMember` is a
  *  superset of it. */
-export type PresenceMemberLike = { userId: string; name: string }
+export type PresenceMemberLike = { userId: string; name: string; src?: string | null }
 
 const STATUS_COPY: Record<LiveStatus, { label: string; hint: string } | null> = {
   // `idle` is "we have not tried yet" -- a state with nothing honest to say, so it says nothing.
@@ -94,25 +92,16 @@ export type PresenceAvatarsProps = {
 
 /** Who else is looking at this screen right now.
  *
- * v1.1 motion pass: people arriving and leaving used to be a cut -- an avatar simply existed, or
- * simply did not, between two frames. On a board four colleagues are moving through during a
- * stand-up that reads as flicker rather than as presence. Each avatar now fades and scales in from
- * 0.8 when its owner joins and collapses out when they leave (`AnimatePresence`), and the `layout`
- * flag slides the survivors along rather than teleporting them into the gap.
- *
- * Reduced motion keeps the crossfade and drops the scale and the slide: you still see somebody
- * arrive, nothing travels. */
+ * Each person has their own accessible hover/focus target. The old single button always named
+ * the first colleague, even while the pointer was over somebody else. */
 export function PresenceAvatars({
   members,
   max = 4,
   className,
 }: PresenceAvatarsProps): React.JSX.Element | null {
   const t = useT()
-  const reduced = useReducedMotion()
   if (members.length === 0) return null
 
-  const shown = members.slice(0, max)
-  const hidden = members.length - shown.length
   const names = members.map((m) => m.name).filter(Boolean)
   const summary =
     members.length === 1
@@ -120,42 +109,19 @@ export function PresenceAvatars({
       : t('realtime.presence.many', { name: names[0] ?? '', count: members.length - 1 })
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={summary}
-          className={['flex items-center -space-x-2', className].filter(Boolean).join(' ')}
-        >
-          <AnimatePresence initial={false} mode="popLayout">
-            {shown.map((member) => (
-              <motion.span
-                key={member.userId}
-                layout={!reduced}
-                initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
-                animate={reduced ? { opacity: 1 } : { opacity: 1, scale: 1 }}
-                exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.8 }}
-                transition={reduced ? crossfade : { ...tweenOut, opacity: tweenIn }}
-                className="rounded-full ring-2 ring-surface-1 transition-transform duration-(--dur-micro) ease-out hover:z-10 hover:-translate-y-0.5"
-              >
-                <Avatar
-                  size="sm"
-                  src={null}
-                  alt={member.name}
-                  initials={initialsFromName(member.name, '')}
-                  hueSeed={member.userId}
-                />
-              </motion.span>
-            ))}
-          </AnimatePresence>
-          {hidden > 0 ? (
-            <span className="z-10 flex size-6 items-center justify-center rounded-full bg-surface-3 text-caption text-muted-foreground ring-2 ring-surface-1">
-              +{hidden}
-            </span>
-          ) : null}
-        </button>
-      </TooltipTrigger>
-      <TooltipContent>{summary}</TooltipContent>
-    </Tooltip>
+    <AvatarStack
+      people={members.map((member) => {
+        const [given = '', ...family] = member.name.trim().split(/\s+/)
+        return {
+          id: member.userId,
+          name: member.name,
+          initials: initialsFromName(given, family.join(' ')),
+          src: member.src ?? null,
+        }
+      })}
+      max={max}
+      label={summary}
+      {...(className ? { className } : {})}
+    />
   )
 }

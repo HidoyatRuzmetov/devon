@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../lib/avatar.js'
 // `/department?id=<uuid>` -- detail, settings, invite and membership management for one department
 // (TECH-SPEC §2.2, §2.3). Query-string id, not a path param: `src/lib/router.tsx` supports exact
 // paths only today (MODULE-GUIDE.md "Web features"); `useSearchParams()` is the documented way around
@@ -679,6 +680,7 @@ function JoinRequestsCard({ id }: { id: string }) {
                     <Avatar
                       size="sm"
                       alt={name}
+                      src={avatarUrl(r.avatarKey, 64)}
                       decorative
                       initials={initialsFromName(r.givenName, r.familyName)}
                       hueSeed={r.userId}
@@ -856,6 +858,7 @@ function MemberRow({
         <Avatar
           size="sm"
           alt={name}
+          src={avatarUrl(member.avatarKey, 64)}
           // SEV2 #21: the row prints the name immediately below.
           decorative
           initials={initialsFromName(member.givenName, member.familyName)}

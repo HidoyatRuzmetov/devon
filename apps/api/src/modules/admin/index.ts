@@ -34,6 +34,7 @@ import {
   patchMaintenanceBodySchema,
   patchRegistrationBodySchema,
   pauseDepartmentBodySchema,
+  restoreDeletedIdentityBodySchema,
   sentinelKeyResultSchema,
   sentinelStatusSchema,
   startWipeBodySchema,
@@ -473,6 +474,20 @@ const adminPlugin: FastifyPluginAsyncZod = async (app) => {
         sendProblem(reply, 'not_found')
         return
       }
+      return reply.code(204).send()
+    },
+  )
+
+  app.post(
+    '/accounts/:id/restore-deleted-identity',
+    {
+      config: { permission: { action: 'administer', subject: instanceSubject } },
+      schema: { params: userIdParamsSchema, body: restoreDeletedIdentityBodySchema },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const ok = await repo.restoreDeletedIdentity(req.params.id, req.body, auditCtx(req))
+      if (!ok) return sendProblem(reply, 'not_found')
       return reply.code(204).send()
     },
   )

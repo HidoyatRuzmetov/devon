@@ -129,17 +129,24 @@
         "temporaryPasswordBody": "Передайте этот пароль пользователю безопасным способом. При первом входе будет предложено задать новый пароль.",
         "temporaryPasswordClose": "Закрыть",
         "anonymizeDialogTitle": "Удалить аккаунт",
-        "anonymizeDialogBody": "Данные пользователя будут обезличены, а аккаунт удалён без возможности восстановления.",
+        "anonymizeDialogBody": "Вход будет закрыт, а все сеансы завершены. Имя и история работы останутся в журнале аудита. Исходный логин можно будет использовать повторно.",
         "anonymizeSubmit": "Удалить",
-        "anonymizedToast": "Аккаунт удалён"
+        "anonymizedToast": "Аккаунт удалён",
+        "correctIdentity": "Исправить имя в истории",
+        "identityCorrectionBody": "Укажите подтверждённое исходное имя. Исправляется только отображение в истории: учётная запись остаётся удалённой и войти в неё нельзя.",
+        "identityGivenName": "Имя",
+        "identityFamilyName": "Фамилия",
+        "identityReason": "Источник или причина исправления",
+        "identitySave": "Сохранить имя в истории",
+        "identityCorrected": "Имя в истории исправлено"
       },
       "analytics": {
-        "totalDepartments": "Всего отделов",
-        "totalPeople": "Всего пользователей",
+        "totalDepartments": "Текущие управления",
+        "totalPeople": "Активные учётные записи",
         "cardsCreated30d": "Карточек (30 дней)",
         "logins7d": "Входов (7 дней)",
-        "departmentsTitle": "Статус отделов",
-        "peopleTitle": "Состав пользователей",
+        "departmentsTitle": "Все управления по статусу",
+        "peopleTitle": "Роли активных учётных записей",
         "activityTitle": "Активность",
         "aiSpendTitle": "Расходы на AI",
         "active": "Активные",
@@ -154,7 +161,8 @@
         "tokensThisMonth": "Токенов в этом месяце",
         "costThisMonth": "Расход в этом месяце",
         "uzs": "сум",
-        "aiSpendUnavailable": "Модуль AI ещё не подключён."
+        "aiSpendUnavailable": "Данные о расходах ИИ сейчас недоступны.",
+        "activeScope": "Активные учётные записи в активных управлениях и суперадминистраторы. Архивные, заблокированные и удалённые записи исключены."
       },
       "audit": {
         "fromDate": "С даты",
@@ -396,7 +404,9 @@
           "work.template_updated": "обновил шаблон",
           "work.template_used": "применил шаблон",
           "work.time_log_removed": "удалил запись времени",
-          "work.time_logged": "записал рабочее время"
+          "work.time_logged": "записал рабочее время",
+          "admin.user.deleted_identity_restored": "исправил имя удалённой учётной записи в истории",
+          "admin.user.deleted": "удалил аккаунт"
         },
         "subjectType": {
           "session": "Сеанс",

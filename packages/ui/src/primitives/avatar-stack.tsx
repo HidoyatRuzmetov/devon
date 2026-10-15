@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { cn } from '../lib/cn.js'
 import { Avatar } from './avatar.js'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip.js'
 
 export interface AvatarStackPerson {
   id: string
@@ -14,8 +15,7 @@ export interface AvatarStackProps {
   /** How many faces to show before collapsing the rest into a "+N" disc. */
   max?: number
   size?: 'sm' | 'md'
-  /** Reads out the whole group, e.g. "12 ishtirokchi" -- the individual faces are `aria-hidden`
-   * inside it, because a screen reader announcing eight names in a row is noise, not information. */
+  /** Names the group; each individual face can also be focused to read its own name. */
   label: string
   className?: string
 }
@@ -33,30 +33,75 @@ export function AvatarStack({
   const overflow = people.length - shown.length
 
   return (
-    <div className={cn('flex items-center', className)} aria-label={label} role="group">
-      <div className="flex -space-x-2" aria-hidden="true">
-        {shown.map((person) => (
-          <Avatar
-            key={person.id}
-            src={person.src ?? null}
-            alt={person.name}
-            initials={person.initials}
-            hueSeed={person.id}
-            size={size}
-            className="ring-2 ring-card"
-          />
-        ))}
-        {overflow > 0 ? (
-          <span
-            className={cn(
-              'inline-flex shrink-0 items-center justify-center rounded-full bg-muted font-medium text-muted-foreground ring-2 ring-card',
-              size === 'sm' ? 'size-6 text-caption' : 'size-9 text-small',
-            )}
-          >
-            {`+${overflow}`}
-          </span>
-        ) : null}
+    <TooltipProvider delayDuration={120} skipDelayDuration={300} disableHoverableContent>
+      <div className={cn('flex items-center', className)} aria-label={label} role="group">
+        <div className="flex items-center -space-x-2">
+          {shown.map((person) => (
+            <StackPerson key={person.id} name={person.name} tooltip={person.name}>
+              <Avatar
+                src={person.src ?? null}
+                alt={person.name}
+                initials={person.initials}
+                hueSeed={person.id}
+                size={size}
+                decorative
+                className="ring-2 ring-card"
+              />
+            </StackPerson>
+          ))}
+          {overflow > 0 ? (
+            <StackPerson
+              name={people
+                .slice(shown.length)
+                .map((person) => person.name)
+                .join(', ')}
+              tooltip={people.slice(shown.length).map((person) => (
+                <div key={person.id}>{person.name}</div>
+              ))}
+            >
+              <span
+                className={cn(
+                  'inline-flex shrink-0 items-center justify-center rounded-full bg-muted font-medium text-muted-foreground ring-2 ring-card',
+                  size === 'sm' ? 'size-6 text-caption' : 'size-9 text-small',
+                )}
+              >{`+${overflow}`}</span>
+            </StackPerson>
+          ) : null}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
+  )
+}
+
+/** The target stays still while its child face moves, avoiding hover flicker along the bottom edge.
+ * A real button also lets touch/keyboard users reveal the same name hint. */
+function StackPerson({
+  name,
+  tooltip,
+  children,
+}: {
+  name: string
+  tooltip: React.ReactNode
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <Tooltip open={open} onOpenChange={setOpen}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="devon-avatar-stack-item inline-flex shrink-0 rounded-full"
+          aria-label={name}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            setOpen(true)
+          }}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-64">{tooltip}</TooltipContent>
+    </Tooltip>
   )
 }

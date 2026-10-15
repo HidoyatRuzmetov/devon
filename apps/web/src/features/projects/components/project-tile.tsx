@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // The "one project card in every member's column" outcome (EPIC-005/TECH-SPEC §3.2) is rendered, not
 // stored: a group project has no row in `app.cards` at all (only its objective/subjective *tasks*
 // do -- `apps/api/src/modules/projects/repo.ts`'s `createProject` never inserts into `app.cards`), so
@@ -115,6 +116,7 @@ export function ProjectTile({
       id: m.userId,
       name: fullName(m),
       initials: initialsFromName(m.givenName, m.familyName),
+      src: avatarUrl(m.avatarKey, 64),
     }))
   const milestone = nextMilestone(project)
   const objectiveText = project.description?.text.trim() || null
@@ -125,16 +127,20 @@ export function ProjectTile({
   return (
     <HoverLift className="h-full">
       <PressScale className="h-full">
-        <RouterLink
-          href={`/projects/view?id=${encodeURIComponent(project.id)}`}
-          className="flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 text-left shadow-1
+        <div
+          className="relative flex h-full flex-col gap-3 rounded-md border border-border bg-card p-4 text-left shadow-1
             transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
             focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <div className="flex items-start gap-3">
             {ring}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              {titleRow}
+              <RouterLink
+                href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+                className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+              >
+                {titleRow}
+              </RouterLink>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge tone={STATUS_TONE[project.status]}>
                   {t(`projects.status.${project.status}`)}
@@ -165,7 +171,12 @@ export function ProjectTile({
 
           <div className="mt-auto flex items-center justify-between gap-2 pt-1">
             {memberPeople.length > 0 ? (
-              <AvatarStack people={memberPeople} max={4} label={t('projects.field.members')} />
+              <AvatarStack
+                people={memberPeople}
+                max={4}
+                label={t('projects.field.members')}
+                className="relative z-10"
+              />
             ) : (
               <span aria-hidden="true" />
             )}
@@ -183,7 +194,7 @@ export function ProjectTile({
                   })}
             </span>
           </div>
-        </RouterLink>
+        </div>
       </PressScale>
     </HoverLift>
   )
