@@ -46,7 +46,7 @@ it('makes every department breakdown page reachable and preserves earlier rows',
     </QueryClientProvider>,
   )
   fireEvent.click(await screen.findByRole('button', { name: 'By department' }))
-  expect(await screen.findByText('First department')).toBeVisible()
+  await waitFor(() => expect(screen.getByText('First department')).toBeVisible())
   fireEvent.click(screen.getByRole('button', { name: 'More departments' }))
   expect(await screen.findByText('Last department')).toBeVisible()
   expect(screen.getByText('First department')).toBeVisible()

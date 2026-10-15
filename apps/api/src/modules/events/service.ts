@@ -85,6 +85,7 @@ function toEventDto(
       id: row.organizer_user_id,
       givenName: row.organizer_given_name,
       familyName: row.organizer_family_name,
+      avatarKey: row.organizer_avatar_key ?? null,
     },
     status: row.status as EventDto['status'],
     updatedSummary: row.updated_summary ? (JSON.parse(row.updated_summary) as EventChange[]) : null,
@@ -486,6 +487,7 @@ export async function listRsvps(ctx: RequestContext, eventId: string): Promise<R
       userId: r.user_id,
       givenName: r.given_name,
       familyName: r.family_name,
+      avatarKey: r.avatar_key ?? null,
       status: r.status as RsvpDto['status'],
       guests: r.guests,
       note: r.note,
@@ -512,7 +514,12 @@ export async function listComments(
     const rows = await repo.listComments(tx, eventId)
     return rows.map((r) => ({
       id: r.id,
-      author: { id: r.author_user_id, givenName: r.given_name, familyName: r.family_name },
+      author: {
+        id: r.author_user_id,
+        givenName: r.given_name,
+        familyName: r.family_name,
+        avatarKey: r.avatar_key ?? null,
+      },
       body: r.body,
       createdAt: r.created_at.toISOString(),
       canDelete: r.author_user_id === viewerUserId,
@@ -545,7 +552,12 @@ export async function addComment(
     })
     return {
       id,
-      author: { id: actor.userId, givenName: actor.givenName, familyName: actor.familyName },
+      author: {
+        id: actor.userId,
+        givenName: actor.givenName,
+        familyName: actor.familyName,
+        avatarKey: actor.avatarKey ?? null,
+      },
       body,
       createdAt: new Date().toISOString(),
       canDelete: true,
@@ -588,7 +600,12 @@ function toCarpoolDto(
     .reduce((sum, p) => sum + p.seats_claimed, 0)
   return {
     id: c.id,
-    driver: { id: c.driver_user_id, givenName: c.given_name, familyName: c.family_name },
+    driver: {
+      id: c.driver_user_id,
+      givenName: c.given_name,
+      familyName: c.family_name,
+      avatarKey: c.avatar_key ?? null,
+    },
     seats: c.seats,
     seatsClaimed,
     departurePlace: c.departure_place,
@@ -599,6 +616,7 @@ function toCarpoolDto(
       userId: p.user_id,
       givenName: p.given_name,
       familyName: p.family_name,
+      avatarKey: p.avatar_key ?? null,
       seatsClaimed: p.seats_claimed,
       status: p.status as 'confirmed' | 'waitlist',
     })),
@@ -766,6 +784,7 @@ function toItemDto(row: repo.ItemRow, viewerUserId: string): ItemDto {
           id: row.claimed_by_user_id,
           givenName: row.claimed_given_name ?? '',
           familyName: row.claimed_family_name ?? '',
+          avatarKey: row.claimed_avatar_key ?? null,
         }
       : null,
     claimedByMe: row.claimed_by_user_id === viewerUserId,
@@ -888,6 +907,7 @@ async function pollToDto(
       id: poll.created_by_user_id,
       givenName: poll.given_name,
       familyName: poll.family_name,
+      avatarKey: poll.avatar_key ?? null,
     },
     totalVotes: tally.reduce((sum, t) => sum + t.votes, 0),
     options: options.map((o) => ({
@@ -1024,7 +1044,12 @@ export async function listPhotos(ctx: RequestContext, viewerUserId: string, even
       id: r.id,
       url: r.url,
       caption: r.caption,
-      addedBy: { id: r.added_by_user_id, givenName: r.given_name, familyName: r.family_name },
+      addedBy: {
+        id: r.added_by_user_id,
+        givenName: r.given_name,
+        familyName: r.family_name,
+        avatarKey: r.avatar_key ?? null,
+      },
       createdAt: r.created_at.toISOString(),
       canDelete: r.added_by_user_id === viewerUserId,
     }))
@@ -1054,7 +1079,12 @@ export async function addPhoto(
       id,
       url: body.url,
       caption: body.caption ?? null,
-      addedBy: { id: actor.userId, givenName: actor.givenName, familyName: actor.familyName },
+      addedBy: {
+        id: actor.userId,
+        givenName: actor.givenName,
+        familyName: actor.familyName,
+        avatarKey: actor.avatarKey ?? null,
+      },
       createdAt: new Date().toISOString(),
       canDelete: true,
     }
@@ -1099,7 +1129,12 @@ export async function listFeedback(
       id: r.id,
       author: r.anonymous
         ? null
-        : { id: r.user_id, givenName: r.given_name, familyName: r.family_name },
+        : {
+            id: r.user_id,
+            givenName: r.given_name,
+            familyName: r.family_name,
+            avatarKey: r.avatar_key ?? null,
+          },
       rating: r.rating,
       comment: r.comment,
       createdAt: r.created_at.toISOString(),
@@ -1113,7 +1148,12 @@ export async function listFeedback(
             id: mine.id,
             author: mine.anonymous
               ? null
-              : { id: mine.user_id, givenName: mine.given_name, familyName: mine.family_name },
+              : {
+                  id: mine.user_id,
+                  givenName: mine.given_name,
+                  familyName: mine.family_name,
+                  avatarKey: mine.avatar_key ?? null,
+                },
             rating: mine.rating,
             comment: mine.comment,
             createdAt: mine.created_at.toISOString(),

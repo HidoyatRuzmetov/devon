@@ -45,14 +45,26 @@ for (const role of ['head', 'member'] as const) {
       // The visible head option includes its role; use the authenticated actor's stable ID.
       await page.getByLabel('Assignee', { exact: true }).selectOption(me.user.id)
       await page.getByLabel('Due', { exact: true }).fill('2030-10-10')
+      const expectedDueAt = '2030-10-10T18:59:59.000Z'
       const createdResponse = page.waitForResponse(
         (response) =>
           response.url().endsWith('/api/v1/cards') && response.request().method() === 'POST',
       )
       await page.getByRole('button', { name: 'New card', exact: true }).click()
-      const created = (await (await createdResponse).json()) as { id: string; title: string }
+      const response = await createdResponse
+      expect(response.request().postDataJSON()).toMatchObject({ dueAt: expectedDueAt })
+      const created = (await response.json()) as {
+        id: string
+        title: string
+        dueAt: string | null
+      }
       expect(created.title).toBe(title)
+      expect(created.dueAt).toBe(expectedDueAt)
       await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue(title)
+      await expect(page.getByRole('button', { name: 'Due', exact: true })).toHaveText('10.10.2030')
+      const savedResponse = await context.request.get(`/api/v1/cards/${created.id}`)
+      expect(savedResponse.ok()).toBeTruthy()
+      expect(await savedResponse.json()).toMatchObject({ dueAt: expectedDueAt })
       const checklist = page.getByRole('region', { name: /^Checklist/ })
       for (const text of ['First check', 'Second check', 'Third check']) {
         // Creating in order proves later completion does not reorder the real database rows.

@@ -174,14 +174,22 @@ export function BarChart({
       aria-label={data.map((d) => `${d.label}: ${d.value}`).join(', ')}
     >
       {data.map((d) => (
-        <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5">
-          <div className="flex w-full flex-1 items-end">
+        <div key={d.label} className="flex h-full min-w-0 flex-1 flex-col items-center gap-1.5">
+          <span className="shrink-0 text-caption tabular-nums text-muted-foreground">
+            {d.value}
+          </span>
+          <div className="flex min-h-0 w-full flex-1 items-end">
             <div
               className="w-full rounded-t-sm bg-primary transition-[height] duration-(--dur-standard) ease-out"
-              style={{ height: drawn ? `${Math.max(2, (d.value / max) * 100)}%` : '0%' }}
+              style={{ height: drawn ? `${(d.value / max) * 100}%` : '0%' }}
             />
           </div>
-          <span className="text-caption text-muted-foreground">{d.label}</span>
+          <span
+            className="max-w-full shrink-0 truncate text-caption text-muted-foreground"
+            title={d.label}
+          >
+            {d.label}
+          </span>
         </div>
       ))}
     </div>

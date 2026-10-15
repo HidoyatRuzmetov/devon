@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // One People-board column: a sticky, colour-tagged member header (avatar, name, workload count),
 // their group-project tiles (EPIC-005), then their cards, an inline "+ Add card" quick-add at the
 // foot, and a collapse toggle that shrinks the whole column to a thin rail -- Trello/Plane's own
@@ -180,7 +181,7 @@ export function BoardColumn({
         {member ? (
           <Avatar
             size="sm"
-            src={null}
+            src={avatarUrl(member.avatarKey, 64)}
             alt={fullName(member)}
             initials={initialsFromName(member.givenName, member.familyName)}
             hueSeed={member.userId}
@@ -225,7 +226,7 @@ export function BoardColumn({
             <>
               <Avatar
                 size="sm"
-                src={null}
+                src={avatarUrl(member.avatarKey, 64)}
                 alt={fullName(member)}
                 initials={initialsFromName(member.givenName, member.familyName)}
                 hueSeed={member.userId}

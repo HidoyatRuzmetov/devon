@@ -73,19 +73,34 @@ describe('resolveDateWord', () => {
     expect(resolveDateWord('tomorrow', wednesday)).toEqual(new Date(2026, 8, 10))
   })
 
-  it('resolves a future weekday name in all three locales to the same date', () => {
+  it('resolves a future weekday name in all four locales to the same date', () => {
     // Friday after 2026-09-09 (Wednesday) is 2026-09-11.
-    for (const word of ['friday', 'juma', 'пятница']) {
+    for (const word of ['friday', 'juma', 'жума', 'пятница']) {
       expect(resolveDateWord(word, wednesday)).toEqual(new Date(2026, 8, 11))
     }
   })
 
   it('resolves the current weekday name to today, not seven days out', () => {
     // wednesday itself
-    for (const word of ['wednesday', 'chorshanba', 'среда']) {
+    for (const word of ['wednesday', 'chorshanba', 'чоршанба', 'среда']) {
       expect(resolveDateWord(word, wednesday)).toEqual(new Date(2026, 8, 9))
     }
   })
+
+  it.each([
+    ['душанба', 14],
+    ['сешанба', 15],
+    ['чоршанба', 9],
+    ['пайшанба', 10],
+    ['жума', 11],
+    ['шанба', 12],
+    ['якшанба', 13],
+  ] as const)(
+    'resolves Cyrillic Uzbek weekday %s, ignoring case and surrounding space',
+    (word, day) => {
+      expect(resolveDateWord(` ${word.toUpperCase()} `, wednesday)).toEqual(new Date(2026, 8, day))
+    },
+  )
 
   it('returns null for gibberish', () => {
     expect(resolveDateWord('not-a-date', wednesday)).toBeNull()
@@ -131,6 +146,7 @@ describe('matchesFilterQuery', () => {
 
   it('matches due:<=friday for a card due on Friday, evaluated from Wednesday', () => {
     expect(cardMatchesFilterText(base, 'due:<=friday', { now })).toBe(true)
+    expect(cardMatchesFilterText(base, 'due:<=жума', { now })).toBe(true)
     expect(cardMatchesFilterText(base, 'due:<=today', { now })).toBe(false)
     expect(cardMatchesFilterText(base, 'due:>=friday', { now })).toBe(true)
   })

@@ -39,7 +39,7 @@
       "moveFailed": "Could not move it. The card went back where it was."
     },
     "quickAdd": {
-      "placeholder": "Quick add: \"Nodira: prepare the monthly report by friday\"",
+      "placeholder": "Quick add: \"Nodira: prepare the monthly report, friday\"",
       "created": "\"{title}\" created",
       "error": "Could not create the card",
       "unknownAssignee": "No member matches \"{name}\"",

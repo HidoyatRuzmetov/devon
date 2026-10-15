@@ -507,17 +507,24 @@
         "temporaryPasswordBody": "Bu parolni xodimga xavfsiz yoʻl bilan yetkazing. Birinchi kirishda undan yangi parol soʻraladi.",
         "temporaryPasswordClose": "Yopish",
         "anonymizeDialogTitle": "Hisobni oʻchirish",
-        "anonymizeDialogBody": "Xodimning maʼlumotlari anonimlashtiriladi va hisob butunlay oʻchiriladi. Buni ortga qaytarib boʻlmaydi.",
+        "anonymizeDialogBody": "Kirish yopiladi va barcha seanslar tugatiladi. Ism va ish tarixi auditda saqlanadi. Asl foydalanuvchi nomidan qayta foydalanish mumkin boʻladi.",
         "anonymizeSubmit": "Oʻchirish",
-        "anonymizedToast": "Hisob oʻchirildi"
+        "anonymizedToast": "Hisob oʻchirildi",
+        "correctIdentity": "Tarixdagi ismni tuzatish",
+        "identityCorrectionBody": "Tasdiqlangan asl ismni kiriting. Faqat tarixdagi koʻrinish tuzatiladi; hisob oʻchirilgan holda qoladi va tizimga kira olmaydi.",
+        "identityGivenName": "Ism",
+        "identityFamilyName": "Familiya",
+        "identityReason": "Tuzatish manbasi yoki sababi",
+        "identitySave": "Tarixdagi ismni saqlash",
+        "identityCorrected": "Tarixdagi ism tuzatildi"
       },
       "analytics": {
-        "totalDepartments": "Jami boshqarmalar",
-        "totalPeople": "Jami xodimlar",
+        "totalDepartments": "Joriy boshqarmalar",
+        "totalPeople": "Faol hisoblar",
         "cardsCreated30d": "Kartalar (30 kun)",
         "logins7d": "Kirishlar (7 kun)",
-        "departmentsTitle": "Boshqarmalar holati",
-        "peopleTitle": "Xodimlar tarkibi",
+        "departmentsTitle": "Barcha boshqarmalar holati",
+        "peopleTitle": "Faol hisoblar rollari",
         "activityTitle": "Faollik",
         "aiSpendTitle": "AI xarajatlari",
         "active": "Faol",
@@ -532,7 +539,8 @@
         "tokensThisMonth": "Bu oydagi tokenlar",
         "costThisMonth": "Bu oydagi xarajat",
         "uzs": "soʻm",
-        "aiSpendUnavailable": "AI moduli hali ulanmagan."
+        "aiSpendUnavailable": "AI sarfi maʼlumotlari hozircha mavjud emas.",
+        "activeScope": "Faol boshqarmalardagi faol hisoblar va superadministratorlar. Arxivlangan, bloklangan va oʻchirilgan hisoblar kirmaydi."
       },
       "audit": {
         "fromDate": "Boshlanish sanasi",
@@ -774,7 +782,9 @@
           "work.template_updated": "andozani yangiladi",
           "work.template_used": "andozadan foydalandi",
           "work.time_log_removed": "vaqt qaydini oʻchirdi",
-          "work.time_logged": "ish vaqtini qayd etdi"
+          "work.time_logged": "ish vaqtini qayd etdi",
+          "admin.user.deleted_identity_restored": "oʻchirilgan hisobning tarixdagi ismini tuzatdi",
+          "admin.user.deleted": "hisobni oʻchirdi"
         },
         "subjectType": {
           "session": "Qurilma",
@@ -1804,7 +1814,7 @@
       "archive": "Arxiv"
     },
     "quickAdd": {
-      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma kuni»",
+      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma»",
       "created": "«{title}» qoʻshildi",
       "error": "Kartani qoʻshib boʻlmadi",
       "unknownAssignee": "«{name}» degan xodim topilmadi",

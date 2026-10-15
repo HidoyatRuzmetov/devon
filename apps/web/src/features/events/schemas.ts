@@ -25,7 +25,12 @@ export type RsvpStatus = (typeof RSVP_STATUSES)[number]
 export const POLL_KINDS = ['date', 'single', 'multi'] as const
 export type PollKind = (typeof POLL_KINDS)[number]
 
-const summaryUser = z.object({ id: z.string(), givenName: z.string(), familyName: z.string() })
+const summaryUser = z.object({
+  id: z.string(),
+  givenName: z.string(),
+  familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
+})
 export type SummaryUser = z.infer<typeof summaryUser>
 
 const eventChange = z.object({
@@ -78,6 +83,7 @@ export const rsvpDto = z.object({
   userId: z.string(),
   givenName: z.string(),
   familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
   status: z.enum(RSVP_STATUSES),
   guests: z.number().int(),
   note: z.string().nullable(),
@@ -100,6 +106,7 @@ export const carpoolSeatDto = z.object({
   userId: z.string(),
   givenName: z.string(),
   familyName: z.string(),
+  avatarKey: z.string().nullable().optional(),
   seatsClaimed: z.number().int(),
   status: z.enum(['confirmed', 'waitlist']),
 })

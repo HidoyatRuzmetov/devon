@@ -90,13 +90,14 @@ describe('PresenceAvatars', () => {
   it('names one colleague directly and counts the rest', () => {
     setLocale('en')
     const { unmount } = renderWithTooltips(<PresenceAvatars members={members.slice(0, 1)} />)
-    expect(screen.getByRole('button')).toHaveAccessibleName(
+    expect(screen.getByRole('group')).toHaveAccessibleName(
       'Aziz Yusupov is looking at this board too',
     )
     unmount()
     renderWithTooltips(<PresenceAvatars members={members.slice(0, 3)} />)
-    expect(screen.getByRole('button')).toHaveAccessibleName(
+    expect(screen.getByRole('group')).toHaveAccessibleName(
       'Aziz Yusupov and 2 others are looking at this board',
     )
+    expect(screen.getByRole('button', { name: 'Dilnoza Karimova' })).toBeEnabled()
   })
 })

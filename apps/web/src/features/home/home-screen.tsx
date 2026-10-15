@@ -38,7 +38,7 @@ import { useIsHead } from '../../lib/can.js'
 import { HeadDashboard } from './head-dashboard.js'
 import { useDepartment, useInstanceQuery, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
-import { navigate } from '../../lib/router.js'
+import { navigate, useSearchParams } from '../../lib/router.js'
 import { formatHomeDateLine, greetingKey, greetingName, tashkentHour } from '../../lib/greeting.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import {
@@ -49,6 +49,12 @@ import {
 } from '../analytics/use-analytics.js'
 import type { SectionProps } from '../analytics/sections.js'
 import type { AnalyticsChartKey } from '../analytics/types.js'
+
+const HomeCardPeekDialog = React.lazy(() =>
+  import('../work/components/card-peek-dialog.js').then((module) => ({
+    default: module.CardPeekDialog,
+  })),
+)
 
 const SECTION_BY_KEY: Record<AnalyticsChartKey, React.ComponentType<SectionProps>> = {
   throughput: React.lazy(() =>
@@ -577,6 +583,7 @@ export default function HomeScreen() {
   const instanceQuery = useInstanceQuery()
   const { departmentId } = useDepartment()
   const isHead = useIsHead()
+  const search = useSearchParams()
 
   const settled = !meQuery.isPending && !instanceQuery.isPending
   const user = meQuery.data?.user ?? null
@@ -682,6 +689,13 @@ export default function HomeScreen() {
         </Button>
       </div>
       {isHead ? <HeadDashboard /> : <Dashboard hasAvatar={Boolean(user.avatarKey)} />}
+      {/* Focus cards keep Home underneath, just as Mine keeps its own list underneath.
+          Load the shared details panel only when a card is actually opened. */}
+      {search.get('card') ? (
+        <React.Suspense fallback={null}>
+          <HomeCardPeekDialog />
+        </React.Suspense>
+      ) : null}
     </div>
   )
 }

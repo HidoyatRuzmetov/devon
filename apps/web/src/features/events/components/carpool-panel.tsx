@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // Carpooling (TECH-SPEC §3.4: "driver offers seats + departure point/time; colleagues claim;
 // waitlist when full"). `carpool.canManage` already folds in "I'm the driver, or I'm the head" --
 // this panel never re-derives that.
@@ -77,6 +78,7 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex min-w-0 flex-[1_1_10rem] items-center gap-2">
           <Avatar
+            src={avatarUrl(carpool.driver.avatarKey, 64)}
             alt={`${carpool.driver.givenName} ${carpool.driver.familyName}`}
             initials={initialsFromName(carpool.driver.givenName, carpool.driver.familyName)}
             hueSeed={carpool.driver.id}
@@ -118,6 +120,7 @@ function CarpoolCard({ eventId, carpool }: { eventId: string; carpool: CarpoolDt
             {carpool.passengers.map((p) => (
               <li key={p.userId} className="flex items-center gap-1.5">
                 <Avatar
+                  src={avatarUrl(p.avatarKey, 64)}
                   alt={`${p.givenName} ${p.familyName}`}
                   initials={initialsFromName(p.givenName, p.familyName)}
                   hueSeed={p.userId}

@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../lib/avatar.js'
 // The list view of the structure editor: nested bo'limlar with inline rename, a colour popover, drag
 // reorder (within a sibling group) and drag-to-nest (drop onto another row to become its child),
 // collapse/expand per branch, add-sub-unit/delete, and each unit's role holders with self-assign /
@@ -195,21 +196,27 @@ export function RoleChips({
               return (
                 <HoverCard key={r.id}>
                   <HoverCardTrigger asChild>
-                    <span className="rounded-full ring-2 ring-card">
+                    <button
+                      type="button"
+                      aria-label={member ? fullName(member) : r.userId}
+                      className="devon-avatar-stack-item inline-flex rounded-full ring-2 ring-card"
+                    >
                       <Avatar
                         size="sm"
+                        src={avatarUrl(member?.avatarKey, 64)}
                         alt={member ? fullName(member) : r.userId}
                         initials={
                           member ? initialsFromName(member.givenName, member.familyName) : '?'
                         }
                         hueSeed={unit.id}
                       />
-                    </span>
+                    </button>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-64">
                     <div className="flex items-center gap-3">
                       <Avatar
                         size="lg"
+                        src={avatarUrl(member?.avatarKey, 128)}
                         alt={member ? fullName(member) : r.userId}
                         initials={
                           member ? initialsFromName(member.givenName, member.familyName) : '?'
@@ -306,6 +313,7 @@ export function RoleChips({
               <span className="inline-flex items-center gap-1 rounded-sm border border-border bg-card py-0.5 pl-1 pr-1.5 text-caption">
                 <Avatar
                   size="sm"
+                  src={avatarUrl(member?.avatarKey, 64)}
                   alt={member ? fullName(member) : r.userId}
                   initials={member ? initialsFromName(member.givenName, member.familyName) : '?'}
                   hueSeed={unit.id}
@@ -337,6 +345,7 @@ export function RoleChips({
                 <div className="flex items-center gap-3">
                   <Avatar
                     size="lg"
+                    src={avatarUrl(member.avatarKey, 128)}
                     alt={fullName(member)}
                     initials={initialsFromName(member.givenName, member.familyName)}
                     hueSeed={unit.id}
@@ -590,6 +599,7 @@ function UnitRow({
                 >
                   <Avatar
                     size="sm"
+                    src={avatarUrl(headMember.avatarKey, 64)}
                     alt={fullName(headMember)}
                     initials={initialsFromName(headMember.givenName, headMember.familyName)}
                     hueSeed={node.id}

@@ -67,13 +67,11 @@ test('release CI explicitly selects production performance without altering ordi
     '\r\n',
     '\n',
   )
-  const jobs = [
-    ...workflow.matchAll(
-      /^      - name: Verify compiled production browser journeys\n([\s\S]*?)^      - name: Run the (integration|release) gate profile\n([\s\S]*?)(?=^      - name:)/gm,
-    ),
-  ]
-  assert.deepEqual(jobs.map((job) => job[2]).sort(), ['integration', 'release'])
-  for (const [, compiled, profile, ordinary] of jobs) {
+  const compiled = workflow.match(/^  browser-production:\n([\s\S]*?)(?=^  [\w-]+:)/m)?.[1]
+  const ordinary = workflow.match(/^  browser-development:\n([\s\S]*?)(?=^  [\w-]+:)/m)?.[1]
+  const source = workflow.match(/^  source-gates:\n([\s\S]*?)(?=^  [\w-]+:)/m)?.[1]
+  assert.ok(compiled && ordinary && source, 'all separate runtime gate jobs remain present')
+  {
     assert.match(compiled, /^\s+FLOW_PRODUCTION_BUILD: '1'$/m)
     assert.match(compiled, /^\s+DEVON_E2E: '0'$/m)
     const build = compiled.indexOf('await buildPerformanceWeb(process.cwd(), process.env)')
@@ -87,9 +85,12 @@ test('release CI explicitly selects production performance without altering ordi
       2,
     )
     assert.equal(compiled.match(/--workers=1 --retries=0/g)?.length, 2)
-    assert.match(ordinary, new RegExp(`run: node agentic/scripts/gate\\.mjs --profile ${profile}`))
+    assert.match(ordinary, /run: node scripts\/ci-gate\.mjs browser/)
     assert.ok(!ordinary.includes('FLOW_PRODUCTION_BUILD'), 'the ordinary gate retains dev fixtures')
   }
+  assert.match(workflow, /GATE_PROFILE:.*'release'.*'integration'/)
+  assert.match(source, /performance:.*startsWith\(github.ref, 'refs\/tags\/'\)/)
+  assert.match(source, /run: node scripts\/ci-gate\.mjs source/)
   // Execute the actual configuration and receipt verifier in an owned fixture. Neither browser
   // nor API services start; the copied source has the same relative layout and dependency lookup.
   // Keep transient copied configs outside Playwright's recursively scanned test directory.

@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // The card detail content (TECH-SPEC §5, DESIGN.md §9.4). round2 SEV2: the original two-column
 // layout ran its left column at ~170px inside the 480px sheet -- title/status/description, then a
 // full-width label-above-value property list (assignee, priority, due, ...), then links/checklist/
@@ -280,6 +281,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
       id: m.userId,
       name: fullName(m),
       initials: initialsFromName(m.givenName, m.familyName),
+      src: avatarUrl(m.avatarKey, 64),
     }))
 
   async function saveTitle() {
@@ -1619,7 +1621,7 @@ function Comments({
               >
                 <Avatar
                   size="sm"
-                  src={null}
+                  src={avatarUrl(author?.avatarKey, 64)}
                   alt={author ? fullName(author) : ''}
                   initials={author ? initialsFromName(author.givenName, author.familyName) : '?'}
                   hueSeed={c.authorUserId}

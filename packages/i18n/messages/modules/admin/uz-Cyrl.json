@@ -129,17 +129,24 @@
         "temporaryPasswordBody": "Бу паролни ходимга хавфсиз йўл билан етказинг. Биринчи киришда ундан янги парол сўралади.",
         "temporaryPasswordClose": "Ёпиш",
         "anonymizeDialogTitle": "Ҳисобни ўчириш",
-        "anonymizeDialogBody": "Ходимнинг маълумотлари анонимлаштирилади ва ҳисоб бутунлай ўчирилади. Буни ортга қайтариб бўлмайди.",
+        "anonymizeDialogBody": "Кириш ёпилади ва барча сеанслар тугатилади. Исм ва иш тарихи аудитда сақланади. Асл фойдаланувчи номидан қайта фойдаланиш мумкин бўлади.",
         "anonymizeSubmit": "Ўчириш",
-        "anonymizedToast": "Ҳисоб ўчирилди"
+        "anonymizedToast": "Ҳисоб ўчирилди",
+        "correctIdentity": "Тарихдаги исмни тузатиш",
+        "identityCorrectionBody": "Тасдиқланган асл исмни киритинг. Фақат тарихдаги кўриниш тузатилади; ҳисоб ўчирилган ҳолда қолади ва тизимга кира олмайди.",
+        "identityGivenName": "Исм",
+        "identityFamilyName": "Фамилия",
+        "identityReason": "Тузатиш манбаси ёки сабаби",
+        "identitySave": "Тарихдаги исмни сақлаш",
+        "identityCorrected": "Тарихдаги исм тузатилди"
       },
       "analytics": {
-        "totalDepartments": "Жами бошқармалар",
-        "totalPeople": "Жами ходимлар",
+        "totalDepartments": "Жорий бошқармалар",
+        "totalPeople": "Фаол ҳисоблар",
         "cardsCreated30d": "Карталар (30 кун)",
         "logins7d": "Киришлар (7 кун)",
-        "departmentsTitle": "Бошқармалар ҳолати",
-        "peopleTitle": "Ходимлар таркиби",
+        "departmentsTitle": "Барча бошқармалар ҳолати",
+        "peopleTitle": "Фаол ҳисоблар роллари",
         "activityTitle": "Фаоллик",
         "aiSpendTitle": "AI харажатлари",
         "active": "Фаол",
@@ -154,7 +161,8 @@
         "tokensThisMonth": "Бу ойдаги токенлар",
         "costThisMonth": "Бу ойдаги харажат",
         "uzs": "сўм",
-        "aiSpendUnavailable": "AI модули ҳали уланмаган."
+        "aiSpendUnavailable": "AI сарфи маълумотлари ҳозирча мавжуд эмас.",
+        "activeScope": "Фаол бошқармалардаги фаол ҳисоблар ва суперадминистраторлар. Архивланган, блокланган ва ўчирилган ҳисоблар кирмайди."
       },
       "audit": {
         "fromDate": "Бошланиш санаси",
@@ -396,7 +404,9 @@
           "work.template_updated": "андозани янгилади",
           "work.template_used": "андозадан фойдаланди",
           "work.time_log_removed": "вақт қайдини ўчирди",
-          "work.time_logged": "иш вақтини қайд этди"
+          "work.time_logged": "иш вақтини қайд этди",
+          "admin.user.deleted_identity_restored": "ўчирилган ҳисобнинг тарихдаги исмини тузатди",
+          "admin.user.deleted": "ҳисобни ўчирди"
         },
         "subjectType": {
           "session": "Қурилма",

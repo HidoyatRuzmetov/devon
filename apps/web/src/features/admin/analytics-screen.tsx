@@ -53,6 +53,7 @@ function AnalyticsBody() {
         />
         <KpiTile label={t('admin.console.analytics.logins7d')} value={a.activity.logins7d} />
       </div>
+      <p className="text-small text-muted-foreground">{t('admin.console.analytics.activeScope')}</p>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <section className="rounded-md border border-border bg-card p-6">
@@ -79,7 +80,7 @@ function AnalyticsBody() {
         <h2 className="mb-4 text-h3 text-foreground">
           {t('admin.console.analytics.activityTitle')}
         </h2>
-        {weeklyBars.length === 0 ? (
+        {weeklyBars.every((bar) => bar.value === 0) ? (
           <p className="text-body text-muted-foreground">
             {t('admin.console.analytics.noActivity')}
           </p>

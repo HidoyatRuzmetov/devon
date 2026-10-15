@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // Event discussion (TECH-SPEC §3.4 `event_comments`). Flat, newest-last, no threading -- matches the
 // scale of a department-wide event thread, not a project's activity feed.
 //
@@ -193,6 +194,7 @@ export function CommentsPanel({ eventId, eventTitle }: { eventId: string; eventT
         {commentsQuery.data.items.map((comment) => (
           <li key={comment.id} className="flex gap-3">
             <Avatar
+              src={avatarUrl(comment.author.avatarKey, 64)}
               alt={`${comment.author.givenName} ${comment.author.familyName}`}
               initials={initialsFromName(comment.author.givenName, comment.author.familyName)}
               hueSeed={comment.author.id}

@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // Shared chrome for every work-module route: the view-switcher tabs (Board/Table/Timeline/Calendar/
 // Mine/Archive), the quick-add bar and the filter bar. One component so a filter typed on the board
 // is still there after clicking over to Table (TECH-SPEC "table, timeline, calendar and mine show the
@@ -118,7 +119,12 @@ export function WorkShell({
         description={t('work.description')}
         actions={
           <div className="flex items-center gap-2">
-            <PresenceAvatars members={watchers} />
+            <PresenceAvatars
+              members={watchers.map((member) => ({
+                ...member,
+                src: avatarUrl(member.avatarKey, 64),
+              }))}
+            />
             <LiveStatusPill />
             {hasCollapsibleChrome ? (
               <IconButton

@@ -1,12 +1,8 @@
 name: CI
 
-# NOTE (EPIC-000.1 / EPIC-000.10 boundary): this file has two jobs today, `gate` (every PR / push to
-# main) and `release-gate` (tags). A third trigger -- a nightly `schedule:` job that re-runs the full
-# release profile against main to catch drift between releases -- is EPIC-000.10's job to add
-# (agentic/ledger/cycles/EPIC-000/items/EPIC-000.10.md: "modify ci.yml beyond adding the nightly
-# release job -- all other sections belong to EPIC-000.1"). Nothing below is that job; this comment is
-# the placeholder.
-
+# Same integration/release gates and both real browser runtimes; independent checks execute on
+# isolated runners instead of sharing one 26-minute serial queue. The original required check
+# names remain final, fail-closed aggregators, so deployment and branch protection keep working.
 on:
   pull_request:
   push:
@@ -21,61 +17,109 @@ permissions:
   contents: read
 
 env:
-  # gate.mjs itself sets CI=1 / FORCE_COLOR=0 per subprocess; this is for steps outside gate.mjs.
   CI: 'true'
+  GATE_PROFILE: ${{ startsWith(github.ref, 'refs/tags/') && 'release' || 'integration' }}
 
 jobs:
-  gate:
-    name: gate (integration profile)
-    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  source-gates:
+    name: Source, unit, migration and security gates
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up pnpm (version read from package.json#packageManager)
-        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
-
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Set up isolated CI runner
+        uses: ./.github/actions/ci-setup
         with:
-          node-version: '22.23.3'
-          cache: pnpm
-
-      - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install browser test dependencies
-        run: |
-          npm ci --prefix e2e --ignore-scripts
-          pnpm --filter @devon/web exec playwright install --with-deps chromium
+          security: 'true'
+          browser: ${{ startsWith(github.ref, 'refs/tags/') && 'true' || 'false' }}
+          performance: ${{ startsWith(github.ref, 'refs/tags/') && 'true' || 'false' }}
 
       - name: Start isolated test services
         run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
 
-      - name: Verify deployment and backup recovery paths
+      - name: Verify deployment, backup recovery and CI safety paths
         run: node --test scripts/test/*.test.mjs
 
-      # The `security` gate (agentic/gates.json) shells out to Semgrep and Trivy directly -- neither
-      # is an npm package, so CI provisions them here rather than pretending a `pnpm install` covers
-      # it. Locally these are never invoked by `pnpm setup`/`pnpm start` (security is not in the
-      # `fast`/`item` profiles), so a contributor's machine never needs them.
-      # Trivy is fetched as a checksummed release tarball, not the vendor's `curl | sh` one-liner --
-      # the latter is exactly the "pipe a remote script into a shell" pattern the `security` gate's
-      # own Semgrep OWASP ruleset flags as blocking (`gha-curl-pipe-shell`) when it later scans this
-      # very file, so using it here would make CI itself fail the gate it is trying to provision.
-      - name: Install security scanners (Semgrep, Trivy)
-        run: |
-          python3 -m pip install --quiet --disable-pip-version-check semgrep==1.176.1
-          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_checksums.txt
-          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
-          sha256sum --ignore-missing -c trivy_0.74.0_checksums.txt
-          tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
-          sudo install -m 0755 trivy /usr/local/bin/trivy
-          rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
-          semgrep --version
-          trivy --version
+      - name: Run every non-browser gate in the selected profile
+        run: node scripts/ci-gate.mjs source
+
+      - name: Upload gate report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: last-gate-report-source-${{ env.GATE_PROFILE }}
+          path: |
+            agentic/ledger/last-gate.json
+            agentic/ledger/gate-logs/**
+          if-no-files-found: warn
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
+
+  browser-development:
+    name: Development browser journeys and accessibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up isolated CI runner
+        uses: ./.github/actions/ci-setup
+        with:
+          browser: 'true'
+
+      - name: Start isolated test services
+        run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
+
+      # These use Vite dev and retain the dev-only component fixtures. Compiled checks below
+      # exercise the separate production React build; neither runtime replaces the other.
+      - name: Run the unchanged development browser gates
+        run: node scripts/ci-gate.mjs browser
+
+      - name: Upload gate report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: last-gate-report-browser-${{ env.GATE_PROFILE }}
+          path: |
+            agentic/ledger/last-gate.json
+            agentic/ledger/gate-logs/**
+          if-no-files-found: warn
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-development-${{ env.GATE_PROFILE }}
+          path: |
+            e2e/playwright-report/**
+            e2e/test-results/**
+            e2e/screenshots/**
+            apps/web/test-results/**
+            artifacts/qa/2026-10/results/**
+            artifacts/qa/2026-10/scanner/**
+            artifacts/qa/2026-10/structure-author/**
+            artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
+          if-no-files-found: ignore
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
+
+  browser-production:
+    name: Compiled production browser journeys and accessibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up isolated CI runner
+        uses: ./.github/actions/ci-setup
+        with:
+          browser: 'true'
+
+      - name: Start isolated test services
+        run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
 
       - name: Verify compiled production browser journeys
         env:
@@ -85,6 +129,46 @@ jobs:
           node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
           pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report-production-${{ env.GATE_PROFILE }}
+          path: |
+            e2e/playwright-report/**
+            e2e/test-results/**
+            e2e/screenshots/**
+            apps/web/test-results/**
+            artifacts/qa/2026-10/results/**
+            artifacts/qa/2026-10/scanner/**
+            artifacts/qa/2026-10/structure-author/**
+            artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
+          if-no-files-found: ignore
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
+
+  workflow-regressions:
+    name: Everyday workflow and real upload scanning
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up isolated CI runner
+        uses: ./.github/actions/ci-setup
+        with:
+          browser: 'true'
+
+      - name: Start isolated test services
+        run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
+
+      - name: Build and verify fresh production React assets
+        env:
+          FLOW_PRODUCTION_BUILD: '1'
+          DEVON_E2E: '0'
+        run: |
+          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
 
       - name: Verify everyday workflow and real upload-scanning regressions
         env:
@@ -99,151 +183,52 @@ jobs:
           FLOW_DB_NAME=devon_flow_e2e_invite_password FLOW_API_PORT=48981 FLOW_WEB_PORT=48982 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-invite-password pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-invite-password.qa.spec.ts --project chromium
           FLOW_DB_NAME=devon_flow_e2e_dept_decision FLOW_API_PORT=49011 FLOW_WEB_PORT=49012 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-department-decision pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-department-decision.qa.spec.ts --project chromium
           FLOW_DB_NAME=devon_flow_e2e_scanner FLOW_API_PORT=49001 FLOW_WEB_PORT=49002 FLOW_CLAMAV_PORT=49003 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=1 QA_RUN_ID=ci-scanner pnpm --filter @devon/web exec playwright test --config test/e2e/scanner-qa.config.ts --project chromium
-
-      - name: Run the integration gate profile
-        run: node agentic/scripts/gate.mjs --profile integration
-
-      - name: Upload gate report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: last-gate-report
-          path: |
-            agentic/ledger/last-gate.json
-            agentic/ledger/gate-logs/**
-          if-no-files-found: warn
-          retention-days: 30
+          FLOW_DB_NAME=devon_flow_e2e_avatar FLOW_API_PORT=48941 FLOW_WEB_PORT=48942 FLOW_CENTRIFUGO_PORT=48943 FLOW_REALTIME=1 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 pnpm --filter @devon/web exec playwright test --config test/e2e/avatar-interactions-qa.config.ts --project chromium
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report
+          name: playwright-report-workflow-regressions-${{ env.GATE_PROFILE }}
           path: |
             e2e/playwright-report/**
             e2e/test-results/**
+            e2e/screenshots/**
             apps/web/test-results/**
             artifacts/qa/2026-10/results/**
             artifacts/qa/2026-10/scanner/**
             artifacts/qa/2026-10/structure-author/**
             artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
+            artifacts/qa/2026-10/avatar-interactions/**
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: ${{ startsWith(github.ref, 'refs/tags/') && 90 || 30 }}
 
-      - name: Upload QA-visual screenshots
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: qa-visual-screenshots
-          path: e2e/screenshots/**
-          if-no-files-found: ignore
-          retention-days: 30
+  gate:
+    name: gate (integration profile)
+    if: ${{ always() && !startsWith(github.ref, 'refs/tags/') }}
+    needs: [source-gates, browser-development, browser-production, workflow-regressions]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Require every independent CI job to pass
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node scripts/ci-gate.mjs verify
 
   release-gate:
     name: gate (release profile)
-    if: startsWith(github.ref, 'refs/tags/')
+    if: ${{ always() && startsWith(github.ref, 'refs/tags/') }}
+    needs: [source-gates, browser-development, browser-production, workflow-regressions]
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up pnpm (version read from package.json#packageManager)
-        uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
-
-      - name: Set up Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '22.23.3'
-          cache: pnpm
-
-      - name: Install workspace dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install browser test dependencies
-        run: |
-          npm ci --prefix e2e --ignore-scripts
-          pnpm --filter @devon/web exec playwright install --with-deps chromium
-
-      - name: Start isolated test services
-        run: docker compose -f infra/docker-compose.yml up -d --wait postgres valkey
-
-      - name: Verify deployment and backup recovery paths
-        run: node --test scripts/test/*.test.mjs
-
-      # See the `gate` job's identical step above for why this is a checksummed release download
-      # rather than the vendor's `curl | sh` one-liner.
-      - name: Install security scanners (Semgrep, Trivy)
-        run: |
-          python3 -m pip install --quiet --disable-pip-version-check semgrep==1.176.1
-          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_checksums.txt
-          curl -sfLO https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz
-          sha256sum --ignore-missing -c trivy_0.74.0_checksums.txt
-          tar -xzf trivy_0.74.0_Linux-64bit.tar.gz trivy
-          sudo install -m 0755 trivy /usr/local/bin/trivy
-          rm -f trivy trivy_0.74.0_checksums.txt trivy_0.74.0_Linux-64bit.tar.gz
-
-      - name: Install pinned performance tools
-        run: bash scripts/install-perf-tools.sh
-
-      - name: Verify compiled production browser journeys
+      - name: Require every independent release CI job to pass
         env:
-          FLOW_PRODUCTION_BUILD: '1'
-          DEVON_E2E: '0'
-        run: |
-          node --input-type=module -e 'import { buildPerformanceWeb } from "./tools/perf/web-build.mjs"; await buildPerformanceWeb(process.cwd(), process.env);'
-          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep-invert @a11y --workers=1 --retries=0 --output test-results/e2e-production
-          pnpm --filter @devon/web exec playwright test --config test/e2e/playwright.config.ts --grep @a11y --workers=1 --retries=0 --output test-results/a11y-production
-
-      - name: Verify everyday workflow and real upload-scanning regressions
-        env:
-          FLOW_PRODUCTION_BUILD: '1'
-          DEVON_E2E: '0'
-        run: |
-          docker pull centrifugo/centrifugo:v6@sha256:017d0a3d39757f94a09efa657b6ad7e68222564dd9ba7dd7193981d75cd8a025
-          docker pull clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
-          FLOW_DB_NAME=devon_flow_e2e_worker FLOW_API_PORT=48971 FLOW_WEB_PORT=48972 FLOW_CENTRIFUGO_PORT=48973 FLOW_REALTIME=1 FLOW_SEED_DEMO=1 FLOW_CLAMAV=0 QA_RUN_ID=ci-work-workers pnpm --filter @devon/web exec playwright test --config test/e2e/work-worker-qa.config.ts --project chromium
-          FLOW_DB_NAME=devon_flow_e2e_structure_author FLOW_API_PORT=48991 FLOW_WEB_PORT=48992 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 STRUCTURE_QA_RUN=ci-structure pnpm --filter @devon/web exec playwright test --config test/e2e/structure-author-qa.config.ts --project chromium
-          FLOW_DB_NAME=devon_flow_e2e_board_navigation FLOW_API_PORT=49021 FLOW_WEB_PORT=49022 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 BOARD_NAV_QA_RUN=ci-board-navigation pnpm --filter @devon/web exec playwright test --config test/e2e/board-navigation-qa.config.ts --project chromium
-          FLOW_DB_NAME=devon_flow_e2e_invite_password FLOW_API_PORT=48981 FLOW_WEB_PORT=48982 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-invite-password pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-invite-password.qa.spec.ts --project chromium
-          FLOW_DB_NAME=devon_flow_e2e_dept_decision FLOW_API_PORT=49011 FLOW_WEB_PORT=49012 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=0 QA_RUN_ID=ci-department-decision pnpm --filter @devon/web exec playwright test --config test/e2e/platform-qa.config.ts platform-department-decision.qa.spec.ts --project chromium
-          FLOW_DB_NAME=devon_flow_e2e_scanner FLOW_API_PORT=49001 FLOW_WEB_PORT=49002 FLOW_CLAMAV_PORT=49003 FLOW_REALTIME=0 FLOW_SEED_DEMO=0 FLOW_CLAMAV=1 QA_RUN_ID=ci-scanner pnpm --filter @devon/web exec playwright test --config test/e2e/scanner-qa.config.ts --project chromium
-
-      - name: Run the release gate profile
-        run: node agentic/scripts/gate.mjs --profile release
-
-      - name: Upload gate report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: last-gate-report-release
-          path: |
-            agentic/ledger/last-gate.json
-            agentic/ledger/gate-logs/**
-          if-no-files-found: warn
-          retention-days: 90
-
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: playwright-report-release
-          path: |
-            e2e/playwright-report/**
-            e2e/test-results/**
-            apps/web/test-results/**
-            artifacts/qa/2026-10/results/**
-            artifacts/qa/2026-10/scanner/**
-            artifacts/qa/2026-10/structure-author/**
-            artifacts/qa/2026-10/board-navigation/ci-board-navigation/**
-          if-no-files-found: ignore
-          retention-days: 90
-
-      - name: Upload QA-visual screenshots
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: qa-visual-screenshots-release
-          path: e2e/screenshots/**
-          if-no-files-found: ignore
-          retention-days: 90
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node scripts/ci-gate.mjs verify

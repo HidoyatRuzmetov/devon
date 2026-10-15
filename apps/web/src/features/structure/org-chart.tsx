@@ -10,6 +10,8 @@ import { Download, Minus, Plus, RotateCcw, X } from 'lucide-react'
 import type { TreeActions, TreeNode } from './unit-tree.js'
 import { RoleChips } from './unit-tree.js'
 import { fullName } from './member-card.js'
+import { OrgChartAvatar } from './org-chart-avatar.js'
+import { inlineOrgChartPhotos } from './org-chart-images.js'
 
 const NODE_W = 244
 const NODE_H = 116
@@ -369,6 +371,7 @@ export function OrgChart({
       }
       copy.style.fontFamily = 'Arial, sans-serif'
     })
+    await inlineOrgChartPhotos(clone)
     const serialized = new XMLSerializer().serializeToString(clone)
     const svgBlob = new Blob([serialized], { type: 'image/svg+xml;charset=utf-8' })
     const url = URL.createObjectURL(svgBlob)
@@ -575,23 +578,12 @@ export function OrgChart({
                   </text>
                   {headMember ? (
                     <>
-                      <circle
-                        cx={24}
+                      <OrgChartAvatar
+                        person={headMember}
                         cy={70 + nodeLabels.extraTitleHeight}
-                        r={11}
                         fill={unitFillVar(node)}
+                        textStyle={captionTextStyle}
                       />
-                      <text
-                        x={24}
-                        y={74 + nodeLabels.extraTitleHeight}
-                        textAnchor="middle"
-                        className="fill-white text-caption"
-                        style={captionTextStyle}
-                      >
-                        {headMember
-                          ? `${headMember.givenName.charAt(0)}${headMember.familyName.charAt(0)}`.toUpperCase()
-                          : '?'}
-                      </text>
                       <text
                         x={40}
                         y={64 + nodeLabels.extraTitleHeight}

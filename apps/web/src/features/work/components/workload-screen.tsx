@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // v1.1 SPEC §7 (A4) -- the workload grid: a row per person, a column per week, each cell the summed
 // estimate of that person's cards due that week against their own weekly capacity.
 //
@@ -472,7 +473,7 @@ function Row({
         <Avatar
           alt={name}
           decorative
-          {...(row.member.avatarKey ? { src: row.member.avatarKey } : {})}
+          src={avatarUrl(row.member.avatarKey, 64)}
           initials={initialsFromName(row.member.givenName, row.member.familyName)}
           hueSeed={row.member.userId}
           size="sm"

@@ -123,10 +123,13 @@ export async function listDepartments(input: {
     }>(sql`
       select d.id, d.name, d.slug, d.status, d.created_at,
         to_char(d.created_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') as cursor_created_at,
-        (select count(*) from app.memberships m where m.department_id = d.id and m.status = 'active' and m.deleted_at is null) as member_count,
+        (select count(*) from app.memberships m join app.users mu on mu.id=m.user_id
+          where m.department_id = d.id and m.status = 'active' and m.deleted_at is null
+            and mu.status='active' and mu.deleted_at is null) as member_count,
         (select u.given_name || ' ' || u.family_name from app.memberships hm
            join app.users u on u.id = hm.user_id
            where hm.department_id = d.id and hm.role = 'head' and hm.status = 'active' and hm.deleted_at is null
+             and u.status='active' and u.deleted_at is null
            order by hm.joined_at asc limit 1) as head_name
       from app.departments d
       where ${sql.join(conditions, sql` and `)}
@@ -170,10 +173,13 @@ export async function getDepartmentDetail(id: string): Promise<AdminDepartmentDe
       head_name: string | null
     }>(sql`
       select d.id, d.name, d.slug, d.status, d.created_at, d.description, d.emoji, d.colour, d.locale_default,
-        (select count(*) from app.memberships m where m.department_id = d.id and m.status = 'active' and m.deleted_at is null) as member_count,
+        (select count(*) from app.memberships m join app.users mu on mu.id=m.user_id
+          where m.department_id = d.id and m.status = 'active' and m.deleted_at is null
+            and mu.status='active' and mu.deleted_at is null) as member_count,
         (select u.given_name || ' ' || u.family_name from app.memberships hm
            join app.users u on u.id = hm.user_id
            where hm.department_id = d.id and hm.role = 'head' and hm.status = 'active' and hm.deleted_at is null
+             and u.status='active' and u.deleted_at is null
            order by hm.joined_at asc limit 1) as head_name
       from app.departments d
       where d.id = ${id} and d.deleted_at is null
@@ -273,6 +279,7 @@ export type AdminUserRow = {
   status: 'active' | 'locked' | 'deleted'
   lastLoginAt: Date | null
   createdAt: Date
+  identityNeedsCorrection: boolean
 }
 
 export type AdminUserDetail = AdminUserRow & {
@@ -282,6 +289,31 @@ export type AdminUserDetail = AdminUserRow & {
   twoFactorEnabled: boolean
   lockedUntil: Date | null
   memberships: { departmentId: string; departmentName: string; role: 'head' | 'member' }[]
+}
+
+/** Presentation only: the instance role must never be changed to grant department authority.
+ * Explicit outer qualification is required: Drizzle strips column qualification inside SELECT
+ * expressions, which would bind an unqualified id/status to a correlated subquery's own tables. */
+function adminDisplayRole() {
+  return sql<AdminUserRow['role']>`case
+    when app.users.role = 'super_admin' then 'super_admin'
+    when exists (
+      select 1 from app.memberships hm join app.departments hd on hd.id=hm.department_id
+      where hm.user_id=app.users.id and hm.role='head'
+        and (app.users.status='deleted' or
+          (hm.status='active' and hm.deleted_at is null and hd.deleted_at is null and hd.status<>'archived'))
+    ) then 'head' else 'member' end`
+}
+
+function identityNeedsCorrection() {
+  return sql<boolean>`app.users.status='deleted'
+    and app.users.deleted_at is not null and app.users.role<>'super_admin'
+    and app.users.given_name=${"O'chirilgan"}
+    and app.users.family_name='foydalanuvchi'
+    and app.users.login ~ '^deleted-[a-f0-9]{8}$'
+    and exists (select 1 from audit.events ie where ie.subject_id=app.users.id::text
+      and ie.subject_type='user' and ie.action='admin.user.anonymised'
+      and nullif(ie.before->>'login','') is not null)`
 }
 
 export async function searchUsers(input: {
@@ -294,7 +326,7 @@ export async function searchUsers(input: {
   return withContext(anonymousAdminCtx(), async (tx) => {
     const conditions = []
     if (input.status) conditions.push(eq(schema.users.status, input.status))
-    if (input.role) conditions.push(eq(schema.users.role, input.role))
+    if (input.role) conditions.push(sql`${adminDisplayRole()} = ${input.role}`)
     if (input.query) {
       const q = `%${input.query}%`
       // H3.4/H14.1: the name half of this search matches through `app.normalize_uz()` (folds ʻ/ʼ/
@@ -325,6 +357,8 @@ export async function searchUsers(input: {
     const rows = await tx.drizzle
       .select({
         ...getTableColumns(schema.users),
+        role: adminDisplayRole(),
+        identityNeedsCorrection: identityNeedsCorrection(),
         cursorCreatedAt: sql<string>`to_char(${schema.users.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
       })
       .from(schema.users)
@@ -346,6 +380,7 @@ export async function searchUsers(input: {
         status: r.status,
         lastLoginAt: r.lastLoginAt,
         createdAt: r.createdAt,
+        identityNeedsCorrection: r.identityNeedsCorrection,
       })),
       nextCursor: hasMore && last ? `${last.cursorCreatedAt}|${last.id}` : null,
     }
@@ -355,7 +390,11 @@ export async function searchUsers(input: {
 export async function getUserDetail(id: string): Promise<AdminUserDetail | null> {
   return withContext(anonymousAdminCtx(), async (tx) => {
     const rows = await tx.drizzle
-      .select()
+      .select({
+        ...getTableColumns(schema.users),
+        role: adminDisplayRole(),
+        identityNeedsCorrection: identityNeedsCorrection(),
+      })
       .from(schema.users)
       .where(eq(schema.users.id, id))
       .limit(1)
@@ -389,6 +428,7 @@ export async function getUserDetail(id: string): Promise<AdminUserDetail | null>
       mustChangePassword: row.mustChangePassword,
       lastLoginAt: row.lastLoginAt,
       createdAt: row.createdAt,
+      identityNeedsCorrection: row.identityNeedsCorrection,
       twoFactorEnabled: security[0]?.totp_enabled ?? false,
       lockedUntil: security[0]?.locked_until ? new Date(security[0].locked_until) : null,
       memberships: memberships.map((m) => ({
@@ -520,9 +560,14 @@ export async function forceTwoFactorReset(id: string, ctx: AuditCtx): Promise<bo
   })
 }
 
-const ANONYMISED_GIVEN_NAME = "O'chirilgan"
-const ANONYMISED_FAMILY_NAME = 'foydalanuvchi'
+/** Frees the original username without discarding its historical identity. UUID suffixes are
+ * collision-free across accounts; deleted status and an invalid password still prevent login. */
+function deletedLogin(login: string, id: string): string {
+  return `${login}.deleted-${id}`
+}
 
+/** Legacy endpoint/function name retained for existing clients. Ordinary administrative deletion
+ * revokes access while retaining the identity needed by historical records; it is not erasure. */
 export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean> {
   return withContext(adminCtx(ctx), async (tx) => {
     const before = await tx.drizzle
@@ -534,18 +579,11 @@ export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean>
     if (!before[0] || before[0].status === 'deleted' || before[0].role === 'super_admin')
       return false
 
-    const randomSuffix = randomBytes(4).toString('hex')
     await tx.drizzle
       .update(schema.users)
       .set({
         status: 'deleted',
-        login: `deleted-${randomSuffix}`,
-        email: null,
-        givenName: ANONYMISED_GIVEN_NAME,
-        familyName: ANONYMISED_FAMILY_NAME,
-        patronymic: null,
-        title: null,
-        avatarKey: null,
+        login: deletedLogin(before[0].login, id),
         passwordHash: `!anonymised:${randomBytes(16).toString('hex')}`,
         deletedAt: new Date(),
         updatedAt: new Date(),
@@ -561,11 +599,84 @@ export async function anonymizeUser(id: string, ctx: AuditCtx): Promise<boolean>
       sql`update app.sessions set revoked_at = now(), revoked_reason = 'admin_anonymise' where user_id = ${id} and revoked_at is null`,
     )
     tx.audit({
-      action: 'admin.user.anonymised',
+      action: 'admin.user.deleted',
       subjectType: 'user',
       subjectId: id,
       before: { login: before[0].login, status: before[0].status },
-      after: { status: 'deleted' },
+      after: { status: 'deleted', login: deletedLogin(before[0].login, id) },
+    })
+    return true
+  })
+}
+
+/** Correct only identities erased by the legacy anonymizer. Authentication and the immutable
+ * audit records are deliberately untouched. The old login must come from the signed audit chain,
+ * never from a caller-supplied username which could misattribute another user's history. */
+export async function restoreDeletedIdentity(
+  id: string,
+  input: {
+    givenName: string
+    familyName: string
+    patronymic?: string | null | undefined
+    reason: string
+  },
+  ctx: AuditCtx,
+): Promise<boolean> {
+  return withContext(adminCtx(ctx), async (tx) => {
+    const [before] = await tx.drizzle
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .limit(1)
+      .for('update')
+    if (
+      !before ||
+      before.status !== 'deleted' ||
+      before.role === 'super_admin' ||
+      !before.deletedAt ||
+      before.givenName !== "O'chirilgan" ||
+      before.familyName !== 'foydalanuvchi' ||
+      !/^deleted-[a-f0-9]{8}$/u.test(before.login)
+    )
+      return false
+    const [source] = await tx.raw<{ login: string | null }>(sql`
+      select before->>'login' as login from audit.events
+      where action='admin.user.anonymised' and subject_type='user' and subject_id=${id}
+      order by seq desc limit 1
+    `)
+    if (!source?.login) return false
+    const login = deletedLogin(source.login, id)
+    await tx.drizzle
+      .update(schema.users)
+      .set({
+        givenName: input.givenName,
+        familyName: input.familyName,
+        patronymic: input.patronymic ?? null,
+        login,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.users.id, id))
+    // Belt-and-braces revocation for an old tombstone, never a credential reset or reactivation.
+    await tx.raw(sql`update app.sessions set revoked_at=now(), revoked_reason='historical_identity_correction'
+      where user_id=${id} and revoked_at is null`)
+    tx.audit({
+      action: 'admin.user.deleted_identity_restored',
+      subjectType: 'user',
+      subjectId: id,
+      before: {
+        givenName: before.givenName,
+        familyName: before.familyName,
+        login: before.login,
+        status: before.status,
+      },
+      after: {
+        givenName: input.givenName,
+        familyName: input.familyName,
+        patronymic: input.patronymic ?? null,
+        login,
+        status: 'deleted',
+        reason: input.reason,
+      },
     })
     return true
   })
@@ -601,28 +712,45 @@ export type AdminAnalytics = {
   }
 }
 
+/** Live analytics describe people who can work in an active department, plus instance admins.
+ * Historical accounts remain available in Accounts and Audit, never in this operational count. */
+const LIVE_USER = sql`u.status='active' and u.deleted_at is null and
+  (u.role='super_admin' or exists (
+    select 1 from app.memberships lm join app.departments ld on ld.id=lm.department_id
+    where lm.user_id=u.id and lm.status='active' and lm.deleted_at is null
+      and ld.status='active' and ld.deleted_at is null))`
+
 async function countByStatus(tx: Tx) {
-  const [deptRows, userRows] = await Promise.all([
+  const [deptRows, userRows, inactiveUserRows] = await Promise.all([
     tx.raw<{ status: string; count: string }>(
       sql`select status, count(*)::text as count from app.departments where deleted_at is null group by status`,
     ),
-    tx.raw<{ role: string; status: string; count: string }>(
-      sql`select role, status, count(*)::text as count from app.users group by role, status`,
-    ),
+    tx.raw<{ role: string; count: string }>(sql`
+      select case when u.role='super_admin' then 'super_admin'
+        when exists (select 1 from app.memberships hm join app.departments hd on hd.id=hm.department_id
+          where hm.user_id=u.id and hm.role='head' and hm.status='active' and hm.deleted_at is null
+            and hd.status='active' and hd.deleted_at is null) then 'head'
+        else 'member' end as role, count(*)::text as count
+      from app.users u where ${LIVE_USER} group by 1
+    `),
+    tx.raw<{ status: string; count: string }>(sql`
+      select status, count(*)::text as count from app.users where status in ('locked','deleted') group by status
+    `),
   ])
-  return { deptRows, userRows }
+  return { deptRows, userRows, inactiveUserRows }
 }
 
 export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
   return withContext(anonymousAdminCtx(), async (tx) => {
-    const { deptRows, userRows } = await countByStatus(tx)
+    const { deptRows, userRows, inactiveUserRows } = await countByStatus(tx)
 
     const departments = { total: 0, active: 0, paused: 0, archived: 0 }
     for (const r of deptRows) {
       const n = Number(r.count)
-      departments.total += n
+      if (r.status !== 'archived') departments.total += n
       if (r.status === 'active') departments.active += n
-      else if (r.status === 'paused_by_admin') departments.paused += n
+      else if (r.status === 'paused_by_admin' || r.status === 'deletion_requested')
+        departments.paused += n
       else if (r.status === 'archived') departments.archived += n
     }
 
@@ -638,12 +766,14 @@ export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
     for (const r of userRows) {
       const n = Number(r.count)
       people.total += n
-      if (r.status === 'active') people.active += n
-      else if (r.status === 'locked') people.locked += n
-      else if (r.status === 'deleted') people.deleted += n
+      people.active += n
       if (r.role === 'super_admin') people.superAdmins += n
       else if (r.role === 'head') people.heads += n
       else if (r.role === 'member') people.members += n
+    }
+    for (const r of inactiveUserRows) {
+      if (r.status === 'locked') people.locked += Number(r.count)
+      else if (r.status === 'deleted') people.deleted += Number(r.count)
     }
 
     // `app.cards`/`app.events` belong to the `work`/`events` modules' own schema files, which this
@@ -654,8 +784,9 @@ export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
     // `select ... from app.cards` would still throw "relation does not exist" on a checkout without
     // that table -- table presence has to be resolved as its own, separate round trip first, and only
     // the queries for tables that actually exist get to run at all.
-    const presence = await tx.raw<{ cards: boolean; events: boolean }>(
-      sql`select (to_regclass('app.cards') is not null) as cards, (to_regclass('app.events') is not null) as events`,
+    const presence = await tx.raw<{ cards: boolean; events: boolean; ai: boolean }>(
+      sql`select (to_regclass('app.cards') is not null) as cards, (to_regclass('app.events') is not null) as events,
+        (to_regclass('app.ai_traces') is not null) as ai`,
     )
     const hasCards = presence[0]?.cards ?? false
     const hasEvents = presence[0]?.events ?? false
@@ -664,37 +795,55 @@ export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
       await Promise.all([
         hasCards
           ? tx.raw<{ count: string }>(
-              sql`select count(*)::text as count from app.cards where created_at >= now() - interval '30 days' and deleted_at is null`,
+              sql`select count(*)::text as count from app.cards c join app.departments d on d.id=c.department_id
+                where c.created_at >= now() - interval '30 days' and c.deleted_at is null and d.deleted_at is null and d.status='active'`,
             )
           : Promise.resolve([{ count: '0' }]),
         hasCards
           ? tx.raw<{ count: string }>(
-              sql`select count(*)::text as count from app.cards where done_at >= now() - interval '30 days' and deleted_at is null`,
+              sql`select count(*)::text as count from app.cards c join app.departments d on d.id=c.department_id
+                where c.done_at >= now() - interval '30 days' and c.deleted_at is null and d.deleted_at is null and d.status='active'`,
             )
           : Promise.resolve([{ count: '0' }]),
         hasEvents
           ? tx.raw<{ count: string }>(
-              sql`select count(*)::text as count from app.events where created_at >= now() - interval '30 days' and deleted_at is null`,
+              sql`select count(*)::text as count from app.events e join app.departments d on d.id=e.department_id
+                where e.created_at >= now() - interval '30 days' and e.deleted_at is null and d.deleted_at is null and d.status='active'`,
             )
           : Promise.resolve([{ count: '0' }]),
         tx.raw<{ week_start: string; count: string }>(sql`
-        select date_trunc('week', created_at)::date::text as week_start, count(*)::text as count
-        from app.sessions
-        where created_at >= now() - interval '8 weeks'
-        group by 1
-        order by 1
+        with weeks as (
+          select generate_series(date_trunc('week',now() at time zone 'Asia/Tashkent')-interval '7 weeks',
+            date_trunc('week',now() at time zone 'Asia/Tashkent'),interval '1 week') as week_start
+        ), counts as (
+          select date_trunc('week',s.created_at at time zone 'Asia/Tashkent') as week_start,count(*)::text as count
+          from app.sessions s join app.users u on u.id=s.user_id
+          where ${LIVE_USER} and s.created_at >= ((select min(week_start) from weeks) at time zone 'Asia/Tashkent')
+          group by 1
+        )
+        select w.week_start::date::text as week_start,coalesce(c.count,'0') as count
+        from weeks w left join counts c using(week_start) order by w.week_start
       `),
         tx.raw<{ count: string }>(
-          sql`select count(*)::text as count from app.sessions where created_at >= now() - interval '7 days'`,
+          sql`select count(*)::text as count from app.sessions s join app.users u on u.id=s.user_id
+            where s.created_at >= now() - interval '7 days' and ${LIVE_USER}`,
         ),
       ])
 
-    // No AI module/schema exists in this checkout yet (EPIC-009+): report the shape honestly rather
-    // than guessing a table name that does not exist, so the console renders "not available" instead
-    // of a fabricated zero that looks like real telemetry.
-    const aiAvailable = await tx.raw<{ present: boolean }>(
-      sql`select (to_regclass('app.ai_usage') is not null) as present`,
-    )
+    // Metering is historical billing: archiving a department never erases its genuine spend.
+    const aiAvailable = presence[0]?.ai ?? false
+    const aiRows = aiAvailable
+      ? await tx.raw<{
+          department_id: string
+          department_name: string
+          tokens: string
+          cost: string
+        }>(sql`select t.department_id,d.name as department_name,coalesce(sum(t.total_tokens),0)::text as tokens,
+        coalesce(sum(t.cost_uzs),0)::text as cost
+      from app.ai_traces t join app.departments d on d.id=t.department_id
+      where t.created_at >= (date_trunc('month',now() at time zone 'Asia/Tashkent') at time zone 'Asia/Tashkent')
+      group by t.department_id,d.name order by sum(t.total_tokens) desc,t.department_id`)
+      : []
 
     return {
       generatedAt: new Date(),
@@ -711,10 +860,14 @@ export async function getGlobalAnalytics(): Promise<AdminAnalytics> {
         })),
       },
       aiSpend: {
-        available: aiAvailable[0]?.present ?? false,
-        tokensThisMonth: 0,
-        costUzsThisMonth: 0,
-        byDepartment: [],
+        available: aiAvailable,
+        tokensThisMonth: aiRows.reduce((sum, row) => sum + Number(row.tokens), 0),
+        costUzsThisMonth: aiRows.reduce((sum, row) => sum + Number(row.cost), 0),
+        byDepartment: aiRows.map((row) => ({
+          departmentId: row.department_id,
+          departmentName: row.department_name,
+          tokens: Number(row.tokens),
+        })),
       },
     }
   })
@@ -729,10 +882,11 @@ export type AuditEventRow = {
   at: Date
   actorUserId: string | null
   actorRole: string | null
-  /** Joined from `app.users` for the console's own "who did this" sentence (round2 SEV2: the log
-   * used to identify the actor only by role, e.g. "super_admin"). Null for a system-initiated event
-   * (no `actor_user_id`) or a since-deleted/anonymised user. */
+  /** Historical attribution is joined to the retained identity, including deleted accounts.
+   * Null denotes a system event or an identity that genuinely cannot be resolved. */
   actorName: string | null
+  actorStatus: AdminUserRow['status'] | null
+  actorAvatarKey: string | null
   departmentId: string | null
   action: string
   subjectType: string
@@ -816,6 +970,8 @@ export async function listAuditEvents(
       actor_role: string | null
       actor_given_name: string | null
       actor_family_name: string | null
+      actor_status: AdminUserRow['status'] | null
+      actor_avatar_key: string | null
       department_id: string | null
       action: string
       subject_type: string
@@ -825,7 +981,8 @@ export async function listAuditEvents(
       select e.seq, e.id, e.at, e.actor_user_id, e.actor_role, e.department_id, e.action,
         e.subject_type, e.subject_id,
         case when e.action = 'work.card_deleted' then e.before->>'title' else null end as subject_title,
-        u.given_name as actor_given_name, u.family_name as actor_family_name
+        u.given_name as actor_given_name, u.family_name as actor_family_name,
+        u.status as actor_status,u.avatar_key as actor_avatar_key
       from audit.events e
       left join app.users u on u.id = e.actor_user_id
       where ${sql.join(conditions, sql` and `)}
@@ -847,6 +1004,8 @@ export async function listAuditEvents(
           r.actor_given_name || r.actor_family_name
             ? `${r.actor_given_name ?? ''} ${r.actor_family_name ?? ''}`.trim()
             : null,
+        actorStatus: r.actor_status,
+        actorAvatarKey: r.actor_avatar_key,
         departmentId: r.department_id,
         action: r.action,
         subjectType: r.subject_type,

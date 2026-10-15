@@ -37,6 +37,7 @@ export type Actor = {
   principal: PermissionActor | null
   givenName: string
   familyName: string
+  avatarKey?: string | null
 }
 
 /**

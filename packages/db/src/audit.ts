@@ -25,6 +25,7 @@ type ActorContext = {
   requestId: string
   userId: string | null
   actorRole: Role | null
+  departmentRole?: 'head' | 'member' | null
   departmentId: string | null
   actingForUserId: string | null
   ip: string
@@ -55,6 +56,17 @@ export async function insertAuditEvent(
   ctx: ActorContext,
   event: AuditEventInput,
 ): Promise<void> {
+  const departmentId = event.departmentId ?? ctx.departmentId
+  // Record the role proven in this event's own department. This affects attribution only:
+  // RequestContext.actorRole and its authorization/RLS GUC remain the instance-wide role.
+  // An explicit different event department cannot borrow the caller's head role in another scope.
+  const actorRole =
+    ctx.actorRole === 'member' &&
+    ctx.departmentRole === 'head' &&
+    departmentId !== null &&
+    departmentId === ctx.departmentId
+      ? 'head'
+      : ctx.actorRole
   await client.query(
     `insert into audit.events
        (actor_user_id, actor_role, on_behalf_of, department_id, action, subject_type, subject_id,
@@ -62,9 +74,9 @@ export async function insertAuditEvent(
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
     [
       ctx.userId,
-      ctx.actorRole,
+      actorRole,
       ctx.actingForUserId,
-      event.departmentId ?? ctx.departmentId,
+      departmentId,
       event.action,
       event.subjectType,
       event.subjectId,

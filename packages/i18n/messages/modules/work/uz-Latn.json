@@ -39,7 +39,7 @@
       "moveFailed": "Koʻchirib boʻlmadi. Karta oldingi joyiga qaytdi."
     },
     "quickAdd": {
-      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma kuni»",
+      "placeholder": "Tez qoʻshish: «Nodira: oylik hisobot, juma»",
       "created": "«{title}» qoʻshildi",
       "error": "Kartani qoʻshib boʻlmadi",
       "unknownAssignee": "«{name}» degan xodim topilmadi",

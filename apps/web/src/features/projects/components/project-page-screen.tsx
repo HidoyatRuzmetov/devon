@@ -1,3 +1,4 @@
+import { avatarUrl } from '../../../lib/avatar.js'
 // Project cards are loaded by immutable project id and paginated, so renaming a project or sharing
 // a title with another project cannot silently move/hide its tasks.
 import * as React from 'react'
@@ -401,6 +402,7 @@ export default function ProjectPageScreen() {
                   id: m.userId,
                   name: fullName(m),
                   initials: initialsFromName(m.givenName, m.familyName),
+                  src: avatarUrl(m.avatarKey, 128),
                 }))}
               max={8}
               size="md"
@@ -686,7 +688,7 @@ export default function ProjectPageScreen() {
                   <div className="flex items-center gap-2">
                     <Avatar
                       size="sm"
-                      src={null}
+                      src={avatarUrl(member.avatarKey, 64)}
                       alt={fullName(member)}
                       initials={initialsFromName(member.givenName, member.familyName)}
                       hueSeed={memberId}

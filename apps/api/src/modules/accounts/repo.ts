@@ -14,6 +14,7 @@ import { decryptSecret, encryptSecret } from './crypto.js'
 import { generateRecoveryCodes, generateTotpSecret, otpauthUri, verifyTotp } from './totp.js'
 import type { AuditCtx, UserRecord } from '../../types.js'
 import type { RegisterBody, PatchProfileBody } from './schemas.js'
+import { emitIdentityUpdated } from './identity-events.js'
 
 const LOGIN_CHALLENGE_TTL_MINUTES = 10
 const ACCOUNT_DELETION_GRACE_DAYS = 30
@@ -38,7 +39,7 @@ export async function patchProfile(userId: string, patch: PatchProfileBody, ctx:
         subjectId: userId,
         after: { fields: Object.keys(patch) },
       })
-      tx.emit({ type: 'accounts.profile.updated', payload: { userId, fields: Object.keys(patch) } })
+      await emitIdentityUpdated(tx, userId, 'accounts.profile.updated')
       return toUserRecord(rows[0])
     })
   } catch (err) {

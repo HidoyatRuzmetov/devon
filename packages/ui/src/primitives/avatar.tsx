@@ -33,6 +33,17 @@ export function initialsFromName(givenName: string, familyName: string): string 
   return `${g}${f}` || '?'
 }
 
+/** Some system/history callers have a display label without separate name fields. */
+function fallbackInitials(initials: string, alt: string): string {
+  if (initials.trim() && initials.trim() !== '?') return initials
+  return (
+    alt
+      .trim()
+      .match(/[\p{L}\p{N}]/u)?.[0]
+      ?.toUpperCase() ?? '?'
+  )
+}
+
 export interface AvatarProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root> {
   src?: string | null
   alt: string
@@ -92,7 +103,7 @@ export const Avatar = React.forwardRef<
       />
     ) : null}
     <AvatarPrimitive.Fallback delayMs={src ? 400 : 0} aria-hidden="true">
-      {initials}
+      {fallbackInitials(initials, alt)}
     </AvatarPrimitive.Fallback>
     {decorative ? null : <span className="sr-only">{alt}</span>}
   </AvatarPrimitive.Root>

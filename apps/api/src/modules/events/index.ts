@@ -104,6 +104,7 @@ function currentActor(req: FastifyRequest): service.Actor {
     principal: req.actor ?? null,
     givenName: req.actorUser?.givenName ?? '',
     familyName: req.actorUser?.familyName ?? '',
+    avatarKey: req.actorUser?.avatarKey ?? null,
   }
 }
 

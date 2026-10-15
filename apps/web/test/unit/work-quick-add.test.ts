@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { LOCALES, translate } from '@devon/i18n'
 import { parseQuickAdd, resolveQuickAddAssignee } from '../../src/features/work/lib/quick-add.js'
 import type { MemberSummary } from '../../src/features/work/api.js'
 
@@ -78,6 +79,19 @@ describe('parseQuickAdd', () => {
     expect(ru.dueAt?.getDay()).toBe(5)
     const en = parseQuickAdd('Nodira: report, friday', MONDAY)
     expect(en.dueAt?.getDay()).toBe(5)
+  })
+
+  // The `work.quickAdd.placeholder` examples must be inputs this grammar actually parses: the
+  // English copy once read "... by friday", which silently produced a title with no due date.
+  it.each(LOCALES)('parses the actual %s quick-add placeholder example', (locale) => {
+    const placeholder = translate(locale, 'work.quickAdd.placeholder')
+    const example = /[«"]([^»"]+)[»"]/.exec(placeholder)?.[1]
+    if (!example) throw new Error(`${locale} quick-add hint must contain a quoted example`)
+    const result = parseQuickAdd(example, MONDAY)
+    expect(result.assigneeToken).not.toBeNull()
+    expect(result.title).not.toBe('')
+    expect(result.title).not.toContain(',')
+    expect(result.dueAt).toEqual(new Date(2026, 8, 11))
   })
 })
 

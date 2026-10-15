@@ -82,6 +82,7 @@ export const adminUserRowSchema = z.object({
   patronymic: z.string().nullable(),
   role: userRoleSchema,
   status: userStatusSchema,
+  identityNeedsCorrection: z.boolean().optional(),
   lastLoginAt: z.string().nullable(),
   createdAt: z.string(),
 })
@@ -136,6 +137,18 @@ export function forceTwoFactorReset(id: string, csrfToken: string) {
 }
 export function anonymizeUser(id: string, csrfToken: string) {
   return apiClient.post(`/api/v1/admin/accounts/${id}/anonymize`, {}, z.void(), csrfToken)
+}
+export function restoreDeletedIdentity(
+  id: string,
+  identity: { givenName: string; familyName: string; reason: string },
+  csrfToken: string,
+) {
+  return apiClient.post(
+    `/api/v1/admin/accounts/${id}/restore-deleted-identity`,
+    identity,
+    z.void(),
+    csrfToken,
+  )
 }
 const resetPasswordResultSchema = z.object({ temporaryPassword: z.string() })
 export function resetUserPassword(id: string, csrfToken: string) {
@@ -196,6 +209,8 @@ export const auditEventRowSchema = z.object({
   actorUserId: z.string().uuid().nullable(),
   actorRole: z.string().nullable(),
   actorName: z.string().nullable(),
+  actorStatus: z.enum(['active', 'locked', 'deleted']).nullable().optional(),
+  actorAvatarKey: z.string().nullable().optional(),
   departmentId: z.string().uuid().nullable(),
   action: z.string(),
   subjectType: z.string(),

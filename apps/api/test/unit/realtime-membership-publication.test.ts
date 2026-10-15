@@ -3,6 +3,15 @@ import { membershipPersonalChannels } from '../../src/modules/realtime/membershi
 const first = 'ed170a4b-32fc-4fa9-bb57-8f138607a33c'
 const second = 'aac53e18-f33f-41f7-b876-40c0454a7a43'
 describe('membership changes address only explicitly named people', () => {
+  it.each(['accounts.profile.updated', 'accounts.user.avatar_updated'])(
+    'refreshes only the affected account for %s, including accounts with no department',
+    (type) => {
+      expect(membershipPersonalChannels(type, { userId: first, userIds: [second] })).toEqual([
+        `personal#${first}`,
+      ])
+      expect(membershipPersonalChannels(type, { userId: '*' })).toEqual([])
+    },
+  )
   it.each(['departments.membership.changed', 'departments.join_request.decided'])(
     'projects %s to deduplicated, validated personal channels',
     (type) => {
