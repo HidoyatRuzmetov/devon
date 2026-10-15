@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
+import '@devon/i18n/catalogues'
+import { isLocale, translate } from '@devon/i18n'
 import {
-  authedPatch,
   authedPost,
   createApprovedDepartment,
   examplePassword,
@@ -16,7 +17,14 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
   const head = await newFlowContext(browser)
   try {
     await loginAsSuperAdmin(admin)
-    expect((await authedPatch(admin, '/api/v1/me', { locale: 'en' })).ok()).toBeTruthy()
+    // This administrator is shared with concurrent console flows. Read its locale without
+    // changing the persisted preference underneath another user's browser journey.
+    const me = (await (await admin.request.get('/api/v1/me')).json()) as {
+      user: { locale: string }
+    }
+    const locale = me.user.locale
+    if (!isLocale(locale)) throw new Error('The administrator locale must be recognized')
+    const label = (key: string) => translate(locale, key)
     const headLogin = uniqueLogin('history.head')
     await createApprovedDepartment(head, admin, {
       headLogin,
@@ -27,24 +35,60 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
       user: { id: string }
     }
     expect(
-      (await authedPost(head, '/api/v1/cards', { title: 'Historical head action' })).status(),
+      (
+        await authedPost(head, '/api/v1/cards', {
+          title: 'Historical head action',
+        })
+      ).status(),
     ).toBe(201)
     const page = await admin.newPage()
     await page.goto('/admin/accounts')
-    await page.getByRole('textbox', { name: 'Search by name or login' }).fill(headLogin)
+    await page
+      .getByRole('textbox', {
+        name: label('admin.console.accounts.searchPlaceholder'),
+      })
+      .fill(headLogin)
     const row = page.getByRole('row').filter({ hasText: headLogin })
-    await expect(row.getByText('Head', { exact: true })).toBeVisible()
-    await row.getByRole('button', { name: 'Actions' }).click()
-    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click()
-    const dialog = page.getByRole('dialog', { name: 'Delete account' })
+    await expect(
+      row.getByText(label('admin.console.accounts.role.head'), { exact: true }),
+    ).toBeVisible()
+    await row
+      .getByRole('button', {
+        name: label('admin.console.accounts.actionsMenu'),
+      })
+      .click()
+    await page
+      .getByRole('menuitem', {
+        name: label('admin.console.accounts.anonymize'),
+        exact: true,
+      })
+      .click()
+    const dialog = page.getByRole('dialog', {
+      name: label('admin.console.accounts.anonymizeDialogTitle'),
+    })
     await expect(dialog.getByText(new RegExp(headLogin.replace(/\./g, '\\.')))).toBeVisible()
-    await dialog.getByRole('button', { name: 'Delete', exact: true }).click()
+    await dialog
+      .getByRole('button', {
+        name: label('admin.console.accounts.anonymizeSubmit'),
+        exact: true,
+      })
+      .click()
     await expect(dialog).not.toBeVisible()
-    await expect(row.getByText('Deleted', { exact: true })).toBeVisible()
+    await expect(
+      row.getByText(label('admin.console.accounts.status.deleted'), {
+        exact: true,
+      }),
+    ).toBeVisible()
     await page.reload()
-    await page.getByRole('textbox', { name: 'Search by name or login' }).fill(headLogin)
+    await page
+      .getByRole('textbox', {
+        name: label('admin.console.accounts.searchPlaceholder'),
+      })
+      .fill(headLogin)
     await expect(row.getByText('Test Head', { exact: true })).toBeVisible()
-    await expect(row.getByText('Head', { exact: true })).toBeVisible()
+    await expect(
+      row.getByText(label('admin.console.accounts.role.head'), { exact: true }),
+    ).toBeVisible()
     const saved = (await (
       await admin.request.get(`/api/v1/admin/accounts/${identity.user.id}`)
     ).json()) as {
@@ -82,8 +126,13 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
     const analytics = (await (await responsePromise).json()) as {
       people: { total: number }
       activity: { weeklyLogins: { count: number }[] }
+      aiSpend: { available: boolean }
     }
-    await expect(page.getByText('Active accounts', { exact: true })).toBeVisible()
+    await expect(
+      page.getByText(label('admin.console.analytics.totalPeople'), {
+        exact: true,
+      }),
+    ).toBeVisible()
     const bars = page.locator('div[role="img"]')
     await expect(bars).toBeVisible()
     await expect
@@ -98,7 +147,12 @@ test('@flow admin deletion preserves identity, head role, audit history and visi
       )
       .toBeGreaterThan(20)
     expect(analytics.activity.weeklyLogins).toHaveLength(8)
-    await expect(page.getByText('The AI module is not connected yet.')).toHaveCount(0)
+    expect(analytics.aiSpend.available).toBe(true)
+    await expect(
+      page.getByText(label('admin.console.analytics.aiSpendTitle'), {
+        exact: true,
+      }),
+    ).toBeVisible()
   } finally {
     await Promise.all([admin.close(), head.close()])
   }
