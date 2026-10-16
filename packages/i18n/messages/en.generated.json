@@ -3208,7 +3208,7 @@
     "form": {
       "stepBasics": "Basics",
       "stepSchedule": "Schedule & place",
-      "stepCapacity": "Capacity & reminders",
+      "stepCapacity": "Review & publish",
       "stepBack": "Back",
       "stepNext": "Next",
       "aiIdeaLabel": "One-line idea",
@@ -3247,7 +3247,17 @@
         "endsBeforeStarts": "The end time must be after the start time"
       },
       "aiDraftCarpool": "Travel",
-      "aiDraftPickDate": "Which date shall we take?"
+      "aiDraftPickDate": "Which date shall we take?",
+      "thumbnailLabel": "Event photo (optional)",
+      "thumbnailHint": "JPG, PNG or WebP, up to 5 MB. Without a photo, the event uses an illustration.",
+      "thumbnailPreview": "Event photo preview",
+      "thumbnailRemove": "Remove photo",
+      "thumbnailUploading": "Uploading photo…",
+      "thumbnailScanning": "Checking photo…",
+      "thumbnailInvalid": "Choose a JPG, PNG or WebP image smaller than 5 MB.",
+      "thumbnailFailed": "Could not save the photo. Choose the image again to retry.",
+      "thumbnailScanUnavailable": "The file check is temporarily unavailable. Retry before continuing.",
+      "reviewHint": "Check these final details. The event is created only when you press Create event."
     },
     "diff": {
       "title": "What changed",
@@ -3259,7 +3269,14 @@
         "placeUrl": "Place link",
         "capacity": "Capacity",
         "costNote": "Cost note",
-        "description": "Description"
+        "description": "Description",
+        "category": "Category",
+        "illustrationKey": "Illustration",
+        "timezone": "Time zone",
+        "waitlistEnabled": "Waitlist",
+        "rsvpDeadline": "RSVP deadline",
+        "reminderOffsetsMinutes": "Reminders (minutes before)",
+        "thumbnailUploadId": "Event photo"
       }
     },
     "cancelDialog": {
@@ -3331,7 +3348,21 @@
       "driverCannotClaim": "The driver can't claim a seat on their own offer",
       "cancelled": "This offer was cancelled",
       "releasedToast": "You gave up your seat",
-      "reclaimedToast": "Your seat was reclaimed"
+      "reclaimedToast": "Your seat was reclaimed",
+      "edit": "Edit ride",
+      "delete": "Delete ride",
+      "saved": "Ride details saved",
+      "deleted": "Ride deleted",
+      "deleteNeedsEmpty": "All passengers, including people on the waitlist, must give up their seats before this ride can be deleted.",
+      "deleteConfirm": "Delete this ride? There are no passengers. You can offer a new ride afterward.",
+      "alreadyDriver": "You already offer a ride for this event. Delete that empty ride before joining another car.",
+      "alreadyPassenger": "You already have a seat or a waitlist place. Give it up before joining another car or offering a ride.",
+      "youDrive": "You are driving this car. Use the pencil to update the details.",
+      "capacityBelowClaimed": "The number of seats cannot be less than the seats already confirmed.",
+      "seatUnavailable": "That seat is no longer available. Refresh the ride and try again.",
+      "eventClosed": "This event is cancelled, finished or already started. New rides and seats are closed; existing seats can still be released.",
+      "saveFailed": "Could not update this ride. Your draft is kept; please try again.",
+      "joinWaitlist": "Join ride waitlist"
     },
     "items": {
       "title": "Who brings what",

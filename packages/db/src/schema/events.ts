@@ -49,6 +49,7 @@ export const pollStatusEnum = appSchema.enum('poll_status', ['open', 'closed'])
 
 export const events = appSchema.table('events', {
   id: uuid('id').primaryKey().defaultRandom(),
+  thumbnailUploadId: uuid('thumbnail_upload_id'),
   departmentId: uuid('department_id').notNull(),
   title: text('title').notNull(),
   description: text('description'),

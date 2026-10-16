@@ -1,6 +1,7 @@
 // The local browser journey uses actual API/storage/database fixtures. Telegram and application
 // AI are disabled by global-setup's guard; bot transport behavior has separate local sink tests.
 import { expect, test } from '@playwright/test'
+import { join } from 'node:path'
 import {
   authedPatch,
   authedPost,
@@ -43,6 +44,14 @@ test('@flow event wizard requires Publish, preserves the created detail route an
   await page.goto('/events?new=1')
   const wizard = page.getByRole('dialog', { name: 'Create event', exact: true })
   await wizard.getByRole('textbox', { name: 'Event title' }).fill(title)
+  await wizard
+    .getByLabel('Event photo (optional)', { exact: true })
+    .setInputFiles(join(import.meta.dirname, 'fixtures/account-avatar.png'))
+  const preview = wizard.getByRole('img', { name: 'Event photo preview', exact: true })
+  await expect(preview).toBeVisible()
+  await expect
+    .poll(() => preview.evaluate((image) => (image as HTMLImageElement).naturalWidth))
+    .toBe(1200)
   await wizard.getByRole('button', { name: 'Next', exact: true }).click()
   await wizard
     .getByLabel('Starts at', { exact: true })
@@ -57,6 +66,9 @@ test('@flow event wizard requires Publish, preserves the created detail route an
   const beforePublish = await head.request.get('/api/v1/events')
   expect((await beforePublish.json()).items).toHaveLength(0)
   await wizard.getByLabel('Capacity', { exact: true }).fill('1')
+  await wizard.getByLabel('Capacity', { exact: true }).press('Enter')
+  await expect(wizard.getByRole('button', { name: 'Create event', exact: true })).toBeVisible()
+  expect(creates).toBe(0)
   const createdResponse = page.waitForResponse(
     (response) =>
       new URL(response.url()).pathname === '/api/v1/events' &&
@@ -65,12 +77,18 @@ test('@flow event wizard requires Publish, preserves the created detail route an
   await wizard.getByRole('button', { name: 'Create event', exact: true }).click()
   const response = await createdResponse
   expect(response.status()).toBe(201)
-  const event = (await response.json()) as { id: string }
+  const event = (await response.json()) as { id: string; thumbnailUrl: string }
+  expect(event.thumbnailUrl).toMatch(/^\/api\/v1\/events\/thumbnails\//)
   expect(creates).toBe(1)
   await expect(page).toHaveURL(
     (url) => url.pathname === '/events' && url.searchParams.get('event') === event.id,
   )
   await expect(page.getByRole('dialog', { name: title, exact: true })).toBeVisible()
+  await expect(
+    page
+      .getByRole('dialog', { name: title, exact: true })
+      .locator(`img[src="${event.thumbnailUrl}"]`),
+  ).toBeVisible()
 
   // A member answers through the real form, then a separate API read and reload prove persistence.
   const memberPage = await member.newPage()

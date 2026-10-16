@@ -38,6 +38,9 @@ export function eventFormValuesToCreateInput(values: EventFormValues): CreateEve
     rsvpDeadline: values.rsvpDeadline ? new Date(values.rsvpDeadline).toISOString() : undefined,
     costNote: values.costNote.trim() || undefined,
     reminderOffsetsMinutes: reminderOffsets(values),
+    ...(values.thumbnailUploadId !== undefined
+      ? { thumbnailUploadId: values.thumbnailUploadId }
+      : {}),
   }
 }
 
@@ -61,5 +64,8 @@ export function eventFormValuesToUpdateInput(
     rsvpDeadline: values.rsvpDeadline ? editedDate(values.rsvpDeadline, saved?.rsvpDeadline) : null,
     costNote: values.costNote.trim() || null,
     reminderOffsetsMinutes: reminderOffsets(values),
+    ...(values.thumbnailUploadId !== undefined
+      ? { thumbnailUploadId: values.thumbnailUploadId }
+      : {}),
   }
 }

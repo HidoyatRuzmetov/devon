@@ -46,6 +46,7 @@ import {
   carpoolClaimBodySchema,
   carpoolDto,
   carpoolListResponseSchema,
+  carpoolUpdateBodySchema,
   commentBodySchema,
   commentDto,
   commentListResponseSchema,
@@ -128,7 +129,7 @@ function mapServiceError(err: unknown, reply: FastifyReply): boolean {
     return true
   }
   if (err instanceof EventConflictError) {
-    sendProblem(reply, 'conflict')
+    sendProblem(reply, 'conflict', { errors: [{ path: err.path, code: err.message }] })
     return true
   }
   return false
@@ -421,6 +422,47 @@ const eventsRoutes: FastifyPluginAsyncZod = async (app) => {
       } catch (err) {
         if (!mapServiceError(err, reply)) throw err
       }
+    },
+  )
+
+  app.patch(
+    '/:eventId/carpools/:carpoolId',
+    {
+      config: { permission: { action: 'update', subject: departmentChildSubject } },
+      schema: {
+        params: carpoolIdParams,
+        body: carpoolUpdateBodySchema,
+        response: { 200: carpoolDto },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const carpool = await service.updateCarpool(
+        toDbContext(req),
+        currentActor(req),
+        req.params.eventId,
+        req.params.carpoolId,
+        req.body,
+      )
+      return reply.type('application/json').send(carpool)
+    },
+  )
+
+  app.delete(
+    '/:eventId/carpools/:carpoolId',
+    {
+      config: { permission: { action: 'delete', subject: departmentChildSubject } },
+      schema: { params: carpoolIdParams },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      await service.deleteCarpool(
+        toDbContext(req),
+        currentActor(req),
+        req.params.eventId,
+        req.params.carpoolId,
+      )
+      return reply.code(204).send()
     },
   )
 

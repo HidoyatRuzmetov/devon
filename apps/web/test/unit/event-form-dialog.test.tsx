@@ -5,6 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { setLocale } from '@devon/i18n'
 import { EventFormDialog } from '../../src/features/events/components/event-form-dialog.js'
 import type { EventDto } from '../../src/features/events/schemas.js'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+function WithQuery({ children }: { children: React.ReactNode }) {
+  const [client] = React.useState(() => new QueryClient())
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+}
 
 // Application AI is excluded from this local journey. Its unavailable boundary is real: the
 // assistant remains hidden and never executes, while the ordinary creation wizard still works.
@@ -23,6 +29,7 @@ function show(onSubmit = vi.fn().mockResolvedValue(undefined)) {
       onSubmit={onSubmit}
       onOpenChange={onOpenChange}
     />,
+    { wrapper: WithQuery },
   )
   return { onSubmit, onOpenChange, user: userEvent.setup() }
 }
@@ -78,7 +85,9 @@ describe('event creation wizard', () => {
       onSubmit: vi.fn().mockResolvedValue(undefined),
       submitting: false,
     }
-    const { rerender } = render(<EventFormDialog {...props} event={event} />)
+    const { rerender } = render(<EventFormDialog {...props} event={event} />, {
+      wrapper: WithQuery,
+    })
     const user = userEvent.setup()
     await user.clear(screen.getByRole('textbox', { name: 'Event title' }))
     await user.type(screen.getByRole('textbox', { name: 'Event title' }), 'My unfinished edit')
@@ -126,6 +135,45 @@ describe('event creation wizard', () => {
     expect(screen.getByText('The end time must be after the start time')).toBeVisible()
     expect(screen.getByLabelText('Starts at')).toBeVisible()
     expect(screen.queryByRole('button', { name: 'Create event' })).toBeNull()
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('never publishes from an implicit form submit or Enter in the final fields', async () => {
+    const { user, onSubmit } = show()
+    await reachSchedule(user)
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    const capacity = screen.getByLabelText('Capacity')
+    await user.click(capacity)
+    await user.keyboard('{Enter}{Enter}')
+    fireEvent.submit(capacity.closest('form')!)
+    expect(onSubmit).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('button', { name: 'Create event' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce())
+  })
+
+  it('does not advance past an invalid optional place URL', async () => {
+    const { user, onSubmit } = show()
+    await reachSchedule(user)
+    await user.type(screen.getByLabelText('Place link'), 'not-a-url')
+    await user.click(screen.getByRole('button', { name: 'Next' }))
+    expect(screen.getByLabelText('Starts at')).toBeVisible()
+    expect(screen.queryByLabelText('Capacity')).toBeNull()
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('leaves Enter on the photo file picker to the native chooser without advancing the wizard', async () => {
+    const { user, onSubmit } = show()
+    await user.type(screen.getByRole('textbox', { name: 'Event title' }), 'Local team meeting')
+    const picker = screen.getByLabelText('Event photo (optional)')
+    const nativeEnter = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    })
+    fireEvent(picker, nativeEnter)
+    expect(nativeEnter.defaultPrevented).toBe(false)
+    expect(screen.getByRole('textbox', { name: 'Event title' })).toBeVisible()
+    expect(screen.queryByLabelText('Starts at')).toBeNull()
     expect(onSubmit).not.toHaveBeenCalled()
   })
 

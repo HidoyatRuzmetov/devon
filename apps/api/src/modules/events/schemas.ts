@@ -56,6 +56,7 @@ export const eventSchema = z.object({
   description: z.string().nullable(),
   category: eventCategorySchema,
   illustrationKey: z.string(),
+  thumbnailUrl: z.string().nullable().optional(),
   startsAt: z.string(),
   endsAt: z.string(),
   timezone: z.string(),
@@ -92,6 +93,7 @@ export const createEventBodySchema = z
     description: z.string().max(5000).optional(),
     category: eventCategorySchema.default('other'),
     illustrationKey: z.string().max(64).default('team_building'),
+    thumbnailUploadId: z.string().uuid().nullable().optional(),
     startsAt: isoDateTime,
     endsAt: isoDateTime,
     timezone: z.string().max(64).default('Asia/Tashkent'),
@@ -116,6 +118,7 @@ export const updateEventBodySchema = z
     description: z.string().max(5000).nullable().optional(),
     category: eventCategorySchema.optional(),
     illustrationKey: z.string().max(64).optional(),
+    thumbnailUploadId: z.string().uuid().nullable().optional(),
     startsAt: isoDateTime.optional(),
     endsAt: isoDateTime.optional(),
     timezone: z.string().max(64).optional(),
@@ -178,6 +181,16 @@ export const carpoolBodySchema = z
 export const carpoolClaimBodySchema = z
   .object({ seats: z.number().int().min(1).max(20).default(1) })
   .strict()
+export const carpoolUpdateBodySchema = z
+  .object({
+    seats: z.number().int().min(1).max(20).optional(),
+    departurePlace: z.string().max(300).nullable().optional(),
+    departureAt: isoDateTime.nullable().optional(),
+    note: z.string().max(500).nullable().optional(),
+  })
+  .strict()
+  .refine((body) => Object.keys(body).length > 0, { message: 'empty_update' })
+export type CarpoolUpdateBody = z.infer<typeof carpoolUpdateBodySchema>
 export const carpoolSeatDto = z.object({
   userId: z.string().uuid(),
   givenName: z.string(),

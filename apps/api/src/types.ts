@@ -81,7 +81,7 @@ export type UploadStatus =
 export type UploadRecord = {
   id: string
   userId: string
-  purpose: 'avatar' | 'card_attachment'
+  purpose: 'avatar' | 'card_attachment' | 'event_thumbnail'
   key: string
   mime: string
   size: number

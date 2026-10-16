@@ -11,6 +11,7 @@ import { startProveDatabase, type ProveDatabase } from '../checks/pg-fixture.js'
 import { startProveServer, type ProveServer } from '../checks/server-fixture.js'
 import { parseCookies, cookieHeader } from '../checks/http.js'
 import { hashPassword } from '../../src/lib/password.js'
+import { cleanupFixtures } from '../../../../scripts/testcontainers-cleanup.mjs'
 
 export const PASSWORD = 'Str0ngExampleValue123'
 
@@ -19,13 +20,30 @@ export type Server = ProveServer
 
 export async function startHarness(): Promise<{ db: Db; server: Server }> {
   const db = await startProveDatabase()
-  const server = await startProveServer(db)
-  return { db, server }
+  try {
+    const server = await startProveServer(db)
+    return { db, server }
+  } catch (error) {
+    try {
+      await db.stop()
+    } catch (cleanupError) {
+      throw new AggregateError(
+        [error, cleanupError],
+        'Server startup and database cleanup failed',
+        {
+          cause: cleanupError,
+        },
+      )
+    }
+    throw error
+  }
 }
 
 export async function stopHarness(h: { db: Db; server: Server }): Promise<void> {
-  await h.server.stop()
-  await h.db.stop()
+  await cleanupFixtures(
+    () => h.server.stop(),
+    () => h.db.stop(),
+  )
 }
 
 /** One superuser client per call -- callers `await using`-style via try/finally is unnecessary since

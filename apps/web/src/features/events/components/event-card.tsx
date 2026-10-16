@@ -5,7 +5,7 @@
 // row in a table (Luma, Meetup).
 import { useT, useLocale, formatTime, formatMonthShort, type Locale } from '@devon/i18n'
 import { HoverLift, Progress } from '@devon/ui'
-import { EventIllustration } from '../illustrations/index.js'
+import { EventCover } from './event-cover.js'
 import type { EventDto } from '../schemas.js'
 import { EventChip, type EventChipTone } from './status-chip.js'
 
@@ -104,10 +104,8 @@ export function EventCard({
           {/* round2 SEV2 "Cover has no hover scale (Luma's signature)": the cover alone zooms a
               touch on hover, inside its own clipped frame, independent of the card's `HoverLift`
               (which moves the whole card) -- transform only, so it costs nothing to lay out. */}
-          <EventIllustration
-            illustrationKey={event.illustrationKey}
-            category={event.category}
-            eventId={event.id}
+          <EventCover
+            event={event}
             illustrationKeyOverride={illustrationKeyOverride}
             className="size-full object-cover transition-transform duration-(--dur-standard) ease-(--ease-standard) motion-safe:group-hover:scale-110"
           />

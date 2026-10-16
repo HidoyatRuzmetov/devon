@@ -20,6 +20,7 @@ export type EventRow = {
   description: string | null
   category: string
   illustration_key: string
+  thumbnail_upload_id?: string | null
   starts_at: Date
   ends_at: Date
   timezone: string
@@ -75,7 +76,7 @@ function toEventRow(r: EventSqlRow): EventRow {
 }
 
 const EVENT_SELECT = sql`
-  select e.id, e.department_id, e.title, e.description, e.category, e.illustration_key,
+  select e.id, e.department_id, e.title, e.description, e.category, e.illustration_key, e.thumbnail_upload_id,
          e.starts_at, e.ends_at, e.timezone, e.place, e.place_url, e.capacity, e.waitlist_enabled,
          e.rsvp_deadline, e.cost_note, e.reminder_offsets_minutes, e.organizer_user_id, e.status,
          e.updated_summary, e.cancelled_at, e.cancelled_reason, e.created_at, e.updated_at, e.version,
@@ -170,6 +171,7 @@ export type NewEvent = {
   description: string | null
   category: string
   illustrationKey: string
+  thumbnailUploadId?: string | null
   startsAt: Date
   endsAt: Date
   timezone: string
@@ -192,12 +194,12 @@ export async function insertEvent(tx: Tx, e: NewEvent): Promise<void> {
   // `createCard` (quick-add crashed every card create with zero labels).
   await tx.raw(sql`
     insert into app.events
-      (id, department_id, organizer_user_id, title, description, category, illustration_key,
+      (id, department_id, organizer_user_id, title, description, category, illustration_key, thumbnail_upload_id,
        starts_at, ends_at, timezone, place, place_url, capacity, waitlist_enabled, rsvp_deadline,
        cost_note, reminder_offsets_minutes, status)
     values
       (${e.id}, ${e.departmentId}, ${e.organizerUserId}, ${e.title}, ${e.description}, ${e.category}::app.event_category,
-       ${e.illustrationKey}, ${e.startsAt}, ${e.endsAt}, ${e.timezone}, ${e.place}, ${e.placeUrl},
+       ${e.illustrationKey}, ${e.thumbnailUploadId ?? null}, ${e.startsAt}, ${e.endsAt}, ${e.timezone}, ${e.place}, ${e.placeUrl},
        ${e.capacity}, ${e.waitlistEnabled}, ${e.rsvpDeadline}, ${e.costNote},
        ${sql.param(e.reminderOffsetsMinutes)}::int[], 'open')
   `)
@@ -208,6 +210,7 @@ export type EventPatch = {
   description: string | null
   category: string
   illustrationKey: string
+  thumbnailUploadId?: string | null
   startsAt: Date
   endsAt: Date
   timezone: string
@@ -230,7 +233,7 @@ export async function updateEventFields(
   await tx.raw(sql`
     update app.events set
       title = ${patch.title}, description = ${patch.description}, category = ${patch.category}::app.event_category,
-      illustration_key = ${patch.illustrationKey}, starts_at = ${patch.startsAt}, ends_at = ${patch.endsAt},
+      illustration_key = ${patch.illustrationKey}, thumbnail_upload_id = ${patch.thumbnailUploadId ?? null}, starts_at = ${patch.startsAt}, ends_at = ${patch.endsAt},
       timezone = ${patch.timezone}, place = ${patch.place}, place_url = ${patch.placeUrl},
       capacity = ${patch.capacity}, waitlist_enabled = ${patch.waitlistEnabled},
       rsvp_deadline = ${patch.rsvpDeadline}, cost_note = ${patch.costNote},
@@ -449,13 +452,17 @@ export type CarpoolRow = {
 }
 
 export async function listCarpools(tx: Tx, eventId: string): Promise<CarpoolRow[]> {
-  return tx.raw<CarpoolRow>(sql`
+  const rows = await tx.raw<CarpoolRow>(sql`
     select c.id, c.driver_user_id, u.given_name, u.family_name, u.avatar_key, c.seats, c.departure_place,
            c.departure_at, c.note, c.status
     from app.carpools c join app.users u on u.id = c.driver_user_id
-    where c.event_id = ${eventId}
+    where c.event_id = ${eventId} and c.status = 'open'
     order by c.created_at asc
   `)
+  return rows.map((row) => ({
+    ...row,
+    departure_at: row.departure_at === null ? null : new Date(row.departure_at),
+  }))
 }
 
 export async function insertCarpool(
@@ -494,7 +501,50 @@ export async function getCarpool(tx: Tx, carpoolId: string): Promise<CarpoolFull
     from app.carpools c join app.users u on u.id = c.driver_user_id
     where c.id = ${carpoolId}
   `)
-  return rows[0] ?? null
+  const row = rows[0]
+  return row
+    ? { ...row, departure_at: row.departure_at === null ? null : new Date(row.departure_at) }
+    : null
+}
+
+/** Read under the event lock: one participant can drive OR reserve one ride, including its queue. */
+export async function getCarpoolParticipation(
+  tx: Tx,
+  eventId: string,
+  userId: string,
+  excludingCarpoolId: string | null = null,
+): Promise<{ driving: boolean; passenger: boolean }> {
+  const rows = await tx.raw<{ driving: boolean; passenger: boolean }>(sql`
+    select
+      exists (select 1 from app.carpools c where c.event_id = ${eventId} and c.status = 'open'
+        and c.driver_user_id = ${userId}
+        and (${excludingCarpoolId}::uuid is null or c.id <> ${excludingCarpoolId}::uuid)) as driving,
+      exists (select 1 from app.carpool_seats s join app.carpools c on c.id = s.carpool_id
+        where c.event_id = ${eventId} and c.status = 'open' and s.user_id = ${userId}
+        and (${excludingCarpoolId}::uuid is null or c.id <> ${excludingCarpoolId}::uuid)) as passenger
+  `)
+  return rows[0]!
+}
+
+export async function updateCarpool(
+  tx: Tx,
+  carpoolId: string,
+  input: {
+    seats: number
+    departurePlace: string | null
+    departureAt: Date | null
+    note: string | null
+  },
+): Promise<void> {
+  await tx.raw(sql`
+    update app.carpools set seats = ${input.seats}, departure_place = ${input.departurePlace},
+      departure_at = ${input.departureAt}, note = ${input.note}
+    where id = ${carpoolId}
+  `)
+}
+
+export async function cancelCarpool(tx: Tx, carpoolId: string): Promise<void> {
+  await tx.raw(sql`update app.carpools set status = 'cancelled' where id = ${carpoolId}`)
 }
 
 export type CarpoolSeatRow = {
@@ -550,7 +600,7 @@ export async function upsertCarpoolSeat(
     values (${input.id}, ${input.departmentId}, ${input.carpoolId}, ${input.userId}, ${input.seatsClaimed},
             ${input.status}::app.carpool_seat_status, now())
     on conflict (carpool_id, user_id) do update set
-      seats_claimed = excluded.seats_claimed, status = excluded.status, claimed_at = now()
+      seats_claimed = excluded.seats_claimed, status = excluded.status
   `)
 }
 
@@ -563,11 +613,20 @@ export async function releaseCarpoolSeat(tx: Tx, carpoolId: string, userId: stri
 export async function listWaitlistedCarpoolSeats(
   tx: Tx,
   carpoolId: string,
+  eventId: string,
 ): Promise<Array<{ id: string; units: number }>> {
   const rows = await tx.raw<{ user_id: string; seats_claimed: number }>(sql`
-    select user_id, seats_claimed from app.carpool_seats
-    where carpool_id = ${carpoolId} and status = 'waitlist'
-    order by claimed_at asc
+    select s.user_id, s.seats_claimed from app.carpool_seats s
+    join app.users u on u.id = s.user_id and u.status = 'active' and u.deleted_at is null
+    where s.carpool_id = ${carpoolId} and s.status = 'waitlist'
+      and exists (select 1 from app.memberships m where m.user_id = s.user_id
+        and m.department_id = s.department_id and m.status = 'active')
+      and not exists (select 1 from app.carpools driver where driver.event_id = ${eventId}
+        and driver.status = 'open' and driver.driver_user_id = s.user_id)
+      and not exists (select 1 from app.carpool_seats other
+        join app.carpools c on c.id = other.carpool_id and c.status = 'open'
+        where c.event_id = ${eventId} and c.id <> ${carpoolId} and other.user_id = s.user_id)
+    order by s.claimed_at asc, s.id asc
   `)
   return rows.map((r) => ({ id: r.user_id, units: r.seats_claimed }))
 }

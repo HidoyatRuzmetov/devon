@@ -1,6 +1,7 @@
 // Typed endpoint functions for the events feature, built on `apiClient` (MODULE-GUIDE.md "Web
 // features"). Every path matches `apps/api/src/modules/events/index.ts` exactly.
 import { apiClient } from '../../lib/api-client.js'
+import { z } from 'zod'
 import {
   carpoolDto,
   carpoolListSchema,
@@ -47,6 +48,7 @@ export type CreateEventInput = {
   description?: string | undefined
   category: string
   illustrationKey?: string | undefined
+  thumbnailUploadId?: string | null | undefined
   startsAt: string
   endsAt: string
   place?: string | undefined
@@ -71,6 +73,7 @@ export type UpdateEventInput = {
   description?: string | null | undefined
   category?: string | undefined
   illustrationKey?: string | undefined
+  thumbnailUploadId?: string | null | undefined
   startsAt?: string | undefined
   endsAt?: string | undefined
   place?: string | null | undefined
@@ -84,6 +87,32 @@ export type UpdateEventInput = {
 
 export function updateEvent(eventId: string, input: UpdateEventInput, csrfToken: string) {
   return apiClient.patch(`${BASE}/${eventId}`, input, eventSchema, csrfToken)
+}
+
+const thumbnailUploadSchema = z.object({
+  uploadId: z.string(),
+  url: z.string(),
+  method: z.literal('PUT'),
+  headers: z.record(z.string(), z.string()),
+  expiresAt: z.string(),
+})
+const thumbnailResultSchema = z.object({ uploadId: z.string(), thumbnailUrl: z.string() })
+
+export function requestEventThumbnailUpload(file: File, csrfToken: string) {
+  return apiClient.post(
+    `${BASE}/thumbnails/upload-url`,
+    { contentType: file.type, size: file.size },
+    thumbnailUploadSchema,
+    csrfToken,
+  )
+}
+export function finalizeEventThumbnailUpload(uploadId: string, csrfToken: string) {
+  return apiClient.post(
+    `${BASE}/thumbnails/${encodeURIComponent(uploadId)}/finalize`,
+    {},
+    thumbnailResultSchema,
+    csrfToken,
+  )
 }
 
 export function cancelEvent(eventId: string, reason: string, csrfToken: string) {
@@ -131,6 +160,26 @@ export function createCarpool(
   csrfToken: string,
 ): Promise<CarpoolDto> {
   return apiClient.post(`${BASE}/${eventId}/carpools`, input, carpoolDto, csrfToken)
+}
+
+export type UpdateCarpoolInput = {
+  seats?: number | undefined
+  departurePlace?: string | null | undefined
+  departureAt?: string | null | undefined
+  note?: string | null | undefined
+}
+
+export function updateCarpool(
+  eventId: string,
+  carpoolId: string,
+  input: UpdateCarpoolInput,
+  csrfToken: string,
+) {
+  return apiClient.patch(`${BASE}/${eventId}/carpools/${carpoolId}`, input, carpoolDto, csrfToken)
+}
+
+export function deleteCarpool(eventId: string, carpoolId: string, csrfToken: string) {
+  return apiClient.delete(`${BASE}/${eventId}/carpools/${carpoolId}`, voidSchema, csrfToken)
 }
 
 export function claimCarpoolSeat(

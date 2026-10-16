@@ -74,7 +74,7 @@
     "form": {
       "stepBasics": "Asosiy",
       "stepSchedule": "Vaqt va manzil",
-      "stepCapacity": "Joylar va eslatmalar",
+      "stepCapacity": "Tekshirish va yaratish",
       "stepBack": "Orqaga",
       "stepNext": "Keyingisi",
       "aiIdeaLabel": "Bir qatorli fikr",
@@ -113,7 +113,17 @@
         "endsBeforeStarts": "Tugash vaqti boshlanish vaqtidan keyin boʻlsin."
       },
       "aiDraftCarpool": "Yoʻl",
-      "aiDraftPickDate": "Qaysi sanani olamiz?"
+      "aiDraftPickDate": "Qaysi sanani olamiz?",
+      "thumbnailLabel": "Tadbir rasmi (ixtiyoriy)",
+      "thumbnailHint": "JPG, PNG yoki WebP, 5 MB gacha. Rasm yuklanmasa, tayyor chizma ishlatiladi.",
+      "thumbnailPreview": "Tadbir rasmining ko‘rinishi",
+      "thumbnailRemove": "Rasmni olib tashlash",
+      "thumbnailUploading": "Rasm yuklanmoqda…",
+      "thumbnailScanning": "Rasm tekshirilmoqda…",
+      "thumbnailInvalid": "5 MB dan kichik JPG, PNG yoki WebP rasm tanlang.",
+      "thumbnailFailed": "Rasmni saqlab bo‘lmadi. Qayta urinish uchun rasmni yana tanlang.",
+      "thumbnailScanUnavailable": "Fayl tekshiruvi vaqtincha ishlamayapti. Davom etishdan oldin qayta urinib ko‘ring.",
+      "reviewHint": "Yakuniy ma’lumotlarni tekshiring. Tadbir faqat «Tadbir yaratish» bosilganda yaratiladi."
     },
     "diff": {
       "title": "Nimalar oʻzgardi",
@@ -125,7 +135,14 @@
         "placeUrl": "Manzil havolasi",
         "capacity": "Joylar soni",
         "costNote": "Xarajat eslatmasi",
-        "description": "Tavsif"
+        "description": "Tavsif",
+        "category": "Toifa",
+        "illustrationKey": "Chizma",
+        "timezone": "Vaqt mintaqasi",
+        "waitlistEnabled": "Navbat ro‘yxati",
+        "rsvpDeadline": "Javob berish muddati",
+        "reminderOffsetsMinutes": "Eslatmalar (oldindan daqiqa)",
+        "thumbnailUploadId": "Tadbir rasmi"
       }
     },
     "cancelDialog": {
@@ -197,7 +214,21 @@
       "driverCannotClaim": "Haydovchi oʻz taklifidan oʻrin ololmaydi",
       "cancelled": "Bu taklif bekor qilingan",
       "releasedToast": "Oʻrindan voz kechdingiz",
-      "reclaimedToast": "Oʻrin qayta band qilindi"
+      "reclaimedToast": "Oʻrin qayta band qilindi",
+      "edit": "Safarni tahrirlash",
+      "delete": "Safarni o‘chirish",
+      "saved": "Safar ma’lumotlari saqlandi",
+      "deleted": "Safar o‘chirildi",
+      "deleteNeedsEmpty": "Safarni o‘chirishdan oldin barcha yo‘lovchilar, jumladan navbatdagilar ham o‘z joyidan voz kechishi kerak.",
+      "deleteConfirm": "Safar o‘chirilsinmi? Yo‘lovchilar yo‘q. Keyin yangi safar taklif qilishingiz mumkin.",
+      "alreadyDriver": "Bu tadbir uchun safar taklif qilgansiz. Boshqa mashinaga o‘tishdan oldin yo‘lovchisiz safaringizni o‘chiring.",
+      "alreadyPassenger": "Sizda joy yoki navbatdagi o‘rin bor. Boshqa mashinaga o‘tish yoki safar taklif qilishdan oldin undan voz keching.",
+      "youDrive": "Bu mashina haydovchisisiz. Ma’lumotlarni qalam belgisi orqali o‘zgartiring.",
+      "capacityBelowClaimed": "Joylar soni band qilingan joylardan kam bo‘lishi mumkin emas.",
+      "seatUnavailable": "Bu joy endi mavjud emas. Safarni yangilang va qayta urinib ko‘ring.",
+      "eventClosed": "Tadbir bekor qilingan, tugagan yoki boshlangan. Yangi safar va joy olish yopiq; olingan joydan voz kechish mumkin.",
+      "saveFailed": "Safarni yangilab bo‘lmadi. Kiritganlaringiz saqlandi; qayta urinib ko‘ring.",
+      "joinWaitlist": "Safar navbatiga turish"
     },
     "items": {
       "title": "Kim nima olib keladi",
