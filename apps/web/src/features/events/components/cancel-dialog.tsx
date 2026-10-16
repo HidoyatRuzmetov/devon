@@ -58,7 +58,7 @@ export function CancelDialog({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t('events.cancelDialog.reasonPlaceholder')}
-              maxLength={1000}
+              maxLength={500}
             />
           </Field>
           <div className="flex justify-end gap-2">

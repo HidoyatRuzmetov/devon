@@ -11,6 +11,13 @@ export type DiffableEvent = {
   capacity: number | null
   costNote: string | null
   description: string | null
+  category?: string
+  illustrationKey?: string
+  thumbnailUploadId?: string | null
+  timezone?: string
+  waitlistEnabled?: boolean
+  rsvpDeadline?: string | null
+  reminderOffsetsMinutes?: string
 }
 
 const DIFF_FIELDS: ReadonlyArray<keyof DiffableEvent> = [
@@ -22,6 +29,13 @@ const DIFF_FIELDS: ReadonlyArray<keyof DiffableEvent> = [
   'capacity',
   'costNote',
   'description',
+  'category',
+  'illustrationKey',
+  'thumbnailUploadId',
+  'timezone',
+  'waitlistEnabled',
+  'rsvpDeadline',
+  'reminderOffsetsMinutes',
 ]
 
 /** The organiser-update diff summary (TECH-SPEC §3.4 `updated_summary`, "what changed, for

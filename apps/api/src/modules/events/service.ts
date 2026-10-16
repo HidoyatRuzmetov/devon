@@ -17,9 +17,11 @@ import {
   type DiffableEvent,
 } from './logic.js'
 import * as repo from './repo.js'
+import { claimEventThumbnail } from './thumbnail-repo.js'
 import { assertManage, mayManage, viewerCanManage, type Actor as GuardActor } from './guards.js'
 import type {
   CarpoolDto,
+  CarpoolUpdateBody,
   CommentDto,
   CreateEventBody,
   EventChange,
@@ -47,6 +49,13 @@ function eventDiffable(e: repo.EventRow): DiffableEvent {
     capacity: e.capacity,
     costNote: e.cost_note,
     description: e.description,
+    category: e.category,
+    illustrationKey: e.illustration_key,
+    thumbnailUploadId: e.thumbnail_upload_id ?? null,
+    timezone: e.timezone,
+    waitlistEnabled: e.waitlist_enabled,
+    rsvpDeadline: e.rsvp_deadline?.toISOString() ?? null,
+    reminderOffsetsMinutes: e.reminder_offsets_minutes.join(', '),
   }
 }
 
@@ -71,6 +80,9 @@ function toEventDto(
     description: row.description,
     category: row.category as EventDto['category'],
     illustrationKey: row.illustration_key,
+    thumbnailUrl: row.thumbnail_upload_id
+      ? `/api/v1/events/thumbnails/${row.thumbnail_upload_id}`
+      : null,
     startsAt: row.starts_at.toISOString(),
     endsAt: row.ends_at.toISOString(),
     timezone: row.timezone,
@@ -173,6 +185,7 @@ export async function createEvent(
 ): Promise<EventDto> {
   return withContext(ctx, async (tx) => {
     const id = randomUUID()
+    if (body.thumbnailUploadId) await claimEventThumbnail(tx, ctx, body.thumbnailUploadId, id)
     await repo.insertEvent(tx, {
       id,
       departmentId: ctx.departmentId!,
@@ -181,6 +194,7 @@ export async function createEvent(
       description: body.description ?? null,
       category: body.category,
       illustrationKey: body.illustrationKey,
+      thumbnailUploadId: body.thumbnailUploadId ?? null,
       startsAt: new Date(body.startsAt),
       endsAt: new Date(body.endsAt),
       timezone: body.timezone,
@@ -234,15 +248,21 @@ export async function updateEvent(
   body: UpdateEventBody,
 ): Promise<EventDto> {
   return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
     const before = await repo.getEventRow(tx, eventId)
     if (!before) throw new EventNotFoundError()
     requireManage(before, actor)
+    if (body.thumbnailUploadId) await claimEventThumbnail(tx, ctx, body.thumbnailUploadId, eventId)
 
     const merged: repo.EventPatch = {
       title: body.title ?? before.title,
       description: body.description === undefined ? before.description : body.description,
       category: body.category ?? before.category,
       illustrationKey: body.illustrationKey ?? before.illustration_key,
+      thumbnailUploadId:
+        body.thumbnailUploadId === undefined
+          ? (before.thumbnail_upload_id ?? null)
+          : body.thumbnailUploadId,
       startsAt: body.startsAt ? new Date(body.startsAt) : before.starts_at,
       endsAt: body.endsAt ? new Date(body.endsAt) : before.ends_at,
       timezone: body.timezone ?? before.timezone,
@@ -272,6 +292,13 @@ export async function updateEvent(
       capacity: merged.capacity,
       costNote: merged.costNote,
       description: merged.description,
+      category: merged.category,
+      illustrationKey: merged.illustrationKey,
+      thumbnailUploadId: merged.thumbnailUploadId ?? null,
+      timezone: merged.timezone,
+      waitlistEnabled: merged.waitlistEnabled,
+      rsvpDeadline: merged.rsvpDeadline?.toISOString() ?? null,
+      reminderOffsetsMinutes: merged.reminderOffsetsMinutes.join(', '),
     })
 
     const counts = await repo.getRsvpCounts(tx, eventId)
@@ -337,6 +364,7 @@ export async function cancelEvent(
   reason: string,
 ): Promise<EventDto> {
   return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
     const before = await repo.getEventRow(tx, eventId)
     if (!before) throw new EventNotFoundError()
     requireManage(before, actor)
@@ -589,6 +617,30 @@ export async function deleteComment(
 
 // --- Carpools --------------------------------------------------------------------------------------
 
+function requireOpenCarpoolEvent(event: repo.EventRow): void {
+  if (!['open', 'full'].includes(event.status) || event.starts_at.getTime() <= Date.now()) {
+    throw new EventConflictError('event_not_open', 'carpool')
+  }
+}
+
+async function promoteAvailableCarpoolSeats(
+  tx: Tx,
+  carpool: repo.CarpoolFullRow,
+): Promise<string[]> {
+  if (carpool.status !== 'open') return []
+  const event = await repo.getEventRow(tx, carpool.event_id)
+  // Releases are allowed for cancelled/past events, but must never create a new booking there.
+  if (!event || !['open', 'full'].includes(event.status) || event.starts_at.getTime() <= Date.now())
+    return []
+  const freeUnits = carpool.seats - (await repo.getConfirmedSeatUnits(tx, carpool.id))
+  if (freeUnits <= 0) return []
+  // A batched eligibility query also avoids promoting stale legacy duplicates or former members.
+  const eligible = await repo.listWaitlistedCarpoolSeats(tx, carpool.id, carpool.event_id)
+  const promoted = selectWaitlistPromotions(eligible, freeUnits)
+  await repo.promoteCarpoolSeats(tx, carpool.id, promoted)
+  return promoted
+}
+
 function toCarpoolDto(
   c: repo.CarpoolRow,
   passengers: repo.CarpoolSeatRow[],
@@ -656,8 +708,14 @@ export async function createCarpool(
   },
 ): Promise<CarpoolDto> {
   return withContext(ctx, async (tx) => {
+    // Cross-car invariants need the event lock, not merely a lock on the requested car.
+    await repo.lockEventForCapacity(tx, eventId)
     const event = await repo.getEventRow(tx, eventId)
     if (!event) throw new EventNotFoundError()
+    requireOpenCarpoolEvent(event)
+    const participation = await repo.getCarpoolParticipation(tx, eventId, actor.userId)
+    if (participation.driving) throw new EventConflictError('driver_already_offering', 'carpool')
+    if (participation.passenger) throw new EventConflictError('passenger_already_booked', 'carpool')
     const id = randomUUID()
     await repo.insertCarpool(tx, {
       id,
@@ -681,6 +739,97 @@ export async function createCarpool(
   })
 }
 
+export async function updateCarpool(
+  ctx: RequestContext,
+  actor: Actor,
+  eventId: string,
+  carpoolId: string,
+  body: CarpoolUpdateBody,
+): Promise<CarpoolDto> {
+  return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
+    const event = await repo.getEventRow(tx, eventId)
+    const before = await repo.getCarpool(tx, carpoolId)
+    if (!event || !before || before.event_id !== eventId) throw new EventNotFoundError()
+    assertManage(actor, [before.driver_user_id])
+    requireOpenCarpoolEvent(event)
+    if (before.status !== 'open') throw new EventConflictError('carpool_cancelled', 'carpool')
+    const patch = {
+      seats: body.seats ?? before.seats,
+      departurePlace:
+        body.departurePlace === undefined ? before.departure_place : body.departurePlace,
+      departureAt:
+        body.departureAt === undefined
+          ? before.departure_at
+          : body.departureAt === null
+            ? null
+            : new Date(body.departureAt),
+      note: body.note === undefined ? before.note : body.note,
+    }
+    if (patch.seats < (await repo.getConfirmedSeatUnits(tx, carpoolId))) {
+      throw new EventConflictError('carpool_capacity_below_claimed', 'carpool')
+    }
+    await repo.updateCarpool(tx, carpoolId, patch)
+    const updated = await repo.getCarpool(tx, carpoolId)
+    const promotedUserIds = await promoteAvailableCarpoolSeats(tx, updated!)
+    tx.audit({
+      action: 'events.carpool_updated',
+      subjectType: 'carpool',
+      subjectId: carpoolId,
+      before: {
+        seats: before.seats,
+        departurePlace: before.departure_place,
+        departureAt: before.departure_at,
+        note: before.note,
+      },
+      after: { ...patch, promotedUserIds },
+    })
+    tx.emit({
+      type: 'events.carpool.updated',
+      departmentId: event.department_id,
+      payload: { eventId, carpoolId, actorUserId: actor.userId },
+    })
+    return toCarpoolDto(
+      updated!,
+      await repo.listCarpoolSeats(tx, carpoolId),
+      actor.userId,
+      mayManage(actor, [null]),
+    )
+  })
+}
+
+export async function deleteCarpool(
+  ctx: RequestContext,
+  actor: Actor,
+  eventId: string,
+  carpoolId: string,
+): Promise<void> {
+  return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
+    const event = await repo.getEventRow(tx, eventId)
+    const carpool = await repo.getCarpool(tx, carpoolId)
+    if (!event || !carpool || carpool.event_id !== eventId) throw new EventNotFoundError()
+    assertManage(actor, [carpool.driver_user_id])
+    if (carpool.status === 'cancelled') return
+    if ((await repo.listCarpoolSeats(tx, carpoolId)).length > 0) {
+      throw new EventConflictError('carpool_has_passengers', 'carpool')
+    }
+    await repo.cancelCarpool(tx, carpoolId)
+    tx.audit({
+      action: 'events.carpool_deleted',
+      subjectType: 'carpool',
+      subjectId: carpoolId,
+      before: { status: carpool.status },
+      after: { status: 'cancelled' },
+    })
+    tx.emit({
+      type: 'events.carpool.deleted',
+      departmentId: event.department_id,
+      payload: { eventId, carpoolId, actorUserId: actor.userId },
+    })
+  })
+}
+
 export async function claimCarpoolSeat(
   ctx: RequestContext,
   actor: Actor,
@@ -689,6 +838,7 @@ export async function claimCarpoolSeat(
   seats: number,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
       throw new EventNotFoundError()
     // Same aggregate invariant as RSVP capacity ("confirmed seats may not exceed `carpool.seats`"),
@@ -697,16 +847,29 @@ export async function claimCarpoolSeat(
     await repo.lockCarpoolForSeats(tx, carpoolId)
     const carpool = await repo.getCarpool(tx, carpoolId)
     if (!carpool) throw new EventNotFoundError()
-    if (carpool.status === 'cancelled') throw new EventConflictError('carpool_cancelled')
-    if (carpool.driver_user_id === actor.userId) {
-      throw new EventConflictError('driver_cannot_claim_own_offer')
-    }
+    const event = await repo.getEventRow(tx, eventId)
+    if (!event) throw new EventNotFoundError()
+    requireOpenCarpoolEvent(event)
+    if (carpool.status === 'cancelled') throw new EventConflictError('carpool_cancelled', 'carpool')
+    const elsewhere = await repo.getCarpoolParticipation(tx, eventId, actor.userId, carpoolId)
+    if (carpool.driver_user_id === actor.userId || elsewhere.driving)
+      throw new EventConflictError('driver_cannot_be_passenger', 'carpool')
+    if (elsewhere.passenger) throw new EventConflictError('passenger_already_booked', 'carpool')
+    if (seats > carpool.seats)
+      throw new EventConflictError('carpool_claim_exceeds_capacity', 'carpool')
 
     const existing = await repo.getMyCarpoolSeat(tx, carpoolId, actor.userId)
     const previousUnits = existing?.status === 'confirmed' ? existing.seats_claimed : 0
     const confirmedUnits = (await repo.getConfirmedSeatUnits(tx, carpoolId)) - previousUnits
     const remaining = carpool.seats - confirmedUnits
-    const status = seats <= remaining ? 'confirmed' : 'waitlist'
+    // Confirmed passengers keep their place. New or queued claims are promoted in their original
+    // arrival order below, so a smaller newcomer cannot jump an older group waiting for room.
+    const requestedStatus =
+      existing?.status === 'confirmed' && seats <= remaining ? 'confirmed' : 'waitlist'
+    if (existing?.status === 'confirmed' && requestedStatus === 'waitlist') {
+      throw new EventConflictError('carpool_claim_capacity_unavailable', 'carpool')
+    }
+    if (existing?.seats_claimed === seats && existing.status === requestedStatus) return
 
     await repo.upsertCarpoolSeat(tx, {
       id: randomUUID(),
@@ -714,13 +877,19 @@ export async function claimCarpoolSeat(
       carpoolId,
       userId: actor.userId,
       seatsClaimed: seats,
-      status,
+      status: requestedStatus,
     })
+    const promotedUserIds = await promoteAvailableCarpoolSeats(tx, carpool)
+    const status = (await repo.getMyCarpoolSeat(tx, carpoolId, actor.userId))!.status
 
     tx.audit({
       action: 'events.carpool_seat_claimed',
       subjectType: 'carpool',
       subjectId: carpoolId,
+      before: existing
+        ? { userId: actor.userId, seats: existing.seats_claimed, status: existing.status }
+        : null,
+      after: { userId: actor.userId, seats, status, promotedUserIds },
     })
     tx.emit({
       type: 'events.carpool.seat_claimed',
@@ -743,6 +912,7 @@ export async function releaseCarpoolSeat(
   carpoolId: string,
 ): Promise<void> {
   return withContext(ctx, async (tx) => {
+    await repo.lockEventForCapacity(tx, eventId)
     if (!(await repo.eventChildBelongsTo(tx, eventId, 'carpools', carpoolId)))
       throw new EventNotFoundError()
     // Releasing frees units and promotes from the waitlist -- the same aggregate the claim path
@@ -751,23 +921,21 @@ export async function releaseCarpoolSeat(
     const carpool = await repo.getCarpool(tx, carpoolId)
     if (!carpool) throw new EventNotFoundError()
     const existing = await repo.getMyCarpoolSeat(tx, carpoolId, actor.userId)
-    const wasConfirmed = existing?.status === 'confirmed'
+    if (!existing) return
     await repo.releaseCarpoolSeat(tx, carpoolId, actor.userId)
-
-    if (wasConfirmed) {
-      const confirmedUnits = await repo.getConfirmedSeatUnits(tx, carpoolId)
-      const freeUnits = carpool.seats - confirmedUnits
-      if (freeUnits > 0) {
-        const waitlist = await repo.listWaitlistedCarpoolSeats(tx, carpoolId)
-        const promoted = selectWaitlistPromotions(waitlist, freeUnits)
-        await repo.promoteCarpoolSeats(tx, carpoolId, promoted)
-      }
-    }
+    const promotedUserIds = await promoteAvailableCarpoolSeats(tx, carpool)
 
     tx.audit({
       action: 'events.carpool_seat_released',
       subjectType: 'carpool',
       subjectId: carpoolId,
+      before: { userId: actor.userId, seats: existing.seats_claimed, status: existing.status },
+      after: { userId: actor.userId, status: 'released', promotedUserIds },
+    })
+    tx.emit({
+      type: 'events.carpool.seat_released',
+      departmentId: carpool.department_id,
+      payload: { eventId, carpoolId, actorUserId: actor.userId },
     })
   })
 }

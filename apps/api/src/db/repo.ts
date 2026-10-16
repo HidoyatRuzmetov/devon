@@ -101,7 +101,7 @@ async function selectUserById(tx: Tx, id: string): Promise<UserRecord | null> {
 type UploadRow = {
   id: string
   user_id: string
-  purpose: 'avatar' | 'card_attachment'
+  purpose: 'avatar' | 'card_attachment' | 'event_thumbnail'
   key: string
   mime: string
   size: number
@@ -538,9 +538,11 @@ export function createRepo(): Deps {
 
     async expirePendingUploads(before, limit) {
       return withContext(anonymousCtx(), async (tx) => {
+        // A finalizer may commit while this UPDATE waits on its row lock. Recheck the target
+        // tuple too: the subquery's earlier pending snapshot must not expire a finalized upload.
         const rows = await tx.raw<{ id: string; user_id: string; key: string }>(
           sql`update app.uploads set status = 'expired', updated_at = now()
-              where id in (
+              where status = 'pending' and expires_at < ${before} and id in (
                 select id from app.uploads
                 where status = 'pending' and expires_at < ${before}
                 order by expires_at asc

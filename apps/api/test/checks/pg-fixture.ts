@@ -9,6 +9,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
+import { getContainerRuntimeClient } from 'testcontainers'
+import { stopTestContainer } from '../../../../scripts/testcontainers-cleanup.mjs'
 
 // Matches TECH-SPEC §1.2 (Postgres 17, pgvector 0.8) and packages/db/test/harness.ts's pin -- the plain
 // `postgres:17` image has no `vector` extension, so `0000_extensions.sql` would fail against it.
@@ -84,7 +86,7 @@ export async function startProveDatabase(): Promise<ProveDatabase> {
     migratorUrl,
     superuserUrl,
     async stop() {
-      await container.stop()
+      await stopTestContainer(container, getContainerRuntimeClient)
     },
   }
 }

@@ -37,7 +37,7 @@ import { downloadIcs } from '../lib/ics-download.js'
 import { AddToCalendarMenu } from '../../calendar/components/add-to-calendar-menu.js'
 import { eventFormValuesToUpdateInput } from '../lib/event-form-mapping.js'
 import type { EventDto, EventStatus, RsvpDto } from '../schemas.js'
-import { EventIllustration } from '../illustrations/index.js'
+import { EventCover } from './event-cover.js'
 import { CancelDialog } from './cancel-dialog.js'
 import { CarpoolPanel } from './carpool-panel.js'
 import { CommentsPanel } from './comments-panel.js'
@@ -75,11 +75,16 @@ function DiffSummary({ event }: { event: EventDto }) {
         {event.updatedSummary.map((change, index) => (
           <li key={index}>
             <span className="font-medium text-foreground">
-              {t(`events.diff.field.${change.field}`)}:
+              {t(`events.diff.field.${change.field}`)}
+              {change.field === 'thumbnailUploadId' ? '' : ':'}
             </span>{' '}
-            <span className="line-through">{change.before ?? '—'}</span>{' '}
-            <span aria-hidden="true">→</span>{' '}
-            <span className="font-medium text-foreground">{change.after ?? '—'}</span>
+            {change.field !== 'thumbnailUploadId' ? (
+              <>
+                <span className="line-through">{change.before ?? '—'}</span>{' '}
+                <span aria-hidden="true">→</span>{' '}
+                <span className="font-medium text-foreground">{change.after ?? '—'}</span>
+              </>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -234,12 +239,7 @@ function EventHeader({
           viewport edge -- RSVP is the single most common action in this module and it was
           off-screen. A fixed, modest band instead: enough illustration to set the mood, not enough
           to cost the reader the thing they opened the sheet to do. */}
-      <EventIllustration
-        illustrationKey={event.illustrationKey}
-        category={event.category}
-        eventId={event.id}
-        className="h-28 w-full rounded-md object-cover sm:h-36"
-      />
+      <EventCover event={event} className="h-28 w-full rounded-md object-cover sm:h-36" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -452,7 +452,13 @@ export function EventDetailDialog({
             <RsvpPanel event={event} eventId={eventId} />
           </TabsContent>
           <TabsContent value="carpool">
-            <CarpoolPanel eventId={eventId} />
+            <CarpoolPanel
+              eventId={eventId}
+              eventClosed={
+                (event.status !== 'open' && event.status !== 'full') ||
+                new Date(event.startsAt).getTime() <= Date.now()
+              }
+            />
           </TabsContent>
           <TabsContent value="items">
             <ItemsPanel eventId={eventId} />

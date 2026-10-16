@@ -46,6 +46,7 @@ export const eventSchema = z.object({
   description: z.string().nullable(),
   category: z.enum(EVENT_CATEGORIES),
   illustrationKey: z.string(),
+  thumbnailUrl: z.string().nullable().optional(),
   startsAt: z.string(),
   endsAt: z.string(),
   timezone: z.string(),

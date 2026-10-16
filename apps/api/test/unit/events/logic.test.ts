@@ -36,6 +36,33 @@ describe('diffEvent', () => {
     const changes = diffEvent(BASE, { ...BASE, place: null })
     expect(changes).toEqual([{ field: 'place', before: 'Chorvoq', after: null }])
   })
+
+  it('records illustration, thumbnail and participation-setting changes even without a title edit', () => {
+    const before = {
+      ...BASE,
+      category: 'social',
+      illustrationKey: 'social',
+      thumbnailUploadId: null,
+      timezone: 'Asia/Tashkent',
+      waitlistEnabled: true,
+      rsvpDeadline: null,
+      reminderOffsetsMinutes: '1440, 60',
+    }
+    expect(
+      diffEvent(before, {
+        ...before,
+        thumbnailUploadId: 'local-upload',
+        illustrationKey: 'training',
+        waitlistEnabled: false,
+        reminderOffsetsMinutes: '60',
+      }),
+    ).toEqual([
+      { field: 'illustrationKey', before: 'social', after: 'training' },
+      { field: 'thumbnailUploadId', before: null, after: 'local-upload' },
+      { field: 'waitlistEnabled', before: 'true', after: 'false' },
+      { field: 'reminderOffsetsMinutes', before: '1440, 60', after: '60' },
+    ])
+  })
 })
 
 describe('resolveYesRsvp', () => {

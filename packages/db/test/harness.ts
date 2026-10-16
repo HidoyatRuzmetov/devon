@@ -10,9 +10,11 @@ import {
   GenericContainer,
   Network,
   Wait,
+  getContainerRuntimeClient,
   type StartedNetwork,
   type StartedTestContainer,
 } from 'testcontainers'
+import { cleanupFixtures, stopTestContainer } from '../../../scripts/testcontainers-cleanup.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const MIGRATIONS_DIR = join(__dirname, '..', 'migrations')
@@ -153,8 +155,10 @@ export async function startMigratedDatabase(): Promise<DatabaseFixture> {
     migratorUrl,
     appUrl,
     async stop() {
-      await container.stop()
-      await network.stop()
+      await cleanupFixtures(
+        () => stopTestContainer(container, getContainerRuntimeClient),
+        () => network.stop(),
+      )
     },
   }
 }
@@ -216,10 +220,14 @@ export async function startPgBouncer(db: DatabaseFixture): Promise<PgBouncerFixt
     }
   }
   if (lastErr) {
-    await container.stop().catch(() => {})
-    throw new Error(
-      `startPgBouncer: port ${port} never accepted a connection within 10s of "process up"`,
-      { cause: lastErr },
+    await cleanupFixtures(
+      async () => {
+        throw new Error(
+          `startPgBouncer: port ${port} never accepted a connection within 10s of "process up"`,
+          { cause: lastErr },
+        )
+      },
+      () => stopTestContainer(container, getContainerRuntimeClient),
     )
   }
 
@@ -227,7 +235,7 @@ export async function startPgBouncer(db: DatabaseFixture): Promise<PgBouncerFixt
     container,
     connectionString,
     async stop() {
-      await container.stop()
+      await stopTestContainer(container, getContainerRuntimeClient)
     },
   }
 }

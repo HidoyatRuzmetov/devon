@@ -241,6 +241,25 @@ export function useClaimCarpoolSeatMutation(eventId: string) {
   })
 }
 
+export function useUpdateCarpoolMutation(eventId: string) {
+  const csrfToken = useCsrfToken()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ carpoolId, input }: { carpoolId: string; input: api.UpdateCarpoolInput }) =>
+      api.updateCarpool(eventId, carpoolId, input, csrfToken),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.carpools(eventId) }),
+  })
+}
+
+export function useDeleteCarpoolMutation(eventId: string) {
+  const csrfToken = useCsrfToken()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (carpoolId: string) => api.deleteCarpool(eventId, carpoolId, csrfToken),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: keys.carpools(eventId) }),
+  })
+}
+
 export function useReleaseCarpoolSeatMutation(eventId: string) {
   const csrfToken = useCsrfToken()
   const queryClient = useQueryClient()

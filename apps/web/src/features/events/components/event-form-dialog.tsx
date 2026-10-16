@@ -32,6 +32,7 @@ import { EventDraftPreview } from '../../ai/components/previews.js'
 import { parseFeatureOutput, type DraftEventOutput } from '../../ai/outputs.js'
 import { EVENT_CATEGORIES, type EventDto } from '../schemas.js'
 import { toLocalInputValue } from '../lib/event-form-mapping.js'
+import { EventThumbnailPicker } from './event-thumbnail-picker.js'
 
 export type EventFormValues = {
   title: string
@@ -47,6 +48,8 @@ export type EventFormValues = {
   costNote: string
   reminderDayBefore: boolean
   reminderHourBefore: boolean
+  thumbnailUploadId?: string | null | undefined
+  thumbnailUrl?: string | null | undefined
 }
 
 const STEPS = ['basics', 'schedule', 'capacity'] as const
@@ -68,6 +71,8 @@ function defaultsFromEvent(event: EventDto | null): EventFormValues {
     costNote: event?.costNote ?? '',
     reminderDayBefore: offsets.includes(1440),
     reminderHourBefore: offsets.includes(60),
+    thumbnailUploadId: undefined,
+    thumbnailUrl: event?.thumbnailUrl ?? null,
   }
 }
 
@@ -334,9 +339,11 @@ export function EventFormDialog({
   const [error, setError] = React.useState<string | null>(null)
   const [step, setStep] = React.useState(0)
   const [saving, setSaving] = React.useState(false)
+  const [uploading, setUploading] = React.useState(false)
   const saveInFlight = React.useRef(false)
   const session = React.useRef<{ eventId: string | null } | null>(null)
   const formRef = React.useRef<HTMLFormElement>(null)
+  const publishRef = React.useRef<HTMLButtonElement>(null)
 
   React.useEffect(() => {
     if (!open) {
@@ -363,7 +370,7 @@ export function EventFormDialog({
   }
   const currentStep = STEPS[step]!
   const lastStep = step === STEPS.length - 1
-  const busy = submitting || saving
+  const busy = submitting || saving || uploading
 
   React.useEffect(() => {
     if (open && step > 0) formRef.current?.querySelector<HTMLInputElement>('input')?.focus()
@@ -377,6 +384,7 @@ export function EventFormDialog({
 
   function advance() {
     if (busy || !canAdvance()) return
+    if (!formRef.current?.reportValidity()) return
     setError(null)
     if (
       currentStep === 'schedule' &&
@@ -390,10 +398,10 @@ export function EventFormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!lastStep) {
-      advance()
-      return
-    }
+    // A browser may dispatch an implicit submit after Next replaces the step's controls. Only
+    // an explicit activation of the final, stable Publish button is permission to create.
+    const submitter = (e.nativeEvent as SubmitEvent).submitter
+    if (submitter !== publishRef.current || !lastStep) return
     if (busy || saveInFlight.current) return
     setError(null)
     if (!values.title.trim() || !values.startsAt || !values.endsAt) return
@@ -425,7 +433,7 @@ export function EventFormDialog({
     >
       <DialogContent
         title={t(event ? 'events.actions.edit' : 'events.actions.create')}
-        className="max-w-140 max-h-[85vh] overflow-y-auto"
+        className="top-[6vh] max-w-140 max-h-[88vh] translate-y-0 overflow-y-auto"
       >
         <div className="mt-4">
           <StepIndicator
@@ -444,13 +452,13 @@ export function EventFormDialog({
           onSubmit={handleSubmit}
           onKeyDown={(e) => {
             if (
-              !lastStep &&
               e.key === 'Enter' &&
               e.target instanceof HTMLInputElement &&
+              e.target.type !== 'file' &&
               !e.nativeEvent.isComposing
             ) {
               e.preventDefault()
-              advance()
+              if (!lastStep && !e.repeat) advance()
             }
           }}
           className="mt-5 flex flex-col gap-4"
@@ -497,6 +505,17 @@ export function EventFormDialog({
                   }))}
                 />
               </Field>
+              <EventThumbnailPicker
+                thumbnailUrl={values.thumbnailUrl ?? null}
+                onBusyChange={setUploading}
+                onChange={(thumbnail) =>
+                  setValues((old) => ({
+                    ...old,
+                    thumbnailUploadId: thumbnail?.uploadId ?? null,
+                    thumbnailUrl: thumbnail?.thumbnailUrl ?? null,
+                  }))
+                }
+              />
             </>
           ) : null}
 
@@ -530,6 +549,7 @@ export function EventFormDialog({
                     value={values.place}
                     onChange={(e) => set('place', e.target.value)}
                     placeholder={t('events.form.placePlaceholder')}
+                    maxLength={300}
                   />
                 </Field>
                 <Field label={t('events.form.placeUrlLabel')} htmlFor="event-place-url">
@@ -538,6 +558,7 @@ export function EventFormDialog({
                     type="url"
                     value={values.placeUrl}
                     onChange={(e) => set('placeUrl', e.target.value)}
+                    maxLength={2000}
                   />
                 </Field>
               </div>
@@ -546,12 +567,15 @@ export function EventFormDialog({
 
           {currentStep === 'capacity' ? (
             <>
+              <p className="text-small text-muted-foreground">{t('events.form.reviewHint')}</p>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('events.form.capacityLabel')} htmlFor="event-capacity">
                   <Input
                     id="event-capacity"
                     type="number"
                     min={1}
+                    max={100000}
+                    step={1}
                     value={values.capacity}
                     onChange={(e) => set('capacity', e.target.value)}
                     placeholder={t('events.form.capacityPlaceholder')}
@@ -584,6 +608,7 @@ export function EventFormDialog({
                   value={values.costNote}
                   onChange={(e) => set('costNote', e.target.value)}
                   placeholder={t('events.form.costNotePlaceholder')}
+                  maxLength={500}
                 />
               </Field>
 
@@ -639,7 +664,17 @@ export function EventFormDialog({
               </DialogClose>
             )}
             {lastStep ? (
-              <Button key="publish" type="submit" loading={busy}>
+              <Button
+                ref={publishRef}
+                key="publish"
+                type="submit"
+                loading={busy}
+                onClick={(event) => {
+                  // The second click of a double-click on Next must not become Publish if the
+                  // final button has appeared under the same pointer in the meantime.
+                  if (event.detail > 1) event.preventDefault()
+                }}
+              >
                 {t(event ? 'events.form.submitUpdate' : 'events.form.submitCreate')}
               </Button>
             ) : (

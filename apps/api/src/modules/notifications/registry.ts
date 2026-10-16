@@ -882,6 +882,19 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
       ),
   },
 
+  'events.carpool.updated': {
+    notify: false,
+    why: 'Ride edits refresh event participants through the department live channel; passengers see current details in the event.',
+  },
+  'events.carpool.deleted': {
+    notify: false,
+    why: 'Only empty offers can be removed, so no passenger loses a seat. The live event list refreshes.',
+  },
+  'events.carpool.seat_released': {
+    notify: false,
+    why: 'Seat releases and queue promotions refresh the live event; the departing passenger is already looking at the confirmation.',
+  },
+
   'events.carpool.seat_claimed': {
     notify: true,
     reason: 'updated',

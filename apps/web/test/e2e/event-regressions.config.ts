@@ -7,7 +7,11 @@ export default defineConfig({
   outputDir: fileURLToPath(
     new URL('../../../../artifacts/qa/2026-10/results/events/', import.meta.url),
   ),
-  testMatch: ['event-wizard-rsvp.flow.spec.ts', 'event-carpool-poll.flow.spec.ts'],
+  testMatch: [
+    'event-wizard-rsvp.flow.spec.ts',
+    'event-carpool-poll.flow.spec.ts',
+    'event-carpool-management.flow.spec.ts',
+  ],
   retries: 0,
   workers: 1,
   projects: [

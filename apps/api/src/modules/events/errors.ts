@@ -19,7 +19,10 @@ export class EventForbiddenError extends Error {
 /** 409: capacity full with waitlisting disabled, RSVP deadline passed, poll closed, voting on the
  * wrong option shape for the poll's kind, feedback submitted twice, etc. */
 export class EventConflictError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    readonly path = 'event',
+  ) {
     super(message)
     this.name = 'EventConflictError'
   }
