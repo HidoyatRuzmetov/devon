@@ -39,10 +39,10 @@ COPY apps/web apps/web
 RUN pnpm --filter @devon/web build
 
 FROM ${NGINX_IMAGE} AS runtime
-# The pinned upstream image contains tiff 4.7.1-r0 (CVE-2026-4775). Upgrade only this
-# runtime library to Alpine's fixed release, then restore the original non-root user.
+# Patch vulnerable libraries in the pinned upstream image (CVE-2026-4775,
+# CVE-2026-77214 and CVE-2026-88806), then restore the original non-root user.
 USER root
-RUN apk add --no-cache tiff=4.7.2-r0
+RUN apk add --no-cache tiff=4.7.2-r0 libexpat=2.9.0-r0 libx11=1.8.14-r0
 USER 101
 # `nginx-unprivileged` already runs its worker AND master process as the `nginx` user (uid 101) on an
 # unprivileged port -- a real non-root container, not just non-root worker processes behind a root
