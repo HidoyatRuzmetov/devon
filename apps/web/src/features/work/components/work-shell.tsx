@@ -213,7 +213,7 @@ export function WorkShell({
               {mobileToolbar}
             </div>
             <nav
-              className="hidden min-w-0 basis-full gap-0 overflow-x-auto md:flex xl:basis-auto xl:flex-1"
+              className="hidden min-w-0 basis-full gap-0 overflow-x-auto overflow-y-hidden md:flex xl:basis-auto xl:flex-1"
               aria-label={t('work.title')}
             >
               {TABS.map((tab) => (
