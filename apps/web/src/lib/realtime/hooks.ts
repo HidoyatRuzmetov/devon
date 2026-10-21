@@ -192,6 +192,14 @@ const INVALIDATIONS: ReadonlyArray<{
   { match: /^events\./, keys: [['events']], mutationKeys: [['events', 'rsvp']] },
   { match: /^structure\./, keys: [['structure']] },
   {
+    match: /^attachments\./,
+    keys: [
+      ['work', 'attachments'],
+      ['pages', 'attachments'],
+      ['admin', 'file-approvals'],
+    ],
+  },
+  {
     match: /^accounts\.(profile\.updated|user\.avatar_updated)$/,
     keys: [['me'], ['work'], ['structure'], ['people'], ['departments'], ['events'], ['admin']],
     mutationKeys: [
@@ -222,12 +230,16 @@ const INVALIDATIONS: ReadonlyArray<{
     keys: [['departments'], ['people']],
   },
   { match: /^realtime\.canvas\./, keys: [['realtime', 'canvas-shares']] },
-  // A personal reminder's delivery also changes its Sent chip on an already-open card.
+  // Personal delivery updates reminders and file approvals, including the superadmin queue
+  // whose requests can originate outside the administrator's active department.
   {
     match: /^inbox\.notification\./,
     keys: [
       ['inbox', 'notifications'],
       ['work', 'reminders'],
+      ['admin', 'file-approvals'],
+      ['work', 'attachments'],
+      ['pages', 'attachments'],
     ],
   },
 ]

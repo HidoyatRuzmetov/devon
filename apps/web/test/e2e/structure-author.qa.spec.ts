@@ -176,7 +176,13 @@ test('head authors units, assigns and removes a member, restores the deleted sub
       [child.id, f.memberId, 'deputy'],
     ])
     expect((await f.roster()).find((person) => person.userId === f.memberId)?.unitId).toBe(child.id)
-    await expect(row(f.page, 'Support desk').getByText('1 people', { exact: true })).toBeVisible()
+    const assignedCount = row(f.page, 'Support desk')
+      .getByText('1 people', { exact: true })
+      .filter({ visible: true })
+    await expect(assignedCount).toBeVisible()
+    await f.page.setViewportSize({ width: 390, height: 844 })
+    await expect(assignedCount).toBeVisible()
+    await f.page.setViewportSize({ width: 1366, height: 900 })
     await f.page.screenshot({ path: info.outputPath('assigned-unit.png'), fullPage: true })
     await f.page.getByRole('tab', { name: 'Org chart', exact: true }).click()
     await f.page.getByRole('treeitem', { name: 'Support desk', exact: true }).click()
@@ -195,7 +201,9 @@ test('head authors units, assigns and removes a member, restores the deleted sub
     expect((await f.roster()).find((person) => person.userId === f.memberId)?.unitId).toBeNull()
     await sheet.press('Escape')
     await f.page.getByRole('tab', { name: 'List', exact: true }).click()
-    await expect(row(f.page, 'Support desk').getByText('0 people', { exact: true })).toBeVisible()
+    await expect(
+      row(f.page, 'Support desk').getByText('0 people', { exact: true }).filter({ visible: true }),
+    ).toBeVisible()
     await action(f.page, 'Delivery office', 'Delete')
     const confirmation = f.page.getByRole('dialog', {
       name: 'Delete “Delivery office”?',

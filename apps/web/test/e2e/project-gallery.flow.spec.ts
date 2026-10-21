@@ -43,7 +43,7 @@ test('@flow gallery project creation cannot leave a partial project on refusal',
       scope: 'department',
       payload: {
         title: 'Project from gallery',
-        cards: [{ title: 'First shared task' }, { title: 'Second shared task' }],
+        cards: [{ title: 'First personal card' }, { title: 'Second personal card' }],
       },
     })
     expect(template.status()).toBe(201)
@@ -140,9 +140,14 @@ test('@flow gallery project creation cannot leave a partial project on refusal',
     const successful = (await (await head.request.get('/api/v1/projects')).json()) as {
       title: string
       objectiveTotal: number
+      subjectiveTotal: number
     }[]
     expect(successful).toHaveLength(1)
-    expect(successful[0]).toMatchObject({ title: 'Gallery failure draft', objectiveTotal: 2 })
+    expect(successful[0]).toMatchObject({
+      title: 'Gallery failure draft',
+      objectiveTotal: 0,
+      subjectiveTotal: 2,
+    })
   } finally {
     await head.close()
     await member.close()

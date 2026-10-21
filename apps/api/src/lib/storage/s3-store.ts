@@ -172,9 +172,11 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
             const result = Buffer.allocUnsafe(size)
             let offset = 0
             while (true) {
+              // nosemgrep: query-in-loop -- Sequential chunks of one bounded object stream; parallel reads break ordered backpressure, and no database query occurs.
               const chunk = await reader.read()
               if (chunk.done) break
               if (offset + chunk.value.byteLength > size) {
+                // nosemgrep: query-in-loop -- Cancel this same stream immediately on overflow; this is bounded error cleanup, not a database query.
                 await reader.cancel()
                 return new ObjectTooLarge(key, offset + chunk.value.byteLength, size)
               }

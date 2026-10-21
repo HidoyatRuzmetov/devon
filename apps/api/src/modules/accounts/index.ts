@@ -509,7 +509,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     async (req, reply) => {
       const record = await repo.getProfessionalProfile(req.actor!.userId, auditCtx(req))
-      return record ? reply.send(record) : sendProblem(reply, 'not_found')
+      return record ? reply.type('application/json').send(record) : sendProblem(reply, 'not_found')
     },
   )
   app.put(
@@ -531,7 +531,7 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
         req.body.version,
         auditCtx(req),
       )
-      return record ? reply.send(record) : sendProblem(reply, 'conflict')
+      return record ? reply.type('application/json').send(record) : sendProblem(reply, 'conflict')
     },
   )
 

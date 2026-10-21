@@ -3,6 +3,36 @@ import { describe, expect, it, vi } from 'vitest'
 import { createRealtimeInvalidator } from '../../src/lib/realtime/hooks.js'
 
 describe('live refresh during optimistic writes', () => {
+  it.each(['attachments.approval.reviewed', 'inbox.notification.created'])(
+    'refreshes an open approval view on %s without a per-screen timer',
+    async (type) => {
+      const client = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity } } })
+      const keys = [
+        ['admin', 'file-approvals'],
+        ['work', 'attachments', 'card-a', 'approvals'],
+        ['pages', 'attachments', 'page-a', 'approvals'],
+      ]
+      let status = 'pending'
+      const read = vi.fn(async () => status)
+      await Promise.all(keys.map((key) => client.fetchQuery({ queryKey: key, queryFn: read })))
+      const stops = keys.map((key) =>
+        new QueryObserver(client, { queryKey: key, queryFn: read }).subscribe(() => {}),
+      )
+      const bridge = createRealtimeInvalidator(client)
+      try {
+        status = 'approved'
+        bridge.receive(type)
+        await vi.waitFor(() => {
+          for (const key of keys) expect(client.getQueryData(key)).toBe('approved')
+        })
+        expect(read).toHaveBeenCalledTimes(6)
+      } finally {
+        bridge.dispose()
+        for (const stop of stops) stop()
+        client.clear()
+      }
+    },
+  )
   it.each(['accounts.user.avatar_updated', 'accounts.profile.updated'])(
     'refreshes photo/name summaries when %s arrives',
     async (type) => {

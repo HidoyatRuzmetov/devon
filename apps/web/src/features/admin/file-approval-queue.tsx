@@ -21,7 +21,6 @@ export function FileApprovalQueue() {
   const query = useQuery({
     queryKey: ['admin', 'file-approvals'],
     queryFn: () => apiClient.get(path, schema),
-    refetchInterval: 30000,
   })
   const review = useMutation({
     mutationFn: ({ id, approved }: { id: string; approved: boolean }) =>

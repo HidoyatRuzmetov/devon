@@ -46,7 +46,6 @@ export function CardAttachments({
         z.array(z.object({ id: z.string(), name: z.string(), status: z.string() })),
       ),
     enabled: canEdit,
-    refetchInterval: 30_000,
   })
   const [stage, setStage] = React.useState<'uploading' | 'scanning' | null>(null)
   const [approvalRequested, setApprovalRequested] = React.useState(false)
