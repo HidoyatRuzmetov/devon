@@ -16,13 +16,11 @@ import {
   Skeleton,
   StateView,
   cn,
-  tweenStandard,
   toastWithUndo,
   unitHueClass,
   useReducedMotion,
 } from '@devon/ui'
 import { useSearchParams } from '../../../lib/router.js'
-import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import type { Project } from '../../projects/api.js'
 import { useCardsQuery, useMembers, usePatchCardMutation } from '../hooks.js'
@@ -365,20 +363,11 @@ export default function TimelineScreen() {
   const members = useMembers()
   const projectsQuery = useProjectsQuery()
   const projects = React.useMemo(() => projectsQuery.data ?? [], [projectsQuery.data])
-  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
 
   const [zoom, setZoom] = useLocalStorageString('devon.work.timeline.zoom', 'day')
   const [groupBy, setGroupBy] = useLocalStorageString('devon.work.timeline.groupBy', 'person')
   const zoomKey: Zoom = zoom === 'week' || zoom === 'month' ? zoom : 'day'
   const groupByKey: GroupBy = groupBy === 'project' ? 'project' : 'person'
-  // round2's deferred item: Kun/Hafta/Oy used to be a hard re-layout -- every bar's `left`/`width`
-  // simply jumped to its new pixels-per-day the instant the button was clicked. `pxPerDay` still
-  // drives the real (instant, correct) layout every render, but the *outer* content div is wrapped
-  // in a `scaleX` that starts at the ratio between the previous zoom's pixel density and the new one
-  // and eases to `1` -- a transform, so 200+ bars cost nothing extra to lay out, and it reads as a
-  // camera zoom (Figma/Linear's own timeline convention) rather than a jump cut. The ref updates in
-  // an effect (after paint), so the render that just changed `zoomKey` still sees the *previous*
-  // density when computing `scaleFrom`.
   const [collapsedGroups, setCollapsedGroups] = React.useState<ReadonlySet<string>>(new Set())
 
   const today = startOfDay(new Date())
@@ -387,12 +376,6 @@ export default function TimelineScreen() {
   const rangeEnd = addDays(today, daysAfter)
   const totalDays = daysBefore + daysAfter
   const totalWidth = totalDays * pxPerDay
-
-  const prevPxPerDayRef = React.useRef(pxPerDay)
-  const zoomScaleFrom = prevPxPerDayRef.current / pxPerDay
-  React.useEffect(() => {
-    prevPxPerDayRef.current = pxPerDay
-  }, [pxPerDay])
 
   const dependencyGraph = useDependencyGraphQuery()
 
@@ -504,6 +487,35 @@ export default function TimelineScreen() {
   )
 
   const scrollRef = React.useRef<HTMLDivElement | null>(null)
+  const zoomAnchorRef = React.useRef<{ date: number; offset: number; top: number } | null>(null)
+  function changeZoom(next: Zoom) {
+    if (next === zoomKey) return
+    const scroller = scrollRef.current
+    if (scroller) {
+      const offset = scroller.clientWidth / 2
+      zoomAnchorRef.current = {
+        date: rangeStart.getTime() + ((scroller.scrollLeft + offset) / pxPerDay) * DAY_MS,
+        offset,
+        top: scroller.scrollTop,
+      }
+    }
+    setZoom(next)
+  }
+  const rangeStartMs = rangeStart.getTime()
+  React.useLayoutEffect(() => {
+    const anchor = zoomAnchorRef.current
+    const scroller = scrollRef.current
+    if (!anchor || !scroller) return
+    zoomAnchorRef.current = null
+    // Keep the same date in view where the new date window permits it. Update before paint,
+    // including vertical position, so a narrower canvas cannot trigger a second scroll jump.
+    const left = ((anchor.date - rangeStartMs) / DAY_MS) * pxPerDay - anchor.offset
+    scroller.scrollTo({
+      left: Math.max(0, Math.min(left, scroller.scrollWidth - scroller.clientWidth)),
+      top: anchor.top,
+      behavior: 'instant',
+    })
+  }, [zoomKey, rangeStartMs, pxPerDay])
   /** A10: the on-screen rectangle of every bar, keyed by card id -- the arrow layer's only input.
    * Mirrors `GanttBar`'s own maths (clamp to the range, `dayIndex * pxPerDay`, `MIN_BAR_WIDTH`) and
    * walks the groups in render order to get each row's absolute y. */
@@ -557,20 +569,25 @@ export default function TimelineScreen() {
   } else {
     chart = (
       <div
-        ref={(el) => {
-          scrollRef.current = el
-          heightRef(el)
-        }}
-        className="overflow-auto rounded-md border border-border"
-        style={{ height: scrollerHeight }}
+        ref={scrollRef}
+        data-timeline-scroller
+        className="h-full overflow-auto rounded-md border border-border"
+        style={{ overflowAnchor: 'none' }}
       >
+        {/* Keep rows mounted when changing scale: remounting replayed every bar's entrance.
+            Only opacity transitions; scaling the entire canvas distorted text and temporarily
+            multiplied its scroll width by almost twelve when switching Day to Month. */}
         <motion.div
-          key={zoomKey}
           className="relative"
-          style={{ width: Math.max(totalWidth, 1), transformOrigin: 'top left' }}
-          initial={reducedTimeline ? { opacity: 1 } : { scaleX: zoomScaleFrom || 1, opacity: 0.85 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={reducedTimeline ? { duration: 0 } : tweenStandard}
+          style={{ width: Math.max(totalWidth, 1), minWidth: '100%' }}
+          initial={false}
+          variants={{
+            day: { opacity: reducedTimeline ? 1 : [0.82, 1] },
+            week: { opacity: reducedTimeline ? 1 : [0.82, 1] },
+            month: { opacity: reducedTimeline ? 1 : [0.82, 1] },
+          }}
+          animate={zoomKey}
+          transition={{ duration: reducedTimeline ? 0 : 0.16, ease: 'easeOut' }}
         >
           <div className="sticky top-0 z-20 bg-card">
             {/* round2 SEV1: "Bugun" used to sit inside the day-number row and print on top of
@@ -698,9 +715,9 @@ export default function TimelineScreen() {
 
   return (
     <>
-      <WorkShell filterLayout="timeline">
-        <div className="flex h-full flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+      <WorkShell filterLayout="timeline" fillViewport>
+        <div className="flex h-full min-h-0 flex-col gap-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
             <div
               role="group"
               aria-label={t('work.timeline.groupByLabel')}
@@ -733,7 +750,7 @@ export default function TimelineScreen() {
                   key={z}
                   type="button"
                   aria-pressed={zoomKey === z}
-                  onClick={() => setZoom(z)}
+                  onClick={() => changeZoom(z)}
                   className={cn(
                     'rounded-sm px-2.5 py-1 text-caption font-medium transition-colors duration-(--dur-micro)',
                     zoomKey === z

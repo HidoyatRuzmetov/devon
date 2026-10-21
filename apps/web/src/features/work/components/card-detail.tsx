@@ -73,6 +73,7 @@ import { useProjectsQuery } from '../../projects/hooks.js'
 import { ConvertProjectDialog } from '../../projects/components/convert-project-dialog.js'
 import { CardAttachments } from './card-attachments.js'
 import { CardLinkLabel } from './card-link-label.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 import { ChecklistRow } from './checklist-row.js'
 // v1.1 SPEC §5: the boshqarma's own columns on a card, rendered in the head's order at the end of the
 // property list. The `fields` feature owns the component; this is the one line that puts it here.
@@ -597,13 +598,17 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={card.workStage === 'in_progress' ? 'info' : 'neutral'}>
-            {t(
-              card.status === 'active'
-                ? `portal.stage.${card.workStage ?? 'todo'}`
-                : `work.status.${card.status}`,
-            )}
-          </Badge>
+          {card.status === 'archived' ? (
+            <ArchivedCardBadge card={card} />
+          ) : (
+            <Badge tone={card.workStage === 'in_progress' ? 'info' : 'neutral'}>
+              {t(
+                card.status === 'active'
+                  ? `portal.stage.${card.workStage ?? 'todo'}`
+                  : `work.status.${card.status}`,
+              )}
+            </Badge>
+          )}
           {canEdit && card.status === 'active' ? (
             <Button
               size="sm"

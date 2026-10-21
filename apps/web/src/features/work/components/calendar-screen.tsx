@@ -20,6 +20,8 @@ import { useCardsQuery } from '../hooks.js'
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
+import { isCardCompleted } from '../lib/format.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import { useEventsQuery } from '../../events/hooks.js'
 import type { EventDto } from '../../events/schemas.js'
@@ -98,14 +100,17 @@ function DayCell({
         type="button"
         onClick={() => onOpen(c.id)}
         className={cn(
-          'w-full shrink-0 truncate rounded-sm px-1 py-0.5 text-left text-caption',
+          'flex w-full shrink-0 items-center gap-1 rounded-sm px-1 py-0.5 text-left text-caption',
           c.priority === 'urgent' || c.priority === 'high'
             ? 'bg-destructive/12 text-destructive'
             : 'bg-primary/12 text-primary',
         )}
         title={c.title}
       >
-        {c.title}
+        <span className={cn('min-w-0 flex-1 truncate', isCardCompleted(c) && 'line-through')}>
+          {c.title}
+        </span>
+        <ArchivedCardBadge card={c} className="py-0" />
       </button>
     )
   }

@@ -66,8 +66,9 @@ import { unitColorClass } from '../../../lib/unit-palette.js'
 import { formatDurationShort } from '../lib/estimate.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import type { Project } from '../../projects/api.js'
-import { PRIORITY_LABEL_KEY, RISK_LABEL_KEY, fullName } from '../lib/format.js'
+import { PRIORITY_LABEL_KEY, RISK_LABEL_KEY, fullName, isCardCompleted } from '../lib/format.js'
 import { touchDrag } from '../lib/touch-drag.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 
 /** A touch drag lifts after this long a press -- long enough that a scroll gesture (which moves the
  * finger within a few pixels almost immediately) never gets mistaken for a lift, short enough that
@@ -445,6 +446,7 @@ export function CardTile({
           className={cn(
             'line-clamp-2 min-w-0 flex-1 break-words text-left text-small leading-snug text-foreground [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring',
             card.projectId ? 'pl-5 pr-10 font-medium md:pr-0' : 'pr-10 font-medium md:pr-6',
+            isCardCompleted(card) && 'line-through decoration-muted-foreground/60',
           )}
         >
           {card.title}
@@ -504,20 +506,26 @@ export function CardTile({
               : 'text-muted-foreground',
           )}
         >
-          <span aria-hidden="true">
-            {card.status === 'active' && card.workStage === 'in_progress'
-              ? '◐'
-              : card.status === 'done'
-                ? '✓'
-                : '○'}
-          </span>
-          <span>
-            {t(
-              card.status === 'active'
-                ? `portal.stage.${card.workStage ?? 'todo'}`
-                : `work.status.${card.status}`,
-            )}
-          </span>
+          {card.status === 'archived' ? (
+            <ArchivedCardBadge card={card} />
+          ) : (
+            <>
+              <span aria-hidden="true">
+                {card.status === 'active' && card.workStage === 'in_progress'
+                  ? '◐'
+                  : card.status === 'done'
+                    ? '✓'
+                    : '○'}
+              </span>
+              <span>
+                {t(
+                  card.status === 'active'
+                    ? `portal.stage.${card.workStage ?? 'todo'}`
+                    : `work.status.${card.status}`,
+                )}
+              </span>
+            </>
+          )}
           <LiveSignalStrip cardId={card.id} />
         </div>
 
@@ -635,7 +643,7 @@ export function CardTile({
               <span className="isolate flex shrink-0 items-center">
                 {showGiver ? (
                   <span
-                    className="devon-avatar-stack-item -mr-1.5"
+                    className="devon-avatar-stack-item -mr-1.5 inline-flex shrink-0 rounded-full"
                     style={{ '--avatar-stack-order': 2 } as React.CSSProperties}
                     title={t('work.card.byGiver', { name: fullName(giver) })}
                   >
@@ -645,13 +653,17 @@ export function CardTile({
                       alt={t('work.card.byGiver', { name: fullName(giver) })}
                       initials={initialsFromName(giver.givenName, giver.familyName)}
                       hueSeed={giver.unitId ?? 'department'}
-                      className={unitColorClass(unitPalette, giver.unitId, giver.role === 'head')}
+                      className={cn(
+                        unitColorClass(unitPalette, giver.unitId, giver.role === 'head'),
+                        'ring-1',
+                        card.projectId ? 'ring-accent' : 'ring-card',
+                      )}
                     />
                   </span>
                 ) : null}
                 {assignee ? (
                   <span
-                    className="devon-avatar-stack-item rounded-full ring-2 ring-card"
+                    className="devon-avatar-stack-item inline-flex shrink-0 rounded-full"
                     style={{ '--avatar-stack-order': 1 } as React.CSSProperties}
                     title={t('work.card.assignedTo', {
                       name: fullName(assignee),
@@ -665,10 +677,10 @@ export function CardTile({
                       })}
                       initials={initialsFromName(assignee.givenName, assignee.familyName)}
                       hueSeed={assignee.unitId ?? 'department'}
-                      className={unitColorClass(
-                        unitPalette,
-                        assignee.unitId,
-                        assignee.role === 'head',
+                      className={cn(
+                        unitColorClass(unitPalette, assignee.unitId, assignee.role === 'head'),
+                        'ring-1',
+                        card.projectId ? 'ring-accent' : 'ring-card',
                       )}
                     />
                   </span>

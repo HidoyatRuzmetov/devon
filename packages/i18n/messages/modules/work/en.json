@@ -238,9 +238,12 @@
       "rest": "Everything else",
       "emptyTitle": "Nothing assigned to you",
       "emptyBody": "Cards assigned to you will show up here.",
-      "completed": "Completed"
+      "completed": "Completed",
+      "completedAndArchived": "Completed & archived"
     },
     "archive": {
+      "completedHint": "Archived · Completed",
+      "unfinishedHint": "Archived · Not completed",
       "emptyTitle": "Archive is empty",
       "emptyBody": "Done and archived cards will show up here."
     },

@@ -46,7 +46,8 @@ import { fetchCards } from '../../work/api.js'
 import type { Card } from '../../work/api.js'
 import { openCardPeek, CardPeekDialog } from '../../work/components/card-peek-dialog.js'
 import { useCreateCardMutation, useMembers, usePatchCardMutation } from '../../work/hooks.js'
-import { fullName } from '../../work/lib/format.js'
+import { fullName, isCardCompleted } from '../../work/lib/format.js'
+import { ArchivedCardBadge } from '../../work/components/archived-card-badge.js'
 import {
   useAddMilestoneMutation,
   usePatchMilestoneMutation,
@@ -78,8 +79,8 @@ function TaskRow({ card }: { card: Card }) {
   return (
     <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
       <Checkbox
-        disabled={card.canEdit === false || patchCard.isPending}
-        checked={card.status === 'done'}
+        disabled={card.status === 'archived' || card.canEdit === false || patchCard.isPending}
+        checked={isCardCompleted(card)}
         onCheckedChange={(v) =>
           patchCard.mutate({
             id: card.id,
@@ -95,11 +96,12 @@ function TaskRow({ card }: { card: Card }) {
         onClick={() => openCardPeek(card.id)}
         className={cn(
           'flex-1 truncate text-left text-small text-foreground',
-          strikethroughClass(card.status === 'done'),
+          strikethroughClass(isCardCompleted(card)),
         )}
       >
         {card.title}
       </button>
+      <ArchivedCardBadge card={card} />
       {card.status === 'active' ? (
         <span
           className={cn(
@@ -670,7 +672,7 @@ export default function ProjectPageScreen() {
                       {fullName(member)}
                     </span>
                     <span className="text-caption text-muted-foreground">
-                      {memberTasks.filter((c) => c.status === 'done').length}/{memberTasks.length}
+                      {memberTasks.filter(isCardCompleted).length}/{memberTasks.length}
                     </span>
                   </div>
                   {memberTasks.map((card) => (

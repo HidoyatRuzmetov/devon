@@ -37,6 +37,7 @@ type CardRefRow = {
   id: string
   title: string
   status: 'active' | 'done' | 'archived'
+  done_at: Date | null
   due_at: Date | null
   assignee_user_id: string | null
 }
@@ -56,13 +57,14 @@ function toCardRef(row: CardRefRow): CardRef {
     id: row.id,
     title: row.title,
     status: row.status,
+    doneAt: row.done_at ? new Date(row.done_at).toISOString() : null,
     risk,
     dueAt: due ? due.toISOString() : null,
     assigneeUserId: row.assignee_user_id,
   }
 }
 
-const CARD_REF_COLUMNS = sql`c.id, c.title, c.status, c.due_at, c.assignee_user_id`
+const CARD_REF_COLUMNS = sql`c.id, c.title, c.status, c.done_at, c.due_at, c.assignee_user_id`
 
 // ---------------------------------------------------------------------------------------------
 // A10 -- dependencies

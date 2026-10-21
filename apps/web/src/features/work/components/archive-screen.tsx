@@ -4,10 +4,11 @@
 // server's `GET /api/v1/archive` has no special-case for "my own" vs "someone else's").
 import * as React from 'react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
-import { Badge, Button, Skeleton, Stagger, StaggerItem, StateView } from '@devon/ui'
+import { Badge, Button, Skeleton, Stagger, StaggerItem, StateView, cn } from '@devon/ui'
 import { useSession } from '../../../lib/session.js'
 import { useArchiveQuery, useMembers, useRestoreCardMutation } from '../hooks.js'
-import { PRIORITY_BADGE_TONE, PRIORITY_LABEL_KEY } from '../lib/format.js'
+import { PRIORITY_BADGE_TONE, PRIORITY_LABEL_KEY, isCardCompleted } from '../lib/format.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 import { MemberPicker } from './member-picker.js'
 import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
@@ -53,24 +54,33 @@ export default function ArchiveScreen() {
         {archiveQuery.data!.items.map((card) => (
           <StaggerItem
             key={card.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-border bg-card p-3"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card p-3 sm:flex-nowrap sm:gap-3"
           >
             <button
               type="button"
               onClick={() => openCardPeek(card.id)}
-              className="min-w-0 flex-1 text-left"
+              className="min-w-0 basis-full text-left sm:flex-1"
             >
-              <p className="truncate text-small text-foreground">{card.title}</p>
+              <p
+                className={cn(
+                  'truncate text-small text-foreground',
+                  isCardCompleted(card) && 'line-through decoration-muted-foreground/60',
+                )}
+              >
+                {card.title}
+              </p>
               <p className="text-caption text-muted-foreground">
                 {card.archivedAt ? formatDate(new Date(card.archivedAt), locale) : ''}
               </p>
             </button>
+            <ArchivedCardBadge card={card} />
             {card.priority !== 'none' ? (
               <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
                 {t(PRIORITY_LABEL_KEY[card.priority])}
               </Badge>
             ) : null}
             <Button
+              className="ml-auto"
               size="sm"
               variant="secondary"
               onClick={() => void restoreCard.mutateAsync(card.id)}

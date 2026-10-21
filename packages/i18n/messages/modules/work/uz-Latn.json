@@ -238,9 +238,12 @@
       "rest": "Qolganlari",
       "emptyTitle": "Sizga hali vazifa berilmagan",
       "emptyBody": "Sizga berilgan vazifalar shu yerda koʻrinadi.",
-      "completed": "Bajarilgan"
+      "completed": "Bajarilgan",
+      "completedAndArchived": "Bajarilgan va arxivlangan"
     },
     "archive": {
+      "completedHint": "Arxivlangan · Bajarilgan",
+      "unfinishedHint": "Arxivlangan · Bajarilmagan",
       "emptyTitle": "Arxiv boʻsh",
       "emptyBody": "Bajarilgan va arxivga olingan kartalar shu yerda koʻrinadi."
     },

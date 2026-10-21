@@ -11,6 +11,70 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
+type DisclosureFrame = {
+  top: number
+  bottom: number
+  panelHeight: number
+  scrollY: number
+  scrollTop: number
+  scrollLeft: number
+}
+
+type DisclosureWindow = Window & { __disclosureFrames?: Promise<DisclosureFrame[]> }
+
+async function captureFilterTransition(page: Page): Promise<DisclosureFrame[]> {
+  await page.evaluate(() => {
+    const board = document.querySelector<HTMLElement>('.devon-board-scroller')!
+    const verticalScroller = window.matchMedia('(max-width: 767px)').matches
+      ? board.querySelector<HTMLElement>('[data-board-column]')!
+      : board
+    ;(window as DisclosureWindow).__disclosureFrames = new Promise((resolve) => {
+      const frames: DisclosureFrame[] = []
+      const captureFrame = () => {
+        const bounds = board.getBoundingClientRect()
+        frames.push({
+          top: bounds.top,
+          bottom: bounds.bottom,
+          panelHeight:
+            document.getElementById('work-shell-mobile-chrome')?.getBoundingClientRect().height ??
+            0,
+          scrollY: window.scrollY,
+          scrollTop: verticalScroller.scrollTop,
+          scrollLeft: board.scrollLeft,
+        })
+      }
+      captureFrame()
+      // Begin with the actual disclosure state change, even if the pointer action waits on CI.
+      // Sampling from evaluate() alone can finish before a delayed click ever starts the motion.
+      const trigger = document.querySelector('[aria-controls="work-shell-mobile-chrome"]')!
+      const observer = new MutationObserver(() => {
+        observer.disconnect()
+        const start = performance.now()
+        const capture = () => {
+          captureFrame()
+          if (performance.now() - start < 500) requestAnimationFrame(capture)
+          else resolve(frames)
+        }
+        capture()
+      })
+      observer.observe(trigger, { attributes: true, attributeFilter: ['aria-expanded'] })
+    })
+  })
+  await page.getByRole('button', { name: 'Filters and quick add', exact: true }).click()
+  return page.evaluate(async () => (await (window as DisclosureWindow).__disclosureFrames)!)
+}
+
+function expectStableFilterTransition(frames: DisclosureFrame[]): void {
+  const range = (values: number[]) => Math.max(...values) - Math.min(...values)
+  expect(range(frames.map((frame) => frame.panelHeight))).toBeGreaterThan(30)
+  // Every animation frame shares one bottom edge; neither flex gaps nor scroll anchoring jump.
+  expect(range(frames.map((frame) => frame.bottom))).toBeLessThanOrEqual(2)
+  expect(range(frames.map((frame) => frame.top - frame.panelHeight))).toBeLessThanOrEqual(2)
+  expect(range(frames.map((frame) => frame.scrollY))).toBe(0)
+  expect(range(frames.map((frame) => frame.scrollTop))).toBeLessThanOrEqual(1)
+  expect(range(frames.map((frame) => frame.scrollLeft))).toBeLessThanOrEqual(1)
+}
+
 type PortalFixture = {
   context: BrowserContext
   page: Page
@@ -374,14 +438,110 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   expect(initial!.height).toBeGreaterThan(500)
   expect(initial!.y + initial!.height).toBeGreaterThan(930)
   expect(initial!.y + initial!.height).toBeLessThanOrEqual(1000)
-  await page.getByRole('button', { name: 'Filters and quick add', exact: true }).click()
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await board.hover({ position: { x: 120, y: 220 } })
+  await page.mouse.wheel(180, 60)
+  await expect.poll(() => board.evaluate((el) => el.scrollLeft)).toBeGreaterThan(100)
+  await expect.poll(() => board.evaluate((el) => el.scrollTop)).toBeGreaterThan(30)
+  const opening = await captureFilterTransition(page)
   await expect
     .poll(async () => (await board.boundingBox())!.height)
     .toBeLessThan(initial!.height - 30)
-  await page.getByRole('button', { name: 'Filters and quick add', exact: true }).click()
+  const closing = await captureFilterTransition(page)
   await expect
     .poll(async () => (await board.boundingBox())!.height)
     .toBeGreaterThan(initial!.height - 5)
+  await testInfo.attach('filter-transition-frames', {
+    body: JSON.stringify({ opening, closing }),
+    contentType: 'application/json',
+  })
+  expectStableFilterTransition(opening)
+  expectStableFilterTransition(closing)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await board.evaluate((el) => el.scrollTo({ left: 0, top: 0, behavior: 'instant' }))
+  // Both cases share one pointer and viewport, so their hover transitions must run in order.
+  /* eslint-disable no-restricted-syntax */
+  for (const origin of ['project', 'standalone']) {
+    const delegatedTile = board
+      .locator(`[data-task-origin="${origin}"]`)
+      .filter({
+        has: page.locator('.devon-avatar-stack-item + .devon-avatar-stack-item'),
+      })
+      .first()
+    await delegatedTile.scrollIntoViewIfNeeded()
+    await page.mouse.move(0, 0)
+    const geometry = await delegatedTile.evaluate((tile) => {
+      const normalizeColor = (color: string) => {
+        const probe = document.createElement('span')
+        probe.style.color = color
+        document.body.append(probe)
+        const normalized = getComputedStyle(probe).color
+        probe.remove()
+        return normalized
+      }
+      return {
+        surface: normalizeColor(getComputedStyle(tile).backgroundColor),
+        faces: [...tile.querySelectorAll<HTMLElement>('.devon-avatar-stack-item')].map(
+          (wrapper) => {
+            const face = wrapper.firstElementChild as HTMLElement
+            const bounds = wrapper.getBoundingClientRect()
+            const faceBounds = face.getBoundingClientRect()
+            const style = getComputedStyle(face)
+            return {
+              width: bounds.width,
+              height: bounds.height,
+              faceWidth: faceBounds.width,
+              faceHeight: faceBounds.height,
+              wrapperShadow: getComputedStyle(wrapper).boxShadow,
+              shadow: style.boxShadow,
+              ring: normalizeColor(style.getPropertyValue('--tw-ring-color').trim()),
+              zIndex: Number(getComputedStyle(wrapper).zIndex),
+            }
+          },
+        ),
+      }
+    })
+    expect(geometry.faces).toHaveLength(2)
+    for (const face of geometry.faces) {
+      expect(face.width).toBeCloseTo(face.height)
+      expect(face.width).toBeCloseTo(face.faceWidth)
+      expect(face.height).toBeCloseTo(face.faceHeight)
+      expect(face.wrapperShadow).toBe('none')
+      expect(face.ring).toBe(geometry.surface)
+    }
+    expect(geometry.faces[0]!.shadow).toBe(geometry.faces[1]!.shadow)
+    expect(geometry.faces[0]!.zIndex).toBeGreaterThan(geometry.faces[1]!.zIndex)
+    await page.emulateMedia({ reducedMotion: 'no-preference' })
+    const rightAvatar = delegatedTile.locator('.devon-avatar-stack-item').last()
+    await rightAvatar.hover()
+    await expect
+      .poll(() =>
+        rightAvatar.evaluate((wrapper) => {
+          const face = wrapper.firstElementChild!.getBoundingClientRect()
+          return face.width > wrapper.getBoundingClientRect().width
+        }),
+      )
+      .toBe(true)
+    const hovered = await rightAvatar.evaluate((wrapper) => ({
+      width: wrapper.getBoundingClientRect().width,
+      height: wrapper.getBoundingClientRect().height,
+      faceWidth: wrapper.firstElementChild!.getBoundingClientRect().width,
+      faceHeight: wrapper.firstElementChild!.getBoundingClientRect().height,
+      zIndex: Number(getComputedStyle(wrapper).zIndex),
+      siblingZIndex: Number(getComputedStyle(wrapper.previousElementSibling!).zIndex),
+    }))
+    expect(hovered.width).toBe(24)
+    expect(hovered.height).toBe(24)
+    expect(hovered.faceWidth).toBeCloseTo(hovered.faceHeight)
+    expect(hovered.zIndex).toBeGreaterThan(hovered.siblingZIndex)
+    await delegatedTile.screenshot({
+      path: testInfo.outputPath(`participants-${origin}-hover.png`),
+    })
+    await page.mouse.move(0, 0)
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+  }
+  await board.evaluate((el) => el.scrollTo({ left: 0, top: 0, behavior: 'instant' }))
+  /* eslint-enable no-restricted-syntax */
   await page.screenshot({ path: testInfo.outputPath('cards-desktop.png') })
   await page.goto('/work?new=1')
   const titleInput = page.getByRole('dialog').getByRole('textbox', { name: 'Title', exact: true })
@@ -422,6 +582,20 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
     (await board.boundingBox())!.width * 0.9,
   )
   expect(await board.evaluate((el) => getComputedStyle(el).scrollSnapType)).toContain('x')
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await headColumn.hover({ position: { x: 120, y: 220 } })
+  await page.mouse.wheel(0, 60)
+  await expect.poll(() => headColumn.evaluate((el) => el.scrollTop)).toBeGreaterThan(30)
+  const phoneOpening = await captureFilterTransition(page)
+  const phoneClosing = await captureFilterTransition(page)
+  await testInfo.attach('filter-transition-phone-frames', {
+    body: JSON.stringify({ opening: phoneOpening, closing: phoneClosing }),
+    contentType: 'application/json',
+  })
+  expectStableFilterTransition(phoneOpening)
+  expectStableFilterTransition(phoneClosing)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await headColumn.evaluate((el) => el.scrollTo({ top: 0, behavior: 'instant' }))
   await page.getByRole('button', { name: 'Next columns', exact: true }).click()
   await expect.poll(() => board.evaluate((el) => el.scrollLeft)).toBeGreaterThan(200)
   await page.getByRole('button', { name: 'Previous columns', exact: true }).click()

@@ -37,6 +37,7 @@ import {
   useRealtimeChannels,
 } from '../../../lib/realtime/index.js'
 import { useMeQuery } from '../../../lib/session.js'
+import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { useBoardQuery } from '../hooks.js'
 import { FilterBar } from './filter-bar.js'
 import { QuickAddBar } from './quick-add-bar.js'
@@ -70,6 +71,8 @@ export interface WorkShellProps {
   toolbar?: React.ReactNode
   /** Phone controls sit beside a compact view switcher instead of compressing the desktop tabs. */
   mobileToolbar?: React.ReactNode
+  /** Let the board consume the remaining viewport through CSS, including animated chrome. */
+  fillViewport?: boolean
   children: React.ReactNode
 }
 
@@ -92,9 +95,11 @@ export function WorkShell({
   hideMeControl = false,
   toolbar,
   mobileToolbar,
+  fillViewport = false,
   children,
 }: WorkShellProps) {
   const t = useT()
+  const [viewportRef, viewportHeight] = useViewportBoundedHeight<HTMLDivElement>(0, true)
   const path = useRoutePath()
   const search = useSearchParams()
   const board = useBoardQuery()
@@ -148,8 +153,13 @@ export function WorkShell({
   useCardSignalSource(channels?.board ?? null, viewerId)
 
   return (
-    <div className="flex min-h-0 flex-col gap-2">
+    <div
+      ref={fillViewport ? viewportRef : undefined}
+      className="flex min-h-0 flex-col"
+      style={fillViewport ? { height: viewportHeight } : undefined}
+    >
       <PageHeader
+        className="shrink-0"
         compact
         title={t('work.title')}
         actions={
@@ -252,13 +262,19 @@ export function WorkShell({
           </div>
         }
       />
-      <Collapsible id="work-shell-mobile-chrome" open={mobileChromeOpen}>
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
-          {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
-          {filterLayout ? <FilterBar layout={filterLayout} /> : null}
-        </div>
-      </Collapsible>
-      <div className="min-h-0">{children}</div>
+      {/* Keep this control target mounted. Its spacing lives inside the animated height, so
+          opening/closing never inserts or removes an unanimated flex gap beside the board. */}
+      <div id="work-shell-mobile-chrome" className="shrink-0">
+        <Collapsible open={mobileChromeOpen}>
+          <div className="pt-2">
+            <div className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
+              {showQuickAdd ? <QuickAddBar members={board.data?.members ?? []} /> : null}
+              {filterLayout ? <FilterBar layout={filterLayout} /> : null}
+            </div>
+          </div>
+        </Collapsible>
+      </div>
+      <div className={cn('mt-2 min-h-0', fillViewport && 'flex-1')}>{children}</div>
     </div>
   )
 }

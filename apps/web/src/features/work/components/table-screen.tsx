@@ -20,6 +20,7 @@ import {
   RISK_ICON_NAME,
   RISK_LABEL_KEY,
   fullName,
+  isCardCompleted,
 } from '../lib/format.js'
 
 const RISK_ICON = { AlertCircle, Clock3 } as const
@@ -28,6 +29,7 @@ import { CardPeekDialog, openCardPeek } from './card-peek-dialog.js'
 import { MultitaskToolbar, MultitaskToolbarSlot, useCardSelection } from './multitask-toolbar.js'
 import { WorkShell } from './work-shell.js'
 import type { Card, CardPriority, MemberSummary } from '../api.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 
 const PRIORITIES: readonly CardPriority[] = ['none', 'low', 'medium', 'high', 'urgent']
 const PRIORITY_ORDER: Record<CardPriority, number> = {
@@ -598,7 +600,10 @@ const TableRow = React.memo(function TableRow({
             type="button"
             title={card.title}
             onClick={() => setEditingTitle(true)}
-            className="h-9 min-w-0 truncate rounded-sm px-2 text-left text-body text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={cn(
+              'h-9 min-w-0 truncate rounded-sm px-2 text-left text-body text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isCardCompleted(card) && 'line-through decoration-muted-foreground/60',
+            )}
           >
             {card.title}
           </button>
@@ -657,9 +662,13 @@ const TableRow = React.memo(function TableRow({
           : null}
       </span>
       <span role="cell" className="overflow-hidden">
-        <Badge tone="neutral" className="whitespace-nowrap">
-          {t(`work.status.${card.status}`)}
-        </Badge>
+        {card.status === 'archived' ? (
+          <ArchivedCardBadge card={card} />
+        ) : (
+          <Badge tone="neutral" className="whitespace-nowrap">
+            {t(`work.status.${card.status}`)}
+          </Badge>
+        )}
       </span>
     </div>
   )
@@ -696,7 +705,7 @@ const MobileTableRow = React.memo(function MobileTableRow({
   const metaParts = [
     assignee ? fullName(assignee) : t('work.field.unassigned'),
     t(PRIORITY_LABEL_KEY[card.priority]),
-    t(`work.status.${card.status}`),
+    ...(card.status === 'archived' ? [] : [t(`work.status.${card.status}`)]),
   ]
   if (card.risk !== 'none') metaParts.push(t(RISK_LABEL_KEY[card.risk]))
 
@@ -745,9 +754,17 @@ const MobileTableRow = React.memo(function MobileTableRow({
         />
       </div>
       <div role="cell" className="min-w-0 flex-1">
-        <p className="truncate text-body text-foreground">{card.title}</p>
+        <p
+          className={cn(
+            'truncate text-body text-foreground',
+            isCardCompleted(card) && 'line-through decoration-muted-foreground/60',
+          )}
+        >
+          {card.title}
+        </p>
         <p className="truncate text-caption text-muted-foreground">{metaParts.join(' · ')}</p>
       </div>
+      <ArchivedCardBadge card={card} />
     </div>
   )
 })

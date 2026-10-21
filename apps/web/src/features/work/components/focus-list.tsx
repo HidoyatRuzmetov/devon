@@ -30,7 +30,8 @@ import {
   useRemoveFocusMutation,
   useReorderFocusMutation,
 } from '../hooks-plus.js'
-import { RISK_BADGE_CLASSNAME, RISK_LABEL_KEY } from '../lib/format.js'
+import { RISK_BADGE_CLASSNAME, RISK_LABEL_KEY, isCardCompleted } from '../lib/format.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 import type { FocusPin } from '../api-plus.js'
 
 function PinRow({
@@ -70,11 +71,12 @@ function PinRow({
             'line-clamp-2 break-words',
             // The strike arrives over `--dur-standard` rather than on the next frame, so a card
             // ticked off in the focus list reads as finishing rather than as a re-render.
-            card.status === 'active' ? 'text-foreground' : strikethroughClass(true),
+            isCardCompleted(card) ? strikethroughClass(true) : 'text-foreground',
           )}
         >
           {card.title}
         </button>
+        <ArchivedCardBadge card={card} />
         {card.risk !== 'none' ? (
           <Badge tone="neutral" className={RISK_BADGE_CLASSNAME[card.risk]}>
             {t(RISK_LABEL_KEY[card.risk])}

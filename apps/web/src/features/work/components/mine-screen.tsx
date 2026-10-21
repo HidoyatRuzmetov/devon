@@ -24,6 +24,7 @@ import {
   RISK_BADGE_CLASSNAME,
   RISK_ICON_NAME,
   RISK_LABEL_KEY,
+  isCardCompleted,
 } from '../lib/format.js'
 
 const RISK_ICON = { AlertCircle, Clock3 } as const
@@ -31,20 +32,24 @@ import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { FocusList } from './focus-list.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
+import { ArchivedCardBadge } from './archived-card-badge.js'
 
 function MineRow({ card, locale }: { card: Card; locale: Locale }) {
   const t = useT()
   const patchCard = usePatchCardMutation()
-  const done = card.status === 'done'
+  const done = isCardCompleted(card)
+  const archived = card.status === 'archived'
   return (
     <HoverLift className="rounded-md">
       <PressScale>
-        <div className="flex w-full items-center gap-3 rounded-md border border-border bg-card p-3 hover:border-ring/50">
+        <div className="flex w-full items-start gap-3 rounded-md border border-border bg-card p-3 hover:border-ring/50 sm:items-center">
           {/* round2 SEV3.5 "completing from this list has no celebration": a real checkbox, the
               same `TaskRow`/`Checkbox` shape used everywhere else a card can be marked done from a
               list -- `celebrate` gives it the coin-sized burst on check. */}
           <Checkbox
             checked={done}
+            disabled={archived || card.canEdit === false || patchCard.isPending}
+            className="mt-0.5 shrink-0 sm:mt-0"
             onCheckedChange={(v) =>
               patchCard.mutate({ id: card.id, patch: { status: v === true ? 'done' : 'active' } })
             }
@@ -55,17 +60,18 @@ function MineRow({ card, locale }: { card: Card; locale: Locale }) {
           <button
             type="button"
             onClick={() => openCardPeek(card.id)}
-            className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+            className="flex min-w-0 flex-1 flex-col items-start gap-1.5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-3"
           >
             <span
               className={cn(
-                'min-w-0 flex-1 truncate text-small',
+                'w-full min-w-0 truncate text-small sm:w-auto sm:flex-1',
                 done ? strikethroughClass(true) : 'text-foreground',
               )}
             >
               {card.title}
             </span>
-            <span className="flex shrink-0 items-center gap-2">
+            <span className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
+              <ArchivedCardBadge card={card} />
               {card.priority !== 'none' ? (
                 <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
                   {t(PRIORITY_LABEL_KEY[card.priority])}
@@ -228,7 +234,7 @@ export default function MineScreen() {
         />
         <Group
           groupKey="completed"
-          titleKey="work.mine.completed"
+          titleKey="work.mine.completedAndArchived"
           cards={completed}
           locale={locale}
           animateKey={combinedQuery}

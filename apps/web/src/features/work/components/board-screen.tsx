@@ -51,7 +51,6 @@ import {
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
 import { useMediaQuery } from '../../../lib/use-media-query.js'
-import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
 import { createUnitPalette, unitColorClass } from '../../../lib/unit-palette.js'
 import { fetchUnitsOverview } from '../../structure/api.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
@@ -161,10 +160,6 @@ function BoardScreenInner() {
     'compact',
     isBoardDensity,
   )
-  // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
-  // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
-  // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
-  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(0, true)
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
   const mobileNavigationTargetRef = React.useRef<string | null>(null)
   const edgeObserverRef = React.useRef<ResizeObserver | null>(null)
@@ -224,7 +219,6 @@ function BoardScreenInner() {
       edgeObserverRef.current?.disconnect()
       edgeObserverRef.current = null
       scrollerElRef.current = el
-      heightRef(el)
       // Re-check once the columns have actually rendered/resized (member count, filter results),
       // not just on scroll -- a department that grows past the visible width should show the fade
       // immediately, before anyone has touched the scrollbar.
@@ -236,7 +230,7 @@ function BoardScreenInner() {
         requestAnimationFrame(() => updateEdgeFade(undefined))
       }
     },
-    [heightRef, updateEdgeFade],
+    [updateEdgeFade],
   )
   // "showing N of M" (UI-OVERHAUL.md's column-collapse affordance): each column owns its own
   // collapsed flag in `localStorage` (a per-viewer convenience, not shared state), so the board only
@@ -655,6 +649,7 @@ function BoardScreenInner() {
     <WorkShell
       filterLayout="people_board"
       hideMeControl
+      fillViewport
       toolbar={toolbar}
       mobileToolbar={
         <div className="flex items-center gap-1">
@@ -663,13 +658,13 @@ function BoardScreenInner() {
         </div>
       }
     >
-      <div className="flex min-h-0 flex-col gap-2">
+      <div className="flex h-full min-h-0 flex-col gap-2">
         {/* N-2 "Kim kechiktiryapti?" -- the head's daily version of the risk explainer, over the top
           at-risk cards on this board, in ONE batched call instead of one per card. Head only, on the
           server (`department_managed`) and here: it is a ranked list of who is late, which is
           management information about other people. */}
         <BoardRiskDigest board={board} />
-        <div className="md:hidden" data-board-mobile-navigation>
+        <div className="shrink-0 md:hidden" data-board-mobile-navigation>
           <BoardNavigation
             mobile
             activePersonId={activePersonId}
@@ -684,18 +679,22 @@ function BoardScreenInner() {
           />
         </div>
 
-        <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {/* A8: the multitask toolbar takes over this row the moment anything is selected, sliding up
             on the same spring the table's does -- one bar, one behaviour, two screens. */}
-          <MultitaskToolbarSlot show={selectedCardIds.size > 0}>
-            <MultitaskToolbar
-              ids={[...selectedCardIds]}
-              members={board.members}
-              labels={board.labels}
-              onClear={clearSelection}
-            />
-          </MultitaskToolbarSlot>
-          <div className="relative min-w-0">
+          <div className="shrink-0">
+            <MultitaskToolbarSlot show={selectedCardIds.size > 0}>
+              <div className="pb-2">
+                <MultitaskToolbar
+                  ids={[...selectedCardIds]}
+                  members={board.members}
+                  labels={board.labels}
+                  onClear={clearSelection}
+                />
+              </div>
+            </MultitaskToolbarSlot>
+          </div>
+          <div className="relative min-h-0 min-w-0 flex-1">
             <div
               ref={setScrollerRefs}
               onScroll={updateEdgeFade}
@@ -704,22 +703,14 @@ function BoardScreenInner() {
               onPointerDownCapture={reconcileMobilePage}
               onWheelCapture={reconcileMobilePage}
               onKeyDownCapture={reconcileMobilePage}
-              // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
-              // an inline `height` for sizing along the flex container's main axis, so as long as this
-              // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
-              // to its content size regardless -- found live, in the browser, the whole reason this file
-              // has a viewport-bounded-height hook instead of a CSS-only fix. The inline 320px
-              // fallback is replaced by the measured available space as soon as the ref attaches.
-              // Desktop shares one two-axis canvas. Phone CSS changes this to a native snap pager,
-              // with an independent vertical position for each full-width person's column.
+              // The outer WorkShell owns the viewport bound. CSS shares the remaining height
+              // with animated controls in the same layout pass, avoiding resize-observer lag.
+              // Desktop shares one two-axis canvas; phones keep a vertical scroll per person.
               role="region"
               aria-label={t('work.board.regionLabel')}
               // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- This named overflow region needs focus for native arrow-key scrolling.
               tabIndex={0}
-              className="devon-board-scroller flex-none overflow-auto pb-2 min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-              style={{
-                height: scrollerHeight ?? 320,
-              }}
+              className="devon-board-scroller h-full overflow-auto pb-2 min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
             >
               <div className="devon-board-track flex min-h-full w-max min-w-full items-stretch gap-4">
                 {groups.map((group) => (

@@ -3,6 +3,12 @@
 // themselves so a screen never repeats "which badge variant for 'urgent'" logic.
 import type { CardPriority, CardRisk, CardStatus } from '../api.js'
 
+/** Archiving preserves whether work was finished; it is not itself completion. */
+export type CardCompletion = { status: CardStatus; doneAt?: string | null | undefined }
+export function isCardCompleted(card: CardCompletion): boolean {
+  return card.status === 'done' || (card.status === 'archived' && Boolean(card.doneAt))
+}
+
 export const PRIORITY_ORDER: readonly CardPriority[] = ['urgent', 'high', 'medium', 'low', 'none']
 
 export const PRIORITY_BADGE_TONE: Record<

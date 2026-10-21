@@ -26,6 +26,7 @@ export const cardRefSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
   status: cardStatusSchema,
+  doneAt: z.string().nullable(),
   risk: cardRiskSchema,
   dueAt: z.string().nullable(),
   assigneeUserId: z.string().uuid().nullable(),
