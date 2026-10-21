@@ -272,6 +272,9 @@ export function registerRealtimeEventSubscriptions(
 
   subscribe('*', async (event: OutboxEventRecord) => {
     try {
+      // A private conversation's existence, IDs and generation state belong to its owner too.
+      // Its authenticated polling endpoint provides progress; never broadcast it to department peers.
+      if (event.type.startsWith('ai.conversation.')) return
       if (event.type === 'notifications.notification.updated') {
         const payload = (event.payload ?? {}) as Record<string, unknown>
         if (typeof payload['userId'] === 'string') {

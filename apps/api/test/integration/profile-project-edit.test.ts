@@ -170,7 +170,11 @@ describe('project editing and conversion', () => {
       projectId: string
       checklist: { text: string }[]
     }
-    expect(detail.projectId).toBe(project.id)
+    expect(detail).toMatchObject({
+      projectId: project.id,
+      projectScope: 'subjective',
+      assigneeUserId: owner.id,
+    })
     expect(JSON.stringify(detail)).toContain('Preserved checklist')
     expect(
       (await request('/projects/from-card', 'POST', { cardId: card.id, members: [colleague.id] }))

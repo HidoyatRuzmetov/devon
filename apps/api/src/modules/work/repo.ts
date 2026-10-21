@@ -21,6 +21,7 @@ type CardRow = {
   giver_user_id: string | null
   project_id: string | null
   project_scope: 'none' | 'objective' | 'subjective'
+  work_stage: 'todo' | 'in_progress'
   status: 'active' | 'done' | 'archived'
   priority: 'none' | 'low' | 'medium' | 'high' | 'urgent'
   start_at: Date | null
@@ -69,6 +70,7 @@ function toCardDTO(row: CardRow): CardDTO {
     projectId: row.project_id,
     projectScope: row.project_scope,
     status: row.status,
+    workStage: row.work_stage,
     priority: row.priority,
     risk: computeRisk(row),
     startAt: row.start_at ? new Date(row.start_at).toISOString() : null,
@@ -119,7 +121,7 @@ export function parseRecurrence(value: unknown): RecurrenceRule | null {
 function cardSelect(viewerUserId: string | null): SQL {
   return sql`
   select c.id, c.kind, c.title, c.description, c.assignee_user_id, c.giver_user_id, c.project_id,
-    c.project_scope, c.status, c.priority, c.start_at, c.due_at, c.done_at, c.archived_at,
+    c.project_scope, c.work_stage, c.status, c.priority, c.start_at, c.due_at, c.done_at, c.archived_at,
     c.order_key, c.labels, c.watchers, c.links, c.created_by_user_id, c.created_at, c.updated_at,
     c.version, c.estimate_min, c.recurrence, c.recurrence_series_id,
     coalesce(cl.total, 0) as checklist_total, coalesce(cl.done, 0) as checklist_done,
@@ -565,7 +567,7 @@ export async function createCardInTx(
             ${id}, ${input.departmentId}, ${input.kind ?? 'task'}, ${input.title},
             ${description ? JSON.stringify(description) : null}::jsonb,
             ${input.assigneeUserId ?? null}, ${input.giverUserId ?? input.createdByUserId},
-            ${input.projectId ?? null}, ${input.projectScope ?? (input.projectId ? 'objective' : 'none')}, ${input.priority ?? 'none'},
+            ${input.projectId ?? null}, ${input.projectScope ?? (input.projectId ? 'subjective' : 'none')}, ${input.priority ?? 'none'},
             ${input.startAt ?? null}, ${input.dueAt ?? null},
             ${sql.param(input.labels ?? [])}::uuid[], ${JSON.stringify(input.links ?? [])}::jsonb,
             ${orderKey}, ${input.createdByUserId},
@@ -609,6 +611,7 @@ type PatchCardInput = {
   assigneeUserId?: string | null | undefined
   giverUserId?: string | null | undefined
   priority?: CardRow['priority'] | undefined
+  workStage?: 'todo' | 'in_progress' | undefined
   status?: CardRow['status'] | undefined
   startAt?: string | null | undefined
   dueAt?: string | null | undefined
@@ -783,6 +786,7 @@ export async function patchCard(
       sets.push(sql`assignee_user_id = ${patch.assigneeUserId}`)
     if (patch.giverUserId !== undefined && patch.giverUserId !== beforeRow.giver_user_id)
       sets.push(sql`giver_user_id = ${patch.giverUserId}`)
+    if (patch.workStage !== undefined) sets.push(sql`work_stage = ${patch.workStage}`)
     if (patch.priority !== undefined) sets.push(sql`priority = ${patch.priority}`)
     if (patch.startAt !== undefined) sets.push(sql`start_at = ${patch.startAt}`)
     if (patch.dueAt !== undefined) sets.push(sql`due_at = ${patch.dueAt}`)

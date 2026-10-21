@@ -48,6 +48,7 @@ export const cardSchema = z.object({
   projectId: z.string().nullable(),
   projectScope: cardProjectScopeSchema,
   status: cardStatusSchema,
+  workStage: z.enum(['todo', 'in_progress']).optional(),
   priority: cardPrioritySchema,
   risk: cardRiskSchema,
   startAt: z.string().nullable(),
@@ -256,6 +257,7 @@ export type PatchCardInput = Partial<{
   giverUserId: string | null
   priority: CardPriority
   status: CardStatus
+  workStage: 'todo' | 'in_progress'
   startAt: string | null
   dueAt: string | null
   labels: string[]

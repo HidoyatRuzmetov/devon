@@ -3,6 +3,7 @@
 // import only from here, never from `./permissions.js` or any other `src/*` path directly.
 export { isPlainHttpUrl } from './http-url.js'
 export { normalizeInvitationKey } from './invitation-key.js'
+export { WORK_TITLE_MAX } from './work-limits.js'
 export {
   can,
   type Role,
@@ -238,3 +239,10 @@ export {
   type PersonalRestoreBody,
   type PersonalTaskVersionChange,
 } from './personal.js'
+
+export {
+  professionalProfileSchema,
+  professionalProfileRecordSchema,
+  type ProfessionalProfile,
+} from './professional-profile.js'
+export * from './ai-chat.js'

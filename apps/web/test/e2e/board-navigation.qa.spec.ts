@@ -274,7 +274,7 @@ test('normal desktop board reaches distant people and keeps quick add visible wh
   }
 })
 
-test('normal phone touch navigation searches a colleague from Mine and preserves native keyboard scrolling', async ({
+test('normal phone touch navigation pages between people and preserves native keyboard scrolling', async ({
   browser,
 }, info) => {
   const f = await fixture(browser, true)
@@ -283,47 +283,59 @@ test('normal phone touch navigation searches a colleague from Mine and preserves
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/work')
     const viewport = page.getByRole('region', { name: 'People board', exact: true })
+    const picker = page.getByRole('combobox', { name: 'Choose a person', exact: true })
+    const column = (id: string) => page.locator(`[data-board-column="${id}"]`)
     await expect(viewport).toBeVisible()
-    await page.getByRole('button', { name: 'My column', exact: true }).tap()
-    const ownAdd = page
-      .locator(`[data-board-column="${f.memberId}"]`)
-      .getByRole('textbox', { name: '+ Add card', exact: true })
+    await expect(viewport.locator('[data-board-column]')).toHaveCount(10)
+    const columnOrder = await viewport.locator('[data-board-column]').evaluateAll((elements) =>
+      elements.map((element) => ({
+        id: element.getAttribute('data-board-column')!,
+        name: element.getAttribute('aria-label')!,
+      })),
+    )
+    async function expectPerson(id: string) {
+      const index = columnOrder.findIndex((person) => person.id === id)
+      expect(index).toBeGreaterThanOrEqual(0)
+      await expect(picker).toContainText(columnOrder[index]!.name)
+      await expect(
+        page.getByLabel(`Person ${index + 1} of ${columnOrder.length}`, { exact: true }),
+      ).toHaveText(`${index + 1}/${columnOrder.length}`)
+      await expect
+        .poll(async () => {
+          const boardBox = (await viewport.boundingBox())!
+          const columnBox = (await column(id).boundingBox())!
+          return Math.abs(columnBox.x - boardBox.x)
+        })
+        .toBeLessThanOrEqual(2)
+    }
+    await expectPerson(f.headId)
+    await picker.tap()
+    await page.getByPlaceholder('Search people…', { exact: true }).fill('Zarina')
+    await page.getByRole('option', { name: /^Zarina Navigator\b/ }).tap()
+    await expectPerson(f.memberId)
+    const ownAdd = column(f.memberId).getByRole('textbox', { name: '+ Add card', exact: true })
     await expect.poll(() => insideViewport(viewport, ownAdd)).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     )
     await settleCapture(page, false)
     await page.screenshot({ path: info.outputPath('phone-own-column.png') })
-    await page.getByRole('radio', { name: 'Mine', exact: true }).check()
-    await expect(viewport.locator('[data-board-column]')).toHaveCount(2)
-    await page.getByRole('combobox', { name: 'Jump to a person', exact: true }).tap()
+    await picker.tap()
     await page.getByPlaceholder('Search people…', { exact: true }).fill('Colleague 3')
     await page.getByRole('option', { name: /^Colleague 3 Navigator\b/ }).tap()
-    await expect(page.getByRole('radio', { name: 'Everyone', exact: false })).toBeChecked()
     await expect(viewport.locator('[data-board-column]')).toHaveCount(10)
-    const other = page
-      .locator('[data-board-column]')
-      .filter({ has: page.getByText('Colleague 3 Navigator', { exact: true }) })
-      .getByRole('textbox', { name: '+ Add card', exact: true })
+    const otherIndex = columnOrder.findIndex((person) => person.name === 'Colleague 3 Navigator')
+    const otherPerson = columnOrder[otherIndex]!
+    await expectPerson(otherPerson.id)
+    const other = column(otherPerson.id).getByRole('textbox', { name: '+ Add card', exact: true })
     await expect.poll(() => insideViewport(viewport, other)).toBe(true)
     await settleCapture(page, false)
     await page.screenshot({ path: info.outputPath('phone-person-search.png') })
-    const beforePrevious = await viewport.evaluate((element) => element.scrollLeft)
-    const expectedPrevious = await viewport.evaluate((element) =>
-      Math.max(0, element.scrollLeft - Math.max(240, element.clientWidth * 0.8)),
-    )
+    // The phone buttons move one complete person page and the picker follows the actual column.
     await page.getByRole('button', { name: 'Previous columns', exact: true }).tap()
-    await expect
-      .poll(() => viewport.evaluate((element) => element.scrollLeft))
-      .toBeLessThan(beforePrevious)
-    await expect
-      .poll(() =>
-        viewport.evaluate(
-          (element, expected) => Math.abs(element.scrollLeft - expected),
-          expectedPrevious,
-        ),
-      )
-      .toBeLessThanOrEqual(1)
+    await expectPerson(columnOrder[otherIndex - 1]!.id)
+    await page.getByRole('button', { name: 'Next columns', exact: true }).tap()
+    await expectPerson(otherPerson.id)
     // Arrow keys remain native browser scrolling when the board region has focus.
     await viewport.focus()
     const left = await viewport.evaluate((element) => element.scrollLeft)
@@ -331,10 +343,33 @@ test('normal phone touch navigation searches a colleague from Mine and preserves
     await expect
       .poll(() => viewport.evaluate((element) => element.scrollLeft))
       .toBeGreaterThan(left)
+    await expectPerson(columnOrder[otherIndex + 1]!.id)
     const overflow = await viewport
       .locator('[data-dnd-column]')
       .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).overflowY))
     expect(overflow.every((value) => value === 'visible')).toBe(true)
+    await picker.tap()
+    await page.getByPlaceholder('Search people…', { exact: true }).fill('Head Navigator')
+    await page.getByRole('option', { name: /^Head Navigator\b/ }).tap()
+    await expectPerson(f.headId)
+    await expect(page.getByRole('button', { name: 'Previous columns', exact: true })).toBeDisabled()
+    const headColumn = column(f.headId)
+    expect(await headColumn.evaluate((element) => getComputedStyle(element).overflowY)).toBe('auto')
+    await headColumn.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect.poll(() => headColumn.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
+    await expect.poll(() => viewport.evaluate((element) => element.scrollTop)).toBe(0)
+    await expect
+      .poll(() =>
+        insideViewport(
+          viewport,
+          headColumn.getByRole('textbox', {
+            name: '+ Add card',
+            exact: true,
+          }),
+        ),
+      )
+      .toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(
       true,
     )

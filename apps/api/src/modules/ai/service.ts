@@ -13,8 +13,11 @@ import {
   hasApiKey,
   loadAiConfig,
   runFeature as runAiFeature,
+  run as runAiGateway,
+  languageConstraint,
 } from '@devon/ai'
-import type { AiProvider } from '@devon/ai'
+import type { AiProvider, ChatMessage, Locale } from '@devon/ai'
+import { z } from 'zod'
 import * as search from './search-service.js'
 import * as repo from './repo.js'
 import { prepareFeatureInput } from './request-context.js'
@@ -45,6 +48,7 @@ import {
 // `respond` never mutates), so there is no reason to rebuild either one per request.
 const aiConfig = loadAiConfig()
 let cachedProvider: AiProvider | null = null
+let providerIsTestOverride = false
 function getProvider(): AiProvider {
   cachedProvider ??= createProvider(aiConfig)
   return cachedProvider
@@ -55,6 +59,125 @@ function getProvider(): AiProvider {
  * production code (`server.ts` never imports this). */
 export function __setProviderForTests(provider: AiProvider | null): void {
   cachedProvider = provider
+  providerIsTestOverride = provider !== null
+}
+
+const chatAnswerSchema = z.object({
+  content: z.string().trim().min(1).max(12_000),
+  citations: z.array(z.string()).max(20),
+})
+
+/** Conversation answers share the same flags, configured GLM, metering and outage breaker as Ask.
+ * A missing provider is an explicit unavailable state, never an offline simulated conversation. */
+export async function runDepartmentChatForActor(
+  ctx: RequestContext,
+  input: {
+    locale: Locale
+    messages: ChatMessage[]
+    allowedRefs: Set<string>
+    signal: AbortSignal
+  },
+): Promise<z.infer<typeof chatAnswerSchema>> {
+  if (!hasApiKey(aiConfig) && !providerIsTestOverride) throw new Error('provider_unavailable')
+  const { settings, spent } = await withContext(ctx, async (tx) => ({
+    settings: await repo.getSettings(tx, ctx.departmentId!),
+    spent: await repo.spentThisMonthUzs(tx, ctx.departmentId!),
+  }))
+  if (settings.flags['semantic_ask'] !== true) throw new AiFeatureDisabledError()
+  // UTF-8 bytes deliberately overestimate token usage, including non-Latin conversation history.
+  // Refuse long conversations explicitly; gateway history trimming must never remove a saved turn.
+  const promptBytes = input.messages.reduce(
+    (n, message) => n + Buffer.byteLength(message.content ?? '', 'utf8') + 16,
+    0,
+  )
+  if (promptBytes > 120_000) throw new Error('context_limit')
+  const worstCaseTokens = (promptBytes + 8192) * 3
+  if (
+    !canAffordCall(
+      spent,
+      settings.budget_uzs_per_month,
+      worstCaseTokens,
+      aiConfig.pricePerMillionTokensUzs,
+    )
+  )
+    throw new AiBudgetExceededError()
+  try {
+    aiBreaker.guard()
+  } catch {
+    throw new AiUnavailableError('circuit_open')
+  }
+  const result = await runAiGateway({
+    provider: getProvider(),
+    config: aiConfig,
+    feature: 'semantic_ask',
+    messages: input.messages,
+    signal: input.signal,
+    maxTokens: 4096,
+    temperature: 0.1,
+    overallTimeoutMs: 180_000,
+    tool: {
+      name: 'department_chat_answer',
+      description:
+        'Return the grounded answer in readable Markdown and source references. ' +
+        languageConstraint(input.locale),
+      schema: chatAnswerSchema,
+      parameters: {
+        type: 'object',
+        properties: {
+          content: { type: 'string', maxLength: 12000 },
+          citations: { type: 'array', maxItems: 20, items: { type: 'string' } },
+        },
+        required: ['content', 'citations'],
+        additionalProperties: false,
+      },
+    },
+    validate: (output) =>
+      output.citations.every((ref) => input.allowedRefs.has(ref))
+        ? { ok: true, output }
+        : {
+            ok: false,
+            error: 'Use only source refs from the fresh authorized context. Do not invent a ref.',
+          },
+  })
+  recordAiRunMetrics('semantic_ask', result.meta)
+  if (result.meta.status === 'provider_error')
+    aiBreaker.fail(new Error('department_chat_provider_failed'))
+  else if (!input.signal.aborted) aiBreaker.succeed()
+  await withContext(ctx, async (tx) => {
+    await repo.insertTrace(tx, {
+      departmentId: ctx.departmentId!,
+      userId: ctx.userId!,
+      feature: 'semantic_ask',
+      model: result.meta.model,
+      promptTokens: result.meta.promptTokens,
+      completionTokens: result.meta.completionTokens,
+      totalTokens: result.meta.totalTokens,
+      costUzs: result.meta.costUzs,
+      latencyMs: result.meta.latencyMs,
+      retried: result.meta.retried,
+      status: result.meta.status,
+    })
+    tx.audit({
+      action: 'ai.conversation.metered',
+      subjectType: 'ai_trace',
+      subjectId: 'semantic_ask',
+      after: {
+        status: result.meta.status,
+        totalTokens: result.meta.totalTokens,
+        costUzs: result.meta.costUzs,
+      },
+    })
+    tx.emit({
+      type: 'ai.conversation.metered',
+      payload: { userId: ctx.userId, status: result.meta.status },
+    })
+  })
+  if (!result.ok)
+    throw new AiRunFailedError(
+      'The answer could not be validated',
+      result.meta.status === 'timeout' ? 'timeout' : 'failed',
+    )
+  return result.data
 }
 
 /**

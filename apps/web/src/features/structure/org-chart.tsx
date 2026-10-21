@@ -48,6 +48,7 @@ interface Positioned extends Omit<TreeNode, 'children'> {
   x: number
   y: number
   width: number
+  nodeHeight: number
   depth: number
   children: Positioned[]
 }
@@ -55,7 +56,7 @@ interface Positioned extends Omit<TreeNode, 'children'> {
 function layout(
   roots: TreeNode[],
   textScale: number,
-  logicalNodeHeight: number,
+  heights: ReadonlyMap<string, number>,
 ): {
   nodes: Positioned[]
   width: number
@@ -65,7 +66,15 @@ function layout(
   const flat: Positioned[] = []
   let maxDepth = 0
   const nodeWidth = NODE_W * textScale
-  const nodeHeight = logicalNodeHeight * textScale
+  const levelHeights: number[] = []
+  const visit = (node: TreeNode, depth: number) => {
+    levelHeights[depth] = Math.max(
+      levelHeights[depth] ?? 0,
+      (heights.get(node.id) ?? NODE_H) * textScale,
+    )
+    node.children.forEach((child) => visit(child, depth + 1))
+  }
+  roots.forEach((root) => visit(root, 0))
   const horizontalGap = H_GAP * textScale
   const verticalGap = V_GAP * textScale
 
@@ -99,7 +108,8 @@ function layout(
       ...node,
       children,
       x,
-      y: depth * (nodeHeight + verticalGap),
+      y: levelHeights.slice(0, depth).reduce((sum, h) => sum + h + verticalGap, 0),
+      nodeHeight: heights.get(node.id) ?? NODE_H,
       width,
       depth,
     }
@@ -117,7 +127,7 @@ function layout(
   return {
     nodes: flat,
     width: totalWidth + MARGIN * 2,
-    height: (maxDepth + 1) * (nodeHeight + verticalGap) - verticalGap + MARGIN * 2,
+    height: levelHeights.reduce((sum, h) => sum + h + verticalGap, 0) - verticalGap + MARGIN * 2,
     maxDepth,
   }
 }
@@ -243,11 +253,22 @@ export function OrgChart({
     }
     return { labels, extraTitleHeight, extraHeadHeight }
   }, [chartRoots, actions.rolesByUnit, actions.membersById, fontMetrics])
-  const logicalNodeHeight = NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight
-  const { nodes, width, height } = React.useMemo(
-    () => layout(chartRoots, textScale, logicalNodeHeight),
-    [chartRoots, textScale, logicalNodeHeight],
+  const memberRows = new Map(
+    roots
+      .flatMap(function collect(node): TreeNode[] {
+        return [node, ...node.children.flatMap(collect)]
+      })
+      .map((node) => [
+        node.id,
+        [...actions.membersById.values()].filter((m) => m.unitId === node.id),
+      ]),
   )
+  const baseHeight = NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight
+  const nodeHeights = new Map(
+    [...memberRows].map(([id, rows]) => [id, baseHeight + rows.length * 42]),
+  )
+  nodeHeights.set('department-root', baseHeight)
+  const { nodes, width, height } = layout(chartRoots, textScale, nodeHeights)
   const smallTextStyle = { fontSize: `calc(var(--text-small) / ${textScale})` }
   const captionTextStyle = { fontSize: `calc(var(--text-caption) / ${textScale})` }
   const [exporting, setExporting] = React.useState(false)
@@ -507,7 +528,7 @@ export function OrgChart({
               node.children.map((child) => (
                 <path
                   key={`${node.id}-${child.id}`}
-                  d={`M ${node.x + MARGIN} ${node.y + logicalNodeHeight * textScale + MARGIN} V ${node.y + (logicalNodeHeight + V_GAP / 2) * textScale + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
+                  d={`M ${node.x + MARGIN} ${node.y + node.nodeHeight * textScale + MARGIN} V ${node.y + (node.nodeHeight + V_GAP / 2) * textScale + MARGIN} H ${child.x + MARGIN} V ${child.y + MARGIN}`}
                   fill="none"
                   stroke="var(--color-muted-foreground)"
                   strokeWidth={1.5}
@@ -550,7 +571,7 @@ export function OrgChart({
                   </title>
                   <rect
                     width={NODE_W}
-                    height={logicalNodeHeight}
+                    height={node.nodeHeight}
                     rx={10}
                     fill="var(--color-card)"
                     stroke={isFocused ? 'var(--color-ring)' : 'var(--color-border)'}
@@ -560,7 +581,7 @@ export function OrgChart({
                     x={0}
                     y={0}
                     width={6}
-                    height={logicalNodeHeight}
+                    height={node.nodeHeight}
                     rx={3}
                     fill={unitFillVar(node)}
                   />
@@ -629,9 +650,41 @@ export function OrgChart({
                       </text>
                     </>
                   )}
+                  {(memberRows.get(node.id) ?? []).map((member, index) => {
+                    const y =
+                      NODE_H + nodeLabels.extraTitleHeight + nodeLabels.extraHeadHeight + index * 42
+                    return (
+                      <g key={member.userId}>
+                        <path
+                          d={`M 20 ${y - 20} V ${y + 8} H 32`}
+                          fill="none"
+                          stroke="var(--color-border)"
+                        />
+                        <text
+                          x={38}
+                          y={y + 8}
+                          className="fill-foreground text-caption"
+                          style={captionTextStyle}
+                        >
+                          <title>{fullName(member)}</title>
+                          {fullName(member).length > 28
+                            ? fullName(member).slice(0, 27) + '…'
+                            : fullName(member)}
+                        </text>
+                        <text
+                          x={38}
+                          y={y + 24}
+                          className="fill-muted-foreground text-caption"
+                          style={captionTextStyle}
+                        >
+                          {(member.title ?? '').slice(0, 28)}
+                        </text>
+                      </g>
+                    )
+                  })}
                   <text
                     x={16}
-                    y={logicalNodeHeight - 10}
+                    y={node.nodeHeight - 10}
                     className="fill-muted-foreground text-caption"
                     style={captionTextStyle}
                   >

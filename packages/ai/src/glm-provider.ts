@@ -140,6 +140,7 @@ export class GlmProvider implements AiProvider {
     const deadline = Date.now() + (request.timeoutMs ?? this.requestTimeoutMs)
     let lastError: unknown
     for (let attempt = 0; attempt <= this.maxTransportRetries; attempt++) {
+      request.signal?.throwIfAborted()
       const remainingMs = deadline - Date.now()
       if (remainingMs <= 0) throw new GlmProviderError('GLM request timed out')
       const controller = new AbortController()
@@ -156,7 +157,9 @@ export class GlmProvider implements AiProvider {
             authorization: `Bearer ${this.apiKey}`,
           },
           body: JSON.stringify(body),
-          signal: controller.signal,
+          signal: request.signal
+            ? AbortSignal.any([controller.signal, request.signal])
+            : controller.signal,
         })
         if (!res.ok) {
           // Provider bodies may echo prompts or credentials. Status is enough to diagnose the
@@ -175,7 +178,19 @@ export class GlmProvider implements AiProvider {
             controller.abort()
             clearTimeout(timer)
             // nosemgrep: query-in-loop -- Retry-After wait depends on this response and shares the same bounded attempt count/deadline.
-            await new Promise<void>((resolve) => setTimeout(resolve, delayMs))
+            await new Promise<void>((resolve, reject) => {
+              const onAbort = () => {
+                clearTimeout(waitTimer)
+                request.signal?.removeEventListener('abort', onAbort)
+                reject(new GlmProviderError('GLM request cancelled'))
+              }
+              const waitTimer = setTimeout(() => {
+                request.signal?.removeEventListener('abort', onAbort)
+                resolve()
+              }, delayMs)
+              if (request.signal?.aborted) onAbort()
+              else request.signal?.addEventListener('abort', onAbort, { once: true })
+            })
             continue
           }
           throw failure
@@ -206,6 +221,7 @@ export class GlmProvider implements AiProvider {
           usage,
         }
       } catch (err) {
+        request.signal?.throwIfAborted()
         lastError = err
         // Eligible 429/503 responses are handled above. Authentication, other HTTP errors and
         // malformed provider choices never retry; transport failures use the remaining shared budget.

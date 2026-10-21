@@ -16,6 +16,8 @@ export interface PageHeaderProps {
    * are the same line (Linear's shape). */
   tabs?: React.ReactNode
   className?: string
+  /** Keep short titles and controls on one row when a workspace needs more vertical room. */
+  compact?: boolean
 }
 
 /** UI-OVERHAUL.md §2 row 1: "page header = title + description + primary action + tabs". Every
@@ -29,12 +31,15 @@ export function PageHeader({
   actions,
   tabs,
   className,
+  compact = false,
 }: PageHeaderProps): React.JSX.Element {
   return (
-    <header className={cn('flex flex-col gap-4', className)}>
+    <header className={cn('flex flex-col gap-4', compact && 'gap-2', className)}>
       {above ? <div className="min-w-0">{above}</div> : null}
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+        <div
+          className={cn('flex min-w-0 flex-1 flex-col gap-1', compact ? 'basis-auto' : 'basis-64')}
+        >
           {eyebrow ? (
             <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
               {eyebrow}

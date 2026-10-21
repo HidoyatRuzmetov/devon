@@ -12,6 +12,7 @@
     "cancelled": "Upload cancelled. The file was not attached.",
     "scanning": "Checking file…",
     "scanUnavailable": "The file check is temporarily unavailable. Try again to finish this upload.",
+    "uploadUnavailable": "Uploads are temporarily busy. Try again to upload the selected file.",
     "tooLarge": "This file exceeds the server's upload limit. Choose a smaller file.",
     "infected": "The file failed the malware check and was rejected.",
     "error": "Could not complete the file action. Check the file type and try again."

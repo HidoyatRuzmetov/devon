@@ -85,20 +85,28 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
   const store: ObjectStore = {
     driver: 's3',
 
-    async presignPut(key, { contentType, expiresInSeconds }) {
+    async presignPut(key, { contentType, contentLength, expiresInSeconds }) {
       assertObjectKey(key)
       await ensureBucket()
       const expiresAt = new Date(Date.now() + expiresInSeconds * 1000)
       const url = await getSignedUrl(
         presignClient,
-        new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType }),
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          ContentType: contentType,
+          ContentLength: contentLength,
+        }),
         {
           expiresIn: expiresInSeconds,
           // The presigner signs only `host` unless told otherwise; naming `content-type` here makes
           // it part of the signature, so a PUT with any other type is refused by MinIO itself
           // (`test/checks/storage-s3-prove.ts` asserts exactly that). `headers` below is what the
           // browser must therefore send verbatim.
-          signableHeaders: new Set(['content-type']),
+          signableHeaders: new Set([
+            'content-type',
+            ...(contentLength === undefined ? [] : ['content-length']),
+          ]),
         },
       )
       return { url, method: 'PUT', headers: { 'content-type': contentType }, expiresAt }
@@ -152,14 +160,37 @@ export function createS3Store(options: S3StoreOptions): ObjectStore {
             abortSignal: signal(),
           })
           if (!res.Body) return null
-          return Buffer.from(await res.Body.transformToByteArray())
+          // One bounded allocation avoids holding chunks, a concatenation, and another Buffer copy
+          // for large attachments. The GET length is rechecked in case the pending object changed.
+          const reader = res.Body.transformToWebStream().getReader()
+          const size = res.ContentLength ?? head.size
+          try {
+            if (!Number.isSafeInteger(size) || size < 0 || size > maxBytes) {
+              await reader.cancel()
+              return new ObjectTooLarge(key, size, maxBytes)
+            }
+            const result = Buffer.allocUnsafe(size)
+            let offset = 0
+            while (true) {
+              const chunk = await reader.read()
+              if (chunk.done) break
+              if (offset + chunk.value.byteLength > size) {
+                await reader.cancel()
+                return new ObjectTooLarge(key, offset + chunk.value.byteLength, size)
+              }
+              result.set(chunk.value, offset)
+              offset += chunk.value.byteLength
+            }
+            return result.subarray(0, offset)
+          } finally {
+            reader.releaseLock()
+          }
         } catch (err) {
           if (isNotFound(err)) return null
           throw err
         }
       })
-      if (bytes && bytes.byteLength > maxBytes)
-        throw new ObjectTooLarge(key, bytes.byteLength, maxBytes)
+      if (bytes instanceof ObjectTooLarge) throw bytes
       return bytes
     },
 

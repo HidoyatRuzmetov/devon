@@ -35,9 +35,14 @@ export function AvatarStack({
   return (
     <TooltipProvider delayDuration={120} skipDelayDuration={300} disableHoverableContent>
       <div className={cn('flex items-center', className)} aria-label={label} role="group">
-        <div className="flex items-center -space-x-2">
-          {shown.map((person) => (
-            <StackPerson key={person.id} name={person.name} tooltip={person.name}>
+        <div className="isolate flex items-center -space-x-2">
+          {shown.map((person, index) => (
+            <StackPerson
+              key={person.id}
+              name={person.name}
+              tooltip={person.name}
+              order={shown.length - index + 1}
+            >
               <Avatar
                 src={person.src ?? null}
                 alt={person.name}
@@ -51,6 +56,7 @@ export function AvatarStack({
           ))}
           {overflow > 0 ? (
             <StackPerson
+              order={1}
               name={people
                 .slice(shown.length)
                 .map((person) => person.name)
@@ -79,10 +85,12 @@ function StackPerson({
   name,
   tooltip,
   children,
+  order,
 }: {
   name: string
   tooltip: React.ReactNode
   children: React.ReactNode
+  order: number
 }) {
   const [open, setOpen] = React.useState(false)
   return (
@@ -91,6 +99,7 @@ function StackPerson({
         <button
           type="button"
           className="devon-avatar-stack-item inline-flex shrink-0 rounded-full"
+          style={{ '--avatar-stack-order': order } as React.CSSProperties}
           aria-label={name}
           onClick={(event) => {
             event.preventDefault()

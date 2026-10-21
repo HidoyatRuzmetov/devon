@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 // Zod schemas for the work module's DTOs (TECH-SPEC §3.2/§4, EPIC-004). Kept in this module's own
 // file -- `apps/api/src/schemas.ts` is the foundation module's file, never edited to add a module
 // (MODULE-GUIDE.md "API modules").
@@ -55,6 +56,7 @@ export const cardSchema = z.object({
   projectId: z.string().uuid().nullable(),
   projectScope: cardProjectScopeSchema,
   status: cardStatusSchema,
+  workStage: z.enum(['todo', 'in_progress']).optional(),
   priority: cardPrioritySchema,
   risk: cardRiskSchema,
   startAt: z.string().nullable(),
@@ -160,7 +162,7 @@ export const boardSchema = z.object({
 })
 
 export const createCardBodySchema = z.object({
-  title: z.string().min(1).max(300),
+  title: z.string().trim().min(1).max(WORK_TITLE_MAX),
   description: z.string().max(20000).optional(),
   kind: cardKindSchema.optional(),
   assigneeUserId: z.string().uuid().nullable().optional(),
@@ -182,12 +184,13 @@ export const createCardBodySchema = z.object({
 
 export const patchCardBodySchema = z
   .object({
-    title: z.string().min(1).max(300),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX),
     description: z.string().max(20000).nullable(),
     assigneeUserId: z.string().uuid().nullable(),
     giverUserId: z.string().uuid().nullable(),
     priority: cardPrioritySchema,
     status: cardStatusSchema,
+    workStage: z.enum(['todo', 'in_progress']).optional(),
     startAt: z.string().datetime().nullable(),
     dueAt: z.string().datetime().nullable(),
     labels: z.array(z.string().uuid()),

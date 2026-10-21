@@ -19,6 +19,7 @@ export const units = appSchema.table('units', {
   name: text('name').notNull(),
   /** One of `@devon/ui`'s 8 categorical unit hues, or `null` for "auto" (see the migration). */
   colour: smallint('colour'),
+  expectedPeople: integer('expected_people'),
   sort: integer('sort').notNull().default(0),
   path: text('path').notNull().default(''),
   createdBy: uuid('created_by'),

@@ -1616,6 +1616,7 @@
     "cancelled": "Upload cancelled. The file was not attached.",
     "scanning": "Checking file…",
     "scanUnavailable": "The file check is temporarily unavailable. Try again to finish this upload.",
+    "uploadUnavailable": "Uploads are temporarily busy. Try again to upload the selected file.",
     "tooLarge": "This file exceeds the server's upload limit. Choose a smaller file.",
     "infected": "The file failed the malware check and was rejected.",
     "error": "Could not complete the file action. Check the file type and try again."
@@ -2363,6 +2364,34 @@
       "invalid": "Add a name and card title, and keep the checklist within its limits.",
       "saveFailed": "Could not save this template. Your draft is kept. Try Save again.",
       "saved": "Template saved"
+    }
+  },
+  "boardRefinement": {
+    "projectTask": "Project card",
+    "standaloneTask": "Standalone card",
+    "sort": {
+      "label": "Sort cards: {order}",
+      "manual": "Manual",
+      "attention": "Attention",
+      "manualOption": "Manual order",
+      "attentionOption": "Attention first",
+      "manualHelp": "Your saved order. Drag cards to arrange them; your focus pins stay at the top.",
+      "attentionHelp": "Focus pins, then overdue cards, priority, and nearest deadline. Moving a card returns to Manual order.",
+      "manualAfterMove": "Switched to Manual order to keep your placement."
+    },
+    "guide": {
+      "title": "Board guide and display",
+      "units": "Column colours identify units",
+      "indicators": "Status uses a symbol and text; flags show priority. Deadline emphasis stays on the date, with a dotted underline when overdue."
+    },
+    "mobile": {
+      "view": "View: {view}",
+      "person": "Choose a person",
+      "position": "Person {current} of {total}"
+    },
+    "ai": {
+      "add": "Add with AI",
+      "unavailable": "AI card creation is unavailable for this department."
     }
   },
   "calendar": {
@@ -4210,6 +4239,62 @@
       }
     }
   },
+  "overviewChat": {
+    "title": "Department assistant",
+    "assistant": "Department assistant",
+    "you": "You",
+    "back": "Back to overview",
+    "continue": "Continue conversation",
+    "history": "Saved conversations",
+    "new": "New conversation",
+    "input": "Ask about your department",
+    "placeholder": "Ask a question about your department…",
+    "followUp": "Ask a follow-up question…",
+    "send": "Send message",
+    "stop": "Stop response",
+    "hint": "Ask about projects, people or what needs attention.",
+    "saved": "This conversation is saved. Follow-up questions keep the context.",
+    "offline": "You are offline. Your draft stays here.",
+    "thinking": "Reviewing department information…",
+    "welcome": "What would you like to understand?",
+    "welcomeHint": "Ask about progress, priorities or your team. Each answer draws on the department information you can access.",
+    "updated": "Briefing · {date}",
+    "noHistory": "Your saved conversations will appear here.",
+    "loadMore": "Load earlier conversations",
+    "messages": "Conversation messages",
+    "sources": "Sources",
+    "latest": "Latest message",
+    "context": "Based on {count} records · {date}",
+    "contextLimited": "Based on {count} of {total} records · {date}",
+    "failed": "The response could not be completed. Your question is saved.",
+    "cancelled": "Response stopped.",
+    "retry": "Try again",
+    "loadFailed": "This conversation could not be loaded.",
+    "noUpdates": "No recent completions to highlight.",
+    "noRisks": "No risks highlighted in this briefing.",
+    "head": "Department head",
+    "member": "Member",
+    "allPeople": "View all {count} people",
+    "createFailed": "Could not start the conversation. Your draft is still here.",
+    "requestFailed": "The request could not be confirmed. Check the conversation or try again.",
+    "errors": {
+      "contextLimit": "This conversation has reached its context limit. Your history is saved; start a new conversation to continue.",
+      "budget": "The monthly AI budget has been reached. An administrator can review the budget.",
+      "disabled": "AI conversations are disabled. Ask an administrator to enable them.",
+      "unavailable": "The AI service is unavailable. Your question is saved; try again shortly.",
+      "timeout": "The response took too long. Your question is saved; try again.",
+      "interrupted": "The response was interrupted. Your question is saved; try again."
+    },
+    "contextOne": "Based on {count} record · {date}",
+    "contextLimitedOne": "Based on {count} of {total} record · {date}",
+    "placeholderShort": "Ask a question…",
+    "metrics": "Department overview metrics",
+    "planned": "{count} planned",
+    "filledShort": "Fully staffed",
+    "planStaffing": "Set staffing targets",
+    "onTrack": "{percent}% on track",
+    "due": "{count} due"
+  },
   "people": {
     "table": {
       "title": "People table",
@@ -4649,6 +4734,93 @@
       }
     }
   },
+  "portal": {
+    "stage": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "start": "Start work",
+      "reset": "Move to to do"
+    },
+    "staffing": {
+      "expected": "Expected people",
+      "unset": "Not set"
+    },
+    "profile": {
+      "title": "Professional profile",
+      "description": "Description",
+      "headline": "Headline",
+      "phone": "Work phone",
+      "location": "Location",
+      "about": "About",
+      "skills": "Skills",
+      "languages": "Languages",
+      "commaHint": "Separate entries with commas.",
+      "education": "Education",
+      "experience": "Experience",
+      "certifications": "Certifications",
+      "links": "Contact links",
+      "institution": "Institution",
+      "degree": "Degree / level",
+      "field": "Field of study",
+      "startYear": "Start year",
+      "endYear": "End / expected year",
+      "current": "Current position",
+      "studying": "Currently studying",
+      "organization": "Organization",
+      "role": "Role",
+      "name": "Name",
+      "issuer": "Issuer",
+      "year": "Year",
+      "label": "Label",
+      "url": "Website URL",
+      "remove": "Remove entry",
+      "add": "Add entry",
+      "saveError": "Could not save. Check the fields and dates. If another window changed your profile, reload before saving.",
+      "empty": "Not entered yet",
+      "expected": "Expected",
+      "present": "Present",
+      "contact": "Contact",
+      "intro": "Optional details you choose to share with colleagues. Keep private information out of this public work profile."
+    },
+    "overview": {
+      "workforce": "Total workforce",
+      "units": "Units",
+      "projects": "Group projects",
+      "tasks": "Individual tasks",
+      "filled": "All positions filled",
+      "positions": "{count} planned positions in units",
+      "setTargets": "Set staffing targets in Structure",
+      "unitsHint": "Organization and staffing",
+      "track": "{percent}% on track · {count} due within 7 days or overdue",
+      "staffing": "Workforce by unit",
+      "staffed": "{actual} of {expected} positions filled",
+      "deadlines": "Upcoming · next 30 days",
+      "noDeadlines": "No upcoming deadlines or events.",
+      "calendar": "Open calendar",
+      "back": "← Back to overview",
+      "readBriefing": "Read full briefing",
+      "staffingTab": "Workforce",
+      "deadlinesTab": "Deadlines"
+    },
+    "files": {
+      "hint": "Any file type. Files are scanned and downloaded, never executed. Files over 100 MB require superadmin approval.",
+      "requested": "Approval requested. After the superadmin approves it, select this file again to upload.",
+      "queue": "Large file approvals",
+      "queueHint": "Approve uploads larger than 100 MB. Malware scanning still applies after approval.",
+      "empty": "No files awaiting approval.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "pending": "Waiting for superadmin approval.",
+      "approved": "Approved — select the same file again to upload.",
+      "rejected": "Upload request declined."
+    },
+    "cards": {
+      "actions": "Card actions",
+      "select": "Select card",
+      "deselect": "Deselect card",
+      "titleLimit": "Up to {count} characters. Put the detail in the description."
+    }
+  },
   "profileEdit": {
     "heading": "Profile",
     "title": "Position",
@@ -4676,7 +4848,7 @@
     "conflict": "Someone updated this project. Close this window, refresh and try again.",
     "error": "Could not save. Check the selected people and try again.",
     "convert": "Create group",
-    "convertHint": "Choose your teammates. This card becomes the first shared card in a new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
+    "convertHint": "Choose your teammates. This card becomes the assignee’s personal card in the new group project; its comments, checklist and files stay with it. You can edit the project and members afterwards.",
     "converted": "Group project created"
   },
   "projectLifecycle": {

@@ -221,11 +221,12 @@ size/MIME/magic-byte allow-lists. Two object-store drivers and two scanner modes
 | `STORAGE_S3_ACCESS_KEY` / `STORAGE_S3_SECRET_KEY` | -- | Required with `s3`. In dev these are `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` from this Compose file; the placeholder password is refused in production exactly like the other example secrets. |
 | `STORAGE_S3_BUCKET` / `STORAGE_S3_REGION` | `devon` / `us-east-1` | Bucket is created on first use if missing. |
 | `STORAGE_S3_FORCE_PATH_STYLE` | `true` | MinIO needs path-style addressing. |
+| `STORAGE_MAX_ATTACHMENT_BYTES` | `1073741824` | Task and Page attachments: up to 1 GiB; above 100 MiB requires superadmin approval. |
 | `STORAGE_MAX_UPLOAD_BYTES` | `5242880` | 5 MiB. Enforced at presign, on the local PUT route (413) and at finalise. |
 | `STORAGE_TIMEOUT_MS` | `10000` | Every MinIO call carries this timeout (H8.1). |
 | `CLAMAV_MODE` | `off` | `clamd`: stream every upload to clamd and fail closed when it is unreachable. `off`: **no scanning** -- developer machines only; logged as a warning at every boot; **refused when `NODE_ENV=production`**. |
 | `CLAMAV_HOST` / `CLAMAV_PORT` | `127.0.0.1` / `3310` | The `clamav` profile publishes 3310 on the host. |
-| `CLAMAV_TIMEOUT_MS` | `20000` | Per-scan timeout. |
+| `CLAMAV_TIMEOUT_MS` | `120000` | Per-scan timeout. |
 
 These are not yet listed in `.env.example` (that file could not be edited from the session that built
 the plugin -- the same permission block MODULE-GUIDE.md already documents); every variable has a

@@ -18,6 +18,8 @@ export type PresignedUpload = {
 
 export type PresignPutOptions = {
   contentType: string
+  /** Bind attachment PUTs to the size authorized before issuing the URL. */
+  contentLength?: number
   expiresInSeconds: number
   /** Who this URL is for. The local driver binds its token to the user (and its PUT route also
    * requires that user's session); S3 URLs are bearer URLs by nature and ignore it. */

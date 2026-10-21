@@ -67,6 +67,7 @@ export const cards = appSchema.table('cards', {
   giverUserId: uuid('giver_user_id'),
   projectId: uuid('project_id'),
   projectScope: cardProjectScopeEnum('project_scope').notNull().default('none'),
+  workStage: text('work_stage').notNull().default('todo'),
   status: cardStatusEnum('status').notNull().default('active'),
   priority: cardPriorityEnum('priority').notNull().default('none'),
   startAt: timestamp('start_at', { withTimezone: true }),

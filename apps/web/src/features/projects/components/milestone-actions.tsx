@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import { Pencil } from 'lucide-react'
@@ -86,7 +87,13 @@ export function MilestoneActions({
             e.preventDefault()
             if (!title.trim() || save.isPending || remove.isPending) return
             save.mutate(
-              { milestoneId: milestone.id, patch: { title: title.trim(), dueOn: dueOn || null } },
+              {
+                milestoneId: milestone.id,
+                patch: {
+                  ...(title.trim() !== milestone.title ? { title: title.trim() } : {}),
+                  dueOn: dueOn || null,
+                },
+              },
               {
                 onSuccess: () => setOpen(false),
               },
@@ -98,7 +105,7 @@ export function MilestoneActions({
             <Input
               required
               disabled={save.isPending || remove.isPending}
-              maxLength={200}
+              maxLength={WORK_TITLE_MAX}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />

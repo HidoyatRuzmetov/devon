@@ -45,6 +45,7 @@ import {
   usePagesQuery,
   usePatchPageMutation,
 } from './use-pages.js'
+import { CardAttachments } from '../work/components/card-attachments.js'
 import { PageEditor } from './page-editor.js'
 import { VersionHistory } from './version-history.js'
 import { OnboardingTemplatesPanel } from './onboarding-templates.js'
@@ -519,13 +520,16 @@ function PageDetail({ id, onBack }: { id: string; onBack: () => void }) {
             }}
           />
         </div>
-        <VersionHistory
-          page={page}
-          canRestore={canRestoreVersion}
-          restoreDisabled={hasDraft || queuedSave.isPending}
-          onRestored={() => pageQuery.refetch()}
-          authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
-        />
+        <div className="flex flex-col gap-5">
+          <CardAttachments cardId={page.id} canEdit subjectType="page" />
+          <VersionHistory
+            page={page}
+            canRestore={canRestoreVersion}
+            restoreDisabled={hasDraft || queuedSave.isPending}
+            onRestored={() => pageQuery.refetch()}
+            authorName={(userId) => mentionCandidates.find((c) => c.id === userId)?.label}
+          />
+        </div>
       </div>
     </motion.div>
   )

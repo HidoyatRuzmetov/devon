@@ -1,0 +1,89 @@
+{
+  "portal": {
+    "stage": {
+      "todo": "Bajarish kerak",
+      "in_progress": "Jarayonda",
+      "start": "Ishni boshlash",
+      "reset": "Rejaga qaytarish"
+    },
+    "staffing": {
+      "expected": "Rejalashtirilgan xodimlar",
+      "unset": "Belgilanmagan"
+    },
+    "profile": {
+      "title": "Kasbiy profil",
+      "description": "Tavsif",
+      "headline": "Qisqacha maʼlumot",
+      "phone": "Ish telefoni",
+      "location": "Joylashuv",
+      "about": "Men haqimda",
+      "skills": "Koʻnikmalar",
+      "languages": "Tillar",
+      "commaHint": "Yozuvlarni vergul bilan ajrating.",
+      "education": "Taʼlim",
+      "experience": "Ish tajribasi",
+      "certifications": "Sertifikatlar",
+      "links": "Aloqa havolalari",
+      "institution": "Taʼlim muassasasi",
+      "degree": "Daraja / bosqich",
+      "field": "Mutaxassislik",
+      "startYear": "Boshlanish yili",
+      "endYear": "Tugash / kutilayotgan yil",
+      "current": "Hozirgi ish joyi",
+      "studying": "Hozir oʻqiyapman",
+      "organization": "Tashkilot",
+      "role": "Lavozim",
+      "name": "Nomi",
+      "issuer": "Bergan tashkilot",
+      "year": "Yil",
+      "label": "Yorliq",
+      "url": "Sayt manzili",
+      "remove": "Yozuvni olib tashlash",
+      "add": "Yozuv qoʻshish",
+      "saveError": "Saqlanmadi. Maydon va sanalarni tekshiring. Boshqa oynada oʻzgartirilgan boʻlsa, sahifani yangilang.",
+      "empty": "Hali kiritilmagan",
+      "expected": "Kutilmoqda",
+      "present": "Hozirgacha",
+      "contact": "Aloqa",
+      "intro": "Hamkasblar bilan ixtiyoriy ulashiladigan maʼlumotlar. Maxfiy maʼlumotlarni bu ish profiliga kiritmang."
+    },
+    "overview": {
+      "workforce": "Jami xodimlar",
+      "units": "Boʻlimlar",
+      "projects": "Guruh loyihalari",
+      "tasks": "Shaxsiy vazifalar",
+      "filled": "Barcha oʻrinlar toʻldirilgan",
+      "positions": "{count} rejalashtirilgan oʻrin",
+      "setTargets": "Tuzilmada shtat sonini belgilang",
+      "unitsHint": "Tuzilma va shtat",
+      "track": "{percent}% oʻz vaqtida · {count} yaqin 7 kunda yoki kechikkan",
+      "staffing": "Boʻlimlar boʻyicha shtat",
+      "staffed": "{expected} oʻrindan {actual} tasi band",
+      "deadlines": "Yaqin 30 kundagi muddatlar",
+      "noDeadlines": "Yaqin muddat yoki tadbir yoʻq.",
+      "calendar": "Taqvimni ochish",
+      "back": "← Umumiy koʻrinishga qaytish",
+      "readBriefing": "To‘liq xulosa",
+      "staffingTab": "Xodimlar",
+      "deadlinesTab": "Muddatlar"
+    },
+    "files": {
+      "hint": "Istalgan fayl turi. Fayllar tekshiriladi va yuklab olinadi, ishga tushirilmaydi. 100 MB dan kattasi uchun superadmin ruxsati kerak.",
+      "requested": "Ruxsat soʻraldi. Superadmin tasdiqlagach, yuklash uchun faylni yana tanlang.",
+      "queue": "Katta fayllarga ruxsat",
+      "queueHint": "100 MB dan katta fayllar. Tasdiqdan keyin ham zararli dastur tekshiruvi bajariladi.",
+      "empty": "Kutilayotgan fayllar yoʻq.",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish",
+      "pending": "Superadmin tasdigʻi kutilmoqda.",
+      "approved": "Tasdiqlandi — yuklash uchun oʻsha faylni qayta tanlang.",
+      "rejected": "Yuklash soʻrovi rad etildi."
+    },
+    "cards": {
+      "actions": "Kartochka amallari",
+      "select": "Kartochkani tanlash",
+      "deselect": "Tanlovni bekor qilish",
+      "titleLimit": "Ko‘pi bilan {count} belgi. Tafsilotlarni tavsifga yozing."
+    }
+  }
+}

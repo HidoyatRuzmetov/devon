@@ -25,6 +25,7 @@ import {
   AiUnavailableError,
 } from './errors.js'
 import * as service from './service.js'
+import conversationRoutes from './conversation-routes.js'
 import { requestBriefing, startBriefingJobs, type BriefingJobsHandle } from './briefing.js'
 import { readBriefing } from './briefing-repo.js'
 import {
@@ -123,6 +124,7 @@ function featureRunSubject(req: FastifyRequest): Subject {
 }
 
 const aiRoutes: FastifyPluginAsyncZod = async (app) => {
+  await app.register(conversationRoutes)
   app.get(
     '/settings',
     {

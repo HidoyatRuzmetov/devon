@@ -1,0 +1,30 @@
+{
+  "boardRefinement": {
+    "projectTask": "Project card",
+    "standaloneTask": "Standalone card",
+    "sort": {
+      "label": "Sort cards: {order}",
+      "manual": "Manual",
+      "attention": "Attention",
+      "manualOption": "Manual order",
+      "attentionOption": "Attention first",
+      "manualHelp": "Your saved order. Drag cards to arrange them; your focus pins stay at the top.",
+      "attentionHelp": "Focus pins, then overdue cards, priority, and nearest deadline. Moving a card returns to Manual order.",
+      "manualAfterMove": "Switched to Manual order to keep your placement."
+    },
+    "guide": {
+      "title": "Board guide and display",
+      "units": "Column colours identify units",
+      "indicators": "Status uses a symbol and text; flags show priority. Deadline emphasis stays on the date, with a dotted underline when overdue."
+    },
+    "mobile": {
+      "view": "View: {view}",
+      "person": "Choose a person",
+      "position": "Person {current} of {total}"
+    },
+    "ai": {
+      "add": "Add with AI",
+      "unavailable": "AI card creation is unavailable for this department."
+    }
+  }
+}

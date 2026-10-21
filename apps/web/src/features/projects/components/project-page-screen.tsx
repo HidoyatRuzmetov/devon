@@ -2,6 +2,7 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // Project cards are loaded by immutable project id and paginated, so renaming a project or sharing
 // a title with another project cannot silently move/hide its tasks.
 import * as React from 'react'
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import { can } from '@devon/contracts'
 import { useQuery } from '@tanstack/react-query'
 import { CalendarClock, ChevronLeft } from 'lucide-react'
@@ -34,7 +35,6 @@ import { RouterLink, useSearchParams, navigate } from '../../../lib/router.js'
 import { useActor } from '../../../lib/can.js'
 import { EditProjectDialog } from './edit-project-dialog.js'
 import { MilestoneActions } from './milestone-actions.js'
-import { taskProgress } from '../progress.js'
 import { projectPlanRanks } from '../plan-order.js'
 import { useAddFocusMutation, useFocusListQuery } from '../../work/hooks-plus.js'
 import { useAiSettingsQuery, useRunAiFeatureMutation } from '../../ai/use-ai.js'
@@ -73,6 +73,7 @@ function useProjectCards(projectId: string | undefined) {
 }
 
 function TaskRow({ card }: { card: Card }) {
+  const t = useT()
   const patchCard = usePatchCardMutation()
   return (
     <div className="flex items-center gap-2 rounded-sm px-1 py-1 hover:bg-accent">
@@ -99,6 +100,18 @@ function TaskRow({ card }: { card: Card }) {
       >
         {card.title}
       </button>
+      {card.status === 'active' ? (
+        <span
+          className={cn(
+            'shrink-0 rounded-full px-2 py-0.5 text-caption',
+            card.workStage === 'in_progress'
+              ? 'bg-info/10 text-info'
+              : 'bg-muted text-muted-foreground',
+          )}
+        >
+          {t(card.workStage === 'in_progress' ? 'portal.stage.in_progress' : 'portal.stage.todo')}
+        </span>
+      ) : null}
       {card.checklistTotal > 0 ? (
         <span className="text-caption tabular-nums text-muted-foreground">
           {card.checklistDone}/{card.checklistTotal}
@@ -117,7 +130,6 @@ export default function ProjectPageScreen() {
   const projectQuery = useProjectQuery(id)
   const members = useMembers()
   const cardsQuery = useProjectCards(projectQuery.data?.id)
-  const createCard = useCreateCardMutation()
   const patchProject = usePatchProjectMutation(id ?? '')
   const patchCard = usePatchCardMutation()
   const addMilestone = useAddMilestoneMutation(id ?? '')
@@ -127,7 +139,6 @@ export default function ProjectPageScreen() {
 
   const [newMilestone, setNewMilestone] = React.useState('')
   const milestoneAddRef = React.useRef<HTMLInputElement>(null)
-  const [newObjective, setNewObjective] = React.useState('')
 
   const aiSettings = useAiSettingsQuery()
   const planAi = useRunAiFeatureMutation('plan_sprint')
@@ -182,8 +193,8 @@ export default function ProjectPageScreen() {
     ownerUserIds: [project.ownerUserId, ...project.members],
   }).allowed
   const cards = cardsQuery.data ?? []
-  const objective = cards.filter((c) => c.projectScope !== 'subjective')
-  const subjective = cards.filter((c) => c.projectScope === 'subjective')
+  const objective = cards
+  const subjective = cards
   const percent = Math.round(project.progress * 100)
   const canDelete = can(actor, 'delete', {
     kind: 'owned',
@@ -534,6 +545,8 @@ export default function ProjectPageScreen() {
                 ref={milestoneAddRef}
                 className="min-w-0"
                 value={newMilestone}
+                maxLength={WORK_TITLE_MAX}
+                title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
                 onChange={(e) => setNewMilestone(e.target.value)}
                 placeholder={t('projects.milestone.addPlaceholder')}
                 aria-label={t('projects.milestone.addPlaceholder')}
@@ -557,86 +570,23 @@ export default function ProjectPageScreen() {
           ) : null}
         </section>
 
-        <Tabs defaultValue="objective" className="flex flex-col gap-3">
+        <Tabs defaultValue="subjective" className="flex flex-col gap-3">
           <TabsList aria-label={t('projects.field.title')}>
-            <TabsTrigger value="objective" count={objective.length}>
-              {t('projects.field.objective')}
-            </TabsTrigger>
             <TabsTrigger value="subjective" count={subjective.length}>
               {t('projects.field.subjective')}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="objective" className="flex flex-col gap-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-caption text-muted-foreground">
-                {t('projects.tile.progress', {
-                  percent: Math.round(taskProgress(objective) * 100),
-                })}
-              </span>
-              {canEdit && planEnabled && openObjective.length > 0 ? (
-                <SparkleButton
-                  aria-label={t('projects.ai.plan')}
-                  size="sm"
-                  loading={planAi.isPending}
-                  onClick={runPlanAi}
-                />
-              ) : null}
-            </div>
-            {cardsQuery.isError ? (
-              <StateView
-                kind="error"
-                titleKey="state.error.title"
-                action={{
-                  labelKey: 'state.error.action',
-                  onAction: () => void cardsQuery.refetch(),
-                }}
+          <TabsContent value="subjective" className="flex flex-col gap-3">
+            {canEdit && planEnabled && openObjective.length > 0 ? (
+              <SparkleButton
+                aria-label={t('projects.ai.plan')}
+                label={t('projects.ai.plan')}
+                size="sm"
+                loading={planAi.isPending}
+                onClick={runPlanAi}
               />
             ) : null}
-            {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
-            {!cardsQuery.isPending && !cardsQuery.isError ? (
-              <div className="flex flex-col gap-1 rounded-md border border-border p-2">
-                {objective.map((card) => (
-                  <TaskRow key={card.id} card={card} />
-                ))}
-                {canEdit ? (
-                  <form
-                    className="flex gap-2 pt-1"
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      if (!newObjective.trim() || createCard.isPending) return
-                      createCard.mutate(
-                        {
-                          title: newObjective.trim(),
-                          assigneeUserId: project.ownerUserId,
-                          giverUserId: project.ownerUserId,
-                          projectId: project.id,
-                          projectScope: 'objective',
-                          kind: 'project_task',
-                        },
-                        { onSuccess: () => setNewObjective('') },
-                      )
-                    }}
-                  >
-                    <Input
-                      value={newObjective}
-                      onChange={(e) => setNewObjective(e.target.value)}
-                      placeholder={t('projects.card.addObjectivePlaceholder')}
-                      aria-label={t('projects.card.addObjectivePlaceholder')}
-                    />
-                    <Button
-                      type="submit"
-                      size="sm"
-                      variant="secondary"
-                      disabled={!newObjective.trim() || createCard.isPending}
-                    >
-                      {t('work.action.save')}
-                    </Button>
-                  </form>
-                ) : null}
-              </div>
-            ) : null}
-
             {planAi.isPending || plan || planAi.isError ? (
               <AiResultPanel
                 title={t('projects.ai.planPreviewTitle')}
@@ -666,9 +616,32 @@ export default function ProjectPageScreen() {
                 ) : null}
               </AiResultPanel>
             ) : null}
-          </TabsContent>
 
-          <TabsContent value="subjective" className="flex flex-col gap-3">
+            {cardsQuery.isPending ? <Skeleton className="h-20 w-full" /> : null}
+            {cardsQuery.isError ? (
+              <StateView
+                kind="error"
+                titleKey="state.error.title"
+                action={{
+                  labelKey: 'state.error.action',
+                  onAction: () => void cardsQuery.refetch(),
+                }}
+              />
+            ) : null}
+            {subjective.some(
+              (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
+            ) ? (
+              <div className="rounded-md border border-border p-2">
+                <h3 className="text-small font-medium">{t('work.board.unassigned')}</h3>
+                {subjective
+                  .filter(
+                    (c) => !c.assigneeUserId || !members.some((m) => m.userId === c.assigneeUserId),
+                  )
+                  .map((card) => (
+                    <TaskRow key={card.id} card={card} />
+                  ))}
+              </div>
+            ) : null}
             {[
               ...new Set([
                 ...project.members,
@@ -796,6 +769,8 @@ function SubjectiveAddRow({
     >
       <Input
         value={text}
+        maxLength={WORK_TITLE_MAX}
+        title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
         onChange={(e) => setText(e.target.value)}
         placeholder={t('projects.card.addSubjectivePlaceholder')}
         aria-label={t('projects.card.addSubjectivePlaceholder')}

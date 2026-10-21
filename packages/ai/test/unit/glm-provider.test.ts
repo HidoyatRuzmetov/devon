@@ -29,6 +29,46 @@ function successfulResponse() {
 }
 
 describe('GlmProvider', () => {
+  it('aborts an active conversation request without transport retries', async () => {
+    const controller = new AbortController()
+    const fetchImpl = vi.fn(
+      (_url: unknown, init: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal!.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
+        }),
+    )
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 5000,
+      fetchImpl: fetchImpl as typeof fetch,
+    })
+    const pending = provider.complete({ ...REQUEST, signal: controller.signal })
+    const rejected = expect(pending).rejects.toThrow()
+    controller.abort()
+    await rejected
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+  it('cancels during Retry-After instead of waiting or retrying', async () => {
+    vi.useFakeTimers()
+    const controller = new AbortController()
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValue(new Response('', { status: 429, headers: { 'Retry-After': '20' } }))
+    const provider = new GlmProvider({
+      baseUrl: 'https://example.test/v1',
+      apiKey: 'fixture',
+      requestTimeoutMs: 30000,
+      fetchImpl,
+    })
+    const pending = provider.complete({ ...REQUEST, signal: controller.signal })
+    const rejected = expect(pending).rejects.toThrow()
+    await vi.advanceTimersByTimeAsync(1)
+    controller.abort()
+    await rejected
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
   it.each([429, 503])(
     'honours Retry-After seconds for HTTP %s and retries without reading error bodies',
     async (status) => {

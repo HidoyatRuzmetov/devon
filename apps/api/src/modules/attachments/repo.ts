@@ -24,13 +24,14 @@ export async function createPending(
   ctx: RequestContext,
   cardId: string,
   input: { id: string; name: string; mime: string; size: number; key: string },
+  subjectType: 'card' | 'page' = 'card',
 ) {
   return withContext(ctx, async (tx) => {
     await tx.raw(sql`insert into app.attachments (id, department_id, subject_type, subject_id, key, name, mime, size, uploaded_by_user_id)
-      values (${input.id}, ${ctx.departmentId}, 'card', ${cardId}, ${input.key}, ${input.name}, ${input.mime}, ${input.size}, ${ctx.userId})`)
+      values (${input.id}, ${ctx.departmentId}, ${subjectType}, ${cardId}, ${input.key}, ${input.name}, ${input.mime}, ${input.size}, ${ctx.userId})`)
     tx.audit({
       action: 'work.attachment_upload_requested',
-      subjectType: 'card',
+      subjectType,
       subjectId: cardId,
       departmentId: ctx.departmentId,
       after: { attachmentId: input.id, name: input.name, size: input.size },
@@ -38,23 +39,32 @@ export async function createPending(
   })
 }
 
-export async function list(ctx: RequestContext, cardId: string) {
+export async function list(
+  ctx: RequestContext,
+  cardId: string,
+  subjectType: 'card' | 'page' = 'card',
+) {
   return withContext(ctx, async (tx) =>
     (
       await tx.raw<Row>(sql`select * from app.attachments
-    where department_id = ${ctx.departmentId} and subject_type = 'card' and subject_id = ${cardId}
+    where department_id = ${ctx.departmentId} and subject_type = ${subjectType} and subject_id = ${cardId}
       and deleted_at is null and scan_status = 'clean' order by created_at desc`)
     ).map(dto),
   )
 }
 
-export async function get(ctx: RequestContext, cardId: string, id: string) {
+export async function get(
+  ctx: RequestContext,
+  cardId: string,
+  id: string,
+  subjectType: 'card' | 'page' = 'card',
+) {
   return withContext(
     ctx,
     async (tx) =>
       (
         await tx.raw<Row>(sql`select * from app.attachments
-    where id = ${id} and department_id = ${ctx.departmentId} and subject_type = 'card' and subject_id = ${cardId} and deleted_at is null`)
+    where id = ${id} and department_id = ${ctx.departmentId} and subject_type = ${subjectType} and subject_id = ${cardId} and deleted_at is null`)
       )[0] ?? null,
   )
 }
@@ -64,13 +74,16 @@ export async function finalize(
   cardId: string,
   id: string,
   key: string,
+  subjectType: 'card' | 'page' = 'card',
 ): Promise<Attachment | null> {
   return withContext(ctx, async (tx) => {
     // Lock the upload as well as the card: expiry sweep and concurrent finalisations cannot race.
     const uploads = await tx.raw<{ id: string }>(sql`select id from app.uploads where id = ${id}
       and user_id = ${ctx.userId} and purpose = 'card_attachment' and status = 'pending' and expires_at > now() for update`)
     if (!uploads[0]) return null
-    const cards = await tx.raw<{ id: string }>(sql`select id from app.cards where id = ${cardId}
+    const cards = await tx.raw<{
+      id: string
+    }>(sql`select id from ${subjectType === 'card' ? sql`app.cards` : sql`app.pages`} where id = ${cardId}
       and department_id = ${ctx.departmentId} and deleted_at is null for update`)
     if (!cards[0]) return null
     const rows =
@@ -83,40 +96,59 @@ export async function finalize(
     )
     tx.audit({
       action: 'work.attachment_added',
-      subjectType: 'card',
+      subjectType,
       subjectId: cardId,
       departmentId: ctx.departmentId,
       after: { attachmentId: id, name: rows[0].name, size: rows[0].size },
     })
-    tx.emit({
-      type: 'work.card.updated',
-      departmentId: ctx.departmentId,
-      payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
-    })
+    if (subjectType === 'card')
+      tx.emit({
+        type: 'work.card.updated',
+        departmentId: ctx.departmentId,
+        payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else
+      tx.emit({
+        type: 'pages.page.updated',
+        departmentId: ctx.departmentId,
+        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
     return dto(rows[0])
   })
 }
 
-export async function remove(ctx: RequestContext, cardId: string, id: string): Promise<boolean> {
+export async function remove(
+  ctx: RequestContext,
+  cardId: string,
+  id: string,
+  subjectType: 'card' | 'page' = 'card',
+): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
     }>(sql`update app.attachments set deleted_at = now(), deleted_by_user_id = ${ctx.userId}
-      where id = ${id} and department_id = ${ctx.departmentId} and subject_type = 'card'
+      where id = ${id} and department_id = ${ctx.departmentId} and subject_type = ${subjectType}
         and subject_id = ${cardId} and deleted_at is null returning id`)
     if (!rows[0]) return false
     tx.audit({
       action: 'work.attachment_removed',
-      subjectType: 'card',
+      subjectType,
       subjectId: cardId,
       departmentId: ctx.departmentId,
       after: { attachmentId: id },
     })
-    tx.emit({
-      type: 'work.card.updated',
-      departmentId: ctx.departmentId,
-      payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
-    })
+    if (subjectType === 'card')
+      tx.emit({
+        type: 'work.card.updated',
+        departmentId: ctx.departmentId,
+        payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else
+      tx.emit({
+        type: 'pages.page.updated',
+        departmentId: ctx.departmentId,
+        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
     return true
   })
 }
@@ -125,27 +157,35 @@ export async function undoRemove(
   ctx: RequestContext,
   cardId: string,
   id: string,
+  subjectType: 'card' | 'page' = 'card',
 ): Promise<boolean> {
   return withContext(ctx, async (tx) => {
     const rows = await tx.raw<{
       id: string
     }>(sql`update app.attachments set deleted_at = null, deleted_by_user_id = null
-      where id = ${id} and department_id = ${ctx.departmentId} and subject_type = 'card'
+      where id = ${id} and department_id = ${ctx.departmentId} and subject_type = ${subjectType}
         and subject_id = ${cardId} and scan_status = 'clean' and deleted_by_user_id = ${ctx.userId}
         and deleted_at >= now() - interval '30 seconds' returning id`)
     if (!rows[0]) return false
     tx.audit({
       action: 'work.attachment_restored',
-      subjectType: 'card',
+      subjectType,
       subjectId: cardId,
       departmentId: ctx.departmentId,
       after: { attachmentId: id },
     })
-    tx.emit({
-      type: 'work.card.updated',
-      departmentId: ctx.departmentId,
-      payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
-    })
+    if (subjectType === 'card')
+      tx.emit({
+        type: 'work.card.updated',
+        departmentId: ctx.departmentId,
+        payload: { cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
+    else
+      tx.emit({
+        type: 'pages.page.updated',
+        departmentId: ctx.departmentId,
+        payload: { pageId: cardId, actorUserId: ctx.userId, changes: ['attachments'] },
+      })
     return true
   })
 }

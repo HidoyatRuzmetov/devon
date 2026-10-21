@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { test, expect, type BrowserContext, type Locator, type Page } from '@playwright/test'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 import { settleCapture, waitForLoadedRoute } from './platform-capture.js'
+import { selectBoardCard } from './board-test-actions.js'
 import type { CardDependencies, CardReminder } from '../../src/features/work/api-plus.js'
 
 const examplePassword = 'Ishonchli#2026'
@@ -62,7 +63,7 @@ async function pickDependency(page: Page, panel: Locator, title: string) {
 async function selectCard(page: Page, id: string) {
   const tile = page.locator(`[data-dnd-card="${id}"]`)
   await tile.hover()
-  await tile.getByRole('checkbox').check()
+  await selectBoardCard(page, tile)
 }
 
 test('@qa dependency CRUD cancel refusal loop and blocked state', async ({ browser }) => {

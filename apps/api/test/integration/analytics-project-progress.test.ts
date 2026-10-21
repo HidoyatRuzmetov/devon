@@ -128,13 +128,13 @@ async function progress(filter = '', session = head) {
 }
 
 describe('consistent project progress in Home, Analytics and Projects', () => {
-  it('includes partial objective/subjective checklists and completed archives, excluding abandoned or deleted work', async () => {
+  it('keeps task counts separate from milestone progress', async () => {
     const projects = (await (await checkedRequest('/projects')).json()) as ProjectDTO[]
     const detail = (await (
       await checkedRequest(`/projects/${partialProject.id}`)
     ).json()) as ProjectDTO
     expect(detail).toMatchObject({ objectiveTotal: 2, objectiveDone: 1, subjectiveTotal: 1 })
-    expect(detail.progress).toBeCloseTo(7 / 12)
+    expect(detail.progress).toBe(0)
     const analytics = (await progress()).find((project) => project.id === partialProject.id)!
     expect(analytics).toMatchObject({ totalTasks: 3, doneTasks: 1 })
     expect(analytics.progress).toBeCloseTo(detail.progress)
@@ -146,7 +146,7 @@ describe('consistent project progress in Home, Analytics and Projects', () => {
     ).toEqual(analytics)
   })
 
-  it('uses milestones or explicit done status for taskless projects and reflects live edits and deletions', async () => {
+  it('uses milestones regardless of task completion or explicit project status', async () => {
     const milestoneProject = await createProject('Milestone project')
     const first = (await (
       await checkedRequest(`/projects/${milestoneProject.id}/milestones`, 'POST', {
@@ -171,12 +171,12 @@ describe('consistent project progress in Home, Analytics and Projects', () => {
     expect(initial.find((project) => project.id === emptyDone.id)).toMatchObject({
       totalTasks: 0,
       doneTasks: 0,
-      progress: 1,
+      progress: 0,
     })
     expect(initial.find((project) => project.id === emptyActive.id)?.progress).toBe(0)
     const actualTask = await createCard(milestoneProject.id)
     expect((await progress()).find((project) => project.id === milestoneProject.id)?.progress).toBe(
-      0,
+      0.5,
     )
     await checkedRequest(`/cards/${actualTask.id}`, 'DELETE')
     expect((await progress()).find((project) => project.id === milestoneProject.id)?.progress).toBe(
@@ -190,12 +190,12 @@ describe('consistent project progress in Home, Analytics and Projects', () => {
     const onlyProject = await progress('project:"Partial project"')
     expect(onlyProject).toHaveLength(1)
     expect(onlyProject[0]?.id).toBe(partialProject.id)
-    expect(onlyProject[0]?.progress).toBeCloseTo(7 / 12)
+    expect(onlyProject[0]?.progress).toBe(0)
     expect(await progress('project:"No such project"')).toEqual([])
     const active = await progress('project:"Partial project" status:active')
-    expect(active[0]).toMatchObject({ totalTasks: 2, doneTasks: 0, progress: 0.375 })
+    expect(active[0]).toMatchObject({ totalTasks: 2, doneTasks: 0, progress: 0 })
     const archived = await progress('project:"Partial project" status:archived')
-    expect(archived[0]).toMatchObject({ totalTasks: 1, doneTasks: 1, progress: 1 })
+    expect(archived[0]).toMatchObject({ totalTasks: 1, doneTasks: 1, progress: 0 })
     expect(
       await progress('project:"Partial project" assignee:@me giver:nobody unit:"Unknown"'),
     ).toEqual(onlyProject)

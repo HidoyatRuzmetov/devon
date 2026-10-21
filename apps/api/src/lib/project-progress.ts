@@ -20,20 +20,13 @@ export const EMPTY_PROJECT_PROGRESS: ProjectProgressRow = {
 }
 
 export function projectCompletion(
-  progress: ProjectProgressRow,
+  _progress: ProjectProgressRow,
   project: { status: string; milestones: readonly { doneAt: string | null }[] | null },
 ): number {
-  const total = Number(progress.objective_total) + Number(progress.subjective_total)
   const milestones = project.milestones ?? []
-  // Once tasks exist, their measured completion takes precedence over milestones that describe
-  // the same work. Milestone-only projects and explicitly completed empty projects still progress.
-  return total > 0
-    ? Number(progress.completion) / total
-    : milestones.length > 0
-      ? milestones.filter((milestone) => Boolean(milestone.doneAt)).length / milestones.length
-      : project.status === 'done'
-        ? 1
-        : 0
+  return milestones.length > 0
+    ? milestones.filter((milestone) => Boolean(milestone.doneAt)).length / milestones.length
+    : 0
 }
 
 /** One query per page, with project IDs already selected under the caller's department context.

@@ -12,6 +12,7 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 import { setTextScale, settleCapture, waitForLoadedRoute } from './platform-capture.js'
+import { selectBoardCard } from './board-test-actions.js'
 
 const catalogue = JSON.parse(
   readFileSync(
@@ -56,7 +57,7 @@ for (const environment of [
       ).toHaveValue('Synthetic focused task')
       await page.keyboard.press('Escape')
       await expect(dialog).toHaveCount(0)
-      await page.locator(`[data-dnd-card="${id}"]`).getByRole('checkbox').check()
+      await selectBoardCard(page, page.locator(`[data-dnd-card="${id}"]`))
       const toolbar = page.getByRole('toolbar', {
         name: catalogue.work.bulk.toolbarLabel,
         exact: true,

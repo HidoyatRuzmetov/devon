@@ -49,7 +49,7 @@ import { useOnline } from '../lib/use-online.js'
 import { useIsViewingAs, ViewAsBanner } from '../features/admin/view-as-banner.js'
 import { useMediaQuery } from '../lib/use-media-query.js'
 import { useThemePreference, setThemePreference, type ThemePreference } from '../lib/theme.js'
-import { navigate, RouterLink, useRoutePath } from '../lib/router.js'
+import { navigate, RouterLink, useRoutePath, useSearchParams } from '../lib/router.js'
 import {
   WORDMARK,
   SIDEBAR_COLLAPSED_STORAGE_KEY,
@@ -95,6 +95,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const t = useT()
   const locale = useLocale()
   const route = useRoutePath()
+  const search = useSearchParams()
+  const returnConversation = search.get('conversation')
+  const overviewHref =
+    returnConversation &&
+    /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(returnConversation)
+      ? `/?conversation=${returnConversation}`
+      : '/'
+  React.useLayoutEffect(() => {
+    // A new screen must not inherit the previous screen's document offset.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    document.getElementById('main')?.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [route])
   const online = useOnline()
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const isWideDesktop = useMediaQuery('(min-width: 1280px)')
@@ -493,6 +505,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main id="main" className="min-w-0 flex-1 px-4 pb-24 pt-6 sm:px-6 md:px-8 md:pb-10 md:pt-8">
           <PaletteProvider onOpen={() => changePaletteOpen(true)}>
             <PageContainer>
+              {route !== '/' && search.get('from') === 'overview' ? (
+                <RouterLink
+                  href={overviewHref}
+                  className="mb-3 inline-flex text-small text-primary"
+                >
+                  {t('portal.overview.back')}
+                </RouterLink>
+              ) : null}
               {/* UI-OVERHAUL.md §3 row 1: the route swap is a crossfade + 8 px slide -- View
                   Transitions where the browser has them, an AnimatePresence fallback otherwise. */}
               <PageTransition routeKey={route}>

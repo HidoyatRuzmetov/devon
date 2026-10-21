@@ -108,26 +108,43 @@ test('@qa uploaded photos reach project and live stacks, each hovered person is 
     const photoFace = projectPeople.getByRole('button', { name: 'Dilnoza Karimova', exact: true })
     await expect(photoFace.locator('img')).toHaveAttribute('src', expectedPhoto)
     await expect(photoFace.locator('img')).toBeVisible()
+    // Idle overlaps follow left-to-right reading order; hovering or focusing raises that person.
+    const idleFaces = await projectPeople.getByRole('button').evaluateAll((elements) =>
+      elements.map((element) => ({
+        x: element.getBoundingClientRect().x,
+        z: Number(getComputedStyle(element).zIndex),
+      })),
+    )
+    expect(idleFaces).toHaveLength(2)
+    expect(idleFaces[0]!.x).toBeLessThan(idleFaces[1]!.x)
+    expect(idleFaces[0]!.z).toBeGreaterThan(idleFaces[1]!.z)
+    const isRaised = (element: Element) => {
+      const siblings = [...element.parentElement!.querySelectorAll('button')].filter(
+        (sibling) => sibling !== element,
+      )
+      return (
+        Number(getComputedStyle(element).zIndex) >
+        Math.max(...siblings.map((sibling) => Number(getComputedStyle(sibling).zIndex)))
+      )
+    }
     await photoFace.hover()
     await expect(
       headPage.getByRole('tooltip', { name: 'Dilnoza Karimova', exact: true }),
     ).toBeVisible()
-    await expect
-      .poll(() => photoFace.evaluate((element) => getComputedStyle(element).zIndex))
-      .toBe('30')
+    await expect.poll(() => photoFace.evaluate(isRaised)).toBe(true)
     const headFace = projectPeople.getByRole('button', { name: 'Test Head', exact: true })
     await headFace.hover()
     await expect(headPage.getByRole('tooltip', { name: 'Test Head', exact: true })).toBeVisible()
-    await expect
-      .poll(() => headFace.evaluate((element) => getComputedStyle(element).zIndex))
-      .toBe('30')
+    await expect.poll(() => headFace.evaluate(isRaised)).toBe(true)
     const output = join(import.meta.dirname, '../../../../artifacts/qa/2026-10/avatar-interactions')
     await mkdir(output, { recursive: true })
     await headPage.screenshot({ path: join(output, 'project-person-hover.png') })
+    await headPage.getByRole('heading', { name: 'Group projects', exact: true }).hover()
     await photoFace.focus()
     await expect(
       headPage.getByRole('tooltip', { name: 'Dilnoza Karimova', exact: true }),
     ).toBeVisible()
+    await expect.poll(() => photoFace.evaluate(isRaised)).toBe(true)
     await headPage.emulateMedia({ reducedMotion: 'reduce' })
     await expect
       .poll(() =>

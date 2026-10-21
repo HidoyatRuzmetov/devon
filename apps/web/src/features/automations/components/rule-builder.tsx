@@ -8,6 +8,7 @@
 // guard would stop it, but refusing it up front is kinder than a rule that silently never runs
 // twice.)
 import * as React from 'react'
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import { Plus, Trash2 } from 'lucide-react'
 import {
   ACTIONS_FOR_TRIGGER,
@@ -239,7 +240,7 @@ function ActionRow({
             <Input
               id={`${id}-title`}
               value={action.title ?? ''}
-              maxLength={300}
+              maxLength={WORK_TITLE_MAX}
               onChange={(e) => onChange({ ...action, title: e.target.value })}
             />
           </Field>

@@ -56,6 +56,7 @@ import {
 import { MyFieldsSection } from '../fields/components/my-fields-section.js'
 import { AvatarPicker } from './avatar-picker.js'
 import { describeUserAgent } from './device-label.js'
+import { ProfessionalProfileSection } from './professional-profile-section.js'
 import { ProfileSection } from './profile-section.js'
 import { AppearanceSection } from './appearance-section.js'
 import { SettingsNavigation } from './settings-navigation.js'
@@ -796,6 +797,7 @@ const SUB_NAV_GROUPS: ReadonlyArray<{ headingKey: string; items: readonly SubNav
   {
     headingKey: 'accounts.settings.profile',
     items: [
+      { id: 'section-professional', labelKey: 'portal.profile.title', icon: ClipboardList },
       { id: 'section-profile', labelKey: 'profileEdit.heading', icon: ClipboardList },
       { id: 'section-photo', labelKey: 'accounts.photo.title', icon: ImageIcon },
       { id: 'section-appearance', labelKey: 'accounts.settings.appearance', icon: Palette },
@@ -891,6 +893,7 @@ export default function AccountSettingsScreen() {
         <SettingsSubNav className="lg:hidden" flat />
         <div className="flex min-w-0 flex-1 flex-col gap-6 [&_[id]]:scroll-mt-20">
           <ProfileSection />
+          <ProfessionalProfileSection />
           <PhotoSection />
           <AppearanceSection />
           <MyFieldsSection />

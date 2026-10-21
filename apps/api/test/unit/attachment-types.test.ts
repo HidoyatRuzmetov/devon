@@ -19,7 +19,8 @@ describe('task attachment validation', () => {
   it('sanitizes paths and header-control characters without using filenames as storage keys', () => {
     expect(safeAttachmentName('../report\r\n".PDF')).toBe('_report___.PDF')
     expect(attachmentMime('REPORT.PDF')).toBe('application/pdf')
-    expect(attachmentMime('invoice.pdf.exe')).toBeNull()
+    expect(attachmentMime('invoice.pdf.exe')).toBe('application/octet-stream')
+    expect(attachmentMime('workshop.mp4')).toBe('application/octet-stream')
   })
   it('rejects renamed executables, malformed UTF-8, binary text and arbitrary ZIPs', () => {
     expect(validAttachmentBytes('report.pdf', Buffer.from('<script>bad</script>'))).toBe(false)
@@ -27,5 +28,15 @@ describe('task attachment validation', () => {
     expect(validAttachmentBytes('report.csv', Buffer.from([65, 0, 66]))).toBe(false)
     expect(validAttachmentBytes('report.docx', Buffer.from('PK\x03\x04arbitrary zip'))).toBe(false)
     expect(validAttachmentBytes('report.txt', Buffer.from('Oʻzbek\nРусский\ttext'))).toBe(true)
+  })
+  it('validates text across UTF-8 chunk boundaries without expanding the whole file', () => {
+    const prefix = Buffer.alloc(65535, 65)
+    expect(validAttachmentBytes('long.txt', Buffer.concat([prefix, Buffer.from('Ўзбек')]))).toBe(
+      true,
+    )
+    expect(validAttachmentBytes('long.txt', Buffer.concat([prefix, Buffer.from([0xd0])]))).toBe(
+      false,
+    )
+    expect(validAttachmentBytes('long.txt', Buffer.concat([prefix, Buffer.from([0])]))).toBe(false)
   })
 })

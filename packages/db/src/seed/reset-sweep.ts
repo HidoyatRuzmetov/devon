@@ -42,6 +42,7 @@ export type DemoScope = {
  * department clears it.
  */
 export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: string }[] = [
+  { table: 'app.file_upload_approvals' },
   // Events and everything hanging off one.
   { table: 'app.event_telegram_deliveries' },
   { table: 'app.poll_votes' },
@@ -89,6 +90,7 @@ export const DEPARTMENT_SWEEP_ORDER: readonly { table: string; ownerColumn?: str
   // Owner-only on write (owner_user_id); swept once per account -- see sweepDepartmentResidue.
   { table: 'app.analytics_saved_filters', ownerColumn: 'owner_user_id' },
   { table: 'app.analytics_daily' },
+  { table: 'app.ai_conversations', ownerColumn: 'owner_user_id' },
   { table: 'app.ai_traces' },
   { table: 'app.ai_search_documents' },
   { table: 'app.ai_briefings' },

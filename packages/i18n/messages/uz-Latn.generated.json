@@ -1616,6 +1616,7 @@
     "cancelled": "Yuklash bekor qilindi. Fayl biriktirilmadi.",
     "scanning": "Fayl tekshirilmoqda…",
     "scanUnavailable": "Faylni tekshirish vaqtincha ishlamayapti. Yuklashni tugatish uchun qayta urinib koʻring.",
+    "uploadUnavailable": "Yuklash xizmati vaqtincha band. Tanlangan faylni yuklash uchun qayta urinib koʻring.",
     "tooLarge": "Fayl server hajm chegarasidan katta. Kichikroq fayl tanlang.",
     "infected": "Faylda zararli dastur aniqlandi va u rad etildi.",
     "error": "Amalni bajarib boʻlmadi. Fayl turini tekshirib, qayta urinib koʻring."
@@ -2363,6 +2364,34 @@
       "invalid": "Andoza va kartochka nomini kiriting, roʻyxat cheklovlariga rioya qiling.",
       "saveFailed": "Andoza saqlanmadi. Kiritganlaringiz saqlanib qoldi. «Saqlash»ni yana bosing.",
       "saved": "Andoza saqlandi"
+    }
+  },
+  "boardRefinement": {
+    "projectTask": "Loyiha vazifasi",
+    "standaloneTask": "Alohida vazifa",
+    "sort": {
+      "label": "Kartochkalar tartibi: {order}",
+      "manual": "Qoʻlda",
+      "attention": "Eʼtibor",
+      "manualOption": "Qoʻlda tartiblash",
+      "attentionOption": "Eʼtibor talab qiladiganlar avval",
+      "manualHelp": "Saqlangan tartibingiz. Kartochkalarni sudrab joylashtiring; diqqatga mahkamlangan vazifalar tepada qoladi.",
+      "attentionHelp": "Avval mahkamlangan, soʻng muddati oʻtgan vazifalar, ustuvorlik va eng yaqin muddat. Kartochka koʻchirilsa, qoʻlda tartiblash yoqiladi.",
+      "manualAfterMove": "Tanlangan joyni saqlash uchun qoʻlda tartiblash yoqildi."
+    },
+    "guide": {
+      "title": "Doska belgilari va koʻrinishi",
+      "units": "Ustun ranglari boʻlimlarni bildiradi",
+      "indicators": "Holat belgi va matn bilan, ustuvorlik bayroqcha bilan koʻrsatiladi. Muddat faqat sanada ajratiladi; muddati oʻtgan sana nuqtali chiziq bilan belgilanadi."
+    },
+    "mobile": {
+      "view": "Koʻrinish: {view}",
+      "person": "Xodimni tanlash",
+      "position": "{total} xodimdan {current}-si"
+    },
+    "ai": {
+      "add": "AI bilan qoʻshish",
+      "unavailable": "Bu boshqarmada AI orqali kartochka yaratish mavjud emas."
     }
   },
   "calendar": {
@@ -4210,6 +4239,62 @@
       }
     }
   },
+  "overviewChat": {
+    "title": "Boshqarma yordamchisi",
+    "assistant": "Boshqarma yordamchisi",
+    "you": "Siz",
+    "back": "Umumiy koʻrinishga qaytish",
+    "continue": "Suhbatni davom ettirish",
+    "history": "Saqlangan suhbatlar",
+    "new": "Yangi suhbat",
+    "input": "Boshqarmangiz haqida soʻrang",
+    "placeholder": "Boshqarmangiz haqida savol bering…",
+    "followUp": "Aniqlashtiruvchi savol bering…",
+    "send": "Xabar yuborish",
+    "stop": "Javobni toʻxtatish",
+    "hint": "Loyihalar, xodimlar yoki eʼtibor talab qiladigan ishlar haqida soʻrang.",
+    "saved": "Suhbat saqlanadi. Keyingi savollar oldingi mazmunni hisobga oladi.",
+    "offline": "Internetga ulanmagansiz. Qoralama shu yerda qoladi.",
+    "thinking": "Boshqarma maʼlumotlarini koʻrib chiqyapman…",
+    "welcome": "Nimani bilishni istaysiz?",
+    "welcomeHint": "Ishlar holati, ustuvorliklar yoki jamoa haqida soʻrang. Javoblar sizga ochiq boʻlgan boshqarma maʼlumotlariga asoslanadi.",
+    "updated": "Qisqa axborot · {date}",
+    "noHistory": "Saqlangan suhbatlaringiz shu yerda koʻrinadi.",
+    "loadMore": "Oldingi suhbatlarni yuklash",
+    "messages": "Suhbat xabarlari",
+    "sources": "Manbalar",
+    "latest": "Oxirgi xabar",
+    "context": "{count} ta yozuv asosida · {date}",
+    "contextLimited": "{total} ta yozuvdan {count} tasi asosida · {date}",
+    "failed": "Javobni tugatib boʻlmadi. Savolingiz saqlandi.",
+    "cancelled": "Javob toʻxtatildi.",
+    "retry": "Qayta urinish",
+    "loadFailed": "Suhbatni yuklab boʻlmadi.",
+    "noUpdates": "Yaqinda yakunlangan ishlar yoʻq.",
+    "noRisks": "Ushbu axborotda xavflar ajratilmagan.",
+    "head": "Boshqarma boshligʻi",
+    "member": "Aʼzo",
+    "allPeople": "Barcha {count} kishini koʻrish",
+    "createFailed": "Suhbatni boshlab boʻlmadi. Qoralamangiz shu yerda.",
+    "requestFailed": "Soʻrovni tasdiqlab boʻlmadi. Suhbatni tekshiring yoki qayta urinib koʻring.",
+    "errors": {
+      "contextLimit": "Suhbat mazmuni chegaraga yetdi. Tarix saqlangan; davom etish uchun yangi suhbat boshlang.",
+      "budget": "Oylik AI byudjeti tugadi. Administrator byudjetni koʻrib chiqishi mumkin.",
+      "disabled": "AI suhbatlari oʻchirilgan. Administratordan yoqishni soʻrang.",
+      "unavailable": "AI xizmati ishlamayapti. Savolingiz saqlangan; birozdan soʻng qayta urinib koʻring.",
+      "timeout": "Javob kutish vaqti tugadi. Savolingiz saqlangan; qayta urinib koʻring.",
+      "interrupted": "Javob uzilib qoldi. Savolingiz saqlangan; qayta urinib koʻring."
+    },
+    "contextOne": "{count} ta yozuv asosida · {date}",
+    "contextLimitedOne": "{total} ta yozuvdan {count} tasi asosida · {date}",
+    "placeholderShort": "Savol bering…",
+    "metrics": "Boshqarma koʻrsatkichlari",
+    "planned": "Reja: {count}",
+    "filledShort": "Shtat toʻliq",
+    "planStaffing": "Shtat rejasini kiriting",
+    "onTrack": "{percent}% jadvalda",
+    "due": "{count} muddat"
+  },
   "people": {
     "table": {
       "title": "Xodimlar jadvali",
@@ -4649,6 +4734,93 @@
       }
     }
   },
+  "portal": {
+    "stage": {
+      "todo": "Bajarish kerak",
+      "in_progress": "Jarayonda",
+      "start": "Ishni boshlash",
+      "reset": "Rejaga qaytarish"
+    },
+    "staffing": {
+      "expected": "Rejalashtirilgan xodimlar",
+      "unset": "Belgilanmagan"
+    },
+    "profile": {
+      "title": "Kasbiy profil",
+      "description": "Tavsif",
+      "headline": "Qisqacha maʼlumot",
+      "phone": "Ish telefoni",
+      "location": "Joylashuv",
+      "about": "Men haqimda",
+      "skills": "Koʻnikmalar",
+      "languages": "Tillar",
+      "commaHint": "Yozuvlarni vergul bilan ajrating.",
+      "education": "Taʼlim",
+      "experience": "Ish tajribasi",
+      "certifications": "Sertifikatlar",
+      "links": "Aloqa havolalari",
+      "institution": "Taʼlim muassasasi",
+      "degree": "Daraja / bosqich",
+      "field": "Mutaxassislik",
+      "startYear": "Boshlanish yili",
+      "endYear": "Tugash / kutilayotgan yil",
+      "current": "Hozirgi ish joyi",
+      "studying": "Hozir oʻqiyapman",
+      "organization": "Tashkilot",
+      "role": "Lavozim",
+      "name": "Nomi",
+      "issuer": "Bergan tashkilot",
+      "year": "Yil",
+      "label": "Yorliq",
+      "url": "Sayt manzili",
+      "remove": "Yozuvni olib tashlash",
+      "add": "Yozuv qoʻshish",
+      "saveError": "Saqlanmadi. Maydon va sanalarni tekshiring. Boshqa oynada oʻzgartirilgan boʻlsa, sahifani yangilang.",
+      "empty": "Hali kiritilmagan",
+      "expected": "Kutilmoqda",
+      "present": "Hozirgacha",
+      "contact": "Aloqa",
+      "intro": "Hamkasblar bilan ixtiyoriy ulashiladigan maʼlumotlar. Maxfiy maʼlumotlarni bu ish profiliga kiritmang."
+    },
+    "overview": {
+      "workforce": "Jami xodimlar",
+      "units": "Boʻlimlar",
+      "projects": "Guruh loyihalari",
+      "tasks": "Shaxsiy vazifalar",
+      "filled": "Barcha oʻrinlar toʻldirilgan",
+      "positions": "{count} rejalashtirilgan oʻrin",
+      "setTargets": "Tuzilmada shtat sonini belgilang",
+      "unitsHint": "Tuzilma va shtat",
+      "track": "{percent}% oʻz vaqtida · {count} yaqin 7 kunda yoki kechikkan",
+      "staffing": "Boʻlimlar boʻyicha shtat",
+      "staffed": "{expected} oʻrindan {actual} tasi band",
+      "deadlines": "Yaqin 30 kundagi muddatlar",
+      "noDeadlines": "Yaqin muddat yoki tadbir yoʻq.",
+      "calendar": "Taqvimni ochish",
+      "back": "← Umumiy koʻrinishga qaytish",
+      "readBriefing": "To‘liq xulosa",
+      "staffingTab": "Xodimlar",
+      "deadlinesTab": "Muddatlar"
+    },
+    "files": {
+      "hint": "Istalgan fayl turi. Fayllar tekshiriladi va yuklab olinadi, ishga tushirilmaydi. 100 MB dan kattasi uchun superadmin ruxsati kerak.",
+      "requested": "Ruxsat soʻraldi. Superadmin tasdiqlagach, yuklash uchun faylni yana tanlang.",
+      "queue": "Katta fayllarga ruxsat",
+      "queueHint": "100 MB dan katta fayllar. Tasdiqdan keyin ham zararli dastur tekshiruvi bajariladi.",
+      "empty": "Kutilayotgan fayllar yoʻq.",
+      "approve": "Tasdiqlash",
+      "reject": "Rad etish",
+      "pending": "Superadmin tasdigʻi kutilmoqda.",
+      "approved": "Tasdiqlandi — yuklash uchun oʻsha faylni qayta tanlang.",
+      "rejected": "Yuklash soʻrovi rad etildi."
+    },
+    "cards": {
+      "actions": "Kartochka amallari",
+      "select": "Kartochkani tanlash",
+      "deselect": "Tanlovni bekor qilish",
+      "titleLimit": "Ko‘pi bilan {count} belgi. Tafsilotlarni tavsifga yozing."
+    }
+  },
   "profileEdit": {
     "heading": "Profil",
     "title": "Lavozim",
@@ -4676,7 +4848,7 @@
     "conflict": "Loyihani boshqa ishtirokchi yangiladi. Oynani yoping, sahifani yangilang va qayta urinib koʻring.",
     "error": "Saqlab boʻlmadi. Ishtirokchilarni tekshirib, qayta urinib koʻring.",
     "convert": "Guruh yaratish",
-    "convertHint": "Hamkasblarni tanlang. Bu kartochka yangi guruh loyihasining birinchi umumiy kartochkasi boʻladi. Izohlar, nazorat roʻyxati va fayllar saqlanadi. Loyiha va ishtirokchilarni keyin ham tahrirlash mumkin.",
+    "convertHint": "Hamkasblarni tanlang. Bu kartochka yangi guruh loyihasida joriy ijrochining shaxsiy kartochkasi boʻladi. Izohlar, nazorat roʻyxati va fayllar saqlanadi. Loyiha va ishtirokchilarni keyin ham tahrirlash mumkin.",
     "converted": "Guruh loyihasi yaratildi"
   },
   "projectLifecycle": {

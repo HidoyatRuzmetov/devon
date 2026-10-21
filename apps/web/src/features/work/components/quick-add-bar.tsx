@@ -8,10 +8,13 @@
 // `compact` form with a `defaultAssigneeUserId`, is the board's inline "+ Add card" at a column's
 // foot.
 import * as React from 'react'
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import { CalendarClock, FileStack, Plus, UserRound } from 'lucide-react'
 import { useT, useLocale, formatDate } from '@devon/i18n'
 import {
   Button,
+  Dialog,
+  DialogContent,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -69,6 +72,9 @@ export interface QuickAddBarProps {
   /** The board's per-column footer: a smaller, icon-only trigger with a shorter placeholder, instead
    * of the top quick-add bar's full grammar hint. */
   compact?: boolean
+  /** The same reviewed parse flow, opened from a column's AI action. */
+  aiComposer?: boolean
+  initialValue?: string
   onCreated?: () => void
 }
 
@@ -76,11 +82,16 @@ export function QuickAddBar({
   members,
   defaultAssigneeUserId = null,
   compact = false,
+  aiComposer = false,
+  initialValue = '',
   onCreated,
 }: QuickAddBarProps) {
   const t = useT()
   const locale = useLocale()
-  const [value, setValue] = React.useState('')
+  const [value, setValue] = React.useState(initialValue)
+  const [aiOpen, setAiOpen] = React.useState(false)
+  const aiTriggerRef = React.useRef<HTMLButtonElement>(null)
+  const aiDescriptionId = React.useId()
   const [aiResult, setAiResult] = React.useState<QuickAddOutput | null>(null)
   const [aiMeta, setAiMeta] = React.useState<RunMeta | null>(null)
   // N-5: the duplicate check runs *after* a successful parse, on the parsed title -- never on every
@@ -127,6 +138,10 @@ export function QuickAddBar({
     if (!parsed || parsed.title.trim().length === 0) return
     // A colon can be ordinary punctuation. Never discard an unresolved prefix as a person's name.
     const title = parsed.assigneeToken && !resolvedAssignee ? value.trim() : parsed.title
+    if (title.length > WORK_TITLE_MAX) {
+      toast(t('portal.cards.titleLimit', { count: WORK_TITLE_MAX }))
+      return
+    }
     try {
       await createCard.mutateAsync({
         title,
@@ -143,7 +158,7 @@ export function QuickAddBar({
   }
 
   function runAiParse() {
-    if (!value.trim()) return
+    if (!value.trim() || !aiEnabled || parseAi.isPending) return
     setAiResult(null)
     setDuplicates(null)
     parseAi.mutate(
@@ -191,6 +206,10 @@ export function QuickAddBar({
 
   async function acceptAi() {
     if (!aiResult) return
+    if (aiResult.title.length > WORK_TITLE_MAX) {
+      toast(t('portal.cards.titleLimit', { count: WORK_TITLE_MAX }))
+      return
+    }
     try {
       await createCard.mutateAsync({
         title: aiResult.title,
@@ -218,27 +237,30 @@ export function QuickAddBar({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        {compact ? null : (
+        {compact || aiComposer ? null : (
           <Plus className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         )}
         <Input
           value={value}
+          maxLength={512}
+          title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
           onChange={(e) => {
             setValue(e.target.value)
             setAiResult(null)
           }}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
               e.preventDefault()
-              void submit()
+              if (aiComposer) runAiParse()
+              else void submit()
             }
           }}
           placeholder={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
           aria-label={compact ? t('work.board.addCard') : t('work.quickAdd.placeholder')}
           disabled={createCard.isPending}
-          className={compact ? 'h-9 text-small' : undefined}
+          className={compact ? 'h-11 min-w-0 text-small md:h-9' : undefined}
         />
-        {!compact ? (
+        {!compact && !aiComposer ? (
           <Button
             size="sm"
             onClick={() => void submit()}
@@ -248,7 +270,7 @@ export function QuickAddBar({
             {t('work.actions.create')}
           </Button>
         ) : null}
-        {cardTemplates.length > 0 ? (
+        {!aiComposer && cardTemplates.length > 0 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <IconButton
@@ -292,17 +314,30 @@ export function QuickAddBar({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
-        {aiEnabled ? (
-          <SparkleButton
-            aria-label={t('work.quickAdd.aiParse')}
-            size={compact ? 'sm' : 'md'}
-            loading={parseAi.isPending}
-            disabled={!value.trim() || createCard.isPending}
-            onClick={runAiParse}
-          />
+        {aiEnabled || compact || aiComposer ? (
+          <span
+            className="shrink-0"
+            title={t(aiEnabled ? 'boardRefinement.ai.add' : 'boardRefinement.ai.unavailable')}
+          >
+            <SparkleButton
+              ref={aiTriggerRef}
+              aria-label={t(compact ? 'boardRefinement.ai.add' : 'work.quickAdd.aiParse')}
+              {...(aiComposer ? { label: t('work.quickAdd.aiParse') } : {})}
+              className={compact ? 'size-11 md:size-9' : undefined}
+              size={compact ? 'sm' : 'md'}
+              loading={parseAi.isPending}
+              disabled={!aiEnabled || (!compact && !value.trim()) || createCard.isPending}
+              onClick={compact ? () => setAiOpen(true) : runAiParse}
+            />
+          </span>
         ) : null}
       </div>
 
+      {(parsed?.title.length ?? 0) > WORK_TITLE_MAX ? (
+        <p role="alert" className="text-caption text-destructive">
+          {t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+        </p>
+      ) : null}
       {!aiResult && !parseAi.isPending && parsed && (parsed.assigneeToken || parsed.dueAt) ? (
         <div className="flex flex-wrap items-center gap-3 pl-6 text-caption text-muted-foreground">
           {parsed.assigneeToken ? (
@@ -379,6 +414,42 @@ export function QuickAddBar({
             </div>
           ) : null}
         </AiResultPanel>
+      ) : null}
+      {compact ? (
+        <Dialog open={aiOpen} onOpenChange={setAiOpen}>
+          {aiOpen ? (
+            <DialogContent
+              title={t('boardRefinement.ai.add')}
+              className="max-w-xl"
+              aria-describedby={aiDescriptionId}
+              onCloseAutoFocus={(event) => {
+                event.preventDefault()
+                aiTriggerRef.current?.focus()
+              }}
+            >
+              <p className="text-small text-muted-foreground">
+                {t('work.field.assignee')}:{' '}
+                {defaultAssigneeUserId && memberById.has(defaultAssigneeUserId)
+                  ? fullName(memberById.get(defaultAssigneeUserId)!)
+                  : t('work.board.unassigned')}
+              </p>
+              <p id={aiDescriptionId} className="mb-3 text-small text-muted-foreground">
+                {t('work.quickAdd.dialogHint')}
+              </p>
+              <QuickAddBar
+                members={members}
+                defaultAssigneeUserId={defaultAssigneeUserId}
+                aiComposer
+                initialValue={value}
+                onCreated={() => {
+                  setAiOpen(false)
+                  setValue('')
+                  onCreated?.()
+                }}
+              />
+            </DialogContent>
+          ) : null}
+        </Dialog>
       ) : null}
     </div>
   )

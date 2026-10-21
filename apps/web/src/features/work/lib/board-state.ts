@@ -27,6 +27,27 @@ export function sortBoardCards(cards: readonly Card[]): Card[] {
   return focusFirst(ordered)
 }
 
+export type BoardCardOrder = 'manual' | 'attention'
+
+/** A personal viewing order, never a rewrite of the shared drag ranks. Stable ties retain the
+ * current array order, including in-flight optimistic moves. Focus pins remain first in both views. */
+export function orderBoardCards(cards: readonly Card[], order: BoardCardOrder): Card[] {
+  if (order === 'manual') return [...cards]
+  const priority = { urgent: 4, high: 3, medium: 2, low: 1, none: 0 }
+  return focusFirst(
+    [...cards].sort((a, b) => {
+      const overdue = Number(b.risk === 'overdue') - Number(a.risk === 'overdue')
+      if (overdue) return overdue
+      const importance = priority[b.priority] - priority[a.priority]
+      if (importance) return importance
+      const due =
+        (a.dueAt ? Date.parse(a.dueAt) : Number.MAX_SAFE_INTEGER) -
+        (b.dueAt ? Date.parse(b.dueAt) : Number.MAX_SAFE_INTEGER)
+      return Number.isNaN(due) ? 0 : due
+    }),
+  )
+}
+
 /** Change the actual source/destination arrays immediately. Patching only assigneeUserId left the
  * card in its old column until a refetch; rolling back a whole board also undid unrelated moves. */
 export function moveCardOnBoard(board: Board, move: BoardMove): Board {

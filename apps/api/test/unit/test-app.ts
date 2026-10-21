@@ -37,6 +37,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     STORAGE_S3_BUCKET: 'devon',
     STORAGE_S3_FORCE_PATH_STYLE: true,
     STORAGE_MAX_UPLOAD_BYTES: 5 * 1024 * 1024,
+    STORAGE_MAX_ATTACHMENT_BYTES: 1024 * 1024 * 1024,
     STORAGE_TIMEOUT_MS: 10_000,
     // Unit tests never run a clamd; the infected path is exercised through `BuildAppOptions.storage`
     // (a fake scanner), see `test/unit/accounts/avatar.test.ts`.

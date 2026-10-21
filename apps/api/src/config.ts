@@ -66,6 +66,12 @@ const configSchema = z
       .int()
       .positive()
       .default(5 * 1024 * 1024),
+    STORAGE_MAX_ATTACHMENT_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(1024 * 1024 * 1024)
+      .default(1024 * 1024 * 1024),
     STORAGE_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
 
     // --- ClamAV (TECH-SPEC §6 "ClamAV before visibility"; HARDENING 1.8) -----------------------
@@ -76,7 +82,7 @@ const configSchema = z
     CLAMAV_MODE: z.enum(['clamd', 'off']).default('off'),
     CLAMAV_HOST: z.string().min(1).default('127.0.0.1'),
     CLAMAV_PORT: z.coerce.number().int().positive().default(3310),
-    CLAMAV_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
+    CLAMAV_TIMEOUT_MS: z.coerce.number().int().positive().default(120_000),
 
     // --- request body/JSON/AI-input limits (H7.4) ----------------------------------------------
     // Fastify's own undocumented-but-real default (`bodyLimit`) is already 1 MiB, so this does not

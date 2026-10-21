@@ -464,6 +464,31 @@ export async function resolveEvent(input: {
   return withContext(systemContext(input.departmentId), async (tx) => {
     let part: Partial_ | null
     switch (input.source) {
+      case 'file_upload_approval': {
+        const [row] = await tx.raw<{
+          id: string
+          name: string
+          user_id: string
+          subject_type: string
+          subject_id: string
+          status: string
+        }>(sql`
+          select id,name,user_id,subject_type,subject_id,status from app.file_upload_approvals where id=${pickString(payload, 'approvalId')}`)
+        part = row
+          ? {
+              subjectId: row.id,
+              subjectTitle: row.name,
+              at: null,
+              extra: {
+                subjectType: row.subject_type,
+                subjectId: row.subject_id,
+                status: row.status,
+              },
+              byRule: { target_user: [row.user_id] },
+            }
+          : null
+        break
+      }
       case 'card':
         part = await loadCard(tx, payload, false)
         break

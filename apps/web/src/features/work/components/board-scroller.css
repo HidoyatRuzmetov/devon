@@ -26,3 +26,66 @@
 .devon-board-scroller::-webkit-scrollbar-thumb:hover {
   background: var(--color-muted-foreground);
 }
+
+/* A common surface groups people by unit. Task origin has its own opaque card surface, so the
+   categorical column tint never changes what a project task's colour means. */
+.devon-board-column {
+  background: color-mix(in srgb, var(--work-unit-color) 9%, var(--color-background));
+  border-top: 3px solid color-mix(in srgb, var(--work-unit-color) 75%, var(--color-border));
+}
+
+.devon-board-column-header {
+  background: color-mix(in srgb, var(--work-unit-color) 12%, var(--color-card));
+}
+
+/* Phones browse people as full-width pages. Each page keeps its own vertical position while the
+   native horizontal swipe snaps to the next person; desktop retains its shared two-axis canvas. */
+@media (max-width: 767px) {
+  .devon-board-scroller {
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0;
+    padding-bottom: 0;
+    scrollbar-width: none;
+  }
+
+  .devon-board-scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .devon-board-track {
+    height: 100%;
+    min-height: 0;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .devon-board-group,
+  .devon-board-group-columns {
+    display: contents;
+  }
+
+  .devon-board-column {
+    width: var(--work-mobile-column-width, calc(100vw - 2rem));
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    scrollbar-width: thin;
+  }
+
+  .devon-board-column-header {
+    padding-top: 8px;
+    gap: 6px;
+  }
+}
+
+@media (forced-colors: active) {
+  .devon-board-column,
+  .devon-board-column-header {
+    background: Canvas;
+    border-color: CanvasText;
+  }
+}

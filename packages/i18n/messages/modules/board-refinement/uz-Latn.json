@@ -1,0 +1,30 @@
+{
+  "boardRefinement": {
+    "projectTask": "Loyiha vazifasi",
+    "standaloneTask": "Alohida vazifa",
+    "sort": {
+      "label": "Kartochkalar tartibi: {order}",
+      "manual": "Qoʻlda",
+      "attention": "Eʼtibor",
+      "manualOption": "Qoʻlda tartiblash",
+      "attentionOption": "Eʼtibor talab qiladiganlar avval",
+      "manualHelp": "Saqlangan tartibingiz. Kartochkalarni sudrab joylashtiring; diqqatga mahkamlangan vazifalar tepada qoladi.",
+      "attentionHelp": "Avval mahkamlangan, soʻng muddati oʻtgan vazifalar, ustuvorlik va eng yaqin muddat. Kartochka koʻchirilsa, qoʻlda tartiblash yoqiladi.",
+      "manualAfterMove": "Tanlangan joyni saqlash uchun qoʻlda tartiblash yoqildi."
+    },
+    "guide": {
+      "title": "Doska belgilari va koʻrinishi",
+      "units": "Ustun ranglari boʻlimlarni bildiradi",
+      "indicators": "Holat belgi va matn bilan, ustuvorlik bayroqcha bilan koʻrsatiladi. Muddat faqat sanada ajratiladi; muddati oʻtgan sana nuqtali chiziq bilan belgilanadi."
+    },
+    "mobile": {
+      "view": "Koʻrinish: {view}",
+      "person": "Xodimni tanlash",
+      "position": "{total} xodimdan {current}-si"
+    },
+    "ai": {
+      "add": "AI bilan qoʻshish",
+      "unavailable": "Bu boshqarmada AI orqali kartochka yaratish mavjud emas."
+    }
+  }
+}

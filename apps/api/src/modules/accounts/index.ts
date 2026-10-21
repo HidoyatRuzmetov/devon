@@ -3,6 +3,7 @@
 // this module adds (registered in `plugins/authorize.ts`'s `PUBLIC_ROUTES`, MODULE-GUIDE.md's one
 // sanctioned public-route edit); everything else is `own_account` (or, for the admin reset,
 // `instance`).
+import { professionalProfileRecordSchema } from '@devon/contracts'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { sendProblem } from '../../lib/problem-reply.js'
@@ -497,6 +498,40 @@ const accountsRoutes: FastifyPluginAsyncZod = async (app) => {
     async (req, reply) => {
       const scheduledFor = await repo.getPendingDeletion(req.actor!.userId)
       return reply.send(scheduledFor ? { scheduledFor: scheduledFor.toISOString() } : null)
+    },
+  )
+
+  app.get(
+    '/professional-profile',
+    {
+      config: { permission: { action: 'read', subject: (r) => ownAccount(r.actor?.userId ?? '') } },
+      schema: { response: { 200: professionalProfileRecordSchema } },
+    },
+    async (req, reply) => {
+      const record = await repo.getProfessionalProfile(req.actor!.userId, auditCtx(req))
+      return record ? reply.send(record) : sendProblem(reply, 'not_found')
+    },
+  )
+  app.put(
+    '/professional-profile',
+    {
+      config: {
+        permission: { action: 'update', subject: (r) => ownAccount(r.actor?.userId ?? '') },
+      },
+      schema: {
+        body: professionalProfileRecordSchema,
+        response: { 200: professionalProfileRecordSchema },
+      },
+    },
+    async (req, reply) => {
+      if (!checkCsrf(req, reply)) return
+      const record = await repo.saveProfessionalProfile(
+        req.actor!.userId,
+        req.body.profile,
+        req.body.version,
+        auditCtx(req),
+      )
+      return record ? reply.send(record) : sendProblem(reply, 'conflict')
     },
   )
 

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import { settleCapture } from './platform-capture.js'
 import {
   authedPatch,
@@ -36,7 +37,10 @@ test('@flow card title resizing is stable and selectable label text remains read
     const me = (await (await head.request.get('/api/v1/me')).json()) as { user: { id: string } }
     const cardResponse = await authedPost(head, '/api/v1/cards', {
       title:
-        'Hamkor tashkilotlar bilan ochiq maʼlumotlar rejasini kelishish va yakuniy jadvalni tayyorlash — barcha hamkorlar uchun yangilangan reja',
+        'Hamkor tashkilotlar bilan ochiq maʼlumotlar rejasini kelishish va yakuniy jadvalni tayyorlash — barcha hamkorlar uchun yangilangan reja'.slice(
+          0,
+          WORK_TITLE_MAX,
+        ),
       assigneeUserId: me.user.id,
     })
     expect(cardResponse.status()).toBe(201)
@@ -83,6 +87,8 @@ test('@flow card title resizing is stable and selectable label text remains read
       await page.goto(`/work/card?id=${card.id}`)
       const title = page.getByRole('textbox', { name: 'Title', exact: true })
       await expect(title).toBeVisible()
+      await expect(title).toHaveAttribute('maxlength', String(WORK_TITLE_MAX))
+      expect((await title.inputValue()).length).toBe(WORK_TITLE_MAX)
       const widths = [1440, 768, 390, 320, 768, 1440, 390]
       // Resize the real containing page, including widening after a multiline title has grown.
       for (let widthIndex = 0; widthIndex < widths.length; widthIndex++) {

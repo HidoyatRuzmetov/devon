@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 // Zod schemas for the projects module (TECH-SPEC §3.2, EPIC-005).
 import { z } from 'zod'
 
@@ -37,7 +38,7 @@ export type ProjectDTO = z.infer<typeof projectSchema>
 export const projectListSchema = z.array(projectSchema)
 
 export const createProjectBodySchema = z.object({
-  title: z.string().trim().min(1).max(200),
+  title: z.string().trim().min(1).max(WORK_TITLE_MAX),
   description: z.string().max(20000).optional(),
   colour: z
     .string()
@@ -49,13 +50,18 @@ export const createProjectBodySchema = z.object({
   startOn: dateSchema.optional(),
   targetOn: dateSchema.optional(),
   milestones: z
-    .array(z.object({ title: z.string().min(1), dueOn: z.string().nullable() }))
+    .array(
+      z.object({
+        title: z.string().trim().min(1).max(WORK_TITLE_MAX),
+        dueOn: z.string().nullable(),
+      }),
+    )
     .optional(),
 })
 
 export const patchProjectBodySchema = z
   .object({
-    title: z.string().trim().min(1).max(200),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX),
     description: z.string().max(20000).nullable(),
     colour: z.string().regex(/^#[0-9a-fA-F]{6}$/),
     ownerUserId: z.string().uuid(),
@@ -69,13 +75,13 @@ export const patchProjectBodySchema = z
   .refine((v) => Object.keys(v).length > 0, { message: 'empty patch' })
 
 export const addMilestoneBodySchema = z.object({
-  title: z.string().trim().min(1).max(200),
+  title: z.string().trim().min(1).max(WORK_TITLE_MAX),
   dueOn: dateSchema.nullable().optional(),
   done: z.boolean().optional(),
 })
 
 export const patchMilestoneBodySchema = z.object({
-  title: z.string().trim().min(1).max(200).optional(),
+  title: z.string().trim().min(1).max(WORK_TITLE_MAX).optional(),
   dueOn: dateSchema.nullable().optional(),
   done: z.boolean().optional(),
 })
@@ -99,7 +105,7 @@ export const templateListSchema = z.array(templateSchema)
 
 export const createFromTemplateBodySchema = z.object({
   templateKey: z.string(),
-  title: z.string().min(1).max(200).optional(),
+  title: z.string().trim().min(1).max(WORK_TITLE_MAX).optional(),
   ownerUserId: z.string().uuid(),
   members: z.array(z.string().uuid()).min(1),
   startOn: dateSchema.optional(),
@@ -108,7 +114,7 @@ export const createFromTemplateBodySchema = z.object({
 export const createFromGalleryBodySchema = z
   .object({
     templateId: z.string().uuid(),
-    title: z.string().trim().min(1).max(200).optional(),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX).optional(),
     ownerUserId: z.string().uuid(),
     members: z.array(z.string().uuid()).min(1).max(200),
   })

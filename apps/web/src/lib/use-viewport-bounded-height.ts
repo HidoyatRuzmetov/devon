@@ -18,18 +18,27 @@ import * as React from 'react'
  * listeners) exactly when React actually attaches it to a new DOM node, skeleton or not. */
 export function useViewportBoundedHeight<T extends HTMLElement>(
   minPx = 320,
+  followVisualViewport = false,
 ): [(node: T | null) => void, number | undefined] {
   const [height, setHeight] = React.useState<number | undefined>(undefined)
   const cleanupRef = React.useRef<() => void>(() => {})
 
   const measure = React.useCallback(
     (el: T) => {
-      const top = el.getBoundingClientRect().top
+      // Document coordinates avoid a feedback loop when the previous page was scrolled.
+      const top = el.getBoundingClientRect().top + window.scrollY
       const main = el.closest('main')
       const bottomGutter = main ? parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0
-      setHeight(Math.max(minPx, window.innerHeight - top - bottomGutter))
+      // Chat composers must remain above mobile keyboards, which can resize only the visual
+      // viewport. Keep pinch zoom as magnification instead of constantly reflowing the layout.
+      const visual =
+        followVisualViewport && window.visualViewport?.scale === 1 ? window.visualViewport : null
+      const bottom = visual
+        ? Math.min(window.innerHeight, visual.pageTop + visual.height)
+        : window.innerHeight
+      setHeight(Math.max(minPx, bottom - top - bottomGutter))
     },
-    [minPx],
+    [minPx, followVisualViewport],
   )
 
   const setRef = React.useCallback(
@@ -41,18 +50,29 @@ export function useViewportBoundedHeight<T extends HTMLElement>(
       const onResize = () => measure(node)
       onResize()
       window.addEventListener('resize', onResize)
+      const visual = followVisualViewport ? window.visualViewport : null
+      visual?.addEventListener('resize', onResize)
+      visual?.addEventListener('scroll', onResize)
       // Anything above the scroller (header tabs wrapping to a second line in a longer locale, a
       // filter chip row growing) moves the element's own top offset -- a ResizeObserver on the
       // element itself plus its previous-sibling chain would be exact, but observing
       // `document.body` catches every such reflow with one observer and no per-ancestor wiring.
       const ro = new ResizeObserver(onResize)
       ro.observe(document.body)
+      // Header disclosures can change position without changing body dimensions.
+      let parent = node.parentElement
+      while (parent) {
+        ro.observe(parent)
+        parent = parent.parentElement
+      }
       cleanupRef.current = () => {
         window.removeEventListener('resize', onResize)
+        visual?.removeEventListener('resize', onResize)
+        visual?.removeEventListener('scroll', onResize)
         ro.disconnect()
       }
     },
-    [measure],
+    [measure, followVisualViewport],
   )
 
   React.useEffect(() => () => cleanupRef.current(), [])

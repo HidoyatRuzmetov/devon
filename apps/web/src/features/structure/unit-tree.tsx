@@ -86,6 +86,7 @@ export type TreeActions = {
   /** How many people belong to each unit (distinct from `rolesByUnit`, which is who holds a
    * head/deputy/member *role* there) -- the row's "N kishi" figure (§25). */
   memberCountByUnit: Map<string, number>
+  onExpectedPeopleChange?(unitId: string, expectedPeople: number | null): void
   onRename(unitId: string, name: string): void
   onColourChange(unitId: string, colour: number | null): void
   onAddChild(parentUnitId: string | null): void
@@ -146,6 +147,48 @@ export function UnitTree({ roots, actions }: { roots: TreeNode[]; actions: TreeA
   )
 }
 
+function StaffingCount({
+  unit,
+  count,
+  actions,
+}: {
+  unit: Unit
+  count: number
+  actions: TreeActions
+}) {
+  const t = useT()
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5 text-caption text-muted-foreground">
+      <span>{t('structure.units.chart.memberCount', { count })}</span>
+      <span aria-hidden="true">/</span>
+      {actions.isHead ? (
+        <input
+          key={unit.expectedPeople ?? 'unset'}
+          type="number"
+          min={0}
+          max={10000}
+          defaultValue={unit.expectedPeople ?? ''}
+          aria-label={t('portal.staffing.expected')}
+          className="h-11 w-16 rounded-sm border border-border bg-card px-2 text-small sm:h-8"
+          onBlur={(e) => {
+            const value = e.target.value === '' ? null : Number(e.target.value)
+            if (
+              value !== unit.expectedPeople &&
+              (value === null || (Number.isInteger(value) && value >= 0 && value <= 10000))
+            )
+              actions.onExpectedPeopleChange?.(unit.id, value)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+          }}
+        />
+      ) : (
+        <span>{unit.expectedPeople ?? t('portal.staffing.unset')}</span>
+      )}
+    </span>
+  )
+}
+
 /** True whenever the signed-in viewer could self-assign a role that isn't already theirs -- shared
  * by `RoleChips`' own inline "Qoʻshilish" button (org chart panel) and `UnitRow`'s overflow menu
  * (tree view, round2 SEV2), so the two contexts never disagree about who can join. */
@@ -189,8 +232,8 @@ export function RoleChips({
             {t('structure.units.chart.noHead')}
           </span>
         ) : (
-          <div className="flex items-center -space-x-1.5">
-            {roles.map((r) => {
+          <div className="isolate flex items-center -space-x-1.5">
+            {roles.map((r, index) => {
               const member = actions.membersById.get(r.userId)
               const canRemove = r.userId === actions.currentUserId || actions.isHead
               return (
@@ -200,6 +243,9 @@ export function RoleChips({
                       type="button"
                       aria-label={member ? fullName(member) : r.userId}
                       className="devon-avatar-stack-item inline-flex rounded-full ring-2 ring-card"
+                      style={
+                        { '--avatar-stack-order': roles.length - index } as React.CSSProperties
+                      }
                     >
                       <Avatar
                         size="sm"
@@ -609,8 +655,8 @@ function UnitRow({
                   </span>
                 </span>
               ) : null}
-              <span className="hidden text-caption text-muted-foreground sm:inline">
-                {t('structure.units.chart.memberCount', { count: memberCount })}
+              <span className="hidden sm:inline-flex">
+                <StaffingCount unit={node} count={memberCount} actions={actions} />
               </span>
               {actions.canEditStructure ? (
                 <DropdownMenu>
@@ -690,6 +736,9 @@ function UnitRow({
               variant="avatars"
               showActions={false}
             />
+            <span className="mt-1 sm:hidden" data-testid="mobile-unit-staffing">
+              <StaffingCount unit={node} count={memberCount} actions={actions} />
+            </span>
           </div>
         </DataRow>
         {dropHint === 'after' ? (

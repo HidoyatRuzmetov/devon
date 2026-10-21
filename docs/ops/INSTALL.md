@@ -17,6 +17,11 @@ final sign-off before real people use it, `docs/ops/CHECKLIST-GO-LIVE.md`.
 Budget about two hours the first time, most of it waiting for image builds and the ClamAV signature
 download.
 
+Task and Page files above 100 MiB require superadmin approval. Attachments are scanned before they
+become downloadable, with one finalization at a time per API process. The supplied API memory ceiling
+is 4 GiB to allow the maximum 1 GiB attachment plus runtime overhead; keep ClamAV stream and scan limits
+at least as large as the attachment limit. HTML and other active formats are served as downloads.
+
 | | |
 |---|---|
 | Target host | One Ubuntu 24.04 LTS server, x86_64 or arm64. No orchestrator (TECH-SPEC §19, decision 2) |
@@ -158,6 +163,7 @@ uses `s3`** against the bundled MinIO, so avatars and attachments survive a cont
 | `STORAGE_S3_ACCESS_KEY` / `STORAGE_S3_SECRET_KEY` | — | Prefer a scoped MinIO user over root (`mc admin user add`), so a compromised app credential cannot also delete backups |
 | `STORAGE_S3_BUCKET` / `STORAGE_S3_REGION` | `devon` / `us-east-1` | The bucket is created on first use |
 | `STORAGE_S3_FORCE_PATH_STYLE` | `true` | MinIO needs path-style addressing |
+| `STORAGE_MAX_ATTACHMENT_BYTES` | `1073741824` | Task and Page attachments: up to 1 GiB; above 100 MiB requires superadmin approval. |
 | `STORAGE_MAX_UPLOAD_BYTES` | `5242880` | 5 MiB, enforced at presign, at PUT and at finalise |
 | `STORAGE_TIMEOUT_MS` | `10000` | Every MinIO call carries it (H8.1) |
 
@@ -167,7 +173,7 @@ uses `s3`** against the bundled MinIO, so avatars and attachments survive a cont
 |---|---|---|
 | `CLAMAV_MODE` | `off` | **`clamd` in production.** `apps/api` refuses to start with `NODE_ENV=production` and `CLAMAV_MODE=off` — an unscanned upload path is a developer convenience, never a deployment |
 | `CLAMAV_HOST` / `CLAMAV_PORT` | `127.0.0.1` / `3310` | `clamav` / `3310` on the Compose network |
-| `CLAMAV_TIMEOUT_MS` | `20000` | Per-scan timeout. clamd unreachable fails the upload closed |
+| `CLAMAV_TIMEOUT_MS` | `120000` | Per-scan timeout. clamd unreachable fails the upload closed |
 
 An air-gapped box must mirror the ClamAV signature feed itself: `freshclam` needs internet by
 default, and the first start-up downloads the whole database (expect five minutes before the

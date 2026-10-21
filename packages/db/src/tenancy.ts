@@ -29,6 +29,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   'app.card_comments': 'department_owned',
   'app.card_activity': 'department_owned',
   'app.attachments': 'department_owned',
+  'app.file_upload_approvals': 'department_owned',
   'app.labels': 'department_owned',
   'app.saved_views': 'department_owned',
   // v1.1 SPEC §4.3: the head's saved people-table views (migration `0201_people_views.sql`).
@@ -75,6 +76,7 @@ export const TENANCY: Readonly<Record<string, TableClass>> = Object.freeze({
   // EPIC-012 ai (MODULE-GUIDE.md "DB: schema").
   'app.ai_department_settings': 'department_owned',
   'app.ai_traces': 'department_owned',
+  'app.ai_conversations': 'department_owned',
   // EPIC-016 AI L2: the search index behind semantic search and the "Ask" box (migration 0810).
   'app.ai_search_documents': 'department_owned',
   // v1.1 recapture #23: the head's department briefing, cached per department per day so the tile

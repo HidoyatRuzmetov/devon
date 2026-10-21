@@ -20,21 +20,40 @@
 // `overflow-x-auto` row of `overflow-y-auto` columns scrolls smoothly with no windowing library; revisit
 // if a real department's card count grows an order of magnitude past the demo.
 import * as React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { cardMatchesFilterText, parseFilterQuery } from '@devon/contracts'
 import { useT, useLocale } from '@devon/i18n'
 import {
   IconButton,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   SegmentedControl,
   Skeleton,
   StateView,
   cn,
   toast,
-  unitHueClass,
 } from '@devon/ui'
-import { ChevronsLeftRight, Rows3, Rows4 } from 'lucide-react'
+import {
+  ArrowDownWideNarrow,
+  ChevronsLeftRight,
+  FolderKanban,
+  Info,
+  Rows3,
+  Rows4,
+} from 'lucide-react'
 import { useDepartment, useSession } from '../../../lib/session.js'
 import { useSearchParams } from '../../../lib/router.js'
+import { useMediaQuery } from '../../../lib/use-media-query.js'
 import { useViewportBoundedHeight } from '../../../lib/use-viewport-bounded-height.js'
+import { createUnitPalette, unitColorClass } from '../../../lib/unit-palette.js'
+import { fetchUnitsOverview } from '../../structure/api.js'
 import { useProjectsQuery } from '../../projects/hooks.js'
 import type { Card } from '../api.js'
 import { useAnnounce, DndAnnouncerProvider } from './dnd-announcer.js'
@@ -55,6 +74,7 @@ import { TouchDragPreviewLayer } from './touch-drag-preview.js'
 import { WorkShell } from './work-shell.js'
 import type { CardDropSpec } from './card-tile.js'
 import { fullName } from '../lib/format.js'
+import { orderBoardCards, type BoardCardOrder } from '../lib/board-state.js'
 
 /** One per-viewer string preference, remembered by user id so a shared machine never leaks one
  * person's board layout onto the next signed-in user. Guarded: a private window or blocked site data
@@ -97,6 +117,7 @@ const isBoardScope = (v: string): v is BoardScope => v === 'all' || v === 'mine'
 /** SPEC §3.3: a density that fits a 26-person boshqarma on one screen. */
 type BoardDensity = 'comfortable' | 'compact'
 const isBoardDensity = (v: string): v is BoardDensity => v === 'comfortable' || v === 'compact'
+const isCardOrder = (v: string): v is BoardCardOrder => v === 'manual' || v === 'attention'
 
 function findMemberMatches(
   needle: string,
@@ -114,31 +135,90 @@ function BoardScreenInner() {
   // Compiler individually rather than via a blanket `compiler: true`.
   'use memo'
   const t = useT()
-  const { department, departmentId } = useDepartment()
   const { user } = useSession()
+  const { departmentId } = useDepartment()
+  const isMobile = useMediaQuery('(max-width: 767px)')
+  const [activePersonId, setActivePersonId] = React.useState<string | undefined>(undefined)
+  const unitsQuery = useQuery({
+    queryKey: ['structure', 'units', departmentId],
+    queryFn: () => fetchUnitsOverview(departmentId!),
+    enabled: departmentId !== null,
+  })
+  const unitPalette = React.useMemo(
+    () => createUnitPalette(unitsQuery.data?.units ?? []),
+    [unitsQuery.data],
+  )
+  const [cardOrder, setCardOrder] = useStoredPreference<BoardCardOrder>(
+    'cardOrder',
+    user?.id,
+    'manual',
+    isCardOrder,
+  )
   const [scope, setScope] = useStoredPreference<BoardScope>('scope', user?.id, 'all', isBoardScope)
   const [density, setDensity] = useStoredPreference<BoardDensity>(
     'density',
     user?.id,
-    'comfortable',
+    'compact',
     isBoardDensity,
   )
   // UI-OVERHAUL.md "pin the board to the viewport": the app shell's `<main>` has no bounded height
   // of its own, so the plain `h-full`/`flex-1`/`min-h-0` chain below did nothing and the columns
   // grew to their content height with the *document* scrolling -- see use-viewport-bounded-height.ts.
-  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(320)
+  const [heightRef, scrollerHeight] = useViewportBoundedHeight<HTMLDivElement>(0, true)
   const scrollerElRef = React.useRef<HTMLDivElement | null>(null)
+  const mobileNavigationTargetRef = React.useRef<string | null>(null)
   const edgeObserverRef = React.useRef<ResizeObserver | null>(null)
   const [edges, setEdges] = React.useState({ left: false, right: false })
-  const updateEdgeFade = React.useCallback((e: React.UIEvent<HTMLDivElement> | undefined) => {
-    const el = e ? e.currentTarget : scrollerElRef.current
-    if (!el) return
-    const left = el.scrollLeft > 1
-    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-    setEdges((previous) =>
-      previous.left === left && previous.right === right ? previous : { left, right },
-    )
+  const handleMobileNavigate = React.useCallback((id: string) => {
+    mobileNavigationTargetRef.current = id
+    setActivePersonId(id)
+    const columns = [
+      ...(scrollerElRef.current?.querySelectorAll<HTMLElement>('[data-board-column]') ?? []),
+    ]
+    const index = columns.findIndex((column) => column.dataset['boardColumn'] === id)
+    if (index >= 0) setEdges({ left: index > 0, right: index < columns.length - 1 })
   }, [])
+  const updateEdgeFade = React.useCallback(
+    (e: React.UIEvent<HTMLDivElement> | undefined) => {
+      const el = e ? e.currentTarget : scrollerElRef.current
+      if (!el) return
+      const width = `${el.clientWidth}px`
+      if (el.style.getPropertyValue('--work-mobile-column-width') !== width)
+        el.style.setProperty('--work-mobile-column-width', width)
+      if (isMobile) {
+        const edge = el.getBoundingClientRect().left
+        const columns = [...el.querySelectorAll<HTMLElement>('[data-board-column]')]
+        const closest = columns.reduce<HTMLElement | undefined>(
+          (best, column) =>
+            !best ||
+            Math.abs(column.getBoundingClientRect().left - edge) <
+              Math.abs(best.getBoundingClientRect().left - edge)
+              ? column
+              : best,
+          undefined,
+        )
+        const target = mobileNavigationTargetRef.current
+        if (target) {
+          const hasArrived =
+            closest?.dataset['boardColumn'] === target &&
+            Math.abs(closest.getBoundingClientRect().left - edge) < 2
+          if (!hasArrived) return
+          mobileNavigationTargetRef.current = null
+        }
+        if (closest?.dataset['boardColumn']) setActivePersonId(closest.dataset['boardColumn'])
+      }
+      const left = el.scrollLeft > 1
+      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+      setEdges((previous) =>
+        previous.left === left && previous.right === right ? previous : { left, right },
+      )
+    },
+    [isMobile],
+  )
+  const reconcileMobilePage = React.useCallback(() => {
+    mobileNavigationTargetRef.current = null
+    updateEdgeFade(undefined)
+  }, [updateEdgeFade])
   const setScrollerRefs = React.useCallback(
     (el: HTMLDivElement | null) => {
       edgeObserverRef.current?.disconnect()
@@ -215,6 +295,12 @@ function BoardScreenInner() {
   const handleDropped = React.useCallback(
     (draggedCardId: string, spec: CardDropSpec) => {
       if (!board) return
+      // A drop explicitly chooses a shared position. Return to that ordering instead of letting an
+      // automatic visual sort immediately hide the user's placement.
+      if (cardOrder !== 'manual') {
+        setCardOrder('manual')
+        toast.info(t('boardRefinement.sort.manualAfterMove'))
+      }
       const targetMember = spec.toUserId
         ? board.members.find((m) => m.userId === spec.toUserId)
         : null
@@ -251,7 +337,7 @@ function BoardScreenInner() {
         }),
       )
     },
-    [board, moveCard, announce, t],
+    [board, moveCard, announce, t, cardOrder, setCardOrder],
   )
 
   const handleMoveTo = React.useCallback(
@@ -261,6 +347,56 @@ function BoardScreenInner() {
     [handleDropped],
   )
 
+  const sourceColumns = React.useMemo(() => board?.columns ?? [], [board?.columns])
+  const ownColumnIndex = sourceColumns.findIndex((c) => c.member.userId === user?.id)
+  // An active search/filter always searches every column -- narrowing to "just me" while a filter is
+  // typed would silently hide a matching card in a colleague's column with nothing to explain why.
+  const isFiltering = q.trim().length > 0
+  const visibleColumns = React.useMemo(
+    () =>
+      isMobile || scope === 'all' || ownColumnIndex === -1 || isFiltering
+        ? sourceColumns
+        : [sourceColumns[ownColumnIndex]!],
+    [isMobile, scope, ownColumnIndex, isFiltering, sourceColumns],
+  )
+
+  // The roster is stable while people move/finish work. Sorting columns by live load made a drop
+  // move several other people's columns under the pointer; risk counts still show who needs help.
+  const orderedColumns = visibleColumns
+
+  // SPEC §3.3: grouped by boʻlim, "Boʻlimsiz" last. A department with no units at all collapses to
+  // one unnamed group, which renders exactly like the flat board did -- no empty heading.
+  type Group = {
+    scope: 'department' | 'unit' | 'unassigned'
+    unitId: string | null
+    unitName: string | null
+    columns: typeof orderedColumns
+  }
+  const groups = React.useMemo(() => {
+    const groups: Group[] = []
+    for (const col of orderedColumns) {
+      const scope =
+        col.member.role === 'head' ? 'department' : col.member.unitId ? 'unit' : 'unassigned'
+      const unitId = scope === 'unit' ? (col.member.unitId ?? null) : null
+      const existing = groups.find((g) => g.scope === scope && g.unitId === unitId)
+      if (existing) existing.columns.push(col)
+      else
+        groups.push({
+          scope,
+          unitId,
+          unitName: col.member.unitName ?? null,
+          columns: [col],
+        })
+    }
+    return groups.sort((a, b) => {
+      if (a.scope === 'department') return -1
+      if (b.scope === 'department') return 1
+      if (a.unitId === null) return 1
+      if (b.unitId === null) return -1
+      return (a.unitName ?? '').localeCompare(b.unitName ?? '')
+    })
+  }, [orderedColumns])
+
   // v1.1 SPEC §7 (A8) -- the board's own multitask selection. The ordered id list is column by
   // column, top to bottom, which is exactly the order the columns are rendered in, so a shift-click
   // range covers what the eye expects rather than whatever order the API happened to return.
@@ -269,10 +405,19 @@ function BoardScreenInner() {
   // conditionally: while the board is still loading the list is simply empty, which is correct.
   const visibleCardIds = React.useMemo(
     () => [
-      ...(board?.columns ?? []).flatMap((col) => col.cards.filter(filterCard).map((c) => c.id)),
-      ...(board?.unassigned ?? []).filter(filterCard).map((c) => c.id),
+      ...groups
+        .flatMap((group) => group.columns)
+        .filter((col) => isMobile || !collapsedByColumn[col.member.userId])
+        .flatMap((col) =>
+          orderBoardCards(col.cards.filter(filterCard), cardOrder).map((c) => c.id),
+        ),
+      ...(!isMobile && collapsedByColumn['unassigned']
+        ? []
+        : orderBoardCards((board?.unassigned ?? []).filter(filterCard), cardOrder).map(
+            (c) => c.id,
+          )),
     ],
-    [board, filterCard],
+    [groups, collapsedByColumn, filterCard, cardOrder, board?.unassigned, isMobile],
   )
   const {
     selected: selectedCardIds,
@@ -296,79 +441,41 @@ function BoardScreenInner() {
 
   if (boardQuery.isPending) {
     return (
-      <div className="flex gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-96 w-72 shrink-0" />
-        ))}
-      </div>
+      <WorkShell filterLayout="people_board" hideMeControl>
+        <div className="flex gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-96 w-72 shrink-0" />
+          ))}
+        </div>
+      </WorkShell>
     )
   }
   if (boardQuery.isError || !board) {
     return (
-      <StateView
-        kind="error"
-        titleKey="state.error.title"
-        bodyKey="state.error.body"
-        action={{
-          labelKey: 'state.error.action',
-          onAction: () => void boardQuery.refetch(),
-        }}
-      />
+      <WorkShell filterLayout="people_board" hideMeControl>
+        <StateView
+          kind="error"
+          titleKey="state.error.title"
+          bodyKey="state.error.body"
+          action={{
+            labelKey: 'state.error.action',
+            onAction: () => void boardQuery.refetch(),
+          }}
+        />
+      </WorkShell>
     )
   }
   if (board.members.length === 0) {
     return (
-      <StateView kind="empty" titleKey="work.board.emptyTitle" bodyKey="work.board.emptyBody" />
+      <WorkShell filterLayout="people_board" hideMeControl>
+        <StateView kind="empty" titleKey="work.board.emptyTitle" bodyKey="work.board.emptyBody" />
+      </WorkShell>
     )
   }
 
   const columnKeys = [...board.columns.map((c) => c.member.userId), 'unassigned']
 
   const collapsedCount = columnKeys.filter((k) => collapsedByColumn[k]).length
-  const ownColumnIndex = board.columns.findIndex((c) => c.member.userId === user?.id)
-  // An active search/filter always searches every column -- narrowing to "just me" while a filter is
-  // typed would silently hide a matching card in a colleague's column with nothing to explain why.
-  const isFiltering = q.trim().length > 0
-  const visibleColumns =
-    scope === 'all' || ownColumnIndex === -1 || isFiltering
-      ? board.columns
-      : [board.columns[ownColumnIndex]!]
-
-  // The roster is stable while people move/finish work. Sorting columns by live load made a drop
-  // move several other people's columns under the pointer; risk counts still show who needs help.
-  const orderedColumns = visibleColumns
-
-  // SPEC §3.3: grouped by boʻlim, "Boʻlimsiz" last. A department with no units at all collapses to
-  // one unnamed group, which renders exactly like the flat board did -- no empty heading.
-  type Group = {
-    scope: 'department' | 'unit' | 'unassigned'
-    unitId: string | null
-    unitName: string | null
-    columns: typeof orderedColumns
-  }
-  const groups: Group[] = []
-  for (const col of orderedColumns) {
-    const scope =
-      col.member.role === 'head' ? 'department' : col.member.unitId ? 'unit' : 'unassigned'
-    const unitId = scope === 'unit' ? (col.member.unitId ?? null) : null
-    const existing = groups.find((g) => g.scope === scope && g.unitId === unitId)
-    if (existing) existing.columns.push(col)
-    else
-      groups.push({
-        scope,
-        unitId,
-        unitName: col.member.unitName ?? null,
-        columns: [col],
-      })
-  }
-  groups.sort((a, b) => {
-    if (a.scope === 'department') return -1
-    if (b.scope === 'department') return 1
-    if (a.unitId === null) return 1
-    if (b.unitId === null) return -1
-    return (a.unitName ?? '').localeCompare(b.unitName ?? '')
-  })
-  const hasNamedGroups = groups.some((g) => g.scope !== 'unassigned')
 
   function setAllCollapsed(collapsed: boolean): void {
     for (const key of columnKeys) {
@@ -383,18 +490,203 @@ function BoardScreenInner() {
     setExpandAllNonce((n) => n + 1)
   }
 
+  const sortControl = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-h-11 shrink-0 gap-1 px-2 md:min-h-9"
+          aria-label={t('boardRefinement.sort.label', {
+            order: t(`boardRefinement.sort.${cardOrder}`),
+          })}
+          title={t('boardRefinement.sort.label', {
+            order: t(`boardRefinement.sort.${cardOrder}`),
+          })}
+        >
+          <ArrowDownWideNarrow className="size-4" aria-hidden="true" />
+          <span className="inline">{t(`boardRefinement.sort.${cardOrder}`)}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuRadioGroup
+          value={cardOrder}
+          onValueChange={(next) => {
+            if (isCardOrder(next)) setCardOrder(next)
+          }}
+        >
+          <DropdownMenuRadioItem value="manual">
+            {t('boardRefinement.sort.manualOption')}
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="attention">
+            {t('boardRefinement.sort.attentionOption')}
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+        <p className="max-w-64 border-t border-border px-3 py-2 text-caption text-muted-foreground">
+          {t(`boardRefinement.sort.${cardOrder}Help`)}
+        </p>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+  const guideControl = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <IconButton
+          className="shrink-0 md:size-8"
+          aria-label={t('boardRefinement.guide.title')}
+          tooltip={t('boardRefinement.guide.title')}
+        >
+          <Info className="size-4" aria-hidden="true" />
+        </IconButton>
+      </PopoverTrigger>
+      <PopoverContent
+        align="end"
+        className="w-80 max-h-[min(36rem,var(--radix-popover-content-available-height))] max-w-[calc(100vw-2rem)] space-y-3 overflow-y-auto"
+      >
+        <p className="text-small font-semibold">{t('boardRefinement.guide.title')}</p>
+        <div className="space-y-2 text-small">
+          <div className="flex items-center gap-2">
+            <span className="flex h-6 w-9 shrink-0 items-center justify-center rounded-sm border border-primary/25 border-l-2 border-l-primary/65 bg-accent">
+              <FolderKanban className="size-3.5 text-primary" aria-hidden="true" />
+            </span>
+            <span>{t('boardRefinement.projectTask')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className="h-6 w-9 shrink-0 rounded-sm border border-border bg-card"
+              aria-hidden="true"
+            />
+            <span>{t('boardRefinement.standaloneTask')}</span>
+          </div>
+          <p className="text-caption text-muted-foreground">
+            {t('boardRefinement.guide.indicators')}
+          </p>
+        </div>
+        <div className="space-y-2 border-t border-border pt-3">
+          <p className="text-caption font-medium">{t('boardRefinement.guide.units')}</p>
+          <div className="grid gap-1.5">
+            {(unitsQuery.data?.units ?? []).map((unit) => (
+              <span key={unit.id} className="flex items-center gap-2 text-caption">
+                <span
+                  className={cn(
+                    'size-2 shrink-0 rounded-full',
+                    unitColorClass(unitPalette, unit.id),
+                  )}
+                  aria-hidden="true"
+                />
+                <span className="min-w-0 break-words">{unit.name}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <p className="border-t border-border pt-3 text-caption text-muted-foreground">
+          {t(`boardRefinement.sort.${cardOrder}Help`)}
+        </p>
+        <div className="hidden flex-wrap gap-2 border-t border-border pt-3 md:flex">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+          >
+            {density === 'compact' ? (
+              <Rows3 className="size-4" aria-hidden="true" />
+            ) : (
+              <Rows4 className="size-4" aria-hidden="true" />
+            )}
+            {t(density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
+          >
+            <ChevronsLeftRight className="size-4" aria-hidden="true" />
+            {t(
+              collapsedCount === columnKeys.length
+                ? 'work.board.expandAllColumns'
+                : 'work.board.collapseAllColumns',
+            )}
+          </Button>
+          {collapsedCount > 0 ? (
+            <span className="text-caption text-muted-foreground">
+              {t('work.board.columnsShowing', {
+                shown: columnKeys.length - collapsedCount,
+                total: columnKeys.length,
+              })}
+            </span>
+          ) : null}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+  const toolbar = (
+    <div
+      className="hidden w-full min-w-0 items-center justify-end gap-1 pb-1 md:flex xl:w-auto xl:shrink-0 xl:pb-0"
+      data-board-toolbar
+    >
+      <BoardNavigation
+        scroller={scrollerElRef}
+        members={board.members}
+        currentUserId={user?.id}
+        canScrollLeft={edges.left}
+        canScrollRight={edges.right}
+        layoutKey={`${scope}:${density}:${expandAllNonce}`}
+        showEveryone={() => setScope('all')}
+      />
+      {ownColumnIndex !== -1 ? (
+        <SegmentedControl
+          size="sm"
+          className="shrink-0 max-md:[&_button]:min-h-10"
+          label={t('work.board.scopeLabel')}
+          value={isFiltering ? 'all' : scope}
+          onValueChange={setScope}
+          options={[
+            { value: 'all', label: t('work.board.scopeAll'), count: board.members.length },
+            { value: 'mine', label: t('work.board.scopeMine') },
+          ]}
+        />
+      ) : null}
+      {sortControl}
+      {guideControl}
+    </div>
+  )
+
   return (
-    <div className="flex h-full flex-col gap-4">
-      {/* N-2 "Kim kechiktiryapti?" -- the head's daily version of the risk explainer, over the top
+    <WorkShell
+      filterLayout="people_board"
+      hideMeControl
+      toolbar={toolbar}
+      mobileToolbar={
+        <div className="flex items-center gap-1">
+          {sortControl}
+          {guideControl}
+        </div>
+      }
+    >
+      <div className="flex min-h-0 flex-col gap-2">
+        {/* N-2 "Kim kechiktiryapti?" -- the head's daily version of the risk explainer, over the top
           at-risk cards on this board, in ONE batched call instead of one per card. Head only, on the
           server (`department_managed`) and here: it is a ranked list of who is late, which is
           management information about other people. */}
-      <BoardRiskDigest board={board} />
+        <BoardRiskDigest board={board} />
+        <div className="md:hidden" data-board-mobile-navigation>
+          <BoardNavigation
+            mobile
+            activePersonId={activePersonId}
+            onNavigate={handleMobileNavigate}
+            scroller={scrollerElRef}
+            members={groups.flatMap((group) => group.columns.map((column) => column.member))}
+            currentUserId={user?.id}
+            canScrollLeft={edges.left}
+            canScrollRight={edges.right}
+            layoutKey={`mobile:${scope}:${expandAllNonce}`}
+            showEveryone={() => setScope('all')}
+          />
+        </div>
 
-      <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-        {/* A8: the multitask toolbar takes over this row the moment anything is selected, sliding up
+        <section className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+          {/* A8: the multitask toolbar takes over this row the moment anything is selected, sliding up
             on the same spring the table's does -- one bar, one behaviour, two screens. */}
-        <div className="relative flex flex-wrap items-center gap-2 px-1">
           <MultitaskToolbarSlot show={selectedCardIds.size > 0}>
             <MultitaskToolbar
               ids={[...selectedCardIds]}
@@ -403,197 +695,110 @@ function BoardScreenInner() {
               onClear={clearSelection}
             />
           </MultitaskToolbarSlot>
-          <span
-            className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(departmentId ?? 'devon'))}
-            aria-hidden="true"
-          />
-          <h2 className="text-small font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-            {department?.name ?? t('work.board.department')}
-          </h2>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <BoardNavigation
-              scroller={scrollerElRef}
-              members={board.members}
-              currentUserId={user?.id}
-              canScrollLeft={edges.left}
-              canScrollRight={edges.right}
-              layoutKey={`${scope}:${density}:${expandAllNonce}`}
-              showEveryone={() => setScope('all')}
-            />
-            {/* SPEC 3.3: a visible segmented control, not a secondary pill -- "Hammasi" is the
-                default and both options are readable before either is chosen. Hidden entirely for a
-                viewer with no column of their own, for whom "Mening" would be an empty board. */}
-            {ownColumnIndex !== -1 ? (
-              <SegmentedControl
-                size="sm"
-                label={t('work.board.scopeLabel')}
-                value={isFiltering ? 'all' : scope}
-                onValueChange={setScope}
-                options={[
-                  {
-                    value: 'all',
-                    label: t('work.board.scopeAll'),
-                    count: board.members.length,
-                  },
-                  { value: 'mine', label: t('work.board.scopeMine') },
-                ]}
-              />
-            ) : null}
-            <IconButton
-              title={t(
-                density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact',
-              )}
-              aria-label={t(
-                density === 'compact' ? 'work.board.densityRoomy' : 'work.board.densityCompact',
-              )}
-              onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+          <div className="relative min-w-0">
+            <div
+              ref={setScrollerRefs}
+              onScroll={updateEdgeFade}
+              // eslint-disable-next-line react/no-unknown-property -- React 19.2 supports scrollend; the pinned React lint plugin predates that event.
+              onScrollEnd={reconcileMobilePage}
+              onPointerDownCapture={reconcileMobilePage}
+              onWheelCapture={reconcileMobilePage}
+              onKeyDownCapture={reconcileMobilePage}
+              // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
+              // an inline `height` for sizing along the flex container's main axis, so as long as this
+              // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
+              // to its content size regardless -- found live, in the browser, the whole reason this file
+              // has a viewport-bounded-height hook instead of a CSS-only fix. The inline 320px
+              // fallback is replaced by the measured available space as soon as the ref attaches.
+              // Desktop shares one two-axis canvas. Phone CSS changes this to a native snap pager,
+              // with an independent vertical position for each full-width person's column.
+              role="region"
+              aria-label={t('work.board.regionLabel')}
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- This named overflow region needs focus for native arrow-key scrolling.
+              tabIndex={0}
+              className="devon-board-scroller flex-none overflow-auto pb-2 min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              style={{
+                height: scrollerHeight ?? 320,
+              }}
             >
-              {density === 'compact' ? (
-                <Rows3 className="size-4" aria-hidden="true" />
-              ) : (
-                <Rows4 className="size-4" aria-hidden="true" />
-              )}
-            </IconButton>
-            <IconButton
-              title={t(
-                collapsedCount === columnKeys.length
-                  ? 'work.board.expandAllColumns'
-                  : 'work.board.collapseAllColumns',
-              )}
-              aria-label={t(
-                collapsedCount === columnKeys.length
-                  ? 'work.board.expandAllColumns'
-                  : 'work.board.collapseAllColumns',
-              )}
-              onClick={() => setAllCollapsed(collapsedCount !== columnKeys.length)}
-            >
-              <ChevronsLeftRight className="size-4" aria-hidden="true" />
-            </IconButton>
-            {collapsedCount > 0 ? (
-              <span className="text-caption text-muted-foreground">
-                {t('work.board.columnsShowing', {
-                  shown: columnKeys.length - collapsedCount,
-                  total: columnKeys.length,
-                })}
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <div className="relative min-w-0">
-          <div
-            ref={setScrollerRefs}
-            onScroll={updateEdgeFade}
-            // `flex-none` here, not `flex-1`: a flex item's `flex-basis` (0% from `flex-1`) wins over
-            // an inline `height` for sizing along the flex container's main axis, so as long as this
-            // row was `flex-1` the explicit pixel height below was silently ignored and the row grew
-            // to its content size regardless -- found live, in the browser, the whole reason this file
-            // has a viewport-bounded-height hook instead of a CSS-only fix. `min-h-80` is only the
-            // instant-before-first-measurement fallback (`useViewportBoundedHeight`'s own floor).
-            // SEV2 #18: `overflow-auto`, not `overflow-x-auto overflow-y-hidden`. One scroller that
-            // moves in both directions replaces the per-column vertical scrollers, so the board has
-            // two scroll regions (the page, and this) instead of three. Each column's header is
-            // `sticky top-0` inside it, so scrolling down never loses whose column you are in.
-            role="region"
-            aria-label={t('work.board.regionLabel')}
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- This named overflow region needs focus for native arrow-key scrolling.
-            tabIndex={0}
-            className="devon-board-scroller flex-none overflow-auto pb-2 min-h-80 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            style={{
-              ...(scrollerHeight !== undefined ? { height: scrollerHeight } : undefined),
-            }}
-          >
-            <div className="flex min-h-full w-max min-w-full items-stretch gap-4">
-              {groups.map((group) => (
-                <div
-                  key={group.unitId ?? group.scope}
-                  className="flex min-w-0 shrink-0 flex-col gap-1.5"
-                >
-                  {/* One heading per unit, printed once above its columns instead of a colour the
-                  reader has to decode. A department with no units at all shows no heading. */}
-                  {hasNamedGroups ? (
-                    <div className="flex items-center gap-1.5 px-1">
-                      <span
-                        className={cn(
-                          'size-1.5 shrink-0 rounded-full',
-                          unitHueClass(group.unitId ?? 'unassigned'),
-                        )}
-                        aria-hidden="true"
-                      />
-                      <h3 className="truncate text-caption font-semibold uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
-                        {group.scope === 'department'
-                          ? t('headScope.leadership')
-                          : (group.unitName ?? t('work.board.noUnit'))}
-                      </h3>
+              <div className="devon-board-track flex min-h-full w-max min-w-full items-stretch gap-4">
+                {groups.map((group) => (
+                  <div
+                    key={group.unitId ?? group.scope}
+                    className="devon-board-group flex min-w-0 shrink-0 flex-col"
+                  >
+                    <div className="devon-board-group-columns flex min-h-0 flex-1 gap-2">
+                      {group.columns.map((col) => (
+                        <BoardColumn
+                          key={`${col.member.userId}:${expandAllNonce}`}
+                          member={col.member}
+                          cards={orderBoardCards(col.cards.filter(filterCard), cardOrder)}
+                          projects={projects.filter((p) => p.members.includes(col.member.userId))}
+                          allProjects={projects}
+                          members={board.members}
+                          unitPalette={unitPalette}
+                          labels={board.labels}
+                          filterKey={q}
+                          density={density}
+                          mobile={isMobile}
+                          onOpenCard={openCardPeek}
+                          onDropped={handleDropped}
+                          onMoveTo={handleMoveTo}
+                          onCollapsedChange={handleCollapsedChange}
+                          selectedIds={selectedCardIds}
+                          onCardSelectedChange={handleCardSelectedChange}
+                          selectionActive={selectedCardIds.size > 0}
+                          rejectedCardId={rejectedCardId}
+                          onRejectionShown={clearRejection}
+                        />
+                      ))}
                     </div>
-                  ) : null}
-                  <div className="flex min-h-0 flex-1 gap-4">
-                    {group.columns.map((col) => (
-                      <BoardColumn
-                        key={`${col.member.userId}:${expandAllNonce}`}
-                        member={col.member}
-                        cards={col.cards.filter(filterCard)}
-                        projects={projects.filter((p) => p.members.includes(col.member.userId))}
-                        allProjects={projects}
-                        members={board.members}
-                        labels={board.labels}
-                        filterKey={q}
-                        density={density}
-                        onOpenCard={openCardPeek}
-                        onDropped={handleDropped}
-                        onMoveTo={handleMoveTo}
-                        onCollapsedChange={handleCollapsedChange}
-                        selectedIds={selectedCardIds}
-                        onCardSelectedChange={handleCardSelectedChange}
-                        selectionActive={selectedCardIds.size > 0}
-                        rejectedCardId={rejectedCardId}
-                        onRejectionShown={clearRejection}
-                      />
-                    ))}
                   </div>
-                </div>
-              ))}
-              <div className="flex min-w-0 shrink-0 flex-col gap-1.5">
-                {hasNamedGroups ? <div className="h-4.5" aria-hidden="true" /> : null}
-                <div className="flex min-h-0 flex-1">
-                  <BoardColumn
-                    key={`unassigned:${expandAllNonce}`}
-                    member={null}
-                    cards={board.unassigned.filter(filterCard)}
-                    projects={[]}
-                    allProjects={projects}
-                    members={board.members}
-                    labels={board.labels}
-                    filterKey={q}
-                    density={density}
-                    onOpenCard={openCardPeek}
-                    onDropped={handleDropped}
-                    onMoveTo={handleMoveTo}
-                    onCollapsedChange={handleCollapsedChange}
-                    selectedIds={selectedCardIds}
-                    onCardSelectedChange={handleCardSelectedChange}
-                    selectionActive={selectedCardIds.size > 0}
-                    rejectedCardId={rejectedCardId}
-                    onRejectionShown={clearRejection}
-                  />
+                ))}
+                <div className="devon-board-group flex min-w-0 shrink-0 flex-col">
+                  <div className="devon-board-group-columns flex min-h-0 flex-1">
+                    <BoardColumn
+                      key={`unassigned:${expandAllNonce}`}
+                      member={null}
+                      cards={orderBoardCards(board.unassigned.filter(filterCard), cardOrder)}
+                      projects={[]}
+                      allProjects={projects}
+                      members={board.members}
+                      unitPalette={unitPalette}
+                      labels={board.labels}
+                      filterKey={q}
+                      density={density}
+                      mobile={isMobile}
+                      onOpenCard={openCardPeek}
+                      onDropped={handleDropped}
+                      onMoveTo={handleMoveTo}
+                      onCollapsedChange={handleCollapsedChange}
+                      selectedIds={selectedCardIds}
+                      onCardSelectedChange={handleCardSelectedChange}
+                      selectionActive={selectedCardIds.size > 0}
+                      rejectedCardId={rejectedCardId}
+                      onRejectionShown={clearRejection}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+            {edges.left ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 hidden md:block left-0 z-20 w-5 bg-linear-to-r from-background to-transparent"
+              />
+            ) : null}
+            {edges.right ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 hidden md:block right-0 z-20 w-5 bg-linear-to-l from-background to-transparent"
+              />
+            ) : null}
           </div>
-          {edges.left ? (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 left-0 z-20 w-5 bg-linear-to-r from-background to-transparent"
-            />
-          ) : null}
-          {edges.right ? (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 right-0 z-20 w-5 bg-linear-to-l from-background to-transparent"
-            />
-          ) : null}
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </WorkShell>
   )
 }
 
@@ -601,9 +806,7 @@ export default function BoardScreen() {
   return (
     <DndAnnouncerProvider>
       {/* SEV2 #18: the board owns the Me/All control, because its own one carries the count. */}
-      <WorkShell filterLayout="people_board" hideMeControl>
-        <BoardScreenInner />
-      </WorkShell>
+      <BoardScreenInner />
       <CardPeekDialog />
       {/* SPEC 12: the shell's "+ Yangi -> Yangi vazifa" routes to `/work?new=1`, which this opens. */}
       <NewCardDialog />

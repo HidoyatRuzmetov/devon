@@ -6,6 +6,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { test, expect, type Locator, type Page } from '@playwright/test'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 import { setTextScale, settleCapture, waitForLoadedRoute } from './platform-capture.js'
+import { selectBoardCard } from './board-test-actions.js'
 
 const examplePassword = 'Ishonchli#2026'
 function label(locale: string, key: string): string {
@@ -190,7 +191,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           await page.keyboard.press('Escape')
           await expect(dialog).not.toBeVisible()
           const tile = page.locator(`[data-dnd-card="${id}"]`)
-          await tile.getByRole('checkbox').check()
+          await selectBoardCard(page, tile, label(locale, 'portal.cards.select'))
           const toolbar = page.getByRole('toolbar', {
             name: label(locale, 'work.bulk.toolbarLabel'),
             exact: true,

@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
+import { WORK_TITLE_MAX } from '@devon/contracts'
+import { selectBoardCard } from './board-test-actions.js'
 import {
   authedPatch,
   authedPost,
@@ -28,8 +30,14 @@ const groupLabels = {
   ru: 'Создать группу',
   en: 'Create group',
 }
+const selectLabels = {
+  'uz-Latn': 'Kartochkani tanlash',
+  'uz-Cyrl': 'Карточкани танлаш',
+  ru: 'Выбрать карточку',
+  en: 'Select card',
+}
 
-test('@flow visual controls: calendar alignment, separated selection, contextual milestone editing and group conversion', async ({
+test('@flow visual controls: date alignment, contextual selection, milestone editing and group conversion', async ({
   browser,
 }) => {
   test.setTimeout(matrix ? 360_000 : 180_000)
@@ -62,7 +70,13 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
       priority: 'high',
     })
     expect(response.status()).toBe(201)
-    const card = (await response.json()) as { id: string }
+    const card = (await response.json()) as { id: string; dueAt: string }
+    const companionResponse = await authedPost(head, '/api/v1/cards', {
+      title: 'Selection companion',
+      assigneeUserId: me.user.id,
+    })
+    expect(companionResponse.status()).toBe(201)
+    const companion = (await companionResponse.json()) as { id: string }
     await authedPost(head, `/api/v1/cards/${card.id}/checklist`, {
       text: 'Maʼlumotlarni tekshirish',
     })
@@ -90,6 +104,7 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
     expect(projectResponse.status()).toBe(201)
     const project = (await projectResponse.json()) as { id: string; milestones: { id: string }[] }
     const page = await head.newPage()
+    page.setDefaultTimeout(15_000)
     const captureRoot =
       phase === 'before' ? evidenceRoot : join(evidenceRoot, test.info().project.name)
     await mkdir(captureRoot, { recursive: true })
@@ -128,11 +143,29 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
             path: join(captureRoot, `${phase}-card-${width}-${theme}-${locale}.png`),
           })
           if (phase !== 'before') {
+            await expect(tile.getByRole('checkbox')).toHaveCount(0)
+            await expect(tile.locator('.lucide-calendar-clock')).toHaveCount(0)
+            await expect(tile.locator('time')).toHaveAttribute('datetime', card.dueAt)
+            // The compact idle metadata is one aligned row. Selection adds an accessible checkbox
+            // target and may wrap that row; it must keep the date visible without clipping.
+            const idleDateAlignment = await tile.locator('time').evaluate((date) => {
+              const dateRect = date.getBoundingClientRect()
+              const rowRect = date.parentElement!.getBoundingClientRect()
+              return Math.abs(dateRect.y + dateRect.height / 2 - rowRect.y - rowRect.height / 2)
+            })
+            expect(idleDateAlignment).toBeLessThanOrEqual(1)
+            // Selecting another card reveals this unchecked target, preserving the outline contrast
+            // and hit-area checks while entering bulk selection through the actual actions menu.
+            await selectBoardCard(
+              page,
+              page.locator(`[data-dnd-card="${companion.id}"]`),
+              selectLabels[locale],
+            )
+            await expect(tile.getByRole('checkbox')).not.toBeChecked()
             const positions = await tile.evaluate((element) => {
-              const icon = element.querySelector('.lucide-calendar-clock')!
-              const chip = icon.closest('span[class*="rounded-full"]')!
-              const iconRect = icon.getBoundingClientRect()
-              const chipRect = chip.getBoundingClientRect()
+              const date = element.querySelector('time')!
+              const dateRect = date.getBoundingClientRect()
+              const cardRect = element.getBoundingClientRect()
               const selection = element.querySelector('[role="checkbox"]')!.getBoundingClientRect()
               const menu = element
                 .querySelector('button[aria-haspopup="menu"]')!
@@ -158,9 +191,12 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
               return {
                 outlineContrast:
                   (Math.max(border, background) + 0.05) / (Math.min(border, background) + 0.05),
-                deltaY: Math.abs(
-                  iconRect.y + iconRect.height / 2 - chipRect.y - chipRect.height / 2,
-                ),
+                dateVisible:
+                  dateRect.width > 0 &&
+                  dateRect.height > 0 &&
+                  dateRect.left >= cardRect.left &&
+                  dateRect.right <= cardRect.right &&
+                  date.scrollWidth <= date.clientWidth,
                 overlap:
                   selection.left < menu.right &&
                   selection.right > menu.left &&
@@ -170,7 +206,7 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
                 targetHeight: selection.height,
               }
             })
-            expect(positions.deltaY).toBeLessThanOrEqual(1)
+            expect(positions.dateVisible).toBe(true)
             expect(positions.overlap).toBe(false)
             expect(positions.outlineContrast).toBeGreaterThanOrEqual(3)
             // Engines can report a 24px CSS target as23.999969px after layout transforms.
@@ -248,12 +284,13 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
     }
     if (phase === 'before') return
 
-    // The expanded checkbox hit area must not open the card or the movement menu.
+    // Menu selection and the expanded checkbox hit area must not open the card detail.
     await page.goto('/work')
     const selectable = page.locator(`[data-dnd-card="${card.id}"]`)
     await selectable.hover()
-    const selection = selectable.getByRole('checkbox')
-    await selection.check()
+    await expect(selectable.getByRole('checkbox')).toHaveCount(0)
+    const finalLocale = locales[locales.length - 1]!
+    const selection = await selectBoardCard(page, selectable, selectLabels[finalLocale])
     await expect(selection).toBeChecked()
     await expect
       .poll(() =>
@@ -288,7 +325,10 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
     await expect(page.getByRole('dialog')).toHaveCount(0)
     await expect(page.getByRole('menu')).toHaveCount(0)
     expect(new URL(page.url()).pathname).toBe('/work')
-    await selection.uncheck()
+    // The last selected checkbox unmounts immediately. A real click followed by the disappearance
+    // assertion observes that contract; uncheck() waits for an unchecked node that no longer exists.
+    await selection.click()
+    await expect(selection).toHaveCount(0)
     const movement = selectable.locator('button[aria-haspopup="menu"]')
     await movement.focus()
     await movement.press('Enter')
@@ -365,7 +405,11 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
     await expect
       .poll(() => cardTitleField.evaluate((el) => el.scrollHeight - el.clientHeight))
       .toBeLessThanOrEqual(1)
-    const editedTitle = `${cardTitle} — barcha hamkorlar uchun yangilangan reja`
+    await expect(cardTitleField).toHaveAttribute('maxlength', String(WORK_TITLE_MAX))
+    const editedTitle = `${cardTitle} — barcha hamkorlar uchun yangilangan reja`.slice(
+      0,
+      WORK_TITLE_MAX,
+    )
     await cardTitleField.fill(editedTitle)
     await cardTitleField.press('Tab')
     await expect
@@ -381,7 +425,7 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
       .poll(() => cardTitleField.evaluate((el) => el.scrollHeight - el.clientHeight))
       .toBeLessThanOrEqual(1)
     await groupAction.click()
-    await expect(page.getByRole('dialog')).toContainText('This card becomes the first shared card')
+    await expect(page.getByRole('dialog')).toContainText('personal card in the new group project')
     await page
       .getByRole('dialog')
       .getByRole('checkbox', { name: 'Test Member', exact: true })
@@ -453,10 +497,15 @@ test('@flow visual controls: calendar alignment, separated selection, contextual
       await page.screenshot({ path: join(captureRoot, 'after-project-1280-short480-light-ru.png') })
     }
   } finally {
-    // Close each owned context after its trace/network flush; each suite also owns a separate
-    // output directory so a concurrent suite cannot remove these trace streams.
-    await admin.close()
-    await head.close()
-    await member.close()
+    // A timeout may already have closed the contexts. Preserve the original failing action while
+    // still flushing each owned context; record any cleanup error without replacing that failure.
+    const cleanup = await Promise.allSettled([admin.close(), head.close(), member.close()])
+    cleanup.forEach((result) => {
+      if (result.status === 'rejected') {
+        test
+          .info()
+          .annotations.push({ type: 'context-cleanup', description: String(result.reason) })
+      }
+    })
   }
 })

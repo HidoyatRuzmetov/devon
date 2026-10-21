@@ -19,20 +19,42 @@ const uploadSchema = z.object({
   method: z.literal('PUT'),
   headers: z.record(z.string(), z.string()),
 })
-const ACCEPT = '.pdf,.txt,.csv,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.webp'
 
-export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: boolean }) {
+export function CardAttachments({
+  cardId,
+  canEdit,
+  subjectType = 'card',
+}: {
+  cardId: string
+  canEdit: boolean
+  subjectType?: 'card' | 'page'
+}) {
   const t = useT()
   const csrf = useMeQuery().data?.csrfToken ?? ''
   const qc = useQueryClient()
-  const base = `/api/v1/cards/${encodeURIComponent(cardId)}/attachments`
-  const key = ['work', 'attachments', cardId]
+  const base = `/api/v1/${subjectType === 'card' ? 'cards' : 'pages'}/${encodeURIComponent(cardId)}/attachments`
+  const key = [subjectType === 'card' ? 'work' : 'pages', 'attachments', cardId]
   const list = useQuery({
     queryKey: key,
     queryFn: () => apiClient.get(base, z.array(attachmentSchema)),
   })
+  const approvals = useQuery({
+    queryKey: [...key, 'approvals'],
+    queryFn: () =>
+      apiClient.get(
+        `${base}/approvals`,
+        z.array(z.object({ id: z.string(), name: z.string(), status: z.string() })),
+      ),
+    enabled: canEdit,
+    refetchInterval: 30_000,
+  })
   const [stage, setStage] = React.useState<'uploading' | 'scanning' | null>(null)
+  const [approvalRequested, setApprovalRequested] = React.useState(false)
   const [pendingId, setPendingId] = React.useState<string | null>(null)
+  const [pendingUpload, setPendingUpload] = React.useState<{
+    file: File
+    signed: z.infer<typeof uploadSchema>
+  } | null>(null)
   const activeUpload = React.useRef<AbortController | null>(null)
   React.useEffect(() => () => activeUpload.current?.abort(), [])
   const finalize = async (id: string) => {
@@ -42,32 +64,56 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
   const upload = useMutation({
     mutationFn: async (file: File | null) => {
       if (!file && pendingId) return finalize(pendingId)
-      if (!file) return
-      setPendingId(null)
+      if (!file && !pendingUpload) return
+      if (file) {
+        setPendingId(null)
+        setPendingUpload(null)
+      }
+      setApprovalRequested(false)
       setStage('uploading')
       const controller = new AbortController()
       activeUpload.current = controller
-      const signed = await apiClient.post(
-        `${base}/upload-url`,
-        { name: file.name, size: file.size },
-        uploadSchema,
-        csrf,
-      )
+      let transfer = pendingUpload
+      if (file) {
+        const signed = await apiClient.post(
+          `${base}/upload-url`,
+          { name: file.name, size: file.size },
+          z.union([uploadSchema, z.object({ approvalRequired: z.literal(true) })]),
+          csrf,
+        )
+        if ('approvalRequired' in signed) {
+          setApprovalRequested(true)
+          return 'approval'
+        }
+        transfer = { file, signed }
+        // Retain the approved transfer before PUT: capacity refusals must retry the same
+        // signed URL instead of spending another approval on a fresh upload request.
+        setPendingUpload(transfer)
+      }
+      if (!transfer) return
+      const { signed } = transfer
       controller.signal.throwIfAborted()
       await apiClient.uploadFile(signed.url, {
         method: signed.method,
         headers: signed.headers,
-        body: file,
+        body: transfer.file,
         signal: controller.signal,
       })
       controller.signal.throwIfAborted()
+      setPendingUpload(null)
       setPendingId(signed.uploadId)
       return finalize(signed.uploadId)
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      void qc.invalidateQueries({ queryKey: [...key, 'approvals'] })
+      if (result === 'approval') return
       setPendingId(null)
+      setPendingUpload(null)
       void qc.invalidateQueries({ queryKey: key })
       toast(t('attachments.saved'))
+    },
+    onError: (error) => {
+      if (!(error instanceof ApiError && error.status === 503)) setPendingUpload(null)
     },
     onSettled: () => {
       activeUpload.current = null
@@ -94,6 +140,7 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
   const error = upload.error instanceof ApiError ? upload.error : null
   const cancelled = upload.error instanceof Error && upload.error.name === 'AbortError'
   const retryScan = error?.status === 503 && pendingId
+  const retryUpload = error?.status === 503 && pendingUpload
   return (
     <section className="flex flex-col gap-3" aria-label={t('attachments.title')}>
       <h3 className="text-small font-semibold">{t('attachments.title')}</h3>
@@ -135,12 +182,18 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
           </li>
         ))}
       </ul>
+      <div aria-live="polite" className="space-y-2">
+        {approvals.data?.map((request) => (
+          <p key={request.id} className="break-words rounded-sm bg-muted/40 p-2 text-small">
+            <strong>{request.name}</strong> · {t(`portal.files.${request.status}`)}
+          </p>
+        ))}
+      </div>
       {canEdit ? (
         <label className="flex flex-col gap-2 text-small">
           {t('attachments.add')}
           <Input
             type="file"
-            accept={ACCEPT}
             disabled={upload.isPending}
             onChange={(e) => {
               const file = e.target.files?.[0]
@@ -148,8 +201,13 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
               e.target.value = ''
             }}
           />
-          <span className="text-caption text-muted-foreground">{t('attachments.hint')}</span>
+          <span className="text-caption text-muted-foreground">{t('portal.files.hint')}</span>
         </label>
+      ) : null}
+      {approvalRequested ? (
+        <p role="status" className="text-small text-info">
+          {t('portal.files.requested')}
+        </p>
       ) : null}
       {stage ? (
         <p role="status" className="text-small text-muted-foreground">
@@ -171,15 +229,17 @@ export function CardAttachments({ cardId, canEdit }: { cardId: string; canEdit: 
           {t(
             retryScan
               ? 'attachments.scanUnavailable'
-              : error?.status === 413
-                ? 'attachments.tooLarge'
-                : error?.errors.some((item) => item.code === 'infected')
-                  ? 'attachments.infected'
-                  : 'attachments.error',
+              : retryUpload
+                ? 'attachments.uploadUnavailable'
+                : error?.status === 413
+                  ? 'attachments.tooLarge'
+                  : error?.errors.some((item) => item.code === 'infected')
+                    ? 'attachments.infected'
+                    : 'attachments.error',
           )}
         </p>
       ) : null}
-      {retryScan ? (
+      {retryScan || retryUpload ? (
         <Button
           size="sm"
           variant="secondary"

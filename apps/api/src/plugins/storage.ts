@@ -13,6 +13,7 @@
 // bearer URLs; the local ones are deliberately stricter), and both go through the same permission
 // preHandler as every other route.
 import { createReadStream } from 'node:fs'
+import { Transform } from 'node:stream'
 import { resolve } from 'node:path'
 import type { FastifyInstance, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
@@ -30,11 +31,18 @@ import { ATTACHMENT_TYPES } from '../lib/storage/attachment-types.js'
 import { createLocalStore, type LocalStore } from '../lib/storage/local-store.js'
 import type { ObjectStore } from '../lib/storage/object-store.js'
 import { createS3Store } from '../lib/storage/s3-store.js'
+import {
+  BufferedTransferBudget,
+  reserveBufferedTransfer,
+  retainBufferedTransfer,
+} from '../lib/storage/buffer-budget.js'
 
 export type StorageService = {
   store: ObjectStore
   scanner: MalwareScanner
+  bufferBudget: BufferedTransferBudget
   maxUploadBytes: number
+  maxAttachmentBytes: number
   /** How long a presigned PUT stays valid (also the `app.uploads.expires_at` horizon). */
   uploadUrlTtlSeconds: number
   /** TECH-SPEC §6 "signed 5-minute GETs". */
@@ -43,7 +51,11 @@ export type StorageService = {
 
 /** Test seam: `buildApp(deps, config, { storage: { scanner } })` swaps in a fake scanner (an
  * "infected" verdict without a real clamd) or a fake store without touching config. */
-export type StorageOverrides = { store?: ObjectStore; scanner?: MalwareScanner }
+export type StorageOverrides = {
+  store?: ObjectStore
+  scanner?: MalwareScanner
+  bufferBudget?: BufferedTransferBudget
+}
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -101,6 +113,7 @@ function registerLocalRoutes(
   instance: FastifyInstance,
   store: LocalStore,
   maxUploadBytes: number,
+  maxImageBytes: number,
 ): void {
   const app = instance.withTypeProvider<ZodTypeProvider>()
   const ownAccount = (r: FastifyRequest) => ({
@@ -114,7 +127,8 @@ function registerLocalRoutes(
   app.removeContentTypeParser('text/plain')
   app.addContentTypeParser(
     [...new Set([...ALLOWED_IMAGE_TYPES, ...Object.values(ATTACHMENT_TYPES)])],
-    { parseAs: 'buffer', bodyLimit: maxUploadBytes },
+    // Only the signed PUT route raises this parser's ordinary HTTP body limit.
+    { parseAs: 'buffer' },
     (_req, body, done) => done(null, body),
   )
 
@@ -127,37 +141,84 @@ function registerLocalRoutes(
       // authority for this route (H1.4).
       config: { permission: { action: 'update', subject: ownAccount }, csrfExempt: true },
       bodyLimit: maxUploadBytes,
+      // Bound the stream before Fastify buffers it. A signed attachment cannot upload more bytes
+      // than its approved metadata, and raising attachment limits never raises the avatar limit.
+      preParsing: async (req, reply, payload) => {
+        const token = store.verifyToken(req.query.token)
+        // Session ownership is checked by the existing preValidation/handler path. At parsing
+        // time only the signed capability is available; invalid capabilities consume no budget.
+        if (!token || token.method !== 'PUT') {
+          sendProblem(reply, 'not_found')
+          return reply
+        }
+        let limit = maxImageBytes
+        if (token.key.startsWith('attachments/')) {
+          const upload = await app.devon.findOwnUpload(
+            token.key.split('/').at(-2) ?? '',
+            token.userId,
+          )
+          if (upload?.key !== token.key || upload.status !== 'pending') {
+            sendProblem(reply, 'not_found')
+            return reply
+          }
+          limit = Math.min(upload.size, maxUploadBytes)
+        }
+        const tooLarge = () =>
+          Object.assign(new Error('Upload limit exceeded'), {
+            statusCode: 413,
+            code: 'FST_ERR_CTP_BODY_TOO_LARGE',
+          })
+        if (Number(req.headers['content-length']) > limit) throw tooLarge()
+        if (!reserveBufferedTransfer(req, reply, app.storage.bufferBudget, limit)) return reply
+        let count = 0
+        const bounded = new Transform({
+          transform(chunk: Buffer, _encoding, callback) {
+            count += chunk.length
+            bounded.receivedEncodedLength = count
+            callback(count > limit ? tooLarge() : null, count > limit ? undefined : chunk)
+          },
+        }) as Transform & { receivedEncodedLength: number }
+        bounded.receivedEncodedLength = 0
+        payload.on('error', (error) => bounded.destroy(error))
+        return payload.pipe(bounded)
+      },
       schema: { querystring: tokenQuerySchema },
     },
     async (req, reply) => {
-      const payload = store.verifyToken(req.query.token)
-      // Unknown, expired, wrong-method or someone else's token all look identical: a 404, never a 403
-      // that would confirm the token exists.
-      if (!payload || payload.method !== 'PUT' || payload.userId !== req.actor!.userId) {
-        sendProblem(reply, 'not_found')
-        return
-      }
-      if (payload.key.startsWith('attachments/')) {
-        const uploadId = payload.key.split('/').at(-2) ?? ''
-        const upload = await app.devon.findOwnUpload(uploadId, req.actor!.userId)
-        if (!upload || upload.key !== payload.key || upload.status !== 'pending') {
-          return sendProblem(reply, 'not_found')
+      const releaseWork = retainBufferedTransfer(req)
+      if (!releaseWork) return reply
+      try {
+        const payload = store.verifyToken(req.query.token)
+        // Unknown, expired, wrong-method or someone else's token all look identical: a 404, never a 403
+        // that would confirm the token exists.
+        if (!payload || payload.method !== 'PUT' || payload.userId !== req.actor!.userId) {
+          sendProblem(reply, 'not_found')
+          return
         }
+        if (payload.key.startsWith('attachments/')) {
+          const uploadId = payload.key.split('/').at(-2) ?? ''
+          const upload = await app.devon.findOwnUpload(uploadId, req.actor!.userId)
+          if (!upload || upload.key !== payload.key || upload.status !== 'pending') {
+            return sendProblem(reply, 'not_found')
+          }
+        }
+        const contentType = (req.headers['content-type'] ?? '').split(';')[0]!.trim().toLowerCase()
+        if (!payload.contentType || contentType !== payload.contentType) {
+          sendProblem(reply, 'validation_failed', {
+            errors: [{ path: 'content-type', code: 'mismatch' }],
+          })
+          return
+        }
+        const body: unknown = req.body
+        if (!Buffer.isBuffer(body) || body.length === 0) {
+          sendProblem(reply, 'validation_failed', { errors: [{ path: 'body', code: 'empty' }] })
+          return
+        }
+        await store.put(payload.key, body, payload.contentType)
+        return reply.code(204).send()
+      } finally {
+        releaseWork()
       }
-      const contentType = (req.headers['content-type'] ?? '').split(';')[0]!.trim().toLowerCase()
-      if (!payload.contentType || contentType !== payload.contentType) {
-        sendProblem(reply, 'validation_failed', {
-          errors: [{ path: 'content-type', code: 'mismatch' }],
-        })
-        return
-      }
-      const body: unknown = req.body
-      if (!Buffer.isBuffer(body) || body.length === 0) {
-        sendProblem(reply, 'validation_failed', { errors: [{ path: 'body', code: 'empty' }] })
-        return
-      }
-      await store.put(payload.key, body, payload.contentType)
-      return reply.code(204).send()
     },
   )
 
@@ -198,7 +259,9 @@ export default fp<{ overrides?: StorageOverrides }>(async function storagePlugin
   app.decorate('storage', {
     store,
     scanner,
+    bufferBudget: opts.overrides?.bufferBudget ?? new BufferedTransferBudget(),
     maxUploadBytes: config.STORAGE_MAX_UPLOAD_BYTES,
+    maxAttachmentBytes: config.STORAGE_MAX_ATTACHMENT_BYTES,
     uploadUrlTtlSeconds: UPLOAD_URL_TTL_SECONDS,
     getUrlTtlSeconds: GET_URL_TTL_SECONDS,
   } satisfies StorageService)
@@ -220,7 +283,12 @@ export default fp<{ overrides?: StorageOverrides }>(async function storagePlugin
   )
 
   if (store.driver === 'local') {
-    registerLocalRoutes(app, store as LocalStore, config.STORAGE_MAX_UPLOAD_BYTES)
+    registerLocalRoutes(
+      app,
+      store as LocalStore,
+      Math.max(config.STORAGE_MAX_UPLOAD_BYTES, config.STORAGE_MAX_ATTACHMENT_BYTES),
+      config.STORAGE_MAX_UPLOAD_BYTES,
+    )
   }
 
   app.addHook('onClose', async () => {

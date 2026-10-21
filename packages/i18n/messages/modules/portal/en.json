@@ -1,0 +1,89 @@
+{
+  "portal": {
+    "stage": {
+      "todo": "To do",
+      "in_progress": "In progress",
+      "start": "Start work",
+      "reset": "Move to to do"
+    },
+    "staffing": {
+      "expected": "Expected people",
+      "unset": "Not set"
+    },
+    "profile": {
+      "title": "Professional profile",
+      "description": "Description",
+      "headline": "Headline",
+      "phone": "Work phone",
+      "location": "Location",
+      "about": "About",
+      "skills": "Skills",
+      "languages": "Languages",
+      "commaHint": "Separate entries with commas.",
+      "education": "Education",
+      "experience": "Experience",
+      "certifications": "Certifications",
+      "links": "Contact links",
+      "institution": "Institution",
+      "degree": "Degree / level",
+      "field": "Field of study",
+      "startYear": "Start year",
+      "endYear": "End / expected year",
+      "current": "Current position",
+      "studying": "Currently studying",
+      "organization": "Organization",
+      "role": "Role",
+      "name": "Name",
+      "issuer": "Issuer",
+      "year": "Year",
+      "label": "Label",
+      "url": "Website URL",
+      "remove": "Remove entry",
+      "add": "Add entry",
+      "saveError": "Could not save. Check the fields and dates. If another window changed your profile, reload before saving.",
+      "empty": "Not entered yet",
+      "expected": "Expected",
+      "present": "Present",
+      "contact": "Contact",
+      "intro": "Optional details you choose to share with colleagues. Keep private information out of this public work profile."
+    },
+    "overview": {
+      "workforce": "Total workforce",
+      "units": "Units",
+      "projects": "Group projects",
+      "tasks": "Individual tasks",
+      "filled": "All positions filled",
+      "positions": "{count} planned positions in units",
+      "setTargets": "Set staffing targets in Structure",
+      "unitsHint": "Organization and staffing",
+      "track": "{percent}% on track · {count} due within 7 days or overdue",
+      "staffing": "Workforce by unit",
+      "staffed": "{actual} of {expected} positions filled",
+      "deadlines": "Upcoming · next 30 days",
+      "noDeadlines": "No upcoming deadlines or events.",
+      "calendar": "Open calendar",
+      "back": "← Back to overview",
+      "readBriefing": "Read full briefing",
+      "staffingTab": "Workforce",
+      "deadlinesTab": "Deadlines"
+    },
+    "files": {
+      "hint": "Any file type. Files are scanned and downloaded, never executed. Files over 100 MB require superadmin approval.",
+      "requested": "Approval requested. After the superadmin approves it, select this file again to upload.",
+      "queue": "Large file approvals",
+      "queueHint": "Approve uploads larger than 100 MB. Malware scanning still applies after approval.",
+      "empty": "No files awaiting approval.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "pending": "Waiting for superadmin approval.",
+      "approved": "Approved — select the same file again to upload.",
+      "rejected": "Upload request declined."
+    },
+    "cards": {
+      "actions": "Card actions",
+      "select": "Select card",
+      "deselect": "Deselect card",
+      "titleLimit": "Up to {count} characters. Put the detail in the description."
+    }
+  }
+}

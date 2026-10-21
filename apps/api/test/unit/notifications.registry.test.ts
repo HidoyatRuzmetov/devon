@@ -136,6 +136,15 @@ describe('the notification registry matches the events the API actually emits', 
 describe('every registry entry is well formed', () => {
   const entries = Object.entries(NOTIFICATION_REGISTRY)
 
+  it('never creates notifications for private AI conversation events', () => {
+    const conversationEvents = entries.filter(([name]) => name.startsWith('ai.conversation.'))
+    expect(conversationEvents).toHaveLength(8)
+    for (const [name, entry] of conversationEvents) {
+      expect(entry.notify, name).toBe(false)
+      expect(specFor(name), name).toBeNull()
+    }
+  })
+
   it('a silent entry explains itself', () => {
     for (const [name, entry] of entries) {
       if (entry.notify === false) {

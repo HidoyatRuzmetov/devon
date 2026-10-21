@@ -70,7 +70,8 @@ describe('admin settings unavailable reads', () => {
     expect.soft(screen.queryByRole('button', { name: 'Turn on' })).not.toBeInTheDocument()
     expect.soft(screen.queryByRole('button', { name: 'Generate key' })).not.toBeInTheDocument()
     expect.soft(screen.queryByRole('button', { name: 'Start wipe' })).not.toBeInTheDocument()
-    expect.soft(screen.queryAllByRole('button', { name: 'Try again' }).length).toBe(4)
+    // Registration, maintenance, sentinel, wipe, and the upload approval queue each explain failure.
+    expect.soft(screen.queryAllByRole('button', { name: 'Try again' }).length).toBe(5)
     for (const mutation of [patchRegistration, patchMaintenance, rotateSentinelKey, startWipe])
       expect(mutation).not.toHaveBeenCalled()
     client.clear()

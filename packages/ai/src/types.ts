@@ -61,6 +61,7 @@ export type ChatCompletionResult = {
 }
 
 export type ChatCompletionRequest = {
+  signal?: AbortSignal
   model: string
   messages: ChatMessage[]
   maxTokens: number

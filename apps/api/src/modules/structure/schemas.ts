@@ -2,6 +2,7 @@
 // body/params/query, never trust `req.body` raw). Response schemas double as the OpenAPI document
 // (`fastify-type-provider-zod`'s `jsonSchemaTransform`, wired once in `src/app.ts`).
 import { z } from 'zod'
+import { professionalProfileSchema } from '@devon/contracts'
 
 export const uuidSchema = z.string().uuid()
 
@@ -27,6 +28,7 @@ export const unitSchema = z.object({
   parentUnitId: uuidSchema.nullable(),
   name: z.string(),
   colour: unitColourSchema,
+  expectedPeople: z.number().int().min(0).nullable().optional(),
   sort: z.number().int(),
   path: z.string(),
   version: z.number().int(),
@@ -63,6 +65,7 @@ export const updateUnitBodySchema = z
     name: z.string().trim().min(1).max(120).optional(),
     colour: unitColourSchema.optional(),
     parentUnitId: uuidSchema.nullable().optional(),
+    expectedPeople: z.number().int().min(0).max(10000).nullable().optional(),
     version: z.number().int().optional(),
   })
   .strict()
@@ -113,6 +116,8 @@ export const memberSchema = z.object({
   patronymic: z.string().nullable(),
   title: z.string().nullable(),
   avatarKey: z.string().nullable(),
+  email: z.string().nullable().optional(),
+  professionalProfile: professionalProfileSchema.optional(),
   membershipRole: membershipRoleSchema,
   unitId: uuidSchema.nullable(),
   unitRole: unitRoleKindSchema.nullable(),

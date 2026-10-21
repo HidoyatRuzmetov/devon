@@ -39,6 +39,11 @@ spec:
           securityContext:
             allowPrivilegeEscalation: false
           image: clamav/clamav:1.4@sha256:b25d9199257ae7ef45e0cc4c7eaa60ce7e5447796f0090d5ff311d1a30980cc3
+          env:
+            - { name: CLAMD_CONF_StreamMaxLength, value: '1024M' }
+            - { name: CLAMD_CONF_MaxFileSize, value: '1024M' }
+            - { name: CLAMD_CONF_MaxScanSize, value: '1536M' }
+            - { name: CLAMD_CONF_AlertExceedsMax, value: 'yes' }
           ports:
             - { name: clamd, containerPort: 3310 }
           volumeMounts:

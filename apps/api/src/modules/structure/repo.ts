@@ -6,6 +6,7 @@
 // hand-written, parameterised SQL against `app.units`/`app.unit_roles` -- the same tables
 // `packages/db/src/schema/structure.ts` describes for Drizzle's benefit inside that package (its own
 // seed module, and `test/tenancy.registry.test.ts`).
+import { professionalProfileSchema } from '@devon/contracts'
 import { randomUUID } from 'node:crypto'
 import { sql } from 'drizzle-orm'
 import { withContext, type RequestContext, type Role, type Tx } from '@devon/db'
@@ -54,6 +55,7 @@ type UnitRow = {
   parent_unit_id: string | null
   name: string
   colour: number | null
+  expected_people: number | null
   sort: number
   path: string
   version: number
@@ -65,6 +67,7 @@ function toUnitDto(r: UnitRow) {
     parentUnitId: r.parent_unit_id,
     name: r.name,
     colour: r.colour,
+    expectedPeople: r.expected_people ?? null,
     sort: r.sort,
     path: r.path,
     version: r.version,
@@ -156,7 +159,7 @@ export async function getUnitsOverview(
     if (!deptRows[0]) throw new StructureError('not_found', 'Department not found')
 
     const unitRows = await tx.raw<UnitRow>(sql`
-      select id, parent_unit_id, name, colour, sort, path, version
+      select id, parent_unit_id, name, colour, expected_people, sort, path, version
       from app.units
       where department_id = ${departmentId} and deleted_at is null
       order by parent_unit_id nulls first, sort, name
@@ -170,7 +173,7 @@ export async function getUnitsOverview(
 
 async function loadUnit(tx: Tx, departmentId: string, unitId: string): Promise<UnitRow> {
   const rows = await tx.raw<UnitRow>(sql`
-    select id, parent_unit_id, name, colour, sort, path, version
+    select id, parent_unit_id, name, colour, expected_people, sort, path, version
     from app.units
     where id = ${unitId} and department_id = ${departmentId} and deleted_at is null
   `)
@@ -228,7 +231,7 @@ export async function createUnit(
     const inserted = await tx.raw<UnitRow>(sql`
       insert into app.units (id, department_id, parent_unit_id, name, colour, sort, path, created_by)
       values (${id}, ${departmentId}, ${parentUnitId}, ${body.name}, ${body.colour ?? null}, ${sort}, ${path}, ${actor.userId})
-      returning id, parent_unit_id, name, colour, sort, path, version
+      returning id, parent_unit_id, name, colour, expected_people, sort, path, version
     `)
     const unit = inserted[0]!
 
@@ -272,6 +275,10 @@ export async function updateUnit(
       throw new StructureError('conflict', 'This unit changed since you last loaded it')
     }
 
+    if (body.expectedPeople !== undefined && actorRoleInDept !== 'head')
+      throw new StructureError('forbidden', 'Only the department head can set staffing targets')
+    const expectedPeople =
+      body.expectedPeople === undefined ? before.expected_people : body.expectedPeople
     const name = body.name ?? before.name
     const colour = body.colour === undefined ? before.colour : body.colour
     const reparenting =
@@ -282,9 +289,9 @@ export async function updateUnit(
       // The common case (rename/recolour only): touches exactly this row, never a descendant.
       const updated = await tx.raw<UnitRow>(sql`
         update app.units
-        set name = ${name}, colour = ${colour}, version = version + 1, updated_at = now()
+        set name = ${name}, colour = ${colour}, expected_people = ${expectedPeople}, version = version + 1, updated_at = now()
         where id = ${unitId} and department_id = ${departmentId} and deleted_at is null
-        returning id, parent_unit_id, name, colour, sort, path, version
+        returning id, parent_unit_id, name, colour, expected_people, sort, path, version
       `)
       unit = updated[0]!
     } else {
@@ -320,6 +327,7 @@ export async function updateUnit(
         update app.units
         set name = case when id = ${unitId} then ${name} else name end,
             colour = case when id = ${unitId} then ${colour} else colour end,
+            expected_people = case when id = ${unitId} then ${expectedPeople} else expected_people end,
             parent_unit_id = case when id = ${unitId} then ${newParentId} else parent_unit_id end,
             sort = case when id = ${unitId} then ${newSort} else sort end,
             path = ${newOwnPath} || substring(path from ${before.path.length + 1}::integer),
@@ -327,7 +335,7 @@ export async function updateUnit(
             updated_at = now()
         where department_id = ${departmentId} and deleted_at is null
           and (id = ${unitId} or path like ${before.path + '%'})
-        returning id, parent_unit_id, name, colour, sort, path, version
+        returning id, parent_unit_id, name, colour, expected_people, sort, path, version
       `)
       unit = updated.find((r) => r.id === unitId)!
     }
@@ -460,7 +468,7 @@ export async function restoreUnit(
 
     const ts = new Date(deletedAt)
     const rows = await tx.raw<UnitRow>(sql`
-      select id, parent_unit_id, name, colour, sort, path, version
+      select id, parent_unit_id, name, colour, expected_people, sort, path, version
       from app.units
       where id = ${unitId} and department_id = ${departmentId} and deleted_at = ${ts}
     `)
@@ -642,6 +650,8 @@ export async function unassignUnitRole(
 // --- members (People page) ------------------------------------------------------------------------
 
 type MemberRow = {
+  email: string | null
+  professional_profile: unknown
   user_id: string
   given_name: string
   family_name: string
@@ -657,7 +667,7 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
   return withDept(actor, departmentId, async (tx) => {
     const rows = await tx.raw<MemberRow>(sql`
       select
-        u.id as user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key,
+        u.id as user_id, u.given_name, u.family_name, u.patronymic, u.title, u.avatar_key, u.email, u.professional_profile,
         m.role as membership_role, ur.unit_id, ur.role as unit_role
       from app.memberships m
       join app.users u on u.id = m.user_id and u.deleted_at is null
@@ -673,6 +683,8 @@ export async function listMembers(actor: ActorCtx, departmentId: string) {
       patronymic: r.patronymic,
       title: r.title,
       avatarKey: r.avatar_key,
+      email: r.email,
+      professionalProfile: professionalProfileSchema.parse(r.professional_profile ?? {}),
       membershipRole: r.membership_role,
       unitId: r.unit_id,
       unitRole: r.unit_role,

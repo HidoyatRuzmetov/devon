@@ -23,7 +23,7 @@ import {
   cn,
   initialsFromName,
 } from '@devon/ui'
-import { RouterLink } from '../../../lib/router.js'
+import { RouterLink, useSearchParams } from '../../../lib/router.js'
 import type { MemberSummary } from '../../work/api.js'
 import type { Project, ProjectStatus } from '../api.js'
 
@@ -61,6 +61,7 @@ export function ProjectTile({
    * the board card below it already carries assignee/priority/due for that member's own work. */
   compact?: boolean
 }) {
+  const origin = useSearchParams().get('from') === 'overview' ? '&from=overview' : ''
   const t = useT()
   const locale = useLocale()
   const percent = Math.round(project.progress * 100)
@@ -95,7 +96,7 @@ export function ProjectTile({
       <HoverLift>
         <PressScale>
           <RouterLink
-            href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+            href={`/projects/view?id=${encodeURIComponent(project.id)}${origin}`}
             className="flex items-center gap-3 rounded-md border border-border bg-card p-3 text-left shadow-1
               transition-colors hover:border-ring/50 focus-visible:outline-none focus-visible:ring-2
               focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -136,7 +137,7 @@ export function ProjectTile({
             {ring}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <RouterLink
-                href={`/projects/view?id=${encodeURIComponent(project.id)}`}
+                href={`/projects/view?id=${encodeURIComponent(project.id)}${origin}`}
                 className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
               >
                 {titleRow}

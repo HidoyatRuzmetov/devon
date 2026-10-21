@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import * as React from 'react'
 import { useT } from '@devon/i18n'
 import {
@@ -83,7 +84,7 @@ function ProjectForm({
         if (save.isPending) return
         save.mutate(
           {
-            title: title.trim(),
+            ...(title.trim() !== project.title ? { title: title.trim() } : {}),
             description: description.trim() || null,
             ownerUserId: owner,
             members: [...new Set([owner, ...selected])],
@@ -107,10 +108,17 @@ function ProjectForm({
           {t('projects.field.title')}
           <Input
             required
-            maxLength={200}
+            maxLength={WORK_TITLE_MAX}
+            aria-label={t('projects.field.title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+          <span
+            className="text-right text-caption text-muted-foreground"
+            title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+          >
+            {title.length}/{WORK_TITLE_MAX}
+          </span>
         </label>
         <label className="flex flex-col gap-1.5 text-small">
           {t('projectEdit.description')}

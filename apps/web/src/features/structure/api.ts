@@ -3,6 +3,7 @@
 // own copy of `apps/api/src/modules/structure/schemas.ts`'s shapes -- the same "no shared DTO
 // package" tradeoff `apps/web/src/lib/api-schemas.ts` already documents for `/me`/`/instance`.
 import { z } from 'zod'
+import { professionalProfileSchema } from '@devon/contracts'
 import { apiClient } from '../../lib/api-client.js'
 
 export const membershipRoleSchema = z.enum(['head', 'member'])
@@ -20,6 +21,7 @@ export const unitSchema = z.object({
   parentUnitId: z.string().nullable(),
   name: z.string(),
   colour: z.number().nullable(),
+  expectedPeople: z.number().int().min(0).nullable().optional(),
   sort: z.number(),
   path: z.string(),
   version: z.number(),
@@ -50,6 +52,8 @@ export const memberSchema = z.object({
   patronymic: z.string().nullable(),
   title: z.string().nullable(),
   avatarKey: z.string().nullable(),
+  email: z.string().nullable().optional(),
+  professionalProfile: professionalProfileSchema.optional(),
   membershipRole: membershipRoleSchema,
   unitId: z.string().nullable(),
   unitRole: unitRoleKindSchema.nullable(),
@@ -79,7 +83,13 @@ export function createUnit(
 export function updateUnit(
   departmentId: string,
   unitId: string,
-  body: { name?: string; colour?: number | null; parentUnitId?: string | null; version?: number },
+  body: {
+    expectedPeople?: number | null
+    name?: string
+    colour?: number | null
+    parentUnitId?: string | null
+    version?: number
+  },
   csrfToken: string,
 ): Promise<Unit> {
   return apiClient.patch(

@@ -1,8 +1,5 @@
 // Postgres access for the projects module, through `@devon/db`'s `withContext()`/`tx.raw()` directly
-// -- same reasoning as `../work/repo.ts`'s header. Progress is computed at read time from
-// `app.cards` (objective + subjective task completion), never stored, so it can never drift from the
-// cards it summarises (TECH-SPEC §3.2: "Project progress = weighted completion of objective tasks and
-// members' subjective tasks").
+// Progress is computed from project milestones; personal task completion is tracked separately.
 import { randomUUID } from 'node:crypto'
 import { sql, type SQL } from 'drizzle-orm'
 import { withContext, type RequestContext, type Tx } from '@devon/db'
@@ -37,18 +34,23 @@ export async function createFromCard(
       title: string
       description: ProjectRow['description']
       project_id: string | null
+      assignee_user_id: string | null
     }>(sql`
-      select title, description, project_id from app.cards where id = ${cardId}
+      select title, description, project_id, assignee_user_id from app.cards where id = ${cardId}
         and department_id = ${departmentId} and deleted_at is null for update`)
     const card = cards[0]
     if (!card) return { ok: false as const, reason: 'not_found' as const }
     if (card.project_id) return { ok: false as const, reason: 'conflict' as const }
-    const selected = await checkedMembers(tx, departmentId, ctx.userId!, members)
+    const selected = await checkedMembers(tx, departmentId, ctx.userId!, [
+      ...members,
+      ...(card.assignee_user_id ? [card.assignee_user_id] : []),
+    ])
     const id = randomUUID()
     await tx.raw(sql`insert into app.projects (id, department_id, title, description, owner_user_id, members, status, colour)
       values (${id}, ${departmentId}, ${card.title}, ${card.description ? JSON.stringify(card.description) : null}::jsonb,
         ${ctx.userId}, ${sql.param(selected)}::uuid[], 'active', ${defaultColour(id)})`)
-    await tx.raw(sql`update app.cards set project_id = ${id}, project_scope = 'objective', kind = 'project_task',
+    await tx.raw(sql`update app.cards set project_id = ${id}, project_scope = 'subjective', kind = 'project_task',
+      assignee_user_id = coalesce(assignee_user_id, ${ctx.userId}),
       updated_at = now(), version = version + 1 where id = ${cardId}`)
     tx.audit({
       action: 'projects.created_from_card',
@@ -62,7 +64,7 @@ export async function createFromCard(
       subjectType: 'card',
       subjectId: cardId,
       departmentId,
-      after: { projectId: id, projectScope: 'objective', kind: 'project_task' },
+      after: { projectId: id, projectScope: 'subjective', kind: 'project_task' },
     })
     tx.emit({
       type: 'projects.project.created',
@@ -138,7 +140,7 @@ export async function createFromGallery(
         orderKey: undefined,
         kind: 'project_task',
         projectId: project.id,
-        projectScope: 'objective',
+        projectScope: 'subjective',
         assigneeUserId: input.ownerUserId,
         giverUserId: ctx.userId!,
         createdByUserId: ctx.userId!,
@@ -154,7 +156,7 @@ export async function createFromGallery(
       departmentId: input.departmentId,
       after: { projectId: project.id, cards: payload.cards?.length ?? 0 },
     })
-    return { ...project, objectiveTotal: payload.cards?.length ?? 0 }
+    return { ...project, subjectiveTotal: payload.cards?.length ?? 0 }
   })
 }
 

@@ -250,9 +250,11 @@ export function RiskExplainPreview({ output }: { output: DeadlineRiskOutput }): 
 export function CatchUpPreview({
   output,
   cardTitle,
+  cardHref = (id) => `/work/card?id=${id}`,
 }: {
   output: CatchUpOutput
   cardTitle: (id: string) => string | null
+  cardHref?: (id: string) => string
 }): React.JSX.Element {
   const t = useT()
   const locale = useLocale()
@@ -285,7 +287,7 @@ export function CatchUpPreview({
                 <span className="min-w-0 flex-1 text-body text-foreground">
                   {risk.text}{' '}
                   <Link
-                    to={`/work/card?id=${risk.cardId}`}
+                    to={cardHref(risk.cardId)}
                     className="text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {cardTitle(risk.cardId) ?? t('ai.preview.openCard')}

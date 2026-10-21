@@ -106,6 +106,12 @@ export default function StructureScreen() {
     onSuccess: invalidateAll,
     onError: () => toast(t('state.error.title')),
   })
+  const staffingMutation = useMutation({
+    mutationFn: ({ unitId, expectedPeople }: { unitId: string; expectedPeople: number | null }) =>
+      updateUnit(departmentId!, unitId, { expectedPeople }, csrfToken),
+    onSuccess: invalidateAll,
+    onError: () => toast(t('state.error.title')),
+  })
   const renameMutation = useMutation({
     mutationFn: ({ unitId, name }: { unitId: string; name: string }) =>
       updateUnit(departmentId!, unitId, { name }, csrfToken),
@@ -223,6 +229,8 @@ export default function StructureScreen() {
   const isHead = myRole === 'head'
 
   const actions: TreeActions = {
+    onExpectedPeopleChange: (unitId, expectedPeople) =>
+      staffingMutation.mutate({ unitId, expectedPeople }),
     canEditStructure: isHead || settings.allowStructureEdit,
     canSelfAssign: settings.allowSelfAssign,
     isHead,

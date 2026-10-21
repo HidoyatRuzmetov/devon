@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 // "A project template creates the objective task list in one click" (EPIC-005 outcome) plus a plain
 // from-scratch project -- one dialog, two tabs' worth of fields shown/hidden by a toggle rather than
 // two separate dialogs, since they share every field except which endpoint ends up called.
@@ -201,11 +202,18 @@ export function CreateProjectDialog() {
               {t('projects.field.title')}
             </span>
             <Input
-              maxLength={200}
+              maxLength={WORK_TITLE_MAX}
+              aria-label={t('projects.field.title')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('projects.field.titlePlaceholder')}
             />
+            <span
+              className="text-right text-caption text-muted-foreground"
+              title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+            >
+              {title.length}/{WORK_TITLE_MAX}
+            </span>
           </label>
 
           <label className="flex flex-col gap-1.5 text-small">

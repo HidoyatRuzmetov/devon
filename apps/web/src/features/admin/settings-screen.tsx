@@ -38,6 +38,7 @@ import {
   rotateSentinelKey,
   startWipe,
 } from './api.js'
+import { FileApprovalQueue } from './file-approval-queue.js'
 import { AdminScreen } from './admin-screen.js'
 
 function SettingsReadError({ error, retry }: { error: unknown; retry: () => unknown }) {
@@ -659,6 +660,7 @@ function WipeCard() {
 function SettingsBody() {
   return (
     <div className="flex flex-col gap-6">
+      <FileApprovalQueue />
       <RegistrationCard />
       <MaintenanceCard />
       <SentinelCard />

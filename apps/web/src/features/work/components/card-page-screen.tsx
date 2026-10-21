@@ -12,6 +12,17 @@ export default function CardPageScreen() {
   const t = useT()
   const search = useSearchParams()
   const id = search.get('id')
+  const boardParams = new URLSearchParams()
+  if (search.get('from') === 'overview') {
+    boardParams.set('from', 'overview')
+    const conversation = search.get('conversation')
+    if (
+      conversation &&
+      /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(conversation)
+    )
+      boardParams.set('conversation', conversation)
+  }
+  const boardHref = `/work${boardParams.size ? `?${boardParams}` : ''}`
 
   // v1.1 EPIC-018. Every other work view renders inside `WorkShell`, which mounts the board signal
   // source once; this page deliberately does not (it is one card, not a view of the board), so it
@@ -38,7 +49,7 @@ export default function CardPageScreen() {
   return (
     <div className="mx-auto max-w-200 pb-12">
       <RouterLink
-        href="/work"
+        href={boardHref}
         className="mb-4 inline-block text-small text-primary underline underline-offset-2"
       >
         {t('work.card.backToBoard')}

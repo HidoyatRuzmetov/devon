@@ -58,6 +58,7 @@ export type RecipientRule =
 
 /** Which loader in `sources.ts` knows how to turn this event's payload into `EventFacts`. */
 export type SubjectSource =
+  | 'file_upload_approval'
   | 'card'
   | 'card_comment'
   | 'event'
@@ -112,6 +113,11 @@ export type NotificationSpec = {
 export type SilentSpec = { readonly notify: false; readonly why: string }
 
 export type RegistryEntry = NotificationSpec | SilentSpec
+
+const PRIVATE_AI_CONVERSATION: SilentSpec = Object.freeze({
+  notify: false,
+  why: 'AI conversations and generation state are private to their owner. The owner sees progress inside the conversation; no inbox, Telegram, push or department notification may expose these events.',
+})
 
 const EMPTY: Readonly<Record<string, string | number | null>> = Object.freeze({})
 
@@ -207,6 +213,14 @@ function str(f: EventFacts, key: string): string {
  * the emit sites statically and asserts this key set equals that name set.
  */
 export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Object.freeze({
+  'ai.conversation.created': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.requested': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.started': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.answered': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.failed': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.cancelled': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.interrupted': PRIVATE_AI_CONVERSATION,
+  'ai.conversation.metered': PRIVATE_AI_CONVERSATION,
   'pages.page.created': {
     notify: false,
     why: 'A new shared page refreshes open knowledge lists without notifying the whole department.',
@@ -214,6 +228,65 @@ export const NOTIFICATION_REGISTRY: Readonly<Record<string, RegistryEntry>> = Ob
   'pages.page.updated': {
     notify: false,
     why: 'Autosaved knowledge edits refresh open pages without creating an inbox item per save.',
+  },
+  'attachments.approval.consumed': {
+    notify: false,
+    why: 'The uploader already sees their upload progress.',
+  },
+  'attachments.approval.requested': {
+    notify: true,
+    reason: 'decision',
+    source: 'file_upload_approval',
+    subjectType: 'file_upload_approval',
+    recipients: ['super_admins'],
+    deepLink: () => '/admin/settings#file-upload-approvals',
+    title: () =>
+      plain(
+        'Katta fayl uchun ruxsat kerak',
+        'Катта файл учун рухсат керак',
+        'Нужно разрешение на большой файл',
+        'Large upload needs approval',
+      ),
+    body: (f) =>
+      withName(
+        plain('Yuklash soʻrovi', 'Юклаш сўрови', 'Запрос на загрузку', 'Upload request'),
+        f.subjectTitle,
+      ),
+  },
+  'attachments.approval.reviewed': {
+    notify: true,
+    reason: 'decision',
+    source: 'file_upload_approval',
+    subjectType: 'file_upload_approval',
+    recipients: ['target_user'],
+    deepLink: (f) =>
+      str(f, 'subjectType') === 'page'
+        ? '/pages?page=' + str(f, 'subjectId')
+        : '/work/card?id=' + str(f, 'subjectId'),
+    title: (f) =>
+      str(f, 'status') === 'rejected'
+        ? plain(
+            'Fayl yuklash rad etildi',
+            'Файл юклаш рад этилди',
+            'Загрузка отклонена',
+            'Upload declined',
+          )
+        : plain(
+            'Fayl yuklash tasdiqlandi',
+            'Файл юклаш тасдиқланди',
+            'Загрузка одобрена',
+            'Upload approved',
+          ),
+    body: (f) =>
+      withName(
+        plain(
+          'Fayl soʻrovi koʻrib chiqildi',
+          'Файл сўрови кўриб чиқилди',
+          'Запрос рассмотрен',
+          'Your file request was reviewed',
+        ),
+        f.subjectTitle,
+      ),
   },
   'pages.page.deleted': {
     notify: false,

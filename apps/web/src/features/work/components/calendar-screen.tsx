@@ -3,12 +3,10 @@
 // due date. Month navigation via `?month=YYYY-MM` so a linked month is shareable like every other view.
 import * as React from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CalendarDays, Flag } from 'lucide-react'
 import { useT, useLocale, formatMonthYear } from '@devon/i18n'
 import {
   Button,
-  Collapsible,
-  HoverLift,
   IconButton,
   Skeleton,
   Stagger,
@@ -22,6 +20,11 @@ import { useCardsQuery } from '../hooks.js'
 import { openCardPeek, CardPeekDialog } from './card-peek-dialog.js'
 import { WorkShell } from './work-shell.js'
 import type { Card } from '../api.js'
+import { useProjectsQuery } from '../../projects/hooks.js'
+import { useEventsQuery } from '../../events/hooks.js'
+import type { EventDto } from '../../events/schemas.js'
+
+type Deadline = { id: string; title: string; date: string; projectId: string }
 
 const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -65,44 +68,52 @@ function DayCell({
   inMonth,
   isToday,
   cards,
+  events,
+  deadlines,
   onOpen,
 }: {
   day: Date
   inMonth: boolean
   isToday: boolean
+  deadlines: readonly Deadline[]
+  events: readonly EventDto[]
   cards: readonly Card[]
   onOpen: (id: string) => void
 }) {
   const t = useT()
   const reduced = useReducedMotion()
   const [expanded, setExpanded] = React.useState(false)
-  const shown = cards.slice(0, 3)
-  const overflow = cards.slice(3)
+  const entries = [
+    ...events.map((e) => ({ kind: 'event' as const, value: e })),
+    ...cards.map((c) => ({ kind: 'card' as const, value: c })),
+    ...deadlines.map((d) => ({ kind: 'deadline' as const, value: d })),
+  ]
+  const shown = expanded ? entries : entries.slice(0, 3)
+  const overflow = entries.slice(3)
 
   function chip(c: Card) {
     return (
-      <HoverLift key={c.id}>
-        <button
-          type="button"
-          onClick={() => onOpen(c.id)}
-          className={cn(
-            'w-full truncate rounded-sm px-1 py-0.5 text-left text-caption',
-            c.priority === 'urgent' || c.priority === 'high'
-              ? 'bg-destructive/12 text-destructive'
-              : 'bg-primary/12 text-primary',
-          )}
-          title={c.title}
-        >
-          {c.title}
-        </button>
-      </HoverLift>
+      <button
+        key={c.id}
+        type="button"
+        onClick={() => onOpen(c.id)}
+        className={cn(
+          'w-full shrink-0 truncate rounded-sm px-1 py-0.5 text-left text-caption',
+          c.priority === 'urgent' || c.priority === 'high'
+            ? 'bg-destructive/12 text-destructive'
+            : 'bg-primary/12 text-primary',
+        )}
+        title={c.title}
+      >
+        {c.title}
+      </button>
     )
   }
 
   return (
     <div
       className={cn(
-        'relative flex min-h-24 flex-col gap-1 bg-card p-1.5',
+        'relative flex h-40 min-w-0 flex-col gap-1 overflow-hidden bg-card p-1.5',
         !inMonth && 'bg-muted/40',
       )}
     >
@@ -120,12 +131,49 @@ function DayCell({
       >
         {day.getDate()}
       </span>
-      {shown.map(chip)}
+      <div className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-1">
+        {shown.map((entry) =>
+          entry.kind === 'card' ? (
+            chip(entry.value)
+          ) : entry.kind === 'deadline' ? (
+            <button
+              key={entry.value.id}
+              type="button"
+              title={entry.value.title}
+              onClick={() =>
+                navigate(
+                  '/projects/view?id=' +
+                    entry.value.projectId +
+                    (new URLSearchParams(window.location.search).get('from') === 'overview'
+                      ? '&from=overview'
+                      : ''),
+                )
+              }
+              className="flex w-full shrink-0 items-center gap-1 rounded-sm border border-warning/30 bg-warning/10 px-1 py-0.5 text-left text-caption text-warning"
+            >
+              <Flag className="size-3 shrink-0" aria-hidden="true" />
+              <span className="truncate">{entry.value.title}</span>
+            </button>
+          ) : (
+            <button
+              key={entry.value.id}
+              type="button"
+              title={entry.value.title}
+              onClick={() =>
+                navigate(
+                  `/events?event=${entry.value.id}${new URLSearchParams(window.location.search).get('from') === 'overview' ? '&from=overview' : ''}`,
+                )
+              }
+              className="flex w-full shrink-0 items-center gap-1 rounded-sm border border-info/30 bg-info/10 px-1 py-0.5 text-left text-caption text-info"
+            >
+              <CalendarDays className="size-3 shrink-0" aria-hidden="true" />
+              <span className="truncate">{entry.value.title}</span>
+            </button>
+          ),
+        )}
+      </div>
       {overflow.length > 0 ? (
         <>
-          <Collapsible open={expanded} id={`day-overflow-${day.toISOString()}`}>
-            <div className="flex flex-col gap-1">{overflow.map(chip)}</div>
-          </Collapsible>
           <button
             type="button"
             aria-expanded={expanded}
@@ -152,7 +200,11 @@ function MonthGrid({
   days,
   today,
   cards,
+  events,
+  deadlines,
 }: {
+  deadlines: readonly Deadline[]
+  events: readonly EventDto[]
   month: Date
   days: readonly Date[]
   today: Date
@@ -182,6 +234,14 @@ function MonthGrid({
               inMonth={day.getMonth() === month.getMonth()}
               isToday={sameDay(day, today)}
               cards={dayCards}
+              deadlines={deadlines.filter((d) => sameDay(new Date(d.date + 'T12:00:00'), day))}
+              events={events.filter((e) => {
+                const start = new Date(e.startsAt),
+                  end = new Date(e.endsAt)
+                const next = new Date(day)
+                next.setDate(next.getDate() + 1)
+                return start < next && end > day && e.status !== 'cancelled'
+              })}
               onOpen={openCardPeek}
             />
           </StaggerItem>
@@ -202,9 +262,27 @@ export default function CalendarScreen() {
   // 100 is `GET /api/v1/cards`'s own hard cap (`work/schemas.ts`'s `limit: z.coerce.number()...
   // max(100)`) -- 300 always got a flat 422 (H1: confirmed live, the calendar view's own error
   // state, not an empty month).
+  const projectsQuery = useProjectsQuery()
   const cardsQuery = useCardsQuery({ q: q || undefined, limit: 100 })
 
   const days = buildGrid(month)
+  const eventsQuery = useEventsQuery({
+    from: days[0]!,
+    to: new Date(days[41]!.getFullYear(), days[41]!.getMonth(), days[41]!.getDate() + 1),
+  })
+  const deadlines: Deadline[] = (projectsQuery.data ?? [])
+    .filter((p) => p.status !== 'archived')
+    .flatMap((p) => [
+      ...p.milestones
+        .filter((m) => m.dueOn)
+        .map((m) => ({
+          id: m.id,
+          title: p.title + ' · ' + m.title,
+          date: m.dueOn!,
+          projectId: p.id,
+        })),
+      ...(p.targetOn ? [{ id: p.id, title: p.title, date: p.targetOn, projectId: p.id }] : []),
+    ])
   const today = new Date()
   const cards = (cardsQuery.data ?? []).filter(
     (c): c is typeof c & { dueAt: string } => c.dueAt !== null,
@@ -217,15 +295,22 @@ export default function CalendarScreen() {
   }
 
   let grid: React.ReactNode
-  if (cardsQuery.isPending) {
+  if (cardsQuery.isPending || eventsQuery.isPending || projectsQuery.isPending) {
     grid = <Skeleton className="h-140 w-full" />
-  } else if (cardsQuery.isError) {
+  } else if (cardsQuery.isError || eventsQuery.isError || projectsQuery.isError) {
     grid = (
       <StateView
         kind="error"
         titleKey="state.error.title"
         bodyKey="state.error.body"
-        action={{ labelKey: 'state.error.action', onAction: () => void cardsQuery.refetch() }}
+        action={{
+          labelKey: 'state.error.action',
+          onAction: () => {
+            void cardsQuery.refetch()
+            void eventsQuery.refetch()
+            void projectsQuery.refetch()
+          },
+        }}
       />
     )
   } else {
@@ -240,7 +325,14 @@ export default function CalendarScreen() {
             exit={reduced ? { opacity: 0 } : { opacity: 0, x: direction * -SLIDE_PX }}
             transition={{ duration: reduced ? 0.15 : 0.22, ease: 'easeOut' }}
           >
-            <MonthGrid month={month} days={days} today={today} cards={cards} />
+            <MonthGrid
+              month={month}
+              days={days}
+              today={today}
+              cards={cards}
+              deadlines={deadlines}
+              events={eventsQuery.data?.items ?? []}
+            />
           </motion.div>
         </AnimatePresence>
       </div>
@@ -264,7 +356,7 @@ export default function CalendarScreen() {
                 variant="ghost"
                 onClick={() => {
                   setDirection(0)
-                  navigate(`/work/calendar${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+                  replaceSearchParam('month', monthKey(new Date()))
                 }}
               >
                 {t('work.calendar.today')}

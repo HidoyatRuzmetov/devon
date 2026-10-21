@@ -111,7 +111,9 @@ export default function PeopleScreen() {
   const departments = useMyDepartments()
   const departmentId = departments.activeDepartmentId
   const [query, setQuery] = React.useState('')
-  const [unitFilter, setUnitFilter] = React.useState<string | null>(null)
+  const [unitFilter, setUnitFilter] = React.useState<string | null>(() =>
+    new URLSearchParams(window.location.search).get('unit'),
+  )
   // ui-blitz round3 #23: the hover card's "copy link" action writes `?member=<userId>` -- this reads
   // it back, drops any unit filter that would hide that member, and scrolls/highlights their card
   // once the directory has loaded. `consumedRef` makes this a one-shot effect (the param stays in the

@@ -67,7 +67,7 @@ spec:
             failureThreshold: 3
           resources:
             requests: { cpu: 200m, memory: 256Mi }
-            limits: { cpu: '2', memory: 1Gi }
+            limits: { cpu: '2', memory: 4Gi }
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false # STORAGE_DRIVER=local would write under .data/storage

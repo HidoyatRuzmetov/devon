@@ -131,14 +131,14 @@ describe('project lifecycle', () => {
     expect(audit[0]?.before.title).toBe('Reviewed')
   })
 
-  it('rolls up partial checklist progress, completed and legacy-scoped tasks equally in list/detail, excluding deleted work', async () => {
+  it('keeps personal checklist completion separate from milestone progress in list and detail', async () => {
     const project = await createProject()
     const [done, partial, deleted] = await Promise.all([
       createCard(project.id),
       createCard(project.id),
       createCard(project.id),
     ])
-    expect(partial.projectScope).toBe('objective')
+    expect(partial.projectScope).toBe('subjective')
     await request(`/cards/${done.id}`, 'PATCH', { status: 'done' })
     await request(`/cards/${deleted.id}`, 'DELETE')
     await superuserQuery(db, "update app.cards set project_scope = 'none' where id = $1", [
@@ -150,17 +150,19 @@ describe('project lifecycle', () => {
     await request(`/cards/${partial.id}/checklist/${item.id}`, 'PATCH', { done: true })
     const detail = (await (await request(`/projects/${project.id}`)).json()) as ProjectDTO
     const list = (await (await request('/projects')).json()) as ProjectDTO[]
-    expect(detail.progress).toBe(0.75)
-    expect(detail.objectiveTotal).toBe(2)
-    expect(detail.objectiveDone).toBe(1)
-    expect(list.find((p) => p.id === project.id)?.progress).toBe(0.75)
+    expect(detail.progress).toBe(0)
+    expect(detail.objectiveTotal).toBe(1)
+    expect(detail.objectiveDone).toBe(0)
+    expect(detail.subjectiveTotal).toBe(1)
+    expect(detail.subjectiveDone).toBe(1)
+    expect(list.find((p) => p.id === project.id)?.progress).toBe(0)
     await request(`/cards/${done.id}`, 'PATCH', { status: 'archived' })
     expect(((await (await request(`/projects/${project.id}`)).json()) as ProjectDTO).progress).toBe(
-      0.75,
+      0,
     )
   })
 
-  it('uses completed milestones when no tasks exist, updates list/detail, and lets actual tasks take precedence', async () => {
+  it('uses completed milestones consistently before and after personal tasks are created or deleted', async () => {
     const project = await createProject()
     const added = await request(`/projects/${project.id}/milestones`, 'POST', {
       title: 'Discovery',
@@ -178,7 +180,7 @@ describe('project lifecycle', () => {
     expect(listed.find((item) => item.id === project.id)?.progress).toBe(0.5)
     const card = await createCard(project.id)
     expect(((await (await request(`/projects/${project.id}`)).json()) as ProjectDTO).progress).toBe(
-      0,
+      0.5,
     )
     await request(`/cards/${card.id}`, 'DELETE')
     expect(((await (await request(`/projects/${project.id}`)).json()) as ProjectDTO).progress).toBe(
@@ -192,12 +194,12 @@ describe('project lifecycle', () => {
     expect(((await completed.json()) as ProjectDTO).progress).toBe(1)
   })
 
-  it('uses the explicit done status for an otherwise empty project', async () => {
+  it('does not invent completed milestones for an empty project marked done', async () => {
     const project = await createProject()
     expect(project.progress).toBe(0)
     const done = await request(`/projects/${project.id}`, 'PATCH', { status: 'done' })
     expect(done.status).toBe(200)
-    expect(((await done.json()) as ProjectDTO).progress).toBe(1)
+    expect(((await done.json()) as ProjectDTO).progress).toBe(0)
   })
 
   it('deletes owner/head projects and live child tasks atomically, retains audit, and only undoes its own cascade', async () => {

@@ -75,6 +75,39 @@ async function run(store: ReturnType<typeof createS3Store>): Promise<void> {
   }
   assertTrue(tooLarge, 'get refuses an object past maxBytes')
 
+  step(
+    'a large attachment URL binds its approved length and reads back without extra whole-file copies',
+  )
+  const attachmentKey = `attachments/${userId}/${uploadId}/pending`
+  try {
+    const large = Buffer.alloc(101 * 1024 * 1024, 65)
+    const approved = await store.presignPut(attachmentKey, {
+      contentType: 'application/octet-stream',
+      contentLength: large.length,
+      expiresInSeconds: 120,
+      userId,
+    })
+    const wrongSize = await fetch(approved.url, {
+      method: 'PUT',
+      headers: approved.headers,
+      body: Buffer.from('wrong size'),
+    })
+    assertEqual(wrongSize.status, 403, 'mismatched approved length is refused')
+    const uploaded = await fetch(approved.url, {
+      method: 'PUT',
+      headers: approved.headers,
+      body: large,
+    })
+    assertEqual(uploaded.status, 200, 'approved large PUT status')
+    const downloaded = await store.get(attachmentKey, { maxBytes: large.length })
+    assertTrue(
+      downloaded !== null && downloaded.equals(large),
+      'large attachment bytes are unchanged',
+    )
+  } finally {
+    await store.remove([attachmentKey])
+  }
+
   step('put (server-side) + presignGet -> a 5-minute download URL; tampering is refused')
   const variantKey = `avatars/${userId}/${uploadId}/64.webp`
   await store.put(variantKey, Buffer.from('RIFF....WEBP'), 'image/webp')

@@ -28,13 +28,14 @@ data:
   STORAGE_S3_REGION: us-east-1
   STORAGE_S3_FORCE_PATH_STYLE: 'true'
   STORAGE_MAX_UPLOAD_BYTES: '5242880'
+  STORAGE_MAX_ATTACHMENT_BYTES: '1073741824'
   STORAGE_TIMEOUT_MS: '10000'
   # apps/api refuses to boot with NODE_ENV=production and CLAMAV_MODE=off (config.ts). Either run
   # the clamav Deployment in optional/ or accept that the API will not start.
   CLAMAV_MODE: clamd
   CLAMAV_HOST: devon-clamav
   CLAMAV_PORT: '3310'
-  CLAMAV_TIMEOUT_MS: '20000'
+  CLAMAV_TIMEOUT_MS: '120000'
   CENTRIFUGO_WS_URL: wss://work.example.ministry.uz/realtime/connection/websocket
   CENTRIFUGO_API_URL: http://devon-centrifugo:8000/api
   CENTRIFUGO_TOKEN_TTL_SECONDS: '600'

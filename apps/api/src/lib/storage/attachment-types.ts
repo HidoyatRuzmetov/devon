@@ -1,5 +1,6 @@
 /** Files are always downloaded, never rendered as active content in the application origin. */
 export const ATTACHMENT_TYPES = {
+  bin: 'application/octet-stream',
   pdf: 'application/pdf',
   txt: 'text/plain',
   csv: 'text/csv',
@@ -39,7 +40,7 @@ export function attachmentDisposition(name: string): string {
 
 export function attachmentMime(name: string): string | null {
   const extension = name.split('.').at(-1)?.toLowerCase() ?? ''
-  return ATTACHMENT_TYPES[extension as keyof typeof ATTACHMENT_TYPES] ?? null
+  return ATTACHMENT_TYPES[extension as keyof typeof ATTACHMENT_TYPES] ?? 'application/octet-stream'
 }
 
 export function validAttachmentBytes(name: string, bytes: Buffer): boolean {
@@ -61,13 +62,20 @@ export function validAttachmentBytes(name: string, bytes: Buffer): boolean {
   }
   if (ext === 'txt' || ext === 'csv') {
     try {
-      const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes)
-      return !Array.from(text).some(
-        (char) => char.charCodeAt(0) < 32 && !['\t', '\n', '\r'].includes(char),
-      )
+      const decoder = new TextDecoder('utf-8', { fatal: true })
+      // Validate UTF-8 across chunk boundaries without making a giant string/character array.
+      for (let offset = 0; offset < bytes.length; offset += 65536) {
+        const text = decoder.decode(bytes.subarray(offset, offset + 65536), { stream: true })
+        for (let i = 0; i < text.length; i++) {
+          const code = text.charCodeAt(i)
+          if (code < 32 && code !== 9 && code !== 10 && code !== 13) return false
+        }
+      }
+      decoder.decode()
+      return true
     } catch {
       return false
     }
   }
-  return false
+  return true
 }

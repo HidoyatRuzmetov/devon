@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 // SPEC §12 / WALKTHROUGH-FINDINGS §2.2 -- "the global + Yangi → Yangi vazifa does nothing".
 //
 // It used to navigate to `/work` and stop: no dialog, no focused input, `document.activeElement`
@@ -69,10 +70,17 @@ export function NewCardDialog() {
                 {t('work.field.title')}
                 <Input
                   value={title}
+                  aria-label={t('work.field.title')}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  maxLength={200}
+                  maxLength={WORK_TITLE_MAX}
                 />
+                <span
+                  className="text-right text-caption text-muted-foreground"
+                  title={t('portal.cards.titleLimit', { count: WORK_TITLE_MAX })}
+                >
+                  {title.length}/{WORK_TITLE_MAX}
+                </span>
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="flex flex-col gap-1.5 text-small">

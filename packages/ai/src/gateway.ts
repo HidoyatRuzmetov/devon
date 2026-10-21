@@ -28,6 +28,7 @@ import type {
 } from './types.js'
 
 export type RunOptions<T> = {
+  signal?: AbortSignal
   provider: AiProvider
   config: AiConfig
   feature: AiFeature
@@ -113,7 +114,8 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
       ? start + options.overallTimeoutMs
       : null
   const remainingMs = (): number => (deadline === null ? 0 : deadline - Date.now())
-  const outOfTime = (): boolean => deadline !== null && remainingMs() <= 0
+  const outOfTime = (): boolean =>
+    options.signal?.aborted === true || (deadline !== null && remainingMs() <= 0)
   const timedOut = (): RunResult<T> => ({
     ok: false,
     error: `The request exceeded its ${options.overallTimeoutMs} ms budget.`,
@@ -160,6 +162,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
       result = await provider.complete({
         model: config.model,
         messages,
+        ...(options.signal ? { signal: options.signal } : {}),
         maxTokens,
         tools: [tool],
         toolChoice: 'required',
@@ -251,6 +254,7 @@ export async function run<T>(options: RunOptions<T>): Promise<RunResult<T>> {
       retryResult = await provider.complete({
         model: config.model,
         messages: retryMessages,
+        ...(options.signal ? { signal: options.signal } : {}),
         maxTokens,
         tools: [tool],
         toolChoice: 'required',

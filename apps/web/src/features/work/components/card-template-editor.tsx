@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import * as React from 'react'
 import { cardTemplatePayloadSchema } from '@devon/contracts'
 import { useT } from '@devon/i18n'
@@ -121,7 +122,7 @@ export function CardTemplateEditor({
               <Input
                 id={`${id}-title`}
                 value={title}
-                maxLength={300}
+                maxLength={WORK_TITLE_MAX}
                 required
                 onChange={(event) => setTitle(event.target.value)}
               />

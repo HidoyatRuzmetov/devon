@@ -35,10 +35,10 @@ import { FocusList } from '../work/components/focus-list.js'
 import { useMyWorkloadQuery } from '../work/hooks-plus.js'
 import { useForcedState } from '../../lib/forced-state.js'
 import { useIsHead } from '../../lib/can.js'
-import { HeadDashboard } from './head-dashboard.js'
+import { DepartmentOverview } from './department-overview.js'
 import { useDepartment, useInstanceQuery, useMeQuery } from '../../lib/session.js'
 import { useOnline } from '../../lib/use-online.js'
-import { navigate, useSearchParams } from '../../lib/router.js'
+import { navigate, replaceSearchParam, useSearchParams } from '../../lib/router.js'
 import { formatHomeDateLine, greetingKey, greetingName, tashkentHour } from '../../lib/greeting.js'
 import { ForcedStateBlock } from '../../shell/forced-state-block.js'
 import {
@@ -587,6 +587,23 @@ export default function HomeScreen() {
 
   const settled = !meQuery.isPending && !instanceQuery.isPending
   const user = meQuery.data?.user ?? null
+  const overviewScope =
+    user && departmentId
+      ? `${departmentId}:${user.id}:${meQuery.data?.actingForUserId ?? ''}`
+      : null
+  const previousOverviewScope = React.useRef<string | null>(null)
+  const overviewScopeChanged = Boolean(
+    previousOverviewScope.current &&
+    overviewScope &&
+    previousOverviewScope.current !== overviewScope,
+  )
+
+  React.useEffect(() => {
+    if (!overviewScope) return
+    if (previousOverviewScope.current && previousOverviewScope.current !== overviewScope)
+      replaceSearchParam('conversation', null)
+    previousOverviewScope.current = overviewScope
+  }, [overviewScope])
 
   React.useEffect(() => {
     if (forced) return
@@ -621,13 +638,31 @@ export default function HomeScreen() {
 
   const header = (
     <Reveal className="flex flex-col gap-1">
-      <p className="text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground">
+      <p
+        className={cn(
+          'text-eyebrow uppercase tracking-(--text-eyebrow--letter-spacing) text-muted-foreground',
+          isHead && 'hidden',
+        )}
+      >
         {t('home.eyebrow')}
       </p>
-      <h1 className="min-w-0 font-display text-hero text-foreground [overflow-wrap:anywhere]">
+      <h1
+        tabIndex={-1}
+        className={cn(
+          'min-w-0 font-display text-foreground [overflow-wrap:anywhere]',
+          isHead ? 'line-clamp-1 text-h3 lg:line-clamp-none lg:text-h2' : 'text-hero',
+        )}
+      >
         {t(greetingKey(tashkentHour(now)), { name: greetingName(user) })}
       </h1>
-      <p className="text-lead text-muted-foreground">{formatHomeDateLine(now, locale)}</p>
+      <p
+        className={cn(
+          'text-muted-foreground',
+          isHead ? 'hidden text-caption lg:block' : 'text-lead',
+        )}
+      >
+        {formatHomeDateLine(now, locale)}
+      </p>
     </Reveal>
   )
 
@@ -668,27 +703,38 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="relative flex flex-col gap-8">
+    <div className={cn('relative flex flex-col', isHead ? 'gap-3' : 'gap-8')}>
       {/* DESIGN.md v2: the ambient gradient lives on auth and the hub only. Home is the hub. */}
-      <HubAmbientWash />
-      {header}
+      {/* The head overview fits the viewport; its decorative wash must fit the same bounds. */}
+      <HubAmbientWash className={isHead ? 'h-full' : ''} />
+      {!isHead ? header : null}
       {/* v1.1 SPEC §3.2 -- the one place in the product that branches on the role itself rather than
           on an action: which *product* this person opens. A boshqarma boshlig'i gets a management
           dashboard (people, load, risk, decisions); a xodim keeps the working view (due from me,
           needs my decision, around me, sprint, focus). Both are fed by endpoints the viewer is
           allowed to call, so neither is a client-side illusion. */}
-      <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => navigate(isHead ? '/work' : '/work/mine')}>
-          {t(isHead ? 'work.view.board' : 'work.view.mine')}
-        </Button>
-        <Button variant="secondary" onClick={() => navigate('/work?new=1')}>
-          {t('work.actions.create')}
-        </Button>
-        <Button variant="ghost" onClick={() => navigate('/help')}>
-          {t('help.title')}
-        </Button>
-      </div>
-      {isHead ? <HeadDashboard /> : <Dashboard hasAvatar={Boolean(user.avatarKey)} />}
+      {!isHead ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={() => navigate(isHead ? '/work' : '/work/mine')}>
+            {t(isHead ? 'work.view.board' : 'work.view.mine')}
+          </Button>
+          <Button variant="secondary" onClick={() => navigate('/work?new=1')}>
+            {t('work.actions.create')}
+          </Button>
+          <Button variant="ghost" onClick={() => navigate('/help')}>
+            {t('help.title')}
+          </Button>
+        </div>
+      ) : null}
+      {isHead ? (
+        <DepartmentOverview
+          key={overviewScope}
+          header={header}
+          allowConversationRoute={!overviewScopeChanged}
+        />
+      ) : (
+        <Dashboard hasAvatar={Boolean(user.avatarKey)} />
+      )}
       {/* Focus cards keep Home underneath, just as Mine keeps its own list underneath.
           Load the shared details panel only when a card is actually opened. */}
       {search.get('card') ? (

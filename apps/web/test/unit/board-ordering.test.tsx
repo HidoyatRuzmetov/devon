@@ -8,6 +8,7 @@ import {
   moveCardOnBoard,
   previousBoardPosition,
   sortBoardCards,
+  orderBoardCards,
 } from '../../src/features/work/lib/board-state.js'
 import {
   patchCardInCaches,
@@ -97,6 +98,36 @@ function client() {
 }
 
 describe('board move and focus cache', () => {
+  it('attention order puts focus, overdue, priority and nearest deadlines first without changing manual ranks', () => {
+    const rows = [
+      { ...card('ordinary', 'a', 'a0'), dueAt: '2026-11-01T00:00:00Z' },
+      { ...card('high', 'a', 'a1'), priority: 'high' as const },
+      { ...card('soon', 'a', 'a2'), dueAt: '2026-10-22T00:00:00Z' },
+      { ...card('late', 'a', 'a3'), risk: 'overdue' as const },
+      { ...card('focused', 'a', 'a4'), focusPinned: true, focusPosition: 0 },
+      card('no-date', 'a', 'a5'),
+    ]
+    expect(orderBoardCards(rows, 'attention').map((item) => item.id)).toEqual([
+      'focused',
+      'late',
+      'high',
+      'soon',
+      'ordinary',
+      'no-date',
+    ])
+    expect(orderBoardCards(rows, 'manual').map((item) => item.id)).toEqual(
+      rows.map((item) => item.id),
+    )
+    expect(rows.map((item) => item.orderKey)).toEqual(['a0', 'a1', 'a2', 'a3', 'a4', 'a5'])
+  })
+  it('attention ties retain the current optimistic order, rather than stale server ranks', () => {
+    const rows = [card('second-rank', 'a', 'b'), card('first-rank', 'a', 'a')]
+    expect(orderBoardCards(rows, 'attention').map((item) => item.id)).toEqual([
+      'second-rank',
+      'first-rank',
+    ])
+    expect(orderBoardCards(rows, 'manual')).not.toBe(rows)
+  })
   it('moves the actual arrays around current target IDs and leaves unrelated columns unchanged', () => {
     const original = board()
     const moved = moveCardOnBoard(original, {

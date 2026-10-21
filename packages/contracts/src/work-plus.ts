@@ -13,6 +13,7 @@
 // formatting is locale work and belongs to `@devon/i18n`; this file only ever returns numbers,
 // `Date`s and structured records the caller renders.
 import { z } from 'zod'
+import { WORK_TITLE_MAX } from './work-limits.js'
 
 // ---------------------------------------------------------------------------------------------
 // A3 -- time estimates and the light time log
@@ -341,7 +342,7 @@ export type WorkTemplateScope = z.infer<typeof workTemplateScopeSchema>
 
 export const cardTemplatePayloadSchema = z
   .object({
-    title: z.string().min(1).max(300),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX),
     description: z.string().max(20000).nullable().optional(),
     priority: z.enum(['none', 'low', 'medium', 'high', 'urgent']).optional(),
     /** Days from "create from template" to the new card's due date. */
@@ -355,21 +356,26 @@ export type CardTemplatePayload = z.infer<typeof cardTemplatePayloadSchema>
 
 export const projectTemplatePayloadSchema = z
   .object({
-    title: z.string().min(1).max(200),
+    title: z.string().trim().min(1).max(WORK_TITLE_MAX),
     description: z.string().max(20000).nullable().optional(),
     colour: z
       .string()
       .regex(/^#[0-9a-fA-F]{6}$/)
       .optional(),
     milestones: z
-      .array(z.object({ title: z.string().min(1).max(200), offsetDays: z.number().int().min(0) }))
+      .array(
+        z.object({
+          title: z.string().trim().min(1).max(WORK_TITLE_MAX),
+          offsetDays: z.number().int().min(0),
+        }),
+      )
       .max(30)
       .optional(),
     /** Objective cards every project started from this template begins with. */
     cards: z
       .array(
         z.object({
-          title: z.string().min(1).max(300),
+          title: z.string().trim().min(1).max(WORK_TITLE_MAX),
           offsetDays: z.number().int().min(0).max(365).optional(),
           estimateMin: z.number().int().min(1).max(MAX_ESTIMATE_MINUTES).nullable().optional(),
         }),
@@ -488,6 +494,9 @@ export type AutomationAction = z.infer<typeof automationActionSchema>
 /** Keep stored legacy actions readable, but refuse new writes missing the input their action
  * actually uses. There is no dynamic recipient mode: assign/notify_user name one colleague. */
 export const automationWritableActionSchema = automationActionSchema.superRefine((action, ctx) => {
+  if (action.kind === 'create_followup' && (action.title?.length ?? 0) > WORK_TITLE_MAX) {
+    ctx.addIssue({ code: 'custom', message: 'work_title_too_long', path: ['title'] })
+  }
   let field: keyof AutomationAction | null = null
   switch (action.kind) {
     case 'assign':

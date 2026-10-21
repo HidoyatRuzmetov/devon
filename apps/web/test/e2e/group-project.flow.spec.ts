@@ -14,7 +14,7 @@ import {
   uniqueLogin,
 } from './flow-api.js'
 
-test('@flow group project: objective + subjective tasks complete and progress reflects it', async ({
+test('@flow group project: personal tasks remain separate from milestone progress', async ({
   browser,
 }) => {
   const superAdminContext = await newFlowContext(browser)
@@ -56,9 +56,9 @@ test('@flow group project: objective + subjective tasks complete and progress re
   const project = (await createRes.json()) as { id: string; milestones: unknown[]; colour: string }
   expect(project.milestones).toEqual([])
 
-  // Real UI: the project page renders (title, and both task-scope tabs).
+  // Legacy task scopes remain readable within the single personal-task section.
   await headPage.goto(`/projects/view?id=${project.id}`)
-  await expect(headPage.getByText('Boshqarma vazifalari')).toBeVisible()
+  await expect(headPage.getByText('Boshqarma vazifalari')).toHaveCount(0)
   await expect(headPage.getByText('Oʻz vazifalarim')).toBeVisible()
 
   // Existing production projects can track work entirely with milestones and no task cards.
@@ -115,9 +115,9 @@ test('@flow group project: objective + subjective tasks complete and progress re
   }
   expect(before.objectiveDone).toBe(0)
   expect(before.subjectiveDone).toBe(0)
-  expect(before.progress).toBe(0)
+  expect(before.progress).toBe(0.5)
 
-  // Checklist steps are real partial progress, even before the task itself is marked done.
+  // Personal checklists do not change the milestone completion percentage.
   const stepResponse = await authedPost(headContext, `/api/v1/cards/${objective.id}/checklist`, {
     text: 'First step',
   })
@@ -127,10 +127,9 @@ test('@flow group project: objective + subjective tasks complete and progress re
     done: true,
   })
   await headPage.reload()
-  await expect(headPage.getByText('25', { exact: true })).toBeVisible()
+  await expect(headPage.getByText('50', { exact: true })).toBeVisible()
 
-  // Ordinary head Home must use the same partial-task progress and an actual future-events read,
-  // rather than filtering the historical analytics window (which intentionally ends today).
+  // The head overview links to the portfolio and to events in the next thirty days.
   expect((await authedPatch(headContext, '/api/v1/me', { locale: 'en' })).status()).toBe(200)
   const futureTitle = `Upcoming project review ${Date.now()}`
   const outsideTitle = `Later project review ${Date.now()}`
@@ -144,7 +143,7 @@ test('@flow group project: objective + subjective tasks complete and progress re
   expect(futureResponse.status()).toBe(201)
   const futureEvent = (await futureResponse.json()) as { id: string; status: string }
   expect(futureEvent.status).toBe('open')
-  const laterAt = new Date(Date.now() + 9 * 86_400_000)
+  const laterAt = new Date(Date.now() + 35 * 86_400_000)
   expect(
     (
       await authedPost(headContext, '/api/v1/events', {
@@ -166,19 +165,20 @@ test('@flow group project: objective + subjective tasks complete and progress re
   const partialProject = (await (
     await headContext.request.get(`/api/v1/projects/${project.id}`)
   ).json()) as { progress: number }
-  expect(partialProject.progress).toBe(0.25)
+  expect(partialProject.progress).toBe(0.5)
   await headPage.goto('/')
-  await expect(headPage.getByRole('heading', { name: 'Coming up', exact: true })).toBeVisible()
-  const upcomingRow = headPage.getByRole('listitem').filter({
-    has: headPage.getByText(futureTitle, { exact: true }),
-  })
-  await expect(upcomingRow).toHaveText(`${futureTitle}1`)
+  await expect(
+    headPage.getByRole('heading', { name: 'Upcoming · next 30 days', exact: true }),
+  ).toBeVisible()
+  const upcomingRow = headPage.getByRole('link').filter({ hasText: futureTitle })
+  await expect(upcomingRow).toHaveAttribute('href', /\/work\/calendar\?month=.+&from=overview/)
   await expect(headPage.getByText(outsideTitle, { exact: true })).toHaveCount(0)
-  const dashboardProject = headPage.getByRole('listitem').filter({
-    has: headPage.getByRole('link', { name: `${projectTitle} 25%`, exact: true }),
-  })
-  await expect(dashboardProject).toBeVisible()
-  await expect(dashboardProject.getByText('25%', { exact: true })).toBeVisible()
+  await expect(
+    headPage
+      .getByRole('main')
+      .getByRole('link')
+      .filter({ has: headPage.getByText('Group projects', { exact: true }) }),
+  ).toHaveAttribute('href', '/projects?from=overview')
   await headPage.screenshot({
     path: test.info().outputPath('head-home-upcoming-and-partial-project.png'),
     fullPage: true,
@@ -213,7 +213,20 @@ test('@flow group project: objective + subjective tasks complete and progress re
   expect(after.objectiveTotal).toBe(1)
   expect(after.subjectiveDone).toBe(1)
   expect(after.subjectiveTotal).toBe(1)
-  expect(after.progress).toBe(1)
+  expect(after.progress).toBe(0.5)
+
+  await headPage.reload()
+  await expect(headPage.getByText('50', { exact: true })).toBeVisible()
+  const remaining = (await afterRes.json()).milestones.find(
+    (milestone: { doneAt: string | null }) => !milestone.doneAt,
+  ) as { id: string }
+  expect(
+    (
+      await authedPatch(headContext, `/api/v1/projects/${project.id}/milestones/${remaining.id}`, {
+        done: true,
+      })
+    ).status(),
+  ).toBe(200)
 
   // Real UI, reloaded: the project's progress ring reads 100%.
   await headPage.reload()

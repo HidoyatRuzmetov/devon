@@ -25,17 +25,15 @@ import {
   type Edge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge'
 import {
-  CalendarClock,
-  ChevronDown,
-  ChevronsUp,
-  ChevronUp,
+  Flag,
+  FolderKanban,
+  Ellipsis,
+  CheckSquare,
   Eye,
-  GripVertical,
   Link2,
   ListChecks,
   Lock,
   MessageSquare,
-  Minus,
   MoveRight,
   Pin,
   Repeat,
@@ -45,7 +43,6 @@ import { useT, useLocale, formatDate } from '@devon/i18n'
 import { useCardSignals } from '../../../lib/realtime/index.js'
 import {
   Avatar,
-  Badge,
   Checkbox,
   Chip,
   cn,
@@ -64,17 +61,12 @@ import {
   springSettle,
   useReducedMotion,
 } from '@devon/ui'
+import { RouterLink } from '../../../lib/router.js'
+import { unitColorClass } from '../../../lib/unit-palette.js'
 import { formatDurationShort } from '../lib/estimate.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import type { Project } from '../../projects/api.js'
-import {
-  DUE_CHIP_TONE,
-  PRIORITY_BADGE_TONE,
-  PRIORITY_ICON_NAME,
-  PRIORITY_LABEL_KEY,
-  RISK_LABEL_KEY,
-  fullName,
-} from '../lib/format.js'
+import { PRIORITY_LABEL_KEY, RISK_LABEL_KEY, fullName } from '../lib/format.js'
 import { touchDrag } from '../lib/touch-drag.js'
 
 /** A touch drag lifts after this long a press -- long enough that a scroll gesture (which moves the
@@ -84,8 +76,6 @@ const TOUCH_LIFT_MS = 350
 /** A touch move before the lift timer fires this far cancels the lift -- the finger is scrolling the
  * column, not picking up the card. */
 const TOUCH_MOVE_CANCEL_PX = 8
-
-const PRIORITY_ICON = { ChevronsUp, ChevronUp, Minus, ChevronDown } as const
 
 export const CARD_DRAG_TYPE = 'devon-work-card'
 
@@ -108,6 +98,7 @@ export interface CardTileProps {
   card: Card
   columnUserId: string | null
   members: readonly MemberSummary[]
+  unitPalette?: ReadonlyMap<string, string>
   labels: readonly Label[]
   /** Looked up by `card.projectId` for the small project chip (Trello/Plane show which project a
    * card belongs to right on the tile, not only inside the detail panel). */
@@ -183,6 +174,7 @@ export function CardTile({
   card,
   columnUserId,
   members,
+  unitPalette = new Map(),
   labels,
   projects = [],
   onOpen,
@@ -380,20 +372,21 @@ export function CardTile({
   const activeLabels = labels.filter((l) => card.labels.includes(l.id))
   const priorityKey = PRIORITY_LABEL_KEY[card.priority]
   const showPriority = card.priority !== 'none'
-  const priorityIconName = PRIORITY_ICON_NAME[card.priority]
-  const PriorityIcon = priorityIconName ? PRIORITY_ICON[priorityIconName] : null
   const project = card.projectId ? projects.find((p) => p.id === card.projectId) : undefined
   const locale = useLocale()
-  const hasMetadata = Boolean(
-    card.assigneeUnavailable ||
+  const hasSecondary = Boolean(
     showPriority ||
-    card.dueAt ||
-    (card.blockedByOpenCount ?? 0) > 0 ||
+    card.assigneeUnavailable ||
+    card.blockedByOpenCount ||
     card.recurrence ||
     card.estimateMin ||
-    card.focusPinned,
+    card.focusPinned ||
+    card.checklistTotal ||
+    card.commentCount ||
+    card.links.length ||
+    card.watchers.length ||
+    (card.giverUserId && card.giverUserId !== card.assigneeUserId),
   )
-
   const cardBody = (
     <div
       ref={ref}
@@ -401,16 +394,22 @@ export function CardTile({
       aria-label={card.title}
       data-dragging={isDragging || undefined}
       data-dnd-card={card.id}
+      data-status={card.status}
+      data-risk={card.risk}
+      data-task-origin={card.projectId ? 'project' : 'standalone'}
       onPointerDown={onTouchPointerDown}
       onPointerMove={onTouchPointerMove}
       onPointerUp={onTouchPointerUp}
       onPointerCancel={cancelTouchDrag}
       className={cn(
-        `group relative flex touch-pan-y flex-col gap-2 rounded-md border bg-card p-3 text-left shadow-1
+        `group relative flex min-h-14 touch-pan-y flex-col gap-1 rounded-md border px-2.5 py-1.5 text-left shadow-1
         transition-colors duration-(--dur-micro) hover:border-ring/50 focus-visible:outline-none
         focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
         data-[dragging]:touch-none data-[dragging]:opacity-40`,
-        selected ? 'border-primary ring-1 ring-primary' : 'border-border',
+        card.projectId
+          ? 'border-primary/25 bg-accent border-l-2 border-l-primary/65'
+          : 'border-border bg-card',
+        selected && 'border-primary ring-1 ring-primary',
       )}
     >
       {activeLabels.length > 0 ? (
@@ -426,8 +425,54 @@ export function CardTile({
         </div>
       ) : null}
 
-      <div className="flex items-start justify-between gap-2">
-        {onSelectedChange ? (
+      {card.projectId ? (
+        <RouterLink
+          href={`/projects/view?id=${card.projectId}`}
+          title={project?.title ?? t('boardRefinement.projectTask')}
+          className="relative z-10 flex min-w-0 items-start gap-1.5 pr-10 text-small font-semibold text-primary hover:underline md:pr-6"
+        >
+          <FolderKanban className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          <span className="line-clamp-2 [overflow-wrap:anywhere]">
+            {project?.title ?? t('boardRefinement.projectTask')}
+          </span>
+        </RouterLink>
+      ) : null}
+      <div className="flex items-start justify-between gap-1.5">
+        <button
+          type="button"
+          onClick={() => onOpen(card.id)}
+          title={card.title}
+          className={cn(
+            'line-clamp-2 min-w-0 flex-1 break-words text-left text-small leading-snug text-foreground [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring',
+            card.projectId ? 'pl-5 pr-10 font-medium md:pr-0' : 'pr-10 font-medium md:pr-6',
+          )}
+        >
+          {card.title}
+        </button>
+        <div className="absolute right-1 top-1 z-10">
+          {canMove || onSelectedChange ? (
+            <MoveToMenu
+              card={card}
+              members={members}
+              unitPalette={unitPalette}
+              onMoveTo={onMoveTo}
+              canMove={canMove}
+              selected={selected}
+              {...(onSelectedChange
+                ? { onSelectCard: () => onSelectedChange(!selected, false) }
+                : {})}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground',
+          !card.projectId && 'pr-10 md:pr-0',
+        )}
+      >
+        {onSelectedChange && (selected || selectionActive) ? (
           <span
             className={cn(
               'relative z-10 shrink-0 transition-opacity duration-(--dur-micro)',
@@ -450,177 +495,189 @@ export function CardTile({
             />
           </span>
         ) : null}
-        <button
-          type="button"
-          onClick={() => onOpen(card.id)}
-          className="min-w-0 flex-1 break-words text-left text-small font-medium leading-snug text-foreground after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+
+        <div
+          className={cn(
+            'flex items-center gap-1 text-caption',
+            card.workStage === 'in_progress' && card.status === 'active'
+              ? 'text-info-text'
+              : 'text-muted-foreground',
+          )}
         >
-          {card.title}
-        </button>
-        <div className="relative z-10 flex shrink-0 items-center gap-1">
-          {canMove ? (
+          <span aria-hidden="true">
+            {card.status === 'active' && card.workStage === 'in_progress'
+              ? '◐'
+              : card.status === 'done'
+                ? '✓'
+                : '○'}
+          </span>
+          <span>
+            {t(
+              card.status === 'active'
+                ? `portal.stage.${card.workStage ?? 'todo'}`
+                : `work.status.${card.status}`,
+            )}
+          </span>
+          <LiveSignalStrip cardId={card.id} />
+        </div>
+
+        {card.dueAt ? (
+          <time
+            dateTime={card.dueAt}
+            title={card.risk !== 'none' ? t(RISK_LABEL_KEY[card.risk]) : undefined}
+            className={cn(
+              'ml-auto whitespace-nowrap tabular-nums',
+              card.risk === 'overdue'
+                ? 'font-semibold text-destructive underline decoration-dotted underline-offset-2'
+                : card.risk !== 'none'
+                  ? 'text-warning-text'
+                  : 'text-muted-foreground',
+            )}
+          >
+            {formatDate(new Date(card.dueAt), locale)}
+          </time>
+        ) : null}
+      </div>
+      {hasSecondary ? (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-caption text-muted-foreground">
+          {showPriority ? (
             <span
-              className="cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100"
-              aria-hidden="true"
+              role="img"
+              aria-label={t(priorityKey)}
+              title={t(priorityKey)}
+              className={cn(
+                'inline-flex items-center gap-1 font-medium',
+                card.priority === 'urgent' || card.priority === 'high'
+                  ? 'text-destructive'
+                  : 'text-muted-foreground',
+              )}
             >
-              <GripVertical className="size-4" />
+              <Flag className="size-3.5" aria-hidden="true" />
+              {t(priorityKey)}
             </span>
           ) : null}
-          {canMove ? <MoveToMenu card={card} members={members} onMoveTo={onMoveTo} /> : null}
-        </div>
-      </div>
-
-      <LiveSignalStrip cardId={card.id} />
-
-      {project ? (
-        <Chip
-          tone="outline"
-          leading={
-            <span className="size-2 rounded-full" style={{ backgroundColor: project.colour }} />
-          }
-        >
-          {project.title}
-        </Chip>
-      ) : null}
-
-      {hasMetadata ? (
-        <div className="flex flex-wrap items-center gap-1.5">
           {card.assigneeUnavailable ? (
             <Chip tone="attention" leading={<MoveRight className="size-3" />}>
               {t('work.card.assigneeUnavailable')}
             </Chip>
           ) : null}
-          {showPriority ? (
-            <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
-              {PriorityIcon ? <PriorityIcon className="size-3" aria-hidden="true" /> : null}
-              {t(priorityKey)}
-            </Badge>
-          ) : null}
-          {card.dueAt ? (
-            <Chip
-              tone={DUE_CHIP_TONE[card.risk]}
-              leading={<CalendarClock className="size-3" />}
-              title={card.risk !== 'none' ? t(RISK_LABEL_KEY[card.risk]) : undefined}
-            >
-              {formatDate(new Date(card.dueAt), locale)}
-            </Chip>
-          ) : null}
-          {/* v1.1 SPEC §7. Each chip is a *fact the tile could not otherwise show*: this card is
-            waiting on other work (A10), it comes back on a schedule (A7), somebody sized it (A3),
-            it is one of my five (A9). All four are server-computed, so none of them is a guess. */}
           {(card.blockedByOpenCount ?? 0) > 0 ? (
-            <Chip
-              tone="destructive"
-              leading={<Lock className="size-3" />}
-              title={t('work.chip.blockedBy', {
-                count: card.blockedByOpenCount ?? 0,
-              })}
+            <span
+              role="img"
+              aria-label={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
+              title={t('work.chip.blockedBy', { count: card.blockedByOpenCount ?? 0 })}
+              className="inline-flex items-center gap-1 text-destructive"
             >
-              {t('work.chip.blocked')}
-            </Chip>
+              <Lock className="size-3.5" aria-hidden="true" />
+              {card.blockedByOpenCount}
+            </span>
           ) : null}
           {card.recurrence ? (
-            <Chip
-              tone="info"
-              leading={<Repeat className="size-3" />}
-              title={t('work.chip.repeats')}
-            >
-              {t('work.chip.repeats')}
-            </Chip>
+            <span role="img" aria-label={t('work.chip.repeats')} title={t('work.chip.repeats')}>
+              <Repeat className="size-3.5" aria-hidden="true" />
+            </span>
           ) : null}
           {card.estimateMin ? (
-            <Chip
-              tone="outline"
-              leading={<Timer className="size-3" />}
-              title={t('work.estimate.label')}
-            >
+            <span title={t('work.estimate.label')} className="inline-flex items-center gap-1">
+              <Timer className="size-3.5" aria-hidden="true" />
               {formatDurationShort(card.estimateMin, t)}
-            </Chip>
+            </span>
           ) : null}
           {card.focusPinned ? (
-            <Chip tone="primary" leading={<Pin className="size-3" />} title={t('work.focus.title')}>
-              {t('work.focus.chip')}
-            </Chip>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="flex items-center justify-between text-caption text-muted-foreground">
-        <div className="flex items-center gap-2.5">
-          {card.checklistTotal > 0 ? (
-            <span className="flex items-center gap-1">
-              <ListChecks className="size-3.5" aria-hidden="true" />
-              {card.checklistDone}/{card.checklistTotal}
+            <span
+              role="img"
+              aria-label={t('work.focus.title')}
+              title={t('work.focus.title')}
+              className="text-primary"
+            >
+              <Pin className="size-3.5" aria-hidden="true" />
             </span>
           ) : null}
-          {card.commentCount > 0 ? (
-            <span className="flex items-center gap-1">
-              <MessageSquare className="size-3.5" aria-hidden="true" />
-              {card.commentCount}
-            </span>
-          ) : null}
-          {card.links.length > 0 ? (
-            <span className="flex items-center gap-1">
-              <Link2 className="size-3.5" aria-hidden="true" />
-              {card.links.length}
-            </span>
-          ) : null}
-          {card.watchers.length > 0 ? (
-            <span className="flex items-center gap-1" title={t('work.field.watchers')}>
-              <Eye className="size-3.5" aria-hidden="true" />
-              {card.watchers.length}
-            </span>
-          ) : null}
-        </div>
-        {/* WALKTHROUGH-FINDINGS 4.8 / SPEC 3.3: the avatar on a card used to be the KIMDAN
+          <div className="flex items-center gap-2 empty:hidden">
+            {card.checklistTotal > 0 ? (
+              <span className="flex items-center gap-1">
+                <ListChecks className="size-3.5" aria-hidden="true" />
+                {card.checklistDone}/{card.checklistTotal}
+              </span>
+            ) : null}
+            {card.commentCount > 0 ? (
+              <span className="flex items-center gap-1">
+                <MessageSquare className="size-3.5" aria-hidden="true" />
+                {card.commentCount}
+              </span>
+            ) : null}
+            {card.links.length > 0 ? (
+              <span className="flex items-center gap-1">
+                <Link2 className="size-3.5" aria-hidden="true" />
+                {card.links.length}
+              </span>
+            ) : null}
+            {card.watchers.length > 0 ? (
+              <span className="flex items-center gap-1" title={t('work.field.watchers')}>
+                <Eye className="size-3.5" aria-hidden="true" />
+                {card.watchers.length}
+              </span>
+            ) : null}
+          </div>
+          {/* WALKTHROUGH-FINDINGS 4.8 / SPEC 3.3: the avatar on a card used to be the KIMDAN
             (delegator), so a person's own column showed a dozen different faces and every Trello or
-            Jira user read them as the assignee. The main avatar is now the **assignee**; the giver,
-            when it is somebody else, is a small secondary avatar overlapped behind it, with a
+            Jira user read them as the assignee. The larger avatar is the **assignee**; the giver,
+            when it is somebody else, is a smaller avatar on the left, overlapping in front, with a
             tooltip that says which is which -- so "who is doing this" and "who asked for it" are
             both answerable without opening the card. */}
-        {(() => {
-          const assignee = members.find((m) => m.userId === card.assigneeUserId)
-          const giver = members.find((m) => m.userId === card.giverUserId)
-          const showGiver = giver && giver.userId !== assignee?.userId
-          if (!assignee && !showGiver) return null
-          return (
-            <span className="flex shrink-0 items-center">
-              {showGiver ? (
-                <span
-                  className="devon-avatar-stack-item -mr-1.5"
-                  title={t('work.card.byGiver', { name: fullName(giver) })}
-                >
-                  <Avatar
-                    size="xs"
-                    src={avatarUrl(giver.avatarKey, 64)}
-                    alt={t('work.card.byGiver', { name: fullName(giver) })}
-                    initials={initialsFromName(giver.givenName, giver.familyName)}
-                    hueSeed={giver.userId}
-                  />
-                </span>
-              ) : null}
-              {assignee ? (
-                <span
-                  className="devon-avatar-stack-item rounded-full ring-2 ring-card"
-                  title={t('work.card.assignedTo', {
-                    name: fullName(assignee),
-                  })}
-                >
-                  <Avatar
-                    size="sm"
-                    src={avatarUrl(assignee.avatarKey, 64)}
-                    alt={t('work.card.assignedTo', {
+          {(() => {
+            const assignee = members.find((m) => m.userId === card.assigneeUserId)
+            const giver = members.find((m) => m.userId === card.giverUserId)
+            const showGiver = giver && giver.userId !== assignee?.userId
+            // The column already names the assignee; keep both identities when someone else delegated.
+            if ((!assignee || assignee.userId === columnUserId) && !showGiver) return null
+            return (
+              <span className="isolate flex shrink-0 items-center">
+                {showGiver ? (
+                  <span
+                    className="devon-avatar-stack-item -mr-1.5"
+                    style={{ '--avatar-stack-order': 2 } as React.CSSProperties}
+                    title={t('work.card.byGiver', { name: fullName(giver) })}
+                  >
+                    <Avatar
+                      size="xs"
+                      src={avatarUrl(giver.avatarKey, 64)}
+                      alt={t('work.card.byGiver', { name: fullName(giver) })}
+                      initials={initialsFromName(giver.givenName, giver.familyName)}
+                      hueSeed={giver.unitId ?? 'department'}
+                      className={unitColorClass(unitPalette, giver.unitId, giver.role === 'head')}
+                    />
+                  </span>
+                ) : null}
+                {assignee ? (
+                  <span
+                    className="devon-avatar-stack-item rounded-full ring-2 ring-card"
+                    style={{ '--avatar-stack-order': 1 } as React.CSSProperties}
+                    title={t('work.card.assignedTo', {
                       name: fullName(assignee),
                     })}
-                    initials={initialsFromName(assignee.givenName, assignee.familyName)}
-                    hueSeed={assignee.userId}
-                  />
-                </span>
-              ) : null}
-            </span>
-          )
-        })()}
-      </div>
+                  >
+                    <Avatar
+                      size="sm"
+                      src={avatarUrl(assignee.avatarKey, 64)}
+                      alt={t('work.card.assignedTo', {
+                        name: fullName(assignee),
+                      })}
+                      initials={initialsFromName(assignee.givenName, assignee.familyName)}
+                      hueSeed={assignee.unitId ?? 'department'}
+                      className={unitColorClass(
+                        unitPalette,
+                        assignee.unitId,
+                        assignee.role === 'head',
+                      )}
+                    />
+                  </span>
+                ) : null}
+              </span>
+            )
+          })()}
+        </div>
+      ) : null}
     </div>
   )
 
@@ -667,23 +724,32 @@ export function CardTile({
 function MoveToMenu({
   card,
   members,
+  unitPalette,
   onMoveTo,
+  canMove,
+  selected,
+  onSelectCard,
 }: {
   card: Card
   members: readonly MemberSummary[]
+  unitPalette: ReadonlyMap<string, string>
   onMoveTo: (cardId: string, toUserId: string | null) => void
+  canMove: boolean
+  selected: boolean
+  onSelectCard?: () => void
 }) {
   const t = useT()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <IconButton
-          aria-label={t('work.card.moveTo')}
-          tooltip={t('work.card.moveTo')}
+          className="md:size-6"
+          aria-label={t('portal.cards.actions')}
+          tooltip={t('portal.cards.actions')}
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
         >
-          <MoveRight className="size-4" aria-hidden="true" />
+          <Ellipsis className="size-4" aria-hidden="true" />
         </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -691,31 +757,42 @@ function MoveToMenu({
         className="max-h-80 overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <DropdownMenuLabel>{t('work.card.moveTo')}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={() => onMoveTo(card.id, null)}
-          disabled={card.assigneeUserId === null}
-        >
-          <MoveRight className="size-4 text-muted-foreground" aria-hidden="true" />
-          {t('work.field.unassigned')}
-        </DropdownMenuItem>
-        {members.map((m) => (
-          <DropdownMenuItem
-            key={m.userId}
-            onSelect={() => onMoveTo(card.id, m.userId)}
-            disabled={card.assigneeUserId === m.userId}
-          >
-            <Avatar
-              size="sm"
-              src={avatarUrl(m.avatarKey, 64)}
-              alt={fullName(m)}
-              initials={initialsFromName(m.givenName, m.familyName)}
-              hueSeed={m.userId}
-            />
-            {fullName(m)}
+        {onSelectCard ? (
+          <DropdownMenuItem onSelect={onSelectCard}>
+            <CheckSquare className="size-4" aria-hidden="true" />
+            {t(selected ? 'portal.cards.deselect' : 'portal.cards.select')}
           </DropdownMenuItem>
-        ))}
+        ) : null}
+        {canMove ? (
+          <>
+            <DropdownMenuLabel>{t('work.card.moveTo')}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onSelect={() => onMoveTo(card.id, null)}
+              disabled={card.assigneeUserId === null}
+            >
+              <MoveRight className="size-4 text-muted-foreground" aria-hidden="true" />
+              {t('work.field.unassigned')}
+            </DropdownMenuItem>
+            {members.map((m) => (
+              <DropdownMenuItem
+                key={m.userId}
+                onSelect={() => onMoveTo(card.id, m.userId)}
+                disabled={card.assigneeUserId === m.userId}
+              >
+                <Avatar
+                  size="sm"
+                  src={avatarUrl(m.avatarKey, 64)}
+                  alt={fullName(m)}
+                  initials={initialsFromName(m.givenName, m.familyName)}
+                  hueSeed={m.unitId ?? (m.role === 'head' ? 'department' : 'unassigned')}
+                  className={unitColorClass(unitPalette, m.unitId, m.role === 'head')}
+                />
+                {fullName(m)}
+              </DropdownMenuItem>
+            ))}
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

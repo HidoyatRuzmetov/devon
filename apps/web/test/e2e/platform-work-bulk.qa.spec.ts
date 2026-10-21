@@ -5,6 +5,7 @@ import { resolve } from 'node:path'
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
 import { authedPatch, authedPost, login, newFlowContext } from './flow-api.js'
 import { waitForLoadedRoute } from './platform-capture.js'
+import { selectBoardCard } from './board-test-actions.js'
 import { fullName } from '../../src/features/work/lib/format.js'
 import type { Board, CardDetail } from '../../src/features/work/api.js'
 
@@ -105,7 +106,7 @@ async function select(page: Page, ids: string[]) {
       }
     }, id)
     try {
-      await tile.getByRole('checkbox').check()
+      await selectBoardCard(page, tile)
     } finally {
       const diagnostic = await tile.evaluate((element) => {
         const checkbox = element.querySelector('[role="checkbox"]')

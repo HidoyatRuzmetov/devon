@@ -35,6 +35,8 @@ export const membershipStatusEnum = appSchema.enum('membership_status', [
 ])
 
 export const users = appSchema.table('users', {
+  professionalProfile: jsonb('professional_profile').notNull().default({}),
+  professionalProfileVersion: integer('professional_profile_version').notNull().default(1),
   id: uuid('id').primaryKey().defaultRandom(),
   login: citext('login').notNull(),
   email: citext('email'),

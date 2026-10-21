@@ -1,3 +1,4 @@
+import { WORK_TITLE_MAX } from '@devon/contracts'
 import { avatarUrl } from '../../../lib/avatar.js'
 // The card detail content (TECH-SPEC §5, DESIGN.md §9.4). round2 SEV2: the original two-column
 // layout ran its left column at ~170px inside the 480px sheet -- title/status/description, then a
@@ -586,7 +587,7 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
             aria-label={t('work.field.title')}
             aria-invalid={titleError || undefined}
             aria-describedby={titleError ? `card-title-error-${cardId}` : undefined}
-            maxLength={300}
+            maxLength={WORK_TITLE_MAX}
             className="w-full resize-none overflow-hidden rounded-sm border border-transparent bg-transparent p-1 font-display text-h3 text-foreground outline-none hover:border-border focus-visible:border-border focus-visible:ring-2 focus-visible:ring-ring read-only:hover:border-transparent"
           />
         </div>
@@ -596,7 +597,28 @@ export function CardDetailContent({ cardId, onClose }: { cardId: string; onClose
           </p>
         ) : null}
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="neutral">{t(`work.status.${card.status}`)}</Badge>
+          <Badge tone={card.workStage === 'in_progress' ? 'info' : 'neutral'}>
+            {t(
+              card.status === 'active'
+                ? `portal.stage.${card.workStage ?? 'todo'}`
+                : `work.status.${card.status}`,
+            )}
+          </Badge>
+          {canEdit && card.status === 'active' ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={patchCard.isPending}
+              onClick={() =>
+                void patchCard.mutateAsync({
+                  id: card.id,
+                  patch: { workStage: card.workStage === 'in_progress' ? 'todo' : 'in_progress' },
+                })
+              }
+            >
+              {t(card.workStage === 'in_progress' ? 'portal.stage.reset' : 'portal.stage.start')}
+            </Button>
+          ) : null}
           {card.priority !== 'none' ? (
             <Badge tone={PRIORITY_BADGE_TONE[card.priority]}>
               {t(PRIORITY_LABEL_KEY[card.priority])}

@@ -7,6 +7,7 @@
 import { randomUUID } from 'node:crypto'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { schema, withContext, type Tx } from '@devon/db'
+import { professionalProfileSchema, type ProfessionalProfile } from '@devon/contracts'
 import type { Role } from '@devon/contracts'
 import { hashPassword, verifyPassword } from '../../lib/password.js'
 import { generateToken, sha256Hex } from '../../lib/tokens.js'
@@ -577,4 +578,36 @@ export async function requestPasswordResetByLogin(login: string, ctx: AuditCtx):
       }
     },
   )
+}
+
+export async function getProfessionalProfile(userId: string, ctx: AuditCtx) {
+  return withContext(toDbContext(ctx), async (tx) => {
+    const [row] = await tx.raw<{ profile: unknown; version: number }>(
+      sql`select professional_profile as profile, professional_profile_version as version from app.users where id = ${userId} and deleted_at is null`,
+    )
+    return row
+      ? { profile: professionalProfileSchema.parse(row.profile), version: row.version }
+      : null
+  })
+}
+export async function saveProfessionalProfile(
+  userId: string,
+  profile: ProfessionalProfile,
+  version: number,
+  ctx: AuditCtx,
+) {
+  return withContext(toDbContext(ctx), async (tx) => {
+    const [row] = await tx.raw<{ version: number }>(
+      sql`update app.users set professional_profile = ${JSON.stringify(profile)}::jsonb, professional_profile_version = professional_profile_version + 1, updated_at = now() where id = ${userId} and deleted_at is null and professional_profile_version = ${version} returning professional_profile_version as version`,
+    )
+    if (!row) return null
+    tx.audit({
+      action: 'accounts.professional_profile_updated',
+      subjectType: 'user',
+      subjectId: userId,
+      after: { fields: Object.keys(profile) },
+    })
+    await emitIdentityUpdated(tx, userId, 'accounts.profile.updated')
+    return { profile, version: row.version }
+  })
 }

@@ -392,7 +392,7 @@ describe('atomic gallery project creation through actual application-role transa
     expect(await count(id)).toBe(0)
   })
 
-  it('creates ordered objective cards, milestones, activity, audit/outbox and one use together', async () => {
+  it('creates ordered personal cards, milestones, activity, audit/outbox and one use together', async () => {
     const f = await fixture()
     const id = await template(f.department.id, f.head.id, {
       title: 'Shared',
@@ -411,7 +411,7 @@ describe('atomic gallery project creation through actual application-role transa
     })
     expect(project).toMatchObject({
       title: 'Shared',
-      objectiveTotal: 2,
+      subjectiveTotal: 2,
       progress: 0,
       colour: '#2563eb',
       members: [f.member.id],
@@ -429,7 +429,7 @@ describe('atomic gallery project creation through actual application-role transa
     )
     expect(cards.map((c) => c.title)).toEqual(['First', 'Second'])
     expect(new Set(cards.map((c) => c.order_key)).size).toBe(2)
-    expect(cards.every((c) => c.source === 'template' && c.project_scope === 'objective')).toBe(
+    expect(cards.every((c) => c.source === 'template' && c.project_scope === 'subjective')).toBe(
       true,
     )
     expect(await count(id)).toBe(1)

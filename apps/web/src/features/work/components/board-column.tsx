@@ -7,8 +7,7 @@ import { avatarUrl } from '../../../lib/avatar.js'
 // isn't over any card.
 import * as React from 'react'
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
-import { ChevronsLeftRight, ChevronsRightLeft, FolderKanban } from 'lucide-react'
-import { navigate } from '../../../lib/router.js'
+import { ChevronsLeftRight, ChevronsRightLeft } from 'lucide-react'
 import { numberFlowLocale, useLocale, useT } from '@devon/i18n'
 import {
   Avatar,
@@ -18,11 +17,11 @@ import {
   StaggerItem,
   cn,
   initialsFromName,
-  unitHueClass,
 } from '@devon/ui'
 import type { Project } from '../../projects/api.js'
 import type { Card, Label, MemberSummary } from '../api.js'
 import { fullName } from '../lib/format.js'
+import { unitColorClass } from '../../../lib/unit-palette.js'
 import { useIsTouchDropTarget } from '../lib/touch-drag.js'
 import { CARD_DRAG_TYPE, CardTile, type CardDropSpec } from './card-tile.js'
 import { QuickAddBar } from './quick-add-bar.js'
@@ -37,6 +36,7 @@ export interface BoardColumnProps {
    * `projectId` its assignee isn't listed as a member of. */
   allProjects: readonly Project[]
   members: readonly MemberSummary[]
+  unitPalette: ReadonlyMap<string, string>
   labels: readonly Label[]
   /** Re-triggers the card list's entrance stagger when it changes -- the board's current `?q=`
    * filter text (UI-OVERHAUL.md §3 "Lists, grids, tiles": "on first render and on filter change"). */
@@ -51,6 +51,7 @@ export interface BoardColumnProps {
    * fits on one screen instead of seven screens of horizontal scroll. Owned by the board (one
    * preference for the whole board, remembered per viewer), passed down rather than read here. */
   density?: 'comfortable' | 'compact'
+  mobile?: boolean
   /** v1.1 SPEC §7 (A8) -- the board's multitask selection, owned by the board and passed straight
    * through to each tile. Omit `onSelectedChange` and the tiles render with no checkbox at all. */
   selectedIds?: ReadonlySet<string>
@@ -92,9 +93,9 @@ function useColumnCollapsed(key: string): [boolean, (next: boolean) => void] {
 export function BoardColumn({
   member,
   cards,
-  projects,
   allProjects,
   members,
+  unitPalette,
   labels,
   filterKey,
   onOpenCard,
@@ -102,6 +103,7 @@ export function BoardColumn({
   onMoveTo,
   onCollapsedChange,
   density = 'comfortable',
+  mobile = false,
   selectedIds,
   onCardSelectedChange,
   selectionActive = false,
@@ -118,6 +120,13 @@ export function BoardColumn({
   const [isDropTarget, setIsDropTarget] = React.useState(false)
   const userId = member?.userId ?? null
   const columnKey = userId ?? 'unassigned'
+  const unitKey = member?.unitId ?? (member?.role === 'head' ? 'department' : 'unassigned')
+  const unitName =
+    member?.unitName ?? t(member?.role === 'head' ? 'headScope.leadership' : 'work.board.noUnit')
+  const unitColour = unitColorClass(unitPalette, member?.unitId, member?.role === 'head')
+  const unitStyle = {
+    '--work-unit-color': `var(${unitColour.replace('bg-', '--color-')})`,
+  } as React.CSSProperties
   const [collapsed, setCollapsed] = useColumnCollapsed(columnKey)
   const touchOver = useIsTouchDropTarget(columnKey)
 
@@ -136,11 +145,11 @@ export function BoardColumn({
     const observer = new ResizeObserver(measure)
     observer.observe(header)
     return () => observer.disconnect()
-  }, [collapsed])
+  }, [collapsed, mobile])
 
   React.useEffect(() => {
-    onCollapsedChange?.(columnKey, collapsed)
-  }, [columnKey, collapsed, onCollapsedChange])
+    onCollapsedChange?.(columnKey, collapsed && !mobile)
+  }, [columnKey, collapsed, mobile, onCollapsedChange])
 
   React.useEffect(() => {
     const el = listRef.current
@@ -165,17 +174,24 @@ export function BoardColumn({
 
   const overdueCount = cards.filter((c) => c.risk === 'overdue').length
 
-  if (collapsed) {
+  if (collapsed && !mobile) {
     return (
       <div
         data-board-column={columnKey}
-        className="flex w-11 shrink-0 flex-col items-center gap-2 rounded-md border border-border bg-card py-2"
+        data-unit-id={unitKey}
+        data-unit-color={unitColour}
+        style={unitStyle}
+        title={unitName}
+        className="devon-board-column flex w-11 shrink-0 flex-col items-center gap-2 rounded-md border border-border py-2"
       >
         <IconButton aria-label={t('work.board.expandColumn')} onClick={() => setCollapsed(false)}>
           <ChevronsLeftRight className="size-4" />
         </IconButton>
         <span
-          className={cn('size-1.5 shrink-0 rounded-full', unitHueClass(userId ?? 'unassigned'))}
+          className={cn(
+            'size-1.5 shrink-0 rounded-full',
+            unitColorClass(unitPalette, member?.unitId, member?.role === 'head'),
+          )}
           aria-hidden="true"
         />
         {member ? (
@@ -184,7 +200,8 @@ export function BoardColumn({
             src={avatarUrl(member.avatarKey, 64)}
             alt={fullName(member)}
             initials={initialsFromName(member.givenName, member.familyName)}
-            hueSeed={member.userId}
+            hueSeed={member.unitId ?? 'department'}
+            className={unitColorClass(unitPalette, member.unitId, member.role === 'head')}
           />
         ) : null}
         <span
@@ -208,20 +225,26 @@ export function BoardColumn({
     <div
       ref={columnRef}
       data-board-column={columnKey}
-      className={cn('flex shrink-0 flex-col gap-2', compact ? 'w-56' : 'w-72')}
+      data-unit-id={unitKey}
+      data-unit-color={unitColour}
+      role="region"
+      aria-label={member ? fullName(member) : t('work.board.unassigned')}
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- On phones each named person page owns its vertical scrolling.
+      tabIndex={mobile ? 0 : undefined}
+      style={unitStyle}
+      className={cn(
+        'devon-board-column flex shrink-0 flex-col gap-1 rounded-md border border-border',
+        compact ? 'w-56' : 'w-72',
+      )}
     >
       <div
         ref={headerRef}
         className={cn(
-          'sticky top-0 z-10 flex flex-col gap-2 rounded-md bg-surface-2 px-2 pb-2 shadow-1',
+          'devon-board-column-header sticky top-0 z-10 flex flex-col gap-2 rounded-t-md px-2 pb-2 shadow-1',
           compact ? 'pt-1' : 'pt-2',
         )}
       >
-        <div className="flex items-center gap-2">
-          <span
-            className={cn('size-2.5 shrink-0 rounded-full', unitHueClass(userId ?? 'unassigned'))}
-            aria-hidden="true"
-          />
+        <div className="hidden items-center gap-2 md:flex" title={unitName}>
           {member ? (
             <>
               <Avatar
@@ -229,10 +252,14 @@ export function BoardColumn({
                 src={avatarUrl(member.avatarKey, 64)}
                 alt={fullName(member)}
                 initials={initialsFromName(member.givenName, member.familyName)}
-                hueSeed={member.userId}
+                hueSeed={member.unitId ?? 'department'}
+                className={unitColorClass(unitPalette, member.unitId, member.role === 'head')}
               />
               <div className="min-w-0">
-                <p className="truncate text-small font-semibold text-foreground">
+                <p
+                  className="line-clamp-2 text-small font-semibold leading-tight text-foreground [overflow-wrap:anywhere]"
+                  title={fullName(member)}
+                >
                   {fullName(member)}
                 </p>
                 {/* The job title is the first thing to go at compact density -- the name and the two
@@ -272,41 +299,23 @@ export function BoardColumn({
           </IconButton>
         </div>
         <QuickAddBar members={members} defaultAssigneeUserId={userId} compact />
+        <div className="flex items-center justify-between text-caption text-muted-foreground md:hidden">
+          <span>{t('work.board.loadCount', { count: cards.length })}</span>
+          {overdueCount > 0 ? (
+            <span className="text-destructive">
+              {t('work.risk.overdue')} · {overdueCount}
+            </span>
+          ) : null}
+        </div>
       </div>
 
-      {/* v1.1 critique SEV2 #18: "the board still repeats a project card in the first slot of every
-          column". A full `ProjectTile` per column, above the cards, for every member of that project
-          -- so a three-person project cost three tall tiles and pushed the actual work below the
-          fold in all three columns. The project is a fact about the column, so it belongs in the
-          column's chrome: one chip per project, one line, click-through to the project. SPEC §3.3
-          says exactly this ("project chips shown once"). */}
-      {projects.length > 0 ? (
-        <div className="flex flex-wrap gap-1 px-2">
-          {projects.map((project) => (
-            <a
-              key={project.id}
-              href={`/projects/view?id=${encodeURIComponent(project.id)}`}
-              onClick={(event) => {
-                if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
-                event.preventDefault()
-                navigate(`/projects/view?id=${encodeURIComponent(project.id)}`)
-              }}
-              title={project.title}
-              className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-caption text-muted-foreground transition-colors duration-(--dur-micro) hover:border-primary/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <FolderKanban aria-hidden="true" className="size-3 shrink-0" />
-              <span className="truncate">{project.title}</span>
-            </a>
-          ))}
-        </div>
-      ) : null}
       {/* One shared two-axis region owns scrolling. Card lists remain plain blocks; the sticky
           member and quick-add header gives every column the same direct action at any depth. */}
       <div
         ref={listRef}
         data-dnd-column={columnKey}
         data-drop-target={isDropTarget || touchOver || undefined}
-        className="rounded-md p-1 outline-2 outline-offset-2
+        className="flex-1 rounded-md p-1 outline-2 outline-offset-2
           outline-transparent transition-colors duration-(--dur-micro)
           data-[drop-target]:bg-accent/40 data-[drop-target]:outline-primary/40"
       >
@@ -321,6 +330,7 @@ export function BoardColumn({
                   card={card}
                   columnUserId={userId}
                   members={members}
+                  unitPalette={unitPalette}
                   labels={labels}
                   projects={allProjects}
                   onOpen={onOpenCard}

@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test'
 import { authedPatch, authedPost, flowClientHeaders, login } from './flow-api.js'
 import { FLOW_WEB_BASE_URL } from './flow-env.js'
 import { setTextScale, settleCapture, waitForLoadedRoute } from './platform-capture.js'
+import { selectBoardCard } from './board-test-actions.js'
 
 const examplePassword = 'Ishonchli#2026'
 function label(locale: string, key: string): string {
@@ -44,6 +45,12 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           const response = await authedPost(context, '/api/v1/cards', { title, kind: 'task' })
           expect(response.status()).toBe(201)
           const { id } = (await response.json()) as { id: string }
+          const companionResponse = await authedPost(context, '/api/v1/cards', {
+            title: `Selection companion ${randomUUID().slice(0, 8)}`,
+            kind: 'task',
+          })
+          expect(companionResponse.status()).toBe(201)
+          const companion = (await companionResponse.json()) as { id: string }
           const page = await context.newPage()
           await page.goto('/work')
           await waitForLoadedRoute(page, '/work')
@@ -51,13 +58,23 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
           const tile = page.locator(`[data-dnd-card="${id}"]`)
           const checkbox = tile.getByRole('checkbox')
           const titleButton = tile.getByRole('button', { name: title, exact: true })
+          await expect(checkbox).toHaveCount(0)
+          await selectBoardCard(
+            page,
+            page.locator(`[data-dnd-card="${companion.id}"]`),
+            label(locale, 'portal.cards.select'),
+          )
           await tile.hover()
           await checkbox.check()
           await expect(checkbox).toBeChecked()
           await checkbox.uncheck()
-          // Programmatic entry on Title, then a real native backward Tab and Space on selection.
+          // Programmatic entry on Title, then native Tab through Actions to the selection control.
           await titleButton.focus()
-          await page.keyboard.press('Shift+Tab')
+          await page.keyboard.press('Tab')
+          await expect(
+            tile.getByRole('button', { name: label(locale, 'portal.cards.actions'), exact: true }),
+          ).toBeFocused()
+          await page.keyboard.press('Tab')
           await expect(checkbox).toBeFocused()
           await settleCapture(page, false)
           const geometry = await checkbox.evaluate((element) => {
@@ -154,7 +171,7 @@ for (const locale of ['en', 'ru', 'uz-Latn', 'uz-Cyrl']) {
             screenshot,
             pixelInspected: false,
             boundary:
-              'Native mouse, backward Tab/Space after programmatic Title entry, touch emulation where stated; no force or click retry.',
+              'Native menu selection, mouse, Tab/Space after programmatic Title entry, touch emulation where stated; no force or click retry.',
           })
           writeFileSync(
             test.info().outputPath('card-targets.json'),
