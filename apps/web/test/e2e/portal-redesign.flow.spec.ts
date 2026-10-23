@@ -628,7 +628,12 @@ test('@flow compact board, route scrolling, calendar overflow and mobile navigat
   })
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.evaluate(() => localStorage.setItem('devon_theme', 'dark'))
+  const darkBoardLoaded = page.waitForResponse(
+    (response) =>
+      new URL(response.url()).pathname === '/api/v1/board' && response.request().method() === 'GET',
+  )
   await page.reload()
+  expect((await darkBoardLoaded).status()).toBe(200)
   await expect(board).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await page.screenshot({

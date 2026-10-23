@@ -17,6 +17,10 @@ import {
 test('@flow group project: personal tasks remain separate from milestone progress', async ({
   browser,
 }) => {
+  // This multi-user journey includes setup, both task lifecycles, milestone edits and two
+  // overlapping delete/undo receipts. Keep individual assertions strict while allowing the
+  // complete sequence to finish on the shared development runner.
+  test.setTimeout(90_000)
   const superAdminContext = await newFlowContext(browser)
   await loginAsSuperAdmin(superAdminContext)
 
